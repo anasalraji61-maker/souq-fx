@@ -563,3 +563,16 @@
 
 - **لم يُتحقَّق بصرياً** (لا متصفّح على الجهاز) — tsc وحده.
 - بنود المهمّة الأصلية: «₴» بتعليقين فقط (`ToolsScreen:88`، `MatrixEdgeRails:202`)؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ لم يتغيّر غير الملفّات أعلاه بنطاقي منذ تشغيل 45.
+
+## 2026-09-25 — تشغيل 47
+صفّا ui بـCOORDINATION (دورة QA 82)، كلٌّ بـcommit مستقل، بوابة البناء خضراء (tsc 0) قبل كل واحد:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| ed917cd | حذف خصائص `layoutCount`/`layoutShape`/`onLayoutPick` `@deprecated` واستيراد أنواعها من `RightPanelRail` (لا مستدعي يمرّرها) | ui45 (بقية) |
+| 918ae86 | التسجيل: حُذفت شرائح «نوع الحساب» و`t.accountType` (الخادم يقبل `trader` وحده منذ backend `06ea3ab` ⇒ الأربعة الأخرى 422 دائماً)؛ `role: 'trader'` ثابت؛ الرفض عبر `registerErrorText(t, e)` بدل `registerError` الجامع (`authErrors.selftest` ok) | launch143 |
+
+- مفاتيح `accountType`/`trainer`/`broker`/`agent`/`company` ما زالت مستعملة بعرض الشبكة (`isRoleId(net.role) ? t[net.role]`) عدا `accountType` — صار بلا مستعمل (launch يقرّر حذفه).
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert` صفر بملفّات `tsx`؛ «درجة الاتفاق» بتعليقات فقط؛ الكردية: 1080 مفتاحاً، صفر ناقص، صفر مطابق للعربية، صفر «ة/ي/ك» عربية.
+- DESIGN-PRO: قائمة QA 82 فشلها الوحيد (DP2) بـ`TerminalScreen` (tools) — لا بند مفتوح بنطاقي.
+- **لم يُتحقَّق بصرياً** (لا متصفّح على الجهاز) — tsc وحده.
