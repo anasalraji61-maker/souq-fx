@@ -443,7 +443,8 @@ class TradeCreate(BaseModel):
     side: Literal["buy", "sell"]
     entry: float = Field(gt=0, allow_inf_nan=False)
     exit: float | None = Field(default=None, gt=0, allow_inf_nan=False)
-    size: float = Field(default=1.0, gt=0, allow_inf_nan=False)
+    # غائب = «غير معروف» (null بالقاعدة) لا لوت واحد: الافتراض 1 كان يُخزَّن فيقرأه المتداول حجماً كتبه.
+    size: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     note: str = Field(default="", max_length=500)
     opened_at: str | None = None
     sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)

@@ -1701,7 +1701,8 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
         "side": data["side"],
         "entry": float(data["entry"]),
         "exit": float(data["exit"]) if data.get("exit") is not None else None,
-        "size": float(data.get("size") or 1),
+        # None = لم يُكتب حجم. كان `float(size or 1)` فيُحفظ «1.00 لوت» لم يكتبه المتداول أحد.
+        "size": float(data["size"]) if data.get("size") is not None else None,
         "pnl": float(data["pnl"]) if data.get("pnl") is not None else None,
         "note": data.get("note") or "",
         "sl": _opt_level(data.get("sl")),

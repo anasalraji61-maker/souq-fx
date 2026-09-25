@@ -313,3 +313,26 @@ def test_a_closed_trade_can_still_be_corrected_on_purpose_via_patch(client):
     trade = _open_trade(client, exit=1.1100)
     r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.1050}, headers=_DEV1)
     assert r.status_code == 200 and r.json()["trade"]["exit"] == pytest.approx(1.1050)
+
+
+# ─── حجم غير مُرسَل = غير معروف، لا لوت واحد ─────────────────────────────────
+
+def test_a_trade_saved_without_a_size_has_no_size_not_one_lot(client):
+    body = {k: v for k, v in _TRADE.items() if k != "size"}
+    r = client.post("/api/trades", json=body, headers=_DEV1)
+    assert r.status_code == 200
+    assert r.json()["trade"]["size"] is None
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["size"] is None, "لا «1.00 لوت» لم يكتبه المتداول"
+
+
+def test_an_explicit_size_is_kept_exactly(client):
+    assert _open_trade(client, size=1)["size"] == 1
+    assert _open_trade(client, size=0.03)["size"] == pytest.approx(0.03)
+
+
+def test_a_sizeless_trade_can_be_given_a_size_later(client):
+    body = {k: v for k, v in _TRADE.items() if k != "size"}
+    trade = client.post("/api/trades", json=body, headers=_DEV1).json()["trade"]
+    r = client.patch(f"/api/trades/{trade['id']}", json={"size": 0.2}, headers=_DEV1)
+    assert r.json()["trade"]["size"] == pytest.approx(0.2)
