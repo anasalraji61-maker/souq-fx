@@ -74,8 +74,11 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
 const DXY_RE = /^(DXY|USDX|USDINDEX)/i;
 const BRENT_RE = /^(UKOIL|UKBRENT|BRENT|XBR)/i;
 
-/** التوقيت الصيفي البريطاني: من آخر أحد بآذار 01:00 UTC حتى آخر أحد بتشرين الأول 01:00 UTC. */
-function ukDst(sec: number): boolean {
+/**
+ * التوقيت الصيفي البريطاني: من آخر أحد بآذار 01:00 UTC حتى آخر أحد بتشرين الأول 01:00 UTC.
+ * النسخة الوحيدة — `sessions.ts` يستوردها (ويُعيد تصديرها) كي لا تنحرف ساعات الجلسات عن كسر برنت.
+ */
+export function ukDst(sec: number): boolean {
   const year = new Date(sec * 1000).getUTCFullYear();
   const lastSunday = (month: number) => {
     const firstNext = Date.UTC(year, month + 1, 1) / 1000;

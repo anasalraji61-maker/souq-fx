@@ -14,28 +14,15 @@
  *
  * الشمعة تنتمي لجلسة إن **بدأت** داخلها. السبت والأحد (UTC) بلا جلسات.
  */
-import { DAY_SEC, nyDst } from './marketHours';
+import { DAY_SEC, nyDst, ukDst } from './marketHours';
+
+export { ukDst };
 
 export type SessionId = 'tokyo' | 'london' | 'ny';
 
 export const SESSION_IDS: readonly SessionId[] = ['tokyo', 'london', 'ny'];
 
 const HOUR = 3600;
-
-/** آخر أحد من شهر `month` (0…11) — منتصف ليله بالثواني UTC. */
-function lastSundayUtcSec(year: number, month: number): number {
-  const last = Date.UTC(year, month + 1, 0) / 1000;
-  const dow = new Date(last * 1000).getUTCDay();
-  return last - dow * DAY_SEC;
-}
-
-/** التوقيت الصيفي البريطاني عند `sec`: آخر أحد آذار 01:00 UTC → آخر أحد تشرين الأول 01:00 UTC. */
-export function ukDst(sec: number): boolean {
-  const year = new Date(sec * 1000).getUTCFullYear();
-  const start = lastSundayUtcSec(year, 2) + HOUR;
-  const end = lastSundayUtcSec(year, 9) + HOUR;
-  return sec >= start && sec < end;
-}
 
 /** نافذة الجلسة `[from, to)` بالثواني UTC لليوم الذي يبدأ عند `dayStartSec` (منتصف ليل UTC). */
 export function sessionWindowUtc(id: SessionId, dayStartSec: number): [number, number] {
