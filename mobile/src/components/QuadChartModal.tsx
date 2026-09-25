@@ -18,7 +18,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
 import { mockSeries } from '../mock';
-import { normalizeProvenance } from '../chart/dataSource';
+import { candleTimeSec, normalizeProvenance } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct } from '../chart/dailyChange';
@@ -288,7 +288,13 @@ export function QuadChartModal({
             const s = series[i];
             // السعر والنسبة من الرقم نفسه: كان السعر المطبوع التيك الخام (ولو تيك بثّ تجريبي بجانب شموع
             // حقيقية، أو سعراً بعيداً عن السلسلة) والنسبة بجانبه من سعر الخادم — فيتناقضان.
-            const headPx = s ? livePriceForHeader(s, ticks[sym] ?? null) : null;
+            // والتيك الأقدم من آخر شمعة جلبها التحديث (رمز غاب عن البثّ — `useMultiLiveTicks` يحفظ آخر تيك
+            // بلا عمر) لا يُطبع: كان سعر الساعة الماضية يبقى بالرأس والشارت تحته يتحرّك مع كل تحديث 90 ث.
+            const tk = ticks[sym];
+            const lastBar = s?.candles[s.candles.length - 1];
+            const tickOlder =
+              tk?.source.as_of != null && lastBar != null && tk.source.as_of < candleTimeSec(lastBar.time);
+            const headPx = s && !tickOlder ? livePriceForHeader(s, tk ?? null) : null;
             const px = headPx ?? s?.last ?? NaN;
             // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
             // إغلاق الشمعة الأخيرة وقبل الجلب التالي.
