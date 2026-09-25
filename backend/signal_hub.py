@@ -110,68 +110,124 @@ def analysts_forecast(symbol: str, timeframe: str = "15m") -> dict[str, Any]:
     return out
 
 
+# نصوص تفاصيل الأصوات. كانت عربية فقط وتصل الواجهة الإنجليزية/الكردية كما هي، والأسعار بـ`:.5f`
+# خام (USDJPY «157.42312»). الآن كل صوت يحمل `detail_code` + `detail_values` (أرقام مقرَّبة بمنازل
+# الرمز) ليترجمها التطبيق بأي لغة، و`detail` نصّ جاهز بالعربية أو الإنجليزية (`lang`). الكردي يأخذ
+# العربية كقوالب المساعد (لا مراجعة كردية بعد — launch77)؛ الرموز تكفي التطبيق ليعرضه بالكردية.
+_VOTE_NAMES: dict[str, dict[str, str]] = {
+    "ar": {"rsi": "RSI 14", "ma_cross": "تقاطع MA", "ma_trend": "اتجاه MA", "macd": "MACD",
+           "bb": "بولنجر", "stoch": "Stochastic", "trend": "ميل السعر"},
+    "en": {"rsi": "RSI 14", "ma_cross": "MA cross", "ma_trend": "MA trend", "macd": "MACD",
+           "bb": "Bollinger", "stoch": "Stochastic", "trend": "Price slope"},
+}
+_DETAIL_TEXT: dict[str, dict[str, str]] = {
+    "ar": {
+        "rsi_overbought": "تشبع شراء ({rsi})", "rsi_oversold": "تشبع بيع ({rsi})",
+        "rsi_bullish": "زخم إيجابي ({rsi})", "rsi_bearish": "زخم سلبي ({rsi})",
+        "rsi_neutral": "محايد ({rsi})",
+        "ma_cross_up": "تقاطع صاعد SMA سريع/بطيء", "ma_cross_down": "تقاطع هابط SMA سريع/بطيء",
+        "ma_above": "سريع {fast} فوق بطيء {slow}", "ma_below": "سريع {fast} تحت بطيء {slow}",
+        "macd_cross_up": "تقاطع صاعد مع الإشارة", "macd_cross_down": "تقاطع هابط مع الإشارة",
+        "macd_above": "الخط {macd} فوق الإشارة {signal}", "macd_below": "الخط {macd} تحت الإشارة {signal}",
+        "bb_upper": "قرب الحد العلوي", "bb_lower": "قرب الحد السفلي", "bb_position": "موقع النطاق {pos}%",
+        "stoch_k": "%K≈{k}", "trend_slope": "10 شموع · {pct}%",
+    },
+    "en": {
+        "rsi_overbought": "Overbought ({rsi})", "rsi_oversold": "Oversold ({rsi})",
+        "rsi_bullish": "Positive momentum ({rsi})", "rsi_bearish": "Negative momentum ({rsi})",
+        "rsi_neutral": "Neutral ({rsi})",
+        "ma_cross_up": "Fast SMA crossed above slow", "ma_cross_down": "Fast SMA crossed below slow",
+        "ma_above": "Fast {fast} above slow {slow}", "ma_below": "Fast {fast} below slow {slow}",
+        "macd_cross_up": "Crossed above signal", "macd_cross_down": "Crossed below signal",
+        "macd_above": "Line {macd} above signal {signal}", "macd_below": "Line {macd} below signal {signal}",
+        "bb_upper": "Near upper band", "bb_lower": "Near lower band", "bb_position": "Band position {pos}%",
+        "stoch_k": "%K≈{k}", "trend_slope": "10 candles · {pct}%",
+    },
+}
+_DISCLAIMER = {
+    "ar": "إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.",
+    "en": "Technical-indicator consensus inside MATRIX — not a guarantee of profit.",
+}
+_NO_DATA = {"ar": "لا بيانات كافية للمؤشرات.", "en": "Not enough data for the indicators."}
+
+
+def price_decimals(price: float | None) -> int:
+    """منازل عرض السعر كما تعرضها المنصّات: ~6 أرقام معنوية (EURUSD 5، USDJPY 3، الذهب 2)."""
+    if price is None or not math.isfinite(price) or price == 0:
+        return 5
+    return max(0, min(5, 5 - int(math.floor(math.log10(abs(price))))))
+
+
+def _text_lang(lang: str | None) -> str:
+    return "en" if (lang or "").strip().lower().startswith("en") else "ar"
+
+
 def indicator_forecast(
     symbol: str,
     candles: list[dict[str, Any]],
     enabled: list[str] | None = None,
+    lang: str | None = None,
 ) -> dict[str, Any]:
     sym = symbol.upper()
+    tl = _text_lang(lang)
     snap = ind_engine.snapshot(candles) if candles else {}
     closes = [float(c["close"]) for c in candles] if candles else []
     last = float(snap.get("last") or closes[-1]) if closes else None
+    dp = price_decimals(last)
 
     want = set(enabled or FORECAST_INDICATOR_IDS)
     votes: list[dict[str, Any]] = []
 
-    def add(key: str, label: str, score: float, detail: str) -> None:
+    def add(key: str, name_key: str, score: float, code: str, **values: float) -> None:
         if key not in want:
             return
         score = max(-1.0, min(1.0, score))
         votes.append(
             {
                 "id": key,
-                "name": label,
+                "name": _VOTE_NAMES[tl][name_key],
                 "direction": _direction(score),
                 "score": round(score, 3),
-                "detail": detail,
+                "detail": _DETAIL_TEXT[tl][code].format(**values),
+                "detail_code": code,
+                "detail_values": values,
             }
         )
 
     rsi_v = snap.get("rsi")
     if rsi_v is not None:
+        r = round(rsi_v, 1)
         if rsi_v >= 70:
-            add("rsi", "RSI 14", -0.7, f"تشبع شراء ({rsi_v:.1f})")
+            add("rsi", "rsi", -0.7, "rsi_overbought", rsi=r)
         elif rsi_v <= 30:
-            add("rsi", "RSI 14", 0.7, f"تشبع بيع ({rsi_v:.1f})")
+            add("rsi", "rsi", 0.7, "rsi_oversold", rsi=r)
         elif rsi_v >= 55:
-            add("rsi", "RSI 14", 0.25, f"زخم إيجابي ({rsi_v:.1f})")
+            add("rsi", "rsi", 0.25, "rsi_bullish", rsi=r)
         elif rsi_v <= 45:
-            add("rsi", "RSI 14", -0.25, f"زخم سلبي ({rsi_v:.1f})")
+            add("rsi", "rsi", -0.25, "rsi_bearish", rsi=r)
         else:
-            add("rsi", "RSI 14", 0.0, f"محايد ({rsi_v:.1f})")
+            add("rsi", "rsi", 0.0, "rsi_neutral", rsi=r)
 
     if snap.get("ma_cross_up"):
-        add("ma", "تقاطع MA", 0.8, "تقاطع صاعد SMA سريع/بطيء")
+        add("ma", "ma_cross", 0.8, "ma_cross_up")
     elif snap.get("ma_cross_down"):
-        add("ma", "تقاطع MA", -0.8, "تقاطع هابط SMA سريع/بطيء")
+        add("ma", "ma_cross", -0.8, "ma_cross_down")
     else:
         sf, ss = snap.get("sma_fast"), snap.get("sma_slow")
         if sf is not None and ss is not None:
-            add(
-                "ma",
-                "اتجاه MA",
-                0.45 if sf > ss else -0.45,
-                f"سريع {sf:.5f} vs بطيء {ss:.5f}",
-            )
+            add("ma", "ma_trend", 0.45 if sf > ss else -0.45,
+                "ma_above" if sf > ss else "ma_below", fast=round(sf, dp), slow=round(ss, dp))
 
     if snap.get("macd_cross_up"):
-        add("macd", "MACD", 0.75, "تقاطع صاعد مع الإشارة")
+        add("macd", "macd", 0.75, "macd_cross_up")
     elif snap.get("macd_cross_down"):
-        add("macd", "MACD", -0.75, "تقاطع هابط مع الإشارة")
+        add("macd", "macd", -0.75, "macd_cross_down")
     else:
         m, ms = snap.get("macd"), snap.get("macd_signal")
         if m is not None and ms is not None:
-            add("macd", "MACD", 0.35 if m > ms else -0.35, f"خط {m:.5f} / إشارة {ms:.5f}")
+            # MACD فرق بين سعرين ⇒ بمنازل السعر نفسها
+            add("macd", "macd", 0.35 if m > ms else -0.35,
+                "macd_above" if m > ms else "macd_below", macd=round(m, dp), signal=round(ms, dp))
 
     # Bollinger-ish from recent std
     if len(closes) >= 20:
@@ -181,12 +237,12 @@ def indicator_forecast(
         std = math.sqrt(var) or 1e-9
         upper, lower = mid + 2 * std, mid - 2 * std
         if last >= upper:
-            add("bb", "بولنجر", -0.55, "قرب الحد العلوي")
+            add("bb", "bb", -0.55, "bb_upper")
         elif last <= lower:
-            add("bb", "بولنجر", 0.55, "قرب الحد السفلي")
+            add("bb", "bb", 0.55, "bb_lower")
         else:
             pos = (last - lower) / (upper - lower)
-            add("bb", "بولنجر", (0.5 - pos) * 0.6, f"موقع النطاق {pos:.0%}")
+            add("bb", "bb", (0.5 - pos) * 0.6, "bb_position", pos=round(pos * 100))
 
     # Stochastic approx from last 14 highs/lows if available
     if len(candles) >= 15:
@@ -196,28 +252,31 @@ def indicator_forecast(
         den = (hi - lo) or 1e-9
         k = (last - lo) / den * 100
         if k >= 80:
-            add("stoch", "Stochastic", -0.6, f"%K≈{k:.0f}")
+            score = -0.6
         elif k <= 20:
-            add("stoch", "Stochastic", 0.6, f"%K≈{k:.0f}")
+            score = 0.6
         else:
-            add("stoch", "Stochastic", (50 - k) / 80, f"%K≈{k:.0f}")
+            score = (50 - k) / 80
+        add("stoch", "stoch", score, "stoch_k", k=round(k))
 
     # Multi-bar trend
     if len(closes) >= 10:
         slope = (closes[-1] - closes[-10]) / (abs(closes[-10]) or 1)
-        add("trend", "ميل السعر", max(-1.0, min(1.0, slope * 40)), f"10 شموع · {slope * 100:.2f}%")
+        add("trend", "trend", max(-1.0, min(1.0, slope * 40)), "trend_slope", pct=round(slope * 100, 2))
 
     if not votes:
+        # لا صوت واحد ⇒ لا اتجاه ولا درجة (كان «محايد» و0.0 — ادّعاء بأن المؤشّرات لا ترى اتجاهاً)
         return {
             "symbol": sym,
             "mode": "indicators",
-            "direction": "neutral",
-            "avg_score": 0.0,
+            "direction": None,
+            "avg_score": None,
             "levels": None,
             "levels_basis": _trade_levels(last, "neutral", candles)[1],
             "votes": [],
             "snapshot": snap,
-            "disclaimer": "لا بيانات كافية للمؤشرات.",
+            "price_decimals": dp,
+            "disclaimer": _NO_DATA[tl],
         }
 
     avg = sum(v["score"] for v in votes) / len(votes)
@@ -237,5 +296,6 @@ def indicator_forecast(
             "change_pct": snap.get("change_pct"),
             "last": last,
         },
-        "disclaimer": "إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.",
+        "price_decimals": dp,
+        "disclaimer": _DISCLAIMER[tl],
     }

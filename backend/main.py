@@ -375,6 +375,8 @@ class IndicatorForecastBody(BaseModel):
     indicators: list[str] | None = Field(
         default=None, min_length=1, max_length=len(signal_hub.FORECAST_INDICATOR_IDS)
     )
+    # لغة نصّ `detail`/`name`/`disclaimer` (ar افتراضياً، en). كل صوت يحمل `detail_code` أيضاً.
+    lang: str | None = Field(default=None, max_length=10)
 
     @model_validator(mode="after")
     def _bounded(self) -> "IndicatorForecastBody":
@@ -1353,7 +1355,7 @@ def indicators_forecast(body: IndicatorForecastBody):
             "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
         }
     candles = [c.model_dump() for c in series.candles]
-    out = signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators)
+    out = signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators, lang=body.lang)
     out["data_kind"] = series.data_source.kind
     out["timeframe"] = series.timeframe
     return out
