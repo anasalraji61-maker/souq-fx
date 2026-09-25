@@ -142,6 +142,13 @@ assert.equal(pctDirection(0.004), 'flat');
 assert.equal(pctDirection(-0.004), 'flat');
 assert.equal(pctDirection(0.005), 'up'); // يُطبع +0.01%
 assert.equal(pctDirection(-0.006), 'down');
+// بطاقة الماسح (ToolsScreen) كانت تقرّب محلياً بـMath.round: ‎−0.005 ⇒ رمادي بجانب «−0.01%». الاتجاه والنصّ من التقريب نفسه
+for (const p of [-0.005, 0.005, -0.015, 0.125, -1.005]) {
+  const shown = formatPct(p);
+  assert.equal(pctDirection(p), shown === '0.00%' ? 'flat' : shown.startsWith('+') ? 'up' : 'down', String(p));
+}
+assert.equal(formatPct(-0.005), '−0.01%');
+assert.equal(pctDirection(-0.005), 'down');
 assert.equal(pctDirection(0.23), 'up');
 assert.equal(pctDirection(-1.5), 'down');
 assert.equal(pctDirection(NaN), 'flat');

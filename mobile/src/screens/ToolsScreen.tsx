@@ -33,7 +33,7 @@ import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
-import { formatPct, isVerifiedTickKind } from '../chart/dailyChange';
+import { formatPct, isVerifiedTickKind, pctDirection } from '../chart/dailyChange';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { isFreshTick } from '../chart/dataSource';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
@@ -776,13 +776,23 @@ export function ToolsScreen() {
               const pct =
                 typeof r.change_pct === 'number' && Number.isFinite(r.change_pct) ? r.change_pct : null;
               /**
-               * الاتجاه من **الرقم المطبوع** لا من الخام: اللون يُشتقّ من حاصل تقريب `formatPct`
-               * نفسه، فلا يخالف ما يُقرأ أبداً. العتبة الناتجة 0.005 — قاعدة «ثابت» بـ`dailyChange`
-               * نفسها. (الشرح الكامل بـ`ScreenerMini`، واللوحتان تعرضان نتائج الماسح نفسه.)
+               * الاتجاه من **الرقم المطبوع** لا من الخام: `pctDirection` يقرّب كـ`formatPct` حرفاً بحرف. كان
+               * `Math.round(pct * 100)` محلياً — ‎−0.005 يُطبع «−0.01%» (`round2` بعيداً عن الصفر) واللون رمادي.
                */
-              const pctRounded = pct == null ? null : Math.round(pct * 100) / 100;
-              const pctDir =
-                pctRounded == null || pctRounded === 0 ? 'flat' : pctRounded > 0 ? 'up' : 'down';
+              const pctDir = pctDirection(pct);
+              const pctText = pct != null ? formatPct(pct) : '—';
+              const filtersText = r.filters_matched.map(filterLabel).join(' · ');
+              // التسمية تحلّ محلّ نصوص البطاقة كلها: كانت «افتح الشارت: EURUSD 15m» — بلا السعر وRSI والنسبة والمرشّحات
+              // التي وُجدت البطاقة لأجلها
+              const cardA11y = [
+                `${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`,
+                formatPrice(r.last, r.symbol),
+                `RSI ${r.rsi}`,
+                `${pctText} ${t.screenerChangeSpan}`,
+                filtersText,
+              ]
+                .filter(Boolean)
+                .join(', ');
               return {
                 id: r.symbol,
                 node: (
@@ -796,7 +806,7 @@ export function ToolsScreen() {
                       },
                     ]}
                     onPress={() => openOnChart(r.symbol)}
-                    accessibilityLabel={`${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`}
+                    accessibilityLabel={cardA11y}
                   >
                     <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
                     <Text style={[styles.meta, { textAlign: align }]}>
@@ -810,12 +820,12 @@ export function ToolsScreen() {
                           pctDir === 'down' && styles.hitPctDown,
                         ]}
                       >
-                        {pct != null ? formatPct(pct) : '—'}
+                        {pctText}
                       </Text>{' '}
                       <Text style={styles.match}>{t.screenerChangeSpan}</Text>
                     </Text>
                     <Text style={[styles.match, { textAlign: align }]}>
-                      {r.filters_matched.map(filterLabel).join(' · ')}
+                      {filtersText}
                     </Text>
                   </Pressable>
                 ),
