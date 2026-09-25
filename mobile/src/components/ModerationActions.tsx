@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ReportKind, type ReportReason } from '../api';
-import { useBlockedUsers } from '../moderation';
+import { canBlockAuthor, useBlockedUsers } from '../moderation';
+import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 
 /**
@@ -27,6 +28,8 @@ export function ModerationActions({
 }) {
   const { t, rtl } = useI18n();
   const { block } = useBlockedUsers();
+  const { user } = useAuth();
+  const showBlock = canBlockAuthor(author, user?.username);
   const [busy, setBusy] = useState(false);
   const align = rtl ? ('right' as const) : ('left' as const);
 
@@ -107,7 +110,7 @@ export function ModerationActions({
         ))}
       </View>
       <View style={[styles.row, rtl && styles.rowRtl]}>
-        {author ? (
+        {author && showBlock ? (
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ disabled: busy }}

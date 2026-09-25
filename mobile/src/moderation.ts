@@ -25,6 +25,16 @@ const listeners = new Set<(list: string[]) => void>();
 const norm = (name: string) => name.trim().toLowerCase();
 
 /**
+ * زر «احظر {الاسم}» يُعرض؟ لا لعنصر مجهول ولا **لعنصر المتداول نفسه**: «⋯» يظهر على فكرته أيضاً فكان
+ * «احظر {اسمي}» يُخفي كل أفكاره حتى «إلغاء حظر الكل» (الذي يُلغي حظر الجميع معه). المقارنة مطبَّعة (`norm`)
+ * كما `isBlocked`: حظر «Ali» يُخفي «ali» أيضاً، فمن اسمه «ali» يُخفي نفسه بحظر «Ali».
+ */
+export function canBlockAuthor(author: string | null | undefined, me: string | null | undefined): boolean {
+  if (!author || !norm(author)) return false;
+  return !me || norm(me) !== norm(author);
+}
+
+/**
  * القائمة كما تُقرأ من القرص → أسماء مطبَّعة (`norm`) بلا فراغ ولا تكرار، آخر `MAX_BLOCKED` منها.
  * `isBlocked` يقارن بالاسم **مطبَّعاً**، فاسمٌ محفوظ بحروف كبيرة أو بمسافة (تعديل يدوي، نسخة احتياطية،
  * إصدار لاحق يكتب بشكل آخر) كان يبقى بالقائمة ولا يُحظر أبداً — وحظره ثانيةً يُضيف نسخة ثانية.

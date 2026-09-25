@@ -17,7 +17,7 @@ const origLoad = M._load;
 M._load = (req: string, ...rest: unknown[]) => (req in stubs ? stubs[req] : origLoad(req, ...rest));
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { sanitizeBlocked } = require('./moderation') as typeof import('./moderation');
+const { sanitizeBlocked, canBlockAuthor } = require('./moderation') as typeof import('./moderation');
 
 // الأسماء تُطبَّع كما يطبّعها isBlocked/block: حروف صغيرة بلا مسافات طرفية
 assert.deepEqual(sanitizeBlocked(['Ahmed', '  spam_bot ', 'x']), ['ahmed', 'spam_bot', 'x']);
@@ -27,6 +27,13 @@ assert.deepEqual(sanitizeBlocked(['ahmed', 'AHMED', ' Ahmed', 'b']), ['ahmed', '
 assert.deepEqual(sanitizeBlocked(['a', 1, null, { n: 'b' }, '   ', '', 'c']), ['a', 'c']);
 // ليس مصفوفة ⇒ قائمة فارغة
 for (const bad of [null, undefined, 'ahmed', 42, { 0: 'a' }]) assert.deepEqual(sanitizeBlocked(bad), []);
+// زر الحظر: لا لعنصري ولا لمجهول؛ المقارنة مطبَّعة كـisBlocked (حظر «Ali» يُخفي «ali»)
+assert.equal(canBlockAuthor('spammer', 'me'), true);
+assert.equal(canBlockAuthor('spammer', null), true); // غير مسجَّل: لا «أنا» يُخفى
+assert.equal(canBlockAuthor('Me', 'me'), false);
+assert.equal(canBlockAuthor(' me ', 'me'), false);
+assert.equal(canBlockAuthor(null, 'me'), false);
+assert.equal(canBlockAuthor('   ', 'me'), false);
 // سقف 500: الأحدث (آخر القائمة) يبقى
 const many = Array.from({ length: 520 }, (_, i) => `User${i}`);
 const capped = sanitizeBlocked(many);
