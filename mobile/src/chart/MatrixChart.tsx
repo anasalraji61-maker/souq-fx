@@ -5705,7 +5705,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (Math.abs(dy) < ALERT_DRAG_SLOP) return;
     const price = alertDragPrice(dy);
     if (!(price > 0) || price === al.price) return;
-    void moveArmedAlert(al.id, price, alertDirection(price, al.condition));
+    // الفشل (خادم أقدم بلا PATCH، تنبيه حُذف، انقطاع) يعيد الخطّ لمكانه — فنقول ذلك بدل قفزة صامتة.
+    const was = fmtPrice(al.price);
+    void moveArmedAlert(al.id, price, alertDirection(price, al.condition)).then((ok) => {
+      if (!ok) notify('MATRIX', tr.mcAlertMoveFailed.replace('{price}', was));
+    });
   };
   // الترند/الشعاع المحدَّد: سعره عند الشمعة الحيّة وبُعد السعر عنه («1.08520 · −6.2 pip») — يُلحق
   // بقراءته، فمنتظر الكسر يعرف كم بقي بلا جرّ التقاطع إلى الخطّ.
