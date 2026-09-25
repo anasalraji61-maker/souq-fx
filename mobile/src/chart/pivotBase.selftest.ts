@@ -158,4 +158,25 @@ assert.equal(pivotLabelRank('??'), 5);
   assert.equal(currentSessionOpenAfter(ms, ms[2]), 1.105);
 }
 
+// 4H صيفاً (حدّ 21:00 UTC) بمحاذاة UTC: شمعة 20:00 لليوم الجديد (بزمن فتحها كانت PDH/PDL بين 21:00 و24:00
+// مستويات ما قبل الأمس، وتسقط قمّة ما بعد الحدّ منها).
+{
+  const H4 = 4 * H;
+  const t0 = Date.UTC(2026, 8, 21, 0) / 1000; // الإثنين 00:00 UTC
+  const c4: Candle[] = [];
+  for (let k = 0; k < 12; k++) c4.push(bar(t0 + k * H4, 1.1, 1.1 + 0.001 * k, 1.09 - 0.001 * k, 1.1 + 0.0001 * k));
+  // آخر شمعة الثلاثاء 20:00 ⇒ جلستها بدأت الثلاثاء 21:00؛ السابقة: الإثنين 20:00 .. الثلاثاء 16:00 (6 شموع، k=5..10)
+  const prev = prevDayFromIntraday(c4, 'EURUSD', H4)!;
+  assert.equal(prev.time, Date.UTC(2026, 8, 21, 21) / 1000);
+  assert.equal(prev.open, c4[5].open);
+  assert.equal(prev.high, c4[10].high);
+  assert.equal(prev.close, c4[10].close);
+  // بلا خطوة (السلوك القديم) ⇒ «اليوم» الثلاثاء 00:00..20:00 والسابقة تبدأ مع أوّل شمعة ⇒ ناقصة ⇒ null
+  assert.equal(prevDayFromIntraday(c4, 'EURUSD'), null);
+  assert.equal(currentSessionOpen(c4, 'EURUSD', H4), c4[11].open);
+  const secs = c4.map((c) => c.time);
+  assert.equal(pivotSessionStartIndex(secs, secs[11], 'EURUSD', H4), 11);
+  assert.equal(pivotSessionStartIndex(secs, secs[10], 'EURUSD', H4), 5);
+}
+
 console.log('pivotBase.selftest: PASS');

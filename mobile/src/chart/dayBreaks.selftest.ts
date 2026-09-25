@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { planDayBreaks } from './dayBreaks';
-import { tradingDayStartSec } from './marketHours';
+import { barTradingDaySec, tradingDayStartSec } from './marketHours';
 
 const utc = (s: string) => Date.parse(s) / 1000;
 
@@ -42,6 +42,28 @@ assert.equal(tradingDayStartSec('btcusd', utc('2026-09-24T03:00:00Z')), utc('202
   assert.ok(planDayBreaks(h4.slice(0, 60), 14400, 'EURUSD', 320).length > 0); // 32px ⇒ تظهر
   assert.deepEqual(planDayBreaks([utc('2026-09-23T10:00:00Z')], 3600, 'EURUSD', 600), []);
   assert.deepEqual(planDayBreaks([NaN, utc('2026-09-23T22:00:00Z')], 3600, 'EURUSD', 600), []);
+}
+
+// 4H بمحاذاة UTC: الشمعة ليوم معظم ساعاتها المفتوحة
+{
+  const H4 = 14400;
+  // صيفاً (حدّ 21:00): 20:00–24:00 ثلاث ساعات لليوم الجديد
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-09-23T20:00:00Z'), H4), utc('2026-09-23T21:00:00Z'));
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-09-23T16:00:00Z'), H4), utc('2026-09-22T21:00:00Z'));
+  // بلا خطوة ⇒ زمن الفتح كما كان
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-09-23T20:00:00Z')), utc('2026-09-22T21:00:00Z'));
+  // شتاءً (حدّ 22:00): ساعتان وساعتان ⇒ الجديد
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-01-14T20:00:00Z'), H4), utc('2026-01-14T22:00:00Z'));
+  // 1H لا يتغيّر (الحدّ على رأس الساعة)
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-09-23T20:00:00Z'), 3600), utc('2026-09-22T21:00:00Z'));
+  // الجمعة 20:00 (ساعة قبل الإغلاق، الباقي عطلة) ⇒ الجمعة؛ الأحد 20:00 (افتتاح 21:00) ⇒ جلسة الأحد
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-09-25T20:00:00Z'), H4), utc('2026-09-24T21:00:00Z'));
+  assert.equal(barTradingDaySec('EURUSD', utc('2026-09-27T20:00:00Z'), H4), utc('2026-09-27T21:00:00Z'));
+  // الكريبتو: منتصف ليل UTC، 4H محاذاة عليه
+  assert.equal(barTradingDaySec('BTCUSD', utc('2026-09-23T20:00:00Z'), H4), utc('2026-09-23T00:00:00Z'));
+  // الفاصل صيفاً قبل شمعة 20:00 لا بعدها (كان عند 00:00)
+  const h4 = Array.from({ length: 12 }, (_, k) => utc('2026-09-22T00:00:00Z') + k * H4);
+  assert.deepEqual(planDayBreaks(h4, H4, 'EURUSD', 600), [5, 11]);
 }
 
 console.log('dayBreaks.selftest: PASS');

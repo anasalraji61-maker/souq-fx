@@ -13,16 +13,19 @@
  */
 import type { Candle } from '../api';
 import { candleTimeSec } from './dataSource';
-import { tradingDayStartSec } from './marketHours';
+import { barTradingDaySec } from './marketHours';
 
-/** الجلسة السابقة مجمَّعة من شموع داخل اليوم (بأي ترتيب)؛ null إن لم تكتمل بالسلسلة. */
-export function prevDayFromIntraday(candles: readonly Candle[], symbol: string): Candle | null {
+/**
+ * الجلسة السابقة مجمَّعة من شموع داخل اليوم (بأي ترتيب)؛ null إن لم تكتمل بالسلسلة. `stepSec` (خطوة الفريم)
+ * ⇒ الشمعة لليوم الذي يحوي معظمها (`barTradingDaySec`: 4H 20:00 UTC صيفاً لليوم الجديد)؛ بدونه زمن فتحها.
+ */
+export function prevDayFromIntraday(candles: readonly Candle[], symbol: string, stepSec?: number): Candle | null {
   if (!Array.isArray(candles) || candles.length < 2) return null;
   const sorted = candles
     .filter((c) => c && Number.isFinite(c.time))
     .sort((a, b) => a.time - b.time);
   if (sorted.length < 2) return null;
-  const dayOf = (t: number) => tradingDayStartSec(symbol, candleTimeSec(t));
+  const dayOf = (t: number) => barTradingDaySec(symbol, candleTimeSec(t), stepSec);
   const lastDay = dayOf(sorted[sorted.length - 1].time);
   let end = sorted.length - 1;
   while (end >= 0 && dayOf(sorted[end].time) === lastDay) end--;
@@ -73,13 +76,13 @@ export function pivotInput(prev: Candle | null, currOpen?: number | null): Candl
 
 /**
  * افتتاح الجلسة الجارية (جلسة آخر شمعة) من شموع داخل اليوم — Woodie يبني محوره عليه. null إن بدأت السلسلة
- * بعد افتتاح الجلسة (أوّل شمعة معروضة ليست الافتتاح الحقيقي).
+ * بعد افتتاح الجلسة (أوّل شمعة معروضة ليست الافتتاح الحقيقي). `stepSec` كما بـ`prevDayFromIntraday`.
  */
-export function currentSessionOpen(candles: readonly Candle[], symbol: string): number | null {
+export function currentSessionOpen(candles: readonly Candle[], symbol: string, stepSec?: number): number | null {
   if (!Array.isArray(candles) || candles.length === 0) return null;
   const sorted = candles.filter((c) => c && Number.isFinite(c.time)).sort((a, b) => a.time - b.time);
   if (!sorted.length) return null;
-  const dayOf = (t: number) => tradingDayStartSec(symbol, candleTimeSec(t));
+  const dayOf = (t: number) => barTradingDaySec(symbol, candleTimeSec(t), stepSec);
   const lastDay = dayOf(sorted[sorted.length - 1].time);
   let start = sorted.length - 1;
   while (start > 0 && dayOf(sorted[start - 1].time) === lastDay) start--;
@@ -132,16 +135,18 @@ export function pivotLabelRank(label: string): number {
  * - `0` ⇒ الجلسة بدأت قبل النافذة (بعرض اللوح كلّه).
  * - `timesSec.length` ⇒ النافذة كلّها قبل الجلسة (المتداول سحب للخلف) ⇒ لا خطوط.
  * - `-1` ⇒ مدخل غير صالح ⇒ يتصرّف المستدعي كما كان (بعرض اللوح).
+ * `stepSec` ⇒ نسبة الشمعة ليومها كـ`prevDayFromIntraday` (4H العابرة للحدّ أوّل الجلسة الجديدة).
  */
 export function pivotSessionStartIndex(
   timesSec: readonly number[],
   lastSec: number,
-  symbol: string
+  symbol: string,
+  stepSec?: number
 ): number {
   if (!Array.isArray(timesSec) || timesSec.length === 0 || !Number.isFinite(lastSec)) return -1;
-  const session = tradingDayStartSec(symbol, lastSec);
+  const session = barTradingDaySec(symbol, lastSec, stepSec);
   for (let i = 0; i < timesSec.length; i++) {
-    if (Number.isFinite(timesSec[i]) && timesSec[i]! >= session) return i;
+    if (Number.isFinite(timesSec[i]) && barTradingDaySec(symbol, timesSec[i]!, stepSec) >= session) return i;
   }
   return timesSec.length;
 }

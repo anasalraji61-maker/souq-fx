@@ -157,7 +157,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { chartPipSpec } from './pipSpec';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
-import { projectBarTimeSec, tradingDayStartSec } from './marketHours';
+import { barTradingDaySec, projectBarTimeSec } from './marketHours';
 import { planSessionRuns, type SessionId } from './sessions';
 import { formatPct, pctDirection, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyCurrOpen, useDailyPrevBar } from './dailyRefStore';
@@ -2021,13 +2021,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const pivotBars = useMemo(() => {
     if (!anyPivot) return null;
     const candles = candlesThrough(series.candles ?? [], replayCutSec);
-    const intraday = timeframeStepSec(series.timeframe) < 86400;
+    const step = timeframeStepSec(series.timeframe);
+    const intraday = step < 86400;
     // داخل اليوم: الجلسة المجمَّعة بحدّ 17:00 نيويورك **أوّلاً** — هو يوم منصّات MT4/MT5 (خوادم
     // GMT+2/+3). شموع D1 من المزوّد بيوم UTC، فكانت PDH/PDL تقفز بين حدّين حسب نجاح جلبها؛ الآن D1
     // احتياط فقط حين لا تغطّي السلسلة الجلسة السابقة كاملة (مثلاً 1m بـ180 شمعة).
-    const fromIntraday = intraday ? validSessionBar(prevDayFromIntraday(candles, series.symbol)) : null;
+    const fromIntraday = intraday ? validSessionBar(prevDayFromIntraday(candles, series.symbol, step)) : null;
     // افتتاح الجلسة الجارية لمحور Woodie. D/W: شمعة D1 التالية للسابقة (مخزن D1) — كان إغلاق السابقة دائماً.
-    const currOpen = intraday ? currentSessionOpen(candles, series.symbol) : null;
+    const currOpen = intraday ? currentSessionOpen(candles, series.symbol, step) : null;
     if (fromIntraday) return pivotInput(fromIntraday, currOpen);
     const fromDaily = seriesDemo || replayCutSec != null ? null : validSessionBar(dailyPrevBar);
     if (fromDaily) return pivotInput(fromDaily, intraday ? currOpen : dailyCurrOpen);
@@ -2528,13 +2529,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // محمَّلة: على 15m بعد أيام يصير متوسطاً شبه ثابت بعيداً عن السعر، ويتغيّر مع كل تحميل تاريخ إضافي.
   // اليومي فأكبر: كل شمعة جلسة (Anchor = Session كـTradingView) ⇒ VWAP = (H+L+C)/3 للشمعة — كان تراكماً
   // مستمراً من أوّل شمعة محمَّلة يتغيّر مع تحميل تاريخ إضافي. `barTime` ⇒ زمن الشمعة المصدر للّبنات.
-  const vwapIntraday = timeframeStepSec(series.timeframe) < 86400;
+  const vwapStep = timeframeStepSec(series.timeframe);
+  const vwapIntraday = vwapStep < 86400;
   const vwapSessionOf = useMemo(
     () =>
       vwapIntraday
-        ? (c: Candle) => tradingDayStartSec(series.symbol, candleTimeSec(barTime(c)))
+        ? (c: Candle) => barTradingDaySec(series.symbol, candleTimeSec(barTime(c)), vwapStep)
         : (c: Candle) => candleTimeSec(barTime(c)),
-    [series.symbol, vwapIntraday]
+    [series.symbol, vwapIntraday, vwapStep]
   );
   const vwap = useMemo(
     () => (indicators.includes('vwap') ? ind(computeVwap(indBars, vwapSessionOf)) : null),
@@ -5569,7 +5571,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const i = pivotSessionStartIndex(
       source.plot.map((b) => candleTimeSec(barTime(b))),
       candleTimeSec(barTime(lastAll)),
-      series.symbol
+      series.symbol,
+      timeframeStepSec(series.timeframe)
     );
     if (i >= source.plot.length) pivotStartX = Infinity;
     else if (i > 0) pivotStartX = Math.max(0, (xOf(i - 1) + xOf(i)) / 2);

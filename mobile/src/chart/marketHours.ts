@@ -201,6 +201,26 @@ export function tradingDayStartSec(symbol: string, sec: number): number {
   return sec >= today ? today : nyFivePmUtcSec(dayStart - DAY_SEC);
 }
 
+/**
+ * يوم التداول الذي تُنسب إليه شمعة تبدأ عند `openSec` بطول `stepSec` — بالجزء **الأكبر** من ساعات
+ * سوقها المفتوحة، لا بزمن فتحها. شمعة 4H من Twelve Data (محاذاة 00/04/…/20 UTC) تعبر حدّ 17:00
+ * نيويورك: 20:00–24:00 صيفاً ثلاث ساعات منها لليوم الجديد، فكانت تُنسب للقديم ⇒ بين 21:00 و24:00
+ * UTC الارتكاز وPDH/PDL وفاصل اليوم على 4H مستويات الأمس بينما 1H صحيحة. جزء بعطلة الأسبوع لا يُحسب:
+ * شمعة الجمعة 20:00 (ساعة واحدة قبل الإغلاق) تبقى للجمعة، وشمعة الأحد 20:00 (افتتاح 21:00) للأحد.
+ * تعادل ⇒ اليوم الجديد. `stepSec` غير صالح أو يومي فأكبر أو كريبتو ⇒ `tradingDayStartSec(openSec)`.
+ */
+export function barTradingDaySec(symbol: string, openSec: number, stepSec?: number): number {
+  const own = tradingDayStartSec(symbol, openSec);
+  if (!(stepSec != null && stepSec > 0 && stepSec < DAY_SEC) || isCryptoSymbol(symbol)) return own;
+  const end = openSec + stepSec;
+  const next = tradingDayStartSec(symbol, end - 1);
+  if (next <= openSec) return own;
+  const before = inForexWeekend(openSec) ? 0 : next - openSec;
+  const after = inForexWeekend(next) ? 0 : end - next;
+  if (before === 0 && after === 0) return own;
+  return after >= before ? next : own;
+}
+
 /** بداية شمعة الفوركس بعطلة نهاية الأسبوع (من إغلاق الجمعة حتى افتتاح الأحد)؟ العطل لا تُحسب. */
 function inForexWeekend(sec: number): boolean {
   const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;

@@ -151,7 +151,8 @@ export function headerChangePct(
 export function replayPrevClose(series: ChartSeries, cutSec: number | null | undefined): number | null {
   if (cutSec == null || !Number.isFinite(cutSec)) return null;
   const upTo = candlesThrough(series.candles, cutSec);
-  if (timeframeStepSec(series.timeframe) < 86400) return prevDayFromIntraday(upTo, series.symbol)?.close ?? null;
+  const step = timeframeStepSec(series.timeframe);
+  if (step < 86400) return prevDayFromIntraday(upTo, series.symbol, step)?.close ?? null;
   const prev = upTo.length >= 2 ? upTo[upTo.length - 2]!.close : null;
   return prev != null && Number.isFinite(prev) && prev > 0 ? prev : null;
 }
