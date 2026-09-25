@@ -57,6 +57,13 @@ eq('USDJPY-CENT', chartPipSpec('USDJPY-CENT')?.symbol, 'USDJPY');
 eq('GBPJPY_MICRO', chartPipSpec('GBPJPY_MICRO')?.symbol, 'GBPJPY');
 eq('USDJPYMICRO 3 decimals', formatPrice(150.1234, 'USDJPYMICRO'), '150.123');
 eq('BTCUSDMICRO', chartPipSpec('BTCUSDMICRO'), null);
+// حساب mini بكل فاصل (QA44/tools62)
+eq('EURUSD-MINI', chartPipSpec('EURUSD-MINI')?.symbol, 'EURUSD');
+eq('USDJPY_MINI pip', chartPipSpec('USDJPY_MINI')?.pipSize, 0.01);
+eq('GOLD_MINI', chartPipSpec('GOLD_MINI')?.symbol, 'XAUUSD');
+eq('EURUSD.mini', chartPipSpec('EURUSD.mini')?.symbol, 'EURUSD');
+eq('USDJPY-MINI 3 decimals', formatPrice(150.1234, 'USDJPY-MINI'), '150.123');
+eq('BTCUSD-MINI', chartPipSpec('BTCUSD-MINI'), null);
 if (fail) {
   console.log(`pipSpec: ${fail} FAIL`);
   process.exit(1);

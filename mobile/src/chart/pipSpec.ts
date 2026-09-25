@@ -8,7 +8,7 @@
  * واحد بحساب السنت — ما يختلف حجم العقد، ولا يقرؤه الشارت. «BTCUSDC» (عملة مستقرّة) تبقى بلا مواصفة لأن
  * «BTCUSD» نفسها بلا مواصفة.
  */
-import { instrumentSpec, smallContractPair, type InstrumentSpec } from '../positionSize';
+import { instrumentSpec, miniAccountSymbol, smallContractPair, type InstrumentSpec } from '../positionSize';
 
 export function chartPipSpec(symbol: string): InstrumentSpec | null {
   const direct = instrumentSpec(symbol);
@@ -29,5 +29,10 @@ export function chartPipSpec(symbol: string): InstrumentSpec | null {
   // تُرفض أعلاه، لكن «MICRO»/«CENT» بفاصل أو بلا فاصل لا تكون اسم أداة أخرى — الحاسبة والدفتر يقرآنها كذلك
   // (`smallContractPair`)، فكان صفّ الصفقة وتأكيد الإغلاق يطبعان 150.12 بدل 150.123.
   const small = smallContractPair(t);
-  return small ? instrumentSpec(small) : null;
+  if (small) return instrumentSpec(small);
+  // حساب mini بفاصل كبير («EURUSD-MINI»، «USDJPY_MINI»، «GOLD_MINI» كما يحفظها الدفتر): `instrumentSpec` يرفضها عمداً
+  // (لوت mini يختلف بين الوسطاء) والنقطة وحدها كانت تُقبل أعلاه ⇒ «USDJPY-MINI» تُطبع 150.12 وبلا pip. السعر والـpip
+  // كالزوج العادي، والمال لا يقرؤه الشارت.
+  const mini = miniAccountSymbol(t);
+  return mini ? instrumentSpec(mini) : null;
 }
