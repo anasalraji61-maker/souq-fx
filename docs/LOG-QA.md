@@ -494,6 +494,8 @@ tools61 وlaunch94 ردّ فقط.
 **إلحاق (تعارض دمج على COORDINATION):** وصل chart 56 (`e216316`) بثلاثة صفوف chart-r56، وtools `6ef8432` بإصلاح (1)(2). تحقّقتُ بالكود:
 (1)(2) أُغلقا (`TerminalScreen.tsx` `key="single"`، `:201` `cachedSeries`، `:671` `allSettled`)؛ (3) مفتوح لـui+tools (`AlertsPanel.tsx:294`، `WatchlistPanel.tsx:385`
 `instrumentSpec`)؛ Mass Index ← أنس (⛔17). أعدتُ البناء والـselftests على 6ef8432: أخضر 0، 101/101.
+**إلحاق 2:** وصل backend 35 (`92d6edf`، `e4abf4d` — `backend/` فقط، لا أثر على tsc) بصفّ backend-r35 (TTS بلا مصادقة) — تحقّقتُ: `main.py:1633` `academy_tts(body)` بلا `Depends`،
+و`LectureClassroom.tsx:255` يستدعيه مجهولاً ⇒ ⛔18 بـSTATUS.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
 **إلحاق بعد الدفع:** وصلت `49c42a5` (launch: البندان 4–5 الكرديان بـ`reportFallbackAdvice` يطابقان ar/en) ⇒ ملاحظة QA42 المنخفضة مُغلقة. البناء أخضر 0 بعدها.
 
@@ -559,6 +561,8 @@ launch99 (a): `openCurrencyExposure` (`tradePlan.ts:1707`) بلا مستعمل �
 chart33 بنود ذاتية.
 **المراجعة (c — a11y)، diff منذ f80d388 + `9b1c2ba`:** `AppErrorBoundary` (زرّ «إعادة المحاولة» باسم، `alert`/`header`، سطر `selectable`) سليم.
 **جديد QA48 → launch+chart (منخفض):** شريحة عدد Line Break `accessibilityLabel={`${k.label} ${lineBreakCount} → …`}` حرفي كشريحة ZigZag ⇒ دُمج بصفّ tools63.
+**إلحاق 2:** وصل backend 35 (`92d6edf`، `e4abf4d` — `backend/` فقط، لا أثر على tsc) بصفّ backend-r35 (TTS بلا مصادقة) — تحقّقتُ: `main.py:1633` `academy_tts(body)` بلا `Depends`،
+و`LectureClassroom.tsx:255` يستدعيه مجهولاً ⇒ ⛔18 بـSTATUS.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
 **إلحاق (تعارض دمج مع 452960a):** وصلت أثناء الدورة `6fee41e` (launch: «الفاصل» ⇒ طلب tools65 مُنجز قبل أن أرفعه)، `aea854c` (chart: `mcZigzagDevA11y` موصول)،
 `b08a1da` (chart: `RECONNECT_*` مُصدَّران)، `0faf734` (launch: `mcLineBreakCountA11y` = بندي QA48 نفسه ⇒ صفّ launch101)، `d17d255` (tools: QA41 مُغلق)، و`452960a`
@@ -849,4 +853,6 @@ launch130 ← ui `aed77b9` (`LectureClassroom.tsx:435-436`). لا طلب جدي�
 **المراجعة (c — `accessibilityLabel`):** سكربت على `Pressable/Touchable*/Switch/TextInput` (مع `placeholder` كوصف للخانة): 8 بقايا كلها كاذبة —
 6 `useRef<TextInput>`، `TradeJournalPanel.tsx:2033` (label `:2048`)، `MessagesScreen.tsx:179` (launch52). فحص ثانٍ: لا `Pressable` ابنه نصّ رمزي فقط (✕/↕) بلا label. **لا بند.**
 STATUS: ⛔6 حُدّث (مصدرا الأخبار ميّتان)، وأُضيفت 4 بنود جهاز (تبديل الرمز، ↕ على US30، عمولة السنت، لوحة الأخبار).
+**إلحاق 2:** وصل backend 35 (`92d6edf`، `e4abf4d` — `backend/` فقط، لا أثر على tsc) بصفّ backend-r35 (TTS بلا مصادقة) — تحقّقتُ: `main.py:1633` `academy_tts(body)` بلا `Depends`،
+و`LectureClassroom.tsx:255` يستدعيه مجهولاً ⇒ ⛔18 بـSTATUS.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
