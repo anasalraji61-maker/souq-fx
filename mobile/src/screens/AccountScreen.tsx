@@ -29,11 +29,6 @@ import { confirmDestructive } from '../chart/confirmDestructive';
 
 type SideId = 'left' | 'right';
 
-/** `authSessionExpired` مطلوب من launch (COORDINATION ui53) — يُقرأ اختيارياً حتى يصل. */
-function sessionExpiredText(t: object): string | undefined {
-  return (t as { authSessionExpired?: string }).authSessionExpired;
-}
-
 export function AccountScreen() {
   const { user, loading, login, register, logout, deleteAccount, sessionExpired } = useAuth();
   const { t, lang, setLang, langs, rtl } = useI18n();
@@ -352,14 +347,14 @@ export function AccountScreen() {
       {!user ? (
         <View style={styles.card}>
           {/* backend-r52: الجلسة المحفوظة رفضها الخادم فمُسحت — سبب ظهور نموذج الدخول بدل الحساب.
-              النصّ من القاموس فقط (لا نصّ ثابت بلغة واحدة)؛ قبل وصول المفتاح لا يظهر السطر. */}
-          {sessionExpired && sessionExpiredText(t) ? (
+              النصّ من القاموس فقط (لا نصّ ثابت بلغة واحدة). */}
+          {sessionExpired ? (
             <Text
               style={[styles.expired, { textAlign: align }]}
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
             >
-              {sessionExpiredText(t)}
+              {t.sessionExpired}
             </Text>
           ) : null}
           <View style={[styles.tabs, rtl && styles.tabsRtl]}>
