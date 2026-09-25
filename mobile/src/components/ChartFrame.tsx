@@ -424,7 +424,20 @@ export function ChartFrame({
           {/* الهاتف: إطار بعرض 48% (~135pt) ورأس بسطر واحد لا يلتفّ — «B 1.08540 · A 1.08550 · 0.9 pips»
               (~165pt) كان أعرض من الإطار كلّه فيقصّ النسبة وزرّ ملء الشاشة ويُسحق اسم الزوج. السبريد بالـpip وحده. */}
           {hasSpread && !((quoteStale || phone) && spreadPips == null) ? (
-            <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
+            <Text
+              style={styles.spreadTag}
+              // launch111: وسم ثابت كان يحلّ محلّ النصّ ⇒ VoiceOver «سبريد البيع والشراء» بلا رقم. يُقرأ ما يظهر فقط.
+              accessibilityLabel={[
+                quoteStale || phone
+                  ? null
+                  : t.cfSpreadBidAskA11y
+                      .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, series.last))
+                      .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, series.last)),
+                spreadPips != null ? t.cfSpreadPipsA11y.replace('{pips}', spreadPips.toFixed(1)) : null,
+              ]
+                .filter(Boolean)
+                .join(rtl ? '، ' : ', ')}
+            >
               {quoteStale || phone
                 ? ''
                 : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
