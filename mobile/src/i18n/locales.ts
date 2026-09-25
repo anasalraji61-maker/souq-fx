@@ -1036,6 +1036,8 @@ export type Dict = {
   mcLogScaleA11y: string;
   /** قارئ الشاشة لزرّ مقياس النسبة المئوية («%» ظاهر) — كـTradingView: التغيّر من أول شمعة ظاهرة؛ مُعَدّ لطلب chart run 26، غير موصول */
   mcPercentScaleA11y: string;
+  /** شريحة انحراف ZigZag (`2973909`) — بدل «ZigZag 5% → 10%» الحرفي الذي يقرأ السهم؛ `{pct}` الحالي و`{next}` التالي بالدورة */
+  mcZigzagDevA11y: string;
   /**
    * زرّ لون الرسم المحدَّد (`85dcbf6`، بدل `drawColorLabels` المؤقّتة بـ`typeLabels.ts`): الكلمة تحت الأيقونة، والوصف يسمّي اللون الحالي
    * `{color}` ← `mcColorNames[i]` بترتيب `drawPalette` (تمييز الإطار، أخضر، أحمر، برتقالي، أزرق، أبيض) — فلا تبقى الحالة لونية فقط
@@ -2129,6 +2131,7 @@ const ar: Dict = {
   mcShowDrawings: 'إظهار الرسوم',
   mcLogScaleA11y: 'مقياس لوغاريتمي للسعر',
   mcPercentScaleA11y: 'مقياس النسبة المئوية: التغيّر من أول شمعة ظاهرة',
+  mcZigzagDevA11y: 'انحراف ZigZag {pct}% — اضغط للتبديل إلى {next}%',
   mcDrawColorWord: 'لون',
   mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
   mcCloneDrawing: 'نسخة',
@@ -3229,6 +3232,7 @@ const enUS: Dict = {
   mcShowDrawings: 'Show drawings',
   mcLogScaleA11y: 'Logarithmic price scale',
   mcPercentScaleA11y: 'Percentage scale: change from the first visible candle',
+  mcZigzagDevA11y: 'ZigZag deviation {pct}% — tap to switch to {next}%',
   mcDrawColorWord: 'Color',
   mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
   mcCloneDrawing: 'Clone',
@@ -4354,6 +4358,7 @@ const ku: Dict = {
   mcShowDrawings: 'پیشاندانی هێڵکارییەکان',
   mcLogScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
   mcPercentScaleA11y: 'پێوەری سەدی: گۆڕان لە یەکەم مۆمی دیار',
+  mcZigzagDevA11y: 'لادانی ZigZag {pct}% — دایبگرە بۆ گۆڕین بۆ {next}%',
   mcDrawColorWord: 'ڕەنگ',
   mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
   mcCloneDrawing: 'کۆپی',
