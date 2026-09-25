@@ -59,6 +59,7 @@ export type IndicatorId =
   | 'bop'
   | 'bullPower'
   | 'bearPower'
+  | 'bbPower'
   | 'tsi'
   | 'coppock'
   | 'eom'
@@ -318,6 +319,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'bop', label: 'Balance of Power', pane: true },
   { id: 'bullPower', label: 'Bull Power', pane: true },
   { id: 'bearPower', label: 'Bear Power', pane: true },
+  { id: 'bbPower', label: 'Bull Bear Power', pane: true },
   { id: 'tsi', label: 'TSI', pane: true },
   { id: 'coppock', label: 'Coppock', pane: true },
   { id: 'eom', label: 'EOM', pane: true },

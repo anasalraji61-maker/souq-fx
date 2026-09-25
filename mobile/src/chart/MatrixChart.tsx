@@ -208,6 +208,7 @@ import {
   computeBearPower,
   computeBollingerBandwidth,
   computeBop,
+  computeBullBearPower,
   computeBullPower,
   computeBwMfi,
   computeCamarillaPivots,
@@ -2766,6 +2767,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   const bearPower = useMemo(
     () => (indicators.includes('bearPower') ? ind(computeBearPower(indBars)) : null),
+    [indBars, indicators]
+  );
+  const bbPower = useMemo(
+    () => (indicators.includes('bbPower') ? ind(computeBullBearPower(indBars)) : null),
     [indBars, indicators]
   );
   const tsi = useMemo(
@@ -10640,6 +10645,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return bearPower.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxBe, paneH);
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: centeredBarTop(v, h, paneH),
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {bbPower ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <PaneValueHead name="BBP" values={bbPower} at={crossIndex} />
+          <View style={[styles.paneInner, paneShift]}>
+            {paneCrossLine}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
+            {(() => {
+              const maxBb = visibleMax(bbPower, paneVis, true);
+              return bbPower.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = centeredBarH(v, maxBb, paneH);
                 return (
                   <View
                     key={i}

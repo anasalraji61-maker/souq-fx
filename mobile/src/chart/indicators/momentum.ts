@@ -331,6 +331,16 @@ export function computeBearPower(candles: Candle[], period = 13): (number | null
 }
 
 /**
+ * Bull Bear Power — مؤشر TradingView المدمج (`BBPower`): **مجموع** قوّتَي Elder بعمود واحد،
+ * bullPower + bearPower = أعلى + أدنى − 2·ema13. من يبحث عن «Bull Bear Power» كما بـTV كان يجد
+ * القوّتين منفصلتين فقط (لوحتان، ولا رقم واحد يطابق شارته هناك).
+ */
+export function computeBullBearPower(candles: Candle[], period = 13): (number | null)[] {
+  const emaClose = ema(candles.map((c) => c.close), period);
+  return candles.map((c, i) => (emaClose[i] != null ? c.high + c.low - 2 * emaClose[i]! : null));
+}
+
+/**
  * TSI (True Strength Index، فترتا القيمة القياسية r=25 (طويلة) وs=13 (قصيرة)) — زخم مزدوج التنعيم:
  * momentum[i] = إغلاق[i] − إغلاق[i-1] (null عند i=0 كـ`ta.change`). يُمرَّر momentum عبر طبقتي ema
  * متتاليتين (r ثم s)، وبالتوازي |momentum| عبر نفس الطبقتين. TSI = 100×(الزخم المزدوج التنعيم)/(القيمة
