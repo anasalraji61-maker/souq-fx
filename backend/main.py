@@ -1795,7 +1795,9 @@ def ai_ask(body: AiAsk):
         abs(series.last - series.last / (1 + chg / 100))
         if series.last is not None and chg > -100 else 0.0
     )
-    flat = chg == 0 or (atr_v is not None and net_move < atr_v)
+    # بلا ATR14 (أقلّ من 15 شمعة) لا مقياس للضجيج ⇒ لا اتجاه: كان المرشّح يُتخطّى فيصير +0.01% على 12 شمعة «شراء»
+    few = live and atr_v is None
+    flat = chg == 0 or few or (atr_v is not None and net_move < atr_v)
     bias = "صاعد" if chg > 0 else "هابط"
     direction: str | None = None if flat else ("شراء" if chg > 0 else "بيع")
     entry: float | None = None
@@ -1826,7 +1828,8 @@ def ai_ask(body: AiAsk):
             f"not a live tick — if it is not recent, say so and do not call it the current price), "
             f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
             f"tf={series.timeframe}"
-            + (", bias=none (net move smaller than one ATR14 — no clear direction)" if flat else f", bias={bias}")
+            + (", bias=none (too few candles for ATR14 — direction cannot be judged)" if few else
+               ", bias=none (net move smaller than one ATR14 — no clear direction)" if flat else f", bias={bias}")
         )
         # مستويات الخادم نفسها التي تُرفق ببطاقة `setup`. كان السياق بلا مستويات والتعليمات «اذكر دخولاً
         # ووقفاً وهدفاً» ⇒ النموذج يخترع وقفه وهدفه من `last` وحده، والبطاقة تحمل وقف ATR ⇒ رقمان
@@ -1862,6 +1865,9 @@ def ai_ask(body: AiAsk):
             bias_en = "bullish" if series.change_pct > 0 else "bearish"
             dir_en = "Buy" if direction == "شراء" else "Sell"
             read = (
+                f"Only {bars + 1} candles ({series.timeframe}) — too few to measure a normal candle range "
+                f"(ATR14), so no direction.\n\n"
+                if few else
                 f"Over the last {bars} candles ({series.timeframe}) the net move ({series.change_pct:+.2f}%) is "
                 f"smaller than one average candle range (ATR14) — no clear direction.\n\n"
                 if flat else
@@ -1892,6 +1898,9 @@ def ai_ask(body: AiAsk):
     else:
         if live:
             read = (
+                f"{bars + 1} شمعة فقط ({series.timeframe}) — أقلّ من أن يُقاس مدى الشمعة المعتاد (ATR14)، "
+                f"فلا قراءة اتجاه.\n\n"
+                if few else
                 f"على آخر {bars} شمعة ({series.timeframe}) صافي الحركة ({series.change_pct:+.2f}%) أصغر من "
                 f"مدى شمعة واحدة معتاد (ATR14) — لا اتجاه واضح.\n\n"
                 if flat else

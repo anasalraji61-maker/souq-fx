@@ -245,3 +245,18 @@ def test_no_sell_card_with_a_negative_target(monkeypatch):
     monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "سيناريو بيع")
     s = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "SHIBUSD"}).json()["setup"]
     assert s["entry"] is None and s["sl"] is None and s["tp"] is None
+
+
+@pytest.mark.parametrize("lang", ["ar", "en"])
+def test_too_few_candles_for_atr_give_no_direction(monkeypatch, lang):
+    """12 شمعة ⇒ لا ATR14 ⇒ كان مرشّح الضجيج يُتخطّى فيصير +0.3% «شراء» بلا مستويات."""
+    base = _provider_series(0.0030)
+
+    def build(*a, **k):
+        s = base(*a, **k)
+        return s.model_copy(update={"candles": s.candles[:12]})
+    monkeypatch.setattr(main, "build_series", build)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "lang": lang}).json()
+    assert out["setup"]["direction"] is None and out["setup"]["entry"] is None
+    assert "ATR14" in out["answer"] and ("12" in out["answer"])
