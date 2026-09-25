@@ -3307,3 +3307,26 @@ console.log('tradePlan minStopPips selftest OK');
   assert.equal(levelLooksLikePips({ symbol: 'XAGUSD', side: 'sell', entry: 110, level: 85.5, kind: 'tp' }), null);
 }
 console.log('tradePlan levelLooksLikePips metal ambiguity selftest OK');
+
+// ── الدفتر: نقاطٌ بخانة الخروج («25» من «أغلقتُ +25») — كانت تُحفظ خروجاً عند 25.00 ⇒ +2,204% و+11,957R ──
+{
+  const { exitLooksLikePips, levelLooksLikePipsText } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.deepEqual(exitLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 25 }), { pips: 25, win: 1.0875, loss: 1.0825 });
+  assert.deepEqual(exitLooksLikePips({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 25 }), { pips: 25, win: 1.0825, loss: 1.0875 });
+  // ين: «40» على 157.40 (تحت الخُمس ورقمٌ صحيح)
+  assert.deepEqual(exitLooksLikePips({ symbol: 'USDJPY', side: 'buy', entry: 157.4, exit: 40 }), { pips: 40, win: 157.8, loss: 157 });
+  // سعرٌ حقيقي بأيّ جهة ⇒ null
+  assert.equal(exitLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875 }), null);
+  assert.equal(exitLooksLikePips({ symbol: 'USDJPY', side: 'sell', entry: 157.4, exit: 156.25 }), null);
+  assert.equal(exitLooksLikePips({ symbol: 'XAUUSD', side: 'buy', entry: 2650, exit: 2700 }), null);
+  // الذهب صعد: خروج 4000 لشراءٍ من 2650 سعرٌ (الضعف لا النصف فوق الدخول)
+  assert.equal(exitLooksLikePips({ symbol: 'XAUUSD', side: 'buy', entry: 2650, exit: 4000 }), null);
+  // بلا pip (BTC) أو بلا دخول ⇒ null
+  assert.equal(exitLooksLikePips({ symbol: 'BTCUSD', side: 'buy', entry: 65000, exit: 25 }), null);
+  assert.equal(exitLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: null, exit: 25 }), null);
+  assert.equal(
+    levelLooksLikePipsText('{field} «{value}»: {pips} pip = {price}', 'Exit', ' 25 ', '−25', '1.0825'),
+    'Exit «25»: −25 pip = 1.0825'
+  );
+}
+console.log('tradePlan exitLooksLikePips selftest OK');

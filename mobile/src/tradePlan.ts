@@ -1399,6 +1399,24 @@ export function levelLooksLikePips(input: {
 }
 
 /**
+ * **نقاطٌ بخانة الخروج** بالدفتر: «25» (من «أغلقتُ +25») لشراء EURUSD على 1.0850 كانت تُحفظ خروجاً عند **25.00** بلا أي حارس
+ * (الوقف والهدف لهما `levelLooksLikePips`) ⇒ «+239,150 pip · +2,204%» و+11,957R، ومتوسّط R للدفتر كلّه +3,986R. القاعدة نفسها،
+ * لكن الخروج بأيّ جهة: `win` السعر على تلك المسافة بجهة الربح و`loss` بجهة الخسارة (`null` لما لا يقع ضمن القاعدة). `null` = ليس نقاطاً.
+ */
+export function exitLooksLikePips(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number | null;
+  exit: number | null;
+}): { pips: number; win: number | null; loss: number | null } | null {
+  const base = { symbol: input.symbol, side: input.side, entry: input.entry, level: input.exit };
+  const win = levelLooksLikePips({ ...base, kind: 'tp' });
+  const loss = levelLooksLikePips({ ...base, kind: 'sl' });
+  if (!win && !loss) return null;
+  return { pips: (win ?? loss)!.pips, win: win?.price ?? null, loss: loss?.price ?? null };
+}
+
+/**
  * نصّ سطر «نقاطٌ بخانة سعر» (`levelLooksLikePipsHint`، launch88) للحاسبة والدفتر معاً: `{price}` يتكرّر (الشرح والنقرة) ⇒ كل
  * المواضع؛ والقيم تُدرج بدالّة لا نصّ بديل (خانةٌ فيها «$$50» كانت ستُعرض «$50»). `{pips}` يُكتب كما قرأه `levelLooksLikePips`.
  */
@@ -1406,7 +1424,8 @@ export function levelLooksLikePipsText(
   template: string,
   field: string,
   value: string,
-  pips: number,
+  /** نصّ بإشارة («+25»/«−25») لسطرَي الخروج — `exitLooksLikePips` */
+  pips: number | string,
   price: string
 ): string {
   const vals: Record<string, string> = { field, value: value.trim(), pips: String(pips), price };

@@ -44,6 +44,7 @@ import {
   journalSymbol,
   quoteSymbol,
   levelSideIssue,
+  exitLooksLikePips,
   levelLooksLikePips,
   levelLooksLikePipsText,
   netByInstrument,
@@ -680,11 +681,33 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       if (!hit) continue;
       const label = (kind === 'sl' ? t.journalSlPlaceholder : t.journalTpPlaceholder).split(' (')[0].trim();
       const text = formatPrice(hit.price, journalSpec(sym)?.symbol ?? sym);
-      return { kind, label, text, raw: raw.trim(), msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, raw, hit.pips, text) };
+      return {
+        kind,
+        label,
+        raw: raw.trim(),
+        fixes: [{ text, msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, raw, hit.pips, text) }],
+      };
+    }
+    // والخروج («25» من «أغلقتُ +25» كانت تُحفظ خروجاً عند 25.00 ⇒ +2,204%): بأيّ جهة، فسطرٌ لكلٍّ منهما بإشارته — `exitLooksLikePips`
+    const ex = exitLooksLikePips({ symbol: sym, side, entry: e, exit: pnum(exit) });
+    if (ex) {
+      const label = t.journalExitPlaceholder.split(' (')[0].trim();
+      const spec = journalSpec(sym)?.symbol ?? sym;
+      const fixes = (
+        [
+          [ex.win, `+${ex.pips}`],
+          [ex.loss, `\u2212${ex.pips}`],
+        ] as const
+      ).flatMap(([px, signed]) => {
+        if (px == null) return [];
+        const text = formatPrice(px, spec);
+        return [{ text, msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, exit, signed, text) }];
+      });
+      return { kind: 'exit' as const, label, raw: exit.trim(), fixes };
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, tp, t]);
+  }, [symbol, side, entry, sl, tp, exit, t]);
 
   /** شرائح الرمز: أدوات المتداول نفسه أولاً («XAUUSD.m» كما يكتبها وسيطه)، ثم القائمة الثابتة — `quickJournalSymbols` */
   const symbolChips = useMemo(() => quickJournalSymbols(trades, QUICK_SYMBOLS), [trades]);
@@ -2037,17 +2060,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         </View>
       ) : null}
       {pipsLevel ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => {
-            playSoftClick();
-            (pipsLevel.kind === 'sl' ? setSl : setTp)(pipsLevel.text);
-            setFormError(null);
-          }}
-          style={({ pressed }) => pressed && { opacity: buttons.pressedOpacity }}
-        >
-          <Text style={[styles.formError, { textAlign: align }]}>{pipsLevel.msg}</Text>
-        </Pressable>
+        pipsLevel.fixes.map((f) => (
+          <Pressable
+            key={f.text}
+            accessibilityRole="button"
+            onPress={() => {
+              playSoftClick();
+              (pipsLevel.kind === 'sl' ? setSl : pipsLevel.kind === 'tp' ? setTp : setExit)(f.text);
+              setFormError(null);
+            }}
+            style={({ pressed }) => pressed && { opacity: buttons.pressedOpacity }}
+          >
+            <Text style={[styles.formError, { textAlign: align }]}>{f.msg}</Text>
+          </Pressable>
+        ))
       ) : draft?.issue && draft.issue !== 'slTooClose' ? (
         <Text style={[styles.formError, { textAlign: align }]}>{planIssueText(draft.issue)}</Text>
       ) : draft?.plan?.ok ? (
