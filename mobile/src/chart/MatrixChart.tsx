@@ -141,7 +141,7 @@ import {
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
-import { appendedAfter, offsetAtTime } from './holdView';
+import { appendedAfter, offsetAtTime, reanchorAhead } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
@@ -1803,6 +1803,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const prev = heldViewRef.current;
     if (prev.key === key && prev.len === all.length && prev.lastSec === lastSec) return; // تيك بالشمعة نفسها
     heldViewRef.current = { key, lastSec, len: all.length, all };
+    // تقاطع المتداول المثبَّت بالمنطقة المستقبلية يبقى على خانته الزمنية حين تُفتح شمعة (`reanchorAhead`)؛ كان
+    // يقفز للشمعة السابقة. تقاطع التابع بالرباعي يعيد أثرُ المزامنة حسابه من زمن القائد فلا يُمسّ.
+    if (prev.key === key && !crossFromSync.current) {
+      const added = appendedAfter(prev.lastSec, all.map(barTime), prev.len);
+      if (added > 0) {
+        setCross((c) => {
+          if (!c?.ahead || prev.lastSec == null || c.time !== prev.all[prev.len - 1]?.time) return c;
+          const r = reanchorAhead(c.ahead, added, all.length);
+          const bar = r ? all[r.index] : undefined;
+          if (!r || !bar) return c;
+          return r.ahead ? { time: bar.time, price: c.price, ahead: r.ahead } : { time: bar.time, price: c.price };
+        });
+      }
+    }
     // تبديل نوع الشارت (الرمز/الفريم نفساهما): الإزاحة بالخانات لا تعني شيئاً بالنوع الجديد — تُنقل
     // بالزمن (`offsetAtTime`) فيبقى الطرف الأيمن على الموضع الذي كان المتداول يدرسه.
     if (

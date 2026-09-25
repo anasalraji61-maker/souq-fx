@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`holdView.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { appendedAfter, offsetAtTime } from './holdView';
+import { appendedAfter, offsetAtTime, reanchorAhead } from './holdView';
 
 // تيك داخل الشمعة نفسها ⇒ لا إضافة
 assert.equal(appendedAfter(300, [0, 100, 200, 300]), 0);
@@ -36,4 +36,13 @@ assert.equal(offsetAtTime(bricks, -5, 2), 7);
 assert.equal(offsetAtTime(bricks, 300, 5), 4);
 assert.equal(offsetAtTime([], 100), 0);
 assert.equal(offsetAtTime(bricks, null), 0);
+// تقاطع بالمستقبل: 3 خانات بعد الأخيرة (فهرس 9 من 10) ثم شمعة جديدة ⇒ الخانة نفسها = الأخيرة الجديدة + 2
+assert.deepEqual(reanchorAhead(3, 1, 11), { index: 10, ahead: 2 });
+// خانة +1 صارت الشمعة الجديدة نفسها ⇒ عليها بلا ahead
+assert.deepEqual(reanchorAhead(1, 1, 11), { index: 10, ahead: 0 });
+// جلب أضاف 3 شموع والتقاطع +2 ⇒ الشمعة الثانية من المضافة (فهرس 9+2)
+assert.deepEqual(reanchorAhead(2, 3, 13), { index: 11, ahead: 0 });
+assert.equal(reanchorAhead(0, 1, 11), null);
+assert.equal(reanchorAhead(3, 0, 11), null);
+assert.equal(reanchorAhead(3, 5, 5), null);
 console.log('holdView.selftest: PASS');

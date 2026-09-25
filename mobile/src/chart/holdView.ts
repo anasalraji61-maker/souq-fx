@@ -56,3 +56,22 @@ export function offsetAtTime(timesSec: readonly number[], rightSec: number | nul
   }
   return max;
 }
+
+/**
+ * تقاطع مثبَّت بالمنطقة المستقبلية (`ahead` خانات بعد آخر شمعة) بعد وصول `added` شموع جديدة.
+ *
+ * التقاطع محفوظ كـ(زمن آخر شمعة، ahead)، و`ahead` يصحّ لآخر شمعة وحدها ⇒ شمعة جديدة كانت تُسقط
+ * `ahead` فيقفز الخطّ من الخانة المستقبلية إلى الشمعة **السابقة** (ماضٍ لم يلمسه المتداول). هنا
+ * تبقى الخانة نفسها زمنياً: فهرس الخانة = آخر شمعة قديمة + ahead؛ صارت شمعة حقيقية ⇒ عليها بلا
+ * `ahead`، وإلا على الأخيرة الجديدة بما تبقّى. `len` طول السلسلة بعد الإضافة. null ⇒ لا تغيير.
+ */
+export function reanchorAhead(
+  ahead: number,
+  added: number,
+  len: number
+): { index: number; ahead: number } | null {
+  if (!(ahead > 0) || !(added > 0) || !Number.isInteger(len) || len < 1 || added >= len) return null;
+  const target = len - 1 - added + ahead;
+  if (target <= len - 1) return { index: target, ahead: 0 };
+  return { index: len - 1, ahead: target - (len - 1) };
+}
