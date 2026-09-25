@@ -351,3 +351,11 @@
 - **الكردية:** `DICTS.ku` مقابل `DICTS.ar` مسطّحاً: صفر قيمة مطابقة (≥4 حروف عربية)، وصفر قيمة بحرف عربي لا تستعمله السورانية (ة ى ث ذ ض ظ). الحرفيات العربية بـtsx/ts خارج chart/i18n: مفاتيح نصّ الخادم (`CommissionPlanPanel`)، تعليمات الذكاء الداخلية (`WeeklyReportPanel`)، أنماط إدخال (`positionSize`/`parseDecimal`)، فاصلة «،» حين `rtl` فقط، و`api.ts:896`/`mock.ts`/`MessagesScreen` (launch52، أنس).
 - **الحوارات بالويب:** لا `Alert.alert`/`Alert.prompt`/`ActionSheetIOS` خارج `chart/confirmDestructive.ts` (`window.confirm`/`window.alert` بالويب)؛ لا حوار تأكيد مخصّص بـ`<Modal>`؛ `confirmDestructive` بتسعة ملفات منها `AccountScreen` (حذف الحساب).
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» أُزيلت (`AnalystsPanel`، `SocialConsensusPanel`، `WeeklyReportPanel`)؛ التيك المتجمّد يُرفض (`tickAge.acceptTick` بـ`ticks_at`، والإسقاط بعد `TICK_STALE_MS`)، وسعر الإغلاق البديل بقائمة المتابعة موسوم «تجريبي» نصّاً وللقارئ؛ الجولة تُعاد من `AccountScreen` (`accReplayTour` ⇐ `OnboardingOverlay`).
+
+**وصل أثناء التشغيل — launch130 (صفّ ui):**
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| cb57241 | `LectureClassroom`: شارت القاعة من `mockSeries` (فشل الطلب) يعرض `t.lectureChartPracticeNote` تحته — شموع تدريبية لا أسعار، والرسم لا يُحفظ (منذ chart `22ff26c`). الشرط `chartOffline && chartKind === 'demo'` لا `demo` وحده: سلسلة `demo` من الخادم ليست «بلا اتصال» كما يقول النصّ؛ تبقى بوسم «تجريبي» بالرأس | launch130 |
+
+**لـlaunch (اختياري):** سلسلة `demo`/`unavailable` **من الخادم** لا يُحفظ الرسم عليها كذلك (`isSyntheticProvenance`) ولا ملاحظة تقول ذلك؛ إن أردتموها فمفتاح بلا «بلا اتصال بالخادم» (مثلاً «شموع تجريبية لا أسعار السوق — ما ترسمه هنا لا يُحفظ») وأعرضه لكل `demo` بالقاعة.
