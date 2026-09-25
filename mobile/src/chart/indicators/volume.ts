@@ -129,7 +129,7 @@ export function computeCmf(candles: (Candle & { volume?: number })[], period = 2
 
 /**
  * Force Index (Alexander Elder، period=13 EMA — القيمة الأكثر شيوعاً) — يجمع اتجاه السعر وحجم
- * الحركة (فوليوم) بضربة واحدة: rawForce[i] = (إغلاق[i] − إغلاق[i-1]) × فوليوم[i] (صفر عند i=0
+ * الحركة (فوليوم) بضربة واحدة: rawForce[i] = (إغلاق[i] − إغلاق[i-1]) × فوليوم[i] (null عند i=0
  * لغياب شمعة سابقة). القيمة الخام شديدة التقلّب فتُمرَّر عبر ema(period) لتنعيمها (نفس أسلوب تنعيم
  * إشارة MACD أعلاه). موجب = ضغط شرائي مدعوم بحجم تداول حقيقي، سالب = ضغط بيعي، قرب الصفر = تحرك
  * بلا زخم حجمي خلفه. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts المستخدَمة لـOBV/MFI/CMF أعلاه
@@ -142,7 +142,9 @@ export function computeForceIndex(
   period = 13
 ): (number | null)[] {
   const n = candles.length;
-  const raw: number[] = new Array(n).fill(0);
+  // i=0 بلا شمعة سابقة ⇒ null (كـ`ta.change` بـTradingView = na) لا 0 — صفر مختلَق كان يدخل بذرة
+  // المتوسّط فيُزيح أوّل القيم ويُظهر المؤشّر شمعة أبكر من TradingView.
+  const raw: (number | null)[] = new Array(n).fill(null);
   for (let i = 1; i < n; i++) {
     const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
     raw[i] = (candles[i].close - candles[i - 1].close) * vol;
