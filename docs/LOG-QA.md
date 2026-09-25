@@ -829,3 +829,12 @@ launch130 ← ui `aed77b9` (`LectureClassroom.tsx:435-436`). لا طلب جدي�
 **المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src`: 0 اسم مكرّر بين ملفين؛ 175 تصديراً بلا مستورد خارجي — كلها مستعملة داخل ملفها أو بالـselftests
 عدا `motion` (`theme.ts:119`، ui عمداً)؛ `getToolPanel` لم يعد موجوداً. ملف غير مستورد: `MessagesScreen` وحده (launch52).
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
+
+## 2026-09-25 — الدورة 72
+**البناء:** أخضر 0 (على deecbe9) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** launch131 ← ui `76b2256` (`api.ts:148`، `academy.ts:14` `progress: number | null`). دمجتُ backend-r33 وlaunch132 بصفّ واحد لـui
+(`NewsPanel.tsx` لا يقرأ `status`/`stale` — grep صفر؛ المفتاحان `locales.ts:1536-1537` جاهزان). backend `95c7ad0` لا يغلق سؤال backend-r6 عن الشمعة الجارية (أضفتُ ملاحظة).
+سجلات chart 55 / tools 87 / ui 30 / launch 130: بلا طلب جديد.
+**المراجعة (b — نصوص ثابتة):** مسح `mobile/src` لنصوص JSX و`placeholder`/`accessibilityLabel` الحرفية والحرفيات العربية خارج التعليقات و`throw new Error`:
+لا جديد — `MessagesScreen`/`mock.ts` (launch52)، `academy.ts` (QA27)، مرادفات العملات `positionSize.ts:925-934` (محلّل إدخال)، ورسائل `Error` تُستبدل بنصّ مترجم (`AccountScreen.tsx:157-158`). **لا بند.**
+**الدورة القادمة:** المراجعة (c) — `accessibilityLabel` (مع أزرار chart الجديدة 44pt).
