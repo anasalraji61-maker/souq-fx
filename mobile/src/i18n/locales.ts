@@ -1463,11 +1463,11 @@ const ar: Dict = {
   snapChangeOverBars: '{pct} خلال آخر {bars} شمعة',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting:
-    'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، إدارة المخاطرة، أو علاقته بـDXY. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
+    'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، أو إدارة المخاطرة. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
   aiPriceAsOf: 'الأسعار في هذا الجواب مبنيّة على إغلاق شمعة {time} بتوقيتك — وليست سعراً حيّاً',
   forecastPriceAsOf: 'المستويات مبنيّة على إغلاق شمعة {time} بتوقيتك — وليست سعراً حيّاً',
   aiOfflineFallback:
-    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقفاً واضحاً بمخاطرة 1% للصفقة (2% حدّاً أقصى).',
+    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب الدولار على أكثر من زوج (EURUSD وUSDJPY) قبل أي دخول على أزواج الدولار، واستخدم وقفاً واضحاً بمخاطرة 1% للصفقة (2% حدّاً أقصى).',
   aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
   aiInputA11y: 'سؤال لمساعد الذكاء الاصطناعي',
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
@@ -1763,7 +1763,7 @@ const ar: Dict = {
   reportFallbackPerformance: 'تقييم مبني على الدفتر{journalLine}',
   reportFallbackRisk: 'موجز مخاطر{journalLine}\n1) مخاطرة 1% للصفقة، 2% حدّاً أقصى.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.',
   reportFallbackAdvice:
-    'ملاحظات للأسبوع القادم{journalLine}\n1) راجع صفقاتك المفتوحة ووقف كلٍّ منها.\n2) انظر إلى مؤشر الدولار (DXY) قبل تحليل أزواج الدولار والذهب.\n3) مخاطرة 1% للصفقة، 2% حدّاً أقصى.\n4) افتح التقويم وتجنّب الدخول قبيل الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج تعرف حركتها.',
+    'ملاحظات للأسبوع القادم{journalLine}\n1) راجع صفقاتك المفتوحة ووقف كلٍّ منها.\n2) قبل تحليل أزواج الدولار والذهب، انظر قوة الدولار على أكثر من زوج (EURUSD وUSDJPY).\n3) مخاطرة 1% للصفقة، 2% حدّاً أقصى.\n4) افتح التقويم وتجنّب الدخول قبيل الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج تعرف حركتها.',
   journalTitle: 'دفتر الصفقات · PnL من صفقاتك',
   journalSub: 'سجّل صفقاتك — التقارير تُبنى من يوميتك',
   journalStatClosed: 'صفقات مغلقة: {n}',
@@ -2634,11 +2634,11 @@ const enUS: Dict = {
   snapChangeOverBars: '{pct} over the last {bars} candles',
   aiPanelTitle: 'AI assistant',
   aiGreeting:
-    "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, risk management, or its relation to DXY. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
+    "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, or risk management. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
   aiPriceAsOf: 'Prices in this answer are based on the candle close at {time} your time — not a live price',
   forecastPriceAsOf: 'Levels are based on the candle close at {time} your time — not a live price',
   aiOfflineFallback:
-    'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop, risking 1% per trade (2% at most).',
+    'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: check the dollar on more than one pair (EURUSD and USDJPY) before entering any dollar pair, and use a clear stop, risking 1% per trade (2% at most).',
   aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
   aiInputA11y: 'Question for the AI assistant',
   aiSendA11y: 'Send question to the AI assistant',
@@ -2933,7 +2933,7 @@ const enUS: Dict = {
   reportFallbackPerformance: 'Assessment based on the journal{journalLine}',
   reportFallbackRisk: 'Risk brief{journalLine}\n1) Risk 1% per trade, 2% at most.\n2) Use a clear stop.\n3) Avoid heavy news.',
   reportFallbackAdvice:
-    'Notes for next week{journalLine}\n1) Review your open trades and each one\'s stop.\n2) Check the dollar index (DXY) before reading USD-pair and gold charts.\n3) Risk 1% per trade, 2% at most.\n4) Check the calendar and avoid entering just before high-impact news.\n5) Focus on 2–3 pairs whose moves you know.',
+    'Notes for next week{journalLine}\n1) Review your open trades and each one\'s stop.\n2) Before reading USD-pair and gold charts, check the dollar’s strength on more than one pair (EURUSD and USDJPY).\n3) Risk 1% per trade, 2% at most.\n4) Check the calendar and avoid entering just before high-impact news.\n5) Focus on 2–3 pairs whose moves you know.',
   journalTitle: 'Trade journal · PnL from your trades',
   journalSub: 'Log your trades — reports are built from your journal',
   journalStatClosed: 'Closed trades: {n}',
@@ -3830,11 +3830,11 @@ const ku: Dict = {
   snapChangeOverBars: '{pct} لە دوایین {bars} مۆمدا',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
-    'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی بە DXY. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
+    'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، یان بەڕێوەبردنی مەترسی. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
   aiPriceAsOf: 'نرخەکانی ئەم وەڵامە لەسەر داخستنی مۆمی {time} بە کاتی تۆن — نرخی ڕاستەوخۆ نین',
   forecastPriceAsOf: 'ئاستەکان لەسەر داخستنی مۆمی {time} بە کاتی تۆن — نرخی ڕاستەوخۆ نین',
   aiOfflineFallback:
-    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی 1% بۆ هەر مامەڵەیەک (زۆرترین 2%).',
+    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، دۆلار لەسەر زیاتر لە یەک جووت (EURUSD و USDJPY) بپشکنە، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی 1% بۆ هەر مامەڵەیەک (زۆرترین 2%).',
   aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
   aiInputA11y: 'پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
@@ -4134,7 +4134,7 @@ const ku: Dict = {
   reportFallbackRisk:
     'کورتەی مەترسی{journalLine}\n1) مەترسی 1% بۆ هەر مامەڵەیەک، زۆرترین 2%.\n2) وەستانێکی ڕوون بەکاربهێنە.\n3) دوور بە لە هەواڵی قورس.',
   reportFallbackAdvice:
-    'تێبینی بۆ هەفتەی داهاتوو{journalLine}\n1) مامەڵە کراوەکانت و وەستانی هەر یەکێکیان پێداچوونەوە بکە.\n2) پێش شیکاری جووتەکانی دۆلار و زێڕ سەیری پێوەری دۆلار (DXY) بکە.\n3) مەترسی 1% بۆ هەر مامەڵەیەک، زۆرترین 2%.\n4) ڕۆژژمێرەکە بکەرەوە و ڕاست پێش هەواڵی کاریگەری بەرز مەچۆ ناو مامەڵە.\n5) سەرنج بدە بە 2–3 جووت کە جووڵەیان دەناسیت.',
+    'تێبینی بۆ هەفتەی داهاتوو{journalLine}\n1) مامەڵە کراوەکانت و وەستانی هەر یەکێکیان پێداچوونەوە بکە.\n2) پێش شیکاری جووتەکانی دۆلار و زێڕ، هێزی دۆلار لەسەر زیاتر لە یەک جووت (EURUSD و USDJPY) بپشکنە.\n3) مەترسی 1% بۆ هەر مامەڵەیەک، زۆرترین 2%.\n4) ڕۆژژمێرەکە بکەرەوە و ڕاست پێش هەواڵی کاریگەری بەرز مەچۆ ناو مامەڵە.\n5) سەرنج بدە بە 2–3 جووت کە جووڵەیان دەناسیت.',
   journalTitle: 'دەفتەری مامەڵە · PnL لە مامەڵەکانت',
   journalSub: 'مامەڵەکانت تۆماربکە — ڕاپۆرتەکان لە ڕۆژنووسەکەت دروستدەبن',
   journalStatClosed: 'مامەڵە داخراوەکان: {n}',
