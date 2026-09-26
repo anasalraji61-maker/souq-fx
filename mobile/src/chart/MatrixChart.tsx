@@ -7862,7 +7862,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     : tr.mcHintNavigate}
           </Text>
         )}
-        {onCreateAlert && crossPrice != null && !crossHover && !measureReadout && !replayOn ? (
+        {/* سعر ≤ 0 (محور مضغوط ومسحوب تحت الصفر) لا يُعرض عليه ⚑: الخادم يرفضه فيرى المتداول «فشل إنشاء التنبيه»
+            فقط — كـAlt+A وسحب خطّ التنبيه. */}
+        {onCreateAlert && crossPrice != null && crossPrice > 0 && !crossHover && !measureReadout && !replayOn ? (
           // تنبيه بلمستين من الشارت: المس المستوى (يظهر الـcrosshair بسعر موضع اللمسة) ثم ⚑ — بلا كتابة رقم.
           // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
           <Pressable
