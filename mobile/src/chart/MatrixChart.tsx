@@ -5393,6 +5393,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           selDragAt.current = grabbed === 't' ? null : drawingEnd(d, grabbed);
           if (grabbed === 'a') grabAt(box.xEntry, box.yEntry);
           else if (grabbed === 'b') grabAt(box.xEnd, box.yStop);
+          // الهدف كالطرفين: لمسة 10px تحت مقبضه كانت تنقل الهدف إلى الإصبع فتقفز R:R وتُحفظ خطوة تراجع بلا سحب.
+          else grabAt(box.xEnd, box.yTarget);
           selDragRr.current = grabbed === 't' ? box.lv.rr : null;
           return;
         }
@@ -5417,6 +5419,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           selDragAt.current = grabbed === 'w' ? null : drawingEnd(d, grabbed);
           if (grabbed === 'a') grabAt(xOf(aL), yOf(d.a.price));
           else if (grabbed === 'b') grabAt(xOf(bL), yOf(d.b.price));
+          else grabAt(xOf((aL + bL) / 2), yOf(channelHandlePrice(d.a, d.b, d.width ?? 0)));
           return;
         }
         if (d.b) {
@@ -5495,7 +5498,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // السعر تحت الإصبع مباشرةً لا المُمغنَط: العرض يتبع الإصبع كما يُرى.
           const d = drawings.find((x) => x.id === selectedId);
           if (!d?.b) return;
-          const width = channelWidthAt(d.a, d.b, priceAtY(evt.nativeEvent.locationY));
+          const width = channelWidthAt(d.a, d.b, priceAtY(evt.nativeEvent.locationY + selGrabOff.current.y));
           if (width === d.width) return;
           if (!selDragPushed.current) {
             pushDrawHistory();
@@ -5504,7 +5507,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           setChannelWidth(selectedId, width);
           return;
         }
-        const off = end === 't' ? { x: 0, y: 0 } : selGrabOff.current;
+        const off = selGrabOff.current;
         const p = pointFromXY(evt.nativeEvent.locationX + off.x, evt.nativeEvent.locationY + off.y);
         if (end === 't') {
           const d = drawings.find((x) => x.id === selectedId);
