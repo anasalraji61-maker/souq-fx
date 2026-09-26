@@ -732,11 +732,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     backgroundColor: colors.accentSoft,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §5.5: تعبئة وحدها بلا حدّ تأكيد فوقها.
     padding: spacing.md,
   },
-  clarifyTitle: { color: colors.accent, fontWeight: '500' },
+  clarifyTitle: { color: colors.text, fontWeight: '500' },
   clarifyText: {
     color: colors.text,
     marginTop: spacing.sm,

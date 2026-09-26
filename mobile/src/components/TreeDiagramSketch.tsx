@@ -154,13 +154,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: radii.sm,
-    borderWidth: 2,
-    borderColor: colors.accent,
+    // DESIGN-PRO §5.5/§1: التعبئة وحدها تميّز «أنت» — لا حدّ تأكيد فوقها ولا نصّ بلون التأكيد.
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
   },
-  youTag: { color: colors.accent, fontSize: 11, fontWeight: '500' },
-  youName: { color: colors.accent, fontWeight: '500', fontSize: 15, marginTop: 4 },
+  youTag: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  youName: { color: colors.text, fontWeight: '500', fontSize: 15, marginTop: 4 },
   hint: {
     color: colors.textDim,
     fontSize: 11,
