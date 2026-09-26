@@ -1610,7 +1610,7 @@ const ar: Dict = {
     'اختر من عشرات المؤشرات (RSI وMACD وبولنجر…) أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (بالفوركس الفوليوم وCVD تقدير من الشموع، لا حجم ولا تدفّق أوامر حقيقي). قيم المتوسطات وحدود بولنجر تظهر على محور السعر بلون خطوطها. وللفوركس: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
-    'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. ولنقله اسحب وسمه 🔔 على حافة الشارت إلى السعر الجديد. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
+    'أسرع طريق: المس المستوى على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. ولنقله اسحب وسمه (السهم والسعر) على حافة الشارت إلى السعر الجديد. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
     'قبل أي صفقة افتح «أدوات ← المخاطرة»: اختر الرمز كما يكتبه وسيطك (EURUSDc لحساب السنت)، وأدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip لا بنقاط MT4/MT5 — 250 نقطة عادةً 25 pip — أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب (وأضف السبريد والعمولة ليشملهما الرقم)، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
@@ -1812,7 +1812,7 @@ const ar: Dict = {
   alertsFirstBadge: '🎉 أول تنبيه مضبوط — سنُعلمك حين يبلغ السعر مستواك (الفحص كل دقيقة تقريباً)',
   alertsLoadError: 'تعذّر تحميل التنبيهات — تحقّق من الاتصال. تنبيهاتك المحفوظة لم تُحذف.',
   alertsEmpty:
-    'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه. أو من الشارت: المس المستوى ثم 🔔.',
+    'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه. أو من الشارت: المس المستوى ثم زرّ التنبيه الذي يظهر بسعره.',
   alertsDeleteConfirmTitle: 'حذف التنبيه؟',
   alertsDeleteFailedTitle: 'تعذر الحذف',
   alertsDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقي التنبيه بالقائمة فاحذفه مرة أخرى.',
@@ -2846,7 +2846,7 @@ const enUS: Dict = {
     'Pick from dozens of indicators (RSI, MACD, Bollinger…) or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (on forex, volume and CVD are estimated from candles, not real volume or order flow). Moving averages and Bollinger bands show their values on the price axis in tags that match their lines. For forex: Sessions shades Tokyo, London and New York at their correct hours through daylight saving, and PDH / PDL marks yesterday’s session high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
-    'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. To move it, drag its 🔔 label at the edge of the chart to the new price. Indicator alerts and notification settings are in the alerts panel.',
+    'Fastest way: tap a level on the chart, then the alert button showing its price — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. To move it, drag its label (arrow and price) at the edge of the chart to the new price. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
     'Before any trade, open Tools → Risk: pick the symbol as your broker writes it (EURUSDc for a cent account), enter your balance, risk % and stop loss (in pips, not MT4/MT5 points — 250 points is usually 25 pips — or as entry and stop prices) to get the right lot size (add spread and commission to include them), then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
@@ -3047,7 +3047,7 @@ const enUS: Dict = {
   alertsFirstBadge: "🎉 First alert set — we’ll notify you when the price reaches your level (checked about once a minute)",
   alertsLoadError: 'Couldn’t load your alerts — check your connection. Your saved alerts haven’t been deleted.',
   alertsEmpty:
-    'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you’ll be notified when price gets there. Or from the chart: tap a level, then 🔔.',
+    'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you’ll be notified when price gets there. Or from the chart: tap a level, then the alert button showing its price.',
   alertsDeleteConfirmTitle: 'Delete the alert?',
   alertsDeleteFailedTitle: 'Could not delete',
   alertsDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the alert is still in the list, delete it again.',
@@ -4120,7 +4120,7 @@ const ku: Dict = {
     'لە دەیان پێوەر هەڵبژێرە (RSI، MACD، بۆلینجەر…)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (لە فۆرێکس قەبارە و CVD خەمڵێنراون لە مۆمەکان، نەک قەبارە یان ڕەوتی ڕاستەقینەی فەرمانەکان). بەهای ناوەندە جووڵاوەکان و سنوورەکانی بۆلینجەر لەسەر تەوەرەی نرخ بە ڕەنگی هێڵەکانیان دەردەکەوێت. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
-    'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. بۆ گواستنەوەی، نیشانەی 🔔ی لە لێواری چارت ڕابکێشە بۆ نرخە نوێیەکە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
+    'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. بۆ گواستنەوەی، نیشانەکەی (تیر و نرخ) لە لێواری چارت ڕابکێشە بۆ نرخە نوێیەکە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
     'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: هێماکە هەڵبژێرە وەک بڕۆکەرەکەت دەینووسێت (EURUSDc بۆ هەژماری سەنت)، باڵانس و ڕێژەی مەترسی و وەستانی زیان (بە pip نەک بە خاڵی MT4/MT5 — 250 خاڵ زۆرجار 25 pipە — یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت (سپرێد و کۆمیسیۆن زیاد بکە بۆ ئەوەی ژمارەکە بیانگرێتەوە)، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
@@ -4321,7 +4321,7 @@ const ku: Dict = {
   alertsFirstBadge: '🎉 یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە ئاگادارت دەکەینەوە',
   alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن — پەیوەندییەکەت بپشکنە. ئاگادارکردنەوە پاشەکەوتکراوەکانت نەسڕاونەتەوە.',
   alertsEmpty:
-    'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە (یان «بەکاری بهێنە» بۆ نرخی ئێستا دابگرە) و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە. یان لە چارتەوە: دەست لە ئاستەکە بدە پاشان 🔔.',
+    'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە (یان «بەکاری بهێنە» بۆ نرخی ئێستا دابگرە) و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە. یان لە چارتەوە: دەست لە ئاستەکە بدە پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات.',
   alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   alertsDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر ئاگادارکردنەوەکە هێشتا لە لیستەکەدایە، دووبارە بیسڕەوە.',
