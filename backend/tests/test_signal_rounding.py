@@ -220,3 +220,28 @@ def test_bollinger_vote_matches_the_displayed_position(target):
     assert v["detail_values"]["pos"] == shown
     assert v["score"] == round((50 - shown) * 0.006, 3)
     assert v["direction"] == ("buy" if shown <= 30 else "sell")
+
+
+def _bb_close_at(target):
+    base = [1.1 + 0.001 * math.sin(i) for i in range(19)]
+    lo_x, hi_x = 1.09, 1.11
+    for _ in range(200):
+        x = (lo_x + hi_x) / 2
+        w = base + [x]
+        mid0 = sum(w) / 20
+        std = math.sqrt(sum((v - mid0) ** 2 for v in w) / 20)
+        if (x - (mid0 - 2 * std)) / (4 * std) < target:
+            lo_x = x
+        else:
+            hi_x = x
+    return [{"open": v, "high": v, "low": v, "close": v} for v in base + [x]]
+
+
+@pytest.mark.parametrize("target,score", [(0.9951, -0.55), (0.99999, -0.55), (1.02, -0.55),
+                                          (0.0049, 0.55), (-0.02, 0.55), (0.9949, -0.294)])
+def test_bollinger_band_edge_matches_the_displayed_position(target, score):
+    """run 68: موقع 99.99% كان يُعرض «موقع 100%» بصوت −0.3 و100.00% «عند الحدّ العلوي» بـ−0.55."""
+    v = signal_hub.indicator_forecast("EURUSD", _bb_close_at(target), enabled=["bb"])["votes"][0]
+    assert v["score"] == score
+    if abs(score) == 0.55:
+        assert "pos" not in (v.get("detail_values") or {})

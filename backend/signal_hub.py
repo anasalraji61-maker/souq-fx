@@ -308,15 +308,17 @@ def indicator_forecast(
         # و20 إغلاقاً متطابقة بسعر الذهب قد تعطي std≈1e-13 من ضجيج الجمع ⇒ صوت «موقع 25%» من لا حركة
         if std <= abs(mid) * 1e-9:
             pass
-        elif last >= upper:
-            add("bb", "bb", -0.55, "bb_upper")
-        elif last <= lower:
-            add("bb", "bb", 0.55, "bb_lower")
         else:
             # التصنيف على الموقع المعروض (كـRSI/%K): 29.95% و30.14% كلاهما «موقع 30%» وكان الأول شراء
-            # (0.1203) والثاني محايداً (0.119)
+            # (0.1203) والثاني محايداً (0.119). وكذلك الحدّان: موقع 99.99% كان «موقع 100%» بصوت −0.3
+            # و100.00% «عند الحدّ العلوي» بـ−0.55 — نفس الرقم المعروض بوزنين
             pos = round((last - lower) / (upper - lower) * 100)
-            add("bb", "bb", (50 - pos) * 0.006, "bb_position", pos=pos)
+            if pos >= 100:
+                add("bb", "bb", -0.55, "bb_upper")
+            elif pos <= 0:
+                add("bb", "bb", 0.55, "bb_lower")
+            else:
+                add("bb", "bb", (50 - pos) * 0.006, "bb_position", pos=pos)
 
     # Stochastic approx from last 14 highs/lows if available
     if len(candles) >= 15:
