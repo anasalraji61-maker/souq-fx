@@ -234,6 +234,10 @@ def _instrument_decimals(symbol: str | None) -> int | None:
         return {"XAU": 2, "XAG": 3}[base]
     if base not in _FIAT:
         return None
+    # الين أساساً (JPYUSD ≈ 0.0067): 5 منازل = خطوة 0.00001 = 0.15% من السعر ≈ ATR ساعة كاملة ⇒ دخول 0.00666
+    # فوق آخر إغلاق 0.0066593، ووقف/هدف مقرَّبان إلى 1:1.00 بدل 1:1.57 المعلَن بـ`levels_basis` ⇒ من حجم السعر
+    if base == "JPY":
+        return None
     return 3 if quote == "JPY" else 5
 
 
