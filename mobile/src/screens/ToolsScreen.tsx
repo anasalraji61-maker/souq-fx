@@ -488,24 +488,33 @@ export function ToolsScreen() {
   // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
   React.useEffect(() => {
     const load = async () => {
-      try {
-        const raw = await AsyncStorage.getItem('matrix.frameTimeframes.v1');
-        if (raw) {
-          const p = JSON.parse(raw) as string[];
-          if (Array.isArray(p) && p.length === 3) setFrameTfs(p);
+      // كل مفتاح وحده (كالطرفية): كانت القراءات بـ`try` واحد، فـJSON تالف لفريمات الإطارات يُسقط رموزها ورمز البطل وفريمه ⇒
+      // «حفظ التخطيط الحالي» يحفظ الافتراضي لا ما على الشاشة. وفريمات الإطارات تُقبل صالحةً فقط (كانت أيّ ثلاثة نصوص تُحفظ بالتخطيط)
+      const read = async (key: string): Promise<string | null> => {
+        try {
+          return await AsyncStorage.getItem(key);
+        } catch {
+          return null;
         }
-        const sym = await AsyncStorage.getItem('matrix.frameSymbols.v1');
-        if (sym) {
-          const p = JSON.parse(sym) as string[];
-          if (Array.isArray(p) && p.length === 3) setFrameSymbols([p[0], p[1], p[2]]);
+      };
+      const json = (raw: string | null): unknown => {
+        if (!raw) return null;
+        try {
+          return JSON.parse(raw) as unknown;
+        } catch {
+          return null;
         }
-        const heroSym = await AsyncStorage.getItem(HERO_SYMBOL_KEY);
-        if (heroSym && heroSym.trim()) setHeroSymbol(heroSym.trim().toUpperCase());
-        const heroTfRaw = await AsyncStorage.getItem(HERO_TF_KEY);
-        if (heroTfRaw && isTimeframe(heroTfRaw)) setHeroTf(heroTfRaw);
-      } catch {
-        /* ignore */
+      };
+      const tfs = json(await read('matrix.frameTimeframes.v1'));
+      if (Array.isArray(tfs) && tfs.length === 3 && tfs.every(isTimeframe)) setFrameTfs([...tfs]);
+      const syms = json(await read('matrix.frameSymbols.v1'));
+      if (Array.isArray(syms) && syms.length === 3 && syms.every((x) => typeof x === 'string' && x.trim() !== '')) {
+        setFrameSymbols([syms[0], syms[1], syms[2]]);
       }
+      const heroSym = await read(HERO_SYMBOL_KEY);
+      if (heroSym && heroSym.trim()) setHeroSymbol(heroSym.trim().toUpperCase());
+      const heroTfRaw = await read(HERO_TF_KEY);
+      if (heroTfRaw && isTimeframe(heroTfRaw)) setHeroTf(heroTfRaw);
     };
     load();
     const unsub = (
