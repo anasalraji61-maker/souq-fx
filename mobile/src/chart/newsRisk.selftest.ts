@@ -1340,3 +1340,25 @@ console.log('newsRisk grid shownSymbol selftest OK');
   assert.equal(newsClockMs(device), device);
 }
 console.log('newsRisk server clock selftest OK');
+
+// ---- حدث بلا ساعة يومَ تحويل الساعة: ينتهي عند منتصف ليل نيويورك التالي لا بعد 24س ثابتة ----
+{
+  const { unannouncedHighImpactToday, unannouncedEndMs } = require('./newsRisk') as typeof import('./newsRisk');
+  const ev = (iso: string) => ({ ts: Date.parse(iso) / 1000, currency: 'USD', impact: 'High', title: 'Fed Chair Speaks' }) as never;
+  // الأحد 2026-03-08 (EST ⇒ EDT): منتصف ليله 05:00Z، والتالي 04:00Z ⇒ 23 ساعة
+  const spring = ev('2026-03-08T05:00:00Z');
+  assert.equal(unannouncedEndMs(Date.parse('2026-03-08T05:00:00Z') / 1000), Date.parse('2026-03-09T04:00:00Z'));
+  assert.ok(unannouncedHighImpactToday([spring], ['USD'], Date.parse('2026-03-09T03:59:00Z'), undefined, 0));
+  // الاثنين 00:30 EDT — الأحد انتهى (كان يحذّر حتى 05:00Z)
+  assert.equal(unannouncedHighImpactToday([spring], ['USD'], Date.parse('2026-03-09T04:30:00Z'), undefined, 0), null);
+  // الأحد 2026-11-01 (EDT ⇒ EST): منتصف ليله 04:00Z، والتالي 05:00Z ⇒ 25 ساعة
+  const fall = ev('2026-11-01T04:00:00Z');
+  assert.equal(unannouncedEndMs(Date.parse('2026-11-01T04:00:00Z') / 1000), Date.parse('2026-11-02T05:00:00Z'));
+  // الأحد 23:30 EST ما زال 1 نوفمبر بنيويورك (كان يختفي عند 04:00Z)
+  assert.ok(unannouncedHighImpactToday([fall], ['USD'], Date.parse('2026-11-02T04:30:00Z'), undefined, 0));
+  assert.equal(unannouncedHighImpactToday([fall], ['USD'], Date.parse('2026-11-02T05:00:00Z'), undefined, 0), null);
+  // يوم عادي: 24 ساعة كما كان
+  assert.equal(unannouncedEndMs(Date.parse('2026-09-28T04:00:00Z') / 1000), Date.parse('2026-09-29T04:00:00Z'));
+  assert.equal(unannouncedEndMs(Date.parse('2026-01-12T05:00:00Z') / 1000), Date.parse('2026-01-13T05:00:00Z'));
+}
+console.log('newsRisk unannounced DST day length selftest OK');

@@ -436,8 +436,19 @@ export function newsTimeUnannounced(e: NewsEvent): boolean {
   return ms === day - (holidayZoneOffsetH('USD', day) as number) * 3_600_000;
 }
 
-/** قبل بداية يوم الحدث بلا ساعة يظهر بقدر أفق الأخبار الموقوتة، ويبقى حتى نهاية يومه بنيويورك. */
+/** طول يوم عادي — نهاية يوم الحدث الفعلية بـ`unannouncedEndMs` (23/25 ساعة يومَي تحويل الساعة). */
 export const UNANNOUNCED_SPAN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * نهاية يوم الحدث بلا ساعة (ms) = منتصف ليل نيويورك التالي. كانت `ts + 24س` ثابتة: يوم الأحد الذي تتقدّم فيه الساعة (مارس) طوله
+ * 23 ساعة ⇒ «خبر قوي · اليوم، الساعة غير معلنة» يبقى ساعةً داخل الاثنين؛ والأحد الذي تتأخّر فيه (نوفمبر) 25 ساعة ⇒ يختفي بآخر
+ * ساعة من يومه، بعد افتتاح السوق مباشرةً.
+ */
+export function unannouncedEndMs(tsSec: number): number {
+  // تاريخ الحدث = تاريخ UTC لمنتصف ليل نيويورك (04:00/05:00 UTC من اليوم نفسه)
+  const next = Math.floor((tsSec * 1000) / 86_400_000) * 86_400_000 + 86_400_000;
+  return next - (holidayZoneOffsetH('USD', next) as number) * 3_600_000;
+}
 
 /**
  * أخبار قوية **بلا ساعة معلنة** لعملات الزوج اليوم (`newsTimeUnannounced`): من `ts − أفق الأخبار` حتى نهاية يومها بنيويورك.
@@ -472,7 +483,7 @@ export function unannouncedHighImpactToday(
     const c = String(e.currency).toUpperCase();
     if (!newsCurrencyMatches(c, want)) continue;
     const start = e.ts * 1000;
-    if (nowMs < start - horizonMs || nowMs >= start + UNANNOUNCED_SPAN_MS) continue;
+    if (nowMs < start - horizonMs || nowMs >= unannouncedEndMs(e.ts)) continue;
     hitCcys.add(c);
     // تاريخ الحدث = تاريخ UTC لمنتصف ليل نيويورك (04:00/05:00 UTC من اليوم نفسه)
     const evDay = Math.floor(start / 86_400_000);
