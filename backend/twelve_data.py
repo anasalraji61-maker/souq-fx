@@ -92,6 +92,30 @@ def _has_weekly_session(sym: str) -> bool:
     return (sym in SYMBOL_MAP or _is_iso_pair(sym)) and sym not in WEEKEND_TRADED
 
 
+# جلسة عطلة الفوركس (كالتطبيق `marketHours.ts` `isForexHolidaySession`): 25 ديسمبر و1 يناير، الجلسة من 17:00
+# نيويورك عشيّتها حتى 17:00 يومها. كان الخادم يعدّها جلسة عادية والتطبيق مغلقة ⇒ تيك/شمعة العطلة من المزوّد
+# تُعرض «آخر سعر» بوقت العطلة وتُطلق التنبيهات، وفي أسبوع جمعته عطلة تبقى شمعة W «جارية» حتى الجمعة فيدخلها
+# اقتباس العطلة إغلاقاً وقمّة للأسبوع — والتطبيق يعدّ الأسبوع مغلقاً منذ الخميس 17:00.
+_HOLIDAYS = frozenset({(12, 25), (1, 1)})
+
+
+def _is_holiday(day: datetime) -> bool:
+    """يوم تداول (الاثنين–الجمعة) جلسته عطلة — عطلة تقع السبت/الأحد تغطّيها العطلة الأسبوعية."""
+    return (day.month, day.day) in _HOLIDAYS and day.weekday() < 5
+
+
+def _holiday_session(ts: float) -> tuple[int, int] | None:
+    """(بداية، نهاية) جلسة العطلة التي تقع فيها `ts` بثواني UTC، وإلا None. الجلسة تُسمّى باليوم الذي تنتهي فيه."""
+    d = datetime.fromtimestamp(float(ts), tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    for day in (d, d + timedelta(days=1)):
+        if not _is_holiday(day):
+            continue
+        start, end = _weekly_close_utc(day - timedelta(days=1)), _weekly_close_utc(day)
+        if start <= ts < end:
+            return start, end
+    return None
+
+
 def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     """نهاية شمعة فُتحت `open_ts` وطولها `step` ثانية: فتحها + طولها، **ولا تتجاوز إغلاق السوق الأسبوعي**.
 
@@ -113,10 +137,15 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
         # الشمعة «جارية» 3 ساعات (2 شتاءً) بعد إغلاقها الحقيقي.
         end = min(end, _weekly_close_utc(opened))
     friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
-    close = _weekly_close_utc(friday)
+    close = _week_close(friday)
     if close <= open_ts:  # فُتحت بعد إغلاق هذه الجمعة (نادر) ⇒ إغلاق الجمعة التالية
-        close = _weekly_close_utc(friday + timedelta(days=7))
+        close = _week_close(friday + timedelta(days=7))
     return float(min(end, close))
+
+
+def _week_close(friday: datetime) -> int:
+    """إغلاق أسبوع الجمعة هذه: الخميس 17:00 نيويورك إن كانت الجمعة عطلة (25 ديسمبر/1 يناير)."""
+    return _weekly_close_utc(friday - timedelta(days=1) if _is_holiday(friday) else friday)
 
 # المعادن وWTI تفتح الأحد 18:00 نيويورك (CME Globex) وبرنت 23:00 لندن (ICE) — لا 17:00 كالفوركس (كالتطبيق:
 # `marketHours.ts` `nextForexOpenSec`). كانت كلها تُعدّ مفتوحة من 17:00 ⇒ شموع ملء العطلة من المزوّد لتلك
@@ -164,9 +193,13 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
     if step == _DAY:
         # شمعة D المؤرَّخة X عند المزوّد تغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك (افتتاح شمعة السبت 26-09 = افتتاح
         # 1m الجمعة 21:00 UTC) ⇒ شمعتا السبت والأحد عطلة كلّها (الأحد 20-09: مدى 20 نقطة من تداول العطلة).
-        return opened.weekday() >= 5
+        # شمعة D المؤرَّخة 25 ديسمبر/1 يناير = جلسة العطلة كلّها
+        return opened.weekday() >= 5 or _is_holiday(opened)
+    holiday = _holiday_session(open_ts)
+    if holiday and open_ts + step <= holiday[1]:
+        return True
     friday = opened - timedelta(days=(opened.weekday() - 4) % 7)
-    close = _weekly_close_utc(friday)
+    close = _week_close(friday)
     reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
     return close <= open_ts and open_ts + step <= reopen
 
@@ -186,8 +219,15 @@ def _closed_until(matrix_symbol: str, fetched_at: float) -> float | None:
     if not WEEKEND_CLOSE_FILTER or not _has_weekly_session(sym):
         return None
     d = datetime.fromtimestamp(float(fetched_at), tz=timezone.utc)
+    holiday = _holiday_session(fetched_at)
+    if holiday and holiday[0] + _CLOSE_SETTLE <= fetched_at:
+        ends = datetime.fromtimestamp(holiday[1], tz=timezone.utc)
+        if ends.weekday() != 4:  # عطلة وسط الأسبوع (أو الاثنين) ⇒ السوق يعود بنهاية الجلسة
+            return float(holiday[1])
+        # جمعة عطلة ⇒ مغلق حتى افتتاح الأحد
+        return float(_weekly_open_utc(ends.replace(hour=0, minute=0, second=0) + timedelta(days=2), sym))
     friday = (d - timedelta(days=(d.weekday() - 4) % 7)).replace(hour=0, minute=0, second=0, microsecond=0)
-    close = _weekly_close_utc(friday)
+    close = _week_close(friday)
     reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
     return float(reopen) if close + _CLOSE_SETTLE <= fetched_at < reopen else None
 
@@ -260,7 +300,7 @@ CANDLE_DISK: Path | None = (
 _disk_checked: set[str] = set()
 # الجدول باسم نسخة: تغيير بمعالجة الشموع (فلتر العطلة، بناء W من D، `_candle`) لا يصل لسلسلة محفوظة قبله —
 # كانت تُحمَّل بعد النشر وتبقى. رفع الرقم مع أيّ تغيير كهذا ⇒ النشر يبدأ بقرص فارغ ويُجلب من المزوّد.
-_DISK_TABLE = "candles_v3"
+_DISK_TABLE = "candles_v4"
 
 # وقت آخر جلب **كامل** لكل مدخل (بحجمه هو). الدمج يُبقي شموع المدخل الأكبر الأقدم ويختم المدخل «الآن» ⇒ القائمة
 # (D/50 كل 90ث) كانت تُبقي أول ~130 شمعة من D/180 بلا جلب أبداً (والقرص يحفظها عبر إعادة التشغيل) — تصحيح
