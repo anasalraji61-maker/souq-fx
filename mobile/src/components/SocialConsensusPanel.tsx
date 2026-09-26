@@ -112,8 +112,19 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
     void persist(next.length ? next : selected);
   };
 
+  // النتيجة تُعرض لرمزها وفريمها ومصادرها فقط: ردّ أقدم (تبديل رمز أو مصادر بسرعة) كان يكتب فوق الأحدث
+  // فتظهر «صفقة مقترحة» لأداة أخرى أو لمجموعة مصادر أخرى، وعدّ المصادر كان من الاختيار الجاري لا ممّا
+  // حُسبت منه النتيجة (أزلت مصدراً ⇒ «المصادر 4» بجانب متوسط الخمسة). `reqRef` يُسقط المتأخر، و`resultKey`
+  // يُخفي نتيجة اختيار سابق حتى يصل حسابه.
+  const reqRef = useRef(0);
+  const key = `${symbol}|${timeframe}|${selected.join(',')}`;
+  const [resultKey, setResultKey] = useState<string | null>(null);
+  const fresh = resultKey === key;
+
   const run = useCallback(async () => {
     if (!selected.length) return;
+    const id = ++reqRef.current;
+    const forKey = `${symbol}|${timeframe}|${selected.join(',')}`;
     setLoading(true);
     try {
       const res = await api.socialConsensus({
@@ -121,7 +132,8 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         timeframe,
         source_ids: selected,
       });
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || id !== reqRef.current) return;
+      setResultKey(forKey);
       // كان `avg_score: null` يرمي عند `toFixed` فتسقط الشاشة كلّها إلى «حدث خطأ» (launch103).
       if (res.status === 'unavailable' || res.data_kind === 'unavailable' || res.direction == null) {
         setUnavailable(true);
@@ -142,13 +154,15 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       setVotes(Array.isArray(res.votes) ? res.votes : []);
       setNote(res.disclaimer);
     } catch {
-      if (mountedRef.current) {
+      if (mountedRef.current && id === reqRef.current) {
+        setResultKey(forKey);
+        setUnavailable(false);
         setHasResult(false);
         setVotes([]);
         setNote(t.socialComputeError);
       }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && id === reqRef.current) setLoading(false);
     }
   }, [symbol, timeframe, selected, t]);
 
@@ -221,11 +235,11 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
-      {unavailable || (ready && !sourcesError && sources.length === 0) ? (
+      {(fresh && unavailable) || (ready && !sourcesError && sources.length === 0) ? (
         <View style={styles.consensus}>
           <Text style={[styles.meta, { textAlign: align }]}>{t.socialUnavailable}</Text>
         </View>
-      ) : hasResult ? (
+      ) : fresh && hasResult ? (
         <View style={styles.consensus}>
           <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
             {dirLabel(direction, t)}
@@ -249,7 +263,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       ) : null}
 
       <ScrollView style={styles.list} nestedScrollEnabled>
-        {votes.map((v) => (
+        {(fresh ? votes : []).map((v) => (
           <View key={v.id} style={[styles.row, rtl && styles.rowRtl]}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.name, { textAlign: align }]}>{v.name}</Text>
@@ -261,7 +275,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           </View>
         ))}
       </ScrollView>
-      {note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
+      {fresh && note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
     </View>
   );
 }
