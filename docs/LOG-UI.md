@@ -1407,7 +1407,7 @@
 
 | commit | ماذا | بند |
 |---|---|---|
-| d4ea450 | `SymbolPairMenu` وكتالوج الإضافة بـ`WatchlistPanel`: وسم الفئة يُعرض بمفتاح `focusSymbolGroups` (موجود بالعربية والإنجليزية والكردية ولم يكن مستعملاً) بدل «FX»/«Metals»/«Energy» الإنجليزية، في النصّ و`accessibilityLabel`؛ فئة بلا مفتاح لا تُعرض. مساعد واحد `symbolGroupLabel` للمكانين | QA130a (ترجمة / قارئ صوتي) |
+| ccbea6a | `SymbolPairMenu` وكتالوج الإضافة بـ`WatchlistPanel`: وسم الفئة يُعرض بمفتاح `focusSymbolGroups` (موجود بالعربية والإنجليزية والكردية ولم يكن مستعملاً) بدل «FX»/«Metals»/«Energy» الإنجليزية، في النصّ و`accessibilityLabel`؛ فئة بلا مفتاح لا تُعرض. مساعد واحد `symbolGroupLabel` للمكانين | QA130a (ترجمة / قارئ صوتي) |
 
 - لا حاجة لمفاتيح جديدة من launch — `focusSymbolGroups` كانت بالملفّ (`locales.ts:1044`). QA130a يُغلق للطرفين.
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ «درجة الاتفاق» تعليقات فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده.
