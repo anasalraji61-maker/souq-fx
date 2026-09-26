@@ -179,10 +179,10 @@ export function evalPineLite(formula: string, candles: Candle[]): (number | null
   const f = formula.trim().toLowerCase().replace(/\s/g, '');
   if (!f) return candles.map(() => null);
 
-  const crossUp = f.match(/^crossover\((.+),(.+)\)$/);
-  if (crossUp) return crossover(resolveAtom(crossUp[1], candles), resolveAtom(crossUp[2], candles));
-  const crossDn = f.match(/^crossunder\((.+),(.+)\)$/);
-  if (crossDn) return crossunder(resolveAtom(crossDn[1], candles), resolveAtom(crossDn[2], candles));
+  const crossUp = crossArgs(f, 'crossover');
+  if (crossUp) return crossover(resolveAtom(crossUp[0], candles), resolveAtom(crossUp[1], candles));
+  const crossDn = crossArgs(f, 'crossunder');
+  if (crossDn) return crossunder(resolveAtom(crossDn[0], candles), resolveAtom(crossDn[1], candles));
 
   const partsSub = splitBinary(f, '-');
   if (partsSub) {
@@ -209,6 +209,23 @@ export function pineIsPriceScale(formula: string): boolean {
   const f = formula.trim().toLowerCase().replace(/\s/g, '');
   if (!f || /^cross(over|under)\(/.test(f) || splitBinary(f, '-') || splitBinary(f, '+')) return false;
   return /^(sma|ema|bbmid|bbupper|bblower|highest|lowest)\(|^(close|high|low|open|hl2|hlc3|ohlc4)$/.test(f);
+}
+
+/**
+ * وسيطا `crossover(a,b)`/`crossunder(a,b)` بالفاصلة **خارج الأقواس**. كان التعبير `(.+),(.+)` جشعاً فيقسم عند آخر
+ * فاصلة: الإعداد الجاهز «Cross SMA» `crossover(sma(close,9),sma(close,21))` صار «sma(close,9),sma(close» و«21)»
+ * ⇒ خطّ فارغ دائماً. ويُرفض ما لا يغلق قوسه الأول عند النهاية (`crossover(a,b)+crossover(c,d)`).
+ */
+function crossArgs(f: string, name: string): [string, string] | null {
+  if (!f.startsWith(`${name}(`) || !f.endsWith(')')) return null;
+  const inner = f.slice(name.length + 1, -1);
+  let depth = 0;
+  for (const ch of inner) {
+    if (ch === '(') depth++;
+    else if (ch === ')' && --depth < 0) return null;
+  }
+  if (depth !== 0) return null;
+  return splitBinary(inner, ',');
 }
 
 function splitBinary(s: string, op: string): [string, string] | null {
