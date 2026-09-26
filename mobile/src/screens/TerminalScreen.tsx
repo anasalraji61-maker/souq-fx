@@ -2187,13 +2187,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     maxWidth: 140,
   },
+  // DESIGN-PRO §3/5.5: 32 ارتفاع الشريط العلوي (كان 38×34)، وحدّ فقط بلا خلفية ثانية
   layoutSwitchBtn: {
-    width: 38,
-    height: 34,
+    width: 40,
+    height: 32,
     borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    backgroundColor: colors.bgPanel,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -2267,7 +2267,7 @@ const styles = StyleSheet.create({
   topDock: { flexDirection: 'row', gap: spacing.xs, paddingHorizontal: 4 },
   // DESIGN-PRO §4: أيقونة فقط (سقط الوسم 7px تحتها) — الاسم في accessibilityLabel؛ 32 ارتفاع الشريط العلوي (§3)
   topBtn: {
-    minWidth: 42,
+    minWidth: 40,
     paddingHorizontal: 4,
     minHeight: 32,
     paddingVertical: spacing.xs,
@@ -2276,7 +2276,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
   },
   topMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   topTip: { color: colors.text, fontSize: 11, fontWeight: '500' },
