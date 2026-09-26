@@ -100,23 +100,39 @@ export function ScreenerMini() {
       if (!mountedRef.current) return;
       const all = res.results;
       const failed = res.failed ?? [];
+      // tools115a/backend-r69: فلتر واحد ⇒ رمز بـ`insufficient_data` هو في `failed` لقِصَر شموعه لا لحدّ المزوّد —
+      // «حدّ الطلبات غالباً» كان سبباً خاطئاً وإعادة الفحص لا تغيّر شيئاً. يُسمّى بسطر `screenerInsufficientData`.
+      const shortSet = new Set(
+        Object.entries(res.insufficient_data ?? {})
+          .filter(([, f]) => Array.isArray(f) && f.length > 0)
+          .map(([s]) => s.toUpperCase())
+      );
+      const rateFailed = failed.filter((s) => !shortSet.has(s.toUpperCase()));
+      const shortSyms = failed.filter((s) => shortSet.has(s.toUpperCase()));
+      const sep = rtl ? '، ' : ', ';
       setHits(all.slice(0, MAX_HITS));
       setTotalHits(all.length);
       if (res.provider_configured === false) {
         setEmptyNote(t.screenerNeedApiKey);
-      } else if (res.scanned === 0 && failed.length > 0) {
+      } else if (res.scanned === 0 && rateFailed.length > 0 && shortSyms.length === 0) {
         setEmptyNote(t.screenerScanNone);
       } else {
         // ناقصٌ ومعه نتائج: تحذيرٌ **بجانب** النتائج لا بدلاً منها.
-        if (failed.length > 0) {
-          setPartialNote(
+        const notes: string[] = [];
+        if (rateFailed.length > 0) {
+          notes.push(
             t.screenerScanPartial
               .replace('{k}', String(res.scanned ?? 0))
               .replace('{total}', String(res.total ?? failed.length))
-              .replace('{list}', failed.join(rtl ? '، ' : ', '))
+              .replace('{list}', rateFailed.join(sep))
           );
         }
-        if (!all.length) {
+        if (shortSyms.length > 0) {
+          notes.push(t.screenerInsufficientData.replace('{tf}', TF).replace('{list}', shortSyms.join(sep)));
+        }
+        if (notes.length) setPartialNote(notes.join('\n'));
+        // لا رمز فُحص وكلّها قصيرة التاريخ ⇒ سطر الشموع يقول كل شيء؛ «لا تطابق من 0» فوقه ضجيج.
+        if (!all.length && !(res.scanned === 0 && shortSyms.length > 0)) {
           setEmptyNote(
             res.scanned != null
               ? t.screenerNoMatchOf.replace('{k}', String(res.scanned)).replace('{tf}', TF)

@@ -610,6 +610,9 @@ export const api = {
       scanned?: number;
       failed?: string[];
       total?: number;
+      /** backend-r69: رمز ⇒ فلاتر لم تكفِ شموعه لتقييمها. رمز كل فلاتره هنا يقع في `failed` أيضاً — سببه قِصَر
+       * التاريخ لا حدّ المزوّد. خادم أقدم لا يرسله. */
+      insufficient_data?: Record<string, string[]>;
       provider_configured: boolean;
     }>('/api/screener/run', body),
   backtest: (body: {
