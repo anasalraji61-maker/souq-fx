@@ -681,3 +681,15 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen:211-223`؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ فحص آلي: لا `Pressable` بحالة `Active/On/Selected` أو لون تأكيد شرطي بلا `accessibilityState`؛ العربي الباقي بنطاقي تعليقات، وخرائط تسميات الخادم (`CommissionPlanPanel`)، وتعليمات AI (`WeeklyReportPanel`، تُرسل مع `lang`)، و`MessagesScreen`/`mock.ts` (launch52، لأنس).
 - DESIGN-PRO بنطاقي: البنود الستّة المرتّبة منجزة (تشغيل 45)؛ لا وزن ≥700، لا مسافة خارج مضاعفات 4 (الباقي كله `chart/`).
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
+
+## 2026-09-26 — تشغيل 56
+صفوف ui بـCOORDINATION (launch148، QA87a، chart-r70، backend-r54) منجزة بالتشغيلين 54–55 (تحقّق بالكود: `d0c0900`، `4a84586`، `7819263`، `ee6b068`) — تنتظر إغلاق QA. بوابة البناء خضراء (tsc 0) قبل كل commit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 1374962 | الخلل نفسه لـchart-r70 بثلاث لوحات أخرى: مستويات `VotePanel` (دخول/وقف/هدف بمرجع الدخول)، صفقات `BacktestPanel` (دخول → خروج بمرجع الدخول)، سطر B/A بـ`FocusChartModal` (بمرجع bid كـ`DomLitePanel`) | chart-r70 (توسيع) |
+
+- **QA88a** (سجّله QA أثناء التشغيل، كنت أفتح الصفّ نفسه فأسقطته): ينتظر مفتاح launch `sigLevelsUnavailableBelowTick` ثم `case 'atr_below_tick'` بـ`signalDirection.ts`. حتى يصل: المستويات تسقط بلا سبب ظاهر (لا رقم خاطئ).
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert` بتعليقات فقط خارج `chart/confirmDestructive.ts`؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen:211-223`.
+- DESIGN-PRO بنطاقي (فحص آلي): لا وزن ≥700، لا مسافة خارج مضاعفات 4؛ كل `<Text>` يعرض سعراً/نسبة بالملفّات المفحوصة يحمل `numeric` (بالنمط أو بالأب).
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
