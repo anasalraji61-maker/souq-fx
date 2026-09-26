@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/candleGeometry.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { candleBodyWidth, restBarCount } from './candleGeometry';
+import { candleBodyWidth, restBarCount, REST_BAR_PX, REST_BARS_MAX, REST_BARS_MIN } from './candleGeometry';
 
 // تصغير شديد: لا يقلّ عن 2px ولا يتجاوز العمود
 assert.equal(candleBodyWidth(2), 2);
@@ -25,7 +25,13 @@ assert.ok(292 / restBarCount(292) >= 5.9);
 assert.equal(restBarCount(600), 100);
 // شاشة كاملة: السقف 160، وأضيق لوح: الحدّ الأدنى 40
 assert.equal(restBarCount(1400), 160);
+assert.equal(REST_BARS_MAX, 160);
+assert.equal(restBarCount(REST_BARS_MAX * REST_BAR_PX * 3), REST_BARS_MAX);
 assert.equal(restBarCount(120), 40);
+assert.equal(REST_BARS_MIN, 40);
+assert.equal(restBarCount(1), REST_BARS_MIN);
+// بين الحدّين الخطوة ~REST_BAR_PX
+assert.equal(restBarCount(100 * REST_BAR_PX), 100);
 // قبل القياس: القيمة القديمة
 assert.equal(restBarCount(NaN), 80);
 assert.equal(restBarCount(0), 80);
