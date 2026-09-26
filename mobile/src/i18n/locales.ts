@@ -1111,6 +1111,14 @@ export type Dict = {
   railTipReport: string;
   railTipNewsItem: string;
   railOpenQuadA11y: string;
+  /** Left rail (`MatrixEdgeRails.tsx` `DRAW_GROUPS`, ui 613add9): one short name per grouped draw button — tip and
+   *  screen-reader label, instead of joining every tool name ("Trend / Ray / Channel / …"). Owner of the wiring: ui. */
+  railDrawGroupLines: string;
+  railDrawGroupShapes: string;
+  railDrawGroupAnnotate: string;
+  railDrawGroupPosition: string;
+  /** a11y hint on a group button: it opens a menu, it does not pick a tool */
+  railDrawGroupMenuHint: string;
   cfSyncLeaderBadge: string;
   cfSyncPartialBadge: string;
   cfSyncFollowBadge: string;
@@ -2464,6 +2472,11 @@ const ar: Dict = {
   railTipReport: 'تقرير',
   railTipNewsItem: 'خبر',
   railOpenQuadA11y: 'فتح تخطيط 2×2',
+  railDrawGroupLines: 'خطوط',
+  railDrawGroupShapes: 'أشكال وفيبو',
+  railDrawGroupAnnotate: 'ملاحظة وقياس',
+  railDrawGroupPosition: 'خطة شراء/بيع',
+  railDrawGroupMenuHint: 'يفتح قائمة أدوات هذه المجموعة',
   cfSyncLeaderBadge: 'قائد الزمن',
   cfSyncPartialBadge: 'متزامن · جزئي',
   cfSyncFollowBadge: 'متزامن',
@@ -3703,6 +3716,11 @@ const enUS: Dict = {
   railTipReport: 'Report',
   railTipNewsItem: 'News',
   railOpenQuadA11y: 'Open 2×2 layout',
+  railDrawGroupLines: 'Lines',
+  railDrawGroupShapes: 'Shapes & Fib',
+  railDrawGroupAnnotate: 'Note & measure',
+  railDrawGroupPosition: 'Buy/sell plan',
+  railDrawGroupMenuHint: 'Opens the tools in this group',
   cfSyncLeaderBadge: 'Time leader',
   cfSyncPartialBadge: 'Synced · partial',
   cfSyncFollowBadge: 'Synced',
@@ -4989,6 +5007,11 @@ const ku: Dict = {
   railTipReport: 'ڕاپۆرت',
   railTipNewsItem: 'هەواڵ',
   railOpenQuadA11y: 'کردنەوەی نەخشەی 2×2',
+  railDrawGroupLines: 'هێڵەکان',
+  railDrawGroupShapes: 'شێوە و فیبۆ',
+  railDrawGroupAnnotate: 'تێبینی و پێوان',
+  railDrawGroupPosition: 'پلانی کڕین/فرۆشتن',
+  railDrawGroupMenuHint: 'لیستی ئامرازەکانی ئەم گرووپە دەکاتەوە',
   cfSyncLeaderBadge: 'سەرکردەی کات',
   cfSyncPartialBadge: 'هاوکات · بەشی',
   cfSyncFollowBadge: 'هاوکات',
