@@ -23,7 +23,8 @@ export type PositionSide = 'long' | 'short';
 
 export const DEFAULT_POSITION_RR = 2;
 export const MIN_POSITION_RR = 0.1;
-export const MAX_POSITION_RR = 20;
+/** سقف للحماية من رسمة فاسدة لا حدّ تداولي: 20 كان يمنع هدف سكالب بوقف 3 نقاط أبعد من 60 نقطة. */
+export const MAX_POSITION_RR = 100;
 
 export function isPositionTool(tool: string | null | undefined): tool is PositionSide {
   return tool === 'long' || tool === 'short';
@@ -103,13 +104,15 @@ export function positionLevels(
 
 /**
  * النسبة من سعر مقبض الهدف المسحوب. الهدف بالجهة الخطأ (تحت دخول الشراء) ⇒ أدنى نسبة لا قلب
- * الصفقة. مقرَّبة لمنزلتين: «2.37» تُقرأ، و2.3712 ضجيج إصبع.
+ * الصفقة. **بلا تقريب مرئي**: كانت تُقرَّب لمنزلتين فأصغر خطوة للهدف 0.01 من الوقف — ذهب بوقف 50$ يقفز 0.5$
+ * (أُسقط على 2735.37 فكُتب «TP 2735.50»). `positionLevels` يضع الهدف على شبكة الزوج و`rrText` يقرّب النصّ.
  */
 export function rrFromTarget(levels: Pick<PositionLevels, 'side' | 'entry' | 'stop'>, targetPrice: number): number {
   const risk = Math.abs(levels.entry - levels.stop);
   if (!(risk > 0) || !Number.isFinite(targetPrice)) return DEFAULT_POSITION_RR;
   const reward = levels.side === 'long' ? targetPrice - levels.entry : levels.entry - targetPrice;
-  return clampRr(Math.max(MIN_POSITION_RR, Math.round((reward / risk) * 100) / 100));
+  // 1e-6 يمسح ضجيج الفاصلة العائمة (‎3.000000000000089‎) — خطوة هدف جزء من مليون من الوقف.
+  return clampRr(Math.max(MIN_POSITION_RR, Math.round((reward / risk) * 1e6) / 1e6));
 }
 
 /** «2» أو «2.5» أو «1.37» — بلا أصفار زائدة. */

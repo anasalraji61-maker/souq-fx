@@ -51,7 +51,8 @@ assert.equal(clampRr(undefined), 2);
 assert.equal(clampRr(NaN), 2);
 assert.equal(clampRr(-1), 2);
 assert.equal(clampRr(0.01), 0.1);
-assert.equal(clampRr(99), 20);
+assert.equal(clampRr(99), 99);
+assert.equal(clampRr(250), 100);
 
 // النسبة من مقبض الهدف
 assert.equal(rrFromTarget({ side: 'long', entry: 1.085, stop: 1.0825 }, 1.0925), 3);
@@ -60,7 +61,16 @@ assert.equal(rrFromTarget({ side: 'short', entry: 1.085, stop: 1.0875 }, 1.08125
 assert.equal(rrFromTarget({ side: 'long', entry: 1.085, stop: 1.0825 }, 1.08), 0.1);
 assert.equal(rrFromTarget({ side: 'long', entry: 1.085, stop: 1.0825 }, 1.085), 0.1);
 // مقرّبة لمنزلتين
-assert.equal(rrFromTarget({ side: 'long', entry: 1, stop: 0.97 }, 1.0712345), 2.37);
+// بلا تقريب النسبة: الهدف يُبنى على شبكة الزوج حيث أُسقط (ذهب بوقف 50$: 2735.37 لا 2735.50)
+{
+  const gold = { side: 'long' as const, entry: 2650, stop: 2600 };
+  const rr = rrFromTarget(gold, 2735.37);
+  assert.equal(positionLevels('long', 2650, 2600, rr, 'XAUUSD').target, 2735.37);
+  assert.equal(rrText(rr), '1.71');
+  // سكالب اليورو بوقف 3 نقاط وهدف +80 نقطة (R:R 26.7) — كان يُقصّ عند 20R (60 نقطة)
+  const eu = { side: 'long' as const, entry: 1.085, stop: 1.08470 };
+  assert.equal(positionLevels('long', 1.085, 1.0847, rrFromTarget(eu, 1.093), 'EURUSD').target, 1.093);
+}
 
 assert.equal(rrText(2), '2');
 assert.equal(rrText(2.5), '2.5');
