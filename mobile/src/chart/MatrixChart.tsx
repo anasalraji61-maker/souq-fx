@@ -8181,7 +8181,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               source.plot.map((b) => candleTimeSec(b.time)),
               timeframeStepSec(series.timeframe),
               series.symbol,
-              chartPlotW
+              // عرض الشموع المرسومة بخانات اللوح (`slots`) لا اللوح كلّه: بالإعادة 12 شمعة مكشوفة من 80 خانة كانت تُحسب
+              // بعرض 6.7× ⇒ فواصل الأيام مكدّسة على 4H مصغَّر حيث تُخفى بلا إعادة.
+              (chartPlotW * source.plot.length) / Math.max(source.plot.length, source.slots)
             ).map((i) => {
               const x = (xOf(i - 1) + xOf(i)) / 2;
               if (!(x >= 0 && x <= chartPlotW)) return null;
