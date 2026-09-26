@@ -56,6 +56,19 @@ def _price_as_of(
     return min(known) if known else None
 
 
+def _evaluable(f: str, closes: list[float], fast: int, slow: int, chg: float | None) -> bool:
+    """هل في السلسلة ما يكفي لتقييم الفلتر؟ التقاطع يحتاج قيمتين للخطّين (`indicators._last_two`)، وإلا
+    `cross_up` يعيد False صامتاً — كان الرمز يُعدّ «مفحوصاً بلا تطابق» (100 شمعة و`slow` 150، أو 30 شمعة
+    لتقاطع MACD الذي يحتاج 35) وهو لم يُفحص. RSI يُفحص قبل هذا (`snap["rsi"]`)."""
+    if f in ("ma_cross_up", "ma_cross_down"):
+        return ind._last_two(ind.sma(closes, fast), ind.sma(closes, slow)) is not None
+    if f == "macd_cross_up":
+        return ind._last_two(*ind.macd(closes)) is not None
+    if f in ("bullish", "bearish"):
+        return chg is not None
+    return True
+
+
 def filter_rules(fast: int = 9, slow: int = 21) -> list[dict[str, Any]]:
     """قاعدة كل فلتر بصيغة آلية مشتقّة من الثوابت نفسها التي يطابق بها الفحص — بلا نصّ بشري:
     التطبيق له نصوصه المترجمة (`locales.ts`)، والخادم لا يرسل لغةً واحدة لكل المستخدمين."""
@@ -104,6 +117,7 @@ def run_scan_detailed(
     hits: list[dict[str, Any]] = []
     scanned = 0
     failed: list[str] = []
+    insufficient: dict[str, list[str]] = {}
 
     for sym in syms:
         try:
@@ -126,9 +140,7 @@ def run_scan_detailed(
         if snap.get("rsi") is None:
             failed.append(sym.upper())
             continue
-        scanned += 1
 
-        matched: list[str] = []
         # يُطابَق على الرقم المعروض (منزلة واحدة): 69.96 كان يُعرض 70.0 ولا يطابق «تشبّع شرائي ≥ 70»
         rsi_v = round(float(snap["rsi"]), 1) + 0.0
         # «آخر 80 شمعة» = من إغلاق ما **قبلها** (80 حركة، كـ`signal_hub` «آخر 10 شموع»): كان `raw[-80:]`
@@ -142,6 +154,17 @@ def run_scan_detailed(
         # على المعروض (منزلتان) كـRSI: +0.0004% كان «صاعد» بجانب «0.00%» (و«-0.00%» هابط)
         chg = round(chg, 2) + 0.0 if chg is not None else None
 
+        closes = ind._closes(raw)
+        short = [f for f in flt if not _evaluable(f, closes, fast, slow, chg)]
+        if short:
+            insufficient[sym.upper()] = short
+        if len(short) == len(flt):
+            # لا فلتر مطلوب أمكن تقييمه ⇒ «لم يُفحص» كرمز تعذّر جلبه، لا «فُحص ولا تطابق»
+            failed.append(sym.upper())
+            continue
+        scanned += 1
+
+        matched: list[str] = []
         for f in flt:
             if f == "rsi_oversold" and rsi_v <= rsi_low:
                 matched.append(f)
@@ -182,5 +205,8 @@ def run_scan_detailed(
         "results": hits,
         "scanned": scanned,
         "failed": failed,
+        # رمز → الفلاتر التي لم تكفِ شموعه لتقييمها (لا تطابق عليها ليس «لا تقاطع»). رمز كل فلاتره هنا
+        # يُعدّ أيضاً في `failed`.
+        "insufficient_data": insufficient,
         "total": len(syms),
     }

@@ -1404,6 +1404,7 @@ def screener_run(body: ScreenerRun):
         "count": len(hits),
         "scanned": scan["scanned"],
         "failed": scan["failed"],
+        "insufficient_data": scan["insufficient_data"],
         "total": scan["total"],
         "provider_configured": market.configured(),
     }

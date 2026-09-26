@@ -435,3 +435,54 @@ def test_backtest_keeps_a_finished_last_candle(client, monkeypatch):
     r = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "15m", "strategy": "ma_cross"}).json()
     assert r["forming_bar_excluded"] is False
     assert r["trades"][-1]["exit_time"] == cs[-1]["time"]
+
+
+def _series(n: int) -> list[dict]:
+    now = int(time.time())
+    return [
+        {"time": now - (n - i) * 900, "open": c, "high": c, "low": c, "close": c, "volume": 0}
+        for i, c in enumerate(1.1 + 0.001 * ((i * 7) % 11) for i in range(n))
+    ]
+
+
+@pytest.mark.parametrize("n,flt,slow", [(100, "ma_cross_up", 150), (100, "ma_cross_down", 150), (30, "macd_cross_up", 21)])
+def test_scan_too_few_candles_for_the_filter_is_not_scanned(monkeypatch, n, flt, slow):
+    """100 شمعة و`slow` 150 (أو 30 شمعة لتقاطع MACD الذي يحتاج 35) ⇒ `cross_up` False صامتاً، وكان الرمز
+    يُعدّ «مفحوصاً بلا تقاطع». الآن «لم يُفحص» (`failed`) مع السبب بـ`insufficient_data`."""
+    candles = _series(n)
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}),
+    )
+    out = screener_engine.run_scan_detailed("15m", [flt], ["EURUSD"], slow=slow)
+    assert out["scanned"] == 0 and out["failed"] == ["EURUSD"] and out["results"] == []
+    assert out["insufficient_data"] == {"EURUSD": [flt]}
+
+
+@pytest.mark.parametrize("n,flt,slow", [(151, "ma_cross_up", 150), (35, "macd_cross_up", 21)])
+def test_scan_exactly_enough_candles_is_scanned(monkeypatch, n, flt, slow):
+    """الحدّ نفسه: `slow`+1 شمعة للتقاطع MA، و35 لـMACD ⇒ يُفحص."""
+    candles = _series(n)
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}),
+    )
+    out = screener_engine.run_scan_detailed("15m", [flt], ["EURUSD"], slow=slow)
+    assert out["scanned"] == 1 and out["failed"] == [] and out["insufficient_data"] == {}
+
+
+def test_scan_partly_evaluable_symbol_is_scanned_and_names_the_skipped_filter(client, monkeypatch):
+    """RSI يُقيَّم على 30 شمعة وتقاطع MACD لا ⇒ الرمز مفحوص (تطابق RSI يظهر) و`insufficient_data` يسمّي MACD."""
+    candles = _series(30)
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}),
+    )
+    r = client.post(
+        "/api/screener/run",
+        json={"symbols": ["EURUSD"], "timeframe": "15m", "filters": ["rsi_oversold", "macd_cross_up"]},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["scanned"] == 1 and body["failed"] == []
+    assert body["insufficient_data"] == {"EURUSD": ["macd_cross_up"]}
