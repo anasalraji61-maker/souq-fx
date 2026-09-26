@@ -1029,17 +1029,25 @@ export function ToolsScreen() {
               if (hero) {
                 setHeroSymbol(hero.symbol);
                 setHeroTf(hero.tf);
-                await AsyncStorage.setItem(HERO_SYMBOL_KEY, hero.symbol);
-                await AsyncStorage.setItem(HERO_TF_KEY, hero.tf);
               }
-              await AsyncStorage.setItem(
-                'matrix.frameSymbols.v1',
-                JSON.stringify(layout.frameSymbols)
-              );
-              await AsyncStorage.setItem(
-                'matrix.frameTimeframes.v1',
-                JSON.stringify(layout.frameTfs)
-              );
+              // الحفظ للتشغيل القادم فقط — الطرفية تأخذ التخطيط من المعاملات أدناه. كتابةٌ ترفض (امتلاء localStorage
+              // بالويب) كانت ترمي قبل `navigate` و`onApply` يُستدعى بلا انتظار ⇒ «تطبيق» بلا أيّ أثر.
+              try {
+                if (hero) {
+                  await AsyncStorage.setItem(HERO_SYMBOL_KEY, hero.symbol);
+                  await AsyncStorage.setItem(HERO_TF_KEY, hero.tf);
+                }
+                await AsyncStorage.setItem(
+                  'matrix.frameSymbols.v1',
+                  JSON.stringify(layout.frameSymbols)
+                );
+                await AsyncStorage.setItem(
+                  'matrix.frameTimeframes.v1',
+                  JSON.stringify(layout.frameTfs)
+                );
+              } catch {
+                /* التخزين يفشل ⇒ التخطيط يُطبَّق للجلسة الحالية على الأقلّ */
+              }
               // الشاشة الرئيسية مركّبة مسبقاً وتقرأ التخزين عند التركيب فقط — كان التطبيق يبدو بلا أثر
               // حتى إعادة تشغيل التطبيق. نمرّر التخطيط كمعاملات (نفس نمط openSymbol) وننتقل للشارت.
               (navigation as unknown as { navigate: (name: string, params: object) => void }).navigate(
