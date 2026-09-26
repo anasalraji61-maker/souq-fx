@@ -17,6 +17,7 @@ import {
   localDayKey,
   dailyRoomMaxLots,
   restoredLostToday,
+  lostTodayInCcy,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3944,3 +3945,15 @@ console.log('positionSize formatLots selftest OK');
   assert.equal(parseSlPips('12.25', instrumentSpec('XAUUSD')!), 12.25);
 }
 console.log('positionSize silver price-in-pips selftest OK');
+
+// ---- lostTodayInCcy: خسارة اليوم بعملتها — لا تُقرأ بعملة حسابٍ أخرى ----
+{
+  assert.equal(lostTodayInCcy('450', 'USD', 'USD'), '450');
+  // USD ⇒ JPY: «450» لم تعد ¥450 (كانت: متّسع 74,572 ين بلا تحذير، والصحيح ~10,875 مع تحذير التخطّي)
+  assert.equal(lostTodayInCcy('450', 'USD', 'JPY'), '');
+  // عادي ⇒ سنت (EURUSD ⇒ EURUSDc): 30 دولاراً ليست 30 سنتاً
+  assert.equal(lostTodayInCcy('30', 'USD', 'USC'), '');
+  assert.equal(lostTodayInCcy('3000', 'USC', 'USD'), '');
+  // حفظٌ أقدم بلا عملة ⇒ كما هو
+  assert.equal(lostTodayInCcy('300', null, 'EUR'), '300');
+}

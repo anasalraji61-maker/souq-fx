@@ -86,6 +86,7 @@ import {
   dailyRoomMaxLots,
   localDayKey,
   restoredLostToday,
+  lostTodayInCcy,
   spreadTooWide,
   spreadMaybePrice,
   stopInsideSpread,
@@ -190,6 +191,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   /** حدّ الخسارة اليومي % وخسارة اليوم (مطويّتان حتى تُفتحا أو يُحفظ حدّ) — راجع `dailyLossRoom` */
   const [dailyLimit, setDailyLimit] = useState('');
   const [lostToday, setLostToday] = useState('');
+  /** عملة المال التي كُتبت بها خسارة اليوم — راجع `lostTodayInCcy` (null = حفظٌ أقدم بلا عملة) */
+  const [lostCcy, setLostCcy] = useState<string | null>(null);
   const [dailyOpen, setDailyOpen] = useState(false);
   const [slPips, setSlPips] = useState('');
   /** سبريد الأداة بالنقاط (اختياري) — يخصّ الأداة لا الحساب، فلا يُحفظ ويُمسح بتبديلها */
@@ -262,6 +265,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             dailyLimit?: string;
             lostToday?: string;
             lostDay?: string;
+            lostCcy?: string;
           };
           if (typeof p.dailyLimit === 'string' && p.dailyLimit.trim() !== '') {
             setDailyLimit(p.dailyLimit);
@@ -269,6 +273,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           }
           // خسارة الأمس لا تُقرأ اليوم — راجع `restoredLostToday`
           setLostToday(restoredLostToday(p, new Date()));
+          setLostCcy(typeof p.lostCcy === 'string' ? p.lostCcy : null);
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
@@ -381,12 +386,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         commissionMode: commissionModeRef.current,
         dailyLimit,
         lostToday,
+        lostCcy,
         lostDay: localDayKey(new Date()),
       })
     ).catch(() => {
       /* ignore */
     });
-  }, [balance, centBalance, otherBalances, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy, dailyLimit, lostToday]);
+  }, [balance, centBalance, otherBalances, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy, dailyLimit, lostToday, lostCcy]);
   const balanceText = cent ? centBalance : balance;
   const setBalanceText = cent ? setCentBalance : setBalance;
   /** لاحقة الوضع الحالي (null = حساب عادي) */
@@ -1030,7 +1036,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * حدّ الخسارة اليومي: المتّسع من رصيد بداية اليوم، بمخاطرة هذه الصفقة **شاملة التكاليف** حين تُكتب (ما يخسره الوقف فعلاً).
    * خانة خسارة اليوم الفارغة = 0؛ رقم مرفوض فيها أو بالحدّ ⇒ لا سطر. راجع `dailyLossRoom`.
    */
-  const lostTodayNum = lostToday.trim() === '' ? 0 : parseDecimal(lostToday, { amount: true });
+  /** بعملةٍ غير عملة المال الآن ⇒ فارغة (0) حتى من قبل أن يُفرغها المؤثّر أدناه */
+  const lostTodayNow = lostTodayInCcy(lostToday, lostCcy, moneyCcy);
+  useEffect(() => {
+    if (lostToday === '') return;
+    // حفظٌ أقدم بلا عملة: تُنسب لعملة المال التي فتحت عليها اللوحة
+    if (lostCcy == null) setLostCcy(moneyCcy);
+    else if (lostTodayNow !== lostToday) setLostToday(lostTodayNow);
+  }, [lostToday, lostCcy, moneyCcy, lostTodayNow]);
+  const lostTodayNum = lostTodayNow.trim() === '' ? 0 : parseDecimal(lostTodayNow, { amount: true });
   const dailyLimitNum = parseDecimal(dailyLimit, { percent: true });
   const dailyRoom =
     result && lots != null && dailyLimitNum != null && lostTodayNum != null
@@ -1624,7 +1638,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         <>
           {input(dailyLimit, setDailyLimit, '5', t.riskCalcDailyLimit)}
           <Text style={[styles.label, { textAlign: align }]}>{`${t.riskCalcLostToday} (${moneyCcy})`}</Text>
-          {input(lostToday, setLostToday, '0', t.riskCalcLostToday)}
+          {input(
+            lostTodayNow,
+            (v: string) => {
+              setLostToday(v);
+              setLostCcy(moneyCcy);
+            },
+            '0',
+            t.riskCalcLostToday
+          )}
         </>
       ) : null}
 
