@@ -97,7 +97,10 @@ import {
   type PlanIssue,
   type TradePlan,
   editExitValue,
-  editClosedAtValue,
+  editClosedAtSend,
+  reopenedCloseAt,
+  journalIsoToLocalField,
+  journalLocalFieldAt,
   editSizeValue,
   journalEditSeen,
   closeTermsChangedElsewhere,
@@ -165,6 +168,9 @@ type Trade = {
   opened_at: string;
   /** وقت الإغلاق من الخادم — ترتيب سلسلة الخسائر والتراجع بالـR (`closedChronological`)؛ غائب ⇒ `opened_at`. */
   closed_at?: string | null;
+  /** backend-r93: الوقتان بـISO بإزاحة الخادم لذلك التاريخ (null = غير معروف/غير مقروء) — حقل «وقت الإغلاق» يُعرض منهما بتوقيت الجهاز. */
+  opened_at_iso?: string | null;
+  closed_at_iso?: string | null;
 };
 
 /** «+2R» بصفّ الصفقة — المصدر نفسه لـ«متوسط R» (`realizedR`: الوقف الأصلي «1R @ …» ثم `sl`)؛ '' بلا R. */
@@ -288,9 +294,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   useEffect(() => setStopTypoFix(false), [editing?.id]);
   const editingRef = useRef(editing);
   editingRef.current = editing;
-  /** backend-r91a: وقت إغلاق صفقة أعاد هذا الجهاز فتحها بالتعديل (مسح الخروج يمسحه بالخادم) ⇒ يعود مع الخروج بتعديلٍ لاحق
-   * بدل «الآن» المختلَق (`editClosedAtValue`). بالجلسة وحدها، بمعرّف الصفقة. */
+  /** backend-r91a: وقت إغلاق صفقة أعاد هذا الجهاز فتحها بالتعديل (مسح الخروج يمسحه بالخادم)، بـ`closed_at_iso` ⇒ يملأ حقل
+   * «وقت الإغلاق» بتعديلٍ لاحق ويُرسل مع الإغلاق من خانة الخروج (`reopenedCloseAt`) بدل «الآن» المختلَق. بالجلسة وحدها، بمعرّف الصفقة. */
   const reopenedClosedAtRef = useRef(new Map<string, string>());
+  /** حقل «وقت الإغلاق» بنموذج التعديل (بتوقيت الجهاز) و`init` = ما مُلئ به (ومصدره ISO إن كان وقتاً محفوظاً) — `editClosedAtSend`. */
+  const [closeTime, setCloseTime] = useState('');
+  const [closeTimeInit, setCloseTimeInit] = useState<{ text: string; iso: string | null }>({ text: '', iso: null });
+  /** لمسه المتداول ⇒ لا يُملأ «الآن» تلقائياً فوق ما كتبه أو مسحه */
+  const closeTimeTouchedRef = useRef(false);
   /** عدسة المراجعة: الأداة المختارة بشرائح الفلتر — `null` = الكل. */
   const [filterSym, setFilterSym] = useState<string | null>(null);
 
@@ -555,6 +566,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    * رسالة السعر غير المقروء: «3.450» بخانة ذهب تقول **لماذا** وتعرض القراءتين (3450 أو 3.45) — رسالة «اكتبه بلا
    * فواصل آلاف، مثل 1.0850» كانت تحيّر: المتداول لا يرى فاصلاً، والمثال يشبه ما كتبه. غير ذلك الرسالة العامة.
    */
+  /** مثال حقل «وقت الإغلاق» بصيغته — الوقت الحالي بتوقيت الجهاز (تاريخٌ ثابت يُقرأ كأنه قيمة) */
+  const closeTimeExample = () => journalLocalFieldAt(Date.now());
+  /** سبب رفض «وقت الإغلاق». «بالمستقبل» بلا مفتاح بعد (طُلب من launch: `journalCloseTimeFuture`) ⇒ التلميح، وسببه الأرجح توقيتٌ غير الجهاز */
+  const closeTimeErrorText = (e: { error: 'invalid' } | { error: 'beforeOpen'; opened: string } | { error: 'future' }): string =>
+    e.error === 'beforeOpen'
+      ? t.journalCloseTimeBeforeOpen.replace('{opened}', () => e.opened)
+      : (e.error === 'invalid' ? t.journalCloseTimeInvalid : t.journalCloseTimeHint).replace('{example}', closeTimeExample);
+
   const pxErrorText = (v: string, sym: string = symbol): string => {
     const a = ambiguousThousandsPrice(v, sym);
     return a
@@ -1179,6 +1198,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setNote(f.note);
   };
 
+  // صفقة مفتوحة يُكتب خروجها بالتعديل: الحقل يظهر بـ«الآن» صريحاً (ما يختمه الخادم إن بقي كما هو) — فارغاً كان سيعني
+  // «غير معروف» بنصّ التلميح بينما يُحفظ «الآن»
+  const exitTyped = editing != null && pnum(exit) != null;
+  useEffect(() => {
+    if (!exitTyped || editing?.status !== 'open' || closeTimeTouchedRef.current || closeTime !== '' || closeTimeInit.text !== '') return;
+    const text = journalLocalFieldAt(Date.now());
+    setCloseTime(text);
+    setCloseTimeInit({ text, iso: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exitTyped, editing?.id]);
+
   const startEdit = (tr: Trade) => {
     // تعديلٌ فوق تعديل: يبقى ما قبل الأوّل
     if (!editing) {
@@ -1190,12 +1220,24 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       };
     }
     setEditing(tr);
+    initCloseTime(tr);
     liveFillRef.current = null;
     // الأسعار كما سُجّلت بلا تقريب ولا صيغة أُسّية، والحجم 1 الافتراضي فارغ — راجع `journalEditForm`
     fillEditForm(journalEditForm(tr));
     setSizeFor(tr.symbol);
     setFormError(null);
     playSoftClick();
+  };
+
+  /** «وقت الإغلاق» كما يُفتح عليه التعديل: المغلقة ⇒ `closed_at_iso` بتوقيت الجهاز (فارغ = غير معروف)؛ مفتوحة أعاد هذا الجهاز
+   * فتحها ⇒ وقتها المحفوظ؛ غيرها فارغ (يُملأ «الآن» حين يُكتب خروجها). */
+  const initCloseTime = (tr: Trade) => {
+    const remembered = tr.status === 'open' ? reopenedClosedAtRef.current.get(tr.id) ?? null : null;
+    const iso = tr.status === 'open' ? remembered : tr.closed_at_iso ?? null;
+    const text = journalIsoToLocalField(iso) ?? '';
+    closeTimeTouchedRef.current = false;
+    setCloseTime(text);
+    setCloseTimeInit({ text, iso: text && remembered ? remembered : null });
   };
 
   const cancelEdit = () => {
@@ -1281,7 +1323,22 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const submittedKey = formKeyRef.current;
     if (editing) {
       const exitSent = editExitValue(editing.status !== 'open', pnum(exit));
-      const restoredClosedAt = editClosedAtValue(editing, exitSent, reopenedClosedAtRef.current.get(editing.id));
+      const closedAt = editClosedAtSend({
+        exitSent,
+        startedClosed: editing.status !== 'open',
+        text: closeTime,
+        initial: closeTimeInit.text,
+        initialIso: closeTimeInit.iso,
+        openedIso: editing.opened_at_iso,
+        nowMs: Date.now(),
+      });
+      if ('error' in closedAt) {
+        addInFlightRef.current = false;
+        setBusy(false);
+        setFormError(closeTimeErrorText(closedAt));
+        return;
+      }
+      const restoredClosedAt = closedAt.send;
       try {
         // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد صفقةً بدأ تعديلها مغلقة مفتوحةً) — لا «بلا تغيير» صامت.
         // بدأ مفتوحاً: الخروج الفارغ لا يُرسل، فإغلاقٌ بالسوق أثناء التعديل لا يُلغى بالحفظ (`editExitValue`)
@@ -1299,11 +1356,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           // بدل أن يكتب الخروج أو الدخول القديم فوقه. متغيّرٌ لا كائنٌ حرفي: نوع `updateTrade` (api.ts، ملك ui) بلا حقول `seen_*`
           ...journalEditSeen(editing),
           // صفقة أُعيد فتحها هنا ثم كُتب خروجها: وقت إغلاقها الأصلي لا «الآن» (backend-r91a). متغيّر كـ`seen_*`: `updateTrade` بلا الحقل
-          ...(restoredClosedAt ? { closed_at: restoredClosedAt } : null),
+          ...(restoredClosedAt !== undefined ? { closed_at: restoredClosedAt } : null),
         };
         await api.updateTrade(editing.id, body);
-        if (restoredClosedAt) reopenedClosedAtRef.current.delete(editing.id);
-        else if (exitSent === null && editing.closed_at) reopenedClosedAtRef.current.set(editing.id, editing.closed_at);
+        if (typeof exitSent === 'number') reopenedClosedAtRef.current.delete(editing.id);
+        else if (exitSent === null && editing.closed_at_iso) reopenedClosedAtRef.current.set(editing.id, editing.closed_at_iso);
         if (!mountedRef.current) return;
         playSoftClick();
         setEditing(null);
@@ -1329,6 +1386,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               journalEditForm(fresh)
             );
             setEditing(fresh);
+            if (!closeTimeTouchedRef.current) initCloseTime(fresh);
             keepErrorForRef.current = [merged.symbol, merged.side, merged.entry, merged.exit, merged.size, merged.sl, merged.tp, merged.note].join(
               '\u0001'
             );
@@ -1337,7 +1395,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           }
         } else {
           // 422 `invalid_closed_at` (الوقت المحفوظ لم يعد يصلح): يُنسى كي لا يمنع الحفظ للأبد — المحاولة التالية بلا وقت
-          if (restoredClosedAt && (err as { status?: number } | null)?.status === 422) reopenedClosedAtRef.current.delete(editing.id);
+          if (restoredClosedAt && restoredClosedAt === closeTimeInit.iso && (err as { status?: number } | null)?.status === 422) {
+            reopenedClosedAtRef.current.delete(editing.id);
+            closeTimeTouchedRef.current = false;
+            setCloseTime('');
+            setCloseTimeInit({ text: '', iso: null });
+          }
           setFormError(t.journalEditError);
         }
       } finally {
@@ -1482,13 +1545,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               if (mountedRef.current) notify(t.journalCloseConflictTitle, t.journalCloseConflictBody);
               return;
             }
+            // أُعيد فتحها بالتعديل هنا ثم أُغلقت من خانة الخروج ⇒ وقت إغلاقها الأصلي لا «الآن» (backend-r93 (2))
+            const closedAt = reopenedCloseAt(tr, source, reopenedClosedAtRef.current.get(tr.id));
             try {
               // الصفّ الذي أكّده المتداول يُرسل (tools122a): الخادم يرفض بـ409 إن عُدّل بعد الجلب أعلاه أو كان خارج الصفحة الأولى.
               // `api.closeTrade` (ui) يرسل `{ exit }` وحده حتى يُضاف له المعامل الثالث — حتى ذلك يبقى الفحص أعلاه وحده، كما كان.
-              await api.closeTrade(tr.id, exitPx, journalCloseSeen(tr));
+              await api.closeTrade(tr.id, exitPx, { ...journalCloseSeen(tr), ...(closedAt ? { closed_at: closedAt } : null) });
+              reopenedClosedAtRef.current.delete(tr.id);
             } catch (e) {
               // الفحص أعلاه يقرأ صفحة الدفتر الأولى وحدها، وجهازان قد يُغلقان بالثانية نفسها: الخادم يرفض الخروج الثاني
               // (409) ويُبقي الأول ⇒ نفس معاملة «أُغلقت من قبل» لا «فشل الإغلاق، حاول ثانية» (إعادة المحاولة 409 دائماً)
+              // 422 على وقتٍ محفوظ لم يعد يصلح: يُنسى كي لا يمنع إغلاقها للأبد — المحاولة التالية بلا وقت
+              if (closedAt && (e as { status?: number } | null)?.status === 422) reopenedClosedAtRef.current.delete(tr.id);
               if (!isAlreadyClosedError(e)) throw e;
               if (!mountedRef.current) return;
               await refresh();
@@ -2074,6 +2142,48 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           accessibilityLabel={t.journalSizeA11y}
         />
       </View>
+      {/* وقت الإغلاق (backend-r91a/r93): بالتعديل وحده ومتى كان للصفقة خروج — بتوقيت الجهاز، فارغ = غير معروف */}
+      {editing && pnum(exit) != null ? (
+        <>
+          <TextInput
+            style={[styles.input, { textAlign: align }]}
+            value={closeTime}
+            onChangeText={(v) => {
+              closeTimeTouchedRef.current = true;
+              setCloseTime(v);
+              setFormError(null);
+            }}
+            placeholder={t.journalCloseTimeLabel}
+            keyboardType="numbers-and-punctuation"
+            maxLength={20}
+            placeholderTextColor={colors.textDim}
+            underlineColorAndroid="transparent"
+            clearButtonMode="while-editing"
+            keyboardAppearance="dark"
+            selectionColor={colors.accent}
+            accessibilityLabel={t.journalCloseTimeLabel}
+            accessibilityHint={t.journalCloseTimeHint.replace('{example}', closeTimeExample)}
+          />
+          {(() => {
+            const chk = editClosedAtSend({
+              exitSent: pnum(exit),
+              startedClosed: editing.status !== 'open',
+              text: closeTime,
+              initial: closeTimeInit.text,
+              initialIso: closeTimeInit.iso,
+              openedIso: editing.opened_at_iso,
+              nowMs: Date.now(),
+            });
+            return 'error' in chk ? (
+              <Text style={[styles.planWarn, { textAlign: align }]}>{closeTimeErrorText(chk)}</Text>
+            ) : (
+              <Text style={[styles.planLine, { textAlign: align }]}>
+                {t.journalCloseTimeLabel} · {t.journalCloseTimeHint.replace('{example}', closeTimeExample)}
+              </Text>
+            );
+          })()}
+        </>
+      ) : null}
       {/* حجم سنت/micro بلوت الحساب العادي — كسطر الحاسبة، فلا يبقى «4» بعد العبور لرمزٍ عادي بلا ما يذكّر بمعناه (`journalSmallLotsStdEquiv`) */}
       {(() => {
         const std = journalSmallLotsStdEquiv(num(size), symbol);

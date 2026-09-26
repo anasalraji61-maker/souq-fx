@@ -1621,30 +1621,99 @@ console.log('tradePlan stopTooClose selftest OK');
 }
 console.log('tradePlan editExitValue selftest OK');
 
-// ——— editClosedAtValue: وقت الإغلاق بعد فتحٍ ثم إغلاقٍ بالتعديل (backend-r91a) ———
+// ——— حقل «وقت الإغلاق» بتوقيت الجهاز (backend-r91a/r93) ———
 {
-  const { editClosedAtValue, editExitValue } = require('./tradePlan') as typeof import('./tradePlan');
-  const opened = { status: 'open', opened_at: '2026-08-10 09:15' };
-  // صفقة أغسطس أُعيد فتحها هنا ثم كُتب خروجها ⇒ وقتها المحفوظ لا «الآن»
-  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-12 14:30'), '2026-08-12 14:30');
-  // مفتوحة بلا وقت محفوظ ⇒ لا يُرسل (إغلاق حقيقي الآن يختمه الخادم)
-  assert.equal(editClosedAtValue(opened, 1.0875, null), undefined);
-  assert.equal(editClosedAtValue(opened, 1.0875, undefined), undefined);
-  // بدأ مغلقاً: الخادم يُبقي وقته، لا يُرسل شيء
-  assert.equal(editClosedAtValue({ status: 'closed', opened_at: opened.opened_at }, 1.09, '2026-08-12 14:30'), undefined);
-  // المسح وبلا تغيير (بمخرجات editExitValue الفعلية) ⇒ لا يُرسل
-  assert.equal(editClosedAtValue(opened, editExitValue(false, null), '2026-08-12 14:30'), undefined);
-  assert.equal(editClosedAtValue({ status: 'closed' }, editExitValue(true, null), '2026-08-12 14:30'), undefined);
-  // يسبق الفتح (422 invalid_closed_at يمنع الحفظ) أو بغير صيغة الخادم ⇒ لا يُرسل
-  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-09 23:59'), undefined);
-  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-12T14:30:00Z'), undefined);
-  assert.equal(editClosedAtValue(opened, 1.0875, ''), undefined);
-  // يساوي الفتح: مقبول بالخادم (`closed_at < opened_at` وحده يُرفض)
-  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-10 09:15'), '2026-08-10 09:15');
-  // صفّ بلا opened_at (نسخة قديمة) ⇒ يُرسل الوقت المحفوظ
-  assert.equal(editClosedAtValue({ status: 'open' }, 1.0875, '2026-08-12 14:30'), '2026-08-12 14:30');
+  const { journalIsoToLocalField, journalLocalFieldToIso, journalLocalFieldAt, editClosedAtSend, reopenedCloseAt, editExitValue } =
+    require('./tradePlan') as typeof import('./tradePlan');
+  const prevTz = process.env.TZ;
+  try {
+    // متداول ببغداد (+03:00 بلا صيفي)، خادم بفرانكفورت صيفاً (+02:00)
+    process.env.TZ = 'Asia/Baghdad';
+    // الخادم يعيد «2026-08-12 13:30» بتوقيته ⇒ الجهاز يرى 14:30 (كان النصّ الخام سيُعرض 13:30 — ساعة خطأ)
+    assert.equal(journalIsoToLocalField('2026-08-12T13:30:00+02:00'), '2026-08-12 14:30');
+    assert.equal(journalIsoToLocalField('2026-08-12T11:30:00Z'), '2026-08-12 14:30');
+    // بلا إزاحة (نصّ الخادم الخام أو صفّ قديم) ⇒ null لا تخمين
+    assert.equal(journalIsoToLocalField('2026-08-12 13:30'), null);
+    assert.equal(journalIsoToLocalField('2026-08-12T13:30:00'), null);
+    assert.equal(journalIsoToLocalField(null), null);
+    assert.equal(journalIsoToLocalField('yesterday'), null);
+    // الكتابة ⇒ ISO بإزاحة الجهاز؛ والعودة تطابق
+    const w = journalLocalFieldToIso('2026-08-12 14:30');
+    assert.equal(w?.iso, '2026-08-12T14:30:00+03:00');
+    assert.equal(w?.ms, Date.parse('2026-08-12T11:30:00Z'));
+    assert.equal(journalIsoToLocalField(w!.iso), '2026-08-12 14:30');
+    // صيغٌ مقبولة: T، «/»، أرقام عربية، خانة واحدة للشهر/اليوم/الساعة، فاصل «٫»
+    assert.equal(journalLocalFieldToIso('2026-08-12T14:30')?.iso, '2026-08-12T14:30:00+03:00');
+    assert.equal(journalLocalFieldToIso(' 2026/8/2 9:05 ')?.iso, '2026-08-02T09:05:00+03:00');
+    assert.equal(journalLocalFieldToIso('٢٠٢٦-٠٨-١٢ ١٤:٣٠')?.iso, '2026-08-12T14:30:00+03:00');
+    // غير موجود/غير مقروء ⇒ null (كان `Date` سيحفظ 1 مايو بدل «31 أبريل»)
+    for (const bad of ['2026-04-31 10:00', '2026-02-29 10:00', '2026-08-12 24:00', '2026-08-12 14:60', '2026-08-12', '14:30', '12-08-2026 14:30', '1969-12-31 23:00', ''])
+      assert.equal(journalLocalFieldToIso(bad), null, bad);
+    assert.equal(journalLocalFieldToIso('2028-02-29 10:00')?.iso, '2028-02-29T10:00:00+03:00');
+
+    const now = Date.parse('2026-09-26T09:00:00Z'); // 12:00 ببغداد
+    const openedIso = '2026-08-10T08:15:00+02:00'; // 09:15 ببغداد
+    const base = { exitSent: 1.0875, startedClosed: true, text: '2026-08-12 14:30', initial: '2026-08-12 14:30', initialIso: null, openedIso, nowMs: now };
+    // بدأ مغلقاً والحقل كما هو ⇒ لا يُرسل (الخادم يُبقيه)
+    assert.deepEqual(editClosedAtSend(base), { send: undefined });
+    assert.deepEqual(editClosedAtSend({ ...base, text: ' 2026-08-12 14:30 ' }), { send: undefined });
+    // صُحّح ⇒ ISO بإزاحة الجهاز
+    assert.deepEqual(editClosedAtSend({ ...base, text: '2026-08-12 16:05' }), { send: '2026-08-12T16:05:00+03:00' });
+    // مُسح ⇒ null «غير معروف»
+    assert.deepEqual(editClosedAtSend({ ...base, text: '' }), { send: null });
+    // غير مقروء / يسبق الفتح / بالمستقبل ⇒ خطأ بسببه لا 422 عامّ
+    assert.deepEqual(editClosedAtSend({ ...base, text: '12/08 14:30' }), { error: 'invalid' });
+    assert.deepEqual(editClosedAtSend({ ...base, text: '2026-08-10 09:14' }), { error: 'beforeOpen', opened: '2026-08-10 09:15' });
+    // الدقيقة نفسها مقبولة (الخادم: `closed_at < opened_at` وحده يُرفض)
+    assert.deepEqual(editClosedAtSend({ ...base, text: '2026-08-10 09:15' }), { send: '2026-08-10T09:15:00+03:00' });
+    assert.deepEqual(editClosedAtSend({ ...base, openedIso: '2026-08-10T08:15:40+02:00', text: '2026-08-10 09:15' }), { send: '2026-08-10T09:15:00+03:00' });
+    assert.deepEqual(editClosedAtSend({ ...base, text: '2026-09-26 12:06' }), { error: 'future' });
+    assert.deepEqual(editClosedAtSend({ ...base, text: '2026-09-26 12:05' }), { send: '2026-09-26T12:05:00+03:00' });
+    // بلا وقت فتح مقروء (صفّ قديم) ⇒ لا فحص «قبل الفتح»
+    assert.deepEqual(editClosedAtSend({ ...base, openedIso: null, text: '2020-01-01 00:00' }), { send: '2020-01-01T00:00:00+03:00' });
+    // الخروج لا يُرسل رقماً (مسح/بلا تغيير — مخرجات editExitValue الفعلية) ⇒ لا وقت
+    assert.deepEqual(editClosedAtSend({ ...base, exitSent: editExitValue(true, null), text: '2026-08-12 16:05' }), { send: undefined });
+    assert.deepEqual(editClosedAtSend({ ...base, exitSent: editExitValue(false, null), startedClosed: false }), { send: undefined });
+    // أُعيد فتحها هنا ثم كُتب خروجها: الحقل مُلئ من الوقت المحفوظ ⇒ ذلك الـISO حرفياً (لا «الآن»)
+    const reopened = { ...base, startedClosed: false, initialIso: '2026-08-12T13:30:00+02:00' };
+    assert.deepEqual(editClosedAtSend(reopened), { send: '2026-08-12T13:30:00+02:00' });
+    assert.deepEqual(editClosedAtSend({ ...reopened, text: '2026-08-12 15:00' }), { send: '2026-08-12T15:00:00+03:00' });
+    // مفتوحة وكُتب خروجها: الحقل مُلئ «الآن» ولم يُمسّ ⇒ لا يُرسل (الخادم يختم «الآن» عند الحفظ)؛ مُسح ⇒ غير معروف
+    const nowText = journalLocalFieldAt(now);
+    assert.equal(nowText, '2026-09-26 12:00');
+    const fresh = { ...base, startedClosed: false, text: nowText, initial: nowText };
+    assert.deepEqual(editClosedAtSend(fresh), { send: undefined });
+    assert.deepEqual(editClosedAtSend({ ...fresh, text: '' }), { send: null });
+    assert.deepEqual(editClosedAtSend({ ...fresh, text: '2026-09-25 22:40' }), { send: '2026-09-25T22:40:00+03:00' });
+
+    // /close من خانة الخروج لصفقة أُعيد فتحها ⇒ وقتها المحفوظ؛ بالسعر الحالي ⇒ «الآن»
+    const openRow = { status: 'open', opened_at_iso: openedIso };
+    assert.equal(reopenedCloseAt(openRow, 'field', '2026-08-12T13:30:00+02:00'), '2026-08-12T13:30:00+02:00');
+    assert.equal(reopenedCloseAt(openRow, 'market', '2026-08-12T13:30:00+02:00'), undefined);
+    assert.equal(reopenedCloseAt(openRow, 'field', undefined), undefined);
+    assert.equal(reopenedCloseAt(openRow, 'field', '2026-08-12 13:30'), undefined); // نصّ الخادم الخام: لا منطقة
+    assert.equal(reopenedCloseAt({ status: 'closed', opened_at_iso: openedIso }, 'field', '2026-08-12T13:30:00+02:00'), undefined);
+    assert.equal(reopenedCloseAt(openRow, 'field', '2026-08-10T08:14:00+02:00'), undefined); // يسبق الفتح ⇒ 422
+    assert.equal(reopenedCloseAt(openRow, 'field', '2026-08-10T08:15:00+02:00'), '2026-08-10T08:15:00+02:00');
+    assert.equal(reopenedCloseAt({ status: 'open' }, 'field', '2026-08-12T13:30:00+02:00'), '2026-08-12T13:30:00+02:00');
+
+    // التوقيت الصيفي: برلين — الإزاحة لذلك التاريخ لا «الآن»
+    process.env.TZ = 'Europe/Berlin';
+    assert.equal(journalLocalFieldToIso('2026-01-15 10:00')?.iso, '2026-01-15T10:00:00+01:00');
+    assert.equal(journalLocalFieldToIso('2026-07-15 10:00')?.iso, '2026-07-15T10:00:00+02:00');
+    // ساعة سقطت بقفزة الربيع (29 مارس 02:00 ⇒ 03:00) ⇒ غير موجودة
+    assert.equal(journalLocalFieldToIso('2026-03-29 02:30'), null);
+    assert.equal(journalIsoToLocalField('2026-01-15T09:00:00Z'), '2026-01-15 10:00');
+    assert.equal(journalIsoToLocalField('2026-07-15T09:00:00Z'), '2026-07-15 11:00');
+    // غربي: نيويورك −04:00 صيفاً
+    process.env.TZ = 'America/New_York';
+    assert.equal(journalLocalFieldToIso('2026-08-12 14:30')?.iso, '2026-08-12T14:30:00-04:00');
+  } finally {
+    if (prevTz === undefined) delete process.env.TZ;
+    else process.env.TZ = prevTz;
+  }
 }
-console.log('tradePlan editClosedAtValue selftest OK');
+console.log('tradePlan close-time field selftest OK');
 
 // ——— editSizeValue: خانة حجم مُسحت بالتعديل ———
 {

@@ -478,27 +478,114 @@ export function editExitValue(startedClosed: boolean, exit: number | null): numb
   return startedClosed ? null : undefined;
 }
 
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/** «YYYY-MM-DD HH:MM» بتوقيت الجهاز للحظة `ms` — صيغة حقل «وقت الإغلاق». */
+export function journalLocalFieldAt(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 /**
- * `closed_at` المُرسل بحفظ التعديل (backend-r91a، `PATCH /api/trades/{id}` يقبله منذ `bf6d37a`). مسح الخروج يعيد الصفقة مفتوحة
- * ويمسح الخادم وقت إغلاقها؛ إعادة كتابة الخروج بتعديلٍ لاحق كانت تختم «الآن» ⇒ صفقة أغسطس تُعدّ من هذا الأسبوع بالتقرير
- * الأسبوعي وسلسلة الخسائر. `remembered` = وقت إغلاقها المخزَّن **قبل** أن يعيد هذا الجهاز فتحها (بنص الخادم حرفياً، فلا
- * منطقة زمنية تُخمَّن).
- *
- * - الخروج لا يُرسل رقماً (مسح أو بلا تغيير) ⇒ `undefined`: المسح يمسح الوقت بالخادم نفسه.
- * - بدأ التعديل على صفقة **مغلقة** ⇒ `undefined`: الخادم يُبقي وقت إغلاقها كما هو (تصحيح سعر الخروج لا يغيّر متى أُغلقت).
- * - بدأ على صفقة مفتوحة بلا وقت محفوظ ⇒ `undefined`: إغلاقٌ حقيقي الآن، الخادم يختم «الآن».
- * - بدأ على صفقة مفتوحة أعاد هذا الجهاز فتحها ⇒ الوقت المحفوظ، ما لم يكن بغير صيغة الخادم أو يسبق `opened_at` (422 يمنع الحفظ).
+ * وقت دفتر من الخادم (`opened_at_iso`/`closed_at_iso`، backend-r93: ISO **بإزاحة الخادم لذلك التاريخ**) ⇒ نصّ الحقل بتوقيت
+ * الجهاز. كان الحقل مستحيلاً: `closed_at` نصّ بتوقيت الخادم بلا منطقة، فمتداول ببغداد وخادم بفرانكفورت يرى الوقت مزاحاً ساعة
+ * أو ساعتين. بلا إزاحة صريحة (صفّ قديم/نصّ حرّ) ⇒ null — لا منطقة تُخمَّن.
  */
-export function editClosedAtValue(
-  before: { status?: string | null; opened_at?: string | null },
-  exitSent: number | null | undefined,
+export function journalIsoToLocalField(iso: string | null | undefined): string | null {
+  if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?([+-]\d{2}:\d{2}|Z)$/.test(iso)) return null;
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? journalLocalFieldAt(ms) : null;
+}
+
+/**
+ * نصّ حقل «وقت الإغلاق» (بتوقيت الجهاز) ⇒ ISO **بإزاحة الجهاز لذلك التاريخ** (صحيح عبر التوقيت الصيفي) كما يقبله الخادم
+ * (`_journal_time` يحوّله لتوقيته). يقبل «2026-08-12 14:30» و«T» بدل المسافة و«/» أو «.» بالتاريخ والأرقام العربية
+ * الهندية. تاريخ غير موجود (31 أبريل، 29 فبراير بسنة عادية) أو ساعة سقطت بقفزة الصيف ⇒ null: `Date` كان سيزيحها بصمت
+ * لليوم/الساعة التالية فيُحفظ وقتٌ لم يكتبه المتداول.
+ */
+export function journalLocalFieldToIso(text: string): { iso: string; ms: number } | null {
+  const norm = text
+    .trim()
+    .replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (c) => String(c.charCodeAt(0) - 0x06f0));
+  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:\s+|T)(\d{1,2})[:\u066b.](\d{2})$/.exec(norm);
+  if (!m) return null;
+  const [y, mo, d, h, mi] = m.slice(1).map(Number);
+  if (y < 1970 || h > 23 || mi > 59) return null;
+  const dt = new Date(y, mo - 1, d, h, mi);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || dt.getHours() !== h || dt.getMinutes() !== mi) {
+    return null;
+  }
+  const off = -dt.getTimezoneOffset();
+  const sign = off < 0 ? '-' : '+';
+  const a = Math.abs(off);
+  return {
+    iso: `${y}-${pad2(mo)}-${pad2(d)}T${pad2(h)}:${pad2(mi)}:00${sign}${pad2(Math.floor(a / 60))}:${pad2(a % 60)}`,
+    ms: dt.getTime(),
+  };
+}
+
+/** سماح الخادم لساعة جهازٍ متقدّمة (`_journal_time`: «بالمستقبل» = أبعد من الآن + 5 دقائق ⇒ 422). */
+export const CLOSE_TIME_FUTURE_SLACK_MS = 5 * 60_000;
+
+export type EditClosedAt =
+  | { send: string | null | undefined }
+  | { error: 'invalid' }
+  | { error: 'beforeOpen'; opened: string }
+  | { error: 'future' };
+
+/**
+ * `closed_at` المُرسل بحفظ التعديل من حقل «وقت الإغلاق» (backend-r91a/r93). `initial` = نصّ الحقل كما مُلئ (من `closed_at_iso`،
+ * أو من وقتٍ حفظه هذا الجهاز قبل أن يعيد فتح الصفقة = `initialIso`، أو «الآن» عند كتابة الخروج لصفقة مفتوحة، أو فارغ).
+ *
+ * - الخروج لا يُرسل رقماً ⇒ `undefined` (مسح الخروج يمسح الوقت بالخادم؛ الحقل مخفيّ).
+ * - الحقل **كما مُلئ**: بدأ مغلقاً ⇒ `undefined` (الخادم يُبقيه)؛ مُلئ من وقتٍ محفوظ لصفقة أُعيد فتحها ⇒ ذلك الـISO حرفياً (لا
+ *   «الآن» المختلَق — صفقة أغسطس لا تُعدّ من هذا الأسبوع)؛ غيره («الآن» أو فارغ) ⇒ `undefined` فيختم الخادم «الآن».
+ * - مُسح ⇒ `null` صريح = «غير معروف» (نصّ التلميح: «اتركه فارغاً إن كنت لا تعرفه»).
+ * - مكتوب ⇒ ISO بإزاحة الجهاز؛ غير مقروء، أو يسبق الفتح، أو بالمستقبل (> الآن + 5 د) ⇒ خطأ يمنع الحفظ بسببه — كان 422 عامّاً.
+ */
+export function editClosedAtSend(a: {
+  exitSent: number | null | undefined;
+  startedClosed: boolean;
+  text: string;
+  initial: string;
+  initialIso: string | null;
+  openedIso: string | null | undefined;
+  nowMs: number;
+}): EditClosedAt {
+  if (typeof a.exitSent !== 'number') return { send: undefined };
+  const text = a.text.trim();
+  if (text === a.initial.trim()) {
+    if (a.startedClosed) return { send: undefined };
+    return { send: text && a.initialIso ? a.initialIso : undefined };
+  }
+  if (!text) return { send: null };
+  const p = journalLocalFieldToIso(text);
+  if (!p) return { error: 'invalid' };
+  if (p.ms > a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) return { error: 'future' };
+  const openedMs = typeof a.openedIso === 'string' && journalIsoToLocalField(a.openedIso) != null ? Date.parse(a.openedIso) : NaN;
+  // الخادم يقارن بدقّة الدقيقة (`closed_at < opened_at` نصّاً) ⇒ الدقيقة نفسها مقبولة
+  if (Number.isFinite(openedMs) && p.ms < Math.floor(openedMs / 60_000) * 60_000) {
+    return { error: 'beforeOpen', opened: journalIsoToLocalField(a.openedIso) as string };
+  }
+  return { send: p.iso };
+}
+
+/**
+ * `closed_at` لإغلاق صفقة من خانة الخروج (`POST /api/trades/{id}/close`، backend-r93 (2)): صفقة أعاد هذا الجهاز فتحها بالتعديل
+ * ⇒ وقت إغلاقها المحفوظ (`remembered`، ISO من `closed_at_iso`) لا «الآن». الإغلاق **بالسعر الحالي** يبقى «الآن» (سعر الآن =
+ * وقت الآن) ⇒ `undefined`، وكذا بلا وقت محفوظ أو بغير صيغة ISO أو يسبق الفتح (422 يمنع الإغلاق).
+ */
+export function reopenedCloseAt(
+  row: { status?: string | null; opened_at_iso?: string | null },
+  source: 'market' | 'field',
   remembered: string | null | undefined
 ): string | undefined {
-  if (typeof exitSent !== 'number' || before.status !== 'open') return undefined;
-  if (typeof remembered !== 'string' || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(remembered)) return undefined;
-  const opened = before.opened_at;
-  if (typeof opened === 'string' && opened.length === remembered.length && remembered < opened) return undefined;
-  return remembered;
+  if (source !== 'field' || row.status !== 'open' || journalIsoToLocalField(remembered) == null) return undefined;
+  const opened = journalIsoToLocalField(row.opened_at_iso) != null ? Date.parse(row.opened_at_iso as string) : NaN;
+  const ms = Date.parse(remembered as string);
+  if (Number.isFinite(opened) && Math.floor(ms / 60_000) < Math.floor(opened / 60_000)) return undefined;
+  return remembered as string;
 }
 
 /**
