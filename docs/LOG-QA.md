@@ -1000,3 +1000,5 @@ tools103a (`liveSeries.ts:232`)؛ tools103b (`db.py:2007`)؛ backend-r55 (`Cours
 **قائمة قبول DESIGN-PRO (التاسع):** 0/12 فشل (diff منذ 939ce4a، 15 ملفّاً: لا زرّ/وزن ≥700/مسافة/ظلّ جديد؛ سطر TBD الثاني بـ`NewsRiskBanner` بنمط `styles.main`).
 **المراجعة (d — أرقام متناقضة):** صفحة الدفتر `tradePlan.ts:1159-1160` = `db.py:1989-1990`؛ STARC بموضع واحد (`volatility.ts`). **QA89 → ui** (أُلحق بـbackend-r55): `duration_min: 20` بـ`CoursesScreen.tsx:120` و`LectureClassroom.tsx:180` يناقض مدّة الخادم (1 د).
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
+**إضافة (تعارض أثناء الدفع، bd2b507):** وصلت 23 كوميتاً ⇒ أُخذت COORDINATION من الأعلى وأُعيد التحقّق. البناء أخضر 0، selftests 114/114 (بالتوازي -P4). أُغلقت بالكود:
+launch150/QA88a (ui `c367cfc`)، backend-r55 (ui `f8e33e3`، ومعها QA89 فلا بند)، tools103a (chart `fa4dff3`)، tools103b (backend `9012172` + tools `abee7c9`)، launch151 (tools `2618e19`)، tools102a (tools `84e4e76`). مفتوح: tools104a → launch.
