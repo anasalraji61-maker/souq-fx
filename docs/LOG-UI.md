@@ -1487,7 +1487,7 @@
 
 | commit | ماذا | بند |
 |---|---|---|
-| 62522e0 | الويب: `documentTitle.formatter` على `NavigationContainer` ⇒ عنوان التبويب «الرئيسية · MATRIX» لا «الرئيسية» وحدها (بلا مفتاح نصّ جديد)؛ `mobile/public/index.html` = قالب Expo 57 نفسه (`%LANG_ISO_CODE%`/`%WEB_TITLE%`) + `background-color:#0B1220` لـ`html,body` ⇒ لا وميض أبيض قبل نزول الحزمة | launch207a (قرار ١٦) |
+| a378563 | الويب: `documentTitle.formatter` على `NavigationContainer` ⇒ عنوان التبويب «الرئيسية · MATRIX» لا «الرئيسية» وحدها (بلا مفتاح نصّ جديد)؛ `mobile/public/index.html` = قالب Expo 57 نفسه (`%LANG_ISO_CODE%`/`%WEB_TITLE%`) + `background-color:#0B1220` لـ`html,body` ⇒ لا وميض أبيض قبل نزول الحزمة | launch207a (قرار ١٦) |
 
 - launch207a جاهز للإغلاق.
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ «درجة الاتفاق» تعليقات فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ لا وزن 700 بنطاقي؛ كل زرّ اختيار شرطي بـ`TimeframeBar`/`ScreenerMini`/`SymbolPairMenu`/`MatrixEdgeRails`/`MatrixBottomDock` يحمل `accessibilityState`.
