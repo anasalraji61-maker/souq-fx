@@ -840,3 +840,14 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ لا وزن ≥700 بنطاقي (الوحيد `chart/MatrixChart.tsx` — chart)؛ لا مسافة خارج 4.
 - باقٍ بالتأكيد (للتشغيل القادم): نصوص روابط بالتأكيد (`close`/`back`/`rearm`/`refresh`) بعدة لوحات — كلٌّ وحده برأسه فمقبول غالباً؛ `CruiseSpeedMark active` بـ`TerminalScreen:1348` ملك tools.
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: وضوح مسار السرعة المفتوح بحدّ محايد.
+
+## 2026-09-26 — تشغيل 69
+لا صفّ بـCOORDINATION موجَّه إلى ui (دورة QA 96). بوابة البناء خضراء (tsc 0) قبل الـcommit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| a1308a0 | سلّم الخطوط §2 (11/12/13/15/18) بنطاقي: عناوين اللوحات 14 ⇒ 13؛ عناوين الشاشات 20–24 ⇒ 18 (`AccountScreen`، `CoursesScreen`، `MessagesScreen`، `LectureClassroom`)؛ قراءات 14/16 ⇒ 15 (`FocusChartModal.price`، `DomLitePanel.value`، `SymbolPairMenu` الكبير)؛ `SubscriptionPlansPanel` 17/20/27 ⇒ 15/15/18. رموز الأيقونات (`⋯`، علامات الشريط السفلي 16) مُبقاة — أيقونات لا نصّ | DESIGN-PRO §2 |
+
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`.
+- خارج نطاقي بالحجم نفسه (لم يُلمس): `PositionSizePanel` 14/28، `TradeJournalPanel`/`BacktestPanel` 16، `ToolsScreen` 22 (tools)؛ `MatrixChart` 10/14/16 (chart).
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: سعر الخطة بـ18 ما زال يقرأ كالعنصر الأبرز ببطاقة الاشتراك.
