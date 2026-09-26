@@ -178,7 +178,9 @@ def run_backtest(
     entry_i = 0
     # فترة المتوسط البطيء لا تخصّ غير `ma_cross`: كانت `slow=150` تُسقط أول 150 شمعة من اختبار RSI/MACD/بولنجر
     # بصمت (8 صفقات ⇒ 1) والنتيجة تُعرض أداءً على السلسلة كلها.
-    start_i = (max(slow, 26) if strategy == "ma_cross" else 26) + 1
+    # أول تقاطع ممكن لـ`ma_cross` عند الشمعة `slow` (أول قيمتين للبطيء: slow-1 وslow) — كان `slow+1` فيُسقط
+    # التقاطع الأول حين slow ≥ 26 (fast=5/slow=30: صفقة الشراء عند الشمعة 30 تغيب عن النتيجة).
+    start_i = max(slow, 27) if strategy == "ma_cross" else 27
 
     def close_trade(exit_i: int, still_open: bool = False) -> None:
         """يسجّل صفقة المركز الحالي مغلقةً عند إغلاق الشمعة `exit_i`.

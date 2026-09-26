@@ -289,3 +289,13 @@ def test_slow_ma_period_does_not_shift_non_ma_strategies():
         a = backtest.run_backtest(cs, strat, slow=21)
         b = backtest.run_backtest(cs, strat, slow=150)
         assert a["trades"] == b["trades"] and a["stats"] == b["stats"], strat
+
+
+def test_ma_cross_trades_the_first_cross_when_slow_is_long():
+    # fast=5/slow=30: أول قيمتين للبطيء عند الشمعتين 29 و30 ⇒ التقاطع الصاعد عند 30 أول صفقة (كان يُتخطّى)
+    closes = [1.10] * 29 + [1.09] + [1.12] * 41 + [1.08] * 40 + [1.13] * 40
+    candles = [{"time": 1_700_000_000 + i * 900, "open": x, "high": x + 0.0005, "low": x - 0.0005, "close": x}
+               for i, x in enumerate(closes)]
+    trades = backtest.run_backtest(candles, "ma_cross", 5, 30)["trades"]
+    assert [(t["side"], (t["entry_time"] - 1_700_000_000) // 900) for t in trades] == [
+        ("long", 30), ("short", 71), ("long", 111)]
