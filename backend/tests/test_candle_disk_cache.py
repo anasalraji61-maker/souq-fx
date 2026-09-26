@@ -21,12 +21,13 @@ def disk(tmp_path, monkeypatch):
 def _restart(monkeypatch):
     monkeypatch.setattr(market, "_cache", {})
     monkeypatch.setattr(market, "_disk_checked", set())
+    monkeypatch.setattr(market, "_base_at", {})
 
 
 def _age_disk(path, seconds):
     con = sqlite3.connect(str(path))
     with con:
-        con.execute("UPDATE candles SET fetched_at = fetched_at - ?", (seconds,))
+        con.execute(f"UPDATE {market._DISK_TABLE} SET fetched_at = fetched_at - ?, base_at = base_at - ?", (seconds, seconds))
     con.close()
 
 
@@ -79,7 +80,7 @@ def test_a_corrupt_saved_row_is_ignored(provider, disk, monkeypatch, body):  # n
     market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
     con = sqlite3.connect(str(disk))
     with con:
-        con.execute("UPDATE candles SET body = ?", (body,))
+        con.execute(f"UPDATE {market._DISK_TABLE} SET body = ?", (body,))
     con.close()
     _restart(monkeypatch)
     provider["payload"] = {"values": _rows_until(201, "1.1050")}
@@ -106,4 +107,52 @@ def test_an_unusable_disk_path_never_breaks_a_fetch(provider, tmp_path, monkeypa
     assert meta["kind"] == "provider" and candles[-1]["close"] == pytest.approx(1.1)
     _restart(monkeypatch)
     _, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    assert meta["kind"] == "provider"
+
+
+def _age_memory(seconds):
+    for k, (at, c) in list(market._cache.items()):
+        market._cache[k] = (at - seconds, c)
+        market._base_at[k] = market._base_at.get(k, at) - seconds
+
+
+def test_the_older_bars_of_a_bigger_entry_are_refetched_after_a_day_of_small_merges(provider, disk, monkeypatch):  # noqa: F811
+    """القائمة (D/50 كل 90ث) كانت تدمج بـD/180 وتختمه «الآن» ⇒ أول 130 شمعة لا تُجلب أبداً، والقرص يحفظها."""
+    provider["payload"] = {"values": _rows_until(200, "9.9900")}
+    market.fetch_time_series_with_meta("BTCUSD", "D", 180)
+    provider["payload"] = {"values": _rows_until(200, "1.1000")}
+    for _ in range(3):  # يوم ونصف من تحديثات القائمة، كلّ منها داخل TTL الشارت
+        _age_memory(market.MERGE_MAX_AGE_SEC / 2)
+        market.fetch_time_series_with_meta("BTCUSD", "D", 50)
+    _restart(monkeypatch)
+    before = market._stats["api_calls"]
+    candles, meta = market.fetch_time_series_with_meta("BTCUSD", "D", 180)
+    assert market._stats["api_calls"] == before + 1 and meta["kind"] == "provider"
+    assert all(c["close"] == pytest.approx(1.1) for c in candles)
+
+
+def test_a_small_fetch_still_refreshes_a_recent_bigger_entry(provider, disk, monkeypatch):  # noqa: F811
+    provider["payload"] = {"values": _rows_until(200, "1.1000")}
+    market.fetch_time_series_with_meta("BTCUSD", "D", 180)
+    _age_memory(market.CACHE_TTL["D"] + 1)
+    provider["payload"] = {"values": _rows_until(200, "1.1050")}
+    market.fetch_time_series_with_meta("BTCUSD", "D", 50)
+    _restart(monkeypatch)
+    before = market._stats["api_calls"]
+    candles, meta = market.fetch_time_series_with_meta("BTCUSD", "D", 180)
+    assert market._stats["api_calls"] == before and meta["kind"] == "cache"
+    assert len(candles) == 180 and candles[-1]["close"] == pytest.approx(1.105)
+
+
+def test_rows_saved_by_an_older_disk_layout_are_not_loaded(provider, disk, monkeypatch):  # noqa: F811
+    con = sqlite3.connect(str(disk))
+    with con:
+        con.execute("CREATE TABLE candles (key TEXT PRIMARY KEY, fetched_at REAL NOT NULL, body TEXT NOT NULL)")
+        con.execute(
+            "INSERT INTO candles VALUES (?, ?, ?)",
+            ("BTCUSD|D|180", __import__("time").time(), '[{"time":1,"open":9,"high":9,"low":9,"close":9}]'),
+        )
+    con.close()
+    provider["payload"] = {"values": _rows_until(200, "1.1000")}
+    _, meta = market.fetch_time_series_with_meta("BTCUSD", "D", 180)
     assert meta["kind"] == "provider"

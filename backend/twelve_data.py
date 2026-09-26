@@ -240,6 +240,15 @@ CANDLE_DISK: Path | None = (
     Path(_ENV_CANDLE_DISK).expanduser() if _ENV_CANDLE_DISK else db_conn.DB_PATH.with_name("candle_cache.db")
 )
 _disk_checked: set[str] = set()
+# الجدول باسم نسخة: تغيير بمعالجة الشموع (فلتر العطلة، بناء W من D، `_candle`) لا يصل لسلسلة محفوظة قبله —
+# كانت تُحمَّل بعد النشر وتبقى. رفع الرقم مع أيّ تغيير كهذا ⇒ النشر يبدأ بقرص فارغ ويُجلب من المزوّد.
+_DISK_TABLE = "candles_v2"
+
+# وقت آخر جلب **كامل** لكل مدخل (بحجمه هو). الدمج يُبقي شموع المدخل الأكبر الأقدم ويختم المدخل «الآن» ⇒ القائمة
+# (D/50 كل 90ث) كانت تُبقي أول ~130 شمعة من D/180 بلا جلب أبداً (والقرص يحفظها عبر إعادة التشغيل) — تصحيح
+# المزوّد للتاريخ لا يصل. بعد `MERGE_MAX_AGE_SEC` من الجلب الكامل لا دمج: يُحذف فيُجلب كاملاً عند طلبه.
+_base_at: dict[str, float] = {}
+MERGE_MAX_AGE_SEC = 86400
 
 
 def _disk_conn() -> sqlite3.Connection | None:
@@ -247,7 +256,10 @@ def _disk_conn() -> sqlite3.Connection | None:
         return None
     CANDLE_DISK.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(str(CANDLE_DISK), timeout=5)
-    con.execute("CREATE TABLE IF NOT EXISTS candles (key TEXT PRIMARY KEY, fetched_at REAL NOT NULL, body TEXT NOT NULL)")
+    con.execute(
+        f"CREATE TABLE IF NOT EXISTS {_DISK_TABLE} "
+        "(key TEXT PRIMARY KEY, fetched_at REAL NOT NULL, base_at REAL NOT NULL, body TEXT NOT NULL)"
+    )
     return con
 
 
@@ -259,36 +271,39 @@ def _disk_write(key: str, entry: tuple[float, list[dict]] | None) -> None:
             return
         with con:
             if entry is None:
-                con.execute("DELETE FROM candles WHERE key = ?", (key,))
+                con.execute(f"DELETE FROM {_DISK_TABLE} WHERE key = ?", (key,))
             else:
                 con.execute(
-                    "INSERT OR REPLACE INTO candles (key, fetched_at, body) VALUES (?, ?, ?)",
-                    (key, entry[0], json.dumps(entry[1], separators=(",", ":"))),
+                    f"INSERT OR REPLACE INTO {_DISK_TABLE} (key, fetched_at, base_at, body) VALUES (?, ?, ?, ?)",
+                    (key, entry[0], _base_at.get(key, entry[0]), json.dumps(entry[1], separators=(",", ":"))),
                 )
         con.close()
     except (sqlite3.Error, OSError, TypeError, ValueError):
         pass
 
 
-def _disk_read(key: str) -> tuple[float, list[dict]] | None:
+def _disk_read(key: str) -> tuple[float, float, list[dict]] | None:
+    """(وقت الجلب، وقت الجلب الكامل، الشموع)."""
     try:
         con = _disk_conn()
         if con is None:
             return None
-        row = con.execute("SELECT fetched_at, body FROM candles WHERE key = ?", (key,)).fetchone()
+        row = con.execute(f"SELECT fetched_at, base_at, body FROM {_DISK_TABLE} WHERE key = ?", (key,)).fetchone()
         con.close()
         if not row:
             return None
-        at, candles = float(row[0]), json.loads(row[1])
+        at, base, candles = float(row[0]), float(row[1]), json.loads(row[2])
     except (sqlite3.Error, OSError, TypeError, ValueError):
         return None
     # صفّ تالف أو وقت جلب بالمستقبل (ساعة خاطئة) كان سيُخدم «طازجاً» بلا نهاية — يُهمَل ويُجلب من المزوّد
     if not math.isfinite(at) or at > time.time() + 60 or not isinstance(candles, list) or not candles:
         return None
+    if not math.isfinite(base) or base > at:
+        return None
     fields = ("time", "open", "high", "low", "close")
     if not all(isinstance(c, dict) and all(isinstance(c.get(f), (int, float)) for f in fields) for c in candles):
         return None
-    return at, candles
+    return at, base, candles
 
 
 def _cached(key: str) -> tuple[float, list[dict]] | None:
@@ -297,7 +312,8 @@ def _cached(key: str) -> tuple[float, list[dict]] | None:
         _disk_checked.add(key)
         hit = _disk_read(key)
         if hit and key not in _cache:
-            _cache[key] = hit
+            _cache[key] = (hit[0], hit[2])
+            _base_at[key] = hit[1]
     return _cache.get(key)
 
 # طول السلسلة الموحَّد للشارت (build_series) والماسح وتنبيهات المؤشر بالـworker. مفتاح الكاش يشمل الطول،
@@ -470,16 +486,20 @@ def _store(cache_key: str, now: float, candles: list[dict]) -> None:
         if b <= int(size) or not old or not candles:
             if b == int(size) or old:
                 _cache[key] = (now, candles)
+                _base_at[key] = now
                 _disk_write(key, _cache[key])
             continue
         first = candles[0]["time"]
         # بلا تداخل (المدخل الأكبر جُلب قبل أن تبدأ الشموع الجديدة: D/180 قبل أسابيع ثم D/50 الآن) كان الدمج
         # يلصق القديم بالجديد بفجوة أسابيع وبوقت جلب «الآن» ⇒ الشارت يرسم ثغرة ويُحسب RSI/MACD عبرها. يُحذف.
-        if old[1][-1]["time"] < first:
+        # وكذلك مدخل آخر جلب كامل له أقدم من `MERGE_MAX_AGE_SEC` (شموعه الأقدم لم تُراجَع منذئذ).
+        if old[1][-1]["time"] < first or now - _base_at.get(key, old[0]) > MERGE_MAX_AGE_SEC:
             del _cache[key]
+            _base_at.pop(key, None)
             _disk_write(key, None)
             continue
         merged = [c for c in old[1] if c["time"] < first] + candles
+        _base_at.setdefault(key, old[0])
         _cache[key] = (now, merged[-max(len(old[1]), len(candles)):])
         _disk_write(key, _cache[key])
 
