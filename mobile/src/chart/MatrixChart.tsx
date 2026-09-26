@@ -637,6 +637,22 @@ function considerHit(id: string, dist: number, max: number, cur: DrawingHit): Dr
   return { id, dist };
 }
 
+/**
+ * هل يُرسم الرسم في النافذة؟ (فهرسا طرفيه نسبةً لأوّل شمعة ظاهرة.) الخطّ الأفقي وفيبو بعرض الشارت،
+ * والشعاع المتّجه يميناً يعبر الشموع الظاهرة ولو كان طرفاه يسارها. معيار واحد للرسم (`visibleDrawings`)
+ * وللّمس (`hitDrawing`).
+ */
+function drawingOnScreen(tool: DrawTool, aLocal: number, bLocal: number): boolean {
+  return (
+    tool === 'hline' ||
+    tool === 'hray' ||
+    tool === 'fib' ||
+    (tool === 'ray' && bLocal > aLocal) ||
+    aLocal >= -2 ||
+    bLocal >= -2
+  );
+}
+
 function windowFromPlot(
   plot: { time: number }[],
   extras?: Pick<SyncTimeWindow, 'xPanNorm' | 'priceScale' | 'pricePan'>
@@ -4508,6 +4524,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (drawingsHidden) return null;
       for (const d of drawings) {
         const aLocal = d.a.index - source.start;
+        // ما لا يُرسم لا يُلمس: ترند/قناة طرفاهما قبل النافذة كان `clipSegmentToBars` يقصّهما لنقطة على
+        // الحافّة اليسرى ⇒ لمسة عند x≈0 تحدّد رسماً غير مرئي (ويُسحب أو يُحذف بلا أن يُرى).
+        if (!drawingOnScreen(d.tool, aLocal, d.b ? d.b.index - source.start : aLocal)) continue;
         const ax = xOf(aLocal);
         const ay = yOf(d.a.price);
         if (d.tool === 'hline') {
@@ -5996,15 +6015,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // الخطّ الأفقي وفيبو بعرض الشارت كلّه: موضع مرساتهما لا يحدّد ظهورهما. كان خطّ دعم
     // مرسوم عند قاع قبل 120 شمعة يختفي (ووسم سعره) بمجرّد العودة للحيّ، ويبقى قابلاً للتحديد.
     // والشعاع المتّجه يميناً كذلك: امتداده يعبر الشموع الظاهرة ولو كان طرفاه يسارها (`raySegment`).
-    .filter(
-      ({ d, aLocal, bLocal }) =>
-        d.tool === 'hline' ||
-        d.tool === 'hray' ||
-        d.tool === 'fib' ||
-        (d.tool === 'ray' && bLocal > aLocal) ||
-        aLocal >= -2 ||
-        bLocal >= -2
-    );
+    .filter(({ d, aLocal, bLocal }) => drawingOnScreen(d.tool, aLocal, bLocal));
 
   /**
    * أي الخطوط الأفقية يحمل وسم سعره. الخطّ الأفقي هو أداة الدعم/المقاومة الأولى عند
