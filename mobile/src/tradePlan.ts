@@ -639,6 +639,49 @@ export function editClosedAtSend(a: {
   return { send: p.iso };
 }
 
+export type CreateTimes =
+  | { send: { opened_at?: string; closed_at?: string } }
+  | { error: 'openInvalid' | 'openFuture' | 'closeInvalid' | 'closeFuture' | 'closeNeedsOpen' }
+  | { error: 'beforeOpen'; opened: string };
+
+/**
+ * `opened_at`/`closed_at` لصفقة **تُسجَّل بعد حدوثها** (`POST /api/trades`، `TradeCreate` يقبلهما أصلاً). كان الإنشاء لا يرسل
+ * أيّ وقت ⇒ الخادم يختم الفتح والإغلاق «الآن»: خسارة أمس تُسجَّل الليلة فتقع بأسبوع التسجيل، وترتيب سلسلة الخسائر يتبع التسجيل،
+ * و«وقت الإغلاق» بالتعديل لا يقبل وقتها الحقيقي أبداً (يسبق فتحاً مختوماً «الآن» ⇒ `beforeOpen`).
+ *
+ * - الحقلان فارغان ⇒ `{}` (الخادم يختم «الآن» كما كان — صفقة تُسجَّل لحظة دخولها).
+ * - الإغلاق يُقرأ فقط والخروج مُرسل رقماً (بلا خروج الخانة مخفيّة)؛ مكتوب بلا فتح ⇒ `closeNeedsOpen` (الخادم يرفض 422: الفتح
+ *   المختوم «الآن» يلي إغلاقاً ماضياً).
+ * - فتح مكتوب وخروج بلا وقت إغلاق ⇒ `closed_at` غائب = «غير معروف» بالخادم (لا «الآن» المختلَق).
+ * - كلاهما بالمستقبل (> الآن + 5 د بساعة الخادم) أو غير مقروء ⇒ خطأ يمنع الحفظ؛ الإغلاق قبل الفتح بدقّة الدقيقة ⇒ `beforeOpen`
+ *   (الساعة المكرَّرة بعودة الشتاء: تُجرَّب القراءة الثانية للإغلاق ثم للفتح الأولى كما هي).
+ */
+export function createTimesSend(a: { openText: string; closeText: string; exitSent: number | null | undefined; nowMs: number }): CreateTimes {
+  const openText = a.openText.trim();
+  const closeText = typeof a.exitSent === 'number' ? a.closeText.trim() : '';
+  const send: { opened_at?: string; closed_at?: string } = {};
+  let opened: { iso: string; ms: number } | null = null;
+  if (openText) {
+    opened = journalLocalFieldToIso(openText);
+    if (!opened) return { error: 'openInvalid' };
+    if (opened.ms > a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) return { error: 'openFuture' };
+    send.opened_at = opened.iso;
+  }
+  if (closeText) {
+    const parsed = journalLocalFieldToIso(closeText);
+    if (!parsed) return { error: 'closeInvalid' };
+    if (parsed.ms > a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) return { error: 'closeFuture' };
+    if (!opened) return { error: 'closeNeedsOpen' };
+    const openMin = Math.floor(opened.ms / 60_000);
+    const before = (ms: number) => Math.floor(ms / 60_000) < openMin;
+    let p: { iso: string; ms: number } = parsed;
+    if (before(p.ms) && parsed.later && parsed.later.ms <= a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) p = parsed.later;
+    if (before(p.ms)) return { error: 'beforeOpen', opened: openText };
+    send.closed_at = p.iso;
+  }
+  return { send };
+}
+
 /**
  * `closed_at` لإغلاق صفقة من خانة الخروج (`POST /api/trades/{id}/close`، backend-r93 (2)): صفقة أعاد هذا الجهاز فتحها بالتعديل
  * ⇒ وقت إغلاقها المحفوظ (`remembered`، ISO من `closed_at_iso`) لا «الآن». الإغلاق **بالسعر الحالي** يبقى «الآن» (سعر الآن =

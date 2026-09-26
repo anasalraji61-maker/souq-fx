@@ -4509,3 +4509,61 @@ console.log('tradePlan journalSizeOunces selftest OK');
   assert.equal(journalNoteAfterSave('y'.repeat(495), 'a', first), 'y'.repeat(495));
   console.log('tradePlan journalNoteAfterSave selftest OK');
 }
+
+// ——— صفقة تُسجَّل بعد حدوثها: `opened_at`/`closed_at` بالإنشاء ———
+{
+  const { createTimesSend, editClosedAtSend } = require('./tradePlan') as typeof import('./tradePlan');
+  const prevTz = process.env.TZ;
+  try {
+    process.env.TZ = 'Asia/Baghdad';
+    const now = Date.parse('2026-09-26T19:00:00Z'); // 22:00 ببغداد — المتداول يسجّل خسارة أمس الليلة
+    // القديم: لا وقت يُرسل ⇒ الخادم يختم الفتح «الآن» ⇒ وقت الإغلاق الحقيقي (أمس) لا يُقبل بالتعديل أبداً
+    const stamped = '2026-09-26T22:00:00+03:00';
+    assert.deepEqual(
+      editClosedAtSend({ exitSent: 1.08, startedClosed: true, text: '2026-09-25 16:40', initial: '2026-09-26 22:00', initialIso: null, openedIso: stamped, nowMs: now }),
+      { error: 'beforeOpen', opened: '2026-09-26 22:00' }
+    );
+    // الجديد: الوقتان يُرسلان بإزاحة الجهاز
+    assert.deepEqual(createTimesSend({ openText: '2026-09-25 14:05', closeText: '2026-09-25 16:40', exitSent: 1.08, nowMs: now }), {
+      send: { opened_at: '2026-09-25T14:05:00+03:00', closed_at: '2026-09-25T16:40:00+03:00' },
+    });
+    // فارغان ⇒ لا شيء (الخادم يختم «الآن» كما كان)
+    assert.deepEqual(createTimesSend({ openText: ' ', closeText: '', exitSent: 1.08, nowMs: now }), { send: {} });
+    // صفقة مفتوحة: الإغلاق مخفيّ فلا يُقرأ حتى لو بقي فيه نصّ
+    assert.deepEqual(createTimesSend({ openText: '2026-09-25 14:05', closeText: 'junk', exitSent: undefined, nowMs: now }), {
+      send: { opened_at: '2026-09-25T14:05:00+03:00' },
+    });
+    // فتح بلا إغلاق مع خروج ⇒ الإغلاق «غير معروف» بالخادم، لا «الآن»
+    assert.deepEqual(createTimesSend({ openText: '2026-09-25 14:05', closeText: '', exitSent: 1.08, nowMs: now }), {
+      send: { opened_at: '2026-09-25T14:05:00+03:00' },
+    });
+    // إغلاق بلا فتح ⇒ الخادم يرفض 422 ⇒ خطأ محدّد قبل الإرسال
+    assert.deepEqual(createTimesSend({ openText: '', closeText: '2026-09-25 16:40', exitSent: 1.08, nowMs: now }), { error: 'closeNeedsOpen' });
+    // غير مقروء / بالمستقبل (سماح 5 د)
+    assert.deepEqual(createTimesSend({ openText: '25-09-2026 14:05', closeText: '', exitSent: undefined, nowMs: now }), { error: 'openInvalid' });
+    assert.deepEqual(createTimesSend({ openText: '2026-09-25 14:05', closeText: '2026-04-31 10:00', exitSent: 1.08, nowMs: now }), { error: 'closeInvalid' });
+    assert.deepEqual(createTimesSend({ openText: '2026-09-26 22:05', closeText: '', exitSent: undefined, nowMs: now }), {
+      send: { opened_at: '2026-09-26T22:05:00+03:00' },
+    });
+    assert.deepEqual(createTimesSend({ openText: '2026-09-26 22:06', closeText: '', exitSent: undefined, nowMs: now }), { error: 'openFuture' });
+    assert.deepEqual(createTimesSend({ openText: '2026-09-26 21:00', closeText: '2026-09-26 22:06', exitSent: 1.08, nowMs: now }), { error: 'closeFuture' });
+    // الإغلاق قبل الفتح؛ الدقيقة نفسها مقبولة (الخادم يقارن بالدقيقة)
+    assert.deepEqual(createTimesSend({ openText: '2026-09-25 16:41', closeText: '2026-09-25 16:40', exitSent: 1.08, nowMs: now }), {
+      error: 'beforeOpen',
+      opened: '2026-09-25 16:41',
+    });
+    assert.deepEqual(createTimesSend({ openText: '2026-09-25 16:40', closeText: '2026-09-25 16:40', exitSent: 1.08, nowMs: now }), {
+      send: { opened_at: '2026-09-25T16:40:00+03:00', closed_at: '2026-09-25T16:40:00+03:00' },
+    });
+    // الساعة المكرَّرة (برلين 25-10-2026): فُتحت 02:40 الصيفية وأُغلقت 02:10 الشتوية (بعدها بثلاثين دقيقة)
+    process.env.TZ = 'Europe/Berlin';
+    const later = Date.parse('2026-10-26T12:00:00Z');
+    assert.deepEqual(createTimesSend({ openText: '2026-10-25 02:40', closeText: '2026-10-25 02:10', exitSent: 1.08, nowMs: later }), {
+      send: { opened_at: '2026-10-25T02:40:00+02:00', closed_at: '2026-10-25T02:10:00+01:00' },
+    });
+  } finally {
+    if (prevTz === undefined) delete process.env.TZ;
+    else process.env.TZ = prevTz;
+  }
+  console.log('tradePlan createTimesSend selftest OK');
+}
