@@ -951,15 +951,8 @@ export const api = {
     postJson<{
       answer: string;
       symbol: string;
-      /** null عند سلسلة demo (المزوّد متعذّر): لا اتجاه ولا مستويات مشتقة من شموع مختلَقة. */
-      setup: {
-        direction: string | null;
-        entry: number | null;
-        sl: number | null;
-        tp: number | null;
-        /** دائماً null الآن — كان رقماً مختلَقاً؛ يبقى الحقل توافقاً فقط ولا يُعرض. */
-        win_probability: number | null;
-      };
+      /* `setup` (اتجاه/دخول/وقف/هدف) أُسقط من النوع عمداً — قرار أنس ٤: الخادم يرسله `null` دائماً
+       * (`352ad77`) ولا يُعرض أبداً؛ غيابه من النوع يمنع أيّ شاشة من قراءته. */
       /** false = لا سعر حي (المزوّد متعذّر)؛ غيابه = خادم أقدم. */
       live_price?: boolean;
       /** ثوانٍ UTC: إغلاق آخر شمعة التي بُني عليها الجواب (backend-r12) — قد يسبق «الآن» بـ15د عند حدّ
