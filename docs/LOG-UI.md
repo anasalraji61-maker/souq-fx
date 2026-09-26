@@ -693,3 +693,15 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert` بتعليقات فقط خارج `chart/confirmDestructive.ts`؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen:211-223`.
 - DESIGN-PRO بنطاقي (فحص آلي): لا وزن ≥700، لا مسافة خارج مضاعفات 4؛ كل `<Text>` يعرض سعراً/نسبة بالملفّات المفحوصة يحمل `numeric` (بالنمط أو بالأب).
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
+
+## 2026-09-26 — تشغيل 57
+صفوف ui بـCOORDINATION (دورة QA 88): **launch150 / QA88a** (الصفّ نفسه)، **backend-r55**. كلٌّ بـcommit مستقل، بوابة البناء خضراء (tsc 0) قبل كل واحد:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| c367cfc | `signalDirection.levelsUnavailableText`: `case 'atr_below_tick'` ⇒ `t.sigLevelsUnavailableAtrBelowTick` (المفتاح من launch، ar/en/ku) — المحلّلون/الإجماع/التوقّع يعرضون سبب غياب الوقف/الهدف | launch150، QA88a |
+| f8e33e3 | الأكاديمية: `AcademyLecture.duration_min` صار `number \| null`؛ البديلان المحلّيان (`CoursesScreen`، `LectureClassroom`) `null` بدل 20 المخترَعة؛ السطر يعرض «n د» من الخادم فقط (يختفي لغير الصالح) وحُذف «محاضرة كاملة» من السطر والتسمية | backend-r55 |
+
+- `ai_tutor` (`api.ts` `Course`) لا تعرضه أي شاشة ⇒ لا «معلّم ذكي» يُخفى. **launch**: مفتاح `coursesFullLectureWord` بلا قارئ الآن — احذفوه.
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» لا يوجد خارج التعليقات؛ `Alert.alert` بتعليقات فقط خارج `chart/confirmDestructive.ts`؛ «درجة الاتفاق» لا شيء؛ إعادة الجولة `AccountScreen:211-229`؛ فحص آلي: كل `Pressable` بنمط اختيار شرطي بنطاقي يحمل `accessibilityState` (و`TimeframeBar` يضيف `selectedFill` خلفيةً).
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
