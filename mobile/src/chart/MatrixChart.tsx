@@ -4861,10 +4861,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             sourceEndTime(),
             weekendClosed
           );
+          // على شبكة سعر الزوج (كالأسهم والاستنساخ): سحب صفقة الشراء كان يترك الوقف 1.0827371 ⇒ «SL 1.08274» مكتوباً
+          // وشمعة قاعها 1.08274 بالضبط لا تُعدّ ضرباً للوقف (فتُقرأ «TP ✓»). أداة بلا منازل معروفة تبقى بلا تقريب.
+          const gridDec = symbolPriceDecimals(series.symbol);
+          const onGrid = (p: number) => {
+            if (gridDec == null) return p;
+            const r = Number(p.toFixed(gridDec));
+            return r > 0 ? r : p;
+          };
           const next = translateDrawing(
             fromNow!,
             drawIndex(locationX) - drawIndex(from.x),
-            (price) => fromScale(toScale(price) + dScaled),
+            (price) => onGrid(fromScale(toScale(price) + dScaled)),
             (index) =>
               stampAtIndex(
                 sourceRef.current.all as { time: number }[],
