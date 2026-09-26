@@ -2415,7 +2415,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       {loading ? <ActivityIndicator color={colors.textMuted} /> : null}
       {!loading && (trades.length === 0 || listError) ? (
         <Text style={[styles.empty, { textAlign: align }]}>
-          {listError ? t.journalLoadErrorRetry : t.journalEmpty}
+          {/* launch170a: a failed refresh over a list already shown must say the list is stale, not "couldn't load" */}
+          {listError ? (trades.length > 0 ? t.journalRefreshErrorRetry : t.journalLoadErrorRetry) : t.journalEmpty}
         </Text>
       ) : null}
       {!loading && listError ? (
