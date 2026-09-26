@@ -1662,6 +1662,9 @@ export type Dict = {
    */
   chartServerUnreachableTitle: string;
   chartServerUnreachableBody: string;
+  /** launch210a (قرار أنس «عنوان الخادم يُكتشف تلقائياً»): سطر تشخيص تحت `chartServerUnreachable*` — `{url}` = `API_URL` الذي حاوله
+   *  التطبيق. للتطوير (`__DEV__`) — ليرى أنس في ثانية أيّ عنوان جُرّب. `{url}` مرّة واحدة ⇒ `.replace` يكفي. */
+  chartServerUnreachableTried: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2953,6 +2956,7 @@ const ar: Dict = {
   chartProviderDownBody: 'المشكلة في الاتصال بمزوّد البيانات، وغالباً مؤقّتة. لا نرسم شموعاً تقديرية في الأثناء كي لا تقرأ أسعاراً غير حقيقية. جرّب مرة أخرى بعد دقائق.',
   chartServerUnreachableTitle: 'تعذّر تحميل شموع {symbol}: لا اتصال بخادم MATRIX',
   chartServerUnreachableBody: 'تأكّد من اتصالك بالإنترنت ثم جرّب مرة أخرى. لا نرسم شموعاً تقديرية في الأثناء كي لا تقرأ أسعاراً غير حقيقية.',
+  chartServerUnreachableTried: 'العنوان الذي جرّبناه: {url}',
 };
 
 const enUS: Dict = {
@@ -4238,6 +4242,7 @@ const enUS: Dict = {
   chartProviderDownBody: 'The connection to our data provider failed — usually a temporary problem. We don’t draw estimated candles meanwhile, so you never read prices that aren’t real. Try again in a few minutes.',
   chartServerUnreachableTitle: 'Can’t load {symbol} candles — no connection to the MATRIX server',
   chartServerUnreachableBody: 'Check your internet connection, then try again. We don’t draw estimated candles meanwhile, so you never read prices that aren’t real.',
+  chartServerUnreachableTried: 'Address we tried: {url}',
 };
 
 const enGB: Dict = {
@@ -5586,6 +5591,7 @@ const ku: Dict = {
   chartProviderDownBody: 'پەیوەندی لەگەڵ دابینکەری داتا سەرکەوتوو نەبوو — زۆرجار کاتییە. لەم ماوەیەدا هیچ مۆمێکی خەمڵێنراو ناکێشین تا نرخی ناڕاستەقینە نەخوێنیتەوە. دوای چەند خولەکێک دووبارە هەوڵ بدەرەوە.',
   chartServerUnreachableTitle: 'مۆمەکانی {symbol} بار نەکران — پەیوەندی بە ڕاژەی MATRIX نییە',
   chartServerUnreachableBody: 'پەیوەندی ئینتەرنێتەکەت بپشکنە، پاشان دووبارە هەوڵ بدەرەوە. لەم ماوەیەدا هیچ مۆمێکی خەمڵێنراو ناکێشین تا نرخی ناڕاستەقینە نەخوێنیتەوە.',
+  chartServerUnreachableTried: 'ئەو ناونیشانەی تاقیمان کردەوە: {url}',
 };
 
 export const DICTS: Record<LangId, Dict> = {
