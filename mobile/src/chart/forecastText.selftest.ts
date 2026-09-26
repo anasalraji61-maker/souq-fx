@@ -38,3 +38,11 @@ assert.equal(forecastDisclaimer(undefined, 'server', en), 'server');
 assert.equal(forecastDisclaimer('other', null, en), '');
 
 console.log(JSON.stringify({ ok: true }));
+// صوت برقمين: منازل واحدة (الخادم يقرّب لمنازل السعر و`String` يُسقط الصفر الأخير).
+const maJpy = { id: 'ma', name: '', detail: 'x', detail_code: 'ma_above', detail_values: { fast: 157.42, slow: 157.418 } };
+assert.equal(forecastVoteDetail(maJpy, en), en.forecastDetail.ma_above.replace('{fast}', '157.420').replace('{slow}', '157.418'));
+const macdTiny = { id: 'macd', name: '', detail: 'x', detail_code: 'macd_above', detail_values: { macd: 0.0002, signal: 0.00015 } };
+assert.equal(forecastVoteDetail(macdTiny, en), en.forecastDetail.macd_above.replace('{macd}', '0.00020').replace('{signal}', '0.00015'));
+const macdE = { ...macdTiny, detail_values: { macd: 1.2e-7, signal: 1e-7 } };
+assert.equal(forecastVoteDetail(macdE, en), en.forecastDetail.macd_above.replace('{macd}', '0.00000012').replace('{signal}', '0.00000010'));
+console.log('forecastText selftest PASS (vote places)');

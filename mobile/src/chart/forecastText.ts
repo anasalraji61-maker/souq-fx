@@ -34,6 +34,12 @@ export function forecastVoteDetail(v: VoteLike, t: Pick<Dict, 'forecastDetail'>)
   const tpl = v.detail_code ? (t.forecastDetail as Record<string, string | undefined>)[v.detail_code] : undefined;
   if (!tpl) return v.detail;
   const vals = v.detail_values ?? {};
+  // أرقام الصوت الواحد بمنازل واحدة: الخادم يقرّب لمنازل السعر و`String` يُسقط الأصفار ⇒ «السريع 157.42 فوق البطيء
+  // 157.418» و«0.0002 فوق 0.00015» — يبدو السريع أقصر دقّةً. تُمدّ كلّها لأطولها (157.420 / 0.00020).
+  let places = 0;
+  for (const n of Object.values(vals)) {
+    if (typeof n === 'number' && Number.isFinite(n)) places = Math.max(places, valueText(n).split('.')[1]?.length ?? 0);
+  }
   let missing = false;
   const out = tpl.replace(/\{(\w+)\}/g, (_m, k: string) => {
     const n = vals[k];
@@ -41,7 +47,7 @@ export function forecastVoteDetail(v: VoteLike, t: Pick<Dict, 'forecastDetail'>)
       missing = true;
       return '';
     }
-    return valueText(n);
+    return Number.isFinite(n) ? n.toFixed(places) : valueText(n);
   });
   return missing ? v.detail : out;
 }
