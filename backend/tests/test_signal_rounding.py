@@ -196,3 +196,27 @@ def test_forecast_levels_for_jpy_cross_under_100_have_three_decimals():
     assert lv["entry"] < 100
     for k in ("entry", "sl", "tp"):
         assert round(lv[k], 3) == lv[k], (k, lv[k])
+
+
+@pytest.mark.parametrize("target", [0.2995, 0.3014, 0.7005, 0.6986])
+def test_bollinger_vote_matches_the_displayed_position(target):
+    """run 67: موقع 0.2995 و0.3014 كلاهما «موقع 30%» والأول شراء (0.12) والثاني محايد (0.119)."""
+    base = [1.1 + 0.001 * math.sin(i) for i in range(19)]
+    # حلّ الإغلاق الأخير الذي يضع الموقع عند `target` (بحث ثنائي — الموقع رتيب في الإغلاق داخل النطاق)
+    lo_x, hi_x = 1.09, 1.11
+    for _ in range(200):
+        x = (lo_x + hi_x) / 2
+        w = base + [x]
+        mid0 = sum(w) / 20
+        std = math.sqrt(sum((v - mid0) ** 2 for v in w) / 20)
+        pos = (x - (mid0 - 2 * std)) / (4 * std)
+        if pos < target:
+            lo_x = x
+        else:
+            hi_x = x
+    c = [{"open": v, "high": v, "low": v, "close": v} for v in base + [x]]
+    v = signal_hub.indicator_forecast("EURUSD", c, enabled=["bb"])["votes"][0]
+    shown = round(target * 100)
+    assert v["detail_values"]["pos"] == shown
+    assert v["score"] == round((50 - shown) * 0.006, 3)
+    assert v["direction"] == ("buy" if shown <= 30 else "sell")

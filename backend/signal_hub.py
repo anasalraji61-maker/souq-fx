@@ -313,8 +313,10 @@ def indicator_forecast(
         elif last <= lower:
             add("bb", "bb", 0.55, "bb_lower")
         else:
-            pos = (last - lower) / (upper - lower)
-            add("bb", "bb", (0.5 - pos) * 0.6, "bb_position", pos=round(pos * 100))
+            # التصنيف على الموقع المعروض (كـRSI/%K): 29.95% و30.14% كلاهما «موقع 30%» وكان الأول شراء
+            # (0.1203) والثاني محايداً (0.119)
+            pos = round((last - lower) / (upper - lower) * 100)
+            add("bb", "bb", (50 - pos) * 0.006, "bb_position", pos=pos)
 
     # Stochastic approx from last 14 highs/lows if available
     if len(candles) >= 15:
