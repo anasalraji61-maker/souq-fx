@@ -1090,6 +1090,14 @@ console.log('newsRisk newsCurrencies selftest OK');
 
 // «sb» ملاصقة (حساب مراهنة على الفروق): كانت `[]` ⇒ لا تحذير قبل الرواتب، و«EURUSD.sb» تُحذَّر
 assert.deepEqual(symbolCurrencies('EURUSDsb'), ['EUR', 'USD']);
+// «micro»/«cent» ملاصقتان على اسم مؤشر/سلعة: كـ«US30.micro»/«US30m»/«US30c» (كانت `[]` ⇒ بلا تحذير قبل الرواتب)
+assert.deepEqual(symbolCurrencies('US30micro'), ['USD']);
+assert.deepEqual(symbolCurrencies('NAS100micro'), ['USD']);
+assert.deepEqual(symbolCurrencies('GER40micro'), ['EUR']);
+assert.deepEqual(symbolCurrencies('US30cent'), ['USD']);
+assert.deepEqual(symbolCurrencies('US30micro'), symbolCurrencies('US30.micro'));
+// اسمٌ مجهول قبلها يبقى بلا عملة — لا تخمين
+assert.deepEqual(symbolCurrencies('ABCmicro'), []);
 assert.deepEqual(symbolCurrencies('EURUSD.sb'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('XAUUSDsb'), ['USD']);
 assert.deepEqual(symbolCurrencies('GBPJPYsb'), ['GBP', 'JPY']);

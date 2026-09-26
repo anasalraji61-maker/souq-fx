@@ -233,8 +233,10 @@ export function symbolCurrencies(symbol: string): string[] {
     if (own.length) return own.includes(q) ? own : [...own, q];
   }
   // و«spot»/«Roll»/«fx» الملاصقة («XAUUSDspot»، «GOLDspot»، «US30Roll»، «EURUSDfx») — كانت `[]` بلا تحذير.
-  // و«sb» (حساب المراهنة على الفروق، «EURUSDsb») — «EURUSD.sb» كانت تُحذَّر والملاصقة لا
-  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL|FX|SB)$/.exec(up);
+  // و«sb» (حساب المراهنة على الفروق، «EURUSDsb») — «EURUSD.sb» كانت تُحذَّر والملاصقة لا.
+  // و«micro»/«cent» الملاصقتان على اسم مؤشر/سلعة («US30micro»، «NAS100micro»، «USOILcent»): الأزواج والمعادن لها `smallContractPair`،
+  // والأسماء كانت `[]` بينما «US30.micro» و«US30m» و«US30c» تُحذَّر — صفقة على الداو قبل الرواتب بلا تحذير
+  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|MICRO|CENT|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL|FX|SB)$/.exec(up);
   if (word) return currenciesOnce(word[1]);
   // المعدن وحده بلا عملة («XAU»، «XAG» — `marketHours` يعرفهما) = الذهب/الفضة بالدولار. مطابقة تامّة لا بالجدول: `suffixFree`
   // تُبقي «XAU» من «XAU_EUR» فكان اليورو يسقط
