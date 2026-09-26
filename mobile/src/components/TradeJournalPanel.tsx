@@ -311,6 +311,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   // الوقتان بالإضافة وحدها: بالتعديل يُملأ «وقت الإغلاق» برمجياً بعد الحفظ، ومفتاح نموذج التعارض (`keepErrorForRef`) بالخانات الثماني
   const formKey = [symbolText, side, entry, exit, size, sl, tp, note].join('\u0001') + (editing ? '' : `\u0001${openTime}\u0001${closeTime}`);
   formKeyRef.current = formKey;
+  /** الوقتان **الآن** بالتعديل — خارج `formKey` (يُملآن برمجياً)، لكن كتابتهما أثناء الحفظ «كتابةٌ بعد الضغط» كبقية الخانات */
+  const editTimesRef = useRef('');
+  editTimesRef.current = `${openTime}\u0001${closeTime}`;
   // خطأٌ عن نموذجٍ تغيّر لم يعد عنه: «دخول غير صالح» كان يبقى تحت الزرّ بعد تصحيح الدخول أو تبديل الجهة حتى الضغطة التالية.
   // الأخطاء كلّها تُضبط بلا تغيير بالنموذج (الحفظ الممنوع، فشل الطلب، لا سعر حيّ) فلا يمحوها هذا في لحظتها
   // استثناء واحد: نموذج التعارض (409) يُملأ بقيم الجهاز الآخر **مع** رسالته — كان التغيّر يمحوها لحظة ظهورها فيتبدّل النموذج بلا تفسير.
@@ -1365,6 +1368,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setOpenTime(text);
     setOpenTimeInit({ text, iso: text ? iso : null });
   };
+  /** بعد حفظٍ يبقى معه التعديل مفتوحاً: الأساس دائماً فتحُ الصفّ المحفوظ (وإلا إعادة الخانة لقيمتها القديمة تُقرأ «بلا تغيير» فلا
+   * تُرسل والخادم على الجديدة)؛ والنصّ فقط إن لم يلمسه المتداول */
+  const rebaseOpenTime = (tr: Trade) => {
+    if (!openTimeTouchedRef.current) {
+      initOpenTime(tr);
+      return;
+    }
+    const iso = tr.opened_at_iso ?? null;
+    const text = journalIsoToLocalField(iso) ?? '';
+    setOpenTimeInit({ text, iso: text ? iso : null });
+  };
 
   const cancelEdit = () => {
     setEditing(null);
@@ -1472,6 +1486,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setBusy(true);
     setFormError(null);
     const submittedKey = formKeyRef.current;
+    const submittedTimes = editTimesRef.current;
     if (editing) {
       const exitSent = editExitValue(editing.status !== 'open', pnum(exit));
       // tools150c: فتحٌ مختوم «الآن» خطأً يُصحَّح — يُفحص قبل الإغلاق، والإغلاق المكتوب يُقارن بالفتح **الجديد**
@@ -1537,13 +1552,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         playSoftClick();
         // كُتب في النموذج أثناء الحفظ (وقفٌ صُحّح بعد الضغط): كان يُمسح بلا كلمة وتعود المسوّدة. يبقى التعديل مفتوحاً على الصفّ
         // المحفوظ (`seen_*` الجديدة) بما كُتب، فيحفظه المتداول ثانيةً — كالإضافة أدناه لا تمسح صفقةً بدأت كتابتها أثناء طلبها
-        if (formKeyRef.current !== submittedKey) {
+        if (formKeyRef.current !== submittedKey || editTimesRef.current !== submittedTimes) {
           if (saved && editingRef.current?.id === saved.id) {
             setEditing(saved);
             // علامة «1R @» التي ألحقها هذا الحفظ تنتقل للخانة — وإلا يمحوها الحفظ التالي (الأساس الآن الوقف الجديد)
             if (typeof saved.note === 'string') setNote((cur) => journalNoteAfterSave(cur, note, saved.note));
             if (!closeTimeTouchedRef.current) initCloseTime(saved);
-            if (!openTimeTouchedRef.current) initOpenTime(saved);
+            rebaseOpenTime(saved);
             setFormNotice(t.journalEditSavedTypedAfter);
             await refresh();
             return;
@@ -1555,7 +1570,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           if (fresh && editingRef.current?.id === fresh.id) {
             setEditing(fresh);
             if (!closeTimeTouchedRef.current) initCloseTime(fresh);
-            if (!openTimeTouchedRef.current) initOpenTime(fresh);
+            rebaseOpenTime(fresh);
             setFormNotice(t.journalEditSavedTypedAfter);
           }
           return;
@@ -1584,7 +1599,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             );
             setEditing(fresh);
             if (!closeTimeTouchedRef.current) initCloseTime(fresh);
-            if (!openTimeTouchedRef.current) initOpenTime(fresh);
+            rebaseOpenTime(fresh);
             keepErrorForRef.current = [merged.symbol, merged.side, merged.entry, merged.exit, merged.size, merged.sl, merged.tp, merged.note].join(
               '\u0001'
             );
@@ -2389,7 +2404,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               closeText: pnum(exit) != null ? closeTime : '',
               nowMs: serverNowSec() * 1000,
             });
-            return 'error' in chk ? <Text style={[styles.planWarn, { textAlign: align }]}>{createTimesErrorText(chk)}</Text> : null;
+            // «الإغلاق قبل الفتح» مع وقت إغلاقٍ مكتوب يقوله سطر الإغلاق (`editClosedAtSend` بالفتح الجديد) — لا السطر نفسه مرّتين
+            if (!('error' in chk) || (chk.error === 'beforeOpen' && closeTime.trim() !== closeTimeInit.text.trim())) return null;
+            return <Text style={[styles.planWarn, { textAlign: align }]}>{createTimesErrorText(chk)}</Text>;
           })()
         : null}
       {!editing ? (
