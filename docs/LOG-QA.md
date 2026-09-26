@@ -1050,3 +1050,4 @@ backend r61: `change_pct` null لشمعة واحدة — `liveSeries.ts:201`، `
 **قائمة قبول DESIGN-PRO (الرابع عشر):** 0/12 فشل (diff منذ 988559f، 11 ملفّاً: عنوان `QuadChartModal` 13px؛ سطرا الدفتر بـ`styles.stat` ⇐ `...numeric`).
 **المراجعة (d — أرقام متناقضة):** حدود النصوص `main.py` (1000/500/2000/32) = `maxLength` بالواجهة. **QA94a → ui**: `AlertsPanel.tsx:356` `String(a.price)` ⇒ «1.23456e-8» يرفضه `parseDecimal` (مُتحقَّق بـtsx)، و`maxLength={12}` (:892) مقابل `PRICE_MAX_LEN = 20` بالدفتر.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
+**إضافة (بعد السحب، 6ebb13c):** أخضر 0؛ selftests `panClamp`/`positionSize`/`tradePlan` ناجحة. أُغلقت **tools109a** ← tools `b49ec7b` (أنماط `...numeric`). ui `3425fe8`/`41f444e` تحييد ألوان التصويت والشرائح ⇒ 0/12 باقٍ. جديد: tools110a → launch (مُتحقَّق).
