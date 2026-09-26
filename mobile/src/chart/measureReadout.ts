@@ -187,7 +187,9 @@ export function measureDurationSec(
   if (ta == null || tb == null) return null;
   const sec = Math.abs(tb - ta);
   // اليومي فما فوق أيام كاملة: افتتاح الجلسة يتحرّك ساعة بتبدّل التوقيت الصيفي ⇒ أسبوعان عبر 8 مارس كانا «13d 23h».
-  return stepSec >= 86400 && rule ? Math.round(sec / 86400) * 86400 : sec;
+  // ضمن ساعة من يوم كامل وحده: ترند مرسوم على H1 من 09:00 إلى 20:00 كان يُقرأ على D بلا مدّة، و«1d 11h» صار «1d».
+  const whole = Math.round(sec / 86400) * 86400;
+  return stepSec >= 86400 && rule && Math.abs(sec - whole) <= 3600 ? whole : sec;
 }
 
 /**

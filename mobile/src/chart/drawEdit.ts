@@ -231,7 +231,8 @@ export function translateDrawing(
   // طرف قبل أوّل شمعة محمَّلة أصلاً (ترند قديم خرج طرفه من نافذة الجلب): الحدّ كان −0 فلا يتحرّك يساراً
   // إطلاقاً. هناك الحدّ ألّا يعبر **أحدث** الطرفين الخانة 0 (الختم قبل السلسلة بزمنه صحيح).
   const floor = minIndex >= 0 ? -minIndex : -Math.max(0, maxIndex);
-  const di = Math.max(Math.round(dIndex), floor);
+  // `ceil`: طرف مرسوم على فريم أدقّ فهرسه كسري (3.625 على D) ⇒ الحدّ كسري، وكان يمرّ ⇒ الطرف الآخر يُحفظ منتصف شمعة.
+  const di = Math.max(Math.round(dIndex), Math.ceil(floor));
   const move = (p: ChartPoint): ChartPoint => {
     // نقطة بلا ختم (رسم قديم) تُختم كالمعتاد كي تُرسى بين الفريمات.
     if (di === 0 && p.time != null) return { ...p, price: priceOf(p.price) };
