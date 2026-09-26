@@ -303,6 +303,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const [listError, setListError] = useState(false);
   /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة صفقة بدل صمت كامل (لم يكن هناك حتى catch) */
   const [formError, setFormError] = useState<string | null>(null);
+  /** launch213a: حُفظ التعديل وبقي مفتوحاً بما كُتب أثناء الطلب — يُقال بنصّ عادي (ليس خطأً، فلا لون `warn`). لا يمحوه تغيّر النموذج
+   * (ما زال صحيحاً حتى الحفظ التالي)؛ يزول بالضغطة التالية على الحفظ أو بالإلغاء أو بفتح تعديل آخر */
+  const [formNotice, setFormNotice] = useState<string | null>(null);
   /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
    * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
   const [editing, setEditing] = useState<Trade | null>(null);
@@ -1292,6 +1295,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     fillEditForm(journalEditForm(tr));
     setSizeFor(tr.symbol);
     setFormError(null);
+    setFormNotice(null);
     playSoftClick();
   };
 
@@ -1311,6 +1315,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     resetForm();
     restorePreEdit();
     setFormError(null);
+    setFormNotice(null);
   };
 
   /**
@@ -1339,6 +1344,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const addInFlightRef = useRef(false);
   const add = async () => {
     if (addInFlightRef.current) return;
+    setFormNotice(null);
     const e = pnum(entry);
     // «EUR/USD» ⇒ EURUSD، و«EU» يُرفض هنا لا بالخادم برسالة عامة — راجع `journalSymbol`
     const sym = journalSymbol(symbol);
@@ -1461,6 +1467,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           if (fresh && editingRef.current?.id === fresh.id) {
             setEditing(fresh);
             if (!closeTimeTouchedRef.current) initCloseTime(fresh);
+            setFormNotice(t.journalEditSavedTypedAfter);
           }
           return;
         }
@@ -2728,6 +2735,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         <Text style={styles.btnText}>{busy ? '...' : editing ? t.journalSaveEditBtn : t.journalAddBtn}</Text>
       </Pressable>
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
+      {formNotice && editing ? <Text style={[styles.formNotice, { textAlign: align }]}>{formNotice}</Text> : null}
 
       {loading ? <ActivityIndicator color={colors.textMuted} /> : null}
       {!loading && (trades.length === 0 || listError) ? (
@@ -2870,6 +2878,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: spacing.xs,
   },
+  formNotice: { color: colors.textMuted, fontSize: 11, textAlign: 'right', marginTop: spacing.xs },
   empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
   trade: {
     paddingVertical: spacing.sm,
