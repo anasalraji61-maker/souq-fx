@@ -141,6 +141,10 @@ async def _validation_error_stays_422(request: Request, exc: RequestValidationEr
             e["input"] = None
         elif isinstance(v, (dict, list, str)) and len(json.dumps(v, default=str)) > 10_000:
             e["input"] = None
+        elif _has_lone_surrogate(v):
+            # بايتات UTF-8 خام لبديل منفرد (ED A0 80) أو جسم UTF-16 يجتازان الوسيط (يبحث عن `\ud800`
+            # المهرَّب فقط): التصديق يرفضه `string_unicode` صحيحاً، لكن إعادته بـ`input` تفشل بترميز الردّ ⇒ 500
+            e["input"] = None
     return JSONResponse(status_code=422, content={"detail": _json_safe(jsonable_encoder(errors))})
 
 
@@ -1798,7 +1802,10 @@ def _require_moderator(x_moderation_token: str | None) -> None:
     expected = os.getenv("MATRIX_MODERATION_TOKEN", "")
     if not expected:
         raise HTTPException(404, "not found")
-    if not x_moderation_token or not secrets.compare_digest(x_moderation_token, expected):
+    # بايتات: `compare_digest` على نصّين يرمي TypeError لأي حرف غير ASCII (رأس «é») ⇒ 500 بدل 403
+    if not x_moderation_token or not secrets.compare_digest(
+        x_moderation_token.encode("utf-8", "surrogateescape"), expected.encode("utf-8", "surrogateescape")
+    ):
         raise HTTPException(403, "forbidden")
 
 
