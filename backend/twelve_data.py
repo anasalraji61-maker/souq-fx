@@ -536,7 +536,8 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         data = r.json()
     if data.get("status") == "error":
         return None
-    price = _pos(data.get("close") or data.get("price"))
+    # `close: "null"` نصّاً كان يُعدّ موجوداً فيحجب `price` صالحاً ⇒ اقتباس يسقط بلا سبب
+    price = _pos(data.get("close")) or _pos(data.get("price"))
     if not price:
         return None
     quoted_at = _quote_time(data.get("last_quote_at"))
@@ -561,7 +562,8 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         "open": _f(data.get("open")),
         "high": _f(data.get("high")),
         "low": _f(data.get("low")),
-        "percent_change": _f(data.get("percent_change")),
+        # «-0.00000» من المزوّد كان يصل ‎-0.0 ⇒ «−0.00%» لتغيّر صفري
+        "percent_change": (pc + 0.0) if (pc := _f(data.get("percent_change"))) is not None else None,
         # وقت السعر نفسه من المزوّد (آخر شمعة دقيقة)، لا لحظة جلبه: بعطلة نهاية الأسبوع كان إغلاق الجمعة
         # يُعاد `as_of` = «الآن» فتقرؤه الحاسبة/الدفتر سعراً حيّاً. None حين لا يرسله (المسار يقرّر).
         "quoted_at": quoted_at,

@@ -296,3 +296,15 @@ def test_quote_network_error_falls_back_to_the_real_candle_not_500(monkeypatch):
     assert body["price"] == pytest.approx(1.1) and body["data_kind"] == "cache"
     assert body["bid"] is None and body["spread_source"] is None
     assert body["as_of"] == now - 60
+
+
+def test_close_null_string_falls_back_to_the_provider_price(routes):
+    """`close: "null"` نصّاً كان يحجب `price` الصالح فيسقط الاقتباس كلّه."""
+    routes["/quote"] = _Resp({"close": "null", "price": "1.10000"})
+    assert market.fetch_quote_book("BTCUSD")["price"] == pytest.approx(1.1)
+
+
+def test_negative_zero_percent_change_is_sent_as_zero(routes):
+    routes["/quote"] = _Resp({"close": "1.10000", "percent_change": "-0.00000"})
+    pc = market.fetch_quote_book("BTCUSD")["percent_change"]
+    assert pc == 0 and str(pc) == "0.0"
