@@ -1431,8 +1431,20 @@ def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]
     ]
 
 
+def _lock_author(c: sqlite3.Connection, user_id: int | None, name: str | None) -> None:
+    """قفل كتابة ثم تحقّق أن الحساب ما يزال باسمه: المسار يقرأ الاسم عند المصادقة، وحذف حساب يُلتزم بين
+    المصادقة والإدراج كان يترك رسالة/فكرة باسم المحذوف — اسم يصير متاحاً لمن يسجّله بعده. PermissionError."""
+    if user_id is None:
+        return
+    c.execute("BEGIN IMMEDIATE")
+    row = c.execute("SELECT username FROM users WHERE id=?", (user_id,)).fetchone()
+    if row is None or row["username"] != name:
+        raise PermissionError("account gone")
+
+
 def add_group_message(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
+        _lock_author(c, user_id, item["user"])
         c.execute(
             "INSERT INTO group_messages(id,user_name,text,ts,created_at,user_id) VALUES(?,?,?,?,?,?)",
             (item["id"], item["user"], item["text"], item["ts"], item.get("created_at"), user_id),
@@ -1527,6 +1539,7 @@ def list_votes(user_id: int | None = None, limit: int = 200) -> list[dict]:
 
 def create_vote(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
+        _lock_author(c, user_id, item["author"])
         c.execute(
             """INSERT INTO votes(id,symbol,direction,entry,sl,tp,note,agree,disagree,author,ts,created_at,user_id)
                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",

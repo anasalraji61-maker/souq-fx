@@ -1720,7 +1720,11 @@ def post_group(msg: ChatMessage, user: dict | None = Depends(_auth_user)):
         "created_at": time.time(),
         "room": "group",
     }
-    db.add_group_message(item, user["user_id"])
+    try:
+        db.add_group_message(item, user["user_id"])
+    except PermissionError:
+        # الحساب حُذف بين المصادقة والإدراج
+        return {"ok": False, "error": "login_required"}
     return {"ok": True, "message": {**item, "mine": True}}
 
 
@@ -1777,7 +1781,10 @@ def create_vote(body: VoteCreate, user: dict | None = Depends(_auth_user)):
         "ts": datetime.now().strftime("%H:%M"),
         "created_at": time.time(),  # ثوانٍ UTC — كرسائل المجموعة
     }
-    db.create_vote(item, user["user_id"])
+    try:
+        db.create_vote(item, user["user_id"])
+    except PermissionError:
+        return {"ok": False, "error": "login_required"}
     item["my_choice"] = None
     item["mine"] = True
     return {"ok": True, "vote": item}
