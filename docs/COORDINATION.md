@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 116، على c883b39) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 117، على 2527ee4) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -20,9 +20,8 @@
 | ui | أنس | **ui-r77** DESIGN-PRO §1 يقصر الأحمر على اتجاه السعر، لكن `colors.bear` هو أيضاً نصّ الأخطاء و«حذف» وزرّ حذف الحساب (`AccountScreen`/`AlertsPanel`/`IndicatorAlertsPanel`/`SocialConsensusPanel`/`NetworkTreePanel`/`SymbolSearchBar`)، واللوحة بلا لون خطأ و`warn` محجوز للبيانات المتأخّرة. لون خطأ مستقلّ، أم نصّ عادي بعلامة، أم استثناء؟ | ui77 |
 | QA | أنس | **QA107a** (بلا قرار سابق — القرار ٤ خاصّ بالمساعد): «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض «مستويات محسوبة: دخول · وقف · هدف» بأسعار (ATR من `/api/signals/indicators/forecast`، backend أبقاه عمداً). المنطق نفسه (`app.json` «لا يقدّم نصيحة استثمارية») ينطبق؟ إخفاء المستويات وإبقاء التصويت، أم كما هي؟ | QA107 |
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
-| launch | tools | **launch186a** الحاسبة على «EURUSDi»/«GOLDi» (`f2c0ea7`): فوق شريحة الزوج يبقى `riskCalcBadSymbol` («رمز غير مدعوم… مثل EURUSD») فيبدو خطأً مطبعياً والشريحة تفترض عقداً عادياً بلا قول. المفتاح `riskCalcSuffixSymbol` (`{symbol}`/`{pair}`، ar/en/ku) جاهز — اعرضه بدل `riskCalcBadSymbol` حين `suffixPair` (`PositionSizePanel.tsx:1631–1636`) | launch186 |
 
-**تحقّق الدورة 116 (بالكود، على 5a50e5f ثم c883b39 بعد السحب):** البناء أخضر 0، selftests 122/122 ناجح.
-**أُغلق (منجز بالكود — ينتظر نظرة أنس):** QA115a ← tools `0d46016` (`centAccountSymbol("EURUSD cent")` = "EURUSD" بـ`npx tsx`) + `a09c9b4` (كلمات الحساب بمسافة)؛ launch184a ← tools `be46bf0` (`TradeJournalPanel.tsx:1966–1970`) + شريحة الزوج بالحاسبة `f2c0ea7`؛ launch185a ← chart `0fd6e98` (`MatrixChart.tsx:10546/10556/14254/14271`).
-**قائمة قبول DESIGN-PRO (السادس والثلاثون): 0 من 12 فشل** — diff منذ b9cfb2f: بند «تنبيه» بقائمة الزرّ الأيمن بـ`a11y` يذكر السعر/الحدّين، سطر لاحقة الدفتر `planLine` (مكتوم لا عنبر، `numeric`، 500)، شريحة الحاسبة غير مختارة بتسمية.
-**المراجعة (a — ميت/تصديرات):** `lineStyle.ts`/`selectionTags.ts`/`positionSize.ts`/`fibIsDown`/`useChartBannerSymbols`/`journalUnknownSuffixPair` — كل تصدير مستعمل داخل ملفه أو بـselftest أو بمستورد. **لا بند.** لا صفّ مفتوح لوكيل برمجي عدا QA1 (جهاز).
+**تحقّق الدورة 117 (بالكود، على 8227339 ثم 2527ee4 بعد السحب):** البناء أخضر 0، selftests 122/122 ناجح.
+**أُغلق (منجز بالكود — ينتظر نظرة أنس):** launch186a ← tools `8227339` (`PositionSizePanel.tsx:1636–1638` يعرض `riskCalcSuffixSymbol` حين `suffixPair`، و`replace` بدالّة فلا يُفسَّر `$` بالرمز).
+**قائمة قبول DESIGN-PRO (السابع والثلاثون): 0 من 12 فشل** — diff منذ c883b39: أزرار الإزاحة تُصفّى حسب الأداة (الأزرار نفسها المسمّاة)، لمس الملاحظة بنصّها، سطر الحاسبة بنمط `styles.warn` القائم.
+**المراجعة (b — نصوص ثابتة):** مسح `.tsx` (نصّ عربي بين وسوم، `accessibilityLabel`/`placeholder`/`title` حرفية) ⇒ `placeholder="EURUSD"` ×3 مثال رمز فقط. **لا بند.** لا صفّ مفتوح لوكيل برمجي عدا QA1 (جهاز).
