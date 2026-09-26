@@ -14143,7 +14143,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 8,
     paddingHorizontal: 4,
-    paddingVertical: 1,
+    // ارتفاع 16 بدل حشوة 1px (DESIGN-PRO §3، QA103a): الشارة بالطول نفسه تقريباً.
+    minHeight: 16,
     borderRadius: 3,
     backgroundColor: 'rgba(7,16,24,0.78)',
   },
@@ -14213,7 +14214,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.selectedFill,
     borderRadius: radii.sm,
     paddingHorizontal: 4,
-    paddingVertical: 1,
+    // بلا حشوة رأسية: سطر 14 يملأ داخل الشريط (16 − حدّين) تماماً (QA103a).
   },
   collapsedPage: {
     ...numeric,
