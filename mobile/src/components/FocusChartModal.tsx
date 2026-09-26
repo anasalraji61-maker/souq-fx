@@ -427,7 +427,7 @@ export function FocusChartModal({
             style={styles.main}
             contentContainerStyle={{
               padding: phone ? spacing.sm : spacing.md,
-              gap: phone ? 7 : 10,
+              gap: phone ? spacing.sm : spacing.md,
             }}
             keyboardShouldPersistTaps="handled"
           >
