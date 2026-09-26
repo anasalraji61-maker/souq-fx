@@ -480,6 +480,12 @@ type Props = {
   initialLens?: LensMode;
   initialKind?: ChartKind;
   initialIndicators?: IndicatorId[];
+  /**
+   * ما يعرضه الشارت فعلاً من المؤشرات (العدسة + المضاف) كلّما تغيّر محتواه — بزرّ الشارت، أو بالقالب المحمَّل عند
+   * التركيب. لأمٍّ تعرض قائمتها الخاصة (لوحة جانبية) فلا تقول «مطفأ» عن مؤشّر ظاهر ولا تمحوه بأوّل ضغطة.
+   * لا يُستدعى عند التركيب، ولا حين تعيد الأمّ القائمة نفسها (`initialIndicators`) ⇒ لا حلقة.
+   */
+  onIndicatorsChange?: (ids: IndicatorId[]) => void;
   compactUi?: boolean;
   /** بدون شريط القراءة — للفريمات التي تملأ الارتفاع بالكامل */
   dense?: boolean;
@@ -1599,6 +1605,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   initialLens,
   initialKind,
   initialIndicators,
+  onIndicatorsChange,
   compactUi = false,
   dense = false,
   mutedCandles = false,
@@ -1895,6 +1902,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const set = new Set([...LENS_PRESETS[lens], ...extraInd]);
     return [...set];
   }, [lens, extraInd]);
+  const selectedKey = selectedInd.join(',');
+  const reportedIndKey = useRef(selectedKey);
+  const onIndicatorsChangeRef = useRef(onIndicatorsChange);
+  onIndicatorsChangeRef.current = onIndicatorsChange;
+  useEffect(() => {
+    if (reportedIndKey.current === selectedKey) return;
+    reportedIndKey.current = selectedKey;
+    onIndicatorsChangeRef.current?.(selectedInd);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `selectedKey` يمثّل `selectedInd`
+  }, [selectedKey]);
 
   const availableH = Math.max(0, height - (interactive ? 8 : 0));
   // صفحة اللوحات: الطيّ كان يُخفي الأولوية الأدنى نهائياً فلا سبيل لرؤيتها إلا بإلغاء
