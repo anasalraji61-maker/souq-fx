@@ -6591,7 +6591,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const lineMul = event.deltaMode === 1 ? 16 : 1;
       const dx = event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
       if (overPlot && !overPrice && !overTime && (event.shiftKey || Math.abs(dx) > Math.abs(event.deltaY))) {
-        const barW = chartPlotW / Math.max(2, windowCountRef.current);
+        // عرض الشمعة **المرسومة** كالسحب (`beginDrag`): Renko بـ40 لبنة بنافذة 80، أو أقدم التاريخ، كانت
+        // السحبة تمرّ ضعفَي (حتى 8×) ما تحرّكه اليد.
+        const shown = Math.min(
+          windowCountRef.current,
+          sourceRef.current.slots || sourceRef.current.plot.length || windowCountRef.current
+        );
+        const barW = chartPlotW / Math.max(2, shown);
         wheelPanCarry.current -= (dx * lineMul * panSpeedMulRef.current) / barW;
         const bars = Math.trunc(wheelPanCarry.current);
         if (bars) {
@@ -6610,16 +6616,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         // فوق محور الزمن: الطرف الأيمن مثبَّت دائماً (الإزاحة كما هي) — بعدّ `zoomWindow` نفسه
         // (شمعة على الأقلّ لكل حزّة، فلا تضيع حزّات العجلة الصغيرة بنافذة ضيّقة). كان يغيّر
         // `windowCount` وحده بلا `windowCountRef`، فالنشر للرباعي يرسل العدد القديم والتوابع تتأخّر حزّة.
-        const current = windowCountRef.current;
+        // بعد السحب للتاريخ الطرف الأيمن نفسه مثبَّت (`focus = 1`) والعدّ من الشموع **المعروضة**: كان يُمرَّر
+        // إزاحة 0 فيُعدّ من المخزَّن (80) بينما الظاهر 10 ⇒ ثلاث حزّات بلا أيّ تغيير ثم قفزة.
         if (replayOnRef.current) {
           zoomAroundCenter(factor);
           return;
         }
-        const z = zoomWindow(sourceRef.current.all.length, current, 0, factor);
-        if (z.count === current) return;
-        windowCountRef.current = z.count;
-        setWindowCount(z.count);
-        schedulePublishSync(false);
+        zoomAroundCenter(factor, 1);
         return;
       }
       // فوق اللوح: الشمعة تحت المؤشّر تبقى تحته (كان حول مركز اللوح فتنزلق الشمعة التي يقرؤها المتداول
