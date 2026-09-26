@@ -599,9 +599,17 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         # وقت السعر نفسه من المزوّد (آخر شمعة دقيقة)، لا لحظة جلبه: بعطلة نهاية الأسبوع كان إغلاق الجمعة
         # يُعاد `as_of` = «الآن» فتقرؤه الحاسبة/الدفتر سعراً حيّاً. None حين لا يرسله (المسار يقرّر).
         "quoted_at": quoted_at,
-        # السوق مفتوح/مغلق كما يقوله المزوّد — None حين لا يقول (لا تخمين من الساعة)
-        "market_open": data.get("is_market_open") if isinstance(data.get("is_market_open"), bool) else None,
+        "market_open": _market_open(matrix_symbol, data.get("is_market_open")),
     }
+
+
+def _market_open(matrix_symbol: str, provider_says: object) -> bool | None:
+    """السوق مفتوح/مغلق كما يقوله المزوّد — None حين لا يقول. إلا بعطلة الجلسة الأسبوعية بساعتنا: المزوّد يقول
+    `true` طوال العطلة، واقتباس الجمعة 20:59 يمرّ فحص وقته ⇒ كان يُرسَل `market_open: true` يوم السبت فتقرأ
+    الحاسبة إغلاق الجمعة «سعراً متوقّفاً منذ 2500 دقيقة» بدل «السوق مغلق · آخر إغلاق»."""
+    if in_weekend_close(matrix_symbol, _session_now(), 0):
+        return False
+    return provider_says if isinstance(provider_says, bool) else None
 
 
 def _quote_time(v: object) -> float | None:

@@ -127,3 +127,24 @@ def test_ws_ticks_as_of_is_newest_sent_tick(monkeypatch):
         msg = ws.receive_json()
     assert msg["ticks"] == {"BTCUSD": 65000.0}
     assert msg["data_source"]["as_of"] == _ts(SAT) - 90
+
+
+FRI_LAST = "2026-09-25 20:59"  # آخر دقيقة قبل إغلاق الجمعة
+
+
+@pytest.mark.parametrize("sym,now,says,expected", [
+    ("EURUSD", SAT, True, False),     # المزوّد يقول مفتوح يوم السبت — ساعتنا تقول مغلق
+    ("EURUSD", SAT, None, False),
+    ("EURUSD", WED, True, True),
+    ("EURUSD", WED, False, False),
+    ("EURUSD", WED, None, None),      # لا يقول ⇒ لا تخمين خارج العطلة
+    ("BTCUSD", SAT, True, True),      # الكريبتو بلا عطلة
+])
+def test_friday_quote_served_on_saturday_is_not_market_open(routes, monkeypatch, sym, now, says, expected):  # noqa: F811
+    monkeypatch.setattr(market, "_session_now", lambda: _ts(now))
+    body = {"close": "1.13913", "last_quote_at": int(_ts(FRI_LAST if now == SAT else now))}
+    if says is not None:
+        body["is_market_open"] = says
+    routes["/quote"] = _Resp(body)
+    q = market.fetch_quote_book(sym)
+    assert q is not None and q["market_open"] is expected
