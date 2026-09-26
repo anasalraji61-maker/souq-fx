@@ -169,6 +169,8 @@ export type Dict = {
   screenerFailed: string;
   screenerScanNone: string;
   screenerScanPartial: string;
+  /** backend-r69: رموز لم تكفِ شموعها لتقييم الفلتر (`insufficient_data`) — ليست حدّ طلبات ولا «بلا تطابق». {tf} {list} */
+  screenerInsufficientData: string;
   /** ui11/backend-r17 (a): وسم نتيجة الماسح المبنيّة على شموع أقدم من شمعتين من الفريم (عطلة الأسبوع، كاش المزوّد).
    * `{time}` = `formatLocalStamp(price_as_of)` = وقت إغلاق آخر شمعة بتوقيت الجهاز — لذا «إغلاق» لا «حتى» (التي تُقرأ «إلى أن»). */
   screenerPriceAsOf: string;
@@ -1680,6 +1682,7 @@ const ar: Dict = {
   screenerNoResults: 'لا رمز يحقّق الفلاتر الحالية الآن — جرّب فلتراً آخر أو أعد الفحص لاحقاً',
   screenerFailed: 'تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى',
   screenerScanNone: 'تعذّر جلب أسعار أي رمز — غالباً حدّ طلبات مزوّد الأسعار؛ انتظر دقيقة وأعد الفحص',
+  screenerInsufficientData: 'شموع {tf} غير كافية لفحص: {list} — لم تُفحص، فغيابها عن النتائج لا يعني «لا تطابق».',
   screenerScanPartial: 'فُحص {k} من {total} رمزاً فقط — تعذّرت قراءة: {list} (حدّ طلبات المزوّد غالباً). النتائج من المفحوصة فقط.',
   screenerPriceAsOf: 'إغلاق {time}',
   screenerNoMatchOf: 'فُحص {k} رمزاً على فريم {tf} ولا أحد يحقّق الشرط الآن — جرّب فلتراً آخر أو أعد الفحص لاحقاً',
@@ -2915,6 +2918,7 @@ const enUS: Dict = {
   screenerNoResults: 'No symbol meets the current filters right now — try another filter or scan again later',
   screenerFailed: 'Could not run the scan — check your connection and try again',
   screenerScanNone: 'Could not load prices for any symbol — likely the data provider rate limit; wait a minute and scan again',
+  screenerInsufficientData: 'Not enough {tf} candles to check: {list} — not scanned, so their absence from results does not mean "no match".',
   screenerScanPartial: 'Only {k} of {total} symbols scanned — could not read: {list} (likely provider rate limit). Results cover scanned symbols only.',
   screenerPriceAsOf: 'as of {time}',
   screenerNoMatchOf: 'Scanned {k} symbols on {tf} and none meet the condition right now — try another filter or scan again later',
@@ -4188,6 +4192,7 @@ const ku: Dict = {
   screenerNoResults: 'ئێستا هیچ هێمایەک مەرجی فلتەرەکان پڕ ناکاتەوە — فلتەرێکی تر تاقی بکەرەوە یان دواتر دووبارە بپشکنە',
   screenerFailed: 'نەکرا پشکنین کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   screenerScanNone: 'نرخی هیچ هێمایەک نەهێنرا — لەوانەیە سنووری داواکاری دابینکەری داتا بێت؛ خولەکێک چاوەڕێ بکە و دووبارە بپشکنە',
+  screenerInsufficientData: 'مۆمی {tf} بەس نییە بۆ پشکنینی: {list} — نەپشکنران، کەواتە نەبوونیان لە ئەنجامەکاندا واتای «هاوتا نییە» نییە.',
   screenerScanPartial: 'تەنها {k} لە {total} هێما پشکنران — نەخوێنرانەوە: {list} (لەوانەیە سنووری داواکاری دابینکەر). ئەنجامەکان تەنها بۆ پشکنراوەکانن.',
   screenerPriceAsOf: 'داخستنی {time}',
   screenerNoMatchOf: '{k} هێما لە {tf} پشکنران و ئێستا هیچیان مەرجەکە پڕ ناکاتەوە — فلتەرێکی تر تاقی بکەرەوە یان دواتر دووبارە بپشکنە',
