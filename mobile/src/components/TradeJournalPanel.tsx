@@ -51,6 +51,7 @@ import {
   formatRR,
   breakevenWinRatePct,
   journalSymbol,
+  journalUnknownSuffixPair,
   journalFormSymbol,
   quoteSymbol,
   levelSideIssue,
@@ -236,6 +237,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   /** الخانة كما تُكتب; `symbol` = الرمز الذي يُحفظ وتُفحص به كل الخانات (`journalFormSymbol` — «EURUSD m» ⇒ «EURUSDM») */
   const [symbolText, setSymbol] = useState(defaultSymbol || 'EURUSD');
   const symbol = useMemo(() => journalFormSymbol(symbolText), [symbolText]);
+  /** ما سيُحفظ فعلاً (null = رمز مرفوض)، والزوج المقصود حين يُحفظ بلاحقة لا يعرفها الدفتر (`journalUnknownSuffixPair`) */
+  const savedSymbol = useMemo(() => journalSymbol(symbolText), [symbolText]);
+  const suffixPair = useMemo(() => journalUnknownSuffixPair(savedSymbol), [savedSymbol]);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   /** رمز السعر والجهة **الآن** — لسعرٍ حيّ يصل بعد تبديل أحدهما (راجع `fillLivePrice`) */
   const liveKeyRef = useRef('');
@@ -1959,6 +1963,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         selectionColor={colors.accent}
         accessibilityLabel={t.journalSymbolA11y}
       />
+      {suffixPair && savedSymbol ? (
+        // launch184a: «EURUSDi» تُحفظ بلا نقاط ولا R ولا مال — كان ذلك بصمت. نصّ مكتوم لا عنبر (§1: العنبر للبيانات المتعطّلة)
+        <Text style={[styles.planLine, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.journalSymbolSuffixUnknown.replace('{symbol}', savedSymbol).replace('{pair}', suffixPair)}
+        </Text>
+      ) : null}
       {/*
         تسجيل صفقة جديدة يقع غالباً **لحظة الدخول** — وهي اللحظة التي يعني فيها خبرٌ قوي قريب أكثر ما
         يعني: الحاسبة والشارت ينبّهان إليه، والدفتر (حيث يُكتب الدخول فعلاً) كان وحده صامتاً. لا يظهر عند

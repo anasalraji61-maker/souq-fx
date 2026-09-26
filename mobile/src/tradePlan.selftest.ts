@@ -56,6 +56,7 @@ import {
   formatRAbs,
   formatRR,
   journalSymbol,
+  journalUnknownSuffixPair,
   journalFormSymbol,
   quoteSymbol,
   levelSideIssue,
@@ -4053,3 +4054,17 @@ console.log('tradePlan journalFormSymbol selftest OK');
   assert.equal(journalSymbol('EURUSD-cent'), 'EURUSD-CENT');
 }
 console.log('tradePlan cent word selftest OK');
+
+// launch184a: لاحقة ملاصقة لا يعرفها الدفتر ⇒ الزوج المقصود لسطر `journalSymbolSuffixUnknown` (كانت تُحفظ بلا نقاط بصمت)
+{
+  for (const [raw, pair] of [['EURUSDi', 'EURUSD'], ['EUR/USD z', 'EURUSD'], ['XAUUSDx', 'XAUUSD'], ['USDJPYZ', 'USDJPY'], ['GOLDi', 'GOLD'], ['EURUSDpro1', 'EURUSD']] as const) {
+    const saved = journalSymbol(raw)!;
+    assert.equal(journalPipSize(saved), null, raw); // فعلاً بلا نقاط — وإلا فالسطر كاذب
+    assert.equal(journalUnknownSuffixPair(saved), pair, raw);
+    assert.ok(journalPipSize(pair), raw); // والمقترح يُحسب
+  }
+  // معروفة (نقاط تُحسب) أو ليست فوركس أو قد تكون عقداً أصغر (الزوج وحده يحسب مالها ×100) أو تيثر: لا سطر
+  for (const raw of ['EURUSD', 'EURUSDm', 'EURUSD.pro', 'EURUSD.x', 'EURUSDc', 'EURUSDmicro', 'EURUSD.mini', 'EURUSD cent', 'EURUSDC1', 'EURUSDcents', 'EURUSDusc', 'EURUSDmic', 'EURUSDmini2', 'EURUSDT', 'BTCUSDT', 'BTCUSDx', 'US30x', 'EURXXXi', ''])
+    assert.equal(journalUnknownSuffixPair(journalSymbol(raw)), null, raw);
+}
+console.log('tradePlan journalUnknownSuffixPair selftest OK');

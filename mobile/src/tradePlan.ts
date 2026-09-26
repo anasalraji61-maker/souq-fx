@@ -2064,6 +2064,24 @@ export function journalSymbol(raw: string): string | null {
 }
 
 /**
+ * رمزٌ **سيُحفظ بلا نقاط** (`journalSpec` لا تعرفه) ويبدأ بزوجٍ معروف أو اسم معدن ثم لاحقة («EURUSDi»، «XAUUSDx»، «GOLDi»)
+ * ⇒ ذلك الزوج (للسطر `journalSymbolSuffixUnknown`)؛ null = لا سطر. launch184a: كانت الصفقة تُحفظ بلا نقاط ولا R ولا مال
+ * **بصمت** — والمتداول لا يعرف أن اللاحقة الملاصقة (غير «m»/«pro»/…) هي السبب.
+ * لا يُقترح الزوج وحده حين قد تكون اللاحقة **عقداً أصغر** («C1»، «CENTS»، «CNT»، «USC»، «MIC»، «MINI2»): الزوج العادي يحسب
+ * مالها بمئة ضعف — رفضها مقصود (`AMBIGUOUS_SMALL_SUFFIX`). ولا لـ«T» («EURUSDT» يورو/تيثر رقمي)، ولا لـBTCUSD/US30 (بلا نقاط أصلاً).
+ */
+export function journalUnknownSuffixPair(symbol: string | null | undefined): string | null {
+  const up = (symbol || '').trim().toUpperCase();
+  if (!up || journalSpec(up) || cryptoPairOf(up) || knownSingleName(up)) return null;
+  for (const re of [/^([A-Z]{6})[.#+]?([A-Z0-9.]+)$/, /^(GOLD|SILVER)[.#+]?([A-Z0-9.]+)$/]) {
+    const m = re.exec(up);
+    if (!m || !instrumentSpec(m[1])) continue;
+    return /^(T|C|USC|MIC|MINI)/.test(m[2]) ? null : m[1];
+  }
+  return null;
+}
+
+/**
  * الرمز الذي **تفحص به خانات النموذج** (الحجم، الأسعار، أخطاء الكتابة) = ما سيُحفظ (`journalSymbol`)، وإلا النصّ كما كُتب.
  * «EURUSD m» يُحفظ «EURUSDM» (لوت عادي بلاحقة الوسيط) و«EURUSD c» «EURUSDC» (سنت)، لكن الفحوص كانت تقرأ النصّ الخام الذي
  * لا تعرفه المواصفات ⇒ «10000» (وحدات منسوخة) تُحفظ عشرة آلاف لوت بلا تحذير (+2,500,000 USD بالصفّ)، وحدّ السنت (قرار ١٥)
