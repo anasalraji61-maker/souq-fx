@@ -170,6 +170,8 @@ ok('Alt+T بلوحة عربية (الحرف «ف») ⇒ من الموضع', draw
 ok('Option+F على ماك («ƒ») ⇒ فيبو', drawToolShortcut('ƒ', 'KeyF', alt) === 'fib');
 ok('بلا Alt ⇒ لا شيء (الكتابة لا تُسرق)', drawToolShortcut('h', 'KeyH', { ...alt, alt: false }) === null);
 ok('Ctrl+Alt ⇒ لا شيء (AltGr بويندوز)', drawToolShortcut('h', 'KeyH', { ...alt, ctrl: true }) === null);
+ok('Dvorak: مفتاح KeyF يكتب «u» ⇒ ليس F (Alt+U لا يفتح فيبو)', drawToolShortcut('u', 'KeyF', alt) === null);
+ok('Dvorak: F بموضع KeyY ⇒ فيبو', drawToolShortcut('f', 'KeyY', alt) === 'fib');
 ok('Alt+Shift ⇒ لا شيء', drawToolShortcut('H', 'KeyH', { ...alt, shift: true }) === null);
 ok('حرف بلا أداة ⇒ لا شيء', drawToolShortcut('q', 'KeyQ', alt) === null);
 ok('وسم الاختصار', drawToolShortcutLabel('hline') === 'Alt+H');

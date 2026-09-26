@@ -5855,13 +5855,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (webKeyChart !== keyToken.current || webDialogCovers(plotRef)) return;
       const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
       if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
-      if (event.code === 'KeyR') {
+      // الحرف المكتوب أوّلاً (`shortcutLetter`) والموضع احتياطاً: بـDvorak مفتاح «KeyR» يكتب «p» — كان Alt+P يعيد العرض
+      // وAlt+R (بموضع «KeyO») لا يفعل شيئاً. ماك (Option ⇒ «®») والعربية بلا حرف لاتيني ⇒ الموضع كما كان.
+      const letter = shortcutLetter(event.key, event.code);
+      if (letter === 'r') {
         if (!canPan) return;
         event.preventDefault();
         resetChartView();
         return;
       }
-      if (event.code === 'KeyA') {
+      if (letter === 'a') {
         const run = altAlertRef.current;
         if (!run) return;
         event.preventDefault();
@@ -6445,7 +6448,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           zoomAroundCenter(zoomIn ? 0.8 : 1.25);
           return;
         }
-        if (!typing && !event.shiftKey && (c === 'KeyF' || k === 'f' || k === 'F')) {
+        // F بالحرف المكتوب، والموضع للوحة بلا حرف لاتيني (العربية «ب»): بـDvorak مفتاح «KeyF» يكتب «u» ⇒ كان U يملأ الشاشة.
+        if (!typing && !event.shiftKey && shortcutLetter(k, c) === 'f') {
           const doc = document as Document & { fullscreenElement?: Element | null };
           event.preventDefault();
           const done = doc.fullscreenElement
