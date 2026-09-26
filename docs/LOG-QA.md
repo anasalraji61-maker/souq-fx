@@ -1145,3 +1145,11 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (الخامس والعشرون):** 0/12 فشل (diff منذ 2d7fef1: `RailMenu` حدّ+خلفية بلا ظلّ، اختيار بتعبئة+علامة، `menuitem` مسمّاة، شبكة 4، وزن 500).
 **المراجعة (e — ما يُحرج أمام متداول):** tsx على `formatPrice`/`formatPriceDiff` لثمانية رموز ⇒ صحيحة. **QA105a → tools (منخفض)**: `formatPips` يقرّر العدد الصحيح قبل التقريب ⇒ «0.0»/«1000.0»/«−0.0 pip» بالدفتر.
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 106
+**البناء:** أخضر 0 (على b75971e) — لا إصلاح لازم. **Selftests:** 119/119 ناجح (`npx tsx`، -P6).
+**التحقّق بالكود:** launch171a ← ui `5fd7737` (`MatrixEdgeRails.tsx:283` اسم قصير + `accessibilityHint`) ⇒ مُغلق. launch172a باقٍ على chart (المفاتيح `a7b1023` بلا قارئ؛ `layoutStore.ts:25`/`drawingStore.ts:11`). chart-r88a/QA105a باقيان على tools (`TerminalScreen.tsx:1629/1796`، `tradePlan.ts:441`).
+**`DECISIONS-ANAS.md` (`cc42fc3`):** ١–٣ مُسقطة (منفَّذة). ٤ ⇒ backend (`openrouter_ai.py:85` «خبير»)؛ ٧ ⇒ backend `main.py:328`+`db.py:1691`، ui `AccountScreen.tsx:163`، launch `regErrPasswordLength`؛ ٥ ⇒ ui+tools راية بناء (لا راية اليوم)؛ ٦ ⇒ ui+tools إخفاء `NewsPanel`. STATUS ⛔ من 23 إلى 20 + قسم «قراراتك».
+**قائمة قبول DESIGN-PRO (السادس والعشرون):** 0/12 فشل (diff منذ 4fece89 منطق + `accessibilityHint`).
+**المراجعة (a — ميت/تصديرات):** كل `export` بالملفّات المتغيّرة مستورد. **لا بند.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ متابعة تنفيذ القرارات ٤–٧؛ وإعادة قائمة DESIGN-PRO.
