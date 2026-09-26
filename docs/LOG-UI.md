@@ -748,3 +748,15 @@
 - مُبقى عمداً: `FrameSizedGrid.cellHover` (حدّ + تعبئة) يظهر أثناء السحب فقط كهدف إفلات — ليس وقت السكون.
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ فحص آلي: كل Pressable باختيار شرطي يحمل `accessibilityState`؛ لا عربي ثابت ظاهر بنطاقي خارج `MessagesScreen` (launch52) — «،» مع `rtl` صحيح للكردية أيضاً.
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
+
+## 2026-09-26 — تشغيل 61
+صفّ ui بـCOORDINATION (دورة QA 91): **backend-r58** (زرّ «تغيير كلمة المرور»). بوابة البناء خضراء (tsc 0) قبل الـcommit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 0c53968 | `api.changePassword(current, new)` ⇒ `POST /api/auth/password` (تحقّقت من العقد بـ`main.py:843-864` و`db.change_password`: 400 `invalid current password`/`password too short` تصل بـ`err.detail`) | backend-r58 |
+
+- **الزرّ لم يُركَّب بعد**: لا مفاتيح نصّ له والقاموس ملك launch ⇒ جديد **ui60a** → launch بستّة مفاتيح بأسمائها ونصوصها المقترحة (ar/en). التشغيل التالي: نموذج مطوي تحت «الخروج» بـ`AccountScreen` (الحالية + الجديدة، `secureTextEntry`، `textContentType` current/new)، 400 ⇒ `accPasswordWrongCurrent` أو `regErrPasswordLength`، غيره ⇒ `accPasswordChangeError`، النجاح ⇒ `accPasswordChanged` ومسح الحقلين.
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط.
+- قائمة DESIGN-PRO المرتّبة بنطاقي: الشريط السفلي 4 + «المزيد» (`MatrixBottomDock` `PRIMARY_TABS`)؛ §5.6 خفوت الواجهة عند مسك الشارت موصول (`onChartInteract` ⇒ `TerminalScreen`). لا بند جديد.
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
