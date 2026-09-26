@@ -263,6 +263,28 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
     return close <= open_ts and open_ts + step <= reopen
 
 
+def _closed_window(matrix_symbol: str, ts: float) -> tuple[float, float] | None:
+    """(بداية، نهاية) الفترة المغلقة (عطلة أسبوعية، جلسة عطلة، كسر يومي) التي تقع فيها `ts`، وإلا None."""
+    sym = canonical_symbol(matrix_symbol)
+    if not WEEKEND_CLOSE_FILTER or not _has_weekly_session(sym):
+        return None
+    window = _holiday_session(ts) or _daily_break(sym, ts)
+    if window:
+        return float(window[0]), float(window[1])
+    d = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+    friday = (d - timedelta(days=(d.weekday() - 4) % 7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    close, reopen = _week_close(friday), _week_reopen(friday, sym)
+    return (float(close), float(reopen)) if close <= ts < reopen else None
+
+
+def _filler_tail(matrix_symbol: str, open_ts: float, step: int, fetched_at: float) -> bool:
+    """آخر تيك في شمعة جُلبت `fetched_at` (قبل نهايتها الخام إن كانت جارية) يقع داخل فترة مغلقة ⇒ إغلاقها ملء
+    المزوّد لتلك الفترة لا سعر تداول. النهاية الخام (فتح + طول) لا المقصوصة بـ`bar_end`: 4H ذهب 20:00 جُلبت 22:30
+    داخل الكسر تنتهي «22:00» بـ`bar_end` وإغلاقها تيك 22:29. D/W بـ`bar_end` (D مؤرَّخة بتاريخ إغلاقها)."""
+    end = bar_end(matrix_symbol, open_ts, step) if step >= _DAY else float(open_ts) + step
+    return _closed_window(matrix_symbol, min(float(fetched_at), end) - 1e-3) is not None
+
+
 # مهلة بعد إغلاق الجمعة قبل أن تُعدّ شموع الجلب نهائية (آخر دقائق الجمعة قد تصل من المزوّد متأخرة).
 _CLOSE_SETTLE = 300
 
@@ -361,7 +383,7 @@ CANDLE_DISK: Path | None = (
 _disk_checked: set[str] = set()
 # الجدول باسم نسخة: تغيير بمعالجة الشموع (فلتر العطلة، بناء W من D، `_candle`) لا يصل لسلسلة محفوظة قبله —
 # كانت تُحمَّل بعد النشر وتبقى. رفع الرقم مع أيّ تغيير كهذا ⇒ النشر يبدأ بقرص فارغ ويُجلب من المزوّد.
-_DISK_TABLE = "candles_v5"
+_DISK_TABLE = "candles_v6"
 
 # وقت آخر جلب **كامل** لكل مدخل (بحجمه هو). الدمج يُبقي شموع المدخل الأكبر الأقدم ويختم المدخل «الآن» ⇒ القائمة
 # (D/50 كل 90ث) كانت تُبقي أول ~130 شمعة من D/180 بلا جلب أبداً (والقرص يحفظها عبر إعادة التشغيل) — تصحيح
@@ -722,8 +744,13 @@ def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tu
             # وقت السعر المنسوخ = min(جلبه، نهاية آخر شمعة فيه): مزوّد متأخّر (آخر 1m انتهت 09:53 وجُلبت 09:58)
             # كان يُختم as_of 09:58 على شارت 1H بينما شارت 1m يقول 09:53 للسعر نفسه. وسلسلة متأخّرة عن جلبنا
             # (آخر شمعة فيها انتهت قبله) ⇒ إغلاقها أقدم من إغلاقنا فلا يُنسخ.
-            price_at = min(at, bar_end(sym, rows[-1]["time"], TF_SECONDS.get(o_tf, 900)))
+            o_step = TF_SECONDS.get(o_tf, 900)
+            price_at = min(at, bar_end(sym, rows[-1]["time"], o_step))
             if not as_of < price_at < end:
+                continue
+            # جُلبت داخل كسر يومي/جلسة عطلة/ما قبل افتتاح الأحد وآخر شمعة فيها تمتدّ إليه ⇒ إغلاقها ملء المزوّد
+            # للفترة المغلقة: كان يُنسخ لشمعة D/W الجارية بـ`as_of` داخل الكسر (برنت 00:30 UTC، ذهب 22:30).
+            if _filler_tail(sym, rows[-1]["time"], o_step, at):
                 continue
             if newest is None or price_at > newest[0]:
                 newest = (price_at, rows[-1]["close"])
@@ -824,6 +851,12 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
             continue
         if in_weekend_close(sym, candle["time"], step):
             continue
+        # شمعة جارية فُتحت داخل فترة مغلقة وما زالت داخلها عند الجلب (4H اليورو الأحد 20:00 جُلبت 21:00 والافتتاح
+        # 22:00): `in_weekend_close` يبقيها لأنها ستعبر الافتتاح، لكنها الآن ملء المزوّد كلّها ⇒ «آخر سعر» مخترَع.
+        if step < _DAY and candle["time"] <= now < candle["time"] + step:
+            window = _closed_window(sym, now - 1e-3)
+            if window and candle["time"] >= window[0]:
+                continue
         candles.append(candle)
     if dropped:
         _stats["rows_dropped"] = int(_stats["rows_dropped"] or 0) + dropped
