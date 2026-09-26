@@ -1184,3 +1184,11 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ متابعة W2/W4/W5/W6/W8/W9 و٨/١٣/١٥؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (6817996):** أخضر 0؛ selftests المتغيّرة (levelLabels/tfTyping/positionSize/tradePlan) ناجحة. أُغلقت W2 ← tools `5d5bf49`؛ W5/ui84b ← tools `1100b8f`؛ W8 ← chart `53a9ec8`؛ W9 ← chart `4608e87`؛ ١٥ ← tools `0d2e4de`؛ backend-r78b ← tools `6817996`؛ ui84c ← chart `864f192` (W4 باقٍ: تلميح `?` لـui، الزرّ الأيمن لـchart). قائمة القبول على diff الجديد 0/12 (قائمة التخطيط حدّ+خلفية بلا ظلّ).
 **بعد السحب (1fd83b8):** W6 ← chart مُغلق (قائمة بحث قابلة للتمرير)؛ selftests 120/120.
+
+## 2026-09-26 — الدورة 110
+**البناء:** **أحمر 3** على f95145d (`crashReporting.ts` TS2307 ×2 `@sentry/react-native` + TS7006 تابع) — الحزمة بـ`package.json`/القفل منذ ui `e522621` لكن `node_modules` على السيرفر قديم، والبوابة لا تثبّت إلا إن غاب المجلد. `npm install` ⇒ أخضر 0. إصلاح دائم: **`bd7531e`** البوابة تعيد التثبيت حين `package-lock.json` أحدث من `node_modules/.package-lock.json`. **Selftests:** 120/120 ناجح (`npx tsx`).
+**التحقّق بالكود (بعد السحب، 1b3a745 — أخضر 0، selftests 120/120):** أُغلقت ٨ ← chart `51750a4` (`tradingNowSec`)؛ ١٢ ← ui `9f10840`؛ ١٣ ← ui `e522621` + launch `8148712` (DSN بشرياً)؛ W3 الهاتف ← ui `5d7059f`؛ W4 `?` ← ui `326796a`؛ r80a ← tools `1bec953`؛ launch175a، chart-r92a/b، ui86a(1). باقٍ: ★ W4 الزرّ الأيمن (chart)، launch177a → ui (`shortcutsSheetTitle` بلا قارئ + Home/End والقفز بتاريخ غائبة عن قائمة `?`)، tools122a → backend، tools122b → launch.
+**قائمة قبول DESIGN-PRO (الثلاثون):** 0/12 فشل (الرصيف و`KeyboardShortcutsSheet` حدّ+خلفية بلا ظلّ، `tabular-nums`، شبكة 4، وزن 500؛ مبدّل الشبكة بتعبئة محايدة+حدّ).
+**المراجعة (e — ما يُحرج أمام متداول):** نصوص الاختصارات تطابق المعالجات (`MatrixChart.tsx:5390/5908`)؛ صيغ pips/lots سليمة. **لا بند جديد.**
+**STATUS:** ⛔ 16→17 («أنشئ حساب Sentry» خطوة بشرية؛ القرار ١٣ نفسه محسوم). القرارات ١–١٥ كلها منفَّذة بالكود.
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات (`crashReporting.ts`، `KeyboardShortcutsSheet.tsx` جديدان)؛ متابعة W4 الزرّ الأيمن وui86a(2)؛ وإعادة قائمة DESIGN-PRO.
