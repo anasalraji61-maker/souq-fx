@@ -5965,6 +5965,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             setCtxMenu(null);
             event.preventDefault?.();
             const point = pointerXY(event);
+            // Shift+نقرة = بدء القياس من هنا (كـTradingView): الطرف الأوّل حيث النقرة، والصندوق يتبع الفأرة
+            // (`drawHoverHandlers`)، والنقرة التالية تثبّته — كان القياس يمرّ بزرّ الأداة أو Alt+M أوّلاً.
+            if (
+              interactive &&
+              tool === 'none' &&
+              !replayOn &&
+              event.nativeEvent?.shiftKey &&
+              event.nativeEvent?.pointerType !== 'touch' &&
+              !webChartPointer.current.active
+            ) {
+              const rect = event.currentTarget?.getBoundingClientRect?.();
+              const x = Math.max(0, point.x - (rect?.left ?? 0));
+              const y = Math.max(0, point.y - (rect?.top ?? 0));
+              webKeyChart = keyToken.current;
+              const start = pointFromXY(x, y);
+              setMeasureDone(null);
+              setSelectedId(null);
+              setTool('measure');
+              setPending(start);
+              setDragEnd(start);
+              return;
+            }
             // لا سحب جارٍ ⇒ لا مؤشّر مضغوط: رفعٌ فات الحدث (خروج النافذة) لا يترك قرصاً وهمياً.
             if (!webChartPointer.current.active) webPointers.current.clear();
             webPointers.current.set(point.pointerId, point.x);
