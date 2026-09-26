@@ -1541,6 +1541,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // لمعالج أسهم العرض: لا يحرّك العرض والأسهم تحرّك الرسم المحدَّد.
   const selectedIdRef = useRef<string | null>(null);
   selectedIdRef.current = selectedId;
+  /** لمعالج Esc بالتقاطع: ما دامت طبقة الرسم تملك شيئاً تُسقطه (نقطة/تحديد/أداة) فـEsc لها أولاً — طبقة واحدة لكل ضغطة. */
+  const drawEscPendingRef = useRef(false);
   const drawHistory = useRef<Drawing[][]>([]);
   /** ما تُرُوجع عنه (لإعادته بـCtrl+Shift+Z / Ctrl+Y على الويب)؛ أيّ تعديل جديد يُفرغه كأيّ محرّر. */
   const redoHistory = useRef<Drawing[][]>([]);
@@ -1548,6 +1550,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [canRedo, setCanRedo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
+  drawEscPendingRef.current = !!interactive && (!!pending || !!selectedId || tool !== 'none');
   // مرساة التقاطع **بزمن الشمعة** لا بفهرسها داخل النافذة — راجع `crossAnchor.ts`:
   // النافذة متحرّكة، فالفهرس وحده يجعل القراءة تتبع الخانة لا الشمعة المختارة.
   // `price` سعر موضع اللمسة (بالمغناطيس إن كان مفعّلاً) — `null` ⇒ لا خطّ أفقي.
@@ -5842,6 +5845,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if (event.key === 'Escape') {
+        // ترتيب المستمعَين على `document` يتبدّل مع إعادة تسجيل التأثيرات، فكانت الضغطة الواحدة تُسقط الرسم **و**التقاطع
+        // المثبَّت معاً. طبقة الرسم أولاً؛ التقاطع بالضغطة التالية.
+        if (drawEscPendingRef.current) return;
         crossPinned.current = false;
         setCross(null);
         return;
