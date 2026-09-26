@@ -14,6 +14,8 @@ type Props = {
 export function OnboardingOverlay({ visible, onDone }: Props) {
   const { t, rtl } = useI18n();
   const [step, setStep] = useState(0);
+  /** نصّ منطقة الإعلان الخفيّة على الويب — `announceForAccessibility` بلا أثر هناك (راجع `go`). */
+  const [webAnnounce, setWebAnnounce] = useState('');
 
   const steps = [
     { title: t.onboardStep1Title, body: t.onboardStep1Body },
@@ -28,19 +30,23 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
 
   const finish = () => {
     setStep(0);
+    setWebAnnounce('');
     onDone();
   };
 
   // قارئ الشاشة كان لا يقرأ الخطوة الجديدة: بعد «التالي» يبقى تركيز VoiceOver/TalkBack على الزرّ
   // نفسه، والعنوان والنصّ يتبدّلان فوقه بصمت — فيسمع «التالي، زر» خمس مرّات ثم «ابدأ» ولا يعرف
   // ما قالته الجولة إلا إن مسح الشاشة بإصبعه بعد كل ضغطة. الآن يُعلَن رقم الخطوة وعنوانها ونصّها
-  // مع كل انتقال (التالي، النقاط، رجوع أندرويد). على الويب الدالة بلا أثر.
+  // مع كل انتقال (التالي، النقاط، رجوع أندرويد).
+  // **وعلى الويب** (قرار ١٦) الدالة بلا أثر، فكان NVDA/VoiceOver بالمتصفّح يسمع «التالي، زر» ولا شيء بعده: النصّ نفسه يُكتب
+  // بمنطقة `aria-live` خفيّة ثابتة بالبطاقة. ثابتة عمداً لا على العنوان: `ScrollView` يُعاد تركيبه مع كل خطوة (`key`)،
+  // ومنطقةٌ تُركَّب من جديد لا يعلنها قارئ الشاشة — يعلن تغيّر محتوى منطقة موجودة فقط.
   const go = (i: number) => {
     setStep(i);
     const s = steps[i]!;
-    AccessibilityInfo.announceForAccessibility(
-      `${t.onboardStepCounterA11y.replace('{n}', String(i + 1)).replace('{total}', String(steps.length))}. ${s.title}. ${s.body}`,
-    );
+    const msg = `${t.onboardStepCounterA11y.replace('{n}', String(i + 1)).replace('{total}', String(steps.length))}. ${s.title}. ${s.body}`;
+    if (Platform.OS === 'web') setWebAnnounce(msg);
+    else AccessibilityInfo.announceForAccessibility(msg);
   };
 
   // زرّ الرجوع بأندرويد يرجع خطوةً لا يُنهي الجولة: كان `onRequestClose={back}`، فضغطةٌ واحدة
@@ -141,6 +147,11 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
                 كان يغلق الجولة بلا أن يرى «تحليل وتعليم فقط، لا نصيحة مالية» إطلاقاً — وهو موضع
                 التطبيق المعلَن بالمتجر (`app.json` وdocs/STORE-LISTING.md). سطران صغيران لا يزاحمان. */}
             <Text style={[styles.riskNote, { textAlign: align }]}>{t.onboardRiskNote}</Text>
+            {Platform.OS === 'web' ? (
+              <Text accessibilityLiveRegion="polite" style={styles.srOnly}>
+                {webAnnounce}
+              </Text>
+            ) : null}
             {/* بالبطاقة الأخيرة «تخطي» و«ابدأ» يفعلان الشيء نفسه — زرّان لخيار واحد، ولا طريق ظاهر للخلف
                 على iOS غير نقاط بستّ بكسلات. هناك يصير الزرّ الصغير «السابق». */}
             <View style={[styles.actions, rtl && styles.actionsRtl]}>
@@ -218,6 +229,8 @@ const styles = StyleSheet.create({
     borderTopColor: colors.borderSoft,
     paddingTop: spacing.sm,
   },
+  // خفيّ للعين ظاهر لقارئ الشاشة (لا `display: none` — يُسقطه من شجرة الوصول). مطلق الموضع: خارج تدفّق البطاقة فلا يمسّ `gap`.
+  srOnly: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0.01 },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
