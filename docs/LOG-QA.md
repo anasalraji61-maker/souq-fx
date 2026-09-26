@@ -990,3 +990,4 @@ QA87a حصّة ui ← `4a84586` ⇒ الباقي → launch (حذف `authSession
 **المراجعة (c — `accessibilityLabel`):** مسح AST لكل `.tsx` ⇒ 7 بلا label صريح، كلها بابن `<Text>` عدا خلفية `MatrixSidePanel.tsx:79` (مقبول)؛ label ثابت وحيد `MessagesScreen.tsx:142` (launch52). **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (تعارض أثناء الدفع، 4a802a7):** حُلّ تعارض COORDINATION بأخذ نسخة tools/launch ثم إعادة تعديلاتي. البناء أخضر 0، selftests 112/112. QA87a مُغلق كلياً ← launch `3841ce5`؛ جديد: launch149 → chart، tools102a → launch، tools102b → أنس (⛔21).
+**إضافة 2 (8a129cc):** أخضر 0، 112/112. أُغلقت backend-r54 ← ui `ee6b068` وlaunch149 ← chart `eb15984` (مُتحقَّق بالكود). المفتوح على الوكلاء: tools102a → launch فقط.

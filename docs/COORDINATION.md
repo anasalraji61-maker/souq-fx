@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 88، على 4a802a7) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 88، على 8a129cc) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -24,11 +24,9 @@
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
 | backend | أنس | **backend-r47** الإخفاء التلقائي بثلاثة بلاغات (`REPORT_HIDE_THRESHOLD`) والتسجيل بلا تحقّق بريد ⇒ شخص واحد بثلاثة حسابات يُخفي أي رسالة أو فكرة صفقة، ويضخّم أصوات موافق/معارض. تحقّق بريد، أم عتبة بعمر الحساب، أم كما هو؟ | backend-r47 |
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
-| backend | ui | **backend-r54** رمزان جديدان من `/api/signals/indicators/forecast` لسلسلة كاملة **بلا حركة** (سوق مجمّد/مغلق): `levels_basis.unavailable: "no_range"` — `signalDirection.ts:38` `levelsUnavailableText` يعيد null له ⇒ أضيفوا `sigLevelsUnavailableNoRange` («لا مدى سعري — لا وقف ولا هدف»)؛ و`disclaimer_code: "no_movement"` (`forecastText.ts:56` يعرض نصّ الخادم ar/en فقط ⇒ مفتاح للكردية). كان كلاهما «شموع قليلة/لا بيانات كافية» خطأً. **launch149: المفتاحان جاهزان** (ar/en/ku): `sigLevelsUnavailableNoRange` ⇒ حصّة ui بـ`signalDirection.ts` (`case 'no_range'`)؛ و`forecastDisclaimerNoMovement` ⇒ حصّة **chart** بصفّ launch149 (مُتحقَّق QA88: الخادم يرسلهما `signal_hub.py:79,342`؛ `signalDirection.ts:38-49` ما زال بلا `no_range`) | backend-r54 |
-| launch | chart | **launch149** `forecastText.ts:53-60` `forecastDisclaimer`: أضيفوا `if (code === 'no_movement') return t.forecastDisclaimerNoMovement;` ووسّعوا `Pick<Dict, …>` — المفتاح جاهز ar/en/ku. بدونه الكردي يرى نصّ الخادم العربي لسلسلة بلا حركة (backend-r54) | launch149 |
 
 **تحقّق الدورة 88 (بالكود، على e321dec ثم 4a802a7):** البناء أخضر 0، selftests 112/112. أُغلقت: **launch148** ← ui `d0c0900` (`FrameSizedGrid.tsx:346` `text`)؛
 **chart-r70** ← ui `7819263` (`AnalystsPanel.tsx:142-143,165` `priceRef`، `SocialConsensusPanel.tsx:242-243`، `AlertsPanel.tsx:415-416`)؛ **QA87a** ← ui `4a84586` + launch `3841ce5` (لا `authSessionExpired` باقٍ).
-جديد مُتحقَّق: backend-r54 → ui، launch149 → chart، tools102a → launch، tools102b → أنس.
+جديد مُتحقَّق: tools102a → launch، tools102b → أنس. **إضافة (8a129cc، أخضر 0، 112/112):** أُغلقت **backend-r54** ← ui `ee6b068` (`signalDirection.ts:49`، `IndicatorForecastPanel.tsx:120`) و**launch149** ← chart `eb15984` (`forecastText.ts:58`).
 **قائمة قبول DESIGN-PRO (الثامن): 0 من 12 فشل** (diff منذ c3cca88: لا زرّ جديد، لا وزن ≥700، لا مسافة، لا ظلّ؛ `NetworkTreePanel` كسب `tabular-nums`، رقائق التوقّع حُيِّدت `9c4757e`).
 **المراجعة (c — `accessibilityLabel`):** مسح AST لكل `.tsx`: 7 بلا label صريح، كلها بابن `<Text>` عدا خلفية `MatrixSidePanel.tsx:79` (مقبول)؛ label ثابت وحيد `MessagesScreen.tsx:142` (launch52). **لا بند.**
