@@ -133,3 +133,51 @@ def test_provider_error_at_the_reopen_still_serves_the_friday_close(provider, mo
     clock["t"] = _ts("2026-09-27 21:16")
     with pytest.raises(RuntimeError):
         market.fetch_time_series_with_meta("EURUSD", "D", 50)
+
+
+# ─── run 84: الكاش بمفتاح الحجم كان يعطي الرمز نفسه سعرين بين قائمة المتابعة (D/50) والشارت (D/180) ───
+
+def _rows_until(n: int, last_close: str) -> list[dict]:
+    from datetime import datetime, timedelta
+    t0 = datetime(2026, 9, 1)
+    rows = [{"datetime": (t0 + timedelta(minutes=15 * i)).strftime("%Y-%m-%d %H:%M:%S"),
+             "open": "1.1", "high": "1.2", "low": "1.0", "close": "1.1"} for i in range(n)]
+    rows[-1]["close"] = last_close
+    return rows
+
+
+def _age_cache(seconds: float) -> None:
+    for k, (at, c) in list(market._cache.items()):
+        market._cache[k] = (at - seconds, c)
+
+
+def test_watchlist_and_chart_sizes_give_one_last_price(provider):  # noqa: F811
+    provider["payload"] = {"values": _rows_until(200, "1.1000")}
+    chart, _ = market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    provider["payload"] = {"values": _rows_until(201, "1.1050")}  # السعر تحرّك بعد جلب الشارت
+    watch, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 50)
+    assert watch[-1]["close"] == chart[-1]["close"] == pytest.approx(1.1)
+    assert meta["kind"] == "cache"
+
+
+def test_provider_error_serves_the_other_size_instead_of_nothing(provider):  # noqa: F811
+    """429/خطأ والقائمة لم تُخزَّن بعد ⇒ كانت «—» بجانب سعر الشارت الحقيقي."""
+    provider["payload"] = {"values": _rows_until(200, "1.1000")}
+    market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    _age_cache(market.CACHE_TTL["15m"] + 1)
+    provider["payload"] = {"status": "error", "code": 429, "message": "limit"}
+    watch, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 50)
+    assert watch[-1]["close"] == pytest.approx(1.1) and meta["kind"] == "cache"
+
+
+def test_a_fresh_small_fetch_updates_the_larger_cached_series(provider):  # noqa: F811
+    provider["payload"] = {"values": _rows_until(320, "1.1000")}
+    market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    _age_cache(market.CACHE_TTL["15m"] + 1)
+    provider["payload"] = {"values": _rows_until(321, "1.1050")}  # شمعة جديدة
+    small, _ = market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    before = market._stats["api_calls"]
+    big, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    assert market._stats["api_calls"] == before and meta["kind"] == "cache"
+    assert big[-1] == small[-1] and big[-1]["close"] == pytest.approx(1.105)
+    assert len(big) == 300 and [c["time"] for c in big] == sorted({c["time"] for c in big})

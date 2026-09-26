@@ -359,7 +359,7 @@ def _candle(row: object) -> dict | None:
 
 
 def _serve_stale(cache_key: str, now: float) -> tuple[list[dict], float] | None:
-    hit = _cache.get(cache_key)
+    hit = _bucket_hit(cache_key)
     if not hit:
         return None
     # شموع العطلة صالحة حتى افتتاح الأحد (`_closed_until`) ⇒ عمرها يُعدّ من الافتتاح لا من الجلب. كان الجلب
@@ -370,6 +370,34 @@ def _serve_stale(cache_key: str, now: float) -> tuple[list[dict], float] | None:
         _stats["stale_served"] = int(_stats["stale_served"] or 0) + 1
         return hit[1], hit[0]
     return None
+
+
+# **مصدر واحد للسعر بين أحجام الطلب** (W1): الكاش بمفتاح «رمز|فريم|حجم»، وقائمة المتابعة تطلب D/50 والشارت
+# D/180 ⇒ مدخلان بوقتَي جلب مختلفين، فيُعرض للرمز نفسه في اللحظة نفسها `last` مختلف (1.1000 بالشارت
+# و1.1050 بالقائمة)، وعند 429 يجد الشارت كاشه والقائمة لا شيء فتعرض «—» بجانب سعر. الآن: الطلب يُخدم من
+# أحدث مدخل بحجم ≥ حجمه، وكل جلب ناجح يُحدِّث كل مدخلات الرمز والفريم معاً (الأكبر: شموعه الأقدم + الجديدة).
+def _bucket_hit(cache_key: str) -> tuple[float, list[dict]] | None:
+    sym, tf, size = cache_key.rsplit("|", 2)
+    best = None
+    for b in _SIZE_BUCKETS:
+        hit = _cache.get(f"{sym}|{tf}|{b}") if b >= int(size) else None
+        if hit and (best is None or hit[0] > best[0]):
+            best = hit
+    return best
+
+
+def _store(cache_key: str, now: float, candles: list[dict]) -> None:
+    sym, tf, size = cache_key.rsplit("|", 2)
+    for b in _SIZE_BUCKETS:
+        key = f"{sym}|{tf}|{b}"
+        old = _cache.get(key)
+        if b <= int(size) or not old or not candles:
+            if b == int(size) or old:
+                _cache[key] = (now, candles)
+            continue
+        first = candles[0]["time"]
+        merged = [c for c in old[1] if c["time"] < first] + candles
+        _cache[key] = (now, merged[-max(len(old[1]), len(candles)):])
 
 
 # أحجام الطلب من المزوّد. كان الكاش بمفتاح `outputsize` كما طُلب (50–5000) بلا إخلاء ⇒ `?outputsize=51`،
@@ -404,7 +432,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
     cache_key = f"{sym}|{tf}|{outputsize}"
     ttl = CACHE_TTL.get(tf, 90)
     now = time.time()
-    hit = _cache.get(cache_key)
+    hit = _bucket_hit(cache_key)
     if hit and (now - hit[0] < ttl or now < (_closed_until(sym, hit[0]) or 0)):
         _stats["cache_hits"] = int(_stats["cache_hits"] or 0) + 1
         return hit[1], {"kind": "cache", "as_of": hit[0], "channel": "twelvedata"}
@@ -495,7 +523,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
     candles = [c for i, c in enumerate(candles) if i == 0 or c["time"] != candles[i - 1]["time"]]
     if weekly_from_daily:
         candles = _weeks_from_days(candles, drop_first=len(data["values"] or []) >= int(params["outputsize"]))
-    _cache[cache_key] = (now, candles)
+    _store(cache_key, now, candles)
     return candles, {"kind": "provider", "as_of": now, "channel": "twelvedata"}
 
 
