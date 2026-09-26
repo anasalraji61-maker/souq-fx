@@ -4,7 +4,8 @@
  * السبب: بعد إصلاح محاذاة اللوحات صار الشريط يتحرّك فعلاً بقيمة المؤشّر، لكن المتداول
  * ما زال بلا مرجعَين أساسيَّين:
  * 1) **خطوط العتبات**: RSI بلا 30/70 ليس RSI — «تشبّع شرائي» بلا الخط الذي يُقاس عليه
- *    مجرّد تغيّر لون. وكذلك 20/80 للستوكاستيك وMFI، و25 لـADX، و‎−20/−80‎ لـ%R.
+ *    مجرّد تغيّر لون. وكذلك 20/80 للستوكاستيك وMFI، و25 لـADX، و‎−20/−80‎ لـ%R — مع خطّ الوسط
+ *    (50 / ‎−50‎) كـTradingView: عبوره هو تحوّل الزخم الذي يقرؤه المتداول قبل بلوغ الطرفين.
  * 2) **الرقم نفسه**: اللوحة لا تذكر قيمة الشمعة الأخيرة إطلاقاً، فلا يفرّق المتداول
  *    بين RSI عند 62 و68 وكلاهما «بين الخطين».
  *
@@ -69,6 +70,7 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
     max: 100,
     levels: [
       { v: 80, kind: 'extreme' },
+      { v: 50, kind: 'mid' },
       { v: 20, kind: 'extreme' },
     ],
   },
@@ -77,6 +79,7 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
     max: 100,
     levels: [
       { v: 80, kind: 'extreme' },
+      { v: 50, kind: 'mid' },
       { v: 20, kind: 'extreme' },
     ],
   },
@@ -88,6 +91,7 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
     max: 0,
     levels: [
       { v: -20, kind: 'extreme' },
+      { v: -50, kind: 'mid' },
       { v: -80, kind: 'extreme' },
     ],
   },
@@ -101,6 +105,7 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
     max: 100,
     levels: [
       { v: 80, kind: 'extreme' },
+      { v: 50, kind: 'mid' },
       { v: 20, kind: 'extreme' },
     ],
   },

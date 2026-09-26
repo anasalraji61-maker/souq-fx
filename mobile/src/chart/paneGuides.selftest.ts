@@ -52,7 +52,9 @@ const INNER = 60; // لوحة مريحة
 // %R بمدى سالب يستعمل نفس التعيين بالضبط: ‎−20‎ بأعلى الصورة و‎−80‎ بأسفلها
 {
   const g = placeGuides('willr', INNER);
-  assert.equal(g.length, 2);
+  assert.equal(g.length, 3);
+  assert.equal(g.find((x) => x.v === -50)!.kind, 'mid');
+  assert.equal(placeGuides('willr', GUIDES_MID_MIN_INNER_H - 1).length, 2);
   const by = (v: number) => g.find((x) => x.v === v)!;
   assert.equal(by(-20).top, 12); // ((0-(-20))/100)*60
   assert.equal(by(-80).top, 48);
@@ -345,7 +347,11 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
 {
   // StochRSI بعتبات الستوكاستيك لا عتبات RSI — وهو الخطأ الذي يسهل الوقوع فيه
   const sr = placeGuides('stochRsi', INNER);
-  assert.deepEqual(sr.map((g) => g.v).sort((a, b) => b - a), [80, 20]);
+  assert.deepEqual(sr.map((g) => g.v).sort((a, b) => b - a), [80, 50, 20]);
+  // خطّ الوسط 50 كـTV على الستوكاستيك وMFI وStochRSI
+  for (const k of ['stoch', 'mfi', 'stochRsi']) {
+    assert.deepEqual(placeGuides(k, INNER).filter((g) => g.kind === 'mid').map((g) => g.v), [50], k);
+  }
   assert.equal(sr.find((g) => g.v === 80)!.top, 12); // ((100-80)/100)*60
   assert.ok(!sr.some((g) => g.v === 70 || g.v === 30), 'ليست عتبات RSI');
   assert.equal(paneValueState('stochRsi', 85), 'high');
