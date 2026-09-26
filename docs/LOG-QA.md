@@ -981,3 +981,12 @@ QA84a ← chart (5 كوميتات) — باقٍ `paneHeadValueLong` 10px لقي�
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (سحب أثناء الدفع):** إعادة البناء على 8820090 أخضر 0، selftests 110/110. أُغلقت QA86a (`abc6eca`)، QA86b (`c6d97ec`)، QA86c (`c5ed090`، الباقي هوية DXY وألوان مستويات الشجرة — مقبول)، QA86d (`3612351`). QA87a قائم.
 **إضافة 2:** على c3cca88 أخضر 0. QA87a ← launch `b65e74e` (نسخة `authSessionExpired`) ⇒ السطر يظهر؛ باقٍ تنظيف منخفض → ui ثم launch. chart-r70 → ui مُتحقَّق بالكود (`AnalystsPanel.tsx:138`).
+
+## 2026-09-26 — الدورة 88
+**البناء:** أخضر 0 (على e321dec) — لا إصلاح لازم. **Selftests:** 112/112 ناجح (`npx tsx`، +`iftRsi`، +`pgoTv`).
+**التحقّق بالكود:** launch148 ← ui `d0c0900` (`FrameSizedGrid.tsx:346` `text`)؛ chart-r70 ← ui `7819263` (`AnalystsPanel.tsx:142-143,165`، `SocialConsensusPanel.tsx:242-243`، `AlertsPanel.tsx:415-416`)؛
+QA87a حصّة ui ← `4a84586` ⇒ الباقي → launch (حذف `authSessionExpired`، `locales.ts:59` والقيم الأربع). جديد: **backend-r54 → ui** مُتحقَّق (`signal_hub.py:79,342` يرسل `no_range`/`no_movement`؛ `signalDirection.ts:38-49` و`forecastText.ts` بلا معالجة). سجلات chart/tools بلا تحديث.
+**قائمة قبول DESIGN-PRO (الثامن):** 0/12 فشل (diff منذ c3cca88، 14 ملفّاً: لا زرّ/وزن ≥700/مسافة/ظلّ جديد).
+**المراجعة (c — `accessibilityLabel`):** مسح AST لكل `.tsx` ⇒ 7 بلا label صريح، كلها بابن `<Text>` عدا خلفية `MatrixSidePanel.tsx:79` (مقبول)؛ label ثابت وحيد `MessagesScreen.tsx:142` (launch52). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
+**إضافة (تعارض أثناء الدفع، 4a802a7):** حُلّ تعارض COORDINATION بأخذ نسخة tools/launch ثم إعادة تعديلاتي. البناء أخضر 0، selftests 112/112. QA87a مُغلق كلياً ← launch `3841ce5`؛ جديد: launch149 → chart، tools102a → launch، tools102b → أنس (⛔21).
