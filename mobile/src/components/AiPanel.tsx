@@ -16,7 +16,7 @@ import { formatLocalStamp } from '../localStamp';
 /** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير.
  * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
  * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي). */
-type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string; arabicReply?: boolean };
+type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string; arabicReply?: boolean; symbol?: string };
 
 /** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
  * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت — يُعرض تحت الجواب بـ`t.aiPriceAsOf`. */
@@ -40,16 +40,20 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
     const question = q.trim();
     // الخادم يطلب 2–2000 حرف (`AiAsk`): حرف واحد كان يُرسَل فيُرفض 422 ويُمسح السؤال ويظهر «الذكاء غير متاح».
     if (question.length < 2 || loading) return;
+    // tools132a: الرمز يُثبَّت لحظة السؤال ويوسَم به السؤال والجواب — تبديل الشريحة قبل الردّ كان يُظهر جواب
+    // EURUSD بلا وسم تحت شريط يقول GBPUSD.
+    const askedSymbol = symbol;
     setQ('');
-    setTurns((prev) => [...prev, { role: 'user', text: question }]);
+    setTurns((prev) => [...prev, { role: 'user', text: question, symbol: askedSymbol }]);
     setLoading(true);
     try {
-      const res = await api.aiAsk(question, symbol, lang);
+      const res = await api.aiAsk(question, askedSymbol, lang);
       setTurns((prev) => [
         ...prev,
         {
           role: 'ai',
           text: res.answer.replace(/\*\*/g, ''),
+          symbol: askedSymbol,
           priceAt:
             typeof res.price_as_of === 'number' && Number.isFinite(res.price_as_of)
               ? formatPriceAt(res.price_as_of, lang)
@@ -96,6 +100,9 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
               turn.offline && styles.aiOffline,
             ]}
           >
+            {turn.symbol ? (
+              <Text style={[styles.symbolTag, { textAlign: align }]}>{turn.symbol}</Text>
+            ) : null}
             {turn.arabicReply ? (
               <Text style={[styles.langNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text>
             ) : null}
@@ -200,6 +207,7 @@ const styles = StyleSheet.create({
   },
   textOffline: { color: colors.textMuted },
   priceAt: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: 4 },
+  symbolTag: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginBottom: 4 },
   langNote: { color: colors.textMuted, fontSize: 11, marginBottom: 4 },
   textRtl: { writingDirection: 'rtl' },
   text: {
