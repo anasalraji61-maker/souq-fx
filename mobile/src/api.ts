@@ -354,6 +354,13 @@ export const api = {
       return 'unknown';
     }
   },
+  /** backend-r58: تغيير كلمة المرور؛ الخادم يُلغي جلسات الأجهزة الأخرى ويُبقي هذه. 400 `detail`:
+   * `invalid current password` أو `password too short` (يُقرأ من `err.detail` كـ`postJson`)؛ 401 بلا دخول. */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    postJson<{ ok: boolean }>('/api/auth/password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
   /** حذف الحساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v)) */
   deleteAccount: () => deleteJson<{ ok: boolean }>('/api/auth/account'),
   commissionPlan: () =>
