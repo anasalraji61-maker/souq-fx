@@ -196,6 +196,21 @@ const TICK_WS_SYMBOLS = FALLBACK_SYMBOLS;
 const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
 const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
+
+/**
+ * `insufficient_data` من `/api/screener/run` (backend-r69) — خادم أقدم لا يرسله، ونوع `screenerRun` بـ`api.ts` لا يصفه بعد
+ * (طلب لـui). يُقبل كائن رمز → قائمة نصوص فقط؛ غير ذلك يُهمل فيبقى السلوك القديم.
+ */
+function readInsufficient(raw: unknown): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const [sym, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!Array.isArray(v)) continue;
+    const ids = v.filter((f): f is string => typeof f === 'string');
+    if (ids.length) out[sym.toUpperCase()] = ids;
+  }
+  return out;
+}
 export function ToolsScreen() {
   const { t, rtl, lang } = useI18n();
   const navigation = useNavigation();
@@ -217,7 +232,14 @@ export function ToolsScreen() {
   const [providerConfigured, setProviderConfigured] = useState<boolean | null>(null);
   const [scanDone, setScanDone] = useState(false);
   /** كم رمزاً قُرئ فعلاً وأيّها تعذّر — بدونها «لا نتائج» بعد حدّ طلبات المزوّد تُقرأ «لا تطابق». */
-  const [scanInfo, setScanInfo] = useState<{ scanned?: number; failed: string[]; total?: number; tf: string }>({
+  const [scanInfo, setScanInfo] = useState<{
+    scanned?: number;
+    failed: string[];
+    total?: number;
+    tf: string;
+    /** backend-r69: رمز → فلاتر لم تكفِ شموعه لتقييمها. رمز كل فلاتره هنا يقع أيضاً في `failed`. */
+    short?: Record<string, string[]>;
+  }>({
     failed: [],
     tf: '15m',
   });
@@ -445,8 +467,16 @@ export function ToolsScreen() {
     return unsub;
   }, [navigation]);
 
-  /** لا رمز قُرئ أصلاً (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
-  const scanNone = scanInfo.scanned === 0 && scanInfo.failed.length > 0;
+  /**
+   * launch167a: رمزٌ لم تكفِ شموعه لأيّ فلتر يقع في `failed` أيضاً — كان يُسمّى «حدّ طلبات المزوّد غالباً» وسببه قِصَر
+   * التاريخ، وإعادة الفحص بعد دقيقة لا تغيّر شيئاً. `rateFailed` = ما تعذّرت قراءته فعلاً.
+   */
+  const shortMap = scanInfo.short ?? {};
+  const rateFailed = scanInfo.failed.filter((s) => !shortMap[s]?.length);
+  const shortSyms = Object.keys(shortMap).filter((s) => shortMap[s].length > 0);
+  /** لا رمز قُرئ أصلاً وكلّها تعذّر جلبه (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
+  const scanNone =
+    scanInfo.scanned === 0 && scanInfo.failed.length > 0 && rateFailed.length === scanInfo.failed.length;
 
   /** نتائج فحص سابق لا تُعرض تحت فلاتر/فريم تغيّرت — كانت تبقى فتُقرأ كأنها نتيجة الاختيار الجديد. */
   const scanKey = `${tf}|${selected.join(',')}`;
@@ -493,7 +523,13 @@ export function ToolsScreen() {
       const res = await api.screenerRun({ timeframe: tf, filters: selected });
       if (stale()) return;
       setResults(res.results);
-      setScanInfo({ scanned: res.scanned, failed: res.failed ?? [], total: res.total, tf });
+      setScanInfo({
+        scanned: res.scanned,
+        failed: res.failed ?? [],
+        total: res.total,
+        tf,
+        short: readInsufficient((res as { insufficient_data?: unknown }).insufficient_data),
+      });
       lastScanKey.current = key;
       setProviderConfigured(res.provider_configured !== false);
       setScanDone(true);
@@ -747,15 +783,34 @@ export function ToolsScreen() {
           {!loading && scanDone && providerConfigured === true && scanNone ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerScanNone}</Text>
           ) : null}
-          {!loading && scanDone && providerConfigured === true && !scanNone && scanInfo.failed.length > 0 ? (
+          {!loading && scanDone && providerConfigured === true && !scanNone && rateFailed.length > 0 ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>
               {t.screenerScanPartial
                 .replace('{k}', String(scanInfo.scanned ?? 0))
                 .replace('{total}', String(scanInfo.total ?? scanInfo.failed.length))
-                .replace('{list}', scanInfo.failed.join(rtl ? '، ' : ', '))}
+                .replace('{list}', rateFailed.join(rtl ? '، ' : ', '))}
             </Text>
           ) : null}
-          {!loading && scanDone && providerConfigured === true && !scanNone && results.length === 0 ? (
+          {!loading && scanDone && providerConfigured === true && shortSyms.length > 0 ? (
+            <Text style={[styles.scanHint, { textAlign: align }]}>
+              {t.screenerInsufficientData.replace('{tf}', scanInfo.tf).replace(
+                '{list}',
+                shortSyms
+                  .map((s) =>
+                    /** فُحص على بقيّة الفلاتر ⇒ نسمّي الفلتر الذي لم يُقيَّم لا الرمز كلّه */
+                    scanInfo.failed.includes(s) ? s : `${s} (${shortMap[s].map(filterLabel).join(' · ')})`
+                  )
+                  .join(rtl ? '، ' : ', ')
+              )}
+            </Text>
+          ) : null}
+          {/* «فُحص 0 رمزاً ولا أحد يحقّق» حين لم يُقيَّم شيء (كلّها شموع غير كافية) — السطران فوقه يقولان السبب */}
+          {!loading &&
+          scanDone &&
+          providerConfigured === true &&
+          !scanNone &&
+          scanInfo.scanned !== 0 &&
+          results.length === 0 ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>
               {scanInfo.scanned != null
                 ? t.screenerNoMatchOf
