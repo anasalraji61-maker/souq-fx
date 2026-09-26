@@ -669,3 +669,15 @@
 
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen:211-223`؛ لا وزن 700 بنطاقي.
 - **لم يُتحقَّق بصرياً ولا بقارئ شاشة على جهاز** — tsc وحده. أولى ما يُفحص: VoiceOver على مقبض الفريم.
+
+## 2026-09-26 — تشغيل 55
+صفّ ui بـCOORDINATION: **backend-r54** (حصّة ui، المفتاحان من launch `5b352e4`). launch148/QA87a/chart-r70 منجزة بالتشغيل 54 (تحقّق بالكود). كلٌّ بـcommit مستقل، بوابة البناء خضراء (tsc 0) قبل كل واحد:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 26bf611 | `signalDirection.levelsUnavailableText`: `case 'no_range'` ⇒ `t.sigLevelsUnavailableNoRange` (المحلّلون/الإجماع/التوقّع). وأيضاً: الخادم يرسل `no_movement` **بلا اتجاه** (`signal_hub.py:342`، لا صوت) ⇒ `IndicatorForecastPanel` كان يعرض «لا بيانات حيّة» لسوق مغلق؛ الآن `t.forecastDisclaimerNoMovement`. مسار النتيجة الكاملة (`forecastText.ts`) باقٍ لـchart (launch149) | backend-r54 |
+| 8744d18 | `ScreenerMini` سطر `meta` (قيمة RSI ووقت الكاش) بـ`numeric` | DESIGN-PRO §2 |
+
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen:211-223`؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ فحص آلي: لا `Pressable` بحالة `Active/On/Selected` أو لون تأكيد شرطي بلا `accessibilityState`؛ العربي الباقي بنطاقي تعليقات، وخرائط تسميات الخادم (`CommissionPlanPanel`)، وتعليمات AI (`WeeklyReportPanel`، تُرسل مع `lang`)، و`MessagesScreen`/`mock.ts` (launch52، لأنس).
+- DESIGN-PRO بنطاقي: البنود الستّة المرتّبة منجزة (تشغيل 45)؛ لا وزن ≥700، لا مسافة خارج مضاعفات 4 (الباقي كله `chart/`).
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
