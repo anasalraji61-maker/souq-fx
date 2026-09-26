@@ -649,7 +649,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const onlySlBad = badFields.every(([label, v, bad]) => label === t.riskCalcSlPips || v.trim() === '' || !bad);
   /**
    * «250 points» بخانة الوقف: النقطة بـMT4/MT5 عُشر pip ⇒ «اكتب 25 pip» بدل «رقم غير مفهوم» (`slPipsInPoints`، مفتاح launch).
-   * «25 نقطة» عربية/كردية (`native`) لا: أغلب المتداولين العرب يقصدون بها pip، و«اكتب 2.5 pip» = لوت ×10
+   * «25 نقطة» عربية/كردية (`native`) لا: أغلب المتداولين العرب يقصدون بها pip، و«اكتب 2.5 pip» = لوت ×10 — تُذكر القراءتان
+   * بلا ترجيح («25 pip أم 2.5 pip؟»، `riskCalcSlPointsAmbiguous`، tools142a)
    */
   const slPoints = slPipsInPoints(slPips);
   /**
@@ -678,6 +679,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         t.riskCalcSlLooksLikePrice.replace('{value}', () => slPips.trim())
       : slPoints && !slPoints.native && onlySlBad
       ? t.riskCalcSlPointsHint.replace('{value}', () => slPoints.value).split('{pips}').join(slPoints.pips)
+      : slPoints && onlySlBad
+      ? t.riskCalcSlPointsAmbiguous
+          .replace('{value}', () => slPoints.value)
+          .replace('{whole}', slPoints.whole)
+          .replace('{pips}', slPoints.pips)
       : onlyOtherCcy
       ? t.riskCalcOtherCcyHint
           .replace('{field}', () => shortLabel(onlyOtherCcy[0]))
@@ -715,7 +721,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           : spreadPoints && !spreadPoints.native
             ? // «12 points» كما تعرضها MT4/MT5 ⇒ «اكتبه هنا 1.2» بدل «رقم غير مفهوم» (tools63، مفتاح launch)
               t.riskCalcSpreadPointsHint.replace('{value}', () => spreadPoints.value).split('{pips}').join(spreadPoints.pips)
-            : t.invalidNumberHint;
+            : spreadPoints
+              ? // «12 نقطة» عربية: pip أم نقاط MT4/MT5؟ القراءتان بلا ترجيح (tools142a)
+                t.riskCalcSpreadPointsAmbiguous
+                  .replace('{value}', () => spreadPoints.value)
+                  .replace('{whole}', spreadPoints.whole)
+                  .replace('{pips}', spreadPoints.pips)
+              : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
   /** الملاحظة بلوت الوضع: micro ⇒ «{std} للعادي = {micro} للوت micro» بأرقام الخانة، السنت ⇒ «بالـUSC، الرقم نفسه». */
   const commissionEx = commissionNoteExample(commission, commissionKind, moneyCcy);

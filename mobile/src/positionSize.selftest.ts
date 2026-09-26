@@ -2822,19 +2822,22 @@ console.log('positionSize moneyInOtherCurrency selftest OK');
 
 // slPipsInPoints (مفتاح launch riskCalcSlPointsHint): «250 points» مرفوضة بخانة الوقف **ومعها** الرقم بالـpip (÷10)
 {
-  assert.deepEqual(slPipsInPoints('250 points'), { value: '250 points', pips: '25', native: false });
-  assert.deepEqual(slPipsInPoints(' 250 pts '), { value: '250 pts', pips: '25', native: false });
-  assert.deepEqual(slPipsInPoints('250 Point'), { value: '250 Point', pips: '25', native: false });
-  assert.deepEqual(slPipsInPoints('٢٥٠ نقطة'), { value: '٢٥٠ نقطة', pips: '25', native: true });
-  assert.deepEqual(slPipsInPoints('250 نقاط'), { value: '250 نقاط', pips: '25', native: true });
-  assert.deepEqual(slPipsInPoints('250 خاڵ'), { value: '250 خاڵ', pips: '25', native: true });
-  assert.deepEqual(slPipsInPoints('255 points'), { value: '255 points', pips: '25.5', native: false });
-  assert.deepEqual(slPipsInPoints('7 pts'), { value: '7 pts', pips: '0.7', native: false }); // لا 0.7000000001
+  assert.deepEqual(slPipsInPoints('250 points'), { value: '250 points', whole: '250', pips: '25', native: false });
+  assert.deepEqual(slPipsInPoints(' 250 pts '), { value: '250 pts', whole: '250', pips: '25', native: false });
+  assert.deepEqual(slPipsInPoints('250 Point'), { value: '250 Point', whole: '250', pips: '25', native: false });
+  assert.deepEqual(slPipsInPoints('٢٥٠ نقطة'), { value: '٢٥٠ نقطة', whole: '250', pips: '25', native: true });
+  assert.deepEqual(slPipsInPoints('250 نقاط'), { value: '250 نقاط', whole: '250', pips: '25', native: true });
+  assert.deepEqual(slPipsInPoints('250 خاڵ'), { value: '250 خاڵ', whole: '250', pips: '25', native: true });
+  assert.deepEqual(slPipsInPoints('255 points'), { value: '255 points', whole: '255', pips: '25.5', native: false });
+  assert.deepEqual(slPipsInPoints('7 pts'), { value: '7 pts', whole: '7', pips: '0.7', native: false }); // لا 0.7000000001
   assert.deepEqual(slPipsInPoints('1,500 points'), null); // مبهمة كالرقم وحده
   // «25 نقطة» عربية = pip عند أغلب المتداولين ⇒ `native`: لا تلميح «اكتب 2.5 pip» (من يتبعه يأخذ 4 لوت بدل 0.4 على 10,000 بـ1%)
   assert.equal(slPipsInPoints('25 نقطه')!.native, true);
   assert.equal(slPipsInPoints('25 خال')!.native, true);
   assert.equal(slPipsInPoints('25 PTS.')!.native, false);
+  // tools142a: `whole` = الرقم كما كُتب بأرقام لاتينية (قراءة pip) لرسالة القراءتين `riskCalcSlPointsAmbiguous`
+  assert.deepEqual(slPipsInPoints('٢٫٥ نقطة'), { value: '٢٫٥ نقطة', whole: '2.5', pips: '0.25', native: true });
+  assert.deepEqual(slPipsInPoints('25 نقطة'), { value: '25 نقطة', whole: '25', pips: '2.5', native: true });
   // الخانة نفسها ما زالت ترفضها: تلميح لا تحويل (بعض الوسطاء يسمّون الـpip «نقطة»)
   assert.equal(parseSlPips('250 points'), null);
   assert.equal(parseSlPips('250 نقاط'), null);
@@ -2847,9 +2850,9 @@ console.log('positionSize moneyInOtherCurrency selftest OK');
   assert.equal(slPipsInPoints('1.500 points'), null);
   assert.equal(slPipsInPoints(''), null);
   // خانة السبريد (مفتاح riskCalcSpreadPointsHint): «12 points» من MT4/MT5 مرفوضة ⇒ «اكتبه 1.2»؛ ليست «واسعة جداً»
-  assert.deepEqual(slPipsInPoints('12 points'), { value: '12 points', pips: '1.2', native: false });
-  assert.deepEqual(slPipsInPoints('١٢ نقطة'), { value: '١٢ نقطة', pips: '1.2', native: true });
-  assert.deepEqual(slPipsInPoints('15pts'), { value: '15pts', pips: '1.5', native: false });
+  assert.deepEqual(slPipsInPoints('12 points'), { value: '12 points', whole: '12', pips: '1.2', native: false });
+  assert.deepEqual(slPipsInPoints('١٢ نقطة'), { value: '١٢ نقطة', whole: '12', pips: '1.2', native: true });
+  assert.deepEqual(slPipsInPoints('15pts'), { value: '15pts', whole: '15', pips: '1.5', native: false });
   assert.equal(parseSpreadPips('12 points'), null);
   assert.equal(spreadTooWide('12 points'), null);
   assert.equal(parseSpreadPips('1.2'), 1.2);
