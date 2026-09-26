@@ -1200,6 +1200,8 @@ export type Dict = {
    * 1–8 = الفريم بموضعه في `TIMEFRAMES` (1m…W) بعد 600ms بلا Enter (`slotTimeframe`).
    */
   mcHintTypeTfWeb: string;
+  /** عنوان قائمة «?» على الويب (`KeyboardShortcutsSheet`، W4) — ويُستعمل تسميةً للنافذة (ui86a). */
+  shortcutsSheetTitle: string;
   /**
    * الويب: يُلحق بـ`mcHintNavigateWeb` حين يمكن تحريك الشارت وليس بالإعادة — كتابة تاريخ ثم Enter تقفز لشمعة ذلك اليوم وتثبّت التقاطع
    * (`parseTypedDate`/`dateJump` بـ`tfTyping.ts` — `304ddfa`)، وHome/End (أقدم شمعة محمَّلة / العودة للحيّ بلا إعادة التكبير — `07ae1df`).
@@ -1353,9 +1355,6 @@ export type Dict = {
   domNoBidAsk: string;
   domNoLiveQuote: string;
   domOtcNote: string;
-  pdwPrevA11yPrefix: string;
-  pdwCurrentA11yPrefix: string;
-  pdwNextA11yPrefix: string;
   /**
    * شريحة الإطار الزمني بـ`TimeframeBar` حسب اللغة — بدل `TIMEFRAME_LABELS` العربي الثابت بـ`timeframes.ts` الذي يراه الكردي أيضاً
    * (`arabic={rtl}` و`isRtl('ku')` = true). الإنجليزية والكردية بالرموز اللاتينية كما بمنصّة الوسيط (1m/1H)؛ العربية كما هي اليوم حرفياً.
@@ -2563,6 +2562,7 @@ const ar: Dict = {
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
   mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · +/− تكبير وتصغير · F ملء الشاشة · Alt+R لإعادة العرض · Alt+T/H/V/F ترند/أفقي/عمودي/فيبو',
   mcHintTypeTfWeb: ' · 1–8 للفريم بترتيبه (1 = 1m … 8 = W) · أو اكتب 15 أو 4h ثم Enter',
+  shortcutsSheetTitle: 'اختصارات لوحة المفاتيح',
   mcHintTypeDateWeb: ' · Home/End لأقدم شمعة وللحيّ · اكتب 2026-09-01 ثم Enter للانتقال إلى ذلك اليوم',
   mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
   mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
@@ -2658,9 +2658,6 @@ const ar: Dict = {
   domNoBidAsk: 'المزوّد لا يوفّر Bid/Ask لهذا الرمز — السعر الأخير فقط.',
   domNoLiveQuote: 'لا سعر حيّ الآن — قد يكون السوق مغلقاً (عطلة نهاية الأسبوع) أو المزوّد لا يردّ. يُعاد الطلب تلقائياً.',
   domOtcNote: 'الفوركس سوق لا مركزي: لا يوجد عمق سوق موحّد، والسبريد الفعلي يختلف حسب وسيطك.',
-  pdwPrevA11yPrefix: 'الزوج السابق: ',
-  pdwCurrentA11yPrefix: 'اختيار الزوج الحالي: ',
-  pdwNextA11yPrefix: 'الزوج التالي: ',
   tfLabels: { '1m': 'دقيقة', '5m': '5 د', '15m': '15 د', '30m': '30 د', '1H': 'ساعة', '4H': '4 س', D: 'يومي', W: 'أسبوعي' },
   tfLabelsA11y: {
     '1m': 'دقيقة واحدة',
@@ -3811,6 +3808,7 @@ const enUS: Dict = {
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
   mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · +/− zoom · F full screen · Alt+R resets the view · Alt+T/H/V/F trend/H-line/V-line/Fib',
   mcHintTypeTfWeb: ' · 1–8 picks a timeframe in order (1 = 1m … 8 = W) · or type 15 or 4h then Enter',
+  shortcutsSheetTitle: 'Keyboard shortcuts',
   mcHintTypeDateWeb: ' · Home/End for oldest bar / live · type 2026-09-01 then Enter to jump to that day',
   mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
   mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
@@ -3906,9 +3904,6 @@ const enUS: Dict = {
   domNoBidAsk: 'The provider has no Bid/Ask for this symbol — last price only.',
   domNoLiveQuote: 'No live price right now — the market may be closed (weekend) or the data provider is not responding. Retrying automatically.',
   domOtcNote: 'Forex is decentralized: there is no single market depth, and your real spread depends on your broker.',
-  pdwPrevA11yPrefix: 'Previous pair: ',
-  pdwCurrentA11yPrefix: 'Select current pair: ',
-  pdwNextA11yPrefix: 'Next pair: ',
   tfLabels: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '4H': '4H', D: 'D', W: 'W' },
   tfLabelsA11y: {
     '1m': '1 minute',
@@ -5107,6 +5102,7 @@ const ku: Dict = {
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
   mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · +/− گەورە و بچووککردنەوە · F پڕکردنەوەی شاشە · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T/H/V/F ترێند/ئاسۆیی/ستوونی/فیبۆ',
   mcHintTypeTfWeb: ' · 1–8 بۆ تایم‌فرەیم بە ڕیز (1 = 1m … 8 = W) · یان 15 یان 4h بنووسە و Enter دابگرە',
+  shortcutsSheetTitle: 'کورتبڕەکانی کیبۆرد',
   mcHintTypeDateWeb: ' · Home/End بۆ کۆنترین مۆم و ڕاستەوخۆ · 2026-09-01 بنووسە و Enter دابگرە بۆ چوون بۆ ئەو ڕۆژە',
   mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
   mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
@@ -5202,9 +5198,6 @@ const ku: Dict = {
   domNoBidAsk: 'دابینکەر Bid/Ask بۆ ئەم هێمایە نییە — تەنها دوایین نرخ.',
   domNoLiveQuote: 'ئێستا نرخی زیندوو نییە — لەوانەیە بازاڕ داخرابێت (کۆتایی هەفتە) یان دابینکەری داتا وەڵام نەداتەوە. خۆکارانە دووبارە هەوڵ دەدرێتەوە.',
   domOtcNote: 'فۆرێکس بازاڕێکی ناناوەندییە: قووڵایی یەکگرتوو نییە، و سپرێدی ڕاستەقینە بەپێی بڕۆکەرەکەت دەگۆڕێت.',
-  pdwPrevA11yPrefix: 'جووتی پێشوو: ',
-  pdwCurrentA11yPrefix: 'دیاریکردنی جووتی ئێستا: ',
-  pdwNextA11yPrefix: 'جووتی داهاتوو: ',
   // لا اختصار كردي شائع لـ«خولەک/کاتژمێر» ⇒ الرموز اللاتينية كمنصّة الوسيط؛ قارئ الشاشة يقرأ الكلمة كاملة (الكردية لا تجمع بعد العدد).
   tfLabels: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '4H': '4H', D: 'D', W: 'W' },
   tfLabelsA11y: {
