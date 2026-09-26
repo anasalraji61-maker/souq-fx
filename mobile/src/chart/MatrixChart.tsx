@@ -6328,6 +6328,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [canPan, beginAxisDrag, endDrag, zoomTimeByDrag, axisTapped]
   );
 
+  // W4 (قرار أنس ١٦): الزرّ الأيمن ⇒ قائمة بالسعر تحت المؤشّر بدل قائمة المتصفّح — تنبيه، خطّ أفقي، إعادة العرض.
+  // على سطح السحب (لا أداة) وعلى اللوح بوضع التحديد: بعد نقرة تحدّد خطّاً يُزال سطح السحب، فكان الزرّ الأيمن على
+  // الخطّ نفسه يفتح قائمة المتصفّح («حفظ الصورة…») بدل نسخ/قفل/حذف.
+  const openChartMenu = (event: PointerEventLike) => {
+    event.preventDefault?.();
+    if (!interactive) return;
+    const rect = event.currentTarget?.getBoundingClientRect?.();
+    const point = pointerXY(event);
+    const x = point.x - (rect?.left ?? 0);
+    const y = point.y - (rect?.top ?? 0);
+    webKeyChart = keyToken.current;
+    // على رسم: يُحدَّد (كالنقرة، `autoSelectRef`) والقائمة لإجراءاته — نسخة، قفل، حذف.
+    const hit = hitDrawing(x, y);
+    if (hit) {
+      autoSelectRef.current = true;
+      setTool('select');
+      setSelectedId(hit);
+    } else if (tool === 'select') {
+      // على الفراغ كالنقرة: يُسقط التحديد (ويعود وضع السحب إن كان تحديداً تلقائياً) والقائمة العامّة.
+      setSelectedId(null);
+    }
+    setCtxMenu({ x, y, point: pointFromXY(x, y), drawingId: hit ?? undefined });
+  };
+
   // React Native Web forwards these browser pointer events to the host element.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const webChartHandlers: any =
@@ -6477,24 +6501,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             webChartPointer.current.active = false;
             endDrag();
           },
-          // W4 (قرار أنس ١٦): الزرّ الأيمن ⇒ قائمة بالسعر تحت المؤشّر بدل قائمة المتصفّح — تنبيه، خطّ أفقي، إعادة العرض.
-          onContextMenu: (event: PointerEventLike) => {
-            event.preventDefault?.();
-            if (!interactive) return;
-            const rect = event.currentTarget?.getBoundingClientRect?.();
-            const point = pointerXY(event);
-            const x = point.x - (rect?.left ?? 0);
-            const y = point.y - (rect?.top ?? 0);
-            webKeyChart = keyToken.current;
-            // على رسم: يُحدَّد (كالنقرة، `autoSelectRef`) والقائمة لإجراءاته — نسخة، قفل، حذف.
-            const hit = hitDrawing(x, y);
-            if (hit) {
-              autoSelectRef.current = true;
-              setTool('select');
-              setSelectedId(hit);
-            }
-            setCtxMenu({ x, y, point: pointFromXY(x, y), drawingId: hit ?? undefined });
-          },
+          onContextMenu: openChartMenu,
           // خروج الفأرة من اللوح يمسح المعاينة؛ التقاطع المثبَّت يبقى (زرّ ⚑ خارج اللوح).
           onPointerLeave: () => {
             if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
@@ -8170,6 +8177,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {...(interactive && tool !== 'none' && tool !== 'select' ? panResponder.panHandlers : {})}
         {...drawHoverHandlers}
         {...(interactive && tool === 'select' ? selectPan.panHandlers : {})}
+        {...(Platform.OS === 'web' && interactive && canPan && tool === 'select' ? { onContextMenu: openChartMenu } : {})}
       >
         {!canPan || tool === 'select' ? (
           <Pressable
