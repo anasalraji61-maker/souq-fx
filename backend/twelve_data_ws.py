@@ -63,7 +63,7 @@ def _parse_price(msg: dict[str, Any]) -> tuple[str, float] | None:
         return None
     # `float("NaN")`/`"inf"` تجتاز التحويل، و`send_json` يكتبها `NaN` حرفياً — JSON غير صالح يُسقط
     # `JSON.parse` بالتطبيق فتتوقّف كل التيكات لا الرمز وحده. وسعر غير موجب ليس سعراً (والتنبيهات تقرؤه).
-    if not math.isfinite(p) or p <= 0:
+    if not math.isfinite(p) or p <= 0 or p > market.PRICE_MAX:  # 1e200 عطل لا سعر (كـ`_candle`)
         return None
     return _matrix_from_td(str(sym)), p
 

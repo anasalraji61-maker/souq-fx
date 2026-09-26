@@ -589,6 +589,10 @@ def _parse_ts(dt_str: str) -> int | None:
     return None
 
 
+# سقف سعر معقول لأيّ أداة (أغلى سهم/عملة مشفّرة اليوم دون 1e6 بكثير) — فوقه عطل مزوّد لا سوق.
+PRICE_MAX = 1e12
+
+
 def _candle(row: object) -> dict | None:
     """شمعة واحدة من صفّ المزوّد، أو `None` إن كان الصفّ غير صالح.
 
@@ -619,6 +623,10 @@ def _candle(row: object) -> dict | None:
     # كانت تمرّ: `low=0` بشمعة 1m واحدة يُطلق **كل** تنبيه «تحت» على الرمز (`_price_hit` يقرأ الذيول)،
     # ويرسم الشارت انهياراً −100% ويدخل RSI/ATR والماسح والاختبار الخلفي كحركة حقيقية.
     if min(o, h, l, c) <= 0 or h < max(o, c, l) or l > min(o, c):
+        return None
+    # منتهٍ لكنه عبثي (1e200 من عطل المزوّد): لا أداة بسعر فوق `PRICE_MAX`. كان يمرّ فيرمي OverflowError
+    # بـ(x−mean)² بالاختبار الخلفي والتوقّع، و`change_pct` لا نهائية ⇒ 500 للشارت والطرفية والماسح.
+    if h > PRICE_MAX:
         return None
     # لا فوليوم مركزياً للفوركس: المزوّد لا يرسل الحقل، وكان يُملأ 0.0 ⇒ «لم يُتداول شيء» رقماً حقيقياً.
     # الغائب/غير الصالح None؛ الصفر الذي يرسله المزوّد فعلاً (دقيقة بلا تيك) يبقى صفراً.
@@ -1039,7 +1047,7 @@ def _f(v: object) -> float | None:
 def _pos(v: object) -> float | None:
     """سعر: موجب منتهٍ وإلا None."""
     f = _f(v)
-    return f if f is not None and f > 0 else None
+    return f if f is not None and 0 < f <= PRICE_MAX else None
 
 
 # حدّا بحث الرموز — معلنان هنا لأنهما **حدّا المزوّد**: `limit` يُرسَل `outputsize` ويُستعمل
