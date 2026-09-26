@@ -9784,7 +9784,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 {tfTyped}
                 <Text style={styles.tfTypedHint}>
                   {'  →  '}
-                  {tfTypedDate ?? (tfTypedTarget ? tr.tfLabels[tfTypedTarget] : typedDatePending(tfTyped) ? '…' : '✕')}
+                  {tfTypedDate ?? (tfTypedTarget ? tr.tfLabels[tfTypedTarget] : typedDatePending(tfTyped) || (!hasTfKey && /^[12]\d{0,3}$/.test(tfTyped)) ? '…' : '✕')}
                 </Text>
               </Text>
             </View>
