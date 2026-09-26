@@ -260,7 +260,7 @@ _LEVEL_WORD = (
     r"|(?<!\w)(?:(?:نقطة|نقطه|سعر|مستوى)\s+)?(?:ال)?خروج(?=\s*(?:[:\-–—=]|\d))"
     r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان|زیان\s*وەستاندن"
     # run 80: التعريب الصوتي «ستوب لوس 1.0800»، «تيك بروفيت 1.0950»
-    r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)تيك\s*بروفيت(?!\w)"
+    r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)(?:و?ال)?تيك\s*بروفيت(?!\w)"
     # run 90: المعرَّف «الستوب/الاستوب لوس»، «التارجت/تارجت»، «خذ الربح»، «اغلق الصفقة»
     r"|(?<!\w)و?ال(?:ا)?(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)(?:و?ال)?تارجت(?:ات)?(?!\w)"
     r"|(?<!\w)(?:خذ|اخذ)\s+(?:ال)?(?:ربح|ارباح)(?!\w)|(?<!\w)(?:اغلق|أغلق)\s+(?:ال)?(?:صفقة|صفقه|مركز)(?!\w)"
@@ -407,7 +407,30 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:^\s*|[.!?,:;—–-]\s*)(?:achetez|achète|vendez|vends|compra|compre|vende|venda|kaufen|verkaufen)\s*(?:[.!]|$)"
     + r"|\bsat[ıi]n\s+al(?!\w)"
     + r"|\b(?:recomiendo|recomendamos|recommande|recommandons|empfehle)\s+(?:de\s+|d['’]\s*|zu\s+)?"
-    r"(?:comprar|vender|acheter|vendre|kaufen|verkaufen)\b",
+    r"(?:comprar|vender|acheter|vendre|kaufen|verkaufen)\b"
+    # run 97: «Enter long at market.»، «Stay short until 1.0800»، «Hold your long.»، «I lean long»،
+    # «My pick is long»، «Pull the trigger on a long»، «Risk 1.0800 to make 1.0950»، «Cut the trade at …»،
+    # «Bail out below …»، «Kauf bei 1.0850» — «Traders enter long when …» و«don't pull the trigger early» شرح
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*)(?:enter\s+(?:long|short)(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|on|today)\b)"
+    r"|(?:stay|remain)\s+(?:long|short)(?![-‑\w])|hold\s+(?:your|the|this)\s+(?:long|short)s?(?![-‑\w]))"
+    + r"|\b(?:i|we)(?:['’]m|\s+am|['’]re|\s+are)?\s+(?:lean(?:ing)?|tilt(?:ing)?)\s+(?:towards?\s+)?(?:a\s+)?"
+    r"(?:long|short|buy(?:ing)?|sell(?:ing)?)(?![-‑\w])"
+    + r"|\b(?:my|our)\s+(?:pick|call|choice|preference|bias|play|trade|vote)\s+(?:is|would\s+be)\s+(?:to\s+)?(?:an?\s+)?"
+    r"(?:go\s+)?(?:long|short|buy|sell)(?![-‑\w])"
+    + r"|\bpull\s+the\s+trigger\s+(?:on\s+(?:an?\s+|the\s+)?(?:long|short|buy|sell)|now|here)\b"
+    + r"|\brisk(?:ing)?\s+(?:it\s+)?(?:to\s+|at\s+|down\s+to\s+)?" + _PRICE
+    + r"[^\n\d]{0,20}?\b(?:to\s+make|for\s+a\s+(?:move|run)\s+to|targeting|aiming\s+(?:at|for))\s*" + _PRICE
+    + r"|\bcut\s+(?:the|your|this)\s+(?:trade|position)\s+(?:at|below|above|under|over|near|@)\s*" + _PRICE
+    + r"|\bbail(?:\s+out)?\s+(?:at|below|above|under|over|near|@)\s*" + _PRICE
+    + r"|\b(?:kauf|verkauf)\s+(?:bei|ab|um|über|unter)\s*\d"
+    # run 97: «أميل للشراء»، «الصفقة المقترحة: شراء»، «سأشتري من هنا»، «كنت سأبيع»، «افتح شراء»،
+    # «شراء EURUSD» و«بيع الذهب» سطراً وحده — «المؤشر يميل للشراء» وصف و«بيع الذهب من البنوك المركزية …» خبر
+    + r"|(?<!\w)(?:انا\s+|نحن\s+)?(?:اميل|نميل)\s+(?:لل|ل|الى\s+ال|إلى\s+ال)(?:شراء|بيع)(?!\w)"
+    + r"|(?:الصفقة|الصفقه|الاتجاه|الخيار)\s+(?:المقترح|المقترحة|المقترحه|المفضل)\s*[:\-–—=]?\s*(?:هو\s+|هي\s+)?(?:ال)?(?:شراء|بيع)(?!\w)"
+    + r"|(?<!\w)(?:كنت\s+)?(?:سا|سن)(?:شتري|بيع)(?!\w)"
+    + r"|(?<!\w)(?:افتح|نفذ)\s+(?:ال)?(?:شراء|بيع)(?!\w)"
+    + r"|(?:^\s*|[.!؟:\-–—•*]\s*)(?:ال)?(?:شراء|بيع)\s+(?:(?-i:[A-Z]{3,6}|[A-Z]{3}/[A-Z]{3})|الذهب|الفضة|الفضه|النفط"
+    r"|اليورو|الدولار|الين|الجنيه|الباوند|البيتكوين)\s*(?:الان|الآن|فورا|فوراً)?\s*[.!؟]?\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)

@@ -758,3 +758,35 @@ def test_guard_flags_run94_leaks(text):
 ])
 def test_guard_run94_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+RUN97_LEAKS = [
+    "Enter long at market.", "Enter short now.", "Stay long.", "Stay short until 1.0800.", "Hold your long.",
+    "Short-term I lean long.", "I lean short on EURUSD.", "I'm leaning long here.", "My pick is long.",
+    "Our bias is short.", "Pull the trigger on a long.", "Risk 1.0800 to make 1.0950.",
+    "Cut the trade at 1.0800.", "Bail out below 1.0800.", "Kauf bei 1.0850",
+    "أنا أميل للشراء", "نميل إلى البيع", "الصفقة المقترحة: شراء اليورو", "التيك بروفيت 1.0950",
+    "سأشتري من هنا", "كنت سأبيع", "افتح شراء", "شراء EURUSD", "بيع الذهب", "- بيع الذهب الآن",
+]
+
+
+@pytest.mark.parametrize("text", RUN97_LEAKS)
+def test_guard_flags_run97_leaks(text):
+    assert openrouter_ai.has_trade_call(text)
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+@pytest.mark.parametrize("text", [
+    "Traders enter long when the fast MA crosses above the slow one.",
+    "To enter long, a trend follower waits for a close above resistance.",
+    "Don't pull the trigger too early; wait for the candle to close.",
+    "Many traders stay long through the trend and trail their stop.",
+    "Hold your long-term view separate from short-term noise.", "Stay short-term focused when scalping.",
+    "Risk 1% of your account per trade.", "Risk 50 pips to make 100 pips gives a 1:2 ratio.",
+    "My pick for learning is the RSI indicator.", "Kaufdruck steigt",
+    "المؤشر يميل للشراء على الإطار اليومي", "سندخل الآن في شرح مؤشر RSI", "سأشرح لك مؤشر MACD",
+    "بيع الذهب من قبل البنوك المركزية يضغط على السعر", "شراء الذهب من البنوك المركزية ارتفع هذا العام",
+    "الشراء والبيع",
+])
+def test_guard_run97_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)
