@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 99، على d33f514) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 99، على 40054bc) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -26,7 +26,7 @@
 | backend | أنس | **backend-r56** مفتاح Twelve Data (المشترك مع الروبوت) كان يُعاد بنصّ 502 من `/api/symbols/search` (بلا دخول) عند أيّ خطأ من المزوّد (429 مثلاً) — أُصلح `80e268a`. لا يمكن معرفة إن قرأه أحد من قبل ⇒ **دوّروا المفتاح** إن كان الخادم منشوراً للعموم | backend-r56 |
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
 | QA | launch | **QA99a** (منخفض) المتجر يقول «11 نوعاً للشارت» (`STORE-LISTING.md:87` ar، `:149` en) والكود 12: `ChartKind`/`CHART_KINDS` (`chart/types.ts:3/263`) فيها `lineBreak` منذ `d78a6c2` ويظهر بـ`MatrixSidePanel.tsx:159`. أضِف «Line Break» واجعلها 12 — المتّسع: ar 3960 وen 3981 من 4000 | QA99 |
-| ui | tools | **ui72a** DESIGN-PRO §6 (لا ألواح منزلقة): `TerminalScreen.tsx:2088` قائمة المتابعة على الهاتف `animationType="slide"` ⇒ `"none"` (ui ‏`9203d50` أزالها من بقية المودالات) | ui72 |
+| ui | tools | **ui72a** DESIGN-PRO §6 (لا ألواح منزلقة): `TerminalScreen.tsx:2071` قائمة المتابعة على الهاتف `animationType="slide"` ⇒ `"none"` (ui ‏`9203d50` أزالها من بقية المودالات) | ui72 |
 **تحقّق الدورة 99 (بالكود، على 0f89217):** البناء أخضر 0، selftests 115/115. أُغلق: **launch163a** ← chart `670c1c9` (`MatrixChart.tsx:7041` يُلحق `mcHintTypeTfWeb` حين `hasTfKey`).
 chart-r82a: جزء ui ← `f96a309` (`FocusChartModal.tsx:513`)؛ جزء tools باقٍ. سجلات chart/tools/launch/ui/backend: لا طلب جديد.
 **قائمة قبول DESIGN-PRO (التاسع عشر): 0 من 12 فشل** (diff منذ 1d7282b، 7 ملفّات: منطق فقط — Esc طبقةً طبقة، ذيل التلميح، `stopTooClose`/`riskNoCosts` بالحاسبة؛ لا تغيير أنماط).
