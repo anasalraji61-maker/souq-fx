@@ -5,7 +5,7 @@ import { useI18n } from '../i18n/I18nContext';
 
 /**
  * W4 (قرار ١٦): «?» على الويب يفتح قائمة اختصارات لوحة المفاتيح. النصوص نفسها التي يعرضها الشارت
- * بتلميحه (`mcHintNavigateWeb` + `mcHintTypeTfWeb` + `mcHintTypeDateWeb`) مقسومة سطراً سطراً عند « · » — مصدر واحد، فلا
+ * بتلميحه (`mcHintNavigateWeb` + `mcHintTypeTfWeb` + `mcHintTypeDateWeb` + `mcHintDrawWeb` + `mcHintSelectedWeb`) مقسومة سطراً سطراً عند « · » — مصدر واحد، فلا
  * تختلف القائمة عن التلميح إن تغيّر اختصار. ويُلحق بها `shortcutsMouseWeb` (الزرّ الأيمن والنقر، chart-r93a). لا شيء على الهاتف.
  */
 function isTypingTarget(el: EventTarget | null): boolean {
@@ -13,6 +13,32 @@ function isTypingTarget(el: EventTarget | null): boolean {
   if (!node || !node.tagName) return false;
   const tag = node.tagName.toLowerCase();
   return tag === 'input' || tag === 'textarea' || tag === 'select' || node.isContentEditable === true;
+}
+
+/** مفتاح يتكرّر بين التلميحات السياقية (Esc، Ctrl+Z / Ctrl+Y، Alt+T/H/V/F): يُبقى أول سطر يبدأ به. */
+const REPEATABLE_KEY = /^(Esc|Ctrl\+\S+|Alt\+\S+)$/;
+
+/**
+ * launch179a: التلميحات السياقية (تنقّل، رسم، رسم محدَّد، فأرة) تُضمّ بـ« · » ثم تُقسم سطراً سطراً.
+ * `mcHintDrawWeb`/`mcHintSelectedWeb` لا تبدأ بـ« · » فتُضمّ هنا لا بالسلسلة. الأسطر المكرّرة حرفياً،
+ * أو التي تبدأ بمفتاح سبق (Esc للإلغاء/لإلغاء التحديد)، تُحذف.
+ */
+function shortcutLines(sources: string[]): string[] {
+  const seenText = new Set<string>();
+  const seenKey = new Set<string>();
+  const out: string[] = [];
+  for (const raw of sources.join(' · ').split(' · ')) {
+    const line = raw.trim();
+    if (!line || seenText.has(line)) continue;
+    const first = line.split(' ')[0];
+    if (REPEATABLE_KEY.test(first)) {
+      if (seenKey.has(first)) continue;
+      seenKey.add(first);
+    }
+    seenText.add(line);
+    out.push(line);
+  }
+  return out;
 }
 
 export function KeyboardShortcutsSheet() {
@@ -40,10 +66,12 @@ export function KeyboardShortcutsSheet() {
 
   if (Platform.OS !== 'web') return null;
 
-  const lines = `${t.mcHintNavigateWeb}${t.mcHintTypeTfWeb}${t.mcHintTypeDateWeb}${t.shortcutsMouseWeb}`
-    .split(' · ')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const lines = shortcutLines([
+    `${t.mcHintNavigateWeb}${t.mcHintTypeTfWeb}${t.mcHintTypeDateWeb}`,
+    t.mcHintDrawWeb,
+    t.mcHintSelectedWeb,
+    t.shortcutsMouseWeb,
+  ]);
   const align = rtl ? ('right' as const) : ('left' as const);
 
   return (
