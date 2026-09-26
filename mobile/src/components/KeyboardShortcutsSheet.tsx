@@ -15,6 +15,12 @@ function isTypingTarget(el: EventTarget | null): boolean {
   return tag === 'input' || tag === 'textarea' || tag === 'select' || node.isContentEditable === true;
 }
 
+/**
+ * «?» بالتخطيط اللاتيني و«؟» (U+061F) بالعربي والكردي: Shift+/ بهما يعطي «؟» فكانت القائمة لا تُفتح
+ * لمن يكتب بالعربية أو الكردية. `event.key` لا `event.code` — «?» على AZERTY فوق الفاصلة لا الشرطة.
+ */
+const HELP_KEYS = new Set(['?', '\u061F']);
+
 /** مفتاح يتكرّر بين التلميحات السياقية (Esc، Ctrl+Z / Ctrl+Y، Alt+T/H/V/F): يُبقى أول سطر يبدأ به. */
 const REPEATABLE_KEY = /^(Esc|Ctrl\+\S+|Alt\+\S+)$/;
 
@@ -55,7 +61,7 @@ export function KeyboardShortcutsSheet() {
         setOpen(false);
         return;
       }
-      if (event.key !== '?' || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (!HELP_KEYS.has(event.key) || event.ctrlKey || event.metaKey || event.altKey) return;
       if (isTypingTarget(event.target)) return;
       event.preventDefault();
       setOpen((v) => !v);
