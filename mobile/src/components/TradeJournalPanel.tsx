@@ -103,6 +103,8 @@ import {
   type TradePlan,
   editExitValue,
   editClosedAtSend,
+  createTimesSend,
+  type CreateTimes,
   reopenedCloseAt,
   journalRowWhen,
   journalIsoToLocalField,
@@ -289,10 +291,19 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const [sl, setSl] = useState('');
   const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
+  /** tools150: «وقت الفتح» بنموذج الإضافة (بتوقيت الجهاز) — صفقة تُسجَّل بعد حدوثها؛ فارغ = «الآن» بالخادم (`createTimesSend`) */
+  const [openTime, setOpenTime] = useState('');
+  /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
+   * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
+  const [editing, setEditing] = useState<Trade | null>(null);
+  /** حقل «وقت الإغلاق» (بتوقيت الجهاز) — بالتعديل `init` = ما مُلئ به (ومصدره ISO إن كان وقتاً محفوظاً، `editClosedAtSend`)؛
+   * بالإضافة يظهر متى كُتب خروج ويُقرأ مع «وقت الفتح» (`createTimesSend`). */
+  const [closeTime, setCloseTime] = useState('');
   const [busy, setBusy] = useState(false);
   /** النموذج **الآن** — صفقةٌ بدأت كتابتها أثناء طلب الإضافة لا يمسحها `resetForm` حين يصل الردّ */
   const formKeyRef = useRef('');
-  const formKey = [symbolText, side, entry, exit, size, sl, tp, note].join('\u0001');
+  // الوقتان بالإضافة وحدها: بالتعديل يُملأ «وقت الإغلاق» برمجياً بعد الحفظ، ومفتاح نموذج التعارض (`keepErrorForRef`) بالخانات الثماني
+  const formKey = [symbolText, side, entry, exit, size, sl, tp, note].join('\u0001') + (editing ? '' : `\u0001${openTime}\u0001${closeTime}`);
   formKeyRef.current = formKey;
   // خطأٌ عن نموذجٍ تغيّر لم يعد عنه: «دخول غير صالح» كان يبقى تحت الزرّ بعد تصحيح الدخول أو تبديل الجهة حتى الضغطة التالية.
   // الأخطاء كلّها تُضبط بلا تغيير بالنموذج (الحفظ الممنوع، فشل الطلب، لا سعر حيّ) فلا يمحوها هذا في لحظتها
@@ -315,9 +326,6 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   /** launch213a: حُفظ التعديل وبقي مفتوحاً بما كُتب أثناء الطلب — يُقال بنصّ عادي (ليس خطأً، فلا لون `warn`). لا يمحوه تغيّر النموذج
    * (ما زال صحيحاً حتى الحفظ التالي)؛ يزول بالضغطة التالية على الحفظ أو بالإلغاء أو بفتح تعديل آخر */
   const [formNotice, setFormNotice] = useState<string | null>(null);
-  /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
-   * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
-  const [editing, setEditing] = useState<Trade | null>(null);
   /** «تصحيح خطأ كتابة لا تحريك» للوقف بهذا التعديل: لا علامة «1R @ …» من وقفٍ قديم كان خطأً (`noteWithInitialStop` `typoFix`) */
   const [stopTypoFix, setStopTypoFix] = useState(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -327,8 +335,6 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   /** backend-r91a: وقت إغلاق صفقة أعاد هذا الجهاز فتحها بالتعديل (مسح الخروج يمسحه بالخادم)، بـ`closed_at_iso` ⇒ يملأ حقل
    * «وقت الإغلاق» بتعديلٍ لاحق ويُرسل مع الإغلاق من خانة الخروج (`reopenedCloseAt`) بدل «الآن» المختلَق. بالجلسة وحدها، بمعرّف الصفقة. */
   const reopenedClosedAtRef = useRef(new Map<string, string>());
-  /** حقل «وقت الإغلاق» بنموذج التعديل (بتوقيت الجهاز) و`init` = ما مُلئ به (ومصدره ISO إن كان وقتاً محفوظاً) — `editClosedAtSend`. */
-  const [closeTime, setCloseTime] = useState('');
   const [closeTimeInit, setCloseTimeInit] = useState<{ text: string; iso: string | null }>({ text: '', iso: null });
   /** لمسه المتداول ⇒ لا يُملأ «الآن» تلقائياً فوق ما كتبه أو مسحه */
   const closeTimeTouchedRef = useRef(false);
@@ -622,6 +628,21 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       : e.error === 'future'
         ? t.journalCloseTimeFuture
         : t.journalCloseTimeInvalid.replace('{example}', closeTimeExample);
+
+  /** سبب رفض وقتَي نموذج الإضافة (`createTimesSend`) */
+  const createTimesErrorText = (e: Extract<CreateTimes, { error: string }>): string =>
+    e.error === 'openInvalid'
+      ? t.journalOpenTimeInvalid.replace('{example}', closeTimeExample)
+      : e.error === 'openFuture'
+        ? t.journalOpenTimeFuture
+        : e.error === 'closeNeedsOpen'
+          ? t.journalCloseTimeNeedsOpen
+          : closeTimeErrorText(
+              e.error === 'beforeOpen' ? e : e.error === 'closeFuture' ? { error: 'future' } : { error: 'invalid' }
+            );
+  /** وقتا الإضافة كما سيُرسلان — «المستقبل» بساعة الخادم (هو من يرفض بعد 5 د)، كوقت الإغلاق بالتعديل */
+  const addTimes = (): CreateTimes =>
+    createTimesSend({ openText: openTime, closeText: closeTime, exitSent: pnum(exit), nowMs: serverNowSec() * 1000 });
 
   const pxErrorText = (v: string, sym: string = symbol): string => {
     const a = ambiguousThousandsPrice(v, sym);
@@ -1213,6 +1234,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setSl('');
     setTp('');
     setNote('');
+    setOpenTime('');
+    setCloseTime('');
   };
 
   // «التالي» بلوحة المفاتيح ينقل بين الخانات بترتيبها (رمز ⇒ دخول ⇒ خروج ⇒ حجم ⇒ وقف ⇒ هدف ⇒ ملاحظة) بدل إغلاقها
@@ -1239,6 +1262,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     sl: string;
     tp: string;
     note: string;
+    openTime: string;
+    closeTime: string;
     liveFill: typeof liveFillRef.current;
   };
   const preEditRef = useRef<{ symbol: string; side: 'buy' | 'sell'; chart: string | undefined; draft: Draft } | null>(null);
@@ -1262,6 +1287,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setSl(d.sl);
     setTp(d.tp);
     setNote(d.note);
+    setOpenTime(d.openTime);
+    setCloseTime(d.closeTime);
     liveFillRef.current = d.liveFill;
   };
 
@@ -1294,10 +1321,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         symbol,
         side,
         chart: defaultSymbol,
-        draft: { entry, exit, size, sizeFor, sl, tp, note, liveFill: liveFillRef.current },
+        draft: { entry, exit, size, sizeFor, sl, tp, note, openTime, closeTime, liveFill: liveFillRef.current },
       };
     }
     setEditing(tr);
+    // وقت فتح مسوّدة الإضافة لا يُعرض فوق صفقة أخرى — محفوظ بالمسوّدة ويعود بالإلغاء/الحفظ
+    setOpenTime('');
     initCloseTime(tr);
     liveFillRef.current = null;
     // الأسعار كما سُجّلت بلا تقريب ولا صيغة أُسّية، والحجم 1 الافتراضي فارغ — راجع `journalEditForm`
@@ -1540,9 +1569,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       }
       return;
     }
+    const times = addTimes();
+    if ('error' in times) {
+      addInFlightRef.current = false;
+      setBusy(false);
+      setFormError(createTimesErrorText(times));
+      return;
+    }
     try {
       const x = pnum(exit);
       await api.createTrade({
+        ...times.send,
         symbol: sym,
         side,
         entry: e,
@@ -2283,6 +2320,54 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           accessibilityLabel={t.journalSizeA11y}
         />
       </View>
+      {/* tools150: وقتا صفقة تُسجَّل بعد حدوثها — بالإضافة وحدها. «وقت الفتح» فارغ = الآن؛ «وقت الإغلاق» متى كُتب خروج */}
+      {!editing ? (
+        <>
+          <TextInput
+            style={[styles.input, { textAlign: align }]}
+            value={openTime}
+            onChangeText={setOpenTime}
+            placeholder={t.journalOpenTimeLabel}
+            keyboardType="numbers-and-punctuation"
+            maxLength={20}
+            placeholderTextColor={colors.textDim}
+            underlineColorAndroid="transparent"
+            clearButtonMode="while-editing"
+            keyboardAppearance="dark"
+            selectionColor={colors.accent}
+            accessibilityLabel={t.journalOpenTimeLabel}
+            accessibilityHint={t.journalOpenTimeHint.replace('{example}', closeTimeExample)}
+          />
+          {pnum(exit) != null ? (
+            <TextInput
+              style={[styles.input, { textAlign: align }]}
+              value={closeTime}
+              onChangeText={setCloseTime}
+              placeholder={t.journalCloseTimeLabel}
+              keyboardType="numbers-and-punctuation"
+              maxLength={20}
+              placeholderTextColor={colors.textDim}
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              keyboardAppearance="dark"
+              selectionColor={colors.accent}
+              accessibilityLabel={t.journalCloseTimeLabel}
+              accessibilityHint={t.journalCloseTimeHint.replace('{example}', closeTimeExample)}
+            />
+          ) : null}
+          {(() => {
+            // سطر واحد تحت الخانتين: السبب إن رُفض الوقت، وإلا التلميح متى كُتب شيء (فارغتان ⇒ لا سطر — الصفقة تُسجَّل الآن)
+            const chk = addTimes();
+            if ('error' in chk) return <Text style={[styles.planWarn, { textAlign: align }]}>{createTimesErrorText(chk)}</Text>;
+            if (openTime.trim() === '' && (pnum(exit) == null || closeTime.trim() === '')) return null;
+            return (
+              <Text style={[styles.planLine, { textAlign: align }]}>
+                {t.journalOpenTimeLabel} · {t.journalOpenTimeHint.replace('{example}', closeTimeExample)}
+              </Text>
+            );
+          })()}
+        </>
+      ) : null}
       {/* وقت الإغلاق (backend-r91a/r93): بالتعديل وحده ومتى كان للصفقة خروج — بتوقيت الجهاز، فارغ = غير معروف */}
       {editing && pnum(exit) != null ? (
         <>
