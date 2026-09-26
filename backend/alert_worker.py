@@ -261,7 +261,8 @@ def _check_indicator(a: dict, cache: dict | None = None) -> bool:
     cond = a["condition"]
     if at == "rsi":
         rv = snap.get("rsi")
-        if rv is None or a.get("value") is None:
+        # سلسلة مسطّحة: RSI ‏50 اصطلاح لا قراءة ⇒ لا تنبيه (`flat_closes`)
+        if rv is None or snap.get("flat_closes") or a.get("value") is None:
             return False
         # على RSI المعروض (منزلة واحدة كالماسح والتوقّع): 69.963 يُعرض «70.0 تشبّع» وتنبيه «فوق 70» صامت
         rv = round(rv, 1) + 0.0

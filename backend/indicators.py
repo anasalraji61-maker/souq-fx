@@ -159,6 +159,9 @@ def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> di
         # الأولى)، كـ«آخر 10 شموع» بـ`signal_hub` (من إغلاق ما قبلها). كان `len(closes)` ⇒ شمعة زائدة.
         "change_bars": len(closes) - 1,
         "rsi": r[-1],
+        # كل الإغلاقات متساوية ⇒ RSI أعلاه 50 **اصطلاحاً** (لا ربح ولا خسارة) لا قراءة: مسار اللقطة وتنبيهات
+        # RSI تُسقطه (كان تنبيه «تحت 50» و«فوق 50» يُطلقان على USDSAR المسطّح)، والتوقّع لا يصوّت به.
+        "flat_closes": len(closes) > 1 and max(closes) == min(closes),
         "sma_fast": f[-1],
         "sma_slow": s[-1],
         "macd": m_line[-1],

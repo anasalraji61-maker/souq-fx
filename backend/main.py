@@ -1351,7 +1351,7 @@ def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
     cond = alert["condition"]
     if at == "rsi":
         rsi_v = snap.get("rsi")
-        if rsi_v is None or alert.get("value") is None:
+        if rsi_v is None or snap.get("flat_closes") or alert.get("value") is None:  # كـ`alert_worker`
             return False
         rsi_v = round(rsi_v, 1) + 0.0  # كـ`alert_worker`: على RSI المعروض لا الخام
         if cond == "above":
@@ -1584,6 +1584,8 @@ def indicator_snapshot(symbol: str, timeframe: str = "15m"):
         }
     candles = [c.model_dump() for c in series.candles]
     snap = ind_engine.snapshot(candles)
+    if snap.get("flat_closes"):
+        snap["rsi"] = None  # 50 اصطلاح لسلسلة لم تتحرّك، لا قراءة موسومة provider
     snap["timeframe"] = series.timeframe
     snap["data_kind"] = series.data_source.kind
     snap["price_as_of"] = _series_price_at(series)  # وقت `last` — راجع مسار التوقّع
