@@ -324,6 +324,10 @@ export function ChartFrame({
     onChartInteract?.(active);
   };
   const frameSymbol = (pendingSwitch?.symbol || label || series.symbol).toUpperCase();
+  // أثناء التبديل الرأس يقول الفريم المختار (كشريط الفريمات)، ووسما المصدر و«مغلق» للرمز السابق يُخفيان —
+  // كان «EURUSD · مغلق» يُقرأ حتى تصل شموع اليورو لأن الذهب باستراحته، ووسم المصدر للذهب بجانب اسم اليورو.
+  const headerTf = pendingSwitch?.tf ?? series.timeframe;
+  const symbolSwitching = !!pendingSwitch?.symbol && pendingSwitch.symbol.toUpperCase() !== series.symbol.toUpperCase();
   // القائد لا يُفعَّل (هو المفعَّل) — إجراء بلا أثر يُربك القارئ. شارته («قائد») نصّ مقروء بجانب الرمز.
   const syncA11yActions =
     !isWeb && onSyncActivate && syncBadge !== 'leader'
@@ -425,12 +429,12 @@ export function ChartFrame({
           {!showTimeframes || phone ? (
             <Text
               style={styles.tf}
-              accessibilityLabel={isTimeframe(series.timeframe) ? t.tfLabelsA11y[series.timeframe] : undefined}
+              accessibilityLabel={isTimeframe(headerTf) ? t.tfLabelsA11y[headerTf] : undefined}
               {...(Platform.OS === 'web'
                 ? ({ translate: 'no', className: 'notranslate' } as object)
                 : {})}
             >
-              {isTimeframe(series.timeframe) ? t.tfLabels[series.timeframe] : series.timeframe}
+              {isTimeframe(headerTf) ? t.tfLabels[headerTf] : headerTf}
             </Text>
           ) : null}
           {switching ? (
@@ -451,7 +455,7 @@ export function ChartFrame({
           ) : null}
           {/* «مزوّد» هي الحالة العادية ولا تضيف للهاتف إلا عرضاً (سطر السعر يقول «حي» أصلاً)؛ تجريبي/مخزّن/مجهول
               تبقى ظاهرة — هي ما يجب ألّا يفوت المتداول. */}
-          {seriesLoading || (phone && candleSrc.kind === 'provider') ? null : (
+          {seriesLoading || symbolSwitching || (phone && candleSrc.kind === 'provider') ? null : (
             <Text
               style={[
                 styles.sourceTag,
@@ -463,7 +467,7 @@ export function ChartFrame({
               {candleTag}
             </Text>
           )}
-          {marketClosed ? (
+          {marketClosed && !symbolSwitching ? (
             <Text style={styles.marketClosedTag} accessibilityLabel={t.cfMarketClosedA11y}>
               {t.cfMarketClosedTag}
             </Text>
