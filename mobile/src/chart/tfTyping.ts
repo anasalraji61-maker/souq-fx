@@ -20,6 +20,9 @@ export function tfTypingChar(key: string, code: string | undefined): string {
   // لوحة الأرقام بـNumLock مطفأ: الموضع «Numpad4» لكن المفتاح سهم/Home («ArrowLeft») ⇒ ليس رقماً. كان السهم
   // يحرّك الشارت ثم بعد 600ms يبدّل إلى 30m (8 ⇒ 4H، 7/Home ⇒ D). الرقم حرف واحد، والأسماء أطول.
   if (digit && (!code!.startsWith('Numpad') || key.length === 1)) return digit[1]!;
+  // حرف لاتيني مكتوب يُقرأ بحرفه لا بموضعه: على Dvorak مفتاح «d» بموضع KeyH فكان «1d⏎» يفتح 1H، وعلى AZERTY «z»
+  // بموضع KeyW يُقرأ «w». الموضع للّوحات غير اللاتينية وحدها (العربية/الكردية) كما بـ`shortcutLetter`.
+  if (/^[a-z]$/i.test(key)) return /^[mhdw]$/i.test(key) ? key.toLowerCase() : '';
   const letter = /^Key([MHDW])$/.exec(code ?? '');
   if (letter) return letter[1]!.toLowerCase();
   // «-» فاصل التاريخ (`parseTypedDate`) — من الموضع كذلك (Minus/NumpadSubtract) لا من الحرف.

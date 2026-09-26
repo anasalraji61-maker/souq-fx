@@ -44,6 +44,9 @@ ok('Numpad5 بـNumLock مطفأ (Clear) ⇒ لا شيء', tfTypingChar('Clear',
 ok('KeyH بلوحة عربية («ا») ⇒ h', tfTypingChar('ا', 'KeyH') === 'h');
 ok('KeyD ⇒ d', tfTypingChar('d', 'KeyD') === 'd');
 ok('KeyQ ⇒ لا شيء', tfTypingChar('q', 'KeyQ') === '');
+ok('Dvorak: «d» بموضع KeyH ⇒ d', tfTypingChar('d', 'KeyH') === 'd');
+ok('AZERTY: «z» بموضع KeyW ⇒ لا شيء', tfTypingChar('z', 'KeyW') === '');
+ok('Shift+D ⇒ d', tfTypingChar('D', 'KeyD') === 'd');
 ok('بلا code: «4» ⇒ 4', tfTypingChar('4', undefined) === '4');
 ok('Enter ⇒ لا شيء', tfTypingChar('Enter', 'Enter') === '');
 
