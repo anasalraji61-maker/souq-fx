@@ -187,6 +187,19 @@ export function TerminalScreen() {
   const [dxyTf, setDxyTf] = useState<Timeframe>('15m');
   const [heroSymbol, setHeroSymbol] = useState('DXY');
   const [prefsReady, setPrefsReady] = useState(false);
+  // chart-r74b: الاستطلاع الدوري يقرأ الرموز/الفريمات الحالية من مراجع لا من تبعيات التأثير — كان كل تبديل فريم/رمز إطار
+  // يعيد تشغيل التأثير فيجلب الخانات الأربعة (5 طلبات لكل ضغطة من حدّ المزوّد)، ويصفّر مؤقّت 90ث، ويرفع عدّاد كل إطار
+  // فيُرمى ردّ التبديل السريع وينتظر الإطار أبطأ الأربعة. التبديلات تجلب خانتها وحدها (`changeFrameTf`…).
+  const frameSymbolsRef = useRef(frameSymbols);
+  frameSymbolsRef.current = frameSymbols;
+  const frameTfsRef = useRef(frameTfs);
+  frameTfsRef.current = frameTfs;
+  const dxyTfRef = useRef(dxyTf);
+  dxyTfRef.current = dxyTf;
+  const heroSymbolRef = useRef(heroSymbol);
+  heroSymbolRef.current = heroSymbol;
+  // تطبيق تخطيط محفوظ يغيّر رموز/فريمات الإطارات الثلاثة دفعة واحدة بلا جلب خاص به ⇒ يطلب جولة كاملة صراحةً.
+  const [framesReloadTick, setFramesReloadTick] = useState(0);
 
   const [symbol, setSymbol] = useState('EURUSD');
   const [tf, setTf] = useState<Timeframe>('15m');
@@ -677,7 +690,7 @@ export function TerminalScreen() {
   );
 
   const loadTerminal = useCallback(
-    async (tfs: Timeframe[], dxyTimeframe: Timeframe = '15m') => {
+    async () => {
       // نفس عدّادات الأجيال التي يستخدمها تبديل رمز فريم/الشارت الرئيسي: التحديث الدوري (كل 90 ثانية) كان
       // بلا حارس، فإن بدأ قبل تبديل EURUSD → USDJPY ووصل بعده أعاد شموع EURUSD للفريم تحت اسم USDJPY.
       // كل نتيجة تُكتب فقط إن لم يبدأ بعدها تحميل أحدث لنفس الخانة.
@@ -688,9 +701,10 @@ export function TerminalScreen() {
         setFrames((prev) => prev.map((old, i) => (frameGens[i] === frameLoadGen.current[i] ? frs[i] : old)));
       };
       // chart-r56: كل خانة مستقلّة — `Promise.all` كان يجعل فشل طلبٍ واحد «لا اتصال» للأربعة حتى الاستطلاع التالي (90 ث).
+      const tfs = frameTfsRef.current;
       const slots: [string, Timeframe][] = [
-        [heroSymbol, dxyTimeframe],
-        ...frameSymbols.map((s, i): [string, Timeframe] => [s, tfs[i]]),
+        [heroSymbolRef.current, dxyTfRef.current],
+        ...frameSymbolsRef.current.map((s, i): [string, Timeframe] => [s, tfs[i]]),
       ];
       const results = await Promise.allSettled(slots.map(([s, t]) => fetchSeries(s, t)));
       const got = results.map((r, i) =>
@@ -701,7 +715,7 @@ export function TerminalScreen() {
         Object.fromEntries(results.map((r, i) => [i === 0 ? 'hero' : `f${i - 1}`, r.status === 'fulfilled']))
       );
     },
-    [frameSymbols, heroSymbol, markSlots]
+    [markSlots]
   );
 
   const loadChart = useCallback(
@@ -729,10 +743,10 @@ export function TerminalScreen() {
   // واحد والظلّ على الشاشة العريضة فقط — كان كلاهما يجلب كل 90 ث بلا عرض (1–4 طلبات من حدّ المزوّد نفسه).
   useEffect(() => {
     if (!prefsReady || focus || !screenFocused || !framesShown) return;
-    void loadTerminal(frameTfs, dxyTf);
-    const id = setInterval(() => void loadTerminal(frameTfs, dxyTf), 90_000);
+    void loadTerminal();
+    const id = setInterval(() => void loadTerminal(), 90_000);
     return () => clearInterval(id);
-  }, [prefsReady, frameTfs, dxyTf, loadTerminal, focus, screenFocused, framesShown]);
+  }, [prefsReady, loadTerminal, focus, screenFocused, framesShown, framesReloadTick]);
 
   // حارس سباق شبكة: تجاهل ردّ متأخر لرمز/فريم زمني سابق (نفس نمط `alive` المستخدَم بلوحة الاقتباس
   // أدناه وبـ`FocusChartModal`/`QuadChartModal`) — تبديل سريع بين رموز المراقبة كان يترك آخر رد وصل
@@ -847,7 +861,7 @@ export function TerminalScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([framesShown ? loadTerminal(frameTfs, dxyTf) : null, mainShown ? loadChart(symbol, tf) : null]);
+    await Promise.all([framesShown ? loadTerminal() : null, mainShown ? loadChart(symbol, tf) : null]);
     setRefreshing(false);
   };
 
@@ -945,6 +959,7 @@ export function TerminalScreen() {
     if (Array.isArray(tfs) && tfs.length === 3 && tfs.every(isTimeframe)) {
       setFrameTfs([...tfs]);
     }
+    setFramesReloadTick((n) => n + 1);
     const heroSym = layoutReq.layoutHeroSymbol;
     if (typeof heroSym === 'string' && heroSym.trim()) {
       const heroTf = layoutReq.layoutHeroTf;
