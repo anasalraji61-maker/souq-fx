@@ -2295,7 +2295,7 @@ const ar: Dict = {
   calendarLoading: 'جاري تحميل التقويم…',
   calendarLoadError: 'تعذّر تحميل التقويم — تحقّق من الاتصال. يعيد المحاولة وحده كل 5 دقائق، أو غيّر أحد الفلاتر لتعيدها الآن',
   calendarEmpty:
-    'لا أحداث بهذا الفلتر هذا الأسبوع — اضغط ALL بصفّ العملة أو «كل» بصفّ الأهمية لترى المزيد. التقويم يعرض الأسبوع الجاري فقط.',
+    'لا أحداث بهذا الفلتر هذا الأسبوع — اختر «الكل» للعملات أو للأهمية لترى المزيد. التقويم يعرض الأسبوع الجاري فقط.',
   layoutDefaultName: 'تخطيطي',
   layoutFallbackName: 'تخطيط',
   layoutsTitle: 'تخطيطات محفوظة',
@@ -3562,7 +3562,7 @@ const enUS: Dict = {
   calendarLoading: 'Loading the calendar…',
   calendarLoadError: "Couldn’t load the calendar — check your connection. It retries by itself every 5 minutes, or change a filter to retry now",
   calendarEmpty:
-    'No events match this filter this week — select ALL in the currency row or All in the impact row to see more. The calendar covers the current week only.',
+    'No events match this filter this week — select All for currencies or for impact to see more. The calendar covers the current week only.',
   layoutDefaultName: 'My layout',
   layoutFallbackName: 'Layout',
   layoutsTitle: 'Saved layouts',
@@ -4882,7 +4882,7 @@ const ku: Dict = {
   calendarLoading: 'ڕۆژژمێرەکە بار دەکرێت…',
   calendarLoadError: 'نەکرا ڕۆژژمێرەکە باربکرێت — پەیوەندییەکەت بپشکنە. هەر 5 خولەک خۆی دووبارە هەوڵ دەداتەوە، یان فلتەرێک بگۆڕە بۆ هەوڵدانەوەی ئێستا',
   calendarEmpty:
-    'ئەم هەفتەیە هیچ ڕووداوێک لەگەڵ ئەم فلتەرە نییە — ALL لە ڕیزی دراو یان «هەموو» لە ڕیزی گرنگی دابگرە بۆ بینینی زیاتر. ڕۆژژمێرەکە تەنها هەفتەی ئێستا پیشان دەدات.',
+    'ئەم هەفتەیە هیچ ڕووداوێک لەگەڵ ئەم فلتەرە نییە — «هەموو» بۆ دراوەکان یان بۆ گرنگی هەڵبژێرە بۆ بینینی زیاتر. ڕۆژژمێرەکە تەنها هەفتەی ئێستا پیشان دەدات.',
   layoutDefaultName: 'نەخشەسازیم',
   layoutFallbackName: 'نەخشەسازی',
   layoutsTitle: 'نەخشەسازییە پاشەکەوتکراوەکان',
