@@ -13,6 +13,7 @@ import {
   scaleOutPlan,
   scaleOutHalfAtOneR,
   localDayKey,
+  dailyRoomMaxLots,
   restoredLostToday,
   convStaleMinutes,
   convQuoteNotice,
@@ -3825,3 +3826,41 @@ console.log('positionSize scaleOutHalfAtOneR selftest OK');
   assert.equal(restoredLostToday({}, d), '');
 }
 console.log('positionSize restoredLostToday selftest OK');
+
+// ---- dailyRoomMaxLots: أكبر لوت يتّسع لما بقي قبل الحدّ اليومي ----
+{
+  // يبقى 100، وقف 20 pip، 10 USD/pip/lot ⇒ 200 للّوت ⇒ 0.50 (الحدّ بالضبط، لا 0.49 من الفاصلة العائمة)
+  assert.equal(dailyRoomMaxLots({ room: 100, slPips: 20, pipValuePerLot: 10 }), 0.5);
+  assert.equal(dailyRoomMaxLots({ room: 99.99, slPips: 20, pipValuePerLot: 10 }), 0.49);
+  // بتكاليف: (20 + 1.5) × 10 + 7 = 222 للّوت ⇒ 100 ÷ 222 = 0.45
+  assert.equal(dailyRoomMaxLots({ room: 100, slPips: 20, pipValuePerLot: 10, spreadPips: 1.5, commissionPerLot: 7 }), 0.45);
+  // لا يتّسع لـ0.01 ⇒ null؛ ومدخل غير صالح
+  assert.equal(dailyRoomMaxLots({ room: 1.99, slPips: 20, pipValuePerLot: 10 }), null);
+  assert.equal(dailyRoomMaxLots({ room: 2, slPips: 20, pipValuePerLot: 10 }), 0.01);
+  assert.equal(dailyRoomMaxLots({ room: 0, slPips: 20, pipValuePerLot: 10 }), null);
+  assert.equal(dailyRoomMaxLots({ room: 100, slPips: 0, pipValuePerLot: 10 }), null);
+  assert.equal(dailyRoomMaxLots({ room: 100, slPips: 20, pipValuePerLot: NaN }), null);
+  // سبريد/عمولة سالبان أو NaN = بلا تكاليف
+  assert.equal(dailyRoomMaxLots({ room: 100, slPips: 20, pipValuePerLot: 10, spreadPips: -1, commissionPerLot: NaN }), 0.5);
+  // خاصية: مخاطرة اللوت المقترح بـ`spreadRisk` ≤ المتبقّي، وخطوة واحدة أكثر تتخطّاه
+  for (let i = 0; i < 3000; i++) {
+    const room = Math.round((1 + Math.random() * 2000) * 100) / 100;
+    const sl = Math.round((1 + Math.random() * 200) * 10) / 10;
+    const pv = Math.round((0.5 + Math.random() * 15) * 1000) / 1000;
+    const sp = Math.round(Math.random() * 30) / 10;
+    const cm = Math.round(Math.random() * 10 * 100) / 100;
+    const l = dailyRoomMaxLots({ room, slPips: sl, pipValuePerLot: pv, spreadPips: sp, commissionPerLot: cm });
+    const per = (sl + sp) * pv + cm;
+    if (l == null) {
+      assert.ok(per * 0.01 > room - 1e-6);
+      continue;
+    }
+    const cost = (lots: number) =>
+      sp || cm
+        ? spreadRisk({ lots, slPips: sl, spreadPips: sp, pipValuePerLot: pv, balance: 1e9, riskPct: 1, contractSize: 100000, commissionPerLot: cm })!.risk
+        : lots * sl * pv;
+    assert.ok(cost(l) <= room + 1e-6, `${l} ${room}`);
+    assert.ok(cost(Math.round((l + 0.01) * 100) / 100) > room - 1e-6);
+  }
+}
+console.log('positionSize dailyRoomMaxLots selftest OK');

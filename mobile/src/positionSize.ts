@@ -1946,6 +1946,32 @@ export function dailyLossRoom(input: {
   };
 }
 
+/**
+ * أكبر لوت يتّسع له **ما بقي قبل حدّ الخسارة اليومي** (`dailyLossRoom().room`) — لسطر التخطّي: «يبقى 80 فقط» وحدها لا تقول
+ * بأيّ حجم يُدخل، والمتداول يقسم بنفسه. كلفة اللوت الواحد عند الوقف = (الوقف + السبريد) × قيمة النقطة + العمولة، كما
+ * `spreadRisk` بالضبط، فاللوت المقترح لا يعود ويتخطّى الحدّ بتكاليفه. للأسفل على خطوة 0.01 (الحدّ بالضبط مسموح).
+ * `null` = لا يتّسع حتى 0.01، أو مدخل غير صالح.
+ */
+export function dailyRoomMaxLots(input: {
+  room: number;
+  slPips: number;
+  pipValuePerLot: number;
+  spreadPips?: number;
+  commissionPerLot?: number;
+}): number | null {
+  const { room, slPips, pipValuePerLot } = input;
+  if (![room, slPips, pipValuePerLot].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const spread = input.spreadPips != null && Number.isFinite(input.spreadPips) && input.spreadPips > 0 ? input.spreadPips : 0;
+  const comm =
+    input.commissionPerLot != null && Number.isFinite(input.commissionPerLot) && input.commissionPerLot > 0
+      ? input.commissionPerLot
+      : 0;
+  const perLot = (slPips + spread) * pipValuePerLot + comm;
+  // هامش الفاصلة العائمة: 100 ÷ (20 × 10 × 0.01) = 49.999… خطوة لا تُقصّ إلى 49
+  const steps = Math.floor(Math.round((room / perLot / LOT_STEP) * 1e6) / 1e6);
+  return steps >= 1 ? Math.round(steps * LOT_STEP * 100) / 100 : null;
+}
+
 /** مفتاح اليوم **المحلّي** «YYYY-MM-DD» — خانة «خسارة اليوم» تُحفظ به (`restoredLostToday`) */
 export function localDayKey(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');

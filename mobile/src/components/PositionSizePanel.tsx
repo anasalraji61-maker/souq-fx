@@ -83,6 +83,7 @@ import {
   lossStreakDrawdownPct,
   scaleOutHalfAtOneR,
   dailyLossRoom,
+  dailyRoomMaxLots,
   localDayKey,
   restoredLostToday,
   spreadTooWide,
@@ -1026,6 +1027,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           riskAmount: withSpread?.risk ?? result.actualRisk,
         })
       : null;
+  /** عند التخطّي: أكبر لوت يتّسع لما بقي، بتكاليفه — راجع `dailyRoomMaxLots` */
+  const dailyFitLots =
+    dailyRoom?.breach && pv != null
+      ? dailyRoomMaxLots({
+          room: dailyRoom.room,
+          slPips: slNum,
+          pipValuePerLot: pv,
+          spreadPips: costs.spreadPips,
+          commissionPerLot: costs.commissionPerLot,
+        })
+      : null;
   /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
   const costParts = [
     spreadPips ? `${spreadPips} ${pipUnit(lang)}` : null,
@@ -1815,7 +1827,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
                 accessibilityLiveRegion="polite"
               >
                 {dailyRoom.breach
-                  ? t.riskCalcDailyBreach.replace('{room}', money(dailyRoom.room))
+                  ? t.riskCalcDailyBreach.replace('{room}', money(dailyRoom.room)) +
+                    (dailyFitLots != null ? ` · ≤ ${dailyFitLots.toFixed(2)} lot` : '')
                   : t.riskCalcDailyRoom
                       .replace('{room}', money(dailyRoom.room))
                       .replace('{n}', String(dailyRoom.losses))
