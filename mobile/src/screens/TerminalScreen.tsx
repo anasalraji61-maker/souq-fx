@@ -825,17 +825,18 @@ export function TerminalScreen() {
   // الخادم أسعاراً مخزّنة قديمة لحاسبة اللوت والتنبيهات. بالعودة يُعاد تشغيل كل تأثير فيجلب فوراً.
   // وتقف كذلك لما لا يُرسم: الإطارات الأربعة تُرسم بشبكة الهاتف وبالتخطيطات المتعدّدة فقط، والشارت الرئيسي بشارت
   // واحد والظلّ على الشاشة العريضة فقط — كان كلاهما يجلب كل 90 ث بلا عرض (1–4 طلبات من حدّ المزوّد نفسه).
+  // ونافذتا التركيز والرباعي (`Modal` معتم بملء الشاشة يجلب رموزه بنفسه) تخفيان كل ما تحتهما — لا جلب خلفهما.
   useEffect(() => {
-    if (!prefsReady || focus || !screenFocused || !framesShown) return;
+    if (!prefsReady || focus || quadOpen || !screenFocused || !framesShown) return;
     void loadTerminal();
     const id = setInterval(() => void loadTerminal(), 90_000);
     return () => clearInterval(id);
-  }, [prefsReady, loadTerminal, focus, screenFocused, framesShown, framesReloadTick]);
+  }, [prefsReady, loadTerminal, focus, quadOpen, screenFocused, framesShown, framesReloadTick]);
 
   // حارس سباق شبكة: تجاهل ردّ متأخر لرمز/فريم زمني سابق (نفس نمط `alive` المستخدَم بلوحة الاقتباس
   // أدناه وبـ`FocusChartModal`/`QuadChartModal`) — تبديل سريع بين رموز المراقبة كان يترك آخر رد وصل
   // (لا آخر رمز مختار فعلياً) هو ما يُعرَض، بصرف النظر عن ترتيب وصول الشبكة الفعلي.
-  const mainShown = !phone && (layoutShape === 'shadow' || layoutCount === 1) && !focus;
+  const mainShown = !phone && (layoutShape === 'shadow' || layoutCount === 1) && !focus && !quadOpen;
   useEffect(() => {
     let alive = true;
     const hit = cachedSeries(symbol, tf);
@@ -853,7 +854,7 @@ export function TerminalScreen() {
   // السطر يُعرض بشريط سطح المكتب لشارت واحد فقط (`desktopQuoteBar`) — على الهاتف وبالتخطيطات المتعدّدة والظلّ
   // وتحت نافذة التركيز كان الاستطلاع يجري كل 90 ث بلا عرض، يستهلك حدّ المزوّد نفسه الذي إن نفد (429) أعاد
   // الخادم أسعاراً مخزّنة قديمة لحاسبة اللوت وللتنبيهات.
-  const showsSpread = screenFocused && !phone && layoutCount === 1 && layoutShape !== 'shadow' && !focus;
+  const showsSpread = screenFocused && !phone && layoutCount === 1 && layoutShape !== 'shadow' && !focus && !quadOpen;
   useEffect(() => {
     let alive = true;
     // لا نُبقي Bid/Ask الرمز السابق تحت اسم الرمز الجديد حتى يصل الرد
@@ -883,8 +884,10 @@ export function TerminalScreen() {
     };
   }, [symbol, showsSpread]);
 
+  // الظلّ يُرسم فوق الشارت الرئيسي وحده: لا جلب تحت التركيز/الرباعي ولا بشبكة الهاتف (تخطيط «shadow» محفوظ من شاشة
+  // عريضة) — كان يجلب الفريمات الثلاثة كل 90 ث (حتى 5000 شمعة لكلٍّ) لشارت لا يُرى، وكل رمز يُختار بنافذة التركيز ثلاثة أخرى
   useEffect(() => {
-    if (!prefsReady || layoutShape !== 'shadow' || !screenFocused) {
+    if (!prefsReady || layoutShape !== 'shadow' || !screenFocused || phone || focus || quadOpen) {
       return;
     }
     const gen = ++shadowLoadGen.current;
@@ -948,6 +951,9 @@ export function TerminalScreen() {
     shadowEnabled,
     series?.candles?.length,
     screenFocused,
+    phone,
+    focus,
+    quadOpen,
   ]);
 
   // عند مغادرة وضع الظل فقط نفرّغ الذاكرة
