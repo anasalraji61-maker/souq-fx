@@ -1194,7 +1194,8 @@ export type Dict = {
   /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. واختصارات Alt (`DRAW_TOOL_SHORTCUTS` بـ`drawEdit.ts`،
    * و`KeyR` لإعادة العرض بـ`MatrixChart.tsx`؛ المستطيل Alt+B لا R — `5786c8f`) — لا تلميح غيره يذكرها، فبلا هذا السطر لا يعرف
    * بها أحد. أسماء الأدوات = `ctlToolTrend/Hline/Vline/Fib`. W4 (`864f192`): «+/−» تكبير وF **المجرّد** ملء الشاشة — لذا Alt يُكتب
-   * صراحةً قبل الأحرف الأربعة («Alt+T/H/V/F») فلا يُقرأ «F فيبو» كمفتاح مجرّد. */
+   * صراحةً قبل الأحرف الأربعة («Alt+T/H/V/F») فلا يُقرأ «F فيبو» كمفتاح مجرّد. chart-r95b: Alt+A تنبيه سعر عند التقاطع — السعر تحت
+   * مؤشّر الفأرة أو المثبَّت، كزرّ ⚑ (`altAlertRef`، `b1169c4`). */
   mcHintNavigateWeb: string;
   /**
    * الويب: يُلحق بـ`mcHintNavigateWeb` حين يبدّل المضيف الفريم بالكتابة (`onTimeframeKey`، `tfTyping.ts` — `fcb9d16`).
@@ -1218,7 +1219,8 @@ export type Dict = {
   shortcutsMouseWeb: string;
   /** الويب بالفأرة وأداة رسم نشطة: Shift يثبّت طرف الترند/الشعاع/القناة الثاني على سعر الأوّل (`lockDrawEnd`، chart `71468ae`)، Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
   mcHintDrawWeb: string;
-  /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`). */
+  /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`).
+   * chart-r95a: Ctrl/⌘+C ينسخه وCtrl/⌘+V يلصق نسخة بجانبه — نفس الرمز والفريم (`bbd5f51`). */
   mcHintSelectedWeb: string;
   /** أداة «تحديد» ولا رسم محدَّد: اللمس على رسم يحدّده، وعلى فراغ يلغي التحديد (`hitDrawing`). */
   mcHintSelect: string;
@@ -2567,13 +2569,13 @@ const ar: Dict = {
   mcClearWord: 'مسح',
   mcHintDraw: 'اسحب لرسم، أو المس نقطتين · يُحفظ تلقائياً',
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
-  mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · +/− تكبير وتصغير · F ملء الشاشة · Alt+R لإعادة العرض · Alt+T/H/V/F ترند/أفقي/عمودي/فيبو',
+  mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · +/− تكبير وتصغير · F ملء الشاشة · Alt+R لإعادة العرض · Alt+T/H/V/F ترند/أفقي/عمودي/فيبو · Alt+A تنبيه عند السعر تحت المؤشّر',
   mcHintTypeTfWeb: ' · 1–8 للفريم بترتيبه (1 = 1m … 8 = W) · أو اكتب 15 أو 4h ثم Enter',
   shortcutsSheetTitle: 'اختصارات لوحة المفاتيح',
   mcHintTypeDateWeb: ' · Home/End لأقدم شمعة وللحيّ · اكتب 2026-09-01 ثم Enter للانتقال إلى ذلك اليوم',
   shortcutsMouseWeb: ' · الزرّ الأيمن على الشارت: تنبيه أو خطّ أفقي عند ذلك السعر، أو إعادة العرض · الزرّ الأيمن على رسم: نسخه أو قفله أو حذفه · انقر رسماً لتحديده وتحريكه',
   mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Shift يُبقي الترند أو الشعاع أو القناة أفقياً · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
-  mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
+  mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Ctrl+C / Ctrl+V لنسخه بجانبه',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
@@ -3813,13 +3815,13 @@ const enUS: Dict = {
   mcClearWord: 'Clear',
   mcHintDraw: 'Drag to draw, or tap two points · saved automatically',
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
-  mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · +/− zoom · F full screen · Alt+R resets the view · Alt+T/H/V/F trend/H-line/V-line/Fib',
+  mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · +/− zoom · F full screen · Alt+R resets the view · Alt+T/H/V/F trend/H-line/V-line/Fib · Alt+A alert at the price under the pointer',
   mcHintTypeTfWeb: ' · 1–8 picks a timeframe in order (1 = 1m … 8 = W) · or type 15 or 4h then Enter',
   shortcutsSheetTitle: 'Keyboard shortcuts',
   mcHintTypeDateWeb: ' · Home/End for oldest bar / live · type 2026-09-01 then Enter to jump to that day',
   shortcutsMouseWeb: ' · Right-click the chart: alert or horizontal line at that price, or reset the view · Right-click a drawing: clone, lock or delete it · Click a drawing to select and move it',
   mcHintDrawWeb: 'Drag to draw, or click two points · Shift keeps a trend, ray or channel level · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
-  mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
+  mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo · Ctrl+C / Ctrl+V to copy it alongside',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
@@ -5107,13 +5109,13 @@ const ku: Dict = {
   mcClearWord: 'سڕینەوە',
   mcHintDraw: 'ڕایبکێشە بۆ کێشان، یان دوو خاڵ دابگرە · خۆکار پاشەکەوت دەبێت',
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
-  mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · +/− گەورە و بچووککردنەوە · F پڕکردنەوەی شاشە · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T/H/V/F ترێند/ئاسۆیی/ستوونی/فیبۆ',
+  mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · +/− گەورە و بچووککردنەوە · F پڕکردنەوەی شاشە · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T/H/V/F ترێند/ئاسۆیی/ستوونی/فیبۆ · Alt+A ئاگادارکردنەوە لەو نرخەی ماوسەکەی لەسەرە',
   mcHintTypeTfWeb: ' · 1–8 بۆ تایم‌فرەیم بە ڕیز (1 = 1m … 8 = W) · یان 15 یان 4h بنووسە و Enter دابگرە',
   shortcutsSheetTitle: 'کورتبڕەکانی کیبۆرد',
   mcHintTypeDateWeb: ' · Home/End بۆ کۆنترین مۆم و ڕاستەوخۆ · 2026-09-01 بنووسە و Enter دابگرە بۆ چوون بۆ ئەو ڕۆژە',
   shortcutsMouseWeb: ' · کلیکی ڕاست لەسەر چارت: ئاگادارکردنەوە یان هێڵی ئاسۆیی لەو نرخەدا، یان ڕێکخستنەوەی پیشاندان · کلیکی ڕاست لەسەر وێنەکێشانێک: کۆپی، قوفڵ یان سڕینەوەی · کلیک لە وێنەکێشانێک بکە بۆ دیاریکردن و جوولاندنی',
   mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Shift ترێند، تیشک یان کەناڵ بە ئاسۆیی دەهێڵێتەوە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
-  mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
+  mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Ctrl+C / Ctrl+V بۆ کۆپیکردنی لە تەنیشتیەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
