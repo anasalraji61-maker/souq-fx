@@ -1103,3 +1103,4 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **قائمة قبول DESIGN-PRO (العشرون):** 0/12 فشل (diff منذ 40054bc، 8 ملفّات: `longPressHint` 11px/`lineHeight` 16/`textMuted`؛ الباقي منطق).
 **المراجعة (e — ما يُحرج أمام متداول):** tsx على `parseLeverage`/`parseDecimal`: «1 30» ⇒ null، «1 : 30»/«١:٣٠»/«1：100»/RLM ⇒ صحيحة، «1:1.000» ⇒ سؤال الآلاف، «‏10.000» ⇒ 10 مع كاشف السؤال؛ «30x» مرفوضة (اتجاه آمن). **لا بند.**
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (aff05e2):** أخضر 0؛ `tfTyping.selftest` ناجح. أُغلق **launch165a** ← ui `6e980ef` و**ui72a** ← tools `aff05e2` (`TerminalScreen.tsx:2071` `"none"`). ui `010eb77` (§5.6) و`5f9d49f` (8/12)، chart `304ddfa` (انتقال لتاريخ) ⇒ 0/12 باقٍ. لا بند مفتوح على وكيل.
