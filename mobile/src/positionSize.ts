@@ -984,14 +984,17 @@ export function ambiguousSlPips(raw: string): { value: string; whole: string; sm
  * بمنصّة MT4/MT5 عُشر pip بأسعار الخمس خانات، وقراءتها pip = لوت أصغر بعشر مرّات. يُرجع الرقم كما كُتب و`pips` = ÷10 لرسالة
  * `riskCalcSlPointsHint` («اكتب 25 pip») بدل «رقم غير مفهوم» — **تلميح لا تحويل**: بعض الوسطاء يسمّون الـpip «نقطة»، فلا نخمّن.
  * `null` = لا كلمة نقاط، أو الرقم قبلها غير مفهوم/مبهم/صفر.
+ *
+ * `native` = الكلمة عربية/كردية («نقطة/نقاط/خاڵ»): بالعربية «25 نقطة» تعني **pip** عند أغلب المتداولين، فتلميح «اكتب 2.5 pip»
+ * يجعل من يتبعه يأخذ لوتاً ×10 (4 لوت بمخاطرة «100 USD» وخسارته عند الوقف 1,000). لها لا يُعرض تلميح ÷10 — يبقى الرفض فقط.
  */
-const POINT_WORDS = /^(.+?)\s*(?:points?|pts?|نقطة|نقاط|نقطه|خاڵ|خال)\.?$/i;
-export function slPipsInPoints(raw: string): { value: string; pips: string } | null {
+const POINT_WORDS = /^(.+?)\s*(points?|pts?|نقطة|نقاط|نقطه|خاڵ|خال)\.?$/i;
+export function slPipsInPoints(raw: string): { value: string; pips: string; native: boolean } | null {
   const m = POINT_WORDS.exec(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, '').trim());
   if (!m) return null;
   const n = parseDecimal(m[1], { amount: true });
   if (n == null || !(n > 0)) return null;
-  return { value: raw.trim(), pips: String(Number((n / 10).toFixed(4))) };
+  return { value: raw.trim(), pips: String(Number((n / 10).toFixed(4))), native: !/^p/i.test(m[2]) };
 }
 
 export const LOT_STEP = 0.01;

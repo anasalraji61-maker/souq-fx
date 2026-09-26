@@ -647,7 +647,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   /** «1.500» بخانة النقاط وحدها مرفوضة: 1500 أم 1.5؟ — القراءتان بدل «مثل 1.0850» (`ambiguousSlPips`) */
   const slAmbig = ambiguousSlPips(slPips);
   const onlySlBad = badFields.every(([label, v, bad]) => label === t.riskCalcSlPips || v.trim() === '' || !bad);
-  /** «250 points» بخانة الوقف: النقطة بـMT4/MT5 عُشر pip ⇒ «اكتب 25 pip» بدل «رقم غير مفهوم» (`slPipsInPoints`، مفتاح launch) */
+  /**
+   * «250 points» بخانة الوقف: النقطة بـMT4/MT5 عُشر pip ⇒ «اكتب 25 pip» بدل «رقم غير مفهوم» (`slPipsInPoints`، مفتاح launch).
+   * «25 نقطة» عربية/كردية (`native`) لا: أغلب المتداولين العرب يقصدون بها pip، و«اكتب 2.5 pip» = لوت ×10
+   */
   const slPoints = slPipsInPoints(slPips);
   /**
    * «€40» بحساب دولار وحدها مرفوضة: المبلغ مفهوم والعملة ليست عملة الحساب (`moneyInOtherCurrency`) ⇒ «…: عملة الحساب USD» بدل
@@ -673,7 +676,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       : slPipsLooksLikePrice(slPips, spec) && onlySlBad
       ? // «1.0820» بخانة النقاط سعرٌ لا مسافة (كانت 1.08 pip ⇒ لوت أكبر بعشرين مرّة) — تُسمّى خانة سعر الوقف التي يقصدها (launch88)
         t.riskCalcSlLooksLikePrice.replace('{value}', () => slPips.trim())
-      : slPoints && onlySlBad
+      : slPoints && !slPoints.native && onlySlBad
       ? t.riskCalcSlPointsHint.replace('{value}', () => slPoints.value).split('{pips}').join(slPoints.pips)
       : onlyOtherCcy
       ? t.riskCalcOtherCcyHint
@@ -709,7 +712,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           fillExampleOrDrop(t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide)), typicalSpreadPipsExample(spec))
         : misplacedArabicThousandsSign(spread, { unit: 'pip' })
           ? t.arabicThousandsSignHint
-          : spreadPoints
+          : spreadPoints && !spreadPoints.native
             ? // «12 points» كما تعرضها MT4/MT5 ⇒ «اكتبه هنا 1.2» بدل «رقم غير مفهوم» (tools63، مفتاح launch)
               t.riskCalcSpreadPointsHint.replace('{value}', () => spreadPoints.value).split('{pips}').join(spreadPoints.pips)
             : t.invalidNumberHint;
