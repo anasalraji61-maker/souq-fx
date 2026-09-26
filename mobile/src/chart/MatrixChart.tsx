@@ -8743,17 +8743,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   zIndex: 4,
                 }}
               >
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: primaryColW / 2 - 0.5,
-                    top: wickTop,
-                    width: 1,
-                    height: wickClipH,
-                    backgroundColor: color,
-                    opacity: 0.9,
-                  }}
-                />
+                {/* الشمعة المجوّفة الصاعدة: الذيل قطعتان فوق الجسم وتحته — ذيل كامل كان خطّاً داخل الجسم الفارغ،
+                    فعلى الهاتف (جسم 5px بإطار 1.5px) تبدو الشمعة ممتلئة كالعادية. */}
+                {(kind === 'hollow' && bull && bodyClipH > 0
+                  ? [
+                      [wickTop, bodyClipTop - wickTop],
+                      [bodyClipTop + bodyClipH, wickTop + wickClipH - (bodyClipTop + bodyClipH)],
+                    ]
+                  : [[wickTop, wickClipH]]
+                ).map(([wt, wh], k) =>
+                  wh > 0 ? (
+                    <View
+                      key={k}
+                      style={{
+                        position: 'absolute',
+                        left: primaryColW / 2 - 0.5,
+                        top: wt,
+                        width: 1,
+                        height: wh,
+                        backgroundColor: color,
+                        opacity: 0.9,
+                      }}
+                    />
+                  ) : null
+                )}
                 {bodyClipH > 0 ? (
                   <View
                     style={{
