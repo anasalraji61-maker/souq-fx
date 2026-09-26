@@ -94,3 +94,15 @@ def test_unknown_username_costs_a_hash(client, monkeypatch):
     monkeypatch.setattr(db, "_hash_password_pbkdf2", lambda *a: calls.append(a[2]) or real(*a))
     assert _login(client, "nobody", "x1234").status_code == 401
     assert calls == [1_000]
+
+
+def test_password_change_without_install_id_unbinds_keyless_push(client):
+    tok, uid = _register(client)
+    sponsor = _login(client, "alice", "old1234").json()["token"]
+    assert client.post("/api/push/register", json={"token": "ExponentPushToken[sponsorXX]"},
+                       headers={"Authorization": f"Bearer {sponsor}"}).status_code == 200
+    assert db.push_tokens_for(uid) == ["ExponentPushToken[sponsorXX]"]
+    r = client.post("/api/auth/password", json={"current_password": "old1234", "new_password": "new5678"},
+                    headers={"Authorization": f"Bearer {tok}"})
+    assert r.status_code == 200
+    assert db.push_tokens_for(uid) == []

@@ -1651,9 +1651,12 @@ def change_password(
             raise ValueError("invalid current password")
         c.execute("UPDATE users SET password_hash=? WHERE id=?", (_encode_password(new), user_id))
         c.execute("DELETE FROM sessions WHERE user_id=? AND token<>?", (user_id, session_token))
-        c.execute(
-            "UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND owner_key IS NOT ?", (user_id, owner_key)
-        )
+        # بلا معرّف تثبيت لا نعرف جهاز الطلب ⇒ يُفكّ الكل (كان `owner_key IS NOT NULL` فيبقى رمز قديم بلا
+        # مفتاح — هاتف الراعي — مربوطاً ويتلقّى تنبيهات العضو). جهاز الطلب يعيد التسجيل عند فتح التطبيق.
+        if owner_key:
+            c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND owner_key IS NOT ?", (user_id, owner_key))
+        else:
+            c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=?", (user_id,))
 
 
 def all_push_tokens() -> list[str]:
