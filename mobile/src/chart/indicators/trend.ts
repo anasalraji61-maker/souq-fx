@@ -1495,10 +1495,9 @@ export function computeKama(
  * تشبّع 75/25 بدل 70/30 — القيمتان القياسيتان لـSTC تحديداً بمعظم المصادر المرجعية، أوسع من RSI لأن
  * STC أصلاً أسرع استجابة فيحتاج عتبات أبعد لتقليل الإشارات الكاذبة).
  * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سعر ثابت تماماً 150 شمعة → macd=0 ثابت بكل نافذة
- * (مدى صفري) → القيمة السابقة المحمولة تبقى 0 بذرتها الأولية بلا أي NaN عبر 83 نقطة صالحة؛ 300 شمعة
- * عشوائية بذرة ثابتة → صفر NaN/Infinity عبر 233 نقطة صالحة بالضبط (يطابق حساب warm-up يدوياً: أول
- * macd صالح عند الفهرس 49 [slowLength−1]، أول pf صالح عند 58 [49+cyclePeriod−1]، أول STC صالح عند
- * 67 [58+cyclePeriod−1] → 300−67=233 تماماً)، وكل قيمة صالحة ضمن [0,100] بالضبط بلا استثناء.
+ * (مدى صفري) → القيمة السابقة المحمولة تبقى 0 بذرتها الأولية بلا أي NaN؛ أول macd صالح عند الفهرس 49
+ * [slowLength−1] وأول STC عند 58 [49+cyclePeriod−1] كـTV (المرحلتان تُمهَّدان من صفر `var` لا من أول قيمة —
+ * selftest `stcTv`)، وكل قيمة صالحة ضمن [0,100] بالضبط بلا استثناء.
  */
 export function computeStc(
   closes: number[],
@@ -1514,55 +1513,55 @@ export function computeStc(
     emaFast[i] != null && emaSlow[i] != null ? emaFast[i]! - emaSlow[i]! : null
   );
 
-  const pf: (number | null)[] = new Array(n).fill(null);
+  // حالة Pine `var … = 0.0` من الشمعة 0: قبل اكتمال نافذة MACD تبقى f1 = 0 ويُمهَّد pf منها، ونافذة المرحلة الثانية
+  // تضمّ تلك الأصفار. كانت كل مرحلة تبدأ من أول قيمة صالحة لها ⇒ ~25 شمعة بعد الإحماء عند 0 بينما TV يتلاشى من ~27
+  // (يعبر 25 ⇒ «تشبّع بيعي» كاذب على تاريخ قصير كالأسبوعي). يُرسَم من أول نافذة MACD صالحة.
+  const pf: number[] = new Array(n).fill(0);
+  let firstValid = -1;
   let f1Prev = 0;
   let pfPrev = 0;
-  let havePf = false;
   for (let i = 0; i < n; i++) {
-    if (i < cyclePeriod - 1) continue;
-    let lo = Infinity;
-    let hi = -Infinity;
-    let windowOk = true;
-    for (let w = i - cyclePeriod + 1; w <= i; w++) {
-      if (macd[w] == null) {
-        windowOk = false;
-        break;
+    let f1 = f1Prev;
+    if (i >= cyclePeriod - 1) {
+      let lo = Infinity;
+      let hi = -Infinity;
+      let windowOk = true;
+      for (let w = i - cyclePeriod + 1; w <= i; w++) {
+        if (macd[w] == null) {
+          windowOk = false;
+          break;
+        }
+        lo = Math.min(lo, macd[w]!);
+        hi = Math.max(hi, macd[w]!);
       }
-      lo = Math.min(lo, macd[w]!);
-      hi = Math.max(hi, macd[w]!);
+      if (windowOk) {
+        if (firstValid < 0) firstValid = i;
+        const range = hi - lo;
+        if (range > 0) f1 = ((macd[i]! - lo) / range) * 100;
+      }
     }
-    if (!windowOk) continue;
-    const range = hi - lo;
-    const f1 = range > 0 ? ((macd[i]! - lo) / range) * 100 : f1Prev;
     f1Prev = f1;
-    const p = havePf ? pfPrev + 0.5 * (f1 - pfPrev) : f1;
-    pfPrev = p;
-    havePf = true;
-    pf[i] = p;
+    pfPrev = i === 0 ? f1 : pfPrev + 0.5 * (f1 - pfPrev);
+    pf[i] = pfPrev;
   }
 
   let f2Prev = 0;
   let pffPrev = 0;
-  let havePff = false;
   for (let i = 0; i < n; i++) {
-    if (pf[i] == null) continue;
-    let lo = Infinity;
-    let hi = -Infinity;
-    let count = 0;
-    for (let w = i; w >= 0 && count < cyclePeriod; w--) {
-      if (pf[w] == null) break;
-      lo = Math.min(lo, pf[w]!);
-      hi = Math.max(hi, pf[w]!);
-      count++;
+    let f2 = f2Prev;
+    if (i >= cyclePeriod - 1) {
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (let w = i - cyclePeriod + 1; w <= i; w++) {
+        lo = Math.min(lo, pf[w]);
+        hi = Math.max(hi, pf[w]);
+      }
+      const range = hi - lo;
+      if (range > 0) f2 = ((pf[i] - lo) / range) * 100;
     }
-    if (count < cyclePeriod) continue;
-    const range = hi - lo;
-    const f2 = range > 0 ? ((pf[i]! - lo) / range) * 100 : f2Prev;
     f2Prev = f2;
-    const p2 = havePff ? pffPrev + 0.5 * (f2 - pffPrev) : f2;
-    pffPrev = p2;
-    havePff = true;
-    out[i] = Math.max(0, Math.min(100, p2));
+    pffPrev = i === 0 ? f2 : pffPrev + 0.5 * (f2 - pffPrev);
+    if (firstValid >= 0 && i >= firstValid) out[i] = Math.max(0, Math.min(100, pffPrev));
   }
   return out;
 }
