@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 122، على f8a1999) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 123، على 4e69258) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -21,9 +21,8 @@
 | QA | أنس | **QA107a** (بلا قرار سابق — القرار ٤ خاصّ بالمساعد): «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض «مستويات محسوبة: دخول · وقف · هدف» بأسعار (ATR من `/api/signals/indicators/forecast`، backend أبقاه عمداً). المنطق نفسه (`app.json` «لا يقدّم نصيحة استثمارية») ينطبق؟ إخفاء المستويات وإبقاء التصويت، أم كما هي؟ | QA107 |
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
 | chart | ui | **chart103a** (وجده مراجِع، مُعاد إنتاجه): رأس `FocusChartModal.tsx:383` `formatPrice(headPrice, sym)` بلا مرجع ⇒ منازله من رقم الرأس وحده، والشارت تحته (`fmtPrice` بمرجع `series.last`) والإطار/الرباعي (`ChartFrame.tsx:474`، `QuadChartModal.tsx:269`) بمرجع ⇒ حين يعبر التيك حدّ 10/100 عن `series.last` يختلفان: XNGUSD تيك 9.998 وlast 10.002 ⇒ الرأس «9.99800» والشارت «9.998»؛ SOLUSD 99.95/100.02 ⇒ «99.950» مقابل «99.95». الحلّ: `formatPrice(headPrice, sym, headSeries?.last)`، وكذلك `:286` (رسالة «مُسلَّح») و`:336` (B/A بمرجع `headSeries?.last` بدل `quote.bid`) | chart103 |
-| launch | tools | **launch193a** شريحة الذهب/الفضة (`22d2ef4`، `TradeJournalPanel.tsx` كتلة `sizeMetal`) تعيد استعمال `journalSizeUnitsFix` ⇒ على XAUUSD «50» تقول «⚠ 50 تبدو عدد وحدات لا لوتات» — جزمٌ بتحذير لسؤال مقصود أنه لا يمنع الحفظ، و«وحدات» لا «أونصات». المفتاح الجديد `t.journalSizeMetalOuncesFix` (نفس `{n}`/`{lots}`): «هل 50 أونصة لا لوت؟ اضغط للتحويل إلى 0.50 lot». المطلوب: استبدال المفتاح في `accessibilityLabel` والنصّ داخل كتلة `sizeMetal` فقط | launch193 |
 
-**تحقّق الدورة 122 (بالكود، على f8a1999):** البناء أخضر 0، selftests 123/123 ناجح.
-**أُغلق:** QA120a ← tools `0434306` (`tradePlan.ts:522` ثوانٍ اختيارية؛ بـ`npx tsx` TZ=Asia/Baghdad: «2026.09.26 14:05:30» ⇒ `14:05:00+03:00`، «:61» ⇒ null)؛ launch191a ← tools `6e7541f` (`tradePlan.ts:506–508` ⇒ «2026-09-10 14:30»). **بعد السحب (286c28f):** جديد مُتحقَّق **chart103a → ui** (`FocusChartModal.tsx:383` `formatPrice(headPrice, sym)` بلا مرجع، `:286` كذلك، `:336` بمرجع `quote.bid`؛ `ChartFrame.tsx:474`/`QuadChartModal.tsx:269` بمرجع `last`).
-**قائمة قبول DESIGN-PRO (الثاني والأربعون): 0 من 12 فشل** — diff منذ 62f494f: «⋯» `selectedFill`+`text` بلا حدّ ولا ظلّ (`ModerationActions.tsx`)؛ الباقي منطق (`marketHours` كسر الشمعة، `tradePlan`).
-**المراجعة (b — نصوص ثابتة):** وسوم JSX = مصطلحات (Log، TPO، MA/MACD، MATRIX)، `placeholder="EURUSD"` ×3؛ العربية خارج `i18n` = مفاتيح خريطة الخادم (`CommissionPlanPanel`)، موجّهات المساعد (`WeeklyReportPanel`)، بدائل احتياطية (`measureReadout`)، ومحتوى `academy.ts` بحقول `_en`. **لا بند.**
+**تحقّق الدورة 123 (بالكود، على 4e69258):** البناء أخضر 0، selftests 123/123 ناجح.
+**أُغلق:** launch193a ← tools `33b2b0f` (`TradeJournalPanel.tsx:2342/2345` `journalSizeMetalOuncesFix` بالتسمية والنصّ). **مفتوح مُتحقَّق:** chart103a → ui (`FocusChartModal.tsx:383` ما زال `formatPrice(headPrice, sym)`، `:286` كذلك، `:336` بمرجع `quote.bid`) — دورة ثانية.
+**قائمة قبول DESIGN-PRO (الثالث والأربعون): 0 من 12 فشل** — diff منذ 286c28f بلا تغيير أنماط: نصّ شريحة «الكل» (`CalendarPanel.tsx:475`)، إرجاع التصويت، مؤشّر البحث، `newsClockMs` — منطق ونصوص.
+**المراجعة (c — `accessibilityLabel`):** مسح AST لكل `Pressable`/`Touchable*` ⇒ 6 أغلفة `accessible={false}` المعروفة نفسها. **لا بند.**
