@@ -351,7 +351,37 @@ function forexWeekAround(sec: number, symbol = ''): { open: number; close: numbe
 }
 
 /**
- * ثواني **التداول** بين `a` و`b` (a ≤ b): المدى ناقص عطل نهاية الأسبوع (الجمعة 17:00 → الأحد 17:00 نيويورك).
+ * فترات التداول داخل أسبوع `wk` (تصاعدياً): الأسبوع ناقص جلستَي عطلة الفوركس (25/12، 1/1 — `isForexHolidaySession`)
+ * إن وقعتا فيه. بدونها كان ترند رُسم قبل الميلاد ويُعرض على M15 بعده يبدأ يوماً كاملاً (96 شمعة) يساراً.
+ * نهاية الجلسة 17:00 نيويورك (+ساعة لرموز CME كـ`nextForexOpenSec`).
+ */
+function weekTradingSpans(wk: { open: number; close: number }, symbol = ''): [number, number][] {
+  const late = isLateOpenSymbol(symbol.trim()) ? 3600 : 0;
+  const holidays: [number, number][] = [];
+  const y0 = new Date(wk.open * 1000).getUTCFullYear();
+  for (const y of [y0, y0 + 1]) {
+    for (const day of [Date.UTC(y - 1, 11, 25) / 1000, Date.UTC(y, 0, 1) / 1000, Date.UTC(y, 11, 25) / 1000]) {
+      const hs = nyFivePmUtcSec(day - DAY_SEC);
+      const he = nyFivePmUtcSec(day) + late;
+      const lo = Math.max(hs, wk.open);
+      const hi = Math.min(he, wk.close);
+      if (hi > lo && !holidays.some(([a, b]) => a === lo && b === hi)) holidays.push([lo, hi]);
+    }
+  }
+  holidays.sort((x, z) => x[0] - z[0]);
+  const spans: [number, number][] = [];
+  let from = wk.open;
+  for (const [lo, hi] of holidays) {
+    if (lo > from) spans.push([from, lo]);
+    from = Math.max(from, hi);
+  }
+  if (wk.close > from) spans.push([from, wk.close]);
+  return spans;
+}
+
+/**
+ * ثواني **التداول** بين `a` و`b` (a ≤ b): المدى ناقص عطل نهاية الأسبوع (الجمعة 17:00 → الأحد 17:00 نيويورك)
+ * وجلستَي 25/12 و1/1 (`weekTradingSpans`).
  * لإرساء الرسومات قبل أوّل شمعة محمَّلة (`drawingAnchors.ts`): على M15 (180 شمعة < أسبوع) كانت عطلة 48 ساعة
  * تُعدّ 192 شمعة. الكريبتو لا يستعملها (يتداول 24/7). `symbol` ⇒ افتتاح جلسته (`forexWeekAround`).
  */
@@ -362,14 +392,18 @@ export function forexTradingSecBetween(a: number, b: number, symbol = ''): numbe
   for (let guard = 0; guard < 5000 && t > a; guard++) {
     const wk = forexWeekAround(t, symbol);
     if (t > wk.close) t = wk.close; // داخل العطلة ⇒ من إغلاق الجمعة
-    if (wk.open <= a) return acc + Math.max(0, t - a);
-    acc += t - wk.open;
+    for (const [s0, e0] of weekTradingSpans(wk, symbol)) {
+      const lo = Math.max(s0, a);
+      const hi = Math.min(e0, t);
+      if (hi > lo) acc += hi - lo;
+    }
+    if (wk.open <= a) return acc;
     t = forexWeekAround(wk.open - 1, symbol).close;
   }
   return acc;
 }
 
-/** الزمن الذي يسبق `from` بـ`sec` ثانية **تداول** (يتخطّى عطل نهاية الأسبوع) — عكس `forexTradingSecBetween`. */
+/** الزمن الذي يسبق `from` بـ`sec` ثانية **تداول** (يتخطّى عطل نهاية الأسبوع و25/12 و1/1) — عكس `forexTradingSecBetween`. */
 export function forexTimeBeforeTrading(from: number, sec: number, symbol = ''): number {
   if (!Number.isFinite(from) || !Number.isFinite(sec)) return from;
   let t = from;
@@ -377,8 +411,14 @@ export function forexTimeBeforeTrading(from: number, sec: number, symbol = ''): 
   for (let guard = 0; guard < 5000; guard++) {
     const wk = forexWeekAround(t, symbol);
     if (t > wk.close) t = wk.close;
-    if (t - wk.open >= left) return t - left;
-    left -= t - wk.open;
+    const spans = weekTradingSpans(wk, symbol);
+    for (let k = spans.length - 1; k >= 0; k--) {
+      const [s0, e0] = spans[k]!;
+      if (s0 >= t) continue;
+      const end = Math.min(e0, t);
+      if (end - s0 >= left) return end - left;
+      left -= end - s0;
+    }
     t = forexWeekAround(wk.open - 1, symbol).close;
   }
   return t - left;

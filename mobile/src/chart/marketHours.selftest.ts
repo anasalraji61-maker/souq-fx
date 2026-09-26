@@ -158,3 +158,23 @@ assert.equal(isForexMarketOpen('USDJPY', at(2026, 8, 27, 21, 30)), true);
   assert.equal(forexTimeBeforeTrading(s(at(2026, 8, 27, 22, 30)), 3600, 'XAUUSD'), s(at(2026, 8, 25, 20, 30)));
 }
 console.log('marketHours.selftest (session week open): PASS');
+
+// جلستا 25/12 و1/1 ليستا زمن تداول (كـ`isForexMarketOpen`): 2026-12-23 → 2027-01-05 = 168 ساعة لا 216،
+// والخميس 24/12 12:00Z قبل الاثنين 28/12 00:00Z بـ12 ساعة تداول (10 يوم 24 + ساعتا مساء الأحد) لا 36.
+{
+  const H = 3600;
+  const a = Date.UTC(2026, 11, 23) / 1000;
+  const b = Date.UTC(2027, 0, 5) / 1000;
+  let brute = 0;
+  for (let t = a; t < b; t += 60) if (isForexMarketOpen('EURUSD', new Date(t * 1000))) brute += 60;
+  assert.equal(forexTradingSecBetween(a, b, 'EURUSD'), brute);
+  assert.equal(brute, 168 * H);
+  const mon = Date.UTC(2026, 11, 28) / 1000;
+  const thu = Date.UTC(2026, 11, 24, 12) / 1000;
+  assert.equal(forexTradingSecBetween(thu, mon, 'EURUSD'), 12 * H);
+  assert.equal(forexTimeBeforeTrading(mon, 12 * H, 'EURUSD'), thu);
+  // لا يرسو داخل جلسة العطلة (2025: الميلاد خميس): 3 ساعات تداول قبل 26/12 00:00Z = ساعتان (25/12 22:00Z→)
+  // + ساعة قبل 24/12 22:00Z ⇒ 24/12 21:00Z.
+  assert.equal(forexTimeBeforeTrading(Date.UTC(2025, 11, 26) / 1000, 3 * H, 'EURUSD'), Date.UTC(2025, 11, 24, 21) / 1000);
+}
+console.log('marketHours.selftest (holiday sessions): PASS');
