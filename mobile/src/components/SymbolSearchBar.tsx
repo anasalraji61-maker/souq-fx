@@ -56,6 +56,8 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
       setAmbiguous([]);
       setError(false);
       setSearchedQ('');
+      // مسح النصّ أثناء طلب قائم: تنظيف الطلب يُطفئ `alive` فلا يُطفئ `finally` مؤشّره ⇒ كان يدور تحت خانة فارغة.
+      setLoading(false);
       return;
     }
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشريط أو تغيّر نص البحث لاحقاً — يشمل
