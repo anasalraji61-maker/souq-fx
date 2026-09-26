@@ -10586,7 +10586,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <PaneGuideLines paneId="demarker" innerH={paneH - 16} />
-            <BoundedLineSeries values={demarker} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
+            <BoundedLineSeries values={demarker} paneH={paneH} max={1} color={(v) => (v > 0.7 ? colors.bear : v < 0.3 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}

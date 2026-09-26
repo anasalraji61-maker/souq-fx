@@ -386,7 +386,13 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.deepEqual(PANE_GUIDES.stc.levels.map((l) => l.v), [75, 25]);
   assert.deepEqual(PANE_GUIDES.connorsRsi.levels.map((l) => l.v), [90, 10]);
   assert.deepEqual(PANE_GUIDES.tii.levels.map((l) => l.v), [80, 20]);
-  for (const id of ['demarker', 'rmi', 'cutlerRsi', 'ultimateOsc']) {
+  // DeMarker بمقياس 0–1 (قرار أنس ١١): خانتان عشريتان ‎0.63‎، والحالة من 0.7/0.3.
+  assert.deepEqual(PANE_GUIDES.demarker.levels.map((l) => l.v), [0.7, 0.3]);
+  assert.equal(paneBoundedDecimals('demarker'), 2);
+  assert.equal(paneValueState('demarker', 0.75), 'high');
+  assert.equal(paneValueState('demarker', 0.25), 'low');
+  assert.equal(paneValueState('demarker', 0.5), 'mid');
+  for (const id of ['rmi', 'cutlerRsi', 'ultimateOsc']) {
     assert.deepEqual(PANE_GUIDES[id].levels.map((l) => l.v), [70, 30], id);
   }
   assert.equal(paneValueState('chop', 62), 'high');

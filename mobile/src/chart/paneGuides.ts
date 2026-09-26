@@ -165,12 +165,13 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
       { v: 20, kind: 'extreme' },
     ],
   },
+  /** DeMarker بمقياس 0–1 كـMT4/MT5 (قرار أنس ١١) — عتبتا 0.7/0.3. */
   demarker: {
     min: 0,
-    max: 100,
+    max: 1,
     levels: [
-      { v: 70, kind: 'extreme' },
-      { v: 30, kind: 'extreme' },
+      { v: 0.7, kind: 'extreme' },
+      { v: 0.3, kind: 'extreme' },
     ],
   },
   rmi: {
