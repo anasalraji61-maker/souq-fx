@@ -109,6 +109,7 @@ import {
   openQuotesRefreshDue,
   computedPriceText,
   journalDraftTyped,
+  journalChartSymbolAfterSave,
   saveOverrideAccepted,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
@@ -241,7 +242,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const [busy, setBusy] = useState(false);
   /** النموذج **الآن** — صفقةٌ بدأت كتابتها أثناء طلب الإضافة لا يمسحها `resetForm` حين يصل الردّ */
   const formKeyRef = useRef('');
-  formKeyRef.current = [symbol, side, entry, exit, size, sl, tp, note].join('\u0001');
+  const formKey = [symbol, side, entry, exit, size, sl, tp, note].join('\u0001');
+  formKeyRef.current = formKey;
+  // خطأٌ عن نموذجٍ تغيّر لم يعد عنه: «دخول غير صالح» كان يبقى تحت الزرّ بعد تصحيح الدخول أو تبديل الجهة حتى الضغطة التالية.
+  // الأخطاء كلّها تُضبط بلا تغيير بالنموذج (الحفظ الممنوع، فشل الطلب، لا سعر حيّ) فلا يمحوها هذا في لحظتها
+  useEffect(() => setFormError(null), [formKey]);
   /** مفتاح النموذج الذي عُرض عليه «نقاطٌ بخانة سعر» عند الحفظ ووقته — ضغطة ثانية بلا تعديل (لا نقرٌ مزدوج) تحفظ السعر كما كُتب. */
   const pipsOverrideRef = useRef<{ key: string; at: number } | null>(null);
   /** جلب «السعر الحالي» لخانة الدخول جارٍ */
@@ -381,11 +386,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       void loadOpenQuotes(list);
     } catch {
       if (mountedRef.current && gen === listGenRef.current) {
-        tradesRef.current = [];
-        setTrades([]);
-        setStats(null);
-        setTotal(null);
-        setOpenTotal(null);
+        // فشل تحديثٍ بعد قائمةٍ وصلت (حفظٌ نجح ثم انقطع الاتصال) كان يُفرغ الدفتر ⇒ «صفقاتي اختفت» وتُسجَّل ثانيةً. تبقى القائمة
+        // المعروضة وفوقها «تعذّر التحميل… لم تُحذف» + إعادة المحاولة؛ الفارغة (أول تحميل) كما كانت
+        if (tradesRef.current.length === 0) {
+          setStats(null);
+          setTotal(null);
+          setOpenTotal(null);
+        }
         setListError(true);
       }
     } finally {
@@ -428,9 +435,24 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   entryRef.current = entry;
   const draftRef = useRef<string[]>([]);
   draftRef.current = [entry, exit, size, sl, tp];
+  /** زوج شارتٍ انتقل إليه أثناء مسودة مكتوبة (لم يُطبَّق) — يُطبَّق بعد «أضف» (`journalChartSymbolAfterSave`) */
+  const heldChartRef = useRef<string | null>(null);
+  /** زوج الشارت **الآن** — «أضف» تقرؤه بعد انتظار الطلب (ما التقطته الدالّة عند الضغط قد تغيّر) */
+  const chartSymRef = useRef(defaultSymbol);
+  chartSymRef.current = defaultSymbol;
   useEffect(() => {
-    if (defaultSymbol && !journalDraftTyped(draftRef.current)) setSymbol(defaultSymbol);
+    if (!defaultSymbol) return;
+    if (journalDraftTyped(draftRef.current)) heldChartRef.current = defaultSymbol;
+    else {
+      heldChartRef.current = null;
+      setSymbol(defaultSymbol);
+    }
   }, [defaultSymbol]);
+  /** رمزٌ اختاره المتداول بيده يغلب انتقال الشارت المعلَّق */
+  const pickSymbol = (v: string) => {
+    heldChartRef.current = null;
+    setSymbol(v);
+  };
 
   /** سعر الدخول بنقرة: المتداول يسجّل الصفقة لحظة فتحها غالباً. Ask للشراء وBid للبيع إن توفّرا (ما ينفَّذ
    * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
@@ -1103,6 +1125,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const restorePreEdit = () => {
     const pre = preEditRef.current;
     preEditRef.current = null;
+    heldChartRef.current = null;
     if (!pre) return;
     const chartMoved = !!defaultSymbol && defaultSymbol !== pre.chart;
     setSymbol(chartMoved ? defaultSymbol : pre.symbol);
@@ -1279,7 +1302,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       if (!mountedRef.current) return;
       playSoftClick();
       // تغيّر النموذج أثناء الطلب = المتداول بدأ الصفقة التالية — تُحفظ كتابته لا تُمسح
-      if (formKeyRef.current === submittedKey) resetForm();
+      if (formKeyRef.current === submittedKey) {
+        resetForm();
+        const chartSym = journalChartSymbolAfterSave(heldChartRef.current, chartSymRef.current);
+        heldChartRef.current = null;
+        if (chartSym != null) setSymbol(chartSym);
+      }
       await refresh();
     } catch {
       if (mountedRef.current) setFormError(t.journalAddError);
@@ -1854,7 +1882,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
                 },
               ]}
               onPress={() => {
-                setSymbol(q);
+                pickSymbol(q);
                 setFormError(null);
               }}
               accessibilityLabel={`${t.journalSymbolA11y}: ${q}`}
@@ -1867,7 +1895,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={symbol}
-        onChangeText={setSymbol}
+        onChangeText={pickSymbol}
         placeholder={t.journalSymbolPlaceholder}
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
@@ -2385,7 +2413,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
 
       {loading ? <ActivityIndicator color={colors.textMuted} /> : null}
-      {!loading && trades.length === 0 ? (
+      {!loading && (trades.length === 0 || listError) ? (
         <Text style={[styles.empty, { textAlign: align }]}>
           {listError ? t.journalLoadErrorRetry : t.journalEmpty}
         </Text>

@@ -24,6 +24,7 @@ import {
   liveEntryQuote,
   liveEntryOrphaned,
   journalDraftTyped,
+  journalChartSymbolAfterSave,
   liveFillStillValid,
   closedElsewhere,
   liveStopChip,
@@ -3779,3 +3780,16 @@ console.log('tradePlan payoff-R selftest OK');
   // ساعة رجعت
   assert.equal(saveOverrideAccepted({ key: k, at: 5_000 }, k, 1_000), false);
 }
+
+// ---- journalChartSymbolAfterSave: زوج الشارت الذي تبدّل أثناء الكتابة يُطبَّق بعد «أضف» ----
+{
+  // الشارت انتقل EURUSD ⇒ GBPJPY أثناء كتابة صفقة EURUSD ⇒ بعد الحفظ: GBPJPY
+  assert.equal(journalChartSymbolAfterSave('GBPJPY', 'GBPJPY'), 'GBPJPY');
+  // لا انتقال معلَّق ⇒ يبقى الرمز
+  assert.equal(journalChartSymbolAfterSave(null, 'GBPJPY'), null);
+  assert.equal(journalChartSymbolAfterSave('', ''), null);
+  // الشارت انتقل ثانيةً (المؤثّر يحدّث held) أو لا شارت ⇒ لا تبديل بقيمة قديمة
+  assert.equal(journalChartSymbolAfterSave('GBPJPY', 'XAUUSD'), null);
+  assert.equal(journalChartSymbolAfterSave('GBPJPY', undefined), null);
+}
+console.log('tradePlan journalChartSymbolAfterSave selftest OK');
