@@ -375,4 +375,24 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   }
 }
 
+// خانة المستقبل على اليومي تُعدّ من افتتاح جلسة الحيّة: EURUSD الحيّة الخميس 24/09/2026 (تفتح الأربعاء 21:00 UTC)،
+// الخانة التالية (الجمعة) تفتح الخميس 21:00 ⇒ على H1 بعد 24 شمعة من افتتاح الحيّة لا 27 (الجمعة 00:00).
+{
+  const D = 86400;
+  const thu = Date.UTC(2026, 8, 24) / 1000;
+  const dBars = [-3, -2, -1, 0].map((k) => ({ time: thu + k * D })); // الاثنين–الخميس
+  const fut = stampAtIndex(dBars, 4, D, undefined, 'EURUSD')!;
+  assert.equal(fut.ahead, 1);
+  assert.equal(anchorPoint({ index: 0, price: 1, ...fut }, dBars, D, false, undefined, 'EURUSD').index, 4);
+  const h1 = Array.from({ length: 60 }, (_, i) => ({ time: Date.UTC(2026, 8, 23, 3) / 1000 + i * H })); // حتى الخميس 14:00
+  const wedOpen = h1.findIndex((b) => b.time === Date.UTC(2026, 8, 23, 21) / 1000);
+  const live = stampAtIndex(dBars, 3, D, undefined, 'EURUSD')!;
+  assert.equal(anchorPoint({ index: 0, price: 1, ...live }, h1, H, false, undefined, 'EURUSD').index, wedOpen);
+  assert.equal(anchorPoint({ index: 0, price: 1, ...fut }, h1, H, false, undefined, 'EURUSD').index, wedOpen + 24);
+  // الكريبتو: يوم UTC كما هو
+  const cf = stampAtIndex(dBars, 4, D, undefined, false)!;
+  const c0 = h1.findIndex((b) => b.time === thu);
+  assert.equal(anchorPoint({ index: 0, price: 1, ...cf }, h1, H, false, undefined, false).index, c0 + 24);
+}
+
 console.log('drawingAnchors.selftest: PASS');

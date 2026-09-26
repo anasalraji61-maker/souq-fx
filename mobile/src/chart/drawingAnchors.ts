@@ -272,10 +272,13 @@ export function anchorPoint(
     const stamp = stampAtIndex(bars, p.index, stepSec, endTime, weekendClosed);
     return stamp == null ? p : { ...p, ...stamp };
   }
-  const base = indexAtTime(bars, p.time, stepSec, endTime, weekendClosed);
   const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
   const aheadStep =
     p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
+  // نقطة المستقبل مختومة بختم آخر شمعة D/W (منتصف ليل تاريخ الإغلاق، `seriesEnd`) ⇒ تُعدّ الخطوات من افتتاح جلستها
+  // كنقاط الشموع نفسها (`timeAtIndex`): الخانة التالية للحيّة على اليومي كانت على H1 الجمعة 00:00 لا الخميس 21:00.
+  const from = ahead > 0 && !synthetic ? barOpen(p.time, aheadStep, weekendClosed) : p.time;
+  const base = indexAtTime(bars, from, stepSec, endTime, weekendClosed);
   // نقطة بمنطقة المستقبل مختومة بزمن **آخر** لبنة (`stampAtIndex`) لا بلبنة بعينها: `brickOffset` كان يعيدها لأولى لبنات
   // الشمعة الحيّة ⇒ على Renko/Kagi/P&F/Range نقطة رُسمت بعد الحيّة بخانة تقفز للخلف فوق اللبنات بأوّل تيك.
   // قبل أوّل شمعة (فريم آخر أو نافذة أحدث): `withinBar` لا يرى شمعة بفهرس سالب ⇒ الكسر كان يضيع فينهار ترند
@@ -291,7 +294,7 @@ export function anchorPoint(
         ? ahead > 0
           ? 0
           : brickOffset(bars, base, p)
-        : withinBar(bars, base, p.time, stepSec, weekendClosed);
+        : withinBar(bars, base, from, stepSec, weekendClosed);
   const index = base == null ? null : base + inBar + (ahead * aheadStep) / stepSec;
   return index == null || index === p.index ? p : { ...p, index };
 }
