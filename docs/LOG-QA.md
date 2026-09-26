@@ -1259,3 +1259,11 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 6 أغلفة `accessible={false}` نفسها. **لا بند.** (السكربت `/tmp/a11y.js` يحتاج `NODE_PATH=mobile/node_modules`.)
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة (منازل النفط 3 بين `pipSpec` والخادم والتنبيه)؛ متابعة launch187a/backend-r91a؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (40b181d):** أخضر 0؛ selftests المتغيّرة (`drawingAnchors`/`flatWindow`/`vwapSession`) ناجحة. أُغلقت launch187a ← tools `40b181d`. diff الجديد منطق مؤشرات/مراسٍ + تبديل مفتاح نصّ ⇒ قائمة القبول 0/12. المفتوح لوكيل: backend-r91a → tools وحده.
+
+## 2026-09-26 — الدورة 119
+**البناء:** أخضر 0 (على 346c318 ثم be61d19 بعد السحب) — لا إصلاح لازم. **Selftests:** 122/122 ثم 123/123 ناجح (`npx tsx`؛ `demarker`/`paneGuides` بعد السحب).
+**التحقّق بالكود:** أُغلقت backend-r91a ← tools `12b00aa` (`TradeJournalPanel.tsx:1284/1302`)؛ بقيّتها tools130a → backend (لا `server_utc_offset`)، tools130b → launch (`journalCloseTime*` غائبة — launch 188 فاتها)، وtools130c: الخادم نفّذ `be61d19` ⇒ الصفّ نُقل إلى **tools** (`TradeJournalPanel.tsx:1488` يرسل `{exit}` وحده؛ `api.ts:881` يمرّر المعامل الثالث فلا تغيير ui).
+**قائمة قبول DESIGN-PRO (التاسع والثلاثون):** 0/12 فشل (diff منذ 40b181d: حارس سعر التحويل، `closed_at`، `priceDec` لرؤوس اللوحات — منطق فقط).
+**المراجعة (d — أرقام متناقضة):** `symbolPriceDecimals` (بـ`npx tsx` على 20 رمزاً) مقابل `signal_hub.price_decimals`/`_instrument_decimals` بالقراءة (httpx غير مثبّت هنا): متطابقة للأزواج والين/HUF والذهب/الفضة/النفط؛ تقاطعات الذهب وDXY من الحجم بالخادم = النتيجة نفسها. نصّ الإشعار `_fmt_price` (`.10g`) يعيد عتبة المستخدم كما كتبها — مقبول. **لا بند.**
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ متابعة tools130a/b/c؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (11b5086، تعارض COORDINATION حُلّ من نسخة upstream):** أخضر 0. أُغلقت tools130a ← backend `0c8d570` (`main.py:1772/1795`)، tools130b ← launch `d78b856`، tools130c ← backend `be61d19`. المفتوح لوكيل: **backend-r93 → tools** وحده (لا `*_iso` بـ`mobile/src`، `TradeJournalPanel.tsx:1488` `{exit}` وحده). diff الجديد خادم/نصوص/وثائق ⇒ قائمة القبول 0/12.
