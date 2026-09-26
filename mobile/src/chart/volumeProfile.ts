@@ -41,12 +41,20 @@ export function computeVolumeProfile(
   const acc = new Array(bins).fill(0);
   for (const c of candles) {
     const vol = c.volume ?? estimatedVolume(c);
-    const i0 = Math.max(0, Math.min(bins - 1, Math.floor((c.low - lo) / step)));
-    const i1 = Math.max(0, Math.min(bins - 1, Math.floor((c.high - lo) / step)));
+    const i0 = Math.max(0, Math.min(bins - 1, Math.floor((c.low - lo) / step + 1e-9)));
+    const i1 = topBin(c.high, i0, lo, step, bins);
     const n = Math.max(1, i1 - i0 + 1);
     for (let i = i0; i <= i1; i++) acc[i] += vol / n;
   }
   return acc.map((volume, i) => ({ price: lo + (i + 0.5) * step, volume }));
+}
+
+/**
+ * صفّ أعلى الشمعة: الحدّ العلوي للصفّ **ضمنه** (`ceil − 1`، بهامش خطأ عشري). كان `floor` ⇒ شمعة 1.10–1.11 بصفوف 0.01
+ * تُحسب بصفّ 1.11–1.12 أيضاً فيذهب نصف حجمها لسعر لم يُتداوَل، ومعه POC وحدود Value Area صفّاً أعلى عند الأرقام المستديرة.
+ */
+function topBin(high: number, i0: number, lo: number, step: number, bins: number): number {
+  return Math.max(i0, Math.min(bins - 1, Math.ceil((high - lo) / step - 1e-9) - 1));
 }
 
 export function pocPrice(rows: VolumeProfileRow[]): number | null {
@@ -79,8 +87,8 @@ export function computeTpo(
 
   candles.forEach((c, i) => {
     const letter = LETTERS[i % LETTERS.length];
-    const i0 = Math.max(0, Math.min(bins - 1, Math.floor((c.low - lo) / step)));
-    const i1 = Math.max(0, Math.min(bins - 1, Math.floor((c.high - lo) / step)));
+    const i0 = Math.max(0, Math.min(bins - 1, Math.floor((c.low - lo) / step + 1e-9)));
+    const i1 = topBin(c.high, i0, lo, step, bins);
     const vol = c.volume ?? estimatedVolume(c);
     const n = Math.max(1, i1 - i0 + 1);
     for (let b = i0; b <= i1; b++) {
