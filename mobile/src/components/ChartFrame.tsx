@@ -133,6 +133,13 @@ export function ChartFrame({
     return () => clearTimeout(id);
   }, [pendingSwitch, series.timeframe, series.symbol]);
   const switching = pendingSwitch != null;
+  // شريط الفريمات والكتابة فوق الشارت على الويب («15»/«4h» ثم Enter) يمرّان من هنا.
+  // العودة للفريم الحاليّ قبل وصول المطلوب تُلغي الانتظار — كان الشريط يبقى على
+  // الفريم المتروك والشارت باهتاً «قيد التبديل» حتى مهلة 8 ثوانٍ.
+  const switchTimeframe = (next: Timeframe) => {
+    setPendingSwitch(next !== series.timeframe ? { tf: next } : null);
+    onTimeframeChange?.(next);
+  };
   const navigate = panControls || interactive;
   const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
   const [measuredH, setMeasuredH] = useState(baseH);
@@ -355,12 +362,7 @@ export function ChartFrame({
         <View style={styles.tfTopLeft}>
           <TimeframeBar
             value={pendingSwitch?.tf ?? series.timeframe}
-            onChange={(next) => {
-              // العودة للفريم الحاليّ قبل وصول المطلوب تُلغي الانتظار — كان الشريط يبقى على
-              // الفريم المتروك والشارت باهتاً «قيد التبديل» حتى مهلة 8 ثوانٍ.
-              setPendingSwitch(next !== series.timeframe ? { tf: next } : null);
-              onTimeframeChange?.(next);
-            }}
+            onChange={switchTimeframe}
             compact={size === 'small' || fill}
           />
         </View>
@@ -583,6 +585,7 @@ export function ChartFrame({
             onReplayPrice={onReplayPrice}
             onChartInteract={onChartInteract}
             askOffset={askOffset}
+            onTimeframeKey={showTimeframes && onTimeframeChange ? switchTimeframe : undefined}
           />
         )}
       </View>

@@ -23,7 +23,8 @@ import {
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { buttons, colors, numeric, radii, selectedMarkerWidth, spacing } from '../theme';
-import { isTimeframe } from '../timeframes';
+import { isTimeframe, type Timeframe } from '../timeframes';
+import { parseTypedTimeframe, TF_TYPING_MAX, tfTypingChar, tfTypingStarts } from './tfTyping';
 import type { Candle, ChartSeries } from '../api';
 import {
   loadDrawings,
@@ -436,6 +437,11 @@ type Props = {
    * المضيفة واجهتها إلى 40% كما يخفت شريط الشارت نفسه.
    */
   onChartInteract?: (active: boolean) => void;
+  /**
+   * الويب: فريم كتبه المتداول فوق الشارت («15»، «4h»، «d» ثم Enter — `tfTyping.ts`). بلاه لا تُعترض الكتابة.
+   * المضيف يبدّل الفريم كما لو ضُغط شريط الفريمات.
+   */
+  onTimeframeKey?: (tf: Timeframe) => void;
   initialLens?: LensMode;
   initialKind?: ChartKind;
   initialIndicators?: IndicatorId[];
@@ -1441,6 +1447,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   initialTool,
   onToolChange,
   onChartInteract,
+  onTimeframeKey,
   initialLens,
   initialKind,
   initialIndicators,
@@ -5378,6 +5385,62 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [interactive, canPan, resetChartView]);
+
+  // الويب: كتابة فريم فوق الشارت الذي لُمس أخيراً (`tfTyping.ts`). المكتوب يظهر وسماً أعلى اللوح مع الفريم
+  // الذي سيُفتح (أو ✕)، Enter يبدّل، Esc/مهلة 3 ثوانٍ تُلغي، Backspace تمحو حرفاً. مستمع **الالتقاط**: ما دامت
+  // الكتابة جارية تُحجب Enter/Esc/Backspace عن مستمعي الرسم (Backspace كانت ستحذف الرسم المحدَّد، وEsc تُسقط الأداة).
+  const [tfTyped, setTfTyped] = useState('');
+  const tfTypedRef = useRef('');
+  const onTimeframeKeyRef = useRef(onTimeframeKey);
+  onTimeframeKeyRef.current = onTimeframeKey;
+  const hasTfKey = !!onTimeframeKey;
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !hasTfKey) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const put = (next: string) => {
+      tfTypedRef.current = next;
+      setTfTyped(next);
+      if (timer) clearTimeout(timer);
+      timer = next ? setTimeout(() => put(''), 3000) : null;
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (webKeyChart !== keyToken.current) {
+        if (tfTypedRef.current) put('');
+        return;
+      }
+      const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+      if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
+      const typed = tfTypedRef.current;
+      if (typed) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          event.stopPropagation();
+          const tf = parseTypedTimeframe(typed);
+          put('');
+          if (tf) onTimeframeKeyRef.current?.(tf);
+          return;
+        }
+        if (event.key === 'Escape' || event.key === 'Backspace') {
+          event.preventDefault();
+          event.stopPropagation();
+          put(event.key === 'Escape' ? '' : typed.slice(0, -1));
+          return;
+        }
+      }
+      const ch = tfTypingChar(event.key, event.code);
+      if (!ch || (!typed && !tfTypingStarts(ch)) || typed.length >= TF_TYPING_MAX) return;
+      event.preventDefault();
+      put(typed + ch);
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      if (timer) clearTimeout(timer);
+      tfTypedRef.current = '';
+    };
+  }, [hasTfKey]);
+  const tfTypedTarget = tfTyped ? parseTypedTimeframe(tfTyped) : null;
 
   const priceAxisTap = useRef<AxisTap | null>(null);
   const timeAxisTap = useRef<AxisTap | null>(null);
@@ -9636,6 +9699,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             })()
           : null}
 
+        {tfTyped ? (
+          <View pointerEvents="none" style={[styles.tfTypedWrap, { right: plotRightInset }]}>
+            <View style={styles.tfTypedBox}>
+              <Text style={styles.tfTypedText}>
+                {tfTyped}
+                <Text style={styles.tfTypedHint}>
+                  {'  →  '}
+                  {tfTypedTarget ? tr.tfLabels[tfTypedTarget] : '✕'}
+                </Text>
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {pending ? (
           <View
             style={[
@@ -13425,6 +13502,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.controlBg,
   },
+  tfTypedWrap: { position: 'absolute', top: 8, left: 0, alignItems: 'center', zIndex: 50 },
+  tfTypedBox: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radii.sm,
+    backgroundColor: colors.bgElevated,
+  },
+  tfTypedText: { ...numeric, color: colors.text, fontSize: 18, fontWeight: '600' },
+  tfTypedHint: { color: colors.textMuted, fontSize: 15, fontWeight: '500' },
   crossAlertText: { ...numeric, fontWeight: '600', fontSize: 11, fontFamily: 'monospace' },
   zoomBtn: {
     width: 28,
