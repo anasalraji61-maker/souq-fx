@@ -1412,8 +1412,8 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **بعد السحب (1dae075):** أخضر 0؛ `positionSize.selftest` ناجح. diff ui 126 (علامة 2px بخلايا اللوح الجانبي — الاختيار لم يعد باللون وحده، بند ١٠ ✓) بلا أنماط مخالفة ⇒ قائمة القبول 0/12.
 
 ## 2026-09-26 — الدورة 138
-**البناء:** أخضر 0 (على 581124c) — لا إصلاح لازم. **Selftests:** 124/124 ناجح (`npx tsx`).
-**التحقّق بالكود:** أُغلقت ui126a ← tools `f00e8dd` (`TerminalScreen.tsx:1477` `dailyChange(…, sym)`). جديد مُتحقَّق **launch210a → ui** (قرار أنس «عنوان الخادم»): `api.ts:7` بلا `EXPO_PUBLIC_API_URL`/`hostUri`، `app.json:94` `192.168.8.102` — دورته الأولى. STATUS: أُزيل «عنوان شبكة منزلية» من «ينتظر أنس» (محسوم بـ`DECISIONS-ANAS.md`) ونُقل إلى «مفتوح لوكلاء».
-**قائمة قبول DESIGN-PRO (الثامن والخمسون):** 0/12 فشل (diff منذ e0c8187: ذيل المجوّفة 1px محتوى شارت، علامة اختيار 2px، `gap: spacing.sm`).
+**البناء:** أخضر 0 (على 581124c ثم بعد السحب 9a89f13) — لا إصلاح لازم. **Selftests:** 125/125 ناجح (`npx tsx`؛ جديد `apiHost.selftest.ts`).
+**التحقّق بالكود:** أُغلقت ui126a ← tools `f00e8dd`، وbackend-r114a ← ui `5bd2730` (`WeeklyReportPanel.tsx:165`)، وlaunch210a ← ui `cfe72db` + launch `2c558d6` (`app.json` بلا `apiUrl`؛ `192.168` باقٍ بتعليق `apiHost.ts:7` وبيانات الاختبار فقط). وbackend-r114b ← ui `8bc7732`. مفتوح — دورته الأولى: **chart-r113a → ui** (`FocusChartModal.tsx:384`)، **ui128b → chart** (`useArmedAlerts.ts:89`)، **ui128a → launch** (مفتاح بلا `{desc}`). STATUS: أُزيل «عنوان شبكة منزلية» من «ينتظر أنس» (محسوم بـ`DECISIONS-ANAS.md`). ملاحظة: backend كتب صفّي r114 مباشرة بـCOORDINATION (ملك QA) — قُبلا بعد التحقّق.
+**قائمة قبول DESIGN-PRO (الثامن والخمسون):** 0/12 فشل (ذيل/لون المجوّفة محتوى شارت، علامة اختيار 2px، `gap: spacing.sm`، طبقة `NATIVE_PASS_THROUGH`).
 **المراجعة (c — `accessibilityLabel`):** 13 نتيجة كاذبة (6 `accessible={false}` مقصودة، 6 `useRef<TextInput>`، خانة ملاحظة موسومة). **لا بند.**
-**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة launch210a؛ وإعادة قائمة DESIGN-PRO.
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة chart-r113a وui128a/b؛ وإعادة قائمة DESIGN-PRO.
