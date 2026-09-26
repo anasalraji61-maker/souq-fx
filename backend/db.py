@@ -2085,6 +2085,13 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
     return row
 
 
+def _close_stamp(opened_at: str | None) -> str:
+    """وقت إغلاق «الآن» لا يسبق الفتح: الفتح يُقبل حتى +5 دقائق (فرق ساعة الجهاز — TradeCreate) فصفقة تُغلق
+    فوراً كانت تُحفظ مغلقة قبل فتحها (مدّة سالبة). الصيغة نفسها `%Y-%m-%d %H:%M` ⇒ المقارنة النصّية زمنية."""
+    now = time.strftime("%Y-%m-%d %H:%M")
+    return max(now, opened_at) if opened_at and len(opened_at) == len(now) else now
+
+
 class TradeAlreadyClosed(Exception):
     """إغلاق صفقة مغلقة أصلاً. `trade` = الصفّ كما هو مخزَّن (بخروجه الأول)."""
 
@@ -2124,7 +2131,7 @@ def _try_close_trade(trade_id: str, exit_price: float, owner_sql: str, owner_arg
             raise TradeAlreadyClosed(row)
         # نسبة حركة السعر فقط — راجع add_trade. None لصفّ قديم بدخول غير موجب (بدل 500 دائم).
         pnl = _pnl_pct(row["side"], float(row["entry"]), exit_price)
-        closed_at = time.strftime("%Y-%m-%d %H:%M")
+        closed_at = _close_stamp(row.get("opened_at"))
         cur = c.execute(
             f"UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' "
             f"WHERE id=? AND status='open' AND side IS ? AND entry IS ? AND {owner_sql}",
@@ -2205,7 +2212,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
                 # «الآن» فقط لصفقة كانت مفتوحة فتُغلق بهذا التعديل. تصحيح خروج صفقة مغلقة سُجّلت بأثر رجعي
                 # (`closed_at` null «غير معروف» — add_trade) كان يختلق لها تاريخ إغلاق = اليوم.
                 if seen["exit"] is None:
-                    row["closed_at"] = row.get("closed_at") or time.strftime("%Y-%m-%d %H:%M")
+                    row["closed_at"] = row.get("closed_at") or _close_stamp(row.get("opened_at"))
                 row["status"] = "closed"
         if row.get("exit") is not None:
             row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))

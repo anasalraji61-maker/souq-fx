@@ -844,3 +844,17 @@ def test_journal_averages_are_never_negative_zero(client):
     st = client.get("/api/trades", headers=_DEV1).json()["stats"]
     assert st["win_count"] == 1 and st["loss_count"] == 1
     assert repr(st["avg_loss"]) == "0.0" and repr(st["avg_win"]) == "0.0"
+
+
+def test_closing_right_after_a_slightly_future_open_never_closes_before_opening(client):
+    # فتح +3 دقائق مقبول (ساعة الجهاز)؛ الإغلاق الفوري بـ/close أو PATCH كان يُحفظ «الآن» قبل الفتح
+    from datetime import datetime, timedelta
+
+    ahead = (datetime.now() + timedelta(minutes=3)).strftime("%Y-%m-%dT%H:%M")
+    for how in ("close", "patch"):
+        trade = client.post("/api/trades", json={**_TRADE, "opened_at": ahead}, headers=_DEV1).json()["trade"]
+        if how == "close":
+            row = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.11}, headers=_DEV1).json()["trade"]
+        else:
+            row = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.11}, headers=_DEV1).json()["trade"]
+        assert row["closed_at"] >= row["opened_at"], how
