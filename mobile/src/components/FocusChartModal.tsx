@@ -283,7 +283,7 @@ export function FocusChartModal({
         note: origin === 'crosshair' ? t.focusAlertFromChartNote : t.focusAlertFromDrawingNote,
       });
       playSoftClick();
-      setArmedMsg(`${t.alertsArmedPrefix}: ${armedText(sym, res.condition, formatPrice(price, sym))}`);
+      setArmedMsg(`${t.alertsArmedPrefix}: ${armedText(sym, res.condition, formatPrice(price, sym, seriesSym === sym ? series?.last : null))}`);
       if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
       armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       setAlertsRefreshKey((k) => k + 1);
@@ -333,7 +333,7 @@ export function FocusChartModal({
       unavailable: t.dsKindUnavailable,
     })}`) +
     (` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`) +
-    (hasSpread ? ` · B ${formatPrice(quote!.bid!, sym, quote!.bid)}/A ${formatPrice(quote!.ask!, sym, quote!.bid)}` : '');
+    (hasSpread ? ` · B ${formatPrice(quote!.bid!, sym, headSeries?.last ?? quote!.bid)}/A ${formatPrice(quote!.ask!, sym, headSeries?.last ?? quote!.bid)}` : '');
 
   return (
     <Modal visible={visible} animationType="none" onRequestClose={onClose}>
@@ -380,7 +380,7 @@ export function FocusChartModal({
           </Pressable>
           {headSeries && !noReal && headPrice != null ? (
             <View style={styles.quote}>
-              <Text style={styles.price}>{formatPrice(headPrice, sym)}</Text>
+              <Text style={styles.price}>{formatPrice(headPrice, sym, headSeries.last)}</Text>
               <Text
                 style={[styles.change, { color: headPctColor }]}
                 // النسبة وحدها «+0.12%» بلا سياق و«—» علامة ترقيم لقارئ الشاشة (launch109)؛ الذيل كما يُرى.
