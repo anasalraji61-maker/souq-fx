@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, setAuthToken } from '../api';
+import { api, setAuthToken, setUnauthorizedListener } from '../api';
 import { currentPushToken } from '../notifications';
 
 type User = { user_id: number; username: string; email?: string | null; token: string };
@@ -86,6 +86,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await persist(null);
     }
   }, [persist]);
+
+  // backend-r70: 401 من مسار بيانات شخصية (دفتر/تنبيهات/متابعة/تخطيطات) ⇒ فحص فوري بدل انتظار العودة للواجهة.
+  // عدّة لوحات تفشل معاً بالتوكن نفسه ⇒ فحص واحد جارٍ في كل مرة.
+  const checkingRef = useRef(false);
+  useEffect(() => {
+    setUnauthorizedListener(() => {
+      if (checkingRef.current) return;
+      checkingRef.current = true;
+      void checkSession().finally(() => {
+        checkingRef.current = false;
+      });
+    });
+    return () => setUnauthorizedListener(null);
+  }, [checkSession]);
 
   const userToken = user?.token ?? null;
   useEffect(() => {

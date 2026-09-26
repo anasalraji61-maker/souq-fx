@@ -215,7 +215,33 @@ function isSlowPostPath(path: string): boolean {
   return SLOW_POST_PATHS.includes(base);
 }
 
+/**
+ * backend-r70: مسارات البيانات الشخصية (الدفتر، التنبيهات، قائمة المتابعة، التخطيطات) تردّ 401 على توكن
+ * منتهٍ/ملغى بدل معاملته مجهولاً. `AuthContext` يسجّل هنا مستمعاً يستدعي `checkSession` فيظهر «انتهت جلستك»
+ * بدل خطأ تحميل عامّ. فقط حين أُرسل توكن فعلاً، وخارج `/api/auth/*` (401 الدخول = كلمة مرور خاطئة، و`/me`
+ * هو الفحص نفسه). المستمع يتحقّق بـ`/api/auth/me` قبل أيّ خروج ⇒ 401 لسبب آخر لا يُخرج أحداً.
+ */
+let unauthorizedListener: (() => void) | null = null;
+
+export function setUnauthorizedListener(fn: (() => void) | null) {
+  unauthorizedListener = fn;
+}
+
+function noteAuthStatus(url: string, init: RequestInit, res: Response) {
+  if (res.status !== 401 || !unauthorizedListener) return;
+  const h = init.headers as Record<string, string> | undefined;
+  if (!h?.Authorization) return;
+  if (url.startsWith(`${API_URL}/api/auth/`)) return;
+  unauthorizedListener();
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
+  const res = await fetchWithTimeoutRaw(url, init, ms);
+  noteAuthStatus(url, init, res);
+  return res;
+}
+
+async function fetchWithTimeoutRaw(url: string, init: RequestInit, ms: number): Promise<Response> {
   if (typeof AbortController === 'undefined') return fetch(url, init);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms);
@@ -248,9 +274,13 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   };
-  const res = isSlowPostPath(path)
-    ? await fetch(url, init)
-    : await fetchWithTimeout(url, init, WRITE_TIMEOUT_MS);
+  let res: Response;
+  if (isSlowPostPath(path)) {
+    res = await fetch(url, init);
+    noteAuthStatus(url, init, res);
+  } else {
+    res = await fetchWithTimeout(url, init, WRITE_TIMEOUT_MS);
+  }
   if (!res.ok) {
     // `status` كـ`patchJson`، و`detail` من جسم الخطأ إن وُجد (409 `trade_already_closed` يحمل الصفّ
     // بخروجه الأول) — الرسالة نفسها «HTTP n» كي لا يتغيّر شيء عند المستدعين القدامى.
