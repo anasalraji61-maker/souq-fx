@@ -338,6 +338,8 @@ def _candle(row: object) -> dict | None:
         o, h, l, c = (float(row[k]) for k in ("open", "high", "low", "close"))
     except (TypeError, ValueError, KeyError):
         return None
+    if any(isinstance(row[k], bool) for k in ("open", "high", "low", "close")):
+        return None  # JSON `true` كان سعراً 1.0 (`float(True)`)
     if not all(math.isfinite(v) for v in (o, h, l, c)):
         return None
     # سعر غير موجب أو شمعة مستحيلة (القمّة تحت القاع/الجسم) ليست سوقاً — كـ`_pos` بالاقتباس و`/ws/ticks`.
@@ -488,6 +490,9 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         raise RuntimeError("Twelve Data: no usable candles in response")
 
     candles.sort(key=lambda c: c["time"])
+    # وقت مكرَّر من المزوّد كان يمرّ شمعتين بالوقت نفسه: مكتبة الشارت تشترط أوقاتاً متزايدة تماماً، وRSI/ATR
+    # والماسح والاختبار الرجعي وتنبيهات الذيل تعدّ الشمعة مرّتين. يبقى أوّل صفّ بترتيب المزوّد (الترتيب ثابت).
+    candles = [c for i, c in enumerate(candles) if i == 0 or c["time"] != candles[i - 1]["time"]]
     if weekly_from_daily:
         candles = _weeks_from_days(candles, drop_first=len(data["values"] or []) >= int(params["outputsize"]))
     _cache[cache_key] = (now, candles)
@@ -606,6 +611,8 @@ def _quote_time(v: object) -> float | None:
 def _f(v: object) -> float | None:
     """رقم منتهٍ أو None. `float("NaN")` كان يجتاز: bid/ask NaN يمرّ فحص `<= 0` و`bid > ask` (كلاهما
     False) فيُرسَل سبريد NaN موسوماً `provider`، وJSON الردّ يرفض NaN ⇒ 500 بدل «لا سعر»."""
+    if isinstance(v, bool):  # `float(True)` = 1.0 ⇒ `{"close": true}` كان سعراً 1.0
+        return None
     try:
         f = float(v) if v is not None else None
     except (TypeError, ValueError):
