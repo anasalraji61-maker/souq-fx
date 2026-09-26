@@ -1444,6 +1444,8 @@ const CCI_LEVELS = [100, -100] as const;
 
 /** Fisher Transform: خطوط TradingView الافتراضية — ‎±1.5‎ تطرّف و‎±0.75‎ منطقة الانعطاف. */
 const FISHER_LEVELS = [1.5, 0.75, -0.75, -1.5] as const;
+/** SMI: عتبتا TradingView ‎±40‎ (تشبّع) — تدخلان المقياس كـCCI ‎±100‎ فلا تقصّهما نافذة هادئة. */
+const SMI_LEVELS = [40, -40] as const;
 
 function ZeroLineSeries({
   values,
@@ -13371,22 +13373,41 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               const smiVals = visibleValues(smi.smi, paneVis);
               const sigVals = visibleValues(smi.signal, paneVis);
-              const allVals = [...smiVals, ...sigVals, 0];
+              const allVals = [...smiVals, ...sigVals, ...SMI_LEVELS, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
               const innerH = Math.max(0, paneH - 16);
+              const y = boundedPaneY(innerH, maxV - span, maxV);
+              // خطّا ‎±40‎ والصفر كـTradingView: بلاها لا يُقرأ التشبّع ولا عبور الصفر من خطّين عائمين.
+              const guides = placeScaledGuides(SMI_LEVELS, minV, maxV, innerH);
               // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
               // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
               return (
-                <PaneLineLayer
-                  innerH={innerH}
-                  y={boundedPaneY(innerH, maxV - span, maxV)}
-                  lines={[
-                    { values: smi.smi, color: colors.accent, opacity: 0.85 },
-                    { values: smi.signal, color: colors.infoAccent, opacity: 0.85 },
-                  ]}
-                />
+                <>
+                  <View pointerEvents="none" style={[styles.paneZeroLine, { top: y(0) }]} />
+                  {guides.map((gd) => (
+                    <React.Fragment key={gd.v}>
+                      <View pointerEvents="none" style={[styles.paneGuideLine, { top: gd.top }]} />
+                      {gd.label ? (
+                        <View
+                          pointerEvents="none"
+                          style={[styles.paneGuideLabelBox, { top: Math.max(0, gd.top - 6) }]}
+                        >
+                          <Text style={styles.paneGuideLabel}>{gd.label}</Text>
+                        </View>
+                      ) : null}
+                    </React.Fragment>
+                  ))}
+                  <PaneLineLayer
+                    innerH={innerH}
+                    y={y}
+                    lines={[
+                      { values: smi.smi, color: colors.accent, opacity: 0.85 },
+                      { values: smi.signal, color: colors.infoAccent, opacity: 0.85 },
+                    ]}
+                  />
+                </>
               );
             })()}
           </View>
@@ -13626,7 +13647,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {williamsAd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Williams A/D" values={williamsAd} at={crossIndex} tone="trend" />
+          <PaneValueHead name="Williams A/D" priceDec={paneDec} values={williamsAd} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries vis={paneVis} values={williamsAd} paneH={paneH} />
