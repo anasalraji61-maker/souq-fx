@@ -519,6 +519,7 @@ type PointerEventLike = {
     setPointerCapture?: (pointerId: number) => void;
     releasePointerCapture?: (pointerId: number) => void;
     getBoundingClientRect?: () => { left: number; top: number };
+    style?: { cursor?: string };
   };
   preventDefault?: () => void;
   stopPropagation?: () => void;
@@ -5907,6 +5908,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerId: point.pointerId,
             };
             event.currentTarget?.setPointerCapture?.(point.pointerId);
+            // اليد المغلقة أثناء السحب، والمفتوحة عند الرفع — كان «grab» ثابتاً فلا يُعرف أن الشارت ممسوك.
+            if (event.currentTarget?.style) event.currentTarget.style.cursor = 'grabbing';
             webKeyChart = keyToken.current;
             beginDrag();
             // `clientX/Y` إحداثيات النافذة؛ `onChartPress` تريدها داخل اللوح.
@@ -5921,9 +5924,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // مرور الفأرة بلا زرّ مضغوط ⇒ معاينة التقاطع (شمعة وسعر) ما لم يكن مثبَّتاً بنقرة.
               // كان التقاطع على الويب بالنقر وحده: قراءة عشر شموع = عشر نقرات. إطار واحد لكل
               // رسم (`requestAnimationFrame`) لا رسم لكل حدث حركة.
-              if (crossPinned.current || event.nativeEvent?.pointerType === 'touch') return;
+              if (event.nativeEvent?.pointerType === 'touch') return;
               const rect = event.currentTarget?.getBoundingClientRect?.();
               const point = pointerXY(event);
+              const surface = event.currentTarget;
               hoverPoint.current = {
                 x: Math.max(0, point.x - (rect?.left ?? 0)),
                 y: Math.max(0, point.y - (rect?.top ?? 0)),
@@ -5931,8 +5935,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               if (hoverRaf.current == null) {
                 hoverRaf.current = requestAnimationFrame(() => {
                   hoverRaf.current = null;
-                  if (crossPinned.current || webChartPointer.current.active) return;
-                  crossAtRef.current(hoverPoint.current.x, hoverPoint.current.y, true);
+                  if (webChartPointer.current.active) return;
+                  const { x, y } = hoverPoint.current;
+                  // فوق رسم: يد الإشارة — النقرة تحدّده (`onChartPress`)، فالمؤشّر يقول ذلك قبل النقر.
+                  if (surface?.style) surface.style.cursor = interactive && hitDrawing(x, y) ? 'pointer' : 'grab';
+                  if (crossPinned.current) return;
+                  crossAtRef.current(x, y, true);
                 });
               }
               return;
@@ -5967,6 +5975,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const wasActive = webChartPointer.current.active;
             webChartPointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
+            if (event.currentTarget?.style) event.currentTarget.style.cursor = 'grab';
             // نقرة بلا سحب ⇒ تقاطع عند موضعها (كمسار الهاتف). كان الرفع يُنهي السحب
             // فقط، فالنقر على شارت الويب لا يضع تقاطعاً أبداً.
             if (
@@ -5978,6 +5987,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             endDrag();
           },
           onPointerCancel: (event: PointerEventLike) => {
+            if (event.currentTarget?.style) event.currentTarget.style.cursor = 'grab';
             webPointers.current.delete(pointerXY(event).pointerId);
             if (webPointers.current.size > 0) return;
             pinchStart.current = null;
@@ -7529,6 +7539,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           { height: mainH },
           hideGrid && styles.plotBare,
           canPan ? webAxisLockStyle : null,
+          // أداة رسم مسلّحة: مؤشّر تصويب بدل السهم، فيُرى موضع الطرف بدقّة البكسل.
+          Platform.OS === 'web' && interactive && tool !== 'none' && tool !== 'select'
+            ? ({ cursor: 'crosshair' } as never)
+            : null,
         ]}
         onLayout={onLayout}
         onTouchStart={chartHoldStart}
