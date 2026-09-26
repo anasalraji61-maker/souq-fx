@@ -6,6 +6,7 @@ import math
 import os
 import re
 import sqlite3
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -306,15 +307,22 @@ def _disk_read(key: str) -> tuple[float, float, list[dict]] | None:
     return at, base, candles
 
 
+# `_store` (افحص ⇒ احذف/ادمج ⇒ اكتب) يُستدعى من خيوط عدّة معاً (مجمّع FastAPI + الـworker): خيطان يريان
+# مدخلاً كبيراً قديماً فيحذفانه ⇒ الثاني `KeyError` بعد جلب ناجح ⇒ `build_series` «غير متاح» بجانب شموع
+# حقيقية جُلبت للتوّ، وخيط يقرأ `_base_at` بعد أن أزاله آخر فيمدّد عمر شموع لم تُراجَع. قفل واحد للقراءة/الكتابة.
+_cache_lock = threading.RLock()
+
+
 def _cached(key: str) -> tuple[float, list[dict]] | None:
     """مدخل الكاش بالذاكرة، أو من القرص أوّل مرة يُسأل عنه بعد الإقلاع."""
-    if key not in _cache and key not in _disk_checked:
-        _disk_checked.add(key)
-        hit = _disk_read(key)
-        if hit and key not in _cache:
-            _cache[key] = (hit[0], hit[2])
-            _base_at[key] = hit[1]
-    return _cache.get(key)
+    with _cache_lock:
+        if key not in _cache and key not in _disk_checked:
+            _disk_checked.add(key)
+            hit = _disk_read(key)
+            if hit and key not in _cache:
+                _cache[key] = (hit[0], hit[2])
+                _base_at[key] = hit[1]
+        return _cache.get(key)
 
 # طول السلسلة الموحَّد للشارت (build_series) والماسح وتنبيهات المؤشر بالـworker. مفتاح الكاش يشمل الطول،
 # فكان الماسح (80) والـworker (80) والشارت/فحص التنبيهات من التطبيق (180) يجلبون نفس (رمز، فريم) كلٌّ
@@ -479,6 +487,11 @@ def _bucket_hit(cache_key: str) -> tuple[float, list[dict]] | None:
 
 
 def _store(cache_key: str, now: float, candles: list[dict]) -> None:
+    with _cache_lock:
+        _store_locked(cache_key, now, candles)
+
+
+def _store_locked(cache_key: str, now: float, candles: list[dict]) -> None:
     sym, tf, size = cache_key.rsplit("|", 2)
     for b in _SIZE_BUCKETS:
         key = f"{sym}|{tf}|{b}"

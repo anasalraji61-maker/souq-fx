@@ -156,3 +156,45 @@ def test_rows_saved_by_an_older_disk_layout_are_not_loaded(provider, disk, monke
     provider["payload"] = {"values": _rows_until(200, "1.1000")}
     _, meta = market.fetch_time_series_with_meta("BTCUSD", "D", 180)
     assert meta["kind"] == "provider"
+
+
+# run 88: `_store` من خيطين معاً (مجمّع FastAPI + الـworker) على مدخل كبير تجاوز `MERGE_MAX_AGE_SEC` ⇒ كلاهما
+# يراه فيحذفه ⇒ الثاني `KeyError` بعد جلب ناجح (`build_series` «غير متاح» بجانب شموع حقيقية). الحاجز يُجبر
+# الخيطين على القراءة قبل أيّ حذف؛ مع القفل ينتظر الثاني فينكسر الحاجز بمهلته ويمضي كلٌّ بدوره.
+def test_concurrent_store_on_an_aged_bigger_entry_does_not_raise(monkeypatch):
+    import threading
+    import time as _time
+
+    _restart(monkeypatch)
+    now = _time.time()
+    old_at = now - 2 * market.MERGE_MAX_AGE_SEC
+    market._cache["EURUSD|D|180"] = (old_at, [{"time": 1000 + i} for i in range(180)])
+    market._base_at["EURUSD|D|180"] = old_at
+    barrier = threading.Barrier(2)
+    real = market._cached
+
+    def gated(key):
+        hit = real(key)
+        if key.endswith("|180"):
+            try:
+                barrier.wait(timeout=0.5)
+            except threading.BrokenBarrierError:
+                pass
+        return hit
+
+    monkeypatch.setattr(market, "_cached", gated)
+    errors = []
+
+    def run():
+        try:
+            market._store("EURUSD|D|50", now, [{"time": 1130 + i} for i in range(50)])
+        except Exception as e:  # noqa: BLE001
+            errors.append(e)
+
+    ts = [threading.Thread(target=run) for _ in range(2)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert errors == []
+    assert "EURUSD|D|180" not in market._cache and len(market._cache["EURUSD|D|50"][1]) == 50
