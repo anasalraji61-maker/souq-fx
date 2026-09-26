@@ -4554,6 +4554,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (d.tool === 'hray') {
           // من مرساته إلى حافّة اللوح كما يُرسم — يسار المرساة ليس من الرسم.
           const sx = Math.max(0, ax);
+          // لا يُرسم حين يبدأ عند الحافّة اليمنى أو بعدها (شارت مُمرَّر للخلف) ⇒ لا يُلمس هناك.
+          if (sx >= chartPlotW - 2) continue;
           best = considerHit(d.id, segmentDistance(x, y, sx, ay, Math.max(sx + 1, chartPlotW), ay, 1), BODY_R, best);
           continue;
         }
