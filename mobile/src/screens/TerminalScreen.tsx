@@ -1830,26 +1830,9 @@ export function TerminalScreen() {
               )}
             </View>
 
+            {/* DESIGN-PRO 5.1: الفريم بمكان واحد — `TimeframeBar` بالشريط العلوي (بهذا التخطيط وحده). صفّ الفريمات هنا كان نسخة ثانية
+                بلون تأكيد ثانٍ للاختيار نفسه. */}
             <View style={styles.rangeBar}>
-              {TIMEFRAMES.map((range) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={range}
-                  style={({ pressed }) => [
-                    styles.rangeBtn,
-                    tf === range && styles.rangeBtnOn,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => setTf(range)}
-                  accessibilityLabel={`${t.termTimeframeA11yPrefix}: ${range}`}
-                  accessibilityState={{ selected: tf === range }}
-                >
-                  <Text style={[styles.rangeText, tf === range && styles.rangeTextOn]}>{range}</Text>
-                </Pressable>
-              ))}
               <View style={styles.rangeSpacer} />
               <Pressable
                 accessibilityRole="button"
