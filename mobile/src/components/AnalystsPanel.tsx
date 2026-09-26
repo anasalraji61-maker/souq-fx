@@ -42,11 +42,21 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
     };
   }, []);
 
+  // النتيجة تُعرض لرمزها وفريمها فقط: تبديل EURUSD → XAUUSD كان يُبقي اتجاه EURUSD ومحلّليه ومستوياته
+  // (~1.08 مطبوعة بمنازل الذهب) تحت عنوان XAUUSD حتى يصل الردّ الجديد — وإلى الأبد إن وصل ردّ EURUSD
+  // الأبطأ أخيراً. `reqRef` يُسقط الردود المتأخرة، و`loadedKey` يُخفي نتيجة رمز سابق أثناء التحميل.
+  const reqRef = useRef(0);
+  const key = `${symbol}|${timeframe}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+
   const load = useCallback(async () => {
+    const id = ++reqRef.current;
+    const forKey = `${symbol}|${timeframe}`;
     setLoading(true);
     try {
       const res = await api.analystsForecast(symbol, timeframe);
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || id !== reqRef.current) return;
+      setLoadedKey(forKey);
       // كان `avg_score: null` يرمي عند `toFixed` فتسقط الشاشة كلّها إلى «حدث خطأ» (launch103).
       if (res.status === 'unavailable' || res.data_kind === 'unavailable' || res.direction == null) {
         setUnavailable(true);
@@ -66,22 +76,28 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
       setRows(Array.isArray(res.analysts) ? res.analysts : []);
       setNote(res.disclaimer);
     } catch {
-      if (mountedRef.current) {
+      if (mountedRef.current && id === reqRef.current) {
+        setLoadedKey(forKey);
         setUnavailable(false);
         setRows([]);
+        setLevels(null);
+        setLevelsWhy(null);
         setNote(t.analystsLoadError);
       }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && id === reqRef.current) setLoading(false);
     }
   }, [symbol, timeframe, t]);
+
+  const fresh = loadedKey === key;
+  const shownRows = fresh ? rows : [];
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const split = { buy: 0, sell: 0, neutral: 0 };
-  for (const a of rows) {
+  for (const a of shownRows) {
     if (a.direction === 'buy') split.buy += 1;
     else if (a.direction === 'sell') split.sell += 1;
     else split.neutral += 1;
@@ -89,7 +105,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   // chart-r70: مرجع منازل واحد للوحة كلها — بدونه رمز بلا منازل معروفة (النفط) يطبع كل رقم بمنازل حجمه
   // («99.950 | 100.45»). الدخول إن وُجد، وإلا أول هدف.
   const priceRef =
-    levels?.entry ?? rows.find((a) => typeof a.target === 'number' && Number.isFinite(a.target))?.target ?? null;
+    levels?.entry ?? shownRows.find((a) => typeof a.target === 'number' && Number.isFinite(a.target))?.target ?? null;
 
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
@@ -121,11 +137,11 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
-      {unavailable ? (
+      {fresh && unavailable ? (
         <View style={styles.consensus}>
           <Text style={[styles.meta, { textAlign: align }]}>{t.analystsUnavailable}</Text>
         </View>
-      ) : rows.length ? (
+      ) : shownRows.length ? (
         <View style={styles.consensus}>
           <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
             {dirLabel(direction, t)}
@@ -149,7 +165,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
       ) : null}
 
       <ScrollView style={styles.list} nestedScrollEnabled>
-        {rows.map((a) => (
+        {shownRows.map((a) => (
           <View key={a.id} style={[styles.row, rtl && styles.rowRtl]}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.name, { textAlign: align }]}>{a.name}</Text>
@@ -170,7 +186,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
           </View>
         ))}
       </ScrollView>
-      {note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
+      {fresh && note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
     </View>
   );
 }
