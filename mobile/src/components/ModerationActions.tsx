@@ -152,7 +152,7 @@ export function ModerationToggle({ open, onPress, label }: { open: boolean; onPr
       accessibilityState={{ expanded: open }}
       onPress={onPress}
       hitSlop={10}
-      style={({ pressed: p }) => [styles.toggle, p && { opacity: buttons.pressedOpacity }]}
+      style={({ pressed: p }) => [styles.toggle, open && styles.toggleOn, p && { opacity: buttons.pressedOpacity }]}
     >
       <Text style={[styles.toggleText, open && styles.toggleTextOn]}>⋯</Text>
     </Pressable>
@@ -184,7 +184,9 @@ const styles = StyleSheet.create({
   blockChip: { borderColor: colors.textDim, maxWidth: 200 },
   blockText: { color: colors.text },
   cancelText: { color: colors.textMuted },
-  toggle: { paddingHorizontal: 4 },
+  toggle: { paddingHorizontal: 4, borderRadius: radii.sm },
+  // DESIGN-PRO §4/§1: «مفتوح» تعبئة محايدة لا لون التأكيد وحده — «⋯» على كل رسالة/فكرة، فلا تأكيد بقائمة
+  toggleOn: { backgroundColor: colors.selectedFill },
   toggleText: { color: colors.textDim, fontSize: 16, fontWeight: '500', lineHeight: 16 },
-  toggleTextOn: { color: colors.accent },
+  toggleTextOn: { color: colors.text },
 });
