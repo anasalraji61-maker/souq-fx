@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -87,7 +87,12 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
 
   // تغيير الرمز/الفريم/الاستراتيجية: نتيجة التشغيل السابق لم تعد تصف الاختيار الظاهر — كانت نسبة نجاح
   // MA Cross على EURUSD تبقى تحت «RSI» و«XAUUSD» كأنها نتيجتهما.
+  // رقم الطلب الجاري: الرقائق تبقى مفعّلة أثناء التشغيل ⇒ EURUSD ثم XAUUSD قبل الردّ كان يكتب نتيجة EURUSD
+  // ومنحناها تحت XAUUSD بعد أن مسحها التأثير أدناه. أي تغيير في الاختيار أو تشغيل جديد يُبطل الردّ السابق.
+  const reqRef = useRef(0);
   useEffect(() => {
+    reqRef.current += 1;
+    setLoading(false);
     setStats(null);
     setTrades([]);
     setEquity([]);
@@ -95,8 +100,15 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
     setRanFor(null);
     setRanSymbol(null);
   }, [symbol, tf, strategy]);
+  useEffect(
+    () => () => {
+      reqRef.current += 1;
+    },
+    [],
+  );
 
   const run = async () => {
+    const req = ++reqRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -105,6 +117,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         timeframe: tf,
         strategy,
       });
+      if (req !== reqRef.current) return;
       // مسار بذري مختلَق (المزوّد متعذّر): نسبة الربح والعائد عليه ليست أداء الاستراتيجية.
       if (res.data_kind === 'demo') {
         setStats(null);
@@ -131,12 +144,13 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       setEquity(res.equity_curve ?? []);
       playSoftClick();
     } catch {
+      if (req !== reqRef.current) return;
       setStats(null);
       setTrades([]);
       setEquity([]);
       setError(t.backtestRunError);
     } finally {
-      setLoading(false);
+      if (req === reqRef.current) setLoading(false);
     }
   };
 
