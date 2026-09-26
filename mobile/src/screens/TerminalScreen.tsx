@@ -1122,7 +1122,7 @@ export function TerminalScreen() {
     },
     {
       id: 'al',
-      mark: '⚡',
+      mark: '⚑',
       tip: t.termAlertWord,
       run: () => setEdgePanel(edgePanel === 'alerts' ? null : 'alerts'),
     },

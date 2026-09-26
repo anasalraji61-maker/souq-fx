@@ -95,7 +95,7 @@ function buildTabs(t: Dict): { id: TabId; label: string; mark: string }[] {
     // تسمّيه به اللوحة بكل اللغات. وموضعها **ملاصق** لـ«تنبيهات+»: التبويبان أخوان، ووجود الأول
     // هو ما يجعل «+» بالثاني مفهوماً أصلاً؛ متفرّقين يقرأ المتداول اسمين متشابهين بلا رابط.
     { id: 'alerts', label: t.alertsTitle, mark: '◎' },
-    { id: 'indAlerts', label: t.toolsTabIndAlerts, mark: '⚡' },
+    { id: 'indAlerts', label: t.toolsTabIndAlerts, mark: '⚐' },
     { id: 'calendar', label: t.toolsTabCalendar, mark: '◷' },
     { id: 'layouts', label: t.toolsTabLayouts, mark: '▦' },
     { id: 'ai', label: t.toolsTabAi, mark: '✧' },
