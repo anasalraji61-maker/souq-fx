@@ -108,6 +108,7 @@ import {
   ambiguousThousandsPrice,
   liveEntryFillAllowed,
   liveEntryQuoteState,
+  serverClockOffsetMs,
   restoredSmallSymbol,
   manualConvLooksInverted,
   manualConvDecimalSlip,
@@ -166,6 +167,11 @@ const QUICK_RISK = ['0.5', '1', '2'];
 /** سلسلة الخسائر بسطر المخاطرة: 5 عادية لنظام نجاحه 50% (والنصّ العربي «{n} خسائر» صحيح لـ3–10 فقط) */
 const LOSS_STREAK_N = 5;
 const STORE_KEY = 'matrix.tools.riskCalc.v1';
+/** فرق ساعتَي الخادم والجهاز لأعمار الأسعار (`as_of` بساعة الخادم) — `quoteAsOfMs`. */
+const clockOffsetMs = () => {
+  const now = Date.now();
+  return serverClockOffsetMs(serverNowSec(now), now);
+};
 
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
@@ -517,7 +523,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       api.marketQuote(sym).then(
         (q) =>
           isRealQuote(q) && !fetchedConvPriceLooksWrong(sym, q.price)
-            ? { price: q.price, at: quoteAsOfMs((q as { as_of?: unknown }).as_of, Date.now()), marketOpen: quoteMarketOpen(q) }
+            ? { price: q.price, at: quoteAsOfMs((q as { as_of?: unknown }).as_of, Date.now(), clockOffsetMs()), marketOpen: quoteMarketOpen(q) }
             : null,
         () => null
       );
@@ -1213,7 +1219,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             ask: q.ask,
             refresh,
             at: now,
-            asOfMs: quoteAsOfMs((q as { as_of?: unknown }).as_of, now),
+            asOfMs: quoteAsOfMs((q as { as_of?: unknown }).as_of, now, clockOffsetMs()),
             closed: quoteMarketOpen(q) === false,
           });
         },
@@ -1540,7 +1546,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       // GBPUSD ومعه «عُبّئ» — فيُحسب الوقف واللوت ويُسجَّل بالدفتر من سعر أداة أخرى. يُسقط بصمت.
       if (liveSymRef.current !== sym) return;
       // سعرٌ مخزّن أقدم من 3 دقائق (المزوّد يردّ 429) ليس «السعر الحالي» — راجع `liveEntryQuoteState`
-      const qState = isRealQuote(q) ? liveEntryQuoteState(q, Date.now()) : 'stale';
+      const qState = isRealQuote(q) ? liveEntryQuoteState(q, Date.now(), clockOffsetMs()) : 'stale';
       if (qState === 'stale') {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;

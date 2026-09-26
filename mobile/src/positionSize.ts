@@ -2471,12 +2471,17 @@ export const CONV_STALE_AFTER_MS = 5 * 60_000;
  * وقت السعر الفعلي (ms) من `as_of` الخادم إن أرسله، وإلا `now`. الخادم يعيد سعراً مخزّناً حتى 15 دقيقة
  * (`data_kind: "cache"`) عند تعثّر المزوّد، وختمه بـ«الآن» عند كل تجديد كان يُخفي تحذير «سعر التحويل قديم» للأبد.
  * `as_of` بالثواني (unix) أو بالملّي؛ قيمة غير صالحة/قبل 2001 ⇒ `now`؛ في المستقبل (فرق ساعتَي الخادم والجهاز) ⇒ `now`.
+ *
+ * `serverOffsetMs` = ساعة الخادم − ساعة الجهاز (`serverNowSec() * 1000 − Date.now()`): `as_of` بساعة الخادم و`now` بساعة الجهاز،
+ * فيُنقل `as_of` إلى ساعة الجهاز قبل المقارنة (كـ`6463618` لـ«أمس»). بلا فرق: هاتفٌ متأخّر 10 دقائق يرى سعراً مخزّناً عمره 12 دقيقة
+ * «عمره دقيقتان» فيُعبّأ **دخولاً حالياً** ويُحسب الوقف واللوت منه؛ ومتقدّمٌ 4 دقائق يرى كل سعر حيّ «قديماً» فلا يُعبّأ أبداً.
  */
-export function quoteAsOfMs(asOf: unknown, now: number): number {
+export function quoteAsOfMs(asOf: unknown, now: number, serverOffsetMs = 0): number {
   if (typeof asOf !== 'number' || !Number.isFinite(asOf) || asOf <= 0) return now;
-  const ms = asOf < 1e11 ? asOf * 1000 : asOf;
-  if (ms < 1e12 || ms > now) return now;
-  return ms;
+  const raw = asOf < 1e11 ? asOf * 1000 : asOf;
+  if (raw < 1e12) return now;
+  const ms = raw - (Number.isFinite(serverOffsetMs) ? serverOffsetMs : 0);
+  return ms > now ? now : ms;
 }
 
 /**
@@ -2528,10 +2533,17 @@ export const LIVE_ENTRY_MAX_AGE_MS = 3 * 60_000;
  * والحاسبة كانت تكتبه «✓ الدخول من السعر الحالي» — وسعر تحويلها بالشاشة نفسها يقرأ `as_of` ويقول «قديم». المتداول يضع وقفه
  * من الشارت الحيّ، فإن تحرّك السوق 10 نقاط ووقفه 20 حُسب اللوت على 10 أو 30 نقطة: المخاطرة الحقيقية 0.67–2 ضعف ما اختار.
  */
-export function liveEntryQuoteState(q: unknown, now: number): 'live' | 'closed' | 'stale' {
+export function liveEntryQuoteState(q: unknown, now: number, serverOffsetMs = 0): 'live' | 'closed' | 'stale' {
   if (quoteMarketOpen(q) === false) return 'closed';
   const asOf = q != null && typeof q === 'object' ? (q as { as_of?: unknown }).as_of : undefined;
-  return now - quoteAsOfMs(asOf, now) > LIVE_ENTRY_MAX_AGE_MS ? 'stale' : 'live';
+  // `as_of` بساعة الخادم ⇒ العمر بفرق الساعتين (`quoteAsOfMs`)
+  return now - quoteAsOfMs(asOf, now, serverOffsetMs) > LIVE_ENTRY_MAX_AGE_MS ? 'stale' : 'live';
+}
+
+/** ساعة الخادم − ساعة الجهاز (ms) من `serverNowSec` — الوسيط الثالث لـ`quoteAsOfMs`/`liveEntryQuoteState`. */
+export function serverClockOffsetMs(serverNowSecAt: number, deviceMs: number): number {
+  const off = serverNowSecAt * 1000 - deviceMs;
+  return Number.isFinite(off) ? off : 0;
 }
 
 /**

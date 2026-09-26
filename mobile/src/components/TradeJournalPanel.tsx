@@ -20,7 +20,7 @@ import { formatPrice } from '../chart/math';
 import { isRealQuote, isSyntheticProvenance, serverNowSec } from '../chart/dataSource';
 import { cachedChartSeries, rememberChartSeries } from '../hooks/chartSeriesCache';
 import { pipUnit } from '../chart/measureReadout';
-import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, liveEntryQuoteState, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, liveEntryQuoteState, serverClockOffsetMs, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -145,6 +145,11 @@ const PRICE_MAX_LEN = 20;
  * كان بلا سطر عائم.
  */
 const MAX_LIVE_QUOTES = 4;
+/** فرق ساعتَي الخادم والجهاز لأعمار الأسعار (`as_of` بساعة الخادم) — `quoteAsOfMs`. */
+const clockOffsetMs = () => {
+  const now = Date.now();
+  return serverClockOffsetMs(serverNowSec(now), now);
+};
 
 /** +80 / −12.5 pip — نفس علامة الناقص المطبعية لـformatR. */
 const formatSignedPips = (p: number): string => {
@@ -364,7 +369,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           // Bid/Ask مع السعر: الصفّ العائم يُحسب على سعر الإغلاق الفعلي (`floatingExitPrice`)
           // وسعرٌ أقدم من 3 دقائق والسوق مفتوح (المزوّد يردّ 429 ⇒ إغلاق شمعة 15د مخزّنة، حتى ساعات) لا يُحسب عليه العائم: «+50 pip»
           // أخضر من سعر قبل ساعتين، و«أغلق بالسعر الحالي» يرفضه نفسه. يُعامَل كغياب السعر؛ والسوق المغلق (العطلة) يبقى بسعر الإغلاق
-          return isRealQuote(q) && liveEntryQuoteState(q, Date.now()) !== 'stale'
+          return isRealQuote(q) && liveEntryQuoteState(q, Date.now(), clockOffsetMs()) !== 'stale'
             ? ([sym, { price: q.price, bid: q.bid, ask: q.ask }] as const)
             : null;
         } catch {
@@ -532,7 +537,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       // الرمز أو الجهة أو الدخول المكتوب أو الصفقة قيد التعديل تغيّرت أثناء الطلب — يُسقط (`liveFillStillValid`)
       if (!liveFillStillValid(atTap, liveNow())) return;
       // سعرٌ مخزّن أقدم من 3 دقائق (المزوّد يردّ 429) ليس «السعر الحالي» — راجع `liveEntryQuoteState`
-      if (!isRealQuote(q) || liveEntryQuoteState(q, Date.now()) === 'stale') {
+      if (!isRealQuote(q) || liveEntryQuoteState(q, Date.now(), clockOffsetMs()) === 'stale') {
         setFormError(t.journalNoLiveQuote);
         return;
       }
@@ -1510,7 +1515,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       const q = await api.marketQuote(quoteSymbol(tr.symbol) ?? tr.symbol);
       if (!mountedRef.current) return;
       // سعرٌ مخزّن قديم كان يُغلق الصفقة بنتيجةٍ من ربع ساعة مضت؛ السوق المغلق = آخر سعر قبل الإغلاق، يصلح
-      if (isRealQuote(q) && liveEntryQuoteState(q, Date.now()) !== 'stale') {
+      if (isRealQuote(q) && liveEntryQuoteState(q, Date.now(), clockOffsetMs()) !== 'stale') {
         px = executionPrice(q, tr.side === 'sell' ? 'sell' : 'buy', 'close');
       }
     } catch {

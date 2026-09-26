@@ -2977,6 +2977,28 @@ console.log('positionSize targetQuoteToAccount selftest OK');
   assert.equal(quoteAsOfMs(now / 1000 + 90, now), now);
   // رقم صغير غير معقول (عدّاد لا تاريخ) ⇒ الآن
   assert.equal(quoteAsOfMs(12345, now), now);
+  // ساعة الجهاز ≠ ساعة الخادم: `as_of` يُنقل لساعة الجهاز بالفرق (خادم − جهاز)
+  const { liveEntryQuoteState, serverClockOffsetMs } = require('./positionSize') as typeof import('./positionSize');
+  const serverNow = now; // ساعة الخادم الحقيقية
+  const slowPhone = now - 10 * 60_000; // الهاتف متأخّر 10 دقائق
+  const offSlow = serverClockOffsetMs(serverNow / 1000, slowPhone);
+  assert.equal(offSlow, 10 * 60_000);
+  const q12 = { price: 1.085, as_of: serverNow / 1000 - 12 * 60, market_open: true, data_kind: 'cache' };
+  // المُعاد إنتاجه: سعرٌ مخزّن عمره 12 دقيقة كان «حيّاً» (عمره بساعة الهاتف دقيقتان) فيُعبّأ دخولاً
+  assert.equal(liveEntryQuoteState(q12, slowPhone), 'live');
+  assert.equal(liveEntryQuoteState(q12, slowPhone, offSlow), 'stale');
+  assert.equal(quoteAsOfMs(q12.as_of, slowPhone, offSlow), slowPhone - 12 * 60_000);
+  assert.equal(convStaleMinutes(quoteAsOfMs(q12.as_of, slowPhone, offSlow), slowPhone), 12);
+  // هاتف متقدّم 4 دقائق: سعرٌ حيّ عمره 5 ث كان «قديماً» فلا يُعبّأ أبداً
+  const fastPhone = now + 4 * 60_000;
+  const offFast = serverClockOffsetMs(serverNow / 1000, fastPhone);
+  const q5 = { price: 1.085, as_of: serverNow / 1000 - 5, market_open: true, data_kind: 'provider' };
+  assert.equal(liveEntryQuoteState(q5, fastPhone), 'stale');
+  assert.equal(liveEntryQuoteState(q5, fastPhone, offFast), 'live');
+  assert.equal(quoteAsOfMs(q5.as_of, fastPhone, offFast), fastPhone - 5000);
+  // فرقٌ غير منتهٍ ⇒ كأن لا فرق
+  assert.equal(quoteAsOfMs(q5.as_of, now, NaN), now - 5000);
+  assert.equal(serverClockOffsetMs(NaN, now), 0);
 }
 console.log('positionSize quoteAsOfMs selftest OK');
 
