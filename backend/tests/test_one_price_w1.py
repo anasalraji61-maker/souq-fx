@@ -117,3 +117,19 @@ def test_weekend_fetch_is_served_from_cache_until_reopen(provider, monkeypatch):
     clock["t"] = _ts("2026-09-27 21:01")
     _, meta = market.fetch_time_series_with_meta("EURUSD", "D", 50)
     assert meta["kind"] == "provider"
+
+
+def test_provider_error_at_the_reopen_still_serves_the_friday_close(provider, monkeypatch):  # noqa: F811
+    """run 80: شموع السبت عمرها ~36 ساعة عند افتتاح الأحد ⇒ خطأ/429 عنده (16 شمعة D للقائمة تنتهي معاً)
+    كان يعيد «غير متاح». العمر يُعدّ من الافتتاح: 15 دقيقة سماح بإغلاق الجمعة الحقيقي ووقت جلبه الحقيقي."""
+    clock = {"t": _ts("2026-09-26 09:00")}
+    monkeypatch.setattr(market.time, "time", lambda: clock["t"])
+    _series(provider, "D")
+    provider["payload"] = {"status": "error", "code": 429, "message": "rate limit"}
+    clock["t"] = _ts("2026-09-27 21:00") + 30
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "D", 50)
+    assert meta == {"kind": "cache", "as_of": _ts("2026-09-26 09:00"), "channel": "twelvedata"}
+    assert candles[-1]["close"] == pytest.approx(FRIDAY_CLOSE)
+    clock["t"] = _ts("2026-09-27 21:16")
+    with pytest.raises(RuntimeError):
+        market.fetch_time_series_with_meta("EURUSD", "D", 50)

@@ -360,8 +360,11 @@ def _serve_stale(cache_key: str, now: float) -> tuple[list[dict], float] | None:
     hit = _cache.get(cache_key)
     if not hit:
         return None
-    age = now - hit[0]
-    if age <= STALE_MAX_SEC:
+    # شموع العطلة صالحة حتى افتتاح الأحد (`_closed_until`) ⇒ عمرها يُعدّ من الافتتاح لا من الجلب. كان الجلب
+    # يوم السبت عمره ~36 ساعة عند الافتتاح ⇒ 429 عنده (16 شمعة D للقائمة تنتهي كلها باللحظة نفسها) يعيد
+    # الصفّ «—» والشارت «غير متاح» بدل إغلاق الجمعة الحقيقي. `as_of` يبقى وقت الجلب الحقيقي.
+    fresh_until = max(hit[0], _closed_until(cache_key.split("|", 1)[0], hit[0]) or 0)
+    if now - fresh_until <= STALE_MAX_SEC:
         _stats["stale_served"] = int(_stats["stale_served"] or 0) + 1
         return hit[1], hit[0]
     return None
