@@ -872,7 +872,7 @@ export function ToolsScreen() {
           !scanNone &&
           scanInfo.scanned !== 0 &&
           results.length === 0 ? (
-            <Text style={[styles.scanHint, { textAlign: align }]}>
+            <Text style={[styles.scanNoMatch, { textAlign: align }]}>
               {scanInfo.scanned != null
                 ? t.screenerNoMatchOf
                     .replace('{k}', String(scanInfo.scanned))
@@ -1186,6 +1186,13 @@ const styles = StyleSheet.create({
     color: colors.warn,
     fontSize: 12,
     fontWeight: '500',
+    paddingVertical: spacing.sm,
+  },
+  // فحصٌ نجح ولم يجد تطابقاً نتيجةٌ عادية لا بيانات متدهورة ⇒ ليس `warn` (DESIGN-PRO §1)
+  scanNoMatch: {
+    ...numeric,
+    color: colors.textMuted,
+    fontSize: 12,
     paddingVertical: spacing.sm,
   },
   sym: { color: colors.text, fontWeight: '500', fontSize: 15 },
