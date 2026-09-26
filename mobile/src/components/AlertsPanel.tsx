@@ -182,8 +182,25 @@ export function AlertsPanel({
 
   /** فتح اللوحة من شارت آخر (FocusChartModal/الشريط الجانبي) يغيّر defaultSymbol — نزامن الرمز
    * ما لم يكن المستخدم في منتصف تعديل تنبيه. */
+  // **والسعر المكتوب لا يعبر معه**: «1.0850» لـEURUSD ثم تبديل الشارت إلى XAUUSD كان يُبقي
+  // «XAUUSD · 1.0850» واتجاه EURUSD بالنموذج ⇒ «أضف» يسلّح تنبيهاً على الذهب بمستوى لا معنى له.
+  // وتبديلٌ أثناء التعديل لا يضيع: يُحفظ بالمرجع ويُطبَّق عند الحفظ أو الإلغاء.
+  const defaultSymbolRef = useRef(defaultSymbol);
+  const clearDraft = () => {
+    setPrice('');
+    priceTextRef.current = '';
+    condManualRef.current = false;
+    setNote('');
+    setFormError(null);
+  };
   useEffect(() => {
-    if (!editingId) setSymbol(defaultSymbol);
+    defaultSymbolRef.current = defaultSymbol;
+    if (editingId) return;
+    if (symbol.trim().toUpperCase() !== defaultSymbol.trim().toUpperCase()) {
+      clearDraft();
+      setArmed(null);
+    }
+    setSymbol(defaultSymbol);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultSymbol]);
 
@@ -375,11 +392,8 @@ export function AlertsPanel({
 
   const cancelEdit = () => {
     setEditingId(null);
-    setPrice('');
-    priceTextRef.current = '';
-    condManualRef.current = false;
-    setNote('');
-    setFormError(null);
+    clearDraft();
+    setSymbol(defaultSymbolRef.current);
   };
 
   const refresh = useCallback(async () => {
@@ -556,6 +570,7 @@ export function AlertsPanel({
       priceTextRef.current = '';
       condManualRef.current = false;
       setNote('');
+      if (replacing) setSymbol(defaultSymbolRef.current);
       setEditingId(null);
       if (fallbackDelete) {
         try {
