@@ -4044,4 +4044,12 @@ console.log('tradePlan journalFormSymbol selftest OK');
     assert.equal(journalPipSize(sym), 0.01, raw);
   }
 }
+// micro/mini بمسافة: الرمز المحفوظ كما كان (المسافة لا تدخل رمزاً محفوظاً) بعد أن صارت `smallContractPair` تعرفها
+{
+  assert.equal(journalSymbol('EURUSD micro'), 'EURUSDMICRO');
+  assert.equal(journalSymbol('EURUSD mini'), 'EURUSDMINI');
+  assert.equal(journalSymbol('EURUSD c'), 'EURUSDC');
+  assert.equal(journalSymbol('EURUSD  cent'), 'EURUSDCENT');
+  assert.equal(journalSymbol('EURUSD-cent'), 'EURUSD-CENT');
+}
 console.log('tradePlan cent word selftest OK');

@@ -2087,6 +2087,35 @@ console.log('positionSize microAccountSymbol selftest OK');
 }
 console.log('positionSize smallContractSpec selftest OK');
 
+// QA115a: المسافة فاصل كالنقطة — «EURUSD cent» تُحسب بالحاسبة كما يقبلها الدفتر (كانت null ⇒ «استخدم زوجاً من 6 أحرف»)
+{
+  for (const [raw, pair, kind] of [
+    ['EURUSD cent', 'EURUSD', 'cent'], ['EURUSD c', 'EURUSD', 'cent'], ['usdjpy CENT', 'USDJPY', 'cent'], ['GOLD cent', 'XAUUSD', 'cent'],
+    ['EUR/USD cent', 'EURUSD', 'cent'], ['EURUSD  cent', 'EURUSD', 'cent'], ['EURUSD micro', 'EURUSD', 'micro'], ['USDJPY Micro', 'USDJPY', 'micro'],
+  ] as const) {
+    assert.equal(instrumentSpec(raw), null, raw);
+    const small = smallContractSpec(raw)!;
+    assert.equal(small.kind, kind, raw);
+    assert.equal(small.spec.symbol, pair, raw);
+    assert.equal(small.spec.contractSize, smallContractSpec(pair + (kind === 'cent' ? '.cent' : '.micro'))!.spec.contractSize, raw);
+    assert.equal(microAccountSymbol(raw), kind === 'micro' ? pair : null, raw);
+  }
+  // اللوت نفسه للكتابتين: 1% من 100,000 سنت بوقف 25 pip = 4.00 لوت سنت
+  for (const raw of ['EURUSD cent', 'EURUSD.cent']) {
+    const spec = smallContractSpec(raw)!.spec;
+    assert.equal(positionSize({ balance: 100_000, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(spec, CENTS_PER_USD), contractSize: spec.contractSize })!.lots, 4, raw);
+  }
+  // اللاحقة تُعاد بمسافتها على زوج آخر
+  assert.equal(smallContractSuffix('EURUSD cent'), ' cent');
+  assert.equal(withSmallSuffix('GBPUSD', ' cent'), 'GBPUSD cent');
+  // mini بمسافة: زوجها معروف لنقاط الدفتر، ولا لوت (حجمها يختلف بين الوسطاء) — كالملاصقة
+  assert.equal(smallContractSpec('EURUSD mini'), null);
+  // كلمة بلا عقد معروف أو أداة غير فوركس: مرفوضة كما كانت
+  for (const raw of ['EURUSD cents', 'EURUSD usc', 'BTCUSD cent', 'US30 cent', 'EURUSD pro cent', 'EURUSD m cent'])
+    assert.equal(smallContractSpec(raw), null, raw);
+}
+console.log('positionSize small contract with space selftest OK');
+
 // المخاطرة بالمال بعملة USC (حساب السنت): تُفهم وتُقلب نسبةً، ولا تُقرأ بعملة أخرى — ما يعتمد عليه تبديل EURUSD ⇄ EURUSDc
 {
   assert.deepEqual(parseRiskInput('USC 100', 10_000, 'USC'), { pct: 1, amount: 100 });

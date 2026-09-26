@@ -147,14 +147,16 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
  * `instrumentSpec` لا يقبله (لوت السنت أصغر بمئة مرّة — عقد الحساب العادي يُعطي لوتاً خاطئاً بمئة ضعف)؛ الحاسبة تحسبه بعقد
  * الزوج ÷ 100 ورصيد بالـUSC (`smallContractSpec`)، والدفتر نقاطاً بلا مال. «c» أو «C» ملاصقة لزوج صالح أو اسم معدن فقط، كالشارت
  * (`chartPipSpec`)؛ رمزٌ تقبله الحاسبة أصلاً ليس سنتاً، ولاحقة فوق لاحقة («EURUSDmc») لا تُخمَّن. «CENT» كلمةً تُقبل بفاصل
- * أو ملاصقة («EURUSD cent»، «EURUSDcent») كـ«MICRO» — الدفتر يحفظ «EURUSD cent» «EURUSDCENT» فكان يضيع نقاطه وسعره.
+ * أو ملاصقة («EURUSD.cent»، «EURUSDcent») كـ«MICRO» — الدفتر يحفظ «EURUSD cent» «EURUSDCENT» فكان يضيع نقاطه وسعره.
+ * **والمسافة فاصلٌ أيضاً** («EURUSD cent»، «EURUSD c»، ولـmicro/mini «EURUSD micro»): الدفتر يقبلها (يحذف المسافة) والحاسبة
+ * كانت ترفضها برسالة «استخدم زوجاً من 6 أحرف» — الرمز نفسه يُحسب بمكانٍ ويُرفض بالآخر.
  */
 export function centAccountSymbol(raw: string): string | null {
   const s = raw.trim();
   if (instrumentSpec(s)) return null;
   const m =
     /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER|gold|silver|Gold|Silver)[cC]$/.exec(s) ??
-    /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)(?:[.\-_#+](?:C|CENT)|CENT)$/i.exec(s);
+    /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)(?:(?:[.\-_#+]|\s+)(?:C|CENT)|CENT)$/i.exec(s);
   if (!m) return null;
   return instrumentSpec(m[1])?.symbol ?? null;
 }
@@ -167,7 +169,7 @@ export function centAccountSymbol(raw: string): string | null {
 export function smallContractPair(raw: string): string | null {
   const cent = centAccountSymbol(raw);
   if (cent) return cent;
-  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+]?MICRO$/i.exec(raw.trim());
+  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)(?:[.\-_#+]|\s+)?MICRO$/i.exec(raw.trim());
   return m ? instrumentSpec(m[1])?.symbol ?? null : null;
 }
 
@@ -185,7 +187,7 @@ export function microAccountSymbol(raw: string): string | null {
  * (نقاط الدفتر وسعر السوق)، والمال **مجهول**: حجم لوت mini يختلف بين الوسطاء — راجع `MINI_SUFFIX`.
  */
 export function miniAccountSymbol(raw: string): string | null {
-  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+]?MINI$/i.exec(raw.trim());
+  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)(?:[.\-_#+]|\s+)?MINI$/i.exec(raw.trim());
   return m ? instrumentSpec(m[1])?.symbol ?? null : null;
 }
 
@@ -219,7 +221,7 @@ export function smallContractSpec(raw: string): { kind: 'cent' | 'micro'; spec: 
 export function smallContractSuffix(raw: string): string | null {
   const s = raw.trim();
   if (!smallContractSpec(s)) return null;
-  const m = /[.\-_#+]?(?:micro|cent|c)$/i.exec(s);
+  const m = /(?:[.\-_#+]|\s+)?(?:micro|cent|c)$/i.exec(s);
   return m ? m[0] : null;
 }
 

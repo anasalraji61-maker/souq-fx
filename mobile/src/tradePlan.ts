@@ -2051,7 +2051,9 @@ export function journalSymbol(raw: string): string | null {
   if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3];
   // «EURUSD-cent»/«EURUSD_micro» تبقى بلاحقتها: حذف الفاصل كان يُخرج «EURUSDCENT» فتضيع النقاط وسعر السوق
   const small = smallContractPair(up) ?? miniAccountSymbol(up);
-  if (small && pair && pair[1] + pair[2] === small && pair[3].length <= 6) return small + pair[3];
+  // «EURUSD cent» بمسافة ⇒ «EURUSDCENT» كما كانت تُحفظ قبل أن تعرفها `smallContractPair` — لا مسافة داخل رمزٍ محفوظ
+  const tail = pair ? pair[3].replace(/^\s+/, '') : '';
+  if (small && pair && pair[1] + pair[2] === small && tail.length <= 6) return small + tail;
   // «BTCUSD#» كـ«GOLD#»: الزوج الرقمي بلاحقة وسيطه بفاصل يُحفظ كما كُتب — كانت «#» تُرفض فرسالة «دخول غير صالح» عامة
   const known = knownSingleName(up) ?? cryptoPairOf(up);
   const suffixed = known ? /^(.*?)([.\-_#+][A-Z0-9]{0,5})$/.exec(up.replace(/[\s/]/g, '')) : null;
