@@ -785,3 +785,11 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ حارس التيك المتجمّد بـ`useMultiLiveTicks` (رفض `ticks_at` الأقدم من `TICK_STALE_MS` وإسقاط الرمز الصامت)، والمتابعة تسم السعر غير الحيّ `wlDemoTag`؛ لا قيمة `ku` مطابقة لنظيرتها العربية (1117/1117 مفتاحاً، ولا مفتاح ناقص).
 - فحص آلي بنطاقي: كل Pressable باختيار شرطي يحمل `accessibilityState` (0 إصابة)؛ كل `<Text>` بقيمة رقمية منسّقة أسلوبه يحمل `...numeric` (7 إصابات كاذبة: تعريف أسلوب بسطر واحد).
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: تغيير كلمة المرور بعد تغييرها من جهاز آخر.
+
+## 2026-09-26 — تشغيل 64
+لا صفّ بـCOORDINATION موجَّه إلى ui (دورة QA 93: launch156a أُغلق، tools108a لـtools ونُفّذ `36136cf`). بوابة البناء خضراء (tsc 0). **لا تغيير كود هذا التشغيل** — لا شيء مفتوح بنطاقي يُصلَح.
+
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط (`AnalystsPanel:149`، `SocialConsensusPanel:248`)؛ «إعادة الجولة» `AccountScreen:247-269` بالعرض الرئيسي لمسجَّل الدخول والزائر معاً.
+- فحص آلي بنطاقي: كل Pressable/Touchable بأسلوب اختيار شرطي يحمل `accessibilityState` (إصابة واحدة كاذبة: غلاف hover `WatchlistPanel:417` بـ`accessible={false}` والزرّ الداخلي يحمل `selected`)؛ لا وزن ≥700، لا `uppercase`، لا مسافة خارج 4؛ الظلّ الوحيد `FrameSizedGrid.cellDragging` (أثناء السحب، مُبقى عمداً)؛ نصوص الأرقام المتغيّرة المفحوصة (`ChartFrame.spreadPips`، `SymbolSnapshot.chip`، `IndicatorForecastPanel.sub`) بـ`...numeric`.
+- قائمة DESIGN-PRO المرتّبة (1–6) منجزة بنطاقي منذ تشغيلات سابقة.
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
