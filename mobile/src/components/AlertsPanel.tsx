@@ -1276,7 +1276,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   offsetChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  editingText: { color: colors.accent, fontSize: 11, fontWeight: '500', flex: 1, marginTop: spacing.xs },
+  // §1: الصفّ المحرَّر يحمل التأكيد بتعبئته (`itemEditing`) وزرّ الحفظ تأكيد اللوحة — الوسم بنصّ أساسي.
+  editingText: { color: colors.text, fontSize: 11, fontWeight: '500', flex: 1, marginTop: spacing.xs },
   cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   firesNow: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   armed: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
