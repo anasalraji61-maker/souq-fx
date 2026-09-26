@@ -1036,7 +1036,8 @@ export function TerminalScreen() {
           }
           try {
             const loaded = await api.chart(symbol, secTf, need);
-            if ((loaded.candles?.length ?? 0) > 0) {
+            // ظلّ تجريبي/«غير متاح» بشموع ⇒ شموع مختلَقة فوق شارت حقيقي بلا شارة (الظلّ لا يحمل وسم مصدر) — يُسقَط كالفارغ
+            if ((loaded.candles?.length ?? 0) > 0 && !isSyntheticProvenance(loaded.data_source)) {
               shadowFetchedRef.current[i] = { key, need, at: Date.now() };
               return loaded;
             }
