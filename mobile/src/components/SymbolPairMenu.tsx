@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
@@ -32,6 +32,33 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
     };
   }, [open]);
 
+  /**
+   * قرار ١٦ (الويب): القائمة كانت تُغلق باختيار رمز أو بالزرّ نفسه فقط — تبقى مفتوحة فوق الشموع بعد نقرة
+   * خارجها، وEsc لا يفعل شيئاً. نمط قائمة التخطيط (`TerminalScreen`) حرفاً بحرف: Esc يغلقها وحدها (التقاط،
+   * لا يلغي رسماً جارياً تحتها)، والنقر خارجها يغلقها ويصل لهدفه كما هو.
+   */
+  const wrapRef = useRef<View>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !open || typeof document === 'undefined') return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+    };
+    const onDown = (event: PointerEvent) => {
+      const node = wrapRef.current as unknown as { contains?: (n: unknown) => boolean } | null;
+      if (node?.contains?.(event.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('pointerdown', onDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('pointerdown', onDown, true);
+    };
+  }, [open]);
+
   const toggle = () => {
     unlockSoftClick();
     playSoftClick();
@@ -45,7 +72,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
   };
 
   return (
-    <View style={styles.wrap}>
+    <View ref={wrapRef} style={styles.wrap}>
       <Pressable
         accessibilityState={{ expanded: open }}
         accessibilityRole="button"
@@ -185,7 +212,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
   },
+  // DESIGN-PRO §1: الصفّ المختار يحمل التعبئة ونصّ الرمز الأساسي — وسم الفئة لا يأخذ التأكيد (شارة).
   groupOn: {
-    color: colors.accent,
+    color: colors.textMuted,
   },
 });
