@@ -4247,6 +4247,15 @@ console.log('positionSize parseLostToday selftest OK');
   // بلا as_of (خادم أقدم) ⇒ quoteAsOfMs = الآن ⇒ كما كان (عمر الجلب وحده)
   assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: quoteAsOfMsM(undefined, now), closed: false }, now), true);
   assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: quoteAsOfMsM((now - 14 * 60_000) / 1000, now), closed: false }, now), false);
+  // QA129a: حدٌّ واحد لعمر السعر — سطر الهامش و«الدخول = السعر الحالي» يحكمان على السعر نفسه بالحكم نفسه
+  const { liveEntryQuoteState, QUOTE_LIVE_MAX_AGE_MS } = require('./positionSize') as typeof import('./positionSize');
+  for (const ageS of [90, 150, 170, 180, 181, 200]) {
+    const asOfSec = (now - ageS * 1000) / 1000;
+    const entryLive = liveEntryQuoteState({ price: 1.085, as_of: asOfSec, market_open: true }, now) === 'live';
+    const marginLive = marginQuoteUsable({ fetchedAt: now, asOfMs: quoteAsOfMsM(asOfSec, now), closed: false }, now);
+    assert.equal(marginLive, entryLive, `age ${ageS}s`);
+    assert.equal(entryLive, ageS * 1000 <= QUOTE_LIVE_MAX_AGE_MS, `age ${ageS}s`);
+  }
   console.log('positionSize marginQuoteUsable selftest OK');
 }
 

@@ -1627,18 +1627,25 @@ export function marginPrice(input: {
   return ok(q.price) ? { price: q.price, live: true } : null;
 }
 
-/** أقدم سعر سوق يُبنى عليه سطر الهامش: دورتا تحديث (60 ث) — بعدها لا سطر بدل رقمٍ من سعرٍ قديم. */
+/**
+ * أقدم **وقت سعر** (`as_of`) يُعدّ «السعر الحالي»: الاقتباس المخزّن بالخادم 30 ث، ووقت المزوّد يتأخّر دقيقة على الأكثر.
+ * حدٌّ واحد لسطر الهامش («@ السعر») و«الدخول = السعر الحالي» — كانا دقيقتين وثلاثاً، فسعرٌ عمره 150 ث يُعبَّأ دخولاً حيّاً
+ * بينما يختفي سطر الهامش بالشاشة نفسها كقديم (QA129a).
+ */
+export const QUOTE_LIVE_MAX_AGE_MS = 3 * 60_000;
+
+/** أقدم **جلب** يُبنى عليه سطر الهامش: دورتا تحديث (60 ث) — بعدها لا سطر بدل رقمٍ من جلبٍ متعثّر. عمر السعر نفسه: `QUOTE_LIVE_MAX_AGE_MS`. */
 export const MARGIN_QUOTE_MAX_AGE_MS = 120_000;
 
 /**
  * سعر السوق المجلوب صالحٌ لسطر الهامش («@ السعر»)؟ العمر كان يُقاس من **لحظة الجلب** وحدها: الخادم يُرجع عند تعثّر المزوّد
  * آخر إغلاق 15m (`ohlc_fallback`، عمره حتى ربع ساعة) فيُعرض «@» كأنه حيّ، بينما «الدخول = السعر الحالي» وسطر التحويل بالحاسبة
- * نفسها يرفضانه قديماً. الآن: جُلب قبل ≤ دقيقتين **و**عمر السعر نفسه (`as_of`) ≤ دقيقتين — إلا والسوق مغلق (`closed`): آخر إغلاق
+ * نفسها يرفضانه قديماً. الآن: جُلب قبل ≤ دقيقتين **و**عمر السعر نفسه (`as_of`) ≤ `QUOTE_LIVE_MAX_AGE_MS` — إلا والسوق مغلق (`closed`): آخر إغلاق
  * هو السعر الصحيح حتى الافتتاح، ويُوسَم «مغلق» بالسطر.
  */
 export function marginQuoteUsable(q: { fetchedAt: number; asOfMs: number; closed: boolean }, now: number): boolean {
   if (!(now - q.fetchedAt <= MARGIN_QUOTE_MAX_AGE_MS)) return false;
-  return q.closed || now - q.asOfMs <= MARGIN_QUOTE_MAX_AGE_MS;
+  return q.closed || now - q.asOfMs <= QUOTE_LIVE_MAX_AGE_MS;
 }
 
 /**
@@ -2522,8 +2529,8 @@ export function convQuoteNotice(staleMin: number | null, marketOpen: boolean | n
   return staleMin != null ? 'stale' : null;
 }
 
-/** «الدخول = السعر الحالي» يرفض سعراً أقدم من هذا: الاقتباس المخزّن بالخادم 30 ث، ووقت المزوّد يتأخّر دقيقة على الأكثر */
-export const LIVE_ENTRY_MAX_AGE_MS = 3 * 60_000;
+/** «الدخول = السعر الحالي» يرفض سعراً أقدم من هذا — الحدّ نفسه لسطر الهامش (`QUOTE_LIVE_MAX_AGE_MS`) */
+export const LIVE_ENTRY_MAX_AGE_MS = QUOTE_LIVE_MAX_AGE_MS;
 
 /**
  * هل يصلح اقتباس `/api/market/quote` **دخولاً الآن**؟ `closed`: الخادم قال السوق مغلق (`market_open: false`) — آخر سعر قبل
