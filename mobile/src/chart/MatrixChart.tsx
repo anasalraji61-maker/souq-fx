@@ -19,6 +19,7 @@ import {
   PanResponder,
   Platform,
   TextInput,
+  AppState,
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -2871,8 +2872,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   // تفكيك المكوّن: يُكتب ما تأجّل بدل إسقاطه — إغلاق نافذة التركيز بعد رسم مباشرةً
   // كان يضيع الرسم لنفس سبب التبديل.
+  // مغادرة التطبيق لا تفكّك المكوّن: إغلاق التبويب أو تحديث الصفحة أو إرسال التطبيق للخلفية (ثم يقتله
+  // النظام) خلال 400ms من آخر رسم كان يُسقط الرسم بصمت. يُكتب ما تأجّل فوراً عند `pagehide`/إخفاء الصفحة
+  // على الويب (localStorage يُكتب متزامناً) وعند مغادرة الحالة `active` على الهاتف.
   useEffect(() => {
+    const flush = () => saveQueue.flush();
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st !== 'active') flush();
+    });
+    const w = Platform.OS === 'web' && typeof window !== 'undefined' ? window : null;
+    const onVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') flush();
+    };
+    w?.addEventListener('pagehide', flush);
+    if (w && typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibility);
     return () => {
+      sub.remove();
+      w?.removeEventListener('pagehide', flush);
+      if (w && typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibility);
       saveQueue.flush();
     };
   }, [saveQueue]);
