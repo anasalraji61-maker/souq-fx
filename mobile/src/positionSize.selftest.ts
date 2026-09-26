@@ -8,6 +8,7 @@ import { chartPipSpec } from './chart/pipSpec';
 import type { CommissionMode } from './positionSize';
 import {
   manualConvLooksInverted,
+  lossStreakDrawdownPct,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3610,3 +3611,29 @@ console.log('positionSize index comma thousands selftest OK');
   assert.equal(spreadMaybePrice('1.08512', instrumentSpec('EURUSD')!, [1.0851]), false);
 }
 console.log('positionSize spread-maybe-price warning selftest OK');
+
+// ---- lossStreakDrawdownPct: ما تأخذه n خسائر متتالية من الحساب ----
+{
+  // بالنسبة (من الرصيد الباقي): 1 − 0.98^5 = 9.608% ⇒ 9.7 (للأعلى)؛ 1 − 0.95^5 = 22.62% ⇒ 22.7؛ 1% × 10 ⇒ 9.56% ⇒ 9.6
+  assert.equal(lossStreakDrawdownPct(2, 5, true), 9.7);
+  assert.equal(lossStreakDrawdownPct(5, 5, true), 22.7);
+  assert.equal(lossStreakDrawdownPct(1, 10, true), 9.6);
+  // خسارة واحدة = المخاطرة نفسها
+  assert.equal(lossStreakDrawdownPct(2, 1, true), 2);
+  assert.equal(lossStreakDrawdownPct(0.5, 1, false), 0.5);
+  // مبلغ ثابت: خطّي بلا ارتفاع من الفاصلة العائمة (5 × 2 = 10 لا 10.1؛ 3 × 0.1 = 0.3)
+  assert.equal(lossStreakDrawdownPct(2, 5, false), 10);
+  assert.equal(lossStreakDrawdownPct(0.1, 3, false), 0.3);
+  assert.equal(lossStreakDrawdownPct(1.1, 3, false), 3.3);
+  // سقف 100%: 30% × 5 ثابتة = 150% ⇒ 100؛ 100% للصفقة ⇒ 100 بالنسبة
+  assert.equal(lossStreakDrawdownPct(30, 5, false), 100);
+  assert.equal(lossStreakDrawdownPct(100, 3, true), 100);
+  assert.equal(lossStreakDrawdownPct(250, 2, true), 100);
+  // مدخل غير صالح
+  assert.equal(lossStreakDrawdownPct(0, 5, true), null);
+  assert.equal(lossStreakDrawdownPct(-1, 5, true), null);
+  assert.equal(lossStreakDrawdownPct(NaN, 5, true), null);
+  assert.equal(lossStreakDrawdownPct(2, 0, true), null);
+  assert.equal(lossStreakDrawdownPct(2, 2.5, true), null);
+}
+console.log('positionSize loss-streak drawdown selftest OK');

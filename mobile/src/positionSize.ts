@@ -1879,6 +1879,23 @@ export function riskIsHigh(pct: number | null | undefined): boolean {
   return pct != null && Number.isFinite(pct) && pct > RISK_HIGH_PCT;
 }
 
+/**
+ * **ما تخسره سلسلة خسائر** من الحساب بمخاطرة الصفقة الحالية: n خسائر متتالية بنسبة `riskPct` لكل صفقة.
+ *
+ * لماذا: «2% للصفقة» تبدو صغيرة؛ خمس خسائر متتالية — وهي عادية لنظام نجاحه 50% — تأخذ 9.6% من الحساب، وبـ5% تأخذ 22.6%.
+ * هذا الرقم هو ما يجعل حدّ المخاطرة محسوساً قبل الدخول.
+ *
+ * `compounding` (المخاطرة بالنسبة، وهي تُحسب كل مرة من الرصيد الباقي): 1 − (1 − p)^n. وإلا (مبلغ ثابت كتبه المتداول بالمال):
+ * n × p خطّياً. سقف 100%. مقرَّب لمنزلة واحدة **للأعلى** (الخسارة لا تُعرض أصغر ممّا هي). `null` لمدخل غير صالح.
+ */
+export function lossStreakDrawdownPct(riskPct: number, n: number, compounding: boolean): number | null {
+  if (!Number.isFinite(riskPct) || riskPct <= 0 || !Number.isInteger(n) || n < 1) return null;
+  const p = Math.min(riskPct, 100) / 100;
+  const lost = compounding ? 1 - Math.pow(1 - p, n) : Math.min(1, n * p);
+  // هامش الفاصلة العائمة (5 × 2% = 10.000…02) لا يرفع منزلة
+  return Math.min(100, Math.ceil(Math.round(lost * 1000 * 1e6) / 1e6) / 10);
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 /**
