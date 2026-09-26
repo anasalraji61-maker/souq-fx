@@ -87,3 +87,25 @@ def test_short_series_is_still_not_enough_data():
     out = signal_hub.indicator_forecast("EURUSD", _flat(1.1, 5), enabled=["bb", "trend"])
     assert out["disclaimer_code"] == "not_enough_data"
     assert out["levels_basis"]["unavailable"] == "not_enough_candles"
+
+
+def test_flat_series_with_default_indicators_is_no_movement_not_neutral():
+    """run 55: RSI ‏50 على سلسلة مسطّحة (اصطلاح لا قراءة) كان الصوت الوحيد ⇒ «إجماع: محايد» بكل المؤشّرات."""
+    out = signal_hub.indicator_forecast("EURUSD", _flat(1.1), lang="en")
+    assert out["votes"] == [] and out["direction"] is None
+    assert out["disclaimer_code"] == "no_movement"
+
+
+def test_flat_closes_with_intrabar_range_is_no_movement():
+    c = [{"open": 1.1, "high": 1.1003, "low": 1.0997, "close": 1.1} for _ in range(180)]
+    out = signal_hub.indicator_forecast("EURUSD", c, lang="en")
+    # Stoch (الإغلاق وسط المدى) والميل 0% قراءتان حقيقيتان؛ RSI ‏50 ليس قراءة
+    assert sorted(v["id"] for v in out["votes"]) == ["stoch", "trend"]
+    assert all(str(v["score"]) == "0.0" for v in out["votes"])
+
+
+def test_rsi_still_votes_on_moving_series():
+    c = [{"open": 1.1 + i * 1e-4, "high": 1.1 + i * 1e-4 + 5e-5, "low": 1.1 + i * 1e-4 - 5e-5,
+          "close": 1.1 + i * 1e-4} for i in range(60)]
+    out = signal_hub.indicator_forecast("EURUSD", c, enabled=["rsi"])
+    assert [v["id"] for v in out["votes"]] == ["rsi"]

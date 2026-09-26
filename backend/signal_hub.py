@@ -227,7 +227,7 @@ def indicator_forecast(
                 "id": key,
                 "name": _VOTE_NAMES[tl][name_key],
                 "direction": _direction(score),
-                "score": round(score, 3),
+                "score": round(score, 3) + 0.0,  # لا «-0.0»
                 "detail": _DETAIL_TEXT[tl][code].format(**values),
                 "detail_code": code,
                 "detail_values": values,
@@ -235,7 +235,10 @@ def indicator_forecast(
         )
 
     rsi_v = snap.get("rsi")
-    if rsi_v is not None:
+    # سلسلة لم يتغيّر إغلاقها قطّ: RSI ‏50 اصطلاح (لا ربح ولا خسارة) لا قراءة ⇒ كان صوته «محايد (50.0)» الوحيد
+    # فيُعرض «إجماع: محايد» بدل «بلا حركة» (`no_movement` لا يُبلغ بالمؤشّرات الافتراضية).
+    flat_closes = rsi_v is not None and max(closes) == min(closes)
+    if rsi_v is not None and not flat_closes:
         # التصنيف على الرقم المعروض: 69.96 كان «زخم إيجابي (70.0)» وصوت شراء بينما 70 «تشبّع شرائي»
         r = round(rsi_v, 1) + 0.0
         if r >= 70:
@@ -339,7 +342,7 @@ def indicator_forecast(
             "snapshot": snap,
             "price_decimals": dp,
             # شموع كافية بلا مدى ⇒ «بلا حركة» لا «بيانات ناقصة» (رمز مجهول ⇒ التطبيق يعرض نصّ الخادم)
-            **({"disclaimer": _NO_MOVE[tl], "disclaimer_code": "no_movement"} if _atr_raw(candles) == 0
+            **({"disclaimer": _NO_MOVE[tl], "disclaimer_code": "no_movement"} if _atr_raw(candles) == 0 or flat_closes
                else {"disclaimer": _NO_DATA[tl], "disclaimer_code": "not_enough_data"}),
         }
 
