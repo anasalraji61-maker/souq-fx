@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
   symbol: { color: colors.text, fontWeight: '500', fontSize: 13 },
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   badgeText: { color: colors.white, fontWeight: '500', fontSize: 11 },
-  meta: { color: colors.textMuted, fontSize: 11, marginTop: 4 },
+  meta: { ...numeric, color: colors.textMuted, fontSize: 11, marginTop: 4 },
   levels: { flexDirection: 'row', gap: spacing.sm, marginTop: 4 },
   levelsRtl: { flexDirection: 'row-reverse' },
   level: {
@@ -595,13 +595,15 @@ const styles = StyleSheet.create({
   levelVal: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600', marginTop: 0 },
   levelSl: { color: colors.bear },
   levelTp: { color: colors.bull },
+  // DESIGN-PRO §1/§2: سطر الخطة يتغيّر مع كل حرف يُكتب — كان تأكيداً على تعبئة تأكيد بجانب زرّ النشر
+  // (عنصرا تأكيد بالنموذج) وبلا أرقام ثابتة العرض ⇒ تعبئة محايدة ونصّ أساسي بـ`numeric`.
   planBox: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.controlBg,
     borderRadius: radii.sm,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
   },
-  planText: { color: colors.accent, fontSize: 11, fontWeight: '500' },
+  planText: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '500' },
   planWarn: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: 4 },
   note: { color: colors.text, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
   barBg: {
@@ -611,7 +613,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     overflow: 'hidden',
   },
-  barFill: { height: 6, backgroundColor: colors.accent },
+  // DESIGN-PRO §1: شريط الموافقة كان بالتأكيد على **كل** بطاقة فكرة وقت السكون ⇒ محايد؛ النسبة مكتوبة تحته.
+  barFill: { height: 6, backgroundColor: colors.textMuted },
   pct: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   actionsRtl: { flexDirection: 'row-reverse' },
