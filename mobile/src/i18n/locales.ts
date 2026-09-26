@@ -1651,7 +1651,7 @@ const ar: Dict = {
     'اختر من عشرات المؤشرات، أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD. بالفوركس الفوليوم وCVD تقدير من الشموع لا حجم حقيقي. وللفوركس أيضاً «Sessions» لجلسات طوكيو ولندن ونيويورك، و«PDH / PDL» لأعلى وأدنى الأمس.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
-    'المس مستوىً على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام. يصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، ولنقله اسحب وسمه على حافة الشارت. تنبيهات المؤشرات وتفعيل الإشعارات في لوح التنبيهات.',
+    'المس مستوىً على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام، وعلى اللابتوب انقر بالزرّ الأيمن عند السعر. يصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، ولنقله اسحب وسمه على حافة الشارت. تنبيهات المؤشرات وتفعيل الإشعارات في لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
     'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip (لا بنقاط MT4/MT5 — 250 نقطة عادةً 25 pip) لتعرف حجم اللوت المناسب، ثم «سجّل هذه الخطة بالدفتر» لتراجعها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
@@ -2897,7 +2897,7 @@ const enUS: Dict = {
     'Pick from dozens of indicators, or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD. On forex, volume and CVD are estimated from candles, not real volume. Also for forex: Sessions shades Tokyo, London and New York, and PDH / PDL marks yesterday’s high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
-    'Tap a level on the chart, then the alert button showing its price — no typing. You get a notification when price reaches it (checked about once a minute). To move it, drag its label at the edge of the chart. Indicator alerts and notification settings are in the alerts panel.',
+    'Tap a level on the chart, then the alert button showing its price — no typing; on a laptop, right-click at that price. You get a notification when price reaches it (checked about once a minute). To move it, drag its label at the edge of the chart. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
     'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss in pips (not MT4/MT5 points — 250 points is usually 25 pips) to get the right lot size, then “Log this plan to the journal” to review it later. Many traders risk no more than 1–2% per trade.',
@@ -4181,7 +4181,7 @@ const ku: Dict = {
     'لە دەیان پێوەر هەڵبژێرە، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD. لە فۆرێکس قەبارە و CVD لە مۆمەکانەوە خەمڵێنراون، نەک قەبارەی ڕاستەقینە. هەروەها بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک ڕەنگ دەکات، و «PDH / PDL» بەرزترین و نزمترینی دوێنێ نیشان دەدات.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
-    'دەست لە ئاستێک بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت). بۆ گواستنەوەی، نیشانەکەی لە لێواری چارت ڕابکێشە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
+    'دەست لە ئاستێک بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە؛ لەسەر لاپتۆپ لەو نرخەدا کلیکی ڕاست بکە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت). بۆ گواستنەوەی، نیشانەکەی لە لێواری چارت ڕابکێشە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
     'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و وەستانی زیان بە pip بنووسە (نەک بە خاڵی MT4/MT5 — 250 خاڵ زۆرجار 25 pipە) بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر پێیدا بچیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
