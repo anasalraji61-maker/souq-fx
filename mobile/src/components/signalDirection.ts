@@ -48,6 +48,9 @@ export function levelsUnavailableText(basis: LevelsBasis, t: Dict): string | nul
     // backend-r54: سلسلة كاملة بلا حركة (سوق مجمّد/مغلق) — كانت تُقرأ خطأً «شموع قليلة».
     case 'no_range':
       return t.sigLevelsUnavailableNoRange;
+    // launch150/QA88a: المدى دون نصف تسعيرة ⇒ الوقف يُقرَّب على الدخول (`signal_hub.py:92`).
+    case 'atr_below_tick':
+      return t.sigLevelsUnavailableAtrBelowTick;
     default:
       return null;
   }
