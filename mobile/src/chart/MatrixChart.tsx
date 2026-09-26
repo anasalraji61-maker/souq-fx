@@ -511,6 +511,7 @@ type PointerEventLike = {
     pageY?: number;
     pointerId?: number;
     pointerType?: string;
+    button?: number;
   };
   currentTarget?: {
     setPointerCapture?: (pointerId: number) => void;
@@ -624,6 +625,10 @@ const NO_DRAWINGS: Drawing[] = [];
 
 let drawingSeq = 0;
 /** `d${Date.now()}` كان يتصادم عند رسمَين بنفس المللي ثانية (نقرتان سريعتان بخط أفقي). */
+/** قائمة الزرّ الأيمن على الويب: عرضها وارتفاع البند (28 = عنصر تحكّم بالشريط الجانبي، §3). */
+const CTX_MENU_W = 280;
+const CTX_ITEM_H = 28;
+
 function nextDrawingId(): string {
   drawingSeq += 1;
   return `d${Date.now()}_${drawingSeq}`;
@@ -2217,6 +2222,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => () => {
     if (alertNudgeTimer.current) clearTimeout(alertNudgeTimer.current);
   }, []);
+  // قائمة الزرّ الأيمن على الويب (W4): موضعها داخل اللوح، والنقطة (فهرس + سعر بمغناطيس الرسم) تحت المؤشّر.
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; point: ChartPoint } | null>(null);
+  const ctxMenuRef = useRef<View>(null);
   const createAlert = (price: number, origin?: 'drawing' | 'crosshair') => {
     if (!onCreateAlert) return;
     onCreateAlert(price, origin);
@@ -5766,6 +5774,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     Platform.OS === 'web'
       ? ({
           onPointerDown: (event: PointerEventLike) => {
+            // الزرّ الأيمن لقائمة `onContextMenu` أدناه — كان يبدأ سحباً يلتصق بالمؤشّر حتى نقرة أخرى.
+            if (event.nativeEvent?.button === 2) return;
+            setCtxMenu(null);
             event.preventDefault?.();
             const point = pointerXY(event);
             // لا سحب جارٍ ⇒ لا مؤشّر مضغوط: رفعٌ فات الحدث (خروج النافذة) لا يترك قرصاً وهمياً.
@@ -5867,6 +5878,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             pinchUsed.current = false;
             webChartPointer.current.active = false;
             endDrag();
+          },
+          // W4 (قرار أنس ١٦): الزرّ الأيمن ⇒ قائمة بالسعر تحت المؤشّر بدل قائمة المتصفّح — تنبيه، خطّ أفقي، إعادة العرض.
+          onContextMenu: (event: PointerEventLike) => {
+            event.preventDefault?.();
+            if (!interactive) return;
+            const rect = event.currentTarget?.getBoundingClientRect?.();
+            const point = pointerXY(event);
+            const x = point.x - (rect?.left ?? 0);
+            const y = point.y - (rect?.top ?? 0);
+            webKeyChart = keyToken.current;
+            setCtxMenu({ x, y, point: pointFromXY(x, y) });
           },
           // خروج الفأرة من اللوح يمسح المعاينة؛ التقاطع المثبَّت يبقى (زرّ ⚑ خارج اللوح).
           onPointerLeave: () => {
@@ -6090,6 +6112,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           },
         } as const)
       : {};
+
+  // القائمة تُغلق بنقرة خارجها، أو Esc (لها وحدها — لا يلغي رسماً ولا يفكّ التقاطع)، أو العجلة، أو تبديل الرمز/الفريم.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !ctxMenu || typeof document === 'undefined') return;
+    const onDown = (event: Event) => {
+      const menu = resolveWebNode(ctxMenuRef);
+      if (menu && event.target instanceof Node && menu.contains(event.target)) return;
+      setCtxMenu(null);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setCtxMenu(null);
+    };
+    const close = () => setCtxMenu(null);
+    document.addEventListener('pointerdown', onDown, true);
+    // window قبل document بالالتقاط ⇒ مستمعو Esc للرسم والتقاطع لا يرونه.
+    window.addEventListener('keydown', onKey, true);
+    document.addEventListener('wheel', close, true);
+    window.addEventListener('blur', close);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('wheel', close, true);
+      window.removeEventListener('blur', close);
+    };
+  }, [ctxMenu]);
+  useEffect(() => setCtxMenu(null), [series.symbol, series.timeframe]);
 
   const wheelPanCarry = useRef(0);
   // RN Web's synthetic onWheel is often passive, so page scroll still wins.
@@ -9896,6 +9947,61 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {...(Platform.OS === 'web' ? webChartHandlers : chartPan.panHandlers)}
           />
         ) : null}
+
+        {ctxMenu && Platform.OS === 'web' && canPan && tool === 'none'
+          ? (() => {
+              const items: { key: string; label: string; price?: number; run: () => void }[] = [];
+              const at = ctxMenu.point.price;
+              if (onCreateAlert && !replayOn && Number.isFinite(at) && at > 0) {
+                items.push({ key: 'alert', label: `⚑ ${tr.mcAlertAtCrossA11y}`, price: at, run: () => createAlert(at, 'crosshair') });
+              }
+              if (Number.isFinite(at)) {
+                items.push({
+                  key: 'hline',
+                  label: localizedDrawTools(tr).find((t) => t.id === 'hline')?.label ?? '',
+                  price: at,
+                  run: () => {
+                    pushDrawHistory();
+                    playSoftClick();
+                    setDrawingsHidden(false);
+                    setDrawings((d) => [...d, { id: nextDrawingId(), tool: 'hline', a: ctxMenu.point, color: accent }]);
+                  },
+                });
+              }
+              items.push({ key: 'reset', label: tr.mcAutoA11y, run: resetChartView });
+              const h = items.length * (CTX_ITEM_H + 12) + 8; // بند قد يلتفّ لسطرين (نصّ إعادة العرض)
+              return (
+                <View
+                  ref={ctxMenuRef}
+                  accessibilityRole="menu"
+                  style={[
+                    styles.ctxMenu,
+                    {
+                      left: Math.max(0, Math.min(ctxMenu.x, chartPlotW - CTX_MENU_W)),
+                      top: ctxMenu.y + h > chartPlotH ? Math.max(0, ctxMenu.y - h) : ctxMenu.y,
+                    },
+                  ]}
+                >
+                  {items.map((it) => (
+                    <Pressable
+                      key={it.key}
+                      accessibilityRole="menuitem"
+                      accessibilityLabel={it.price != null ? `${it.label} ${fmtPrice(it.price)}` : it.label}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      style={(state: any) => [styles.ctxItem, (state.hovered || state.pressed) && styles.ctxItemOn]}
+                      onPress={() => {
+                        setCtxMenu(null);
+                        it.run();
+                      }}
+                    >
+                      <Text style={styles.ctxItemText}>{it.label}</Text>
+                      {it.price != null ? <Text style={styles.ctxItemPrice}>{fmtPrice(it.price)}</Text> : null}
+                    </Pressable>
+                  ))}
+                </View>
+              );
+            })()
+          : null}
 
         {/* مقابض سحب خطوط التنبيه — فوق سطح الإيماءات، بموضع وسم كل خطّ. */}
         {canPan && tool === 'none' && !replayOn && !hidePriceLabels
@@ -13745,6 +13851,28 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.06)',
   },
+  // §5.5 فاصل واحد: حدّ خافت على خلفية مرتفعة، بلا ظلّ. البند المحوَّم بتعبئة محايدة لا بالتأكيد (§1).
+  ctxMenu: {
+    position: 'absolute',
+    zIndex: 60,
+    width: CTX_MENU_W,
+    paddingVertical: 4,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.bgElevated,
+  },
+  ctxItem: {
+    minHeight: CTX_ITEM_H,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ctxItemOn: { backgroundColor: 'rgba(255,255,255,0.06)' },
+  ctxItemText: { flex: 1, color: colors.text, fontSize: 13, fontWeight: '400' },
+  ctxItemPrice: { ...numeric, color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   chartGestureSurface: {
     position: 'absolute',
     left: 0,
