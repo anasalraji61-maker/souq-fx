@@ -102,3 +102,14 @@ def test_weekend_ws_tick_does_not_feed_alerts(monkeypatch, when, served):
     monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
     monkeypatch.setattr(alert_worker.td_ws, "received_at", lambda syms: {"EURUSD": _ts(when)})
     assert (alert_worker._price_at("EURUSD")[0] is not None) is served
+
+
+def test_ws_ticks_drop_weekend_forex(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import main
+    monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.139, "BTCUSD": 65000.0}, _ts(SAT)))
+    monkeypatch.setattr(main.td_ws, "received_at", lambda syms: {s: _ts(SAT) for s in syms})
+    with TestClient(main.app).websocket_connect("/ws/ticks") as ws:
+        msg = ws.receive_json()
+    assert msg["ticks"] == {"BTCUSD": 65000.0}

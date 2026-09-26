@@ -2261,6 +2261,10 @@ async def ticks(ws: WebSocket):
     try:
         while True:
             live, live_at = td_ws.recent_snapshot()
+            # تيكات العطلة (فوركس/معادن/نفط بعد إغلاق الجمعة) ليست أسعاراً قابلة للتداول — كانت تُبثّ «حيّة»
+            at_by = td_ws.received_at(live)
+            live = {s: p for s, p in live.items()
+                    if not market.in_weekend_close(s, at_by.get(s) or market._session_now(), 0)}
             if live:
                 payload = {
                     "ts": time.time(),
