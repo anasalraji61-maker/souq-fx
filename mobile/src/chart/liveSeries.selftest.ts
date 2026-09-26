@@ -45,6 +45,23 @@ const btc: ChartSeries = {
   candles: eur.candles.map((c) => ({ ...c, open: 60000, high: 61500, low: 59000, close: 60000 })),
 };
 assert.equal(tickPlausibleForSeries(btc, 66000), true);
+// أسبوعي: مدى اليورو ~180 نقطة (20× = 31%) — الحدّ مسقوف بـ10% فالباوند والكندي يُرفضان، وحركة 2% تُقبل
+const eurW: ChartSeries = {
+  ...eur,
+  timeframe: '1w',
+  candles: eur.candles.map((c) => ({ ...c, open: 1.17, high: 1.179, low: 1.161, close: 1.1702 })),
+};
+assert.equal(tickPlausibleForSeries(eurW, 1.345), false);
+assert.equal(tickPlausibleForSeries(eurW, 1.385), false);
+assert.equal(tickPlausibleForSeries(eurW, 1.19), true);
+// BTC أسبوعي (مدى ~7%): تيك الإيثريوم يُرفض
+const btcW: ChartSeries = {
+  ...btc,
+  timeframe: '1w',
+  candles: btc.candles.map((c) => ({ ...c, high: 62000, low: 57800 })),
+};
+assert.equal(tickPlausibleForSeries(btcW, 4000), false);
+assert.equal(tickPlausibleForSeries(btcW, 64000), true);
 // بلا شموع ⇒ لا حكم
 assert.equal(tickPlausibleForSeries({ ...eur, candles: [] }, 5), true);
 

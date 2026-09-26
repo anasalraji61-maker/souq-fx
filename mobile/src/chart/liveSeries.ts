@@ -25,6 +25,9 @@ export type LiveMergeOpts = {
  * والتبديل بين زوجين متقاربين (EURUSD↔GBPUSD، الفرق ~15%) يفعل الشيء نفسه بشكل أخفى.
  * الحدّ: 3% من آخر إغلاق، أو 20 ضعف وسيط مدى الشموع الأخيرة (فريمات كبيرة/أدوات متقلّبة) — أيّهما أكبر.
  * حركة فعلية بهذا الحجم بين جلبَين لا تحدث بالفوركس؛ الجلب التالي يُظهرها بشموعها على أي حال.
+ * الحدّ من المدى مسقوف بـ10%: على الأسبوعي مدى اليورو ~180 نقطة ⇒ 20 ضعفاً = 31% فكان تيك الباوند (1.345، +15%)
+ * والكندي يُقبلان فوق شموع اليورو، وعلى BTC الأسبوعي (مدى ~7%) تيك الإيثريوم 4000 يرسم ذيلاً للأسبوع الجاري
+ * يسحق المحور. 10% فوق أيّ حركة حقيقية بين جلبَين (~90 ث)، وتحت أقرب زوجين (اليورو/الباوند).
  */
 export function tickPlausibleForSeries(series: ChartSeries, price: number): boolean {
   const n = series.candles.length;
@@ -38,7 +41,7 @@ export function tickPlausibleForSeries(series: ChartSeries, price: number): bool
   }
   ranges.sort((a, b) => a - b);
   const med = ranges.length ? ranges[Math.floor(ranges.length / 2)]! : 0;
-  return Math.abs(price - ref) <= Math.max(ref * 0.03, med * 20);
+  return Math.abs(price - ref) <= Math.max(ref * 0.03, Math.min(med * 20, ref * 0.1));
 }
 
 /** أقصى فريم تُفتح له شمعة حيّة محلياً: ≤1H محاذاته لرأس الدقيقة/الساعة معروفة؛ 4H/D/W تختلف بين المزوّدين. */
