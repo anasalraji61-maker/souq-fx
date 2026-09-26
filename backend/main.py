@@ -1749,6 +1749,35 @@ def market_quote(symbol: str):
     return book
 
 
+def _journal_iso(v) -> str | None:
+    """وقت دفتر (`YYYY-MM-DD HH:MM` بتوقيت الخادم بلا منطقة) ⇒ ISO بإزاحة الخادم **لذلك التاريخ** (tools130a).
+    العميل لا يعرف منطقة الخادم: متداول ببغداد كان يقرأ/يكتب الوقت مزاحاً بفرق الساعات فتنتقل صفقة الأحد 23:30
+    لأسبوع آخر بالتقرير. الإزاحة لكل صفّ لا واحدة عامّة: صفقة يناير وصفقة يوليو يفصلهما التوقيت الصيفي.
+    غير المقروء (صفوف قديمة بنصّ حرّ) ⇒ None — لا وقت مخمَّن."""
+    if not isinstance(v, str) or not v:
+        return None
+    try:
+        dt = datetime.strptime(v, "%Y-%m-%d %H:%M")
+    except ValueError:
+        return None
+    try:
+        return dt.astimezone().isoformat()  # ساعة مكرَّرة بنهاية الصيفي ⇒ أولاهما (fold=0)
+    except (OverflowError, OSError):
+        return None
+
+
+def _trade_out(row: dict | None) -> dict | None:
+    if not row:
+        return row
+    return {**row, "opened_at_iso": _journal_iso(row.get("opened_at")), "closed_at_iso": _journal_iso(row.get("closed_at"))}
+
+
+def _server_utc_offset_min() -> int:
+    """إزاحة الخادم **الآن** بالدقائق (لكتابة وقت جديد). الأوقات المخزّنة تُقرأ من `*_at_iso` لكل صفّ."""
+    off = datetime.now().astimezone().utcoffset()
+    return int(off.total_seconds() // 60) if off is not None else 0
+
+
 @app.get("/api/trades")
 def trades_list(
     limit: int = Query(default=db.TRADES_PAGE, ge=1, le=db.TRADES_PAGE_MAX),
@@ -1762,7 +1791,8 @@ def trades_list(
     متى `open_total <= limit` (وإلا فمجموع خطرها من الصفحة جزئي)."""
     uid = user["user_id"] if user else None
     return {
-        "trades": db.list_trades(uid, owner_key=key, limit=limit, offset=offset),
+        "trades": [_trade_out(t) for t in db.list_trades(uid, owner_key=key, limit=limit, offset=offset)],
+        "server_utc_offset_min": _server_utc_offset_min(),
         "open_first": True,
         "open_total": db.count_trades(uid, owner_key=key, status="open"),
         "total": db.count_trades(uid, owner_key=key),
@@ -1778,7 +1808,7 @@ def trades_create(
 ):
     uid = user["user_id"] if user else None
     row = db.add_trade(body.model_dump(), uid, owner_key=key)
-    return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}
+    return {"ok": True, "trade": _trade_out(row), "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.post("/api/trades/{trade_id}/close")
@@ -1797,13 +1827,13 @@ def trades_close(
         raise HTTPException(422, {"error": "invalid_closed_at", "reason": str(e)})
     except db.TradeAlreadyClosed as e:
         # 409 لا 200: الخروج المسجَّل أولاً يبقى، والعميل يعرض الصفّ كما هو مخزَّن
-        raise HTTPException(409, {"error": "trade_already_closed", "trade": e.trade})
+        raise HTTPException(409, {"error": "trade_already_closed", "trade": _trade_out(e.trade)})
     except db.TradeUpdateConflict:
         # الصفّ تغيّر عمّا رآه العميل (`seen_*`)، أو الدخول/الاتجاه يتغيّران باستمرار من جهاز آخر
         raise HTTPException(409, {"error": "trade_changed_concurrently"})
     if not row:
         raise HTTPException(404, "trade not found")
-    return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}
+    return {"ok": True, "trade": _trade_out(row), "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.patch("/api/trades/{trade_id}")
@@ -1832,7 +1862,7 @@ def trades_update(
         raise HTTPException(409, {"error": "trade_changed_concurrently"})
     if not row:
         raise HTTPException(404, "trade not found")
-    return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}
+    return {"ok": True, "trade": _trade_out(row), "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.delete("/api/trades/{trade_id}")
