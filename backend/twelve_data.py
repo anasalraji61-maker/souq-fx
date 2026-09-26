@@ -101,6 +101,11 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     if not _has_weekly_session(sym):
         return end
     opened = datetime.fromtimestamp(float(open_ts), tz=timezone.utc)
+    if step == _DAY:
+        # شمعة D المؤرَّخة X عند المزوّد تغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك (مُتحقَّق حيّاً: افتتاح D ‏24-09 =
+        # افتتاح 1H ‏23-09 21:00 UTC، وإغلاقها = إغلاق 1H ‏24-09 20:00) — فتحاً + يوماً كان X+1 00:00 UTC ⇒
+        # الشمعة «جارية» 3 ساعات (2 شتاءً) بعد إغلاقها الحقيقي.
+        end = min(end, _weekly_close_utc(opened))
     friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
     close = _weekly_close_utc(friday)
     if close <= open_ts:  # فُتحت بعد إغلاق هذه الجمعة (نادر) ⇒ إغلاق الجمعة التالية
@@ -381,6 +386,12 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
 
     td_sym = td_symbol(sym)
     interval = TF_MAP[tf]
+    # شمعة W من المزوّد لرمز له جلسة أسبوعية = شموع D من الاثنين حتى **الأحد** (مُتحقَّق حيّاً: W ‏24-08
+    # لليورو دولار قاعها 1.14898 = قاع D الأحد 30-08، وقاع الاثنين–الجمعة 1.15781 — 88 نقطة من تداول
+    # العطلة؛ وإغلاقها إغلاق الأحد لا الجمعة). تُبنى من شموع D بلا السبت والأحد (7 لكل أسبوع + أسبوع يُسقَط).
+    weekly_from_daily = tf == "W" and _has_weekly_session(canonical_symbol(sym))
+    if weekly_from_daily:
+        interval = TF_MAP["D"]
     params = {
         "symbol": td_sym,
         "interval": interval,
@@ -388,7 +399,10 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         # `symbol_search`). كل نداء اليوم يمرّ بثابت أو بقيمة محصورة بـ`build_series`،
         # فهذا حارس مسارٍ مستقبليّ — ورفعُ الخطأ هنا لا يصلح: `build_series` يبتلعه فيُعرض
         # شارت تجريبي بدل رسالة.
-        "outputsize": str(max(1, min(outputsize + _weekend_allowance(sym, tf, outputsize), 5000))),
+        "outputsize": str(max(1, min(
+            (outputsize + 1) * 7 if weekly_from_daily else outputsize + _weekend_allowance(sym, tf, outputsize),
+            5000,
+        ))),
         "apikey": key,
         "timezone": "UTC",
         "order": "ASC",
@@ -429,7 +443,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
 
     candles: list[dict] = []
     dropped = 0
-    step = TF_SECONDS[tf]
+    step = _DAY if weekly_from_daily else TF_SECONDS[tf]
     for row in data["values"] or []:
         candle = _candle(row)
         if candle is None:
@@ -451,8 +465,29 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         raise RuntimeError("Twelve Data: no usable candles in response")
 
     candles.sort(key=lambda c: c["time"])
+    if weekly_from_daily:
+        candles = _weeks_from_days(candles, drop_first=len(data["values"] or []) >= int(params["outputsize"]))
     _cache[cache_key] = (now, candles)
     return candles, {"kind": "provider", "as_of": now, "channel": "twelvedata"}
+
+
+def _weeks_from_days(days: list[dict], drop_first: bool) -> list[dict]:
+    """شموع W (مؤرَّخة الاثنين 00:00 UTC كالمزوّد) من شموع D للاثنين–الجمعة مرتّبة. `drop_first`: نافذة D
+    امتلأت فأقدم أسبوع قد يبدأ منتصفه (افتتاح وقمّة وقاع ناقصة) ⇒ يُسقَط."""
+    weeks: list[dict] = []
+    for d in days:
+        opened = datetime.fromtimestamp(float(d["time"]), tz=timezone.utc)
+        monday = int((opened - timedelta(days=opened.weekday())).replace(hour=0, minute=0, second=0).timestamp())
+        if weeks and weeks[-1]["time"] == monday:
+            w = weeks[-1]
+            w["high"] = max(w["high"], d["high"])
+            w["low"] = min(w["low"], d["low"])
+            w["close"] = d["close"]
+            if d.get("volume") is not None:
+                w["volume"] = (w["volume"] or 0) + d["volume"]
+        else:
+            weeks.append({**d, "time": monday})
+    return weeks[1:] if drop_first else weeks
 
 
 def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120) -> list[dict]:

@@ -41,8 +41,8 @@ def test_sunday_dated_weekly_bar_is_clamped_too():
 def test_daily_and_intraday_bars_friday_evening():
     assert market.bar_end("EURUSD", _ts(2026, 9, 25), 86400) == FRI_CLOSE_SUMMER
     assert market.bar_end("EURUSD", _ts(2026, 9, 25, 20), 14400) == FRI_CLOSE_SUMMER
-    # منتصف الأسبوع لا يتغيّر
-    assert market.bar_end("EURUSD", _ts(2026, 9, 23), 86400) == _ts(2026, 9, 24)
+    # منتصف الأسبوع: D المؤرَّخة X تنتهي X ‏17:00 نيويورك (run 60) لا X+1 00:00 UTC
+    assert market.bar_end("EURUSD", _ts(2026, 9, 23), 86400) == _ts(2026, 9, 23, 21)
     assert market.bar_end("EURUSD", _ts(2026, 9, 25, 10), 3600) == _ts(2026, 9, 25, 11)
 
 
