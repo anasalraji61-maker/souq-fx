@@ -101,6 +101,13 @@ const DXY_TF_KEY = 'matrix.home.dxyTf.v1';
 /** خانة ظلّ جُلبت قبل أقلّ من هذا ⇒ تُعاد كما هي حين يُعاد تشغيل التأثير لسبب لا يخصّها (الاستطلاع كل 90ث يجلبها). */
 const SHADOW_REUSE_MS = 60_000;
 const DXY_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
+/**
+ * رمز الخانة الرئيسية (الأكبر) قبل أن يختار المتداول غيره. كان «DXY» — والمزوّد لا يقدّمه (قرار أنس ٢) ⇒ أوّل ما يراه
+ * مستخدم جديد، في أعلى عنصر صوتاً على الشاشة، لوحة «غير متاح». USDJPY لا يكرّر خانات `DEFAULT_LAYOUT` (EURUSD/GBPUSD/XAUUSD).
+ * اختيارٌ محفوظ (حتى DXY) يُحترم كما هو. **المعرّف `'DXY'` للخانة نفسها** (الترتيب/المزامنة) اسمٌ لا رمز، ويبقى.
+ * نسخة مطابقة: `DEFAULT_HERO_SYMBOL` في `ToolsScreen.tsx`.
+ */
+const DEFAULT_HERO_SYMBOL = 'USDJPY';
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
 const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
@@ -176,7 +183,7 @@ export function TerminalScreen() {
   const narrowWatch = width < 1100;
   const desktopChartHeight = Math.max(320, Math.min(720, height - 330));
 
-  const [dxy, setDxy] = useState<ChartSeries>(() => bootFrame('DXY', '15m'));
+  const [dxy, setDxy] = useState<ChartSeries>(() => bootFrame(DEFAULT_HERO_SYMBOL, '15m'));
   const [frames, setFrames] = useState<ChartSeries[]>(() =>
     DEFAULT_LAYOUT.frameSymbols.map((s, i) =>
       bootFrame(s, DEFAULT_FRAME_TIMEFRAMES[i])
@@ -187,7 +194,7 @@ export function TerminalScreen() {
   );
   const [frameTfs, setFrameTfs] = useState<Timeframe[]>([...DEFAULT_FRAME_TIMEFRAMES]);
   const [dxyTf, setDxyTf] = useState<Timeframe>('15m');
-  const [heroSymbol, setHeroSymbol] = useState('DXY');
+  const [heroSymbol, setHeroSymbol] = useState(DEFAULT_HERO_SYMBOL);
   const [prefsReady, setPrefsReady] = useState(false);
   // chart-r74b: الاستطلاع الدوري يقرأ الرموز/الفريمات الحالية من مراجع لا من تبعيات التأثير — كان كل تبديل فريم/رمز إطار
   // يعيد تشغيل التأثير فيجلب الخانات الأربعة (5 طلبات لكل ضغطة من حدّ المزوّد)، ويصفّر مؤقّت 90ث، ويرفع عدّاد كل إطار

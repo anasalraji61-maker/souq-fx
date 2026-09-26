@@ -135,7 +135,8 @@ const SYMBOL_TABS: readonly TabId[] = [
   'calendar',
 ];
 /** احتياط حين تتعذّر قراءة قائمة المتابعة (تخزين معطَّل/أول تشغيل) — أشهر ما يتابعه متداول فردي */
-const FALLBACK_SYMBOLS = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
+// لا «DXY»: المزوّد لا يقدّمه (قرار أنس ٢) ⇒ شريحةٌ تفتح الحاسبة/الدفتر على رمز بلا سعر.
+const FALLBACK_SYMBOLS = ['EURUSD', 'GBPUSD', 'XAUUSD', 'USDJPY'];
 /** آخر رمز اختاره المتداول بشاشة الأدوات — يبقى بين الجلسات كبقية تفضيلات الشاشة */
 const TOOLS_SYMBOL_KEY = 'matrix.tools.symbol.v1';
 /**
@@ -150,6 +151,8 @@ const TOOLS_SYMBOL_KEY = 'matrix.tools.symbol.v1';
 const TOOLS_TAB_KEY = 'matrix.tools.tab.v1';
 /** الخانة الرابعة (الشارت الرئيسي) بالترمينال — نفس `DXY_SYMBOL_KEY`/`DXY_TF_KEY` في `TerminalScreen.tsx`. */
 const HERO_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
+/** نسخة مطابقة لـ`DEFAULT_HERO_SYMBOL` في `TerminalScreen.tsx` (كان «DXY» — لا يقدّمه المزوّد، قرار ٢). */
+const DEFAULT_HERO_SYMBOL = 'USDJPY';
 const HERO_TF_KEY = 'matrix.home.dxyTf.v1';
 /**
  * التبويبات المعروفة — `Record<TabId, true>` عمداً لا مصفوفة: إضافة تبويب لـ`TabId` **تكسر البناء**
@@ -262,7 +265,7 @@ export function ToolsScreen() {
   );
   /** chart-r49: الخانة الرابعة (الشارت الرئيسي بالترمينال، مفتاحا `DXY_SYMBOL_KEY`/`DXY_TF_KEY` هناك) — كان التخطيط يحفظ
    * الثلاث فقط فتطبيق «A» لا يعيد XAUUSD 4H بالرابعة. */
-  const [heroSymbol, setHeroSymbol] = useState('DXY');
+  const [heroSymbol, setHeroSymbol] = useState(DEFAULT_HERO_SYMBOL);
   const [heroTf, setHeroTf] = useState('15m');
 
   useEffect(() => {
