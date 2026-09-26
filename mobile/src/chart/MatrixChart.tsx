@@ -1618,6 +1618,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   /** مقياس النسبة (كـTradingView «Percent»): المحور يقرأ التغيّر عن أول شمعة ظاهرة — يستبعد اللوغاريتمي. */
   const [percentScale, setPercentScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
+  // الويب: Ctrl (⌘ على ماك) مضغوطاً يقلب المغناطيس مؤقّتاً كـTradingView — مستوى بين الشموع والمغناطيس مفعَّل،
+  // أو قمّة شمعة بالضبط وهو معطَّل، بلا نقرتين على 🧲 ذهاباً وإياباً. يعود عند الرفع أو مغادرة النافذة.
+  const [magnetFlip, setMagnetFlip] = useState(false);
+  const magnetOn = magnet !== magnetFlip;
   // طرفا آخر قياس لا نصّه: النصّ المجمَّد كان **لا يُمسح أبداً** — بعد قياس واحد يحلّ محلّ
   // سطر OHLC للتقاطع ويُخفي زرّ ⚑ للأبد، ويبقى pip اليورو مكتوباً فوق شارت الين بعد
   // التبديل. الآن يُمسح بأول نقرة/قياس جديد وبتبديل الرمز/الفريم/نوع الشارت، ويُحسب نصّه عند الرسم.
@@ -4324,7 +4328,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       // خارج الجذب: السعر مقرَّب لمنازل الأداة (1.08500 لا 1.0849973) كوسم التقاطع.
       const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
       const price =
-        crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef) ?? raw;
+        crossPriceAt(raw, candle, magnetOn, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef) ?? raw;
       const index = sourceRef.current.start + local;
       // مختومة بزمنها من الولادة: السحب لا يمرّ بتأثير الختم إطاراً إطاراً (رسمتان لكل حركة).
       const stamp = stampAtIndex(
@@ -4336,7 +4340,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       );
       return stamp == null ? { index, price } : { index, price, ...stamp };
     },
-    [drawIndex, priceAtY, magnet, series.timeframe, series.symbol, priceDecimalsRef, weekendClosed]
+    [drawIndex, priceAtY, magnetOn, series.timeframe, series.symbol, priceDecimalsRef, weekendClosed]
   );
 
   // طرف `b` لخطّة شراء/بيع: يمين الدخول دائماً (`positionEndIndex`)، مختوماً بزمنه الجديد — وإلا
@@ -4783,7 +4787,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const inShadowLane = !!shadowStack && y > shadowStack.primaryLane.height;
     const price = inShadowLane
       ? null
-      : crossPriceAt(raw, ahead ? null : candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
+      : crossPriceAt(raw, ahead ? null : candle, magnetOn, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
     crossPinned.current = !hover;
     crossFromSync.current = false;
     setCrossHover(hover);
@@ -4857,9 +4861,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const was = shiftHeldRef.current;
       shiftHeldRef.current = e.shiftKey;
       if (was !== e.shiftKey) shiftRepaintRef.current();
+      setMagnetFlip(e.ctrlKey || e.metaKey);
     };
     const onBlur = () => {
       shiftHeldRef.current = false;
+      setMagnetFlip(false);
     };
     window.addEventListener('keydown', onKey, true);
     window.addEventListener('keyup', onKey, true);
@@ -4969,6 +4975,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (!at || !anchor) return;
     setDragEnd(lockDrawEnd(anchor, pointFromXY(at.x, at.y)));
   };
+  // Ctrl/⌘ ضُغط أو رُفع والفأرة ساكنة: التقاطع المعاين وطرف المعاينة يُعاد جذبهما بالمغناطيس الجديد فوراً
+  // (بعد الرسم، فـ`placeCross`/`pointFromXY` يقرآن `magnetOn` الجديد) — لا حتى الحركة التالية.
+  const magnetFlipSeen = useRef(magnetFlip);
+  useEffect(() => {
+    if (magnetFlipSeen.current === magnetFlip) return;
+    magnetFlipSeen.current = magnetFlip;
+    if (crossHover) crossAtRef.current(hoverPoint.current.x, hoverPoint.current.y, true);
+    shiftRepaintRef.current();
+  });
 
   // حالة سحب المقبض بمراجع لا بمتغيّرات داخل `useMemo`: `selectPan` يُعاد بناؤه مع كل تغيّر بـ`drawings`
   // (وأوّل خطوة سحب تغيّرها)، ونظام المستجيب يستدعي معالجات **الخصائص الحالية** — فمتغيّر الإغلاق
@@ -7587,16 +7602,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={tr.mcMagnetA11y}
-              accessibilityState={{ selected: magnet }}
+              accessibilityState={{ selected: magnetOn }}
               style={({ pressed }) => [
                 styles.zoomBtn,
-                magnet && styles.replayOn,
+                magnetOn && styles.replayOn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => setMagnet((v) => !v)}
             >
-              <Text style={[styles.zoomText, magnet && styles.replayTextOn]}>🧲</Text>
-              {magnet ? <SelMark /> : null}
+              <Text style={[styles.zoomText, magnetOn && styles.replayTextOn]}>🧲</Text>
+              {magnetOn ? <SelMark /> : null}
             </Pressable>
           </View>
         ) : null}
