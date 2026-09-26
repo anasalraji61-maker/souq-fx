@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderTopColor: colors.border,
     borderTopWidth: 1,
-    paddingTop: 6,
+    paddingTop: 4,
   },
   tabLabel: { fontSize: 11, fontWeight: '500' },
   iconWrap: {
