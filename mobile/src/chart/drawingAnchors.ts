@@ -39,7 +39,7 @@
  *
  * خالص بلا React: يُفحص بـ`drawingAnchors.selftest.ts`.
  */
-import { forexTimeBeforeTrading, forexTradingSecBetween } from './marketHours';
+import { forexTimeBeforeTrading, forexTradingSecBetween, nyFivePmUtcSec } from './marketHours';
 import type { ChartPoint, Drawing } from './types';
 
 export type TimeBar = { time: number; srcTime?: number };
@@ -80,7 +80,7 @@ export function timeAtIndex(
     if (wk) {
       // الخانة نفسها بالأسبوع المحمَّل الأوّل، ثم تُرجَع أسابيع كاملة بالزمن
       const k = Math.ceil(-index / wk.bars - 1e-9);
-      return timeAtIndex(bars, index + k * wk.bars, stepSec, endTime)! - k * WEEK_SEC;
+      return timeAtIndex(bars, index + k * wk.bars, stepSec, endTime, weekendClosed)! - k * WEEK_SEC;
     }
     const ts = tradingStep(bars, weekendClosed);
     if (ts != null) return forexTimeBeforeTrading(barTime(bars[0]), -index * ts, weekSymbol(weekendClosed));
@@ -90,7 +90,7 @@ export function timeAtIndex(
   const i = Math.floor(index);
   const bar = bars[i]!;
   const frac = index - i;
-  if (frac > 0 && bar.srcTime == null && stepSec > 0) return bar.time + Math.round(frac * stepSec);
+  if (frac > 0 && bar.srcTime == null && stepSec > 0) return barOpen(bar.time, stepSec, weekendClosed) + Math.round(frac * stepSec);
   return barTime(bar);
 }
 
@@ -276,7 +276,7 @@ export function anchorPoint(
         ? ahead > 0
           ? 0
           : brickOffset(bars, base, p)
-        : withinBar(bars, base, p.time, stepSec);
+        : withinBar(bars, base, p.time, stepSec, weekendClosed);
   const index = base == null ? null : base + inBar + (ahead * aheadStep) / stepSec;
   return index == null || index === p.index ? p : { ...p, index };
 }
@@ -299,7 +299,7 @@ function pastIndex(
     const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
     const shifted = time + k * WEEK_SEC;
     const i = indexAtTime(bars, shifted, stepSec, endTime)!;
-    return i + withinBar(bars, i, shifted, stepSec) - k * wk.bars;
+    return i + withinBar(bars, i, shifted, stepSec, weekendClosed) - k * wk.bars;
   }
   const ts = tradingStep(bars, weekendClosed);
   if (ts != null) return -forexTradingSecBetween(time, first, weekSymbol(weekendClosed)) / ts;
@@ -325,12 +325,36 @@ function brickOffset(bars: readonly TimeBar[], base: number, p: ChartPoint): num
  * ⇒ 1 = الشمعة **التالية**: نقطة H1 عند افتتاح الأحد 22:00 (فجوة الافتتاح) كانت على اليومي بشمعة الجمعة التي
  * لا تحويها، بينما سعرها تداوُل جلسة الاثنين. آخر شمعة بلا تالية ⇒ صفر كما كان.
  */
-function withinBar(bars: readonly TimeBar[], i: number, time: number, stepSec: number): number {
+function withinBar(
+  bars: readonly TimeBar[],
+  i: number,
+  time: number,
+  stepSec: number,
+  weekendClosed: WeekendRule = false
+): number {
   const bar = bars[i];
   if (!bar || !(stepSec > 0)) return 0;
-  const frac = (time - bar.time) / stepSec;
-  if (frac >= 1 && i >= 0 && i + 1 < bars.length) return 1;
+  // ختم الشمعة نفسه (نقطة رُسمت على هذا الفريم) بدايتُها وإن سبقه افتتاح الجلسة.
+  if (time === bar.time) return 0;
+  const frac = (time - barOpen(bar.time, stepSec, weekendClosed)) / stepSec;
+  if (frac >= 1 && i >= 0 && i + 1 < bars.length) {
+    // مساء 17:00–24:00 نيويورك يقع بعد ختم «اليوم» وهو من جلسة الشمعة التالية (المختومة بتاريخ إغلاقها).
+    const next = bars[i + 1]!;
+    const f = next.srcTime == null ? (time - barOpen(next.time, stepSec, weekendClosed)) / stepSec : -1;
+    return f > 0 && f < 1 ? 1 + f : 1;
+  }
   return frac > 0 && frac < 1 ? frac : 0;
+}
+
+/**
+ * افتتاح شمعة D/W فعلياً: الخادم يختم اليومية بتاريخ **إغلاقها** 00:00 UTC وهي تغطّي من 17:00 نيويورك قبلها
+ * (21:00/22:00 UTC)، والأسبوعية بالاثنين 00:00 وتفتح الأحد 17:00 نيويورك. بلا هذا كانت نقطة H1 الثلاثاء 22:00 UTC
+ * (جلسة الأربعاء) تُرسم على اليومي قرب حافّة شمعة الثلاثاء، ونقطة افتتاح الأحد على الأسبوعي بشمعة الأسبوع السابق.
+ * الكريبتو (`false`) ويوم UTC كما هو، وأيّ ختم ليس منتصف ليل ⇒ الختم نفسه.
+ */
+function barOpen(stamp: number, stepSec: number, weekendClosed: WeekendRule): number {
+  if (!weekendClosed || (stepSec !== 86400 && stepSec !== WEEK_SEC) || stamp % 86400 !== 0) return stamp;
+  return nyFivePmUtcSec(stamp - 86400);
 }
 
 /**

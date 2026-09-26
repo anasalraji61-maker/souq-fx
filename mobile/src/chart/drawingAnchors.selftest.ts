@@ -326,12 +326,25 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   for (let w = 0; w < 10; w++) for (let d = 0; d < 5; d++) days.push({ time: mon + w * 7 * D + d * D });
   const at = (t: number) => anchorPoint({ index: 0, price: 1, time: t } as never, days, D, false, undefined, 'EURUSD').index;
   const preWed = mon - 14 * D + 2 * D;
-  assert.equal(at(preWed + 6 * H), -7.75);
-  assert.equal(at(preWed + 18 * H), -7.25);
+  // الكسر من افتتاح الجلسة (17:00 نيويورك = 22:00 UTC شتاءً) لا من منتصف ليل ختم الإغلاق: 06:00 = 8/24، 18:00 = 20/24
+  assert.ok(Math.abs(at(preWed + 6 * H) + 8 - 1 / 3) < 1e-9, `06:00 ${at(preWed + 6 * H)}`);
+  assert.ok(Math.abs(at(preWed + 18 * H) + 8 - 5 / 6) < 1e-9, `18:00 ${at(preWed + 18 * H)}`);
   assert.equal(at(mon - 7 * D - 2 * H), -5); // الأحد 22:00 ⇒ شمعة الاثنين
   // ختم عند −7.5 ثم إعادة فهرسة ⇒ −7.5 لا −8
   const s = stampAtIndex(days, -7.5, D, undefined, 'EURUSD')!;
   assert.equal(anchorPoint({ index: -7.5, price: 1, ...s } as never, days, D, false, undefined, 'EURUSD').index, -7.5);
+  // مساء الثلاثاء 22:00 UTC (18:00 نيويورك) من جلسة الأربعاء — كان على اليومي قرب حافّة شمعة الثلاثاء
+  const tue = mon + 7 * D + D;
+  assert.ok(Math.abs(at(tue + 23 * H) - (7 + 1 / 24)) < 1e-9, `tue 23:00 ${at(tue + 23 * H)}`);
+  assert.equal(at(tue + D), 7); // ختم الأربعاء نفسه (رُسم على اليومي) بدايتها
+  // ذهاب وإياب: ختم كسرٍ على اليومي يُعاد للفهرس نفسه
+  const sw = stampAtIndex(days, 7.5, D, undefined, 'EURUSD')!;
+  assert.equal(sw.time, tue + D - 2 * H + 12 * H);
+  assert.equal(anchorPoint({ index: 0, price: 1, ...sw } as never, days, D, false, undefined, 'EURUSD').index, 7.5);
+  // الأسبوعي: افتتاح الأحد 22:00 على شمعة أسبوعه (المختومة بالاثنين) لا الأسبوع السابق
+  const weeks = Array.from({ length: 6 }, (_, i) => ({ time: mon + i * 7 * D }));
+  const w = anchorPoint({ index: 0, price: 1, time: mon + 14 * D - H } as never, weeks, 7 * D, false, undefined, 'EURUSD').index;
+  assert.ok(Math.abs(w - (2 + H / (7 * D))) < 1e-9, `weekly sun ${w}`);
   // كريبتو H1 متّصل (متوسّط الخطوة): 5س45د قبل الأولى ⇒ −5.75
   const t0 = mon;
   const hours = Array.from({ length: 100 }, (_, i) => ({ time: t0 + i * H }));
