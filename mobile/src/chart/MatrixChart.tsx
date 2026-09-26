@@ -1777,7 +1777,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // التبديل. الآن يُمسح بأول نقرة/قياس جديد وبتبديل الرمز/الفريم/نوع الشارت، ويُحسب نصّه عند الرسم.
   // نوع الشارت أيضاً: طرفاه فهارس شموع، فعلى Renko/Range تقع فوق لبنات أخرى وعدد الشموع والمدّة كاذبان.
   const [measureDone, setMeasureDone] = useState<{ a: ChartPoint; b: ChartPoint } | null>(null);
-  useEffect(() => {
+  // قبل الرسم لا بعده: بأثر عادي كان صندوق القياس ونصّه («24.0 pip») يُرسمان إطاراً فوق الرمز/الفريم الجديد.
+  useLayoutEffect(() => {
     setMeasureDone(null);
   }, [series.symbol, series.timeframe, kind]);
   const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
