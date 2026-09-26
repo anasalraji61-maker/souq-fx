@@ -2246,7 +2246,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // قائمة الزرّ الأيمن على الويب (W4): موضعها داخل اللوح، والنقطة (فهرس + سعر بمغناطيس الرسم) تحت المؤشّر.
   // التحديد بنقرة من وضع السحب (`onChartPress`): أداة «تحديد» مؤقّتة تنتهي بانتهاء التحديد. اختيارها من الشريط لا يمسّها.
   const autoSelectRef = useRef(false);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; point: ChartPoint; drawingId?: string } | null>(null);
+  // `axis`: الزرّ الأيمن على محور السعر ⇒ قائمة المقياس (تلقائي، لوغاريتمي، نسبة) بدل إجراءات السعر.
+  const [ctxMenu, setCtxMenu] = useState<{
+    x: number;
+    y: number;
+    point: ChartPoint;
+    drawingId?: string;
+    axis?: 'price';
+  } | null>(null);
   const ctxMenuRef = useRef<View>(null);
   useEffect(() => {
     if (tool !== 'select') {
@@ -6243,6 +6250,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           onPointerDown: (event: PointerEventLike) => {
             event.preventDefault?.();
             event.stopPropagation?.();
+            // الزرّ الأيمن للقائمة أدناه لا للسحب — ولا يُعدّ نقرة أولى من «نقرتين تعيدان المقياس».
+            if (event.nativeEvent?.button === 2) return;
             const point = pointerXY(event);
             webPricePointer.current = {
               active: true,
@@ -6273,6 +6282,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           onPointerCancel: () => {
             webPricePointer.current.active = false;
             endDrag();
+          },
+          // الزرّ الأيمن على المحور ⇒ قائمة المقياس (كـTradingView) — كان اللوغاريتمي والنسبة بشريط الأزرار وحده،
+          // وقائمة المتصفّح («حفظ الصورة»…) تظهر فوق الأسعار.
+          onContextMenu: (event: PointerEventLike) => {
+            event.preventDefault?.();
+            event.stopPropagation?.();
+            const rect = event.currentTarget?.getBoundingClientRect?.();
+            const y = Math.max(0, pointerXY(event).y - (rect?.top ?? 0));
+            webKeyChart = keyToken.current;
+            setCtxMenu({ x: chartPlotW, y, point: pointFromXY(Math.max(0, chartPlotW - 1), y), axis: 'price' });
           },
         } as const)
       : {};
@@ -10169,11 +10188,33 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           />
         ) : null}
 
-        {ctxMenu && Platform.OS === 'web' && canPan && (ctxMenu.drawingId ? selectedId === ctxMenu.drawingId : tool === 'none')
+        {ctxMenu &&
+        Platform.OS === 'web' &&
+        canPan &&
+        (ctxMenu.axis ? true : ctxMenu.drawingId ? selectedId === ctxMenu.drawingId : tool === 'none')
           ? (() => {
               const items: { key: string; label: string; price?: number; run: () => void }[] = [];
               const at = ctxMenu.point.price;
-              if (ctxMenu.drawingId) {
+              if (ctxMenu.axis) {
+                // المقياس المفعَّل بعلامة ✓ لا باللون وحده (DESIGN-PRO §4)؛ اللوغاريتمي والنسبة متنافيان كزرّيهما.
+                items.push({ key: 'auto', label: tr.mcAutoA11y, run: resetChartView });
+                items.push({
+                  key: 'log',
+                  label: `${logScale ? '✓' : '\u2003'} ${tr.mcLogScaleA11y}`,
+                  run: () => {
+                    setLogScale((v) => !v);
+                    setPercentScale(false);
+                  },
+                });
+                items.push({
+                  key: 'pct',
+                  label: `${percentScale ? '✓' : '\u2003'} ${tr.mcPercentScaleA11y}`,
+                  run: () => {
+                    setPercentScale((v) => !v);
+                    setLogScale(false);
+                  },
+                });
+              } else if (ctxMenu.drawingId) {
                 const drawingId = ctxMenu.drawingId;
                 items.push({ key: 'clone', label: `❐ ${tr.mcCloneDrawing}`, run: () => cloneSelectedDrawing() });
                 items.push({
@@ -10193,7 +10234,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               } else if (onCreateAlert && !replayOn && Number.isFinite(at) && at > 0) {
                 items.push({ key: 'alert', label: `⚑ ${tr.mcAlertAtCrossA11y}`, price: at, run: () => createAlert(at, 'crosshair') });
               }
-              if (!ctxMenu.drawingId && Number.isFinite(at)) {
+              if (!ctxMenu.axis && !ctxMenu.drawingId && Number.isFinite(at)) {
                 items.push({
                   key: 'hline',
                   label: localizedDrawTools(tr).find((t) => t.id === 'hline')?.label ?? '',
@@ -10206,7 +10247,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   },
                 });
               }
-              if (!ctxMenu.drawingId) items.push({ key: 'reset', label: tr.mcAutoA11y, run: resetChartView });
+              if (!ctxMenu.axis && !ctxMenu.drawingId) items.push({ key: 'reset', label: tr.mcAutoA11y, run: resetChartView });
               const h = items.length * (CTX_ITEM_H + 12) + 8; // بند قد يلتفّ لسطرين (نصّ إعادة العرض)
               return (
                 <View
