@@ -80,6 +80,9 @@ export function FocusChartModal({
   const phone = width < 700;
   const [sym, setSym] = useState(symbol);
   const [compareSym, setCompareSym] = useState<string | null>(null);
+  // DESIGN-PRO §5.6 — الإصبع على الشارت ⇒ الرأس وقائمة المتابعة وشريط الفريمات إلى 40% حتى الرفع (كـ`TerminalScreen`).
+  const [chartTouch, setChartTouch] = useState(false);
+  const chromeDim = chartTouch ? styles.chromeDim : null;
   const [tf, setTf] = useState<Timeframe>(initialTf);
   const [series, setSeries] = useState<ChartSeries | null>(null);
   /** الرمز الذي طُلبت له `series` — الخادم قد يعيد اسماً مطبَّعاً، فلا يُقارن بـ`series.symbol`. */
@@ -327,7 +330,7 @@ export function FocusChartModal({
   return (
     <Modal visible={visible} animationType="none" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={[styles.top, rtl && styles.topRtl, phone && styles.topPhone]}>
+        <View style={[styles.top, rtl && styles.topRtl, phone && styles.topPhone, chromeDim]}>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -388,7 +391,7 @@ export function FocusChartModal({
         <View style={[styles.body, rtl && styles.bodyRtl, phone && styles.bodyPhone]}>
           {!phone ? (
             <ScrollView
-              style={styles.watch}
+              style={[styles.watch, chromeDim]}
               contentContainerStyle={{ gap: 4, padding: spacing.sm }}
               keyboardShouldPersistTaps="handled"
             >
@@ -472,9 +475,16 @@ export function FocusChartModal({
               </>
             ) : null}
 
-            <TimeframeBar value={tf} onChange={setTf} />
+            <View style={chromeDim}>
+              <TimeframeBar value={tf} onChange={setTf} />
+            </View>
+            {/* تحذير خطر الأخبار لا يخفت: تنبيه لا زينة. */}
             <NewsRiskBanner symbol={sym} />
-            {!phone ? <SymbolSnapshot symbol={sym} timeframe={tf} /> : null}
+            {!phone ? (
+              <View style={chromeDim}>
+                <SymbolSnapshot symbol={sym} timeframe={tf} />
+              </View>
+            ) : null}
 
             {/* كان `loading ? spinner : MatrixChart` يفكّ الشارت بكل تبديل رمز/فريم فيضيع نوع الشموع
                 والمؤشرات واللوغاريتمي. الآن يبقى مركَّباً، باهتاً تحت مؤشّر التحميل حتى تصل الشموع الجديدة. */}
@@ -511,6 +521,7 @@ export function FocusChartModal({
                     onCreateAlert={alertFromDrawing}
                     // الويب: كتابة «15» ثم Enter تبدّل الفريم كشريط `TimeframeBar` أعلاه (chart-r82a)
                     onTimeframeKey={setTf}
+                    onChartInteract={setChartTouch}
                     initialTool={initialTool}
                     initialLens={initialLens}
                     initialKind={initialKind}
@@ -605,6 +616,7 @@ const styles = StyleSheet.create({
   compareNoteWarn: { color: colors.warn, fontWeight: '500' },
   armed: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
   main: { flex: 1 },
+  chromeDim: { opacity: 0.4 },
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 8,

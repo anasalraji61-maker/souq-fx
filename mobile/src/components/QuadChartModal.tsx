@@ -90,6 +90,8 @@ export function QuadChartModal({
   // الاختيار يخصّ هذه الجلسة وحدها: يُنسى عند الإغلاق (وعند تغيّر فريم الأمّ) فلا يُفتح
   // الرباعي لاحقاً على فريم لا يطابق ما يوحي به الإطار الأول.
   const [tfOverride, setTfOverride] = useState<Timeframe | null>(null);
+  // DESIGN-PRO §5.6 — مسك أيّ خلية ⇒ الرأس وشريط الفريمات إلى 40% حتى الرفع (كـ`TerminalScreen`).
+  const [chartTouch, setChartTouch] = useState(false);
   useEffect(() => {
     if (!visible) setTfOverride(null);
   }, [visible]);
@@ -203,10 +205,12 @@ export function QuadChartModal({
     };
   }, [visible, symbols, tf]);
 
+  const chromeDim = chartTouch ? styles.chromeDim : null;
+
   return (
     <Modal visible={visible} animationType="none" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe}>
-        <View style={[styles.top, rtl && styles.topRtl]}>
+        <View style={[styles.top, rtl && styles.topRtl, chromeDim]}>
           <Pressable
             accessibilityRole="button"
             onPress={onClose}
@@ -249,11 +253,11 @@ export function QuadChartModal({
             </Text>
           </Pressable>
         </View>
-        <View style={[styles.tfRow, rtl && styles.tfRowRtl]}>
+        <View style={[styles.tfRow, rtl && styles.tfRowRtl, chromeDim]}>
           <TimeframeBar value={tf} onChange={setTfOverride} compact />
         </View>
         {syncTime ? (
-          <Text style={[styles.syncHint, { textAlign: align }]}>
+          <Text style={[styles.syncHint, { textAlign: align }, chromeDim]}>
             {`${t.mcSyncLeadHint} — ${symbols[leader]}`}
           </Text>
         ) : null}
@@ -382,6 +386,7 @@ export function QuadChartModal({
                     onCrossTime={syncTime && isLeader ? setCrossTime : undefined}
                     // الويب: «15»/«4h» ثم Enter فوق أيّ خلية = شريط الفريمات المشترك أعلى النافذة.
                     onTimeframeKey={setTfOverride}
+                    onChartInteract={setChartTouch}
                   />
                 ) : (
                   // chart-r47: الدوّار وحده كان لا يقول ماذا يُحمَّل — والخلايا الأربع تبدو متطابقة أثناء التحميل.
@@ -408,6 +413,7 @@ export function QuadChartModal({
 }
 
 const styles = StyleSheet.create({
+  chromeDim: { opacity: 0.4 },
   safe: { flex: 1, backgroundColor: colors.bg },
   cellLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm },
   cellLoadingText: { color: colors.textDim, fontSize: 11, textAlign: 'center' },
