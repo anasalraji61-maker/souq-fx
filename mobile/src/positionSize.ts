@@ -897,7 +897,9 @@ export function positionSize(input: {
     rawLots,
     lots: roundedLots,
     actualRisk: roundedLots * slPips * pv,
-    units: Math.round(roundedLots * contractSize),
+    // لأقرب 0.01 لا لعدد صحيح: عقد ذهب السنت/micro أونصة واحدة والفضة 50 (`smallContractSpec`) ⇒ 0.06 لوت ذهب = 0.06 أونصة
+    // كانت «الوحدات: 0»، و0.01 لوت فضة = 0.5 أونصة كانت «1» (ضعف المركز) بجانب اللوت الصحيح. اللوت بمنزلتين والعقد صحيح ⇒ دقيق.
+    units: Math.round(roundedLots * contractSize * 100) / 100,
     pipValue: roundedLots * pv,
     belowMinLot: roundedLots < LOT_STEP,
   };

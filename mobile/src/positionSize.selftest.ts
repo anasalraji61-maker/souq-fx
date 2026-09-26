@@ -2006,6 +2006,20 @@ console.log('positionSize microAccountSymbol selftest OK');
   // ذهب سنت: pip (0.1) لكل لوت سنت = 0.1 × 1 × 100 = 10 USC = 0.10 USD (عُشر دولار = 1/100 من 10 USD العادي)
   const gold = smallContractSpec('XAUUSDc')!.spec;
   assert.ok(Math.abs(pipValuePerLot(gold, centQuoteToAccount(1)!) - 10) < 1e-9);
+  // وحدات ذهب/فضة السنت بالأونصة لا عدداً صحيحاً: 10,000 USC، 1%، وقف 150 ⇒ 0.06 لوت ذهب = 0.06 أونصة (كانت 0)،
+  // و0.01 لوت فضة (عقد 50) = 0.5 أونصة (كانت 1 — ضعف المركز)
+  const goldR = positionSize({ balance: 10_000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(gold, centQuoteToAccount(1)!), contractSize: gold.contractSize })!;
+  assert.equal(goldR.lots, 0.06);
+  assert.equal(goldR.units, 0.06);
+  const silver = smallContractSpec('XAGUSDc')!.spec;
+  assert.equal(silver.contractSize, 50);
+  const silverR = positionSize({ balance: 10_000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(silver, centQuoteToAccount(1)!), contractSize: silver.contractSize })!;
+  assert.equal(silverR.lots, 0.01);
+  assert.equal(silverR.units, 0.5);
+  assert.equal(smallContractSpec('GOLD.micro')!.spec.contractSize, 1);
+  // العقود العادية كما هي: 0.37 لوت ذهب = 37 أونصة، 0.29 لوت EURUSD = 29,000 (لا 28,999.999…)
+  assert.equal(positionSize({ balance: 5550, riskPct: 1, slPips: 15, pipValuePerLot: 10, contractSize: 100 })!.units, 37);
+  assert.equal(positionSize({ balance: 2900, riskPct: 1, slPips: 10, pipValuePerLot: 10, contractSize: 100_000 })!.units, 29_000);
 
   // micro EURUSD بحساب دولار: 1,000 USD، 1%، وقف 25 ⇒ 10 ÷ (25 × 0.10) = 4.00 لوت micro = 0.04 عادي
   const micro = smallContractSpec('EURUSDmicro')!.spec;
