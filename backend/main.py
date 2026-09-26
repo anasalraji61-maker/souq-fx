@@ -2286,11 +2286,15 @@ async def ticks(ws: WebSocket):
             live = {s: p for s, p in live.items()
                     if not market.in_weekend_close(s, at_by.get(s) or market._session_now(), 0)}
             if live:
+                sent_at = td_ws.received_at(live)
+                # `as_of` = أحدث تيك **مُرسَل**: كان `live_at` قبل إسقاط تيكات العطلة ⇒ السبت يحمل BTC
+                # (09:58:30) وقت تيك يورو دولار محذوف (10:00)
+                live_at = max((t for t in sent_at.values() if t), default=None)
                 payload = {
                     "ts": time.time(),
                     "ticks": live,
                     # وقت استلام كل تيك (قد يسبق `as_of` بحتى دقيقتين) — لا يرث وقت أحدث رمز
-                    "ticks_at": td_ws.received_at(live),
+                    "ticks_at": sent_at,
                     "source": "twelvedata_ws",
                     # وقت الاستلام الحقيقي لا «الآن»: سعر مجمَّد (انقطاع/عطلة) كان يظهر بشارة «حي»
                     "data_source": {

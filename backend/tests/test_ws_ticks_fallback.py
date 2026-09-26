@@ -17,6 +17,7 @@ def test_no_provider_means_no_ticks_and_says_so(monkeypatch):
 
 def test_live_provider_ticks_pass_through_unchanged(monkeypatch):
     monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.08412}, 1700000000.0))
+    monkeypatch.setattr(main.td_ws, "received_at", lambda syms: {s: 1700000000.0 for s in syms})
     with TestClient(main.app).websocket_connect("/ws/ticks") as ws:
         msg = ws.receive_json()
     assert msg["ticks"] == {"EURUSD": 1.08412}

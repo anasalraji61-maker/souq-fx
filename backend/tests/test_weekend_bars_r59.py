@@ -113,3 +113,17 @@ def test_ws_ticks_drop_weekend_forex(monkeypatch):
     with TestClient(main.app).websocket_connect("/ws/ticks") as ws:
         msg = ws.receive_json()
     assert msg["ticks"] == {"BTCUSD": 65000.0}
+
+
+def test_ws_ticks_as_of_is_newest_sent_tick(monkeypatch):
+    """run 67: `as_of` كان وقت أحدث تيك **قبل** إسقاط العطلة ⇒ BTC (قبل 90 ث) يحمل وقت تيك يورو دولار محذوف."""
+    from fastapi.testclient import TestClient
+
+    import main
+    at = {"EURUSD": _ts(SAT), "BTCUSD": _ts(SAT) - 90}
+    monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.139, "BTCUSD": 65000.0}, _ts(SAT)))
+    monkeypatch.setattr(main.td_ws, "received_at", lambda syms: {s: at[s] for s in syms})
+    with TestClient(main.app).websocket_connect("/ws/ticks") as ws:
+        msg = ws.receive_json()
+    assert msg["ticks"] == {"BTCUSD": 65000.0}
+    assert msg["data_source"]["as_of"] == _ts(SAT) - 90
