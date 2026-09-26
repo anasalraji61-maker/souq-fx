@@ -255,6 +255,7 @@ def test_indicator_alert_period_rule_unchanged(client):
     r = client.post(
         "/api/indicator-alerts",
         json={"symbol": "EURUSD", "alert_type": "ma_cross", "condition": "cross_up", "fast_period": 0},
+        headers={"X-Install-Id": "install-aaaaaaaaaaaaaaaa"},
     )
     assert r.status_code == 422, r.text
     assert "fast_period" in r.text

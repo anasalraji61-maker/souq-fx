@@ -69,4 +69,9 @@ def _owner_key(
     الجلسة انتهت. التطبيق يعالج 401 منذ ui `aacb194`. `logout` يبقى على `_install_key` (يفكّ Push بالمنتهي)."""
     if authorization and not user:
         raise HTTPException(status_code=401, detail="login_required")
+    # مجهول بلا معرّف تثبيت صالح (غائب أو مشوَّه) كان يُحال لدلو واحد مشترك (`owner_key IS NULL`):
+    # يقرأ صفقات/تنبيهات كل من أرسل معرّفاً مشوَّهاً ويغلقها ويحذفها، ونسبة فوزه تخلط صفقاتهم.
+    # التطبيق يرسل دائماً معرّفاً صالحاً (`api.ts` `authHeaders`) ⇒ هذا لا يصيب إلا طلبات يدوية/عملاء قدامى.
+    if not user and not key:
+        raise HTTPException(status_code=400, detail="install_id_required")
     return key

@@ -538,9 +538,8 @@ def test_page_bounds_are_enforced(client, q):
 def test_logged_in_client_without_install_id_sees_only_its_own_trades(client):
     """مسجّل بلا `X-Install-Id` كان يرى دلو المجهولين القديم (صفقات **كل** متداول مجهول قبل معرّف
     التثبيت) فيعدّلها ويحذفها، وتدخل نسبة فوز حسابه."""
-    r = client.post("/api/trades", json={**_TRADE, "exit": 1.0900})  # صفّ مجهول قديم: خسارة لغريب
-    assert r.status_code == 200, r.text
-    stranger = r.json()["trade"]
+    # صفّ مجهول قديم (قبل معرّف التثبيت): خسارة لغريب
+    stranger = db.add_trade({**_TRADE, "exit": 1.0900}, None)
     r = client.post(
         "/api/auth/register",
         json={"username": "hana", "email": "hana@example.com", "password": "pass1234"},
@@ -555,8 +554,8 @@ def test_logged_in_client_without_install_id_sees_only_its_own_trades(client):
     assert body["stats"]["win_rate"] == 100.0
     assert client.delete(f"/api/trades/{stranger['id']}", headers=me).status_code == 404
     assert client.patch(f"/api/trades/{stranger['id']}", json={"note": "x"}, headers=me).status_code == 404
-    # والعميل القديم المجهول ما زال يرى صفّه
-    assert [t["id"] for t in client.get("/api/trades").json()["trades"]] == [stranger["id"]]
+    # ومجهول بلا معرّف تثبيت لا يصل للدلو القديم المشترك
+    assert client.get("/api/trades").status_code == 400
 
 
 def _signup(client, name: str) -> dict:
@@ -895,3 +894,16 @@ def test_boolean_close_and_patch_are_422(client):
 def test_boolean_alert_price_is_422(client):
     r = client.post("/api/alerts", json={"symbol": "EURUSD", "condition": "above", "price": True}, headers=_DEV1)
     assert r.status_code == 422
+
+
+@pytest.mark.parametrize("hdr", [{}, {"X-Install-Id": "abc"}, {"X-Install-Id": "other!"}])
+def test_anonymous_client_without_a_valid_install_id_is_refused(client, hdr):
+    """مجهول بلا معرّف تثبيت صالح كان يُحال لدلو واحد مشترك: `X-Install-Id: abc` يحفظ صفقة فيه، ومن
+    بلا ترويسة يقرؤها ويغلقها ويحذفها، ونسبة فوزه تخلط صفقات الغرباء. صار 400 `install_id_required`."""
+    legacy = db.add_trade({**_TRADE}, None)
+    r = client.post("/api/trades", json=_TRADE, headers=hdr)
+    assert r.status_code == 400 and r.json()["detail"] == "install_id_required"
+    assert client.get("/api/trades", headers=hdr).status_code == 400
+    assert client.post(f"/api/trades/{legacy['id']}/close", json={"exit": 1.2}, headers=hdr).status_code == 400
+    assert client.delete(f"/api/trades/{legacy['id']}", headers=hdr).status_code == 400
+    assert db.list_trades(None)[0]["status"] == "open"

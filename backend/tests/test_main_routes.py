@@ -273,8 +273,8 @@ def test_anonymous_devices_do_not_share_alerts(client):
     client.post("/api/alerts", json=_ALERT, headers=_DEV1)
     assert len(client.get("/api/alerts", headers=_DEV1).json()["alerts"]) == 1
     assert client.get("/api/alerts", headers=_DEV2).json()["alerts"] == []
-    # وعميل قديم بلا ترويسة لا يرى صفوف الأجهزة الجديدة
-    assert client.get("/api/alerts").json()["alerts"] == []
+    # ومجهول بلا معرّف تثبيت (أو بمعرّف مشوَّه) يُرفض — لا دلو مشترك يقرأ منه الغرباء
+    assert client.get("/api/alerts").json()["detail"] == "install_id_required"
 
 
 def test_signing_in_adopts_the_rows_made_on_that_device_before_login(client):
@@ -443,7 +443,7 @@ def test_anonymous_devices_do_not_share_indicator_alerts(client):
     client.post("/api/indicator-alerts", json=_IND_RSI, headers=_DEV1)
     assert len(client.get("/api/indicator-alerts", headers=_DEV1).json()["alerts"]) == 1
     assert client.get("/api/indicator-alerts", headers=_DEV2).json()["alerts"] == []
-    assert client.get("/api/indicator-alerts").json()["alerts"] == []
+    assert client.get("/api/indicator-alerts").status_code == 400
 
 
 # ─── تنبيهات المؤشرات: الفحص ────────────────────────────────────────────────
@@ -835,10 +835,10 @@ def test_worker_indicator_series_drops_stale_cache(monkeypatch):
 @pytest.mark.parametrize("sym", ["DXY", "dxy"])
 def test_alerts_on_a_symbol_the_provider_does_not_offer_are_refused(client, sym):
     """DXY: كان يُحفظ «يراقب» إلى الأبد ولا يُطلق — لا سعر له عند المزوّد."""
-    r = client.post("/api/alerts", json={"symbol": sym, "condition": "above", "price": 100})
+    r = client.post("/api/alerts", json={"symbol": sym, "condition": "above", "price": 100}, headers=_DEV1)
     assert r.status_code == 422 and "symbol unavailable at provider" in r.text
     r = client.post("/api/indicator-alerts", json={
-        "symbol": sym, "alert_type": "rsi", "condition": "above", "value": 70})
+        "symbol": sym, "alert_type": "rsi", "condition": "above", "value": 70}, headers=_DEV1)
     assert r.status_code == 422 and "symbol unavailable at provider" in r.text
 
 
