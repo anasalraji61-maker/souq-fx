@@ -5889,6 +5889,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (!ch || (!typed && !tfTypingStarts(ch)) || typed.length >= TF_TYPING_MAX) return;
       // شارت بلا مبدّل فريم (`onTimeframeKey`): التاريخ وحده — «15» لا تُظهر وسماً لا يفعل شيئاً.
       const next = typed + ch;
+      // «-» فاصل تاريخ فقط بعد السنة («2026-»)؛ بعد «5» هو تصغير (`+/-`) — كان يُبتلع ⇒ «5-» ✕: لا فريم ولا تصغير.
+      if (ch === '-' && !typedDatePending(next) && !parseTypedDate(next)) return;
       if (!onTimeframeKeyRef.current && !/^[12]\d{0,3}$/.test(next) && !typedDatePending(next) && !parseTypedDate(next)) return;
       event.preventDefault();
       put(next);
