@@ -561,6 +561,10 @@ export function WatchlistPanel({
             );
           })
         )}
+        {/* launch165a: «حذف» (والترتيب) مخفيّ وقت السكون (§5.2) ويظهر بالضغط المطوّل — على اللمس لا شيء يدلّ عليه. الويب يكشفه بالمرور. */}
+        {Platform.OS !== 'web' && list.length > 0 ? (
+          <Text style={[styles.longPressHint, { textAlign: align }]}>{t.rowDeleteLongPressHint}</Text>
+        ) : null}
       </ScrollView>
 
       <Modal visible={addOpen} transparent animationType="none" onRequestClose={() => setAddOpen(false)}>
@@ -658,6 +662,7 @@ const styles = StyleSheet.create({
   toolBtnText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   list: { gap: 4, paddingBottom: spacing.lg },
   emptyBox: { paddingVertical: spacing.lg, alignItems: 'center', gap: spacing.sm },
+  longPressHint: { color: colors.textMuted, fontSize: 11, lineHeight: 16, padding: spacing.sm },
   empty: {
     color: colors.textDim,
     fontSize: 11,

@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
@@ -486,6 +487,10 @@ export function IndicatorAlertsPanel({
               </Pressable>
             ))
           )}
+          {/* launch165a: «حذف» مخفيّ وقت السكون (§5.2) ويظهر بالضغط المطوّل — على اللمس لا شيء يدلّ عليه. الويب يكشفه بالمرور. */}
+          {Platform.OS !== 'web' && alerts.length > 0 ? (
+            <Text style={[styles.longPressHint, { textAlign: align }]}>{t.rowDeleteLongPressHint}</Text>
+          ) : null}
     </>
   );
 
@@ -685,6 +690,7 @@ const styles = StyleSheet.create({
   btnText: { color: colors.onAccent, fontWeight: '500' },
   btnDisabled: { opacity: 0.4 },
   empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
+  longPressHint: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: spacing.sm },
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
   itemRtl: { flexDirection: 'row-reverse' },
   itemTextHit: { flex: 1 },
