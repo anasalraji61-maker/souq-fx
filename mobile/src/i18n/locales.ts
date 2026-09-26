@@ -1494,6 +1494,12 @@ export type Dict = {
   journalShownOfTotal: string;
   journalLoadOlder: string;
   journalSizeUnknown: string;
+  /**
+   * tools (سجلّ 126 «ما فُحص»): رمزٌ بلاحقة وسيط لا يعرفها الدفتر («EURUSDi») يُحفظ بلا نقاط ولا R ولا مال، بصمت.
+   * `{symbol}` كما سيُحفظ، `{pair}` الزوج الذي يبدو أنه المقصود («EURUSD»). لرمز يشبه زوجاً + لاحقة فقط — لا لـBTCUSD/US30 (بلا نقاط أصلاً).
+   * **غير موصول بعد** — لـtools.
+   */
+  journalSymbolSuffixUnknown: string;
   journalLoadOlderError: string;
   /**
    * فشل تحميل الدفتر مع زرّ «إعادة المحاولة» (launch140 → tools، موصول `TradeJournalPanel.tsx`). `journalLoadError`
@@ -2810,6 +2816,7 @@ const ar: Dict = {
   journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
   journalLoadOlder: 'تحميل الأقدم',
   journalSizeUnknown: 'الحجم غير مسجَّل',
+  journalSymbolSuffixUnknown: 'الدفتر لا يعرف «{symbol}» — تُحفظ الصفقة، لكن بلا نقاط ولا R ولا ربح بالمال. إن كانت لاحقة من وسيطك فاكتب الزوج وحده: {pair}',
   journalLoadOlderError: 'تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً. ما يظهر أمامك لم يتغيّر.',
   journalRetryBtn: 'إعادة المحاولة',
   journalLoadErrorRetry: 'تعذّر تحميل الدفتر — تحقّق من الاتصال ثم اضغط «إعادة المحاولة». صفقاتك المسجّلة لم تُحذف.',
@@ -4067,6 +4074,7 @@ const enUS: Dict = {
   journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
   journalLoadOlder: 'Load older',
   journalSizeUnknown: 'Size not recorded',
+  journalSymbolSuffixUnknown: 'The journal doesn’t recognize “{symbol}” — the trade is saved, but without pips, R or profit in money. If that’s your broker’s suffix, type the pair alone: {pair}',
   journalLoadOlderError: 'Couldn’t load older trades — check your connection and select “Load older” again. The trades already shown are unchanged.',
   journalRetryBtn: 'Try again',
   journalLoadErrorRetry: 'Couldn’t load your journal — check your connection, then select “Try again”. Your logged trades haven’t been deleted.',
@@ -4135,6 +4143,7 @@ const enGB: Dict = {
   mcDrawColorA11y: 'Drawing colour: {color} — select for the next colour',
   mcColorNames: ['Frame colour', 'Green', 'Red', 'Amber', 'Blue', 'White'],
   wlCatalogAllAdded: 'All catalogue symbols added',
+  journalSymbolSuffixUnknown: 'The journal doesn’t recognise “{symbol}” — the trade is saved, but without pips, R or profit in money. If that’s your broker’s suffix, type the pair alone: {pair}',
   invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
   // الفعل «practise» بريطاني و«practice» أمريكي — كانت نسخة en-US بالتهجئة البريطانية.
   lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
@@ -5373,6 +5382,7 @@ const ku: Dict = {
   journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
   journalLoadOlder: 'بارکردنی کۆنترەکان',
   journalSizeUnknown: 'قەبارە تۆمار نەکراوە',
+  journalSymbolSuffixUnknown: 'ڕۆژنامەکە «{symbol}» ناناسێت — مامەڵەکە پاشەکەوت دەکرێت، بەڵام بێ پیپ و R و قازانج بە پارە. ئەگەر ئەوە پاشگرێکی بڕۆکەرەکەتە، تەنها جووتەکە بنووسە: {pair}',
   journalLoadOlderError: 'بارکردنی مامەڵە کۆنترەکان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە «بارکردنی کۆنترەکان» دابگرە. ئەوەی لەبەردەمتە نەگۆڕاوە.',
   // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
   journalRetryBtn: 'دووبارە هەوڵبدەرەوە',
