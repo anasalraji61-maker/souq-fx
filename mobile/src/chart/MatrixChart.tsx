@@ -169,6 +169,7 @@ import { isNotOfferedSymbol } from '../providerSymbols';
 import { playSoftClick } from '../audio/playSoftClick';
 import { chartPipSpec } from './pipSpec';
 import { planHiLoLabels } from './hiLoLabels';
+import { withAlpha } from './alpha';
 import { planDayBreaks } from './dayBreaks';
 import { barTradingDaySec, projectBarTimeSec } from './marketHours';
 import { planSessionRuns, type SessionId } from './sessions';
@@ -1464,8 +1465,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // (التقاطع، الخطّ الأفقي، المنطقة، خطّ الاتجاه) بدل زرّ ينتهي بخطأ عام.
   const onCreateAlert = isNotOfferedSymbol(series.symbol) ? undefined : onCreateAlertProp;
   const canPan = syncFollow ? false : (panControls ?? interactive);
-  const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
-  const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
+  const candleBull = mutedCandles ? withAlpha(colors.bull, 0.34) : colors.bull;
+  const candleBear = mutedCandles ? withAlpha(colors.bear, 0.34) : colors.bear;
   const timeAxisH = hideTimeLabels ? 0 : TIME_AXIS_HEIGHT;
   const syncKeyRef = useRef('');
   /** جلسة نشر نشطة: يُصفَّر المفتاح فقط عند الانتقال من غير ناشر → ناشر */
@@ -4471,8 +4472,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     );
     return (
       <View key={key} pointerEvents="none" style={StyleSheet.absoluteFill}>
-        {band(box.yEntry, box.yTarget, 'rgba(34,197,94,0.14)', 'rgba(34,197,94,0.55)')}
-        {band(box.yEntry, box.yStop, 'rgba(244,63,94,0.14)', 'rgba(244,63,94,0.55)')}
+        {band(box.yEntry, box.yTarget, withAlpha(colors.bull, 0.14), withAlpha(colors.bull, 0.55))}
+        {band(box.yEntry, box.yStop, withAlpha(colors.bear, 0.14), withAlpha(colors.bear, 0.55))}
         <View
           style={{
             position: 'absolute',
@@ -4492,7 +4493,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               top: Math.min(box.yEntry, yOf(outcome.exit)),
               width: xExit - xFill,
               height: Math.max(1, Math.abs(yOf(outcome.exit) - box.yEntry)),
-              backgroundColor: outcomeUp ? 'rgba(34,197,94,0.22)' : 'rgba(244,63,94,0.22)',
+              backgroundColor: outcomeUp ? withAlpha(colors.bull, 0.22) : withAlpha(colors.bear, 0.22),
             }}
           />
         ) : null}
@@ -8705,8 +8706,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 // المُسقَطة يمين آخر شمعة أبهت قليلاً — تُقرأ «قادمة» لا سعراً مضى.
                 backgroundColor:
                   (ichimokuCloud.spanA[bnd.at] ?? 0) >= (ichimokuCloud.spanB[bnd.at] ?? 0)
-                    ? bnd.at >= source.plot.length ? 'rgba(34,197,94,0.09)' : 'rgba(34,197,94,0.14)'
-                    : bnd.at >= source.plot.length ? 'rgba(244,63,94,0.09)' : 'rgba(244,63,94,0.14)',
+                    ? bnd.at >= source.plot.length ? withAlpha(colors.bull, 0.09) : withAlpha(colors.bull, 0.14)
+                    : bnd.at >= source.plot.length ? withAlpha(colors.bear, 0.09) : withAlpha(colors.bear, 0.14),
               }}
             />
           ))}
