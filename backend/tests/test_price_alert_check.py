@@ -180,6 +180,26 @@ def test_recent_minutes_reports_when_its_close_was_fetched(monkeypatch):
     assert alert_worker._recent_minutes("BTCUSD") == (1.1, candles, now - 40)
 
 
+def test_close_of_a_bar_that_ended_before_arming_does_not_fire(monkeypatch):
+    """آخر شمعة 1m منشورة بدأت قبل 150ث (لا أحدث بعد) وأغلقت 1.1003؛ سُلِّح «فوق 1.1000» قبل 60ث والسعر
+    1.0995؛ جلب جديد بعده ⇒ كان الإغلاق يُوسَم بلحظة الجلب فيُطلق على سعر سبق التسليح."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    now = int(_time.time())
+    candles = [{"time": now - 150, "open": 1.1, "high": 1.1003, "low": 1.1, "close": 1.1003}]
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
+                        lambda *a, **k: (candles, {"kind": "provider", "as_of": now}))
+    q, cs, q_at = alert_worker._recent_minutes("BTCUSD")
+    assert q == 1.1003 and q_at == now - 90
+    armed = datetime.fromtimestamp(now - 60, timezone.utc).isoformat()
+    assert alert_worker._price_hit({"price": 1.1, "condition": "above", "ts": armed}, q, cs, q_at) is False
+    # تنبيه سُلِّح قبل تلك الشمعة يُطلق عليها كما كان
+    older = datetime.fromtimestamp(now - 600, timezone.utc).isoformat()
+    assert alert_worker._price_hit({"price": 1.1, "condition": "above", "ts": older}, q, cs, q_at) is True
+
+
 def test_fallback_quote_carries_its_provider_time_so_a_pre_arming_quote_does_not_fire(monkeypatch):
     """1m متعذّرة ⇒ اقتباس بعمر 90ث (مقبول ≤3د) كان يُعاد بلا وقته ⇒ «فوق 1.1000» سُلِّح قبل 30ث يُطلق عليه."""
     import time as _time

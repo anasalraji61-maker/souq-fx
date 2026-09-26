@@ -88,7 +88,11 @@ def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None
             # فيُطلق تنبيهاً على سعر لم يعد قائماً. الذيول تبقى صالحة (تُفلتر بلحظة التسليح).
             if last > 0 and time.time() - int(candles[-1]["time"]) <= 180:
                 at = meta.get("as_of") if isinstance(meta, dict) else None
-                return last, candles, float(at) if at is not None else None
+                # الإغلاق سعرُ نهاية شمعته لا لحظة الجلب: آخر شمعة منشورة قد تكون بدأت قبل دقيقتين (تأخّر
+                # المزوّد/دقائق هادئة) ⇒ كان إغلاق 1.1003 قبل التسليح بـ92ث يُوسَم بلحظة جلب بعده فيُطلق
+                # «فوق 1.1000» والسعر 1.0995. الجارية تنتهي بعد الجلب ⇒ يبقى `as_of`.
+                bar_end = int(candles[-1]["time"]) + 60
+                return last, candles, min(float(at), bar_end) if at is not None else float(bar_end)
             q, q_at = _price_at(symbol)
             return q, candles, q_at
     except Exception:
