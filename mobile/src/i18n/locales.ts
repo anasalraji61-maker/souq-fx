@@ -402,6 +402,12 @@ export type Dict = {
   riskCalcDailyLimit: string;
   riskCalcLostToday: string;
   /**
+   * تحت خانة خسارة اليوم حين أُفرغت لأن عملة المال تغيّرت (`lostTodayInCcy`، tools `a672a78`: شريحة الحساب أو عادي ⇄ سنت).
+   * `{from}` العملة التي كُتبت بها (`lostCcy`)، `{to}` عملة المال الآن. يُعرض ما دامت الخانة فارغة و`lostCcy` ≠ عملة المال —
+   * بدونه يرى المستخدم خانته فارغة بلا سبب، ومتّسع الحدّ اليومي يُحسب كأنه لم يخسر شيئاً اليوم.
+   */
+  riskCalcLostTodayOtherCcy: string;
+  /**
    * `{room}` المتبقّي قبل الحدّ مبلغاً بعملة الحساب كما يُعرض، `{n}` عدد الخسائر الكاملة بمخاطرة هذه الصفقة داخل الحدّ (رقم
    * صحيح ≥1 — حين 0 يُعرض `riskCalcDailyBreach` بدله)، `{pct}` أقصى مخاطرة للصفقة التالية % بلا «%» (القالب يضعها).
    * العربية والكردية تضعان `{n}` بعد نقطتين فلا تتعلّق صيغة الجمع بالعدد.
@@ -1882,6 +1888,7 @@ const ar: Dict = {
   riskCalcLossStreak: '{n} خسائر متتالية بهذه المخاطرة = −{pct}% من الحساب',
   riskCalcDailyLimit: 'حدّ الخسارة اليومي %',
   riskCalcLostToday: 'خسارتك اليوم حتى الآن',
+  riskCalcLostTodayOtherCcy: 'كتبتَ خسارة اليوم بـ{from} — أعد كتابتها بـ{to}. حتى ذلك يُحسب المتبقّي من حدّك اليومي كأنك لم تخسر شيئاً اليوم.',
   riskCalcDailyRoom: 'يبقى {room} قبل حدّك اليومي · خسائر كاملة بهذه المخاطرة تتّسع لها: {n} · أقصى مخاطرة للصفقة التالية {pct}%',
   riskCalcDailyBreach: '⚠ وقف هذه الصفقة وحده يتخطّى حدّك اليومي — يبقى لك {room} فقط. صغّر الحجم أو توقّف لليوم.',
   riskCalcSlPips: 'وقف الخسارة (pip)',
@@ -3116,6 +3123,7 @@ const enUS: Dict = {
   riskCalcLossStreak: '{n} losses in a row at this risk = −{pct}% of the account',
   riskCalcDailyLimit: 'Daily loss limit %',
   riskCalcLostToday: 'Lost so far today',
+  riskCalcLostTodayOtherCcy: 'You entered today’s loss in {from} — enter it again in {to}. Until then, the room left in your daily limit assumes you have lost nothing today.',
   riskCalcDailyRoom: '{room} left before your daily limit · full losses at this risk that still fit: {n} · max risk on the next trade {pct}%',
   riskCalcDailyBreach: '⚠ This trade’s stop alone would break your daily limit — only {room} left. Reduce the size or stop for the day.',
   riskCalcSlPips: 'Stop loss (pips)',
@@ -4390,6 +4398,7 @@ const ku: Dict = {
   riskCalcLossStreak: '{n} زیانی لەسەر یەک بەم مەترسییە = −{pct}%ی هەژمار',
   riskCalcDailyLimit: 'سنووری زیانی ڕۆژانە %',
   riskCalcLostToday: 'زیانی ئەمڕۆت تا ئێستا',
+  riskCalcLostTodayOtherCcy: 'زیانی ئەمڕۆت بە {from} نووسی — دووبارە بە {to} بینووسەوە. تا ئەو کاتە، ئەوەی لە سنووری ڕۆژانەت ماوە وا دەژمێردرێت کە ئەمڕۆ هیچ زیانێکت نەکردووە.',
   riskCalcDailyRoom: '{room} ماوە تا سنووری ڕۆژانەت · زیانی تەواو بەم مەترسییە کە جێی دەبێتەوە: {n} · زۆرترین مەترسی بۆ مامەڵەی داهاتوو {pct}%',
   riskCalcDailyBreach: '⚠ تەنها وەستانی ئەم مامەڵەیە سنووری ڕۆژانەت دەبەزێنێت — تەنها {room} ماوە. قەبارەکە بچووک بکەرەوە یان ئەمڕۆ بوەستە.',
   riskCalcSlPips: 'وەستانی زیان (pip)',
