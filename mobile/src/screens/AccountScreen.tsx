@@ -22,6 +22,7 @@ import { CommissionPlanPanel, isRoleId } from '../components/CommissionPlanPanel
 import { loginErrorText, registerErrorText } from '../i18n/authErrors';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
+import { SHOW_REFERRAL_AND_PLANS } from '../featureFlags';
 import { OnboardingOverlay } from '../components/OnboardingOverlay';
 import { markOnboardingSeen } from '../onboarding';
 import { api } from '../api';
@@ -74,7 +75,7 @@ export function AccountScreen() {
   const align = rtl ? ('right' as const) : ('left' as const);
 
   const loadNetwork = useCallback(async () => {
-    if (!user) {
+    if (!user || !SHOW_REFERRAL_AND_PLANS) {
       setNet(null);
       setNetError(false);
       return;
@@ -276,13 +277,17 @@ export function AccountScreen() {
         }}
       />
 
-      <SubscriptionPlansPanel />
-      <CommissionPlanPanel />
-      <NetworkTreePanel
-        enabled={!!user}
-        previewName={user?.username}
-        onChanged={() => void loadNetwork()}
-      />
+      {SHOW_REFERRAL_AND_PLANS ? (
+        <>
+          <SubscriptionPlansPanel />
+          <CommissionPlanPanel />
+          <NetworkTreePanel
+            enabled={!!user}
+            previewName={user?.username}
+            onChanged={() => void loadNetwork()}
+          />
+        </>
+      ) : null}
 
       {user ? (
         <View style={styles.card}>
@@ -604,7 +609,7 @@ export function AccountScreen() {
             </Pressable>
           </View>
 
-          {mode === 'register' ? (
+          {mode === 'register' && SHOW_REFERRAL_AND_PLANS ? (
             <>
               <TextInput
                 style={[styles.input, { textAlign: align }]}
