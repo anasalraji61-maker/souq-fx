@@ -985,6 +985,11 @@ export type Dict = {
   wlAddEmptyBtn: string;
   wlDemoPriceA11ySuffix: string;
   wlDemoTag: string;
+  /**
+   * صفّ بلا سعر بعد (قبل أوّل تيك — لا سعر احتياطي منذ `07b92d4`/`b574e4d`، قرار أنس ٢): الخلية تعرض «—» والقارئ الصوتي
+   * كان ينطق اسم الرمز وحده. لاحقة لـ`accessibilityLabel` الصفّ حين `price == null` (بـ`WatchlistPanel.tsx`، ملك ui).
+   */
+  wlNoPriceA11ySuffix: string;
   wlMoveUpA11y: string;
   wlMoveDownA11y: string;
   wlRemoveA11y: string;
@@ -2354,8 +2359,9 @@ const ar: Dict = {
   wlEmpty:
     'لا رموز في المتابعة — أضف أزواجك من الزرّ أدناه لتراها بسعرها وتغيّرها اليومي وتبدّل الشارت بنقرة.',
   wlAddEmptyBtn: 'إضافة رمز',
-  wlDemoPriceA11ySuffix: ' · سعر افتراضي',
-  wlDemoTag: 'افتراضي',
+  wlDemoPriceA11ySuffix: ' · سعر تجريبي',
+  wlDemoTag: 'تجريبي',
+  wlNoPriceA11ySuffix: ' · لا سعر بعد',
   wlMoveUpA11y: 'تحريك لأعلى',
   wlMoveDownA11y: 'تحريك لأسفل',
   wlRemoveA11y: 'إزالة من المتابعة',
@@ -3602,6 +3608,7 @@ const enUS: Dict = {
   wlAddEmptyBtn: 'Add symbol',
   wlDemoPriceA11ySuffix: ' · demo price',
   wlDemoTag: 'Demo',
+  wlNoPriceA11ySuffix: ' · no price yet',
   wlMoveUpA11y: 'Move up',
   wlMoveDownA11y: 'Move down',
   wlRemoveA11y: 'Remove from watchlist',
@@ -4895,6 +4902,7 @@ const ku: Dict = {
   wlAddEmptyBtn: 'زیادکردنی هێما',
   wlDemoPriceA11ySuffix: ' · نرخی نموونەیی',
   wlDemoTag: 'نموونەیی',
+  wlNoPriceA11ySuffix: ' · هێشتا نرخ نییە',
   wlMoveUpA11y: 'بۆ سەرەوە بگوازەرەوە',
   wlMoveDownA11y: 'بۆ خوارەوە بگوازەرەوە',
   wlRemoveA11y: 'لابردن لە چاودێری',
