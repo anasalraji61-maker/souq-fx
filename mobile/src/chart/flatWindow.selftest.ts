@@ -43,6 +43,20 @@ const closes = [...moving.map((b) => b.close), ...Array(60).fill(1.1)];
 const sr = computeStochRsi(closes);
 assert.equal(sr.k[closes.length - 1], null, 'StochRSI K');
 assert.equal(sr.d[closes.length - 1], null, 'StochRSI D');
+// توقّف بعد حركة: RSI يتذبذب ~1e-14 تقريباً — كان K يقفز 0↔100 على سوق ميّت
+{
+  const cs: number[] = [];
+  let px = 1.08;
+  let seed = 3;
+  for (let i = 0; i < 40; i++) {
+    seed = (seed * 16807) % 2147483647;
+    px += (seed / 2147483647 - 0.5) * 0.004;
+    cs.push(px);
+  }
+  for (let i = 0; i < 60; i++) cs.push(px);
+  const st = computeStochRsi(cs);
+  for (const i of [60, 70, 80, 90, 99]) assert.equal(st.k[i] ?? null, null, `StochRSI stalled K[${i}]`);
+}
 
 // لا تغيير على بيانات متحرّكة: لا null بعد الإحماء
 const k = computeStoch(moving).k;

@@ -562,8 +562,9 @@ function stochRsiRaw(closes: number[], rsiPeriod: number, stochPeriod: number): 
       lo = Math.min(lo, rsi[w]!);
     }
     const span = hi - lo;
-    // RSI ثابت على النافذة ⇒ na بـ`ta.stoch` عند TradingView؛ 0 كان «تشبّع بيعي» وهمياً.
-    out.push(span === 0 ? null : ((rsi[i]! - lo) / span) * 100);
+    // RSI ثابت على النافذة ⇒ na بـ`ta.stoch` عند TradingView؛ 0 كان «تشبّع بيعي» وهمياً. «ثابت» بتسامح 1e-10:
+    // سعر توقّف بعد حركة يُبقي RSI يتذبذب ~1e-14 من خطأ التقريب، و`span === 0` لا يلتقطه ⇒ K يقفز 0↔100.
+    out.push(span <= 1e-10 * Math.max(1, Math.abs(hi)) ? null : ((rsi[i]! - lo) / span) * 100);
   }
   return out;
 }
