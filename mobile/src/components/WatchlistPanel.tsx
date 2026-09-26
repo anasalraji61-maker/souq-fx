@@ -411,7 +411,7 @@ export function WatchlistPanel({
             const armedDist = armedNearest != null ? formatPips(armedNearest) : null;
             const armedText =
               armedLevels && armedLevels.length > 0
-                ? `🔔${armedLevels.length > 1 ? armedLevels.length : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}`
+                ? `⚑${armedLevels.length > 1 ? armedLevels.length : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}`
                 : null;
             return (
               <Pressable

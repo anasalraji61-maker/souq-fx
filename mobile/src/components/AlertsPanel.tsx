@@ -655,7 +655,7 @@ export function AlertsPanel({
   const firedCount = alerts.filter((a) => a.triggered).length;
 
   /**
-   * سطر «🔔 أُطلق …» **لم يكن يزول أبداً**: يُكتب مرة عند الإطلاق ولا مؤقّت له ولا زرّ إخفاء
+   * سطر «⚑ أُطلق …» **لم يكن يزول أبداً**: يُكتب مرة عند الإطلاق ولا مؤقّت له ولا زرّ إخفاء
    * (خلافاً لـ`armed` وشارة أول تنبيه، ولكلٍّ منهما مؤقّت). واللوحة مركَّبة طوال الجلسة داخل شبكة
    * شاشة الأدوات، فيبقى السطر معلّقاً فوق النموذج ساعاتٍ يعلن سعراً تجاوزه السوق من زمن — بل يبقى
    * بعد أن يمسح المتداول التنبيهات المُطلَقة نفسها، فيعلن إطلاقاً لم يعد له أثر بالقائمة. السجلّ
@@ -874,7 +874,7 @@ export function AlertsPanel({
       )}
       {flash ? (
         <View style={[styles.flashRow, rtl && styles.rowRtl]}>
-          <Text style={[styles.flash, styles.flashText, { textAlign: align }]}>🔔 {flash}</Text>
+          <Text style={[styles.flash, styles.flashText, { textAlign: align }]}>⚑ {flash}</Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => setFlash(null)}

@@ -250,7 +250,7 @@ export function FocusChartModal({
     setCompareSym((prev) => (prev === next ? null : next));
   };
 
-  /** تأكيد «مُفعَّل» مرئي بعد إنشاء تنبيه من الشارت (خط رسم أو 🔔 الـcrosshair) — كان النقر يُصدر صوتاً
+  /** تأكيد «مُفعَّل» مرئي بعد إنشاء تنبيه من الشارت (خط رسم أو ⚑ الـcrosshair) — كان النقر يُصدر صوتاً
    * فقط، ولوحة التنبيهات تحت الشارت لا تُحدَّث إلا بعد دقيقة. الآن سطر تأكيد 4 ثوانٍ + تحديث فوري للقائمة. */
   const [armedMsg, setArmedMsg] = useState<string | null>(null);
   const armedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
