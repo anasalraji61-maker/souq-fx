@@ -90,6 +90,10 @@ def synthesize(text: str, voice_id: str | None = None) -> Path:
         )
         if r.status_code >= 400:
             raise RuntimeError(f"ElevenLabs {r.status_code}: {r.text[:400]}")
+        # 200 بجسم فارغ أو غير صوتي (JSON/HTML) كان يُحفظ `.mp3` ويُعاد `ok: true` فيُشغَّل ملف فارغ
+        ctype = (r.headers.get("content-type") or "").lower()
+        if not r.content or not ctype.startswith("audio/"):
+            raise RuntimeError(f"ElevenLabs returned no audio ({ctype or 'no content-type'}, {len(r.content)} bytes)")
         out.write_bytes(r.content)
     return out
 
