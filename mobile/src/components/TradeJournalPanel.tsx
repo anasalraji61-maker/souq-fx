@@ -10,13 +10,14 @@ import {
   AppState,
 } from 'react-native';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
-import { api } from '../api';
+import { api, type Candle } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
-import { isRealQuote } from '../chart/dataSource';
+import { isRealQuote, isSyntheticProvenance, serverNowSec } from '../chart/dataSource';
+import { cachedChartSeries, rememberChartSeries } from '../hooks/chartSeriesCache';
 import { pipUnit } from '../chart/measureReadout';
 import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, liveEntryQuoteState, sizeLooksLikeUnits } from '../positionSize';
 import {
@@ -75,6 +76,8 @@ import {
   quickJournalSymbols,
   journalSpec,
   quickStopPips,
+  atrStopPips,
+  ATR_STOP_TF,
   stopAtPips,
   averageR,
   pnlPctContradictsCash,
@@ -157,6 +160,9 @@ const rowR = (tr: Trade): string =>
   ) ?? '';
 
 type Stats = JournalStats;
+
+/** شريحة وقف التقلّب (`atrStopPips`): اسم المؤشر كما هو بالشارت، بلا ترجمة كسائر أسماء المؤشرات. */
+const ATR_STOP_LABEL = 'ATR';
 
 type Props = {
   /** رمز الشارت/الإشارة المفتوح — التسجيل يبدأ به بدل EURUSD ثابت (كالحاسبة والباك-تست). */
@@ -678,17 +684,61 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    * المتداول يقرّر وقفه بالنقاط، وكان يطرح بيده فيقع الوقف بالجهة الخطأ أو بحجم pip خاطئ. تظهر بدخول صالح
    * لأداة معروفة المواصفات فقط.
    */
+  /**
+   * شموع الساعة للرمز (الزوج العادي لرموز السنت/الأسماء — `journalSpec`) لشريحة وقف التقلّب (`atrStopPips`): من ذاكرة الشارت
+   * المشتركة إن جلبها، وإلا طلبٌ واحد بعد توقّف الكتابة. التجريبية/غير المتاحة لا تُستعمل (ATR سعرٍ عشوائي ليس تقلّب السوق)،
+   * وردٌّ لرمزٍ سابق يُرمى.
+   */
+  const atrKey = journalSpec(symbol.trim().toUpperCase())?.symbol ?? null;
+  const [atrSeries, setAtrSeries] = useState<{ key: string; candles: Candle[] } | null>(null);
+  const atrWanted = atrKey != null && pnum(entry) != null;
+  useEffect(() => {
+    if (!atrKey || !atrWanted) return;
+    const cached = cachedChartSeries(atrKey, ATR_STOP_TF);
+    if (cached && !isSyntheticProvenance(cached.data_source)) {
+      setAtrSeries({ key: atrKey, candles: cached.candles });
+      return;
+    }
+    let alive = true;
+    const id = setTimeout(() => {
+      api
+        .chart(atrKey, ATR_STOP_TF, 60)
+        .then((s) => {
+          const r = rememberChartSeries(atrKey, ATR_STOP_TF, s);
+          if (alive && !isSyntheticProvenance(r.data_source)) setAtrSeries({ key: atrKey, candles: r.candles });
+        })
+        .catch(() => {});
+    }, 600);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+    };
+  }, [atrKey, atrWanted]);
+  const atrPips = useMemo(
+    () =>
+      atrKey && atrSeries?.key === atrKey
+        ? atrStopPips({ symbol: atrKey, candles: atrSeries.candles, nowSec: serverNowSec() })
+        : null,
+    [atrKey, atrSeries]
+  );
+
   const slTargets = useMemo(() => {
     const e = pnum(entry);
     const sym = symbol.trim().toUpperCase();
     const spec = journalSpec(sym);
     if (e == null || !spec) return [];
-    return quickStopPips(sym, e).flatMap((pips) => {
+    // شريحة التقلّب أولاً (إن لم تطابق شريحة ثابتة)، ثم المسافات الثابتة
+    const fixed = quickStopPips(sym, e);
+    const list: { pips: number; atr: boolean }[] = [
+      ...(atrPips != null && !fixed.includes(atrPips) ? [{ pips: atrPips, atr: true }] : []),
+      ...fixed.map((pips) => ({ pips, atr: pips === atrPips })),
+    ];
+    return list.flatMap(({ pips, atr }) => {
       const v = stopAtPips({ symbol: sym, side, entry: e, pips });
-      return v != null ? [{ pips, v, tol: spec.pipSize / 20, text: formatPrice(v, spec.symbol) }] : [];
+      return v != null ? [{ pips, atr, v, tol: spec.pipSize / 20, text: formatPrice(v, spec.symbol) }] : [];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry]);
+  }, [symbol, side, entry, atrPips]);
 
   /**
    * «50» بخانة الهدف (من «TP 50 pips») أو «25» بخانة الوقف: نقاطٌ لا سعر (`levelLooksLikePips`) — كانت تُحفظ هدفاً عند 50.00
@@ -2086,7 +2136,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       </View>
       {slTargets.length > 0 ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
-          {slTargets.map((x: { pips: number; v: number; tol: number; text: string }) => {
+          {slTargets.map((x: { pips: number; atr: boolean; v: number; tol: number; text: string }) => {
             const cur = pnum(sl);
             const on = cur != null && Math.abs(cur - x.v) <= x.tol;
             return (
@@ -2106,10 +2156,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
                   setSl(x.text);
                   setFormError(null);
                 }}
-                accessibilityLabel={t.journalSlAtPipsA11y.replace('{pips}', String(x.pips)).replace('{price}', x.text)}
+                accessibilityLabel={`${t.journalSlAtPipsA11y.replace('{pips}', String(x.pips)).replace('{price}', x.text)}${
+                  x.atr ? ` (${ATR_STOP_LABEL})` : ''
+                }`}
               >
                 {/* DESIGN-PRO §1: مسافة الوقف ليست اتجاه سعر — صفّ الشرائح محايد وقت السكون (كان كلّه أحمر) */}
-                <Text style={[styles.qChipText, on && styles.chipTextOn]}>{`−${x.pips} ${pipUnit(lang)}`}</Text>
+                <Text style={[styles.qChipText, on && styles.chipTextOn]}>
+                  {`${x.atr ? `${ATR_STOP_LABEL} ` : ''}−${x.pips} ${pipUnit(lang)}`}
+                </Text>
               </Pressable>
             );
           })}
