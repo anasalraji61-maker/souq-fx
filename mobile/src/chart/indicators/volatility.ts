@@ -277,7 +277,9 @@ export function computeMassIndex(
 }
 
 /**
- * Envelopes (نطاق نسبي حول متوسط متحرك بسيط، period=20 وpct=2.5% القيمتان الشائعتان) — أبسط بديل
+ * Envelopes (نطاق نسبي حول متوسط متحرك بسيط، period=20 وpct=0.1%) — pct كان 2.5%: ±290 نقطة على EURUSD،
+ * والنطاق يدخل مدى المحور الآلي ⇒ على M15 (مدى الشموع ~0.8%) تنسحق الشموع خطّاً مسطّحاً ويخرج النطاق عن
+ * كل فائدة. 0.1% افتراضي MetaTrader (منصّة الفوركس المرجعية) ⇒ ~12 نقطة، مرئي بجانب الشموع بكل فريم — أبسط بديل
  * لبولنجر/كلتنر: بدل استخدام انحراف معياري (بولنجر) أو ATR (كلتنر) لضبط عرض النطاق، يستخدم Envelopes
  * نسبة مئوية ثابتة من قيمة المتوسط نفسه: mid = SMA(closes, period)، upper = mid×(1+pct)، lower =
  * mid×(1-pct). عرض النطاق يتناسب طردياً مع مستوى السعر نفسه (بعكس بولنجر/كلتنر اللذين يتفاعلان مع
@@ -289,7 +291,7 @@ export function computeMassIndex(
 export function computeEnvelopes(
   closes: number[],
   period = 20,
-  pct = 0.025
+  pct = 0.001
 ): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
   const mid = sma(closes, period);
   const upper = mid.map((v) => (v == null ? null : v * (1 + pct)));
