@@ -386,7 +386,7 @@ CANDLE_DISK: Path | None = (
 _disk_checked: set[str] = set()
 # الجدول باسم نسخة: تغيير بمعالجة الشموع (فلتر العطلة، بناء W من D، `_candle`) لا يصل لسلسلة محفوظة قبله —
 # كانت تُحمَّل بعد النشر وتبقى. رفع الرقم مع أيّ تغيير كهذا ⇒ النشر يبدأ بقرص فارغ ويُجلب من المزوّد.
-_DISK_TABLE = "candles_v6"
+_DISK_TABLE = "candles_v7"
 
 # وقت آخر جلب **كامل** لكل مدخل (بحجمه هو). الدمج يُبقي شموع المدخل الأكبر الأقدم ويختم المدخل «الآن» ⇒ القائمة
 # (D/50 كل 90ث) كانت تُبقي أول ~130 شمعة من D/180 بلا جلب أبداً (والقرص يحفظها عبر إعادة التشغيل) — تصحيح
@@ -866,6 +866,13 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         if opened <= now < end:
             window = _closed_window(sym, now - 1e-3)
             if window and (opened >= window[0] or window[1] - window[0] <= _SHORT_BREAK):
+                continue
+        elif opened < now and step < _DAY:
+            # run 113: شمعة انتهت **داخل** كسر يومي ما زال قائماً عند الجلب (4H برنت 20:00 شتاءً تنتهي 24:00 والكسر
+            # 23:00–01:00، جُلبت 00:30): لم تعد «جارية» فكان الشرط أعلاه يبقيها **آخر شمعة** وإغلاقها تيك الكسر
+            # (`_filler_tail` نفسه يقول ذلك) ⇒ «آخر سعر» `provider` مختوماً 23:00 والسوق مغلق. تعود بعد الكسر (حدّ معروف).
+            window = _closed_window(sym, now - 1e-3)
+            if window and window[1] - window[0] <= _SHORT_BREAK and window[0] < end <= window[1]:
                 continue
         candles.append(candle)
     if dropped:

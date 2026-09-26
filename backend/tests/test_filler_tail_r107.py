@@ -132,3 +132,17 @@ def test_friday_forming_bar_kept_over_the_weekend(monkeypatch):
     _serve(monkeypatch, "2026-09-25 21:30", ["2026-09-25 16:00", "2026-09-25 20:00"])
     candles = market.fetch_time_series("EURUSD", "4H", 2)
     assert candles[-1]["time"] == _ts("2026-09-25 20:00")
+
+
+@pytest.mark.parametrize("now,last", [
+    # run 113: 4H برنت 20:00 شتاءً تنتهي 24:00 داخل الكسر 23:00–01:00 UTC؛ جُلبت 00:30 = لم تعد جارية لكن
+    # إغلاقها تيك الكسر ⇒ تُسقَط ما دام الكسر قائماً (الجارية 00:00 فُتحت داخله فتُسقَط أصلاً)
+    ("2026-12-02 00:30", "2026-12-01 16:00"),
+    # بعد الكسر تعود (حدّ معروف: إغلاقها يبقى تيك الكسر عند المزوّد)
+    ("2026-12-02 01:30", "2026-12-02 00:00"),
+])
+def test_finished_bar_ending_inside_ongoing_break_is_dropped(monkeypatch, now, last):
+    _serve(monkeypatch, now, ["2026-12-01 16:00", "2026-12-01 20:00", "2026-12-02 00:00"])
+    candles = market.fetch_time_series("UKOIL", "4H", 3)
+    assert candles[-1]["time"] == _ts(last)
+    assert (_ts("2026-12-01 20:00") in [c["time"] for c in candles]) == (now > "2026-12-02 01")
