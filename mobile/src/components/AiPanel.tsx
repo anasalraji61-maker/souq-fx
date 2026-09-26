@@ -17,7 +17,8 @@ import { formatLocalStamp } from '../localStamp';
  * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
  * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي).
  * و`template`: ردّ `source: 'template'` (لا نموذج مربوط) قراءة شارت عامة تبدأ «بالنسبة لسؤالك:» ولا تجيب
- * عنه — تُعرض بفقاعة الانقطاع الخافتة مع `reportAiFallbackNote` لا كجواب للمساعد. */
+ * عنه — تُعرض بفقاعة الانقطاع الخافتة مع `aiTemplateNote` لا كجواب للمساعد (الخادم لا يردّ القالب إلا
+ * حين لا نموذج مربوط أصلاً، فـ«تعذّر الاتصال» غير صحيح هنا — launch215a). */
 type Turn = {
   role: 'user' | 'ai';
   text: string;
@@ -115,7 +116,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
               <Text style={[styles.symbolTag, { textAlign: align }]}>{turn.symbol}</Text>
             ) : null}
             {turn.template ? (
-              <Text style={[styles.langNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
+              <Text style={[styles.langNote, { textAlign: align }]}>{t.aiTemplateNote}</Text>
             ) : null}
             {turn.arabicReply ? (
               <Text style={[styles.langNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text>
