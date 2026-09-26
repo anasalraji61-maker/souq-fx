@@ -85,17 +85,17 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 
 الشارت
 • 11 نوعاً للشارت: شموع يابانية ومجوّفة، أعمدة، هايكن آشي، خط، مساحة، خط أساس، رينكو، كاجي، نقطة ورقم، ونطاق (Range).
-• حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
-• قارن زوجين على شارت واحد: في الشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول بخطّ بنفسجي، كل شمعة مقابل نظيرتها في الوقت نفسه.
+• حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة.
+• قارن زوجين على شارت واحد: بالشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول، كل شمعة مقابل نظيرتها زمنياً.
 • المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip وتغيّرها عن إغلاق السابقة، وكم pip يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
-• كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
+• كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف لتدرس نموذجاً قديماً، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة.
-• سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
-• المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، إيشيموكو، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي وWoodie) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
+• سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل أيام التداول على الفريمات الصغيرة.
+• المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، إيشيموكو، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي وWoodie) وأعلى الأمس وأدناه، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD؛ فوليوم الفوركس وCVD تقدير من الشموع).
 • أدوات رسم: خط اتجاه، شعاع، قناة موازية، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع وزرّ «نسخة» يكرّر الرسم بلمسة — حتى في المساحة الفارغة يمين آخر شمعة. أزرار ▲▼◀▶ تُزيح الرسم المحدَّد pip واحداً أو شمعة بكل لمسة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
-• خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
-• أداة قياس تكتب المسافة بالـpip والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
+• خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ الهدف أم الوقف.
+• أداة قياس تكتب الـpip والنسبة وعدد الشموع ومدّة الحركة وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
 
 المتابعة والتنبيهات
@@ -104,8 +104,8 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • تقويم اقتصادي بمواعيد البيانات المؤثرة.
 
 أدوات المتداول
-• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
-• دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالـpip والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R) مقيسةً من الوقف الذي دخلت به ولو حرّكته بعدها.
+• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، والهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه. وحدّ خسارة يومي يُريك ما بقي لك اليوم وأقصى مخاطرة للصفقة التالية.
+• دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالـpip والمال قبل حفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R) مقيسةً من الوقف الذي دخلت به ولو حرّكته بعدها.
 • تنبيه بخبر اقتصادي قوي قريب على عملة الزوج أو المؤشر أو المعدن — قبل الصفقة وعلى صفقاتك المفتوحة، بأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
@@ -118,7 +118,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 
 مصمّم ليبقى واضحاً: ألوان هادئة مريحة للعين في الجلسات الطويلة، ولمسات تفاعلية حيث تلمس فقط.
 
-تنبيه مهم: MATRIX تطبيق تحليل وتعليم فقط. لا ينفّذ صفقات، ولا يرتبط بأي وسيط، ولا يقدّم نصيحة استثمارية. التداول بالعملات والأسواق المالية ينطوي على مخاطر عالية وقد يؤدي إلى خسارة رأس المال. الأسعار المعروضة قد تكون متأخرة حسب المصدر، وحين لا تتوفّر بيانات يقول التطبيق ذلك صراحةً بدل عرض أسعار. شارت الدرس في الأكاديمية قد يستعمل بيانات توضيحية.
+تنبيه مهم: MATRIX تطبيق تحليل وتعليم فقط. لا ينفّذ صفقات، ولا يرتبط بأي وسيط، ولا يقدّم نصيحة استثمارية. التداول بالعملات والأسواق ينطوي على مخاطر عالية قد تُفقدك رأس المال. الأسعار قد تتأخر حسب المصدر، وحين لا تتوفّر بيانات يقول التطبيق ذلك صراحةً بدل عرض أسعار. شارت درس الأكاديمية قد يستعمل بيانات توضيحية.
 
 **ما الجديد (الإصدار الأول)**
 الإصدار الأول من MATRIX بالعربية والإنجليزية والكردية: شارتات متعددة، مؤشرات وأدوات رسم، تنبيهات أسعار ومؤشرات، حاسبة حجم المركز ودفتر صفقات، تقويم اقتصادي، وأكاديمية صوتية للتحليل الفني.
@@ -143,7 +143,7 @@ Analyze forex and markets on fast, clean charts and learn chart reading step by 
 forex,charts,technical analysis,indicators,candlestick,alerts,economic calendar,gold,fx,rsi,macd
 
 **Full description**
-MATRIX is a technical-analysis workspace built for individual traders: fast charts, precise drawing tools, price alerts, and an academy that teaches you chart reading from the ground up. Available in English, Arabic and Kurdish.
+MATRIX is a technical-analysis workspace built for individual traders: fast charts, precise drawing tools, price alerts, and an academy that teaches chart reading from the ground up. Available in English, Arabic and Kurdish.
 
 CHARTS
 • 11 chart types: solid/hollow candles, bars, Heikin-Ashi, line, area, baseline, Renko, Kagi, Point & Figure, Range.
@@ -151,12 +151,12 @@ CHARTS
 • Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then 🔔 sets an alert there.
 • Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back; one tap returns to the live candle, zoom intact.
 • A countdown under the live price to the candle's close.
-• The on-screen high and low carry their price and update as you scroll, and a faint line marks each new trading day on intraday charts.
+• The on-screen high and low show their price as you scroll; a faint line marks each trading day on intraday charts.
 • Indicators traders use: SMA, EMA, Bollinger Bands, RSI, MACD, Ichimoku, Volume and more, each line's value in the legend, plus pivots (classic, Camarilla, Fibonacci, Woodie) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger, CVD; forex volume and CVD are estimated from candles).
 • Drawing tools: trend line, ray, parallel channel, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo and one-tap cloning — also past the live candle. ▲▼◀▶ buttons move a selected drawing one pip or one candle per tap. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
-• Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
-• A measure tool showing pips, percent, bar count and how long the move took as you drag.
+• Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether target or stop was hit.
+• A measure tool: pips, percent, bars and time as you drag.
 • Candle replay to train your eye.
 
 WATCHLIST & ALERTS
@@ -165,8 +165,8 @@ WATCHLIST & ALERTS
 • Economic calendar of key releases.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
-• A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — one tap closes it at its stop, breakeven or target — then win rate, net result per instrument and average R, from your entry stop even after trailing it.
+• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread. A daily loss limit shows the room left today and your next trade's max risk.
+• A trade journal you fill in yourself: potential profit before you enter, each result in pips and money before saving — one tap closes it at its stop, breakeven or target — then win rate, net result per instrument and average R, from your entry stop even after trailing it.
 • Heads-up when high-impact news nears the pair's, index's or metal's currency — before a trade and on open ones, in your broker's symbol names. If the calendar can't load, it says so.
 • A screener on common indicator conditions.
 • Simple strategy backtests on past data, for learning.
@@ -179,7 +179,7 @@ ACADEMY
 
 Calm colors for long sessions, with tactile feedback only where you touch.
 
-Important: MATRIX is an analysis and education app only. It does not execute trades, does not connect to any broker, and does not provide investment advice. Trading currencies and financial markets involves a high level of risk and may result in the loss of capital. Prices shown may be delayed depending on the source; when data is unavailable the app says so instead of showing prices. Lesson charts in the academy may use illustrative data.
+Important: MATRIX is an analysis and education app only. It does not execute trades, connect to any broker, or give investment advice. Trading currencies and markets carries a high risk of losing capital. Prices may be delayed by source; when data is unavailable the app says so rather than show prices. Academy lesson charts may use illustrative data.
 
 **What's New (first release)**
 The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts, indicators and drawing tools, price and indicator alerts, a position size calculator and trade journal, an economic calendar, and an audio academy for technical analysis.
@@ -260,3 +260,9 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > ميّتان (`news_feed.py` — ForexFactory XML ‏403، DailyFX ‏404؛ backend-r33 `acace1d`) فلوحة الأخبار فارغة دائماً، والقاعدة 4 أعلاه تمنع
 > ذكر ميزة بلا بيانات حقيقية. الآن «تقويم اقتصادي بمواعيد البيانات المؤثرة» / «Economic calendar of key releases» — التقويم يعمل (JSON). إن
 > رُخِّص مصدر أخبار يعمل (launch73، backend-r33 ← أنس) تُعاد «وأخبار السوق». العدّ بسكربت: **ar 3996 / en 3994** من 4000.
+
+> **2026-09-26 (launch 164) — كان فوق الحدّ**: تعديل التنبيه (`3b18fb1`، «الأسعار قد تكون متأخرة… يقول التطبيق ذلك صراحةً… شارت الدرس») أضاف ~100 حرف
+> لكلّ وصف ولم يُعَد العدّ؛ ملاحظة launch 130 («ar 3996 / en 3994») كانت قديمة. العدّ الفعلي منذئذ **ar 4096 / en 4100** — كان Google Play سيرفضه.
+> اختُصرت عبارات بلا حذف ميزة (التنبيه، أداة القياس، القمّة/القاع، الرجوع للخلف، المقارنة — «بخطّ بنفسجي» حُذف، الدفتر، الهامش، الخطة، الارتكاز، الرباعي)،
+> وأُضيف **حدّ الخسارة اليومي** لسطر الحاسبة (معروض: `PositionSizePanel.tsx:1621`، والسطر :1845؛ النسبة شاملة السبريد والعمولة `421adcb`).
+> العدّ بسكربت (نصّ الوصف بين عنوانه و«ما الجديد»، أحرف Unicode بالأسطر الفارغة): **ar 3960 / en 3981** من 4000. تعديلا en-GB («Analyse»، «colours») بلا تغيير.
