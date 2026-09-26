@@ -36,6 +36,13 @@ import { instrumentSpec } from '../positionSize';
 assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('gbpjpy'), ['GBP', 'JPY']);
 assert.deepEqual(symbolCurrencies('XAUUSD'), ['USD']);
+// بادئة البورصة من TradingView (كانت [] ⇒ لا تحذير ولا «التقويم غير متاح»)
+assert.deepEqual(symbolCurrencies('OANDA:XAUUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('FX:EURUSD'), ['EUR', 'USD']);
+assert.deepEqual(symbolCurrencies('fx:us30'), ['USD']);
+assert.deepEqual(symbolCurrencies('FX_IDC:GBPJPY'), ['GBP', 'JPY']);
+assert.deepEqual(symbolCurrencies('OANDA:#US30'), ['USD']);
+assert.deepEqual(symbolCurrencies('OANDA:'), []);
 assert.deepEqual(symbolCurrencies('DXY'), ['USD']);
 // USDINDEX/UKBRENT: أسماء يعرفها marketHours (DXY_RE/BRENT_RE) وكانت [] هنا ⇒ بلا تحذير قبل خبر أمريكي
 for (const s of ['USDINDEX', 'USDIndex', 'USDINDEX.m', 'UKBRENT', 'UKBRENT.cash']) assert.deepEqual(symbolCurrencies(s), ['USD'], s);
@@ -491,6 +498,7 @@ console.log('newsRisk glued-c selftest OK');
   const failFirst = calendarAfterFetch(null, null, t0);
   assert.equal(calendarUnavailable(failFirst, 'EURUSD'), true);
   assert.equal(calendarUnavailable(failFirst, 'XAUUSDc'), true);
+  assert.equal(calendarUnavailable(failFirst, 'FX:EURUSD'), true);
   // رمزٌ لا يحذّر عنه الشريط أبداً ⇒ صامت
   assert.equal(calendarUnavailable(failFirst, 'AAPL'), false);
   assert.equal(calendarUnavailable(failFirst, ''), false);

@@ -211,7 +211,9 @@ export function symbolCurrencies(symbol: string): string[] {
   if (r.length) return r;
   const up = symbol.trim().toUpperCase();
   // بادئة وسيط («#US30»، «.NAS100»، «#GOLD»): `suffixFree` كانت تعدّ «#US30» كلّها لاحقة فتُسقطها ⇒ `[]` قبل الرواتب
-  const unprefixed = up.replace(/^[#.]+/, '');
+  // وبادئة البورصة/المزوّد («OANDA:XAUUSD»، «FX:EURUSD» منسوخة من TradingView) — كـ`pipSpec`/`marketHours` اللذين يقشّرانها
+  // أصلاً: كان خانة الدفتر تعرض منازل الذهب الصحيحة و**لا** تحذير قبل الرواتب ولا سطر «التقويم غير متاح» ⇒ يبدو «لا أخبار»
+  const unprefixed = up.replace(/^[A-Z0-9_]+:/, '').replace(/^[#.]+/, '');
   if (unprefixed !== up && unprefixed.length >= 2) return symbolCurrencies(unprefixed);
   // لاحقة بفاصل أطول من 5 («EURUSD.proecn»، «EURUSD.stdacc»، «US30.rolling») كانت تبقى ⇒ `[]`؛ تُقشَّر حتى 10
   const peeled = up.replace(/[.\-_#+][A-Z0-9]{0,10}$/, '');
