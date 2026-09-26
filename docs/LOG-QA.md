@@ -1094,3 +1094,4 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **قائمة قبول DESIGN-PRO (التاسع عشر):** 0/12 فشل (diff منذ 1d7282b، 7 ملفّات منطق فقط: Esc طبقةً طبقة `drawEscPendingRef`، ذيل التلميح، `stopTooClose`/`riskNoCosts` بالحاسبة).
 **المراجعة (d — أرقام متناقضة):** حقول المتجر بعدّ Unicode ضمن الحدود (كامل 3960/3981 من 4000)؛ «1:1 إلى 1:3» = `QUICK_RR`. **QA99a → launch (منخفض)**: «11 نوعاً للشارت» (`STORE-LISTING.md:87/149`) والكود 12 (`lineBreak` منذ `d78a6c2`).
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (d33f514):** وصلت 11 كوميتاً ⇒ أخضر 0، `crossAnchor.selftest` ناجح. أُغلق chart-r82a ← tools `cced072`. tools أزال صفّ الفريمات المكرّر (`25069dd`) وشريط الطرفية 32px بحدّ فقط (`d0226cb`/`b594403`؛ كان 34–38 بلا `hitSlop` أصلاً) ⇒ 0/12 باقٍ.
