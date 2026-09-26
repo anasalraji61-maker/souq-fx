@@ -10101,12 +10101,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       />
                     ))
                   : null}
-                {sel && !('extended' in seg && seg.extended) ? (
-                  <>
-                    <View style={[styles.grabHandle, { left: x1, top: y1, borderColor: d.color }]} />
-                    <View style={[styles.grabHandle, { left: x2, top: y2, borderColor: d.color }]} />
-                  </>
-                ) : null}
+                {/* المقبضان عند الطرفين الحقيقيين لا طرفَي القطعة المقصوصة: طرفٌ خارج النافذة كان يُعطى مقبضاً عند
+                    حافّة القصّ (أو عند نهاية امتداد الشعاع) لا يلتقطه السحب — فيُسحب الخطّ كلّه بدل الطرف. */}
+                {sel && !('extended' in seg && seg.extended)
+                  ? ([
+                      [xOf(aLocal), yOf(d.a.price)],
+                      [xOf(bLocal), yOf(d.b.price)],
+                    ] as const).map(([hx, hy], k) =>
+                      hx >= 0 && hx <= chartPlotW && hy >= 0 && hy <= chartPlotH ? (
+                        <View key={k} style={[styles.grabHandle, { left: hx, top: hy, borderColor: d.color }]} />
+                      ) : null
+                    )
+                  : null}
               </React.Fragment>
             );
           }
