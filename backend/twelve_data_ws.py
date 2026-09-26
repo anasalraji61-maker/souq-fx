@@ -100,8 +100,10 @@ _MAX_AHEAD_S = 60.0
 
 
 def _store(msg: dict[str, Any]) -> None:
+    global _last_price_frame
     parsed = _parse_price(msg)
     if parsed:
+        _last_price_frame = time.monotonic()
         sym = parsed[0]
         received = time.time()
         at = _quoted_at(msg, received)
@@ -123,6 +125,38 @@ def _store(msg: dict[str, Any]) -> None:
             _PROVIDER_TS[sym] = ts
 
 
+# run 124: الحلقة كانت تعيد الاتصال فقط حين ينتهي `async for` أو يرمي. مزوّد يتوقّف عن الأسعار والمقبس قائم
+# (يردّ على ping) ⇒ انتظار للأبد: لا إعادة اشتراك، `connected` يبقى true، وكل الرموز بلا سعر حتى إعادة
+# تشغيل الخادم. المراقب يرسل heartbeat المزوّد كل `_HEARTBEAT_S`، وبلا سعر `_STALL_S` والسوق مفتوح لرمز
+# مشترَك (العطلة والكسر اليومي بلا تيكات أصلاً) ⇒ يغلق المقبس فتعيد الحلقة الاتصال والاشتراك.
+_HEARTBEAT_S = 10.0
+_STALL_S = 90.0
+_last_price_frame = 0.0  # time.monotonic() لآخر سعر مقبول
+_real_sleep = asyncio.sleep  # الاختبارات تستبدل `asyncio.sleep` لإيقاف الحلقة الرئيسية
+
+
+def _stalled(td_symbols: list[str], connected_at: float) -> bool:
+    """لا سعر منذ `_STALL_S` (منذ الاتصال إن كان أحدث) وسوق رمز مشترَك واحد على الأقل مفتوح الآن."""
+    if time.monotonic() - max(_last_price_frame, connected_at) < _STALL_S:
+        return False
+    now = time.time()
+    return any(not market.in_weekend_close(_matrix_from_td(s), now, 0) for s in td_symbols)
+
+
+async def _watch(ws: Any, td_symbols: list[str], stall: list[bool]) -> None:
+    connected_at = time.monotonic()
+    try:
+        while True:
+            await _real_sleep(_HEARTBEAT_S)
+            if _stalled(td_symbols, connected_at):
+                stall.append(True)
+                await ws.close()
+                return
+            await ws.send(json.dumps({"action": "heartbeat"}))
+    except Exception:  # noqa: BLE001 — المقبس أُغلق أثناء الإرسال: الحلقة الرئيسية تعيد الاتصال
+        return
+
+
 async def run_forever() -> None:
     global _connected, _last_error
     key = _ws_key()
@@ -136,28 +170,33 @@ async def run_forever() -> None:
     while True:
         try:
             url = f"{WS_URL}?apikey={key}"
+            stall: list[bool] = []
             async with websockets.connect(url, ping_interval=20, ping_timeout=20) as ws:
                 sub = {"action": "subscribe", "params": {"symbols": symbols}}
                 await ws.send(json.dumps(sub))
                 _connected = True
                 _last_error = None
-                async for raw in ws:
-                    try:
-                        data = json.loads(raw)
-                    except json.JSONDecodeError:
-                        continue
-                    for item in data if isinstance(data, list) else [data]:
-                        if isinstance(item, dict):
-                            # إطار واحد معطوب كان يرمي خارج `async for` ⇒ يُغلق الاتصال وتتوقّف تيكات كل
-                            # الرموز ~8ث. يُتجاوَز وحده.
-                            try:
-                                _store(item)
-                            except Exception:  # noqa: BLE001
-                                continue
+                watch = asyncio.ensure_future(_watch(ws, [x.strip() for x in symbols.split(",") if x.strip()], stall))
+                try:
+                    async for raw in ws:
+                        try:
+                            data = json.loads(raw)
+                        except json.JSONDecodeError:
+                            continue
+                        for item in data if isinstance(data, list) else [data]:
+                            if isinstance(item, dict):
+                                # إطار واحد معطوب كان يرمي خارج `async for` ⇒ يُغلق الاتصال وتتوقّف تيكات كل
+                                # الرموز ~8ث. يُتجاوَز وحده.
+                                try:
+                                    _store(item)
+                                except Exception:  # noqa: BLE001
+                                    continue
+                finally:
+                    watch.cancel()
             # إغلاق نظيف (1000/1001) ينهي `async for` بلا استثناء: كان `connected` يبقى true وإعادة
             # الاتصال فورية بلا انتظار ⇒ خادم يقبل ثم يغلق (نفاد الرصيد) = «متصل» ولا شيء يصل، وحلقة بلا توقّف
             _connected = False
-            _last_error = "closed by server"
+            _last_error = "no prices from provider" if stall else "closed by server"
             await asyncio.sleep(8)
         except asyncio.CancelledError:
             _connected = False
