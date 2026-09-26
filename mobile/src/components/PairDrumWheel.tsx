@@ -147,6 +147,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active)}
+        accessibilityState={{ selected: true }}
         accessibilityLabel={`${t.pdwCurrentA11yPrefix}${current}`}
       >
         <Text numberOfLines={1} style={styles.midText}>
@@ -201,15 +202,14 @@ const styles = StyleSheet.create({
   mid: {
     height: 28,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §5.5/§1: التعبئة وحدها تميّز الزوج الجاري — لا حدّ ولا نصّ بلون التأكيد فوقها.
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   midText: {
-    color: colors.accent,
+    color: colors.text,
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
