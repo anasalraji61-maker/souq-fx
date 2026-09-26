@@ -105,6 +105,8 @@ def feed(monkeypatch):
     monkeypatch.setattr(nf, "_CACHE_TS", 0.0)
     monkeypatch.setattr(nf, "_FAIL_TS", 0.0)
     monkeypatch.setattr(nf.httpx, "Client", _FakeClient)
+    # خلاصتان للدمج والترتيب بين المصادر — لا تعتمد على عدد `FEEDS` الفعلي (run 112 أسقط ملفّ التقويم منها)
+    monkeypatch.setattr(nf, "FEEDS", ["https://a.example/rss", "https://b.example/rss"])
 
     def _serve(mapping: dict[str, str]):
         _FakeClient.by_url = {u: _Resp(x) for u, x in mapping.items()}

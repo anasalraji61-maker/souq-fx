@@ -21,8 +21,9 @@ EMPTY_TTL = 120
 _FAIL_TS = 0.0
 STALE_MAX = 6 * 3600
 
+# (run 112) كان هنا `ffcal_week_this.xml` — ملفّ التقويم (`<event>` لا `<item>`) ⇒ `_parse_rss` يعطي 0 عنواناً دائماً،
+# وكان يُجلب كل دقيقتين (`EMPTY_TTL`) طلباً مهدوراً على مضيف التقويم. المصدران غير مرخَّصين أصلاً (قرار ٦).
 FEEDS = [
-    "https://www.forexfactory.com/ffcal_week_this.xml",
     "https://feeds.feedburner.com/dailyfx/news",
 ]
 
