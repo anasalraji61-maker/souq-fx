@@ -377,6 +377,8 @@ export type Dict = {
   planNoteNetRR: string;
   planRewardWord: string;
   planLowRR: string;
+  /** `breakevenWinRatePct` (`tradePlan.ts`): `{pct}` أدنى نسبة نجاح تكفي للتعادل بهذه R:R، بلا تكاليف، مقرَّبة للأعلى */
+  planBreakevenWinRate: string;
   riskCalcAccountCcy: string;
   riskCalcBalance: string;
   riskCalcRiskPct: string;
@@ -384,6 +386,11 @@ export type Dict = {
   /** المخاطرة أكبر من الرصيد (طلب وكيل الأدوات)؛ `{risk}` و`{balance}` مبلغان بعملة الحساب كما تُعرض */
   riskCalcRiskOverBalance: string;
   riskCalcHighRisk: string;
+  /**
+   * `lossStreakDrawdownPct` (`positionSize.ts`): `{n}` خسائر متتالية (5 بالحاسبة)، `{pct}` ما تأخذه من الحساب (موجب، القالب يضع −).
+   * العربية «{n} خسائر» صحيحة لـ3–10 فقط — إن تغيّر n خارجها يُعاد صوغها.
+   */
+  riskCalcLossStreak: string;
   riskCalcSlPips: string;
   riskCalcFromPrice: string;
   riskCalcSlMismatch: string;
@@ -1824,6 +1831,7 @@ const ar: Dict = {
   planNoteNetRR: 'R:R بعد التكاليف',
   planRewardWord: 'الربح المحتمل',
   planLowRR: '⚠ الربح المحتمل أقل من المخاطرة',
+  planBreakevenWinRate: 'التعادل يحتاج نسبة نجاح {pct}% على الأقل',
   riskCalcAccountCcy: 'عملة الحساب',
   riskCalcBalance: 'رصيد الحساب',
   riskCalcRiskPct: 'المخاطرة (% أو مبلغ)',
@@ -1831,6 +1839,7 @@ const ar: Dict = {
   riskCalcRiskOverBalance:
     'المخاطرة ({risk}) أكبر من رصيد الحساب ({balance}) — ضربة وقف واحدة تمحو الحساب كلّه. راجع الخانتين: ربما كتبتَ مبلغاً مكان النسبة، أو نقص الرصيد صفراً.',
   riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
+  riskCalcLossStreak: '{n} خسائر متتالية بهذه المخاطرة = −{pct}% من الحساب',
   riskCalcSlPips: 'وقف الخسارة (pip)',
   riskCalcFromPrice: 'أو احسبه من السعر: الدخول والوقف كما تراهما على الشارت',
   riskCalcSlMismatch:
@@ -3048,6 +3057,7 @@ const enUS: Dict = {
   planNoteNetRR: 'Net R:R',
   planRewardWord: 'Reward',
   planLowRR: '⚠ Potential reward is smaller than the risk',
+  planBreakevenWinRate: 'Needs a {pct}%+ win rate to break even',
   riskCalcAccountCcy: 'Account currency',
   riskCalcBalance: 'Account balance',
   riskCalcRiskPct: 'Risk (% or amount)',
@@ -3055,6 +3065,7 @@ const enUS: Dict = {
   riskCalcRiskOverBalance:
     'Your risk ({risk}) is larger than your account balance ({balance}) — a single stop-loss hit would wipe out the whole account. Check both fields: you may have typed an amount instead of a percent, or left a zero off the balance.',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
+  riskCalcLossStreak: '{n} losses in a row at this risk = −{pct}% of the account',
   riskCalcSlPips: 'Stop loss (pips)',
   riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
   riskCalcSlMismatch:
@@ -4312,6 +4323,7 @@ const ku: Dict = {
   planNoteNetRR: 'R:R دوای تێچووەکان',
   planRewardWord: 'قازانجی ئەگەری',
   planLowRR: '⚠ قازانجی ئەگەری لە مەترسی کەمترە',
+  planBreakevenWinRate: 'بۆ بێ قازانج و زیان، ڕێژەی سەرکەوتنی {pct}% یان زیاتر پێویستە',
   riskCalcAccountCcy: 'دراوی هەژمار',
   riskCalcBalance: 'باڵانسی هەژمار',
   riskCalcRiskPct: 'مەترسی (% یان بڕی پارە)',
@@ -4319,6 +4331,7 @@ const ku: Dict = {
   riskCalcRiskOverBalance:
     'مەترسی ({risk}) لە باڵانسی هەژمار ({balance}) زیاترە — یەک لێدانی وەستان هەموو هەژمارەکە دەسڕێتەوە. هەردوو خانەکە بپشکنە: لەوانەیە بڕی پارەت لە جیاتی ڕێژە نووسیبێت، یان سفرێک لە باڵانسەکە کەم بێت.',
   riskCalcHighRisk: '⚠ زیاتر لە 2% بۆ هەر مامەڵەیەک مەترسی زۆرە',
+  riskCalcLossStreak: '{n} زیانی لەسەر یەک بەم مەترسییە = −{pct}%ی هەژمار',
   riskCalcSlPips: 'وەستانی زیان (pip)',
   riskCalcFromPrice: 'یان لە نرخەوە: چوونەژوورەوە و وەستان وەک لە چارتەکەدا دەیانبینیت',
   riskCalcSlMismatch:
