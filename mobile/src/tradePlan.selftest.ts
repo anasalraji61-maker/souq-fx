@@ -4179,3 +4179,33 @@ console.log('tradePlan cent word selftest OK');
   }
 }
 console.log('tradePlan journalUnknownSuffixPair selftest OK');
+
+// ——— وقت صفّ الدفتر بتوقيت الجهاز (المغلقة: الإغلاق، المفتوحة: الفتح) ———
+{
+  const { journalRowWhen } = require('./tradePlan') as typeof import('./tradePlan');
+  const prevTz = process.env.TZ;
+  try {
+    process.env.TZ = 'Asia/Baghdad';
+    const now = Date.parse('2026-09-26T09:00:00Z');
+    const opened = '2026-08-10T08:15:00+02:00'; // 09:15 ببغداد
+    const closed = '2026-08-12T13:30:00+02:00'; // 14:30 ببغداد
+    // المغلقة ⇒ وقت إغلاقها بساعة الجهاز (لا نصّ الخادم 13:30)، والسنة الحالية تسقط
+    assert.equal(journalRowWhen({ status: 'closed', opened_at_iso: opened, closed_at_iso: closed }, now), '08-12 14:30');
+    // المفتوحة ⇒ وقت فتحها
+    assert.equal(journalRowWhen({ status: 'open', opened_at_iso: opened, closed_at_iso: null }, now), '08-10 09:15');
+    // سنة سابقة ⇒ السنة ظاهرة؛ حدّ السنة بتوقيت الجهاز (23:30Z 31 ديسمبر = 1 يناير ببغداد)
+    assert.equal(journalRowWhen({ status: 'closed', closed_at_iso: '2025-12-30T10:00:00Z' }, now), '2025-12-30 13:00');
+    assert.equal(journalRowWhen({ status: 'closed', closed_at_iso: '2025-12-31T23:30:00Z' }, now), '01-01 02:30');
+    // مغلقة بلا وقت إغلاق ⇒ لا شيء (لا وقت الفتح تحت «مغلقة»)؛ بلا إزاحة ⇒ لا تخمين
+    assert.equal(journalRowWhen({ status: 'closed', opened_at_iso: opened, closed_at_iso: null }, now), null);
+    assert.equal(journalRowWhen({ status: 'open', opened_at_iso: '2026-08-10 08:15' }, now), null);
+    assert.equal(journalRowWhen({ status: 'open' }, now), null);
+    // جهاز بنيويورك: اليوم نفسه بالخادم قد يكون أمس بالجهاز
+    process.env.TZ = 'America/New_York';
+    assert.equal(journalRowWhen({ status: 'open', opened_at_iso: '2026-08-10T02:15:00+02:00' }, now), '08-09 20:15');
+  } finally {
+    if (prevTz === undefined) delete process.env.TZ;
+    else process.env.TZ = prevTz;
+  }
+}
+console.log('tradePlan journalRowWhen selftest OK');
