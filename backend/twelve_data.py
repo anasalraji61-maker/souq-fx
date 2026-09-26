@@ -118,22 +118,26 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
         close = _weekly_close_utc(friday + timedelta(days=7))
     return float(min(end, close))
 
-# المعادن والنفط تفتح الأحد 18:00 نيويورك (CME Globex للذهب/الفضة/WTI، وICE برنت 23:00 لندن) لا 17:00
-# كالفوركس. كانت كلها تُعدّ مفتوحة من 17:00 ⇒ شموع ملء العطلة من المزوّد لتلك الساعة تمرّ «أسعاراً حيّة»
-# للذهب والنفط: تُطلق عليها التنبيهات وتُعرض آخر سعر.
-_SUNDAY_18 = frozenset({"USOIL", "UKOIL"})
-
-
-def _opens_sunday_18(sym: str) -> bool:
-    return sym in _SUNDAY_18 or sym[:3] in ("XAU", "XAG", "XPT", "XPD")
+# المعادن وWTI تفتح الأحد 18:00 نيويورك (CME Globex) وبرنت 23:00 لندن (ICE) — لا 17:00 كالفوركس (كالتطبيق:
+# `marketHours.ts` `nextForexOpenSec`). كانت كلها تُعدّ مفتوحة من 17:00 ⇒ شموع ملء العطلة من المزوّد لتلك
+# الساعة تمرّ «أسعاراً حيّة» للذهب والنفط: تُطلق عليها التنبيهات وتُعرض آخر سعر.
+def _last_sunday(year: int, month: int) -> int:
+    nxt = datetime(year + month // 12, month % 12 + 1, 1, tzinfo=timezone.utc)
+    last = nxt - timedelta(days=1)
+    return last.day - (last.weekday() + 1) % 7
 
 
 def _weekly_open_utc(sunday: datetime, sym: str = "") -> int:
-    """الأحد 17:00 نيويورك بثواني UTC (18:00 للمعادن والنفط) — يوم تحويل الساعة نفسه يأخذ الإزاحة الجديدة
-    (التحويل 02:00)."""
+    """الأحد 17:00 نيويورك بثواني UTC (18:00 للمعادن وWTI، 23:00 لندن لبرنت) — يوم تحويل الساعة نفسه يأخذ
+    الإزاحة الجديدة (التحويل فجراً)."""
     y = sunday.year
-    dst = (3, _nth_sunday(y, 3, 2)) <= (sunday.month, sunday.day) < (11, _nth_sunday(y, 11, 1))
-    hour = (21 if dst else 22) + (1 if _opens_sunday_18(sym) else 0)
+    if sym == "UKOIL":
+        bst = (3, _last_sunday(y, 3)) <= (sunday.month, sunday.day) < (10, _last_sunday(y, 10))
+        hour = 22 if bst else 23
+    else:
+        dst = (3, _nth_sunday(y, 3, 2)) <= (sunday.month, sunday.day) < (11, _nth_sunday(y, 11, 1))
+        cme = sym == "USOIL" or sym[:3] in ("XAU", "XAG", "XPT", "XPD")
+        hour = (21 if dst else 22) + (1 if cme else 0)
     return int(sunday.replace(hour=hour, minute=0, second=0, microsecond=0).timestamp())
 
 
