@@ -13,3 +13,21 @@ export function candleBodyWidth(colW: number): number {
   if (!Number.isFinite(colW) || colW <= 2) return 2;
   return Math.min(colW, Math.max(2, Math.round((colW + 1) * 0.78)));
 }
+
+/** خطوة الشمعة المستهدفة بالعرض الافتراضي (بكسل) وحدّا عدد الشموع. */
+export const REST_BAR_PX = 6;
+export const REST_BARS_MIN = 40;
+export const REST_BARS_MAX = 160;
+
+/**
+ * عدد الشموع بالعرض الافتراضي (فتح الشارت، AUTO، نقرتا محور الزمن) من عرض اللوح.
+ *
+ * كان 80 ثابتاً أيّاً كان العرض: على هاتف 360px (لوح ~292px) خطوة 3.6px فجسم 3px لا تُقرأ فيه الذيول،
+ * وعلى لابتوب بلوح 1200px خطوة 15px — شموع ضخمة وتاريخ أربعة أيام فقط على 1H. الآن ~6px للشمعة:
+ * الهاتف ~48 شمعة بجسم 5px، الرباعي على الويب (~600px) ~100 كما كان تقريباً، والشاشة الكاملة 160.
+ * `plotW` غير صالح ⇒ 80 (القيمة القديمة) إلى أن يُقاس اللوح.
+ */
+export function restBarCount(plotW: number): number {
+  if (!Number.isFinite(plotW) || plotW <= 0) return 80;
+  return Math.max(REST_BARS_MIN, Math.min(REST_BARS_MAX, Math.round(plotW / REST_BAR_PX)));
+}

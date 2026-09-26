@@ -59,7 +59,7 @@ import { loadLineBreakCount, saveLineBreakCount, subscribeLineBreakCount } from 
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
-import { candleBodyWidth } from './candleGeometry';
+import { candleBodyWidth, restBarCount } from './candleGeometry';
 import { pinchSpread, pinchWindow, zoomWindow } from './zoomWindow';
 import {
   AXIS_TAP_SLOP,
@@ -1678,6 +1678,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [canPan, replayOn]
   );
   const xPanAtRest = useRef(true);
+  // عدد الشموع بالعرض الافتراضي من عرض اللوح (`restBarCount`) للشارت القابل للسحب؛ شارت الدرس/المصغَّر يبقى 80
+  // (أمثلة الأكاديمية مبنيّة عليه). `restCountRef` آخر عدد راحة طُبِّق: ما دام العرض عليه، تغيّر العرض يعيد حسابه.
+  const restWindowCount = useCallback(
+    () => (canPan && interactive ? restBarCount(chartPlotWRef.current) : 80),
+    [canPan, interactive]
+  );
+  const restCountRef = useRef(80);
   /** سحب/قرص/سحب محور جارٍ: الطيّ (`foldRightGap`) يؤجَّل لنهايته — الإيماءة تحسب من إزاحة بدايتها. */
   const gestureOnRef = useRef(false);
   const chartPlotHRef = useRef(200);
@@ -1748,7 +1755,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }, [series, livePrice, liveTickSource]);
 
   // تبديل الرمز/الفريم: العودة للطرف الحيّ ومقياس سعر تلقائي، مع **إبقاء التكبير** (عدد الشموع) كـTradingView —
-  // كان يعود إلى 80 فمن كبّر إلى 30 شمعة ليقرأ الشموع يفقد ذلك بكل ضغطة فريم. AUTO/نقرتا محور الزمن تعيدان 80.
+  // كان يعود إلى 80 فمن كبّر إلى 30 شمعة ليقرأ الشموع يفقد ذلك بكل ضغطة فريم. AUTO/نقرتا محور الزمن تعيدان عدد الراحة (`restBarCount`).
   // LayoutEffect لا Effect: بعد الرسم كان أوّل إطار للفريم/الزوج الجديد يُرسم بإزاحة السابق (120 شمعة للخلف)
   // ومقياس سعره اليدوي والتقاطع المثبَّت ثم يقفز للطرف الحيّ. والمراجع تُصفَّر فوراً لإيماءة تبدأ قبل إعادة الرسم.
   useLayoutEffect(() => {
@@ -3810,6 +3817,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setXPan(rest);
     schedulePublishSync(false);
   }, [chartPlotW, restXPan, schedulePublishSync]);
+  // وكذلك عدد الشموع: بعد القياس الأول، وتدوير الهاتف، وتغيير عرض نافذة المتصفّح/التخطيط — ما لم يكبّر المتداول
+  // أو يصغّر (العدد لم يعد عدد الراحة). التابع يأخذ نافذة القائد؛ والإعادة لا تُمسّ (موضع شمعتها من العدد).
+  useEffect(() => {
+    if (syncFollow || replayOnRef.current) return;
+    if (windowCountRef.current !== restCountRef.current) return;
+    const rest = restWindowCount();
+    restCountRef.current = rest;
+    if (rest === windowCountRef.current) return;
+    windowCountRef.current = rest;
+    setWindowCount(rest);
+    schedulePublishSync(false);
+  }, [chartPlotW, restWindowCount, syncFollow, schedulePublishSync]);
   chartPlotHRef.current = chartPlotH;
 
   // مفتاح ألوان طبقات السعر. `legendTokens` يحلّ رموز السمة المكتوبة بجدول priceLegend
@@ -5373,21 +5392,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // المراجع قبل النشر: `publishSyncWindow` يقرؤها لا الحالة، وبلا نشر كانت توابع
     // الرباعي تبقى على النافذة القديمة بينما القائد عاد للحيّ.
     priceScaleRef.current = 1;
-    windowCountRef.current = 80;
+    const rest = restWindowCount();
+    restCountRef.current = rest;
+    windowCountRef.current = rest;
     pricePanRef.current = 0;
     xPanRef.current = restXPan();
     xPanAtRest.current = true;
     // بالإعادة «الحيّ» هو شمعة الإعادة: قرب الطرف الأيمن (`replayRestOffset`)، لا نافذة تبدأ بها.
     const src = sourceRef.current;
-    const nextOffset = replayOnRef.current ? replayRestOffset(src.all.length, 80, src.cut) : 0;
+    const nextOffset = replayOnRef.current ? replayRestOffset(src.all.length, rest, src.cut) : 0;
     offsetRef.current = nextOffset;
     setPriceScale(1);
-    setWindowCount(80);
+    setWindowCount(rest);
     setPricePan(0);
     setXPan(xPanRef.current);
     setOffset(nextOffset);
     schedulePublishSync(false);
-  }, [restXPan, schedulePublishSync]);
+  }, [restXPan, restWindowCount, schedulePublishSync]);
 
   // Alt+R على الويب: إعادة العرض (كـAUTO). بـ`event.code` لا `event.key`: Alt على ماك يُخرج «†»/«˙»، وبلوحة عربية أو كردية
   // يُخرج حرفاً عربياً — الموضع الفيزيائي للمفتاح هو الثابت. `preventDefault` يمنع Alt+F من فتح
@@ -5536,10 +5557,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         setPriceScale(1);
         setPricePan(0);
       } else {
-        windowCountRef.current = 80;
+        const rest = restWindowCount();
+        restCountRef.current = rest;
+        windowCountRef.current = rest;
         xPanRef.current = restXPan();
         xPanAtRest.current = true;
-        setWindowCount(80);
+        setWindowCount(rest);
         setXPan(xPanRef.current);
       }
       schedulePublishSync(false);
