@@ -331,6 +331,9 @@ console.log('axisTicks.selftest: PASS');
   assert.ok(Math.max(...btc) >= 50000, `BTC top labelled: ${btc.join(' ')}`);
   const dec3 = niceLogPriceTicks(1, 1000, 7, 0.01);
   for (let i = 1; i < dec3.length; i++) assert.ok(Math.log(dec3[i] / dec3[i - 1]) < 0.5 * Math.log(1000), `no half-axis gap: ${dec3.join(' ')}`);
+  // درجة لا تكفي كل العقود تُترك: «1 3 10 100 1000» (3 وحدها بالعقد الأوّل) ⇒ «1 10 100 1000»
+  assert.deepEqual(niceLogPriceTicks(1, 1000, 5, 0.01), [1, 10, 100, 1000]);
+  assert.deepEqual(niceLogPriceTicks(1, 10000, 6, 0.01), [1, 10, 100, 1000, 10000]);
   console.log('niceLogPriceTicks PASS');
 }
 

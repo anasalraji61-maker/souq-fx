@@ -136,6 +136,26 @@ export function niceLogPriceTicks(lo: number, hi: number, maxCount: number, minS
   const kept: number[] = [];
   // داخل كل درجة: الأبعد (بالسجلّ) عمّا قُبل أولاً. كان التصاعد من أصغر قوة عشرة يملأ الحدّ بالأسعار الدنيا:
   // BTC ‏100..70000 ⇒ 100…10000 وأعلى 30% من المحور (حيث السعر الحالي) بلا وسم.
+  // درجة تتّسع لأقلّ من عقد واحد لكل عقد كامل تُترك إن كان المحور مقروءاً أصلاً (3 أسعار فأكثر): 1..1000 بخمس
+  // خانات كان «1 3 10 100 1000» — 3 وحدها بالعقد الأوّل تبدو خطأً لا تدرّجاً؛ الآن «1 10 100 1000».
+  const decades = Math.floor(Math.log10(hi / lo) + 1e-9);
+  const pick = (cand: readonly number[], into: number[], limit: number) => {
+    while (into.length < limit) {
+      let best = -1;
+      let bestD = -1;
+      for (const v of cand) {
+        const lv = Math.log(v);
+        let d = Infinity;
+        for (const x of into) d = Math.min(d, Math.abs(Math.log(x) - lv));
+        if (d >= minGap && d > bestD) {
+          bestD = d;
+          best = v;
+        }
+      }
+      if (best < 0) break;
+      into.push(best);
+    }
+  };
   for (const ladder of LOG_LADDERS) {
     const cand: number[] = [];
     for (let k = k0; k <= k1; k++) {
@@ -144,21 +164,14 @@ export function niceLogPriceTicks(lo: number, hi: number, maxCount: number, minS
         if (v > 0 && v >= lo && v <= hi) cand.push(v);
       }
     }
-    while (kept.length < cap) {
-      let best = -1;
-      let bestD = -1;
-      for (const v of cand) {
-        const lv = Math.log(v);
-        let d = Infinity;
-        for (const x of kept) d = Math.min(d, Math.abs(Math.log(x) - lv));
-        if (d >= minGap && d > bestD) {
-          bestD = d;
-          best = v;
-        }
-      }
-      if (best < 0) break;
-      kept.push(best);
+    const slots = cap - kept.length;
+    if (slots <= 0) break;
+    if (kept.length >= 3 && slots < decades) {
+      const all = kept.slice();
+      pick(cand, all, Infinity);
+      if (all.length - kept.length > slots) continue;
     }
+    pick(cand, kept, cap);
   }
   return kept.sort((x, y) => x - y);
 }
