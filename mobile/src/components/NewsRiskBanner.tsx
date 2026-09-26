@@ -10,7 +10,6 @@ import {
   calendarSourceMs,
   calendarStaleSilent,
   calendarUnavailable,
-  isCryptoSymbol,
   openCalendarUnavailable,
   newsCountdown,
   newsBannerText,
@@ -20,7 +19,8 @@ import {
   openPositionsNewsRisk,
   sameMinuteCurrencyLabel,
   sameMinuteHighImpact,
-  symbolCurrencies,
+  shownHolidayCurrencies,
+  shownNewsCurrencies,
   unannouncedHighImpactToday,
   type CalendarCache,
 } from '../chart/newsRisk';
@@ -98,15 +98,25 @@ function ensureFresh(now: number) {
  * يقوله شريط النموذج مرّة واحدة.
  */
 type Props =
-  | { symbol: string; openSymbols?: never; shownSymbol?: never }
+  | {
+      symbol: string;
+      /**
+       * رموز أخرى **ظاهرة** بالشاشة نفسها (إطارات شبكة الطرفية): الخبر والعطلة وتعطّل التقويم لعملاتها كلها مع `symbol`
+       * — راجع `shownNewsCurrencies`.
+       */
+      alsoSymbols?: readonly string[];
+      openSymbols?: never;
+      shownSymbol?: never;
+    }
   | {
       symbol?: never;
+      alsoSymbols?: never;
       openSymbols: readonly string[];
       /** رمز شريطٍ آخر ظاهر بالشاشة نفسها: اللحظة نفسها لا تُعلَن مرّتين — راجع `openPositionsNewsRisk` */
       shownSymbol?: string;
     };
 
-export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props) {
+export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSymbol }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
@@ -145,7 +155,8 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   }, []);
 
   // الخبر: مؤشر غير دولاري (GER40) يُحذَّر له بخبر الدولار كذلك — `newsCurrencies`؛ العطلة بعملته وحدها
-  const currencies = openSymbols ? [...new Set(openSymbols.flatMap((s) => newsCurrencies(s)))] : newsCurrencies(symbol);
+  const shown = alsoSymbols?.length ? [symbol, ...alsoSymbols] : [symbol];
+  const currencies = openSymbols ? [...new Set(openSymbols.flatMap((s) => newsCurrencies(s)))] : shownNewsCurrencies(shown);
   const currencyKey = currencies.join(',');
   // تبديل الرمز والشريط مركَّب (الطرفية، الحاسبة، كتابة رمز الدفتر): `now` كان آخر دقّة للساعة — حتى 60ث قديمة —
   // فخبر الزوج الجديد بعد 40ث يُكتب «بعد 1د» 35ث، ومؤقّت التجديد يُجدول من الفرق الخطأ نفسه
@@ -161,19 +172,23 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     return () => clearTimeout(id);
   }, [now, hitDelta]);
   // خبرٌ قويّ اليوم **بلا ساعة معلنة** (قرار بنك اليابان «Tentative»): كان يُعدّ لمنتصف ليل نيويورك كأنه موعد — الآن سطرٌ
-  // أحمر كالخبر الموقوت بلا عدّ. للرمز المعروض فقط (الصفقات المفتوحة تبقى على الموقوت)، وحين لا خبر موقوت يشغل الشريط
-  const tbd = !hit && !openSymbols && cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
-  if (tbd) {
-    // يومُه غداً بتقويم الجهاز (21:00–24:00 نيويورك بالأمريكتين) ⇒ «غداً» لا «اليوم» — `unannouncedHighImpactToday().tomorrow`
-    const when = tbd.tomorrow ? t.newsTimeTbdTomorrow : t.newsTimeTbd;
-    const text = newsBannerText({
-      head: t.newsRiskHigh,
-      // `ALL` (G20 «All Day») ⇒ «كل العملات» كالسطر الموقوت أدناه
-      currency: tbd.currencies.map((c) => (c === 'ALL' ? t.newsAllCurrencies : c)).join('/'),
-      when,
-      title: tbd.titles[0] ?? '',
-      more: Math.max(0, tbd.titles.length - 1),
-    });
+  // كالخبر الموقوت بلا عدّ. للرمز المعروض فقط (الصفقات المفتوحة تبقى على الموقوت). **ومع خبرٍ موقوت كذلك** سطراً ثانياً: يوم
+  // بنك اليابان «BOJ Policy Rate» بلا ساعة والمؤتمر الصحفي 06:30 UTC — من 03:31 كان السطر «بعد 2س 59د · المؤتمر» وحده، والقرار
+  // نفسه (يصدر عادةً 03:00–04:30) قد يسقط أيّ دقيقة
+  const tbd = !openSymbols && cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
+  // يومُه غداً بتقويم الجهاز (21:00–24:00 نيويورك بالأمريكتين) ⇒ «غداً» لا «اليوم» — `unannouncedHighImpactToday().tomorrow`
+  const tbdText = tbd
+    ? newsBannerText({
+        head: t.newsRiskHigh,
+        // `ALL` (G20 «All Day») ⇒ «كل العملات» كالسطر الموقوت أدناه
+        currency: tbd.currencies.map((c) => (c === 'ALL' ? t.newsAllCurrencies : c)).join('/'),
+        when: tbd.tomorrow ? t.newsTimeTbdTomorrow : t.newsTimeTbd,
+        title: tbd.titles[0] ?? '',
+        more: Math.max(0, tbd.titles.length - 1),
+      })
+    : null;
+  if (tbdText && !hit) {
+    const text = tbdText;
     const stale = cache != null && (!cache.ok || cacheServerStale);
     return (
       <View
@@ -198,7 +213,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   }
   // عطلة بنوك اليوم لعملتَي الرمز — حين لا خبر قوي فقط (الخبر أخطر ويشغل الشريط). لا للصفقات المفتوحة ولا للرقمية (سوقٌ بلا عطلة)
   const holiday =
-    !hit && !openSymbols && holidayCache && !isCryptoSymbol(symbol) ? bankHolidayToday(holidayCache.events, symbolCurrencies(symbol), now) : null;
+    !hit && !openSymbols && holidayCache ? bankHolidayToday(holidayCache.events, shownHolidayCurrencies(shown), now) : null;
   if (holiday) {
     const text = `🏦 ${t.newsHolidayToday
       .split('{ccy}')
@@ -218,7 +233,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     // للرمز المعروض فقط: شريط الصفقات المفتوحة يسكت عن التعطّل حين يقوله شريطٌ آخر، كـ`openCalendarUnavailable`
     const down = openSymbols
       ? openCalendarUnavailable(cache, openSymbols, shownSymbol)
-      : calendarUnavailable(cache, symbol) || calendarStaleSilent(cache, cacheServerStale, symbol, now);
+      : shown.some((s) => calendarUnavailable(cache, s) || calendarStaleSilent(cache, cacheServerStale, s, now));
     if (!down) return null;
     // فشلٌ بلا محفوظ: الغياب كان يُقرأ «لا خطر» — سطرٌ هادئ (عنبري لا أحمر: لا نعرف بخبر، نعرف أننا لا نعرف)
     return (
@@ -259,11 +274,16 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
       style={styles.wrap}
       accessible
       accessibilityRole="alert"
-      accessibilityLabel={`${text}. ${hint}${stale ? `. ${t.newsStale}` : ''}`}
+      accessibilityLabel={`${text}. ${tbdText ? `${tbdText}. ` : ''}${hint}${stale ? `. ${t.newsStale}` : ''}`}
     >
       <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
         {text}
       </Text>
+      {tbdText ? (
+        <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
+          {tbdText}
+        </Text>
+      ) : null}
       <Text style={[styles.hint, { textAlign: align }]} numberOfLines={openHit ? 2 : 1}>
         {hint}
       </Text>

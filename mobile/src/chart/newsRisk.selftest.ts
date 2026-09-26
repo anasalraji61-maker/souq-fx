@@ -24,6 +24,8 @@ import {
   newsCurrencies,
   knownSingleName,
   isCryptoSymbol,
+  shownNewsCurrencies,
+  shownHolidayCurrencies,
   NEWS_STALE_MAX_MS,
   type NewsEvent,
 } from './newsRisk';
@@ -1149,3 +1151,38 @@ console.log('newsRisk holiday live-feed 19:00 NY selftest OK');
   assert.equal(calendarStaleSilent(calendarAfterFetch(null, null, t1), false, 'EURUSD', t1 + 2 * H), false);
 }
 console.log('newsRisk stale calendar with no event selftest OK');
+
+// ── شريط الطرفية لكل الإطارات الظاهرة (شبكة الهاتف: DXY + 3 أزواج) لا لـ`symbol` الابتدائي وحده ──
+{
+  // الافتراضي: DXY، EURUSD، GBPUSD، XAUUSD ⇒ USD، EUR، GBP (بلا تكرار، بترتيب الظهور)
+  assert.deepEqual(shownNewsCurrencies(['DXY', 'EURUSD', 'GBPUSD', 'XAUUSD']), ['USD', 'EUR', 'GBP']);
+  // مؤشر غير دولاري يجلب الدولار معه كـ`newsCurrencies`؛ رمزٌ بلا عملات يسقط وحده
+  assert.deepEqual(shownNewsCurrencies(['GER40', 'AAPL', 'USDJPY']), ['EUR', 'USD', 'JPY']);
+  assert.deepEqual(shownNewsCurrencies([]), []);
+  // العطلة: `symbolCurrencies` (GER40 ⇒ EUR وحدها)، والرقمية لا عطلة لها
+  assert.deepEqual(shownHolidayCurrencies(['GER40', 'BTCUSD', 'GBPJPY']), ['EUR', 'GBP', 'JPY']);
+  assert.deepEqual(shownHolidayCurrencies(['BTCUSD']), []);
+  // الحالة: قرار بنك إنجلترا بعد 10د، والشبكة تعرض GBPUSD — كان الشريط على EURUSD وحده ⇒ لا تحذير
+  const now = Date.UTC(2026, 8, 24, 10, 50);
+  const boe: NewsEvent = { ts: Date.UTC(2026, 8, 24, 11, 0) / 1000, currency: 'GBP', impact: 'High', title: 'Official Bank Rate' } as NewsEvent;
+  assert.equal(nextHighImpact([boe], newsCurrencies('EURUSD'), now), null);
+  assert.equal(nextHighImpact([boe], shownNewsCurrencies(['DXY', 'EURUSD', 'GBPUSD', 'XAUUSD']), now)?.event.title, 'Official Bank Rate');
+  // ساقا USDJPY/AUDUSD/NZDUSD المحفوظة ⇒ قرار بنك الاحتياطي الأسترالي يُحذَّر له
+  const rba: NewsEvent = { ts: Date.UTC(2026, 8, 24, 11, 30) / 1000, currency: 'AUD', impact: 'High', title: 'Cash Rate' } as NewsEvent;
+  assert.equal(nextHighImpact([rba], shownNewsCurrencies(['DXY', 'USDJPY', 'AUDUSD', 'NZDUSD']), now)?.event.title, 'Cash Rate');
+}
+console.log('newsRisk shown-frames currencies selftest OK');
+
+// ── يوم بنك اليابان: القرار بلا ساعة + المؤتمر الموقوت ⇒ الاثنان معاً (الشريط يعرض سطر «بلا ساعة» تحت العدّ) ──
+{
+  // منتصف ليل نيويورك 2026-07-30 = 04:00 UTC (توقيت صيفي)
+  const rate: NewsEvent = { ts: Date.UTC(2026, 6, 30, 4, 0) / 1000, currency: 'JPY', impact: 'High', title: 'BOJ Policy Rate' } as NewsEvent;
+  const presser: NewsEvent = { ts: Date.UTC(2026, 6, 30, 6, 30) / 1000, currency: 'JPY', impact: 'High', title: 'BOJ Press Conference' } as NewsEvent;
+  const at = Date.UTC(2026, 6, 30, 3, 31);
+  const ccys = newsCurrencies('USDJPY');
+  // من 03:31 الموقوت داخل الأفق (2س 59د)، والقرار بلا ساعة لا يزال قائماً — كان الشريط يُسقطه حين وُجد الموقوت
+  assert.equal(nextHighImpact([rate, presser], ccys, at)?.event.title, 'BOJ Press Conference');
+  const tbd = unannouncedHighImpactToday([rate, presser], ccys, at, undefined, 540);
+  assert.deepEqual(tbd?.titles, ['BOJ Policy Rate']);
+}
+console.log('newsRisk unannounced alongside timed selftest OK');

@@ -545,6 +545,15 @@ export function TerminalScreen() {
     return ordered.slice(0, Math.max(1, layoutCount));
   }, [frameOrder, layoutCount]);
 
+  // شريط الأخبار لكل ما يُرسم لا لـ`symbol` وحده: شبكة الهاتف (DXY/الخانة الرابعة + الأزواج الثلاثة) والتخطيطات المتعدّدة
+  // (الإطارات الظاهرة بترتيبها). `symbol` ابتدائياً EURUSD لا يُستعاد ولا يُرسم هناك — كان الشريط يسكت عن قرار بنك إنجلترا
+  // وإطار GBPUSD على الشاشة (ويحذّر من خبر يورو لا إطار له). بشارت واحد (والظلّ) ⇒ `symbol` وحده كما كان.
+  const bannerFrameSymbols = useMemo(() => {
+    if (!framesShown || focus) return undefined;
+    const ids = phone ? ['DXY', 'pair-0', 'pair-1', 'pair-2'] : visibleFrameIds;
+    return ids.map((id) => (id === 'DXY' ? heroSymbol : frameSymbols[Number(id.slice(5))])).filter(Boolean);
+  }, [framesShown, focus, phone, visibleFrameIds, heroSymbol, frameSymbols]);
+
   useEffect(() => {
     if (!timeSyncActive) return;
     if (!visibleFrameIds.includes(syncLeaderId)) {
@@ -1428,7 +1437,7 @@ export function TerminalScreen() {
         </ScrollView>
       ) : null}
 
-      <NewsRiskBanner symbol={symbol} />
+      <NewsRiskBanner symbol={bannerFrameSymbols?.[0] ?? symbol} alsoSymbols={bannerFrameSymbols?.slice(1)} />
 
       <View style={styles.workspace}>
         {!phone ? (

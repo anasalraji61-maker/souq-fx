@@ -320,6 +320,27 @@ export function newsCurrencies(symbol: string): string[] {
   return own.length === 1 && own[0] !== 'USD' ? [own[0], 'USD'] : own;
 }
 
+/**
+ * عملات تحذير الخبر لـ**كل الرموز الظاهرة** معاً (`newsCurrencies` لكلٍّ، بلا تكرار، بترتيب الظهور). شبكة الطرفية بالهاتف
+ * (وتخطيطات 2–4 إطارات) تعرض DXY + ثلاثة أزواج محفوظة، والشريط كان يتبع `symbol` وحده — EURUSD الابتدائي الذي لا يُستعاد ولا
+ * يُعرض — فقرار بنك إنجلترا بعد 10د لا يُحذَّر له وإطار GBPUSD على الشاشة. رمزٌ بلا عملات يسقط وحده.
+ */
+export function shownNewsCurrencies(symbols: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const s of symbols) for (const c of newsCurrencies(s)) if (!out.includes(c)) out.push(c);
+  return out;
+}
+
+/** عملات **العطلة** للرموز الظاهرة: `symbolCurrencies` لكلٍّ عدا الرقمية (سوقٌ بلا عطلة)، بلا تكرار — راجع `shownNewsCurrencies`. */
+export function shownHolidayCurrencies(symbols: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const s of symbols) {
+    if (isCryptoSymbol(s)) continue;
+    for (const c of symbolCurrencies(s)) if (!out.includes(c)) out.push(c);
+  }
+  return out;
+}
+
 export const NEWS_HORIZON_MS = 3 * 60 * 60 * 1000;
 export const NEWS_GRACE_MS = 15 * 60 * 1000;
 
