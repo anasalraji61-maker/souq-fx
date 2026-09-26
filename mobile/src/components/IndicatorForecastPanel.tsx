@@ -180,12 +180,12 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const levelsWhy = levelsUnavailableText({ unavailable: levelsGap }, t);
   // الوقف والهدف كانا سعرَين فقط، والمتداول يزن الصفقة بالـpip (حجم لوته من مسافة وقفه).
   // `pipsBetween` نفسها التي تبني عليها الحاسبة؛ أداة بلا مواصفة pip تبقى بالأسعار وحدها.
-  // backend-r125: أزواج **أساسها الين** (JPYUSD ≈ 0.0067) — مواصفتنا تعاملها زوجاً بـ5 منازل وpip ‏0.0001 (1.5% من
-  // السعر)، والخادم يرسل منازلها من حجم السعر (8). منازل الخادم الأدقّ تغلب، ولا pip حين لا تطابق المواصفة الأداة:
-  // كان الدخول والوقف والهدف كلها «0.00666» والمسافة «0.1 pips».
+  // backend-r125: أزواج **أساسها الين** (JPYUSD ≈ 0.0067) — منازل الخادم الأدقّ تغلب (كانت «0.00666» للثلاثة).
+  // الـpip باقٍ: المواصفة صارت pip ‏0.000001 (tools `f520ea4`، عُرف CME 6J) ⇒ وقف 30 pip = 0.45% كالين العادي؛
+  // إسقاطه كان يُخفي مسافة الوقف التي يبني عليها المتداول لوته، والحاسبة والشارت يعرضانها.
   const specDecimals = symbolPriceDecimals(symbol);
   const useServerDecimals = serverDecimals != null && (specDecimals == null || serverDecimals > specDecimals);
-  const levelSpec = levels && !(useServerDecimals && specDecimals != null) ? chartPipSpec(symbol) : null;
+  const levelSpec = levels ? chartPipSpec(symbol) : null;
   const pipsTag = (a: number, b: number) => {
     const p = levelSpec ? pipsBetween(levelSpec, a, b) : null;
     // «pips» بالإنجليزية كسطر السبريد والقياس بالشارت (كانت «12.0 pip» ثابتة)، وبلا عُشر من 1000.
