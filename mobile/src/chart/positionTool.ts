@@ -71,7 +71,10 @@ export function positionLevels(
   entry: number,
   rawStop: number,
   rr: number | null | undefined,
-  symbol: string
+  symbol: string,
+  /** مرجع منازل الشارت (`series.last`) كـ`positionLabels`: نفط عند 99.80 (3 منازل) ودخول 100.012 كان يُقرِّب
+   * الهدف لمنزلتين من سعر الدخول (100.136 ⇒ 100.14) فيُكتب «TP 100.140» وR:R الفعلية 2.06 لا 2. */
+  priceRef?: number | null
 ): PositionLevels {
   const stop = positionStop(side, entry, rawStop, symbol);
   let r = clampRr(rr);
@@ -84,7 +87,7 @@ export function positionLevels(
   // على شبكة سعر الزوج كما يُطبع: 1.0869249 كان يُكتب «TP 1.08692» بينما المسافة 16.95 نقطة، وشمعة قمّتها 1.08692
   // بالضبط (الهدف المكتوب) لا تُعدّ إصابة — فالوسم والنقاط وTP ✓ الآن من الرقم نفسه.
   const rawTarget = entry + (entry - stop) * r;
-  const onGrid = Number(formatPrice(rawTarget, symbol, entry));
+  const onGrid = Number(formatPrice(rawTarget, symbol, priceRef ?? entry));
   const target = Number.isFinite(onGrid) && onGrid > 0 ? onGrid : rawTarget;
   return { side, entry, stop, target, rr: r };
 }

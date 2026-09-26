@@ -25,12 +25,14 @@ export function selectionPrices(
   /** فهرس الشمعة الحيّة (آخر شمعة بالسلسلة) — لسعر الترند/الشعاع عندها (`lineValueAt`). */
   nowIndex?: number,
   /** المقياس اللوغاريتمي: الخطّ مستقيم بالبكسل = باللوغاريتم — راجع `lineValueAt`. */
-  log = false
+  log = false,
+  /** مرجع منازل الشارت لهدف الشراء/البيع — راجع `positionLevels`. */
+  priceRef?: number | null
 ): { price: number; tone: SelectionTagTone }[] {
   if (d.tool === 'vline' || d.tool === 'note') return [];
   if (d.tool === 'hline' || !d.b) return [{ price: d.a.price, tone: 'line' }];
   if (isPositionTool(d.tool)) {
-    const lv = positionLevels(d.tool, d.a.price, d.b.price, d.rr, symbol);
+    const lv = positionLevels(d.tool, d.a.price, d.b.price, d.rr, symbol, priceRef);
     return [
       { price: lv.entry, tone: 'line' },
       { price: lv.stop, tone: 'bear' },

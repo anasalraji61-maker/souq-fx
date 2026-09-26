@@ -4382,7 +4382,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     aLocal: number,
     bLocal: number
   ) => {
-    const lv = positionLevels(side, a.price, b.price, rr, series.symbol);
+    const lv = positionLevels(side, a.price, b.price, rr, series.symbol, priceDecimalsRef);
     const xEntry = xOf(aLocal);
     const xEnd = xOf(bLocal);
     const left = Math.min(xEntry, xEnd);
@@ -4947,7 +4947,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (end === 't') {
           const d = drawings.find((x) => x.id === selectedId);
           if (!d?.b || !isPositionTool(d.tool)) return;
-          const lv = positionLevels(d.tool, d.a.price, d.b.price, d.rr, series.symbol);
+          const lv = positionLevels(d.tool, d.a.price, d.b.price, d.rr, series.symbol, priceDecimalsRef);
           const rr = rrFromTarget(lv, p.price);
           if (rr === selDragRr.current) return;
           if (!selDragPushed.current) {
@@ -6401,7 +6401,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedDrawing = selectedId && !hidePriceLabels ? drawings.find((d) => d.id === selectedId) : undefined;
   const selectionTags = selectedDrawing
     ? placeSelectionTags(
-        selectionPrices(selectedDrawing, series.symbol, nowIndex, logScale),
+        selectionPrices(selectedDrawing, series.symbol, nowIndex, logScale, priceDecimalsRef),
         yOf,
         chartPlotH,
         PRICE_TAG_H,

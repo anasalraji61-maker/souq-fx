@@ -233,4 +233,11 @@ assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.00001, r: -0.000
   assert.equal(positionOutcome(g, bars, 0, Infinity, 1)?.state, 'target');
 }
 
+// النفط عند 99.80 (محور 3 منازل) ودخول 100.012: الهدف على شبكة الشارت لا على منزلتي الدخول (100.136 لا 100.14)
+{
+  const oil = positionLevels('long', 100.012, 99.95, 2, 'USOIL', 99.8);
+  near(oil.target, 100.136);
+  assert.equal(positionLabels(oil, 'USOIL', 'en-US', 99.8).target.startsWith('TP 100.136 '), true);
+}
+
 console.log('positionTool.selftest: PASS');
