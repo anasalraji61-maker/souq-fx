@@ -6,6 +6,8 @@ import {
   saveLayout,
   deleteLayout,
   mergeServerLayouts,
+  pendingLayoutDeletes,
+  clearLayoutTombstone,
   subscribeLayoutsSaveError,
   DEFAULT_LAYOUT,
   type TerminalLayout,
@@ -100,6 +102,17 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
       .catch(() => {
         /* بلا خادم: القائمة المحلية كافية */
       });
+    // حذفٌ لم يصل الخادم (بلا شبكة/خادم قديم) — يُعاد طلبه، وإلا عاد التخطيط من جهاز آخر أو بعد إعادة التثبيت.
+    pendingLayoutDeletes().then((ids) =>
+      ids.forEach((id) =>
+        api
+          .deleteLayout(id)
+          .then(() => clearLayoutTombstone(id))
+          .catch(() => {
+            /* يُعاد عند فتح اللوحة التالي */
+          })
+      )
+    );
     const unsubErr = subscribeLayoutsSaveError(setSaveError);
     return () => {
       alive = false;
@@ -163,9 +176,12 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
     // «حُفظ Scalp» كان يبقى تحت اللوحة بعد حذف Scalp نفسه — تأكيد لشيء لم يعد موجوداً.
     setSavedLayout((s) => (s?.id === l.id ? null : s));
     // وإلا عاد التخطيط المحذوف من الخادم عند فتح اللوحة التالي
-    api.deleteLayout(l.id).catch(() => {
-      /* بلا خادم: الحذف المحلي تمّ */
-    });
+    api
+      .deleteLayout(l.id)
+      .then(() => clearLayoutTombstone(l.id))
+      .catch(() => {
+        /* بلا خادم: الحذف المحلي تمّ، والعلامة المحفوظة تعيد الطلب لاحقاً */
+      });
   };
 
   return (

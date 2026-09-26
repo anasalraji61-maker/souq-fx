@@ -43,25 +43,79 @@ function serial<T>(fn: () => Promise<T>): Promise<T> {
 /** محذوفات هذه الجلسة — استجابة خادم طُلبت قبل الحذف تحملها بعد، فلا يُعيدها الدمج. */
 const deletedIds = new Set<string>();
 
-export async function loadLayouts(): Promise<TerminalLayout[]> {
+/**
+ * محذوفات لم يؤكّد الخادم حذفها — محفوظة بالجهاز. كانت بالذاكرة فقط: حذف «Scalp» بلا شبكة (أو خادم قديم
+ * يردّ 405) يُبقي صفّه بالخادم، وبعد إعادة تشغيل التطبيق يعيده الدمج للقائمة بصمت. يُعاد طلب حذفها عند
+ * فتح اللوحة التالي، وتُمحى بتأكيد الخادم أو بحفظ المعرّف نفسه من جديد.
+ */
+const TOMBSTONE_KEY = 'matrix.layouts.deleted.v1';
+const MAX_TOMBSTONES = 200;
+
+async function loadTombstones(): Promise<string[]> {
   try {
-    const raw = await AsyncStorage.getItem(KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as TerminalLayout[];
-    return Array.isArray(parsed) ? parsed : [];
+    const raw = await AsyncStorage.getItem(TOMBSTONE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
   } catch {
     return [];
   }
 }
 
+async function editTombstones(fn: (ids: string[]) => string[]): Promise<void> {
+  try {
+    const next = fn(await loadTombstones()).slice(-MAX_TOMBSTONES);
+    await AsyncStorage.setItem(TOMBSTONE_KEY, JSON.stringify(next));
+  } catch {
+    /* الذاكرة (`deletedIds`) تحمي هذه الجلسة */
+  }
+}
+
+/** معرّفات حُذفت محلياً ولم يؤكّد الخادم حذفها بعد — ليُعاد طلبها. */
+export function pendingLayoutDeletes(): Promise<string[]> {
+  return serial(async () => {
+    const ids = await loadTombstones();
+    // الطلب المُعاد قد يُمحي العلامة قبل دمج استجابة خادم طُلبت قبله — الذاكرة تحمي بقية الجلسة.
+    ids.forEach((id) => deletedIds.add(id));
+    return ids;
+  });
+}
+
+/** الخادم أكّد الحذف ⇒ لا حاجة للعلامة. */
+export function clearLayoutTombstone(id: string): Promise<void> {
+  return serial(() => editTombstones((ids) => ids.filter((x) => x !== id)));
+}
+
+export async function loadLayouts(): Promise<TerminalLayout[]> {
+  try {
+    return await loadLayoutsStrict();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * للكتابة: قراءة فاشلة (قاعدة مشغولة، JSON مبتور) ترمي بدل `[]`. كان الحفظ/الحذف يقرأ `[]` ثم يكتب القائمة
+ * «كاملة» فوق 40 تخطيطاً محفوظاً — تُرفض الكتابة الآن ويظهر خطأ الحفظ، والقائمة المخزّنة سليمة.
+ */
+async function loadLayoutsStrict(): Promise<TerminalLayout[]> {
+  const raw = await AsyncStorage.getItem(KEY);
+  if (!raw) return [];
+  const parsed = JSON.parse(raw) as TerminalLayout[];
+  if (!Array.isArray(parsed)) throw new Error('layouts: not an array');
+  return parsed;
+}
+
 export function saveLayout(layout: TerminalLayout): Promise<void> {
   deletedIds.delete(layout.id);
-  return serial(() => saveLayoutNow(layout));
+  return serial(async () => {
+    await saveLayoutNow(layout);
+    await editTombstones((ids) => ids.filter((x) => x !== layout.id));
+  });
 }
 
 async function saveLayoutNow(layout: TerminalLayout): Promise<void> {
   try {
-    const all = await loadLayouts();
+    const all = await loadLayoutsStrict();
     const idx = all.findIndex((l) => l.id === layout.id);
     if (idx >= 0) all[idx] = layout;
     else all.unshift(layout);
@@ -74,12 +128,15 @@ async function saveLayoutNow(layout: TerminalLayout): Promise<void> {
 
 export function deleteLayout(id: string): Promise<void> {
   deletedIds.add(id);
-  return serial(() => deleteLayoutNow(id));
+  return serial(async () => {
+    await editTombstones((ids) => [...ids.filter((x) => x !== id), id]);
+    await deleteLayoutNow(id);
+  });
 }
 
 async function deleteLayoutNow(id: string): Promise<void> {
   try {
-    const all = (await loadLayouts()).filter((l) => l.id !== id);
+    const all = (await loadLayoutsStrict()).filter((l) => l.id !== id);
     await AsyncStorage.setItem(KEY, JSON.stringify(all));
     setSaveError(null);
   } catch {
@@ -124,13 +181,19 @@ export function mergeServerLayouts(payloads: unknown[]): Promise<TerminalLayout[
 }
 
 async function mergeServerLayoutsNow(payloads: unknown[]): Promise<TerminalLayout[]> {
-  const local = await loadLayouts();
+  let local: TerminalLayout[];
+  try {
+    local = await loadLayoutsStrict();
+  } catch {
+    return []; // لا دمج فوق قائمة لم تُقرأ
+  }
+  const tombstones = new Set(await loadTombstones());
   const ids = new Set(local.map((l) => l.id));
   const names = new Set(local.map((l) => l.name));
   const added: TerminalLayout[] = [];
   for (const raw of payloads) {
     const l = parseServerLayout(raw);
-    if (!l || ids.has(l.id) || names.has(l.name) || deletedIds.has(l.id)) continue;
+    if (!l || ids.has(l.id) || names.has(l.name) || deletedIds.has(l.id) || tombstones.has(l.id)) continue;
     ids.add(l.id);
     names.add(l.name);
     added.push(l);
