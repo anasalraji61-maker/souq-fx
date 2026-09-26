@@ -1630,9 +1630,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       {!spec && symbol.trim().length > 0 ? (
         <Text style={[styles.warn, { textAlign: align }]}>
           {/* رمز حساب mini مرفوضٌ عمداً لا خطأ مطبعي — السبب والزوج العادي بدل «رمز غير مدعوم» (QA44) */}
+          {/* لاحقة مجهولة («EURUSDi»): السبب وأنّ شريحة الزوج تفترض العقد العادي — لا «رمز غير مدعوم» (launch186a) */}
           {miniPair
-            ? t.riskCalcMiniSymbol.replace('{symbol}', symbol.trim()).replace('{pair}', miniPair)
-            : t.riskCalcBadSymbol}
+            ? t.riskCalcMiniSymbol.replace('{symbol}', () => symbol.trim()).replace('{pair}', () => miniPair)
+            : suffixPair
+              ? t.riskCalcSuffixSymbol.replace('{symbol}', () => symbol.trim()).replace('{pair}', () => suffixPair)
+              : t.riskCalcBadSymbol}
         </Text>
       ) : null}
       {suffixPair ? (
