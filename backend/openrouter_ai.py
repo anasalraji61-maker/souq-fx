@@ -251,13 +251,17 @@ _LEVEL_WORD = (
     r"(?:\b(?:entry(?:\s?price)?(?!\s+of\s+the\b)|entries|enter|stop[- ]?loss(?:es)?|stops?(?![- ](?:run|hunt))"
     r"|s/?l\d?|take[- ]?profits?|t/?p\d?|pt|tgt|targets?(?!\s+of\s+th)|profit target|invalidation"
     r"|objective(?!\s+of\s+th)|exit(?!\s+of\b)|entrée|objectif|objetivo|entrada)(?![a-z])"
-    r"|\baim(?:ing)?\s+(?:for|at)\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
+    # run 90: «Targeting 1.0950»، «Aiming 1.0950»، «Take the trade at 1.0850»، «Jump in at 1.0850»
+    r"|\btargeting\b|\baim(?:ing|s)?\b|\b(?:take|enter)\s+(?:the|this)\s+(?:trade|position)\b|\bjump\s+in\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
     r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
     r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
     + r"(?!\s+من\s+(?:هذ|ال|درس))"
     r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان|زیان\s*وەستاندن"
     # run 80: التعريب الصوتي «ستوب لوس 1.0800»، «تيك بروفيت 1.0950»
     r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)تيك\s*بروفيت(?!\w)"
+    # run 90: المعرَّف «الستوب/الاستوب لوس»، «التارجت/تارجت»، «خذ الربح»، «اغلق الصفقة»
+    r"|(?<!\w)و?ال(?:ا)?(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)(?:و?ال)?تارجت(?:ات)?(?!\w)"
+    r"|(?<!\w)(?:خذ|اخذ)\s+(?:ال)?(?:ربح|ارباح)(?!\w)|(?<!\w)(?:اغلق|أغلق)\s+(?:ال)?(?:صفقة|صفقه|مركز)(?!\w)"
     # run 83: التركية والألمانية («Giriş: 1.0850»، «zarar durdur 1.0800»، «hedef 1.0950»، «Einstieg 1.0850»)
     r"|\b(?:giri[şs]|zarar\s+durdur|hedef|k[aâ]r\s+al|einstieg|kursziel)\w*)"
     # run 83: رقم ترتيب بعد الكلمة («Target 1: 1.0950»، «TP 2: 1.1000»، «T1 1.0950») — كان الرقم يقطع الفجوة
@@ -276,7 +280,7 @@ _EN_ACT = (
     r"|enter(?:ing)?\s+(?:long|short)|an?\s+(?:long|short)\s+(?:position|trade|entry)|(?:long|short)\s+position)\b"
     r"(?![-‑](?:off|side))(?!\s+(?:pressure|interest|volume|climax|momentum|activity|power|wave|orders?)\b)"
 )
-_AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?:ال)?(?:شراء|بيع)(?!\w)"
+_AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?<!حجم )(?<!زخم )(?<!موجة )(?<!موجه )(?<!قوة )(?<!قوه )(?:ال)?(?:شراء|بيع)(?!\w)"
 # أمر صفقة بأول الجملة: «Buy.»، «Go long.»، «Short it.»، «long EURUSD»، «Accumulate gold below 2350».
 # الرمز حساس لحالة الأحرف (EURUSD، EUR/USD) — «Long wicks»/«Short-term» ليست أمراً.
 _EN_ORDER = (
@@ -356,6 +360,26 @@ _TRADE_CALL_RE = re.compile(
     + r"|توصية\s*[:\-–—]?\s*(?:ب|ب?ال)?(?:شراء|بيع)"
     + r"|(?:الاتجاه|القرار|الصفقة|إشارة|اشارة|الإشارة|الاشارة)\s*[:\-–—=]\s*(?:ال)?(?:شراء|بيع)"
     + r"|(?:توصيتي|توصيتنا|الأنسب|الانسب|خياري)\s*(?:هي|هو)?\s*[:\-–—]?\s*(?:ال)?(?:شراء|بيع)(?!\w)"
+    # run 90: فعل بلا حرف جرّ أو مع مفعول («بيع اليورو الآن»، «بيع الذهب من 2400»)، المضارع للمخاطَب
+    # («يجب أن تشتري الآن»، «تشتري عند 1.0850»)، «الشراء منطقي/مناسب/الخيار الأمثل»، «لو كنت مكانك لاشتريت»
+    + r"|" + _AR_ACT + r"\s+\S+\s+(?:الآن|الان|فورا|فوراً|(?:من|عند|قرب|فوق|تحت)\s*\d)"
+    + r"|(?:يجب|ينبغي|عليك|لازم)\s+(?:ان\s+)?(?:تشتري|تبيع|تدخل)(?!\w)"
+    + r"|(?<!\w)(?:تشتري|تبيع|تدخل)(?!\w)[^\n\d]{0,15}?(?:الآن|الان|فورا|هنا|(?:من|عند|قرب|فوق|تحت)\s*\d)"
+    + r"|(?<!\w)ال(?:شراء|بيع)\s+(?:هو\s+)?(?:الخيار\s+)?(?:افضل|الافضل|انسب|الانسب|امثل|الامثل|منطقي|مناسب)(?!\w)"
+    + r"|(?<!\w)ل(?:اشتريت|بعت|دخلت)(?!\w)"
+    + r"|\b(?:buying|selling|shorting|going\s+(?:long|short))\s+(?:here|now|at\s+these\s+levels)\s+"
+    r"(?:makes\s+sense|is\s+(?:\w+\s+)?(?:good|fine|reasonable|smart|wise|better|best|justified))\b"
+    # run 90: «You should buy EURUSD.»، «You should sell gold.»
+    + r"|\b(?:you|traders?|one)\s+(?:should|could|might|may|can|must|need\s+to|(?:might\s+|may\s+)?want\s+to)\s+"
+    r"(?:buy|sell|short)\s+(?:(?:gold|silver|oil|crude|bitcoin|btc|the\s+(?:euro|dollar|yen|pound))\b"
+    r"|(?-i:(?!(?:EMA|SMA|WMA|RSI|MACD|ATR|ADX|CCI|MFI|OBV|VWAP)\b)[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
+    # run 90: أمر بلا سعر «Place a buy order now.»، و«sell there»/«@1.0850 buy»، و«E: 1.0850 S: 1.0800»، «In at … out at …»
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*)(?:place|open|put\s+in|enter)\s+an?\s+(?:buy|sell|long|short)\s+"
+    r"(?:order|trade|position)\s*(?:[.!]|$|(?:now|here|today)\b)"
+    + r"|(?<!traders )(?<!tend to )(?<!often )(?<!usually )(?<!typically )\b(?:buy|sell|short)\s+(?:from\s+)?there\b|@\s*\d+[.,]\d+\s*(?:buy|sell|long|short)\b"
+    + r"|(?-i:\bE)\s*:\s*\d+[.,]\d+[^\n]{0,15}?(?-i:\b(?:S|SL|T|TP))\s*:\s*\d"
+    + r"|\bin\s+at\s*\d+[.,]\d+[^\n\d]{0,15}\bout\s+at\s*\d"
+    + r"|\bget\s+in\s+(?:now|here|today)\b|(?<!\w)(?:ال)?(?:ربح|خروج)\s+(?:عند|قرب|من|فوق|تحت)\s*" + _PRICE
     + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشتر|اشتري|بع|ادخل)(?!\w)"
     # «أدخل مؤشر RSI» (أضِف) تصير «ادخل» بعد توحيد الألف — إدخال بالواجهة لا دخول صفقة
     r"(?!\s+(?:ال)?(?:مؤشر|اداة|أداة|قيمة|رقم|اسم|بريد|كود|رمز|اعدادات|إعدادات|اعداد|إعداد|الى|إلى|على)(?!\w))"
@@ -368,6 +392,8 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:کڕین|فرۆشتن)\w*[^\n\d]{0,25}?(?:\d|ئێستا|بکە)"
     # run 80: فعل الأمر «بکڕە/بیکڕە/بفرۆشە»، «EURUSD: کڕین»، و«… پێشنیار دەکەم» (أنصح)
     + r"|(?<!\w)بی?(?:کڕە|فرۆشە)(?!\w)"
+    # run 90: «پێویستە بکڕیت»، «باشترە بکڕیت»، «کڕین باشترە»
+    + r"|(?:پێویستە|باشترە|دەبێت|دەبێ)\s+(?:\S+\s+)?بی?(?:کڕیت|فرۆشیت)(?!\w)|(?:کڕین|فرۆشتن)\w*\s+باشترە"
     + r"|(?:^\s*|[:\-–—=]\s*)(?:کڕین|فرۆشتن)\s*(?:[.!]|$)"
     + r"|(?:کڕین|فرۆشتن)\w*[^\n]{0,30}?پێشنیار|پێشنیار\w*[^\n]{0,30}?(?:کڕین|فرۆشتن)"
     # الفرنسية/الإسبانية: فعل أمر صفقة مع سعر أو «الآن»

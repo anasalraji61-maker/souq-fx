@@ -702,3 +702,35 @@ def test_ai_context_pct_matches_real_move(monkeypatch):
 ])
 def test_move_pct_text(move, first, want):
     assert main._move_pct_text(move, first) == want
+
+
+# run 90: صيغ كانت تمرّ الحارس (وتُقتبس بالقالب الاحتياطي حين لا نموذج)
+RUN90_LEAKS = [
+    "الستوب 1.0800", "الاستوب لوس 1.0800", "حط الستوب تحت 1.0800", "التارجت 1.0950", "تارجت 1.0950",
+    "You should buy EURUSD.", "You should sell gold.", "Place a buy order now", "Place a sell order.",
+    "خذ الربح عند 1.0950", "الربح عند 1.0950", "اغلق الصفقة عند 1.0950", "Targeting 1.0950", "Aiming 1.0950",
+    "Take the trade at 1.0850", "Jump in at 1.0850", "Get in now", "Price should reach 1.0950, sell there.",
+    "Demand zone 1.0840-1.0850, buy there", "@1.0850 buy", "E: 1.0850 S: 1.0800 T: 1.0950",
+    "In at 1.0850, out at 1.0950", "بيع اليورو الآن", "بيع الذهب من 2400", "يجب أن تشتري الآن",
+    "تشتري عند 1.0850", "الشراء منطقي الآن", "أرى أن الشراء مناسب الآن", "الشراء هو الخيار الأمثل",
+    "لو كنت مكانك لاشتريت", "Buying here makes sense", "Selling here makes sense.",
+    "پێویستە بکڕیت", "باشترە بکڕیت", "کڕین باشترە",
+]
+
+
+@pytest.mark.parametrize("text", RUN90_LEAKS)
+def test_guard_flags_run90_leaks(text):
+    assert openrouter_ai.has_trade_call(text)
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+@pytest.mark.parametrize("text", [
+    "Traders get in when the fast MA crosses.", "الخروج من السوق قرار صعب.", "الربح عند الإغلاق يُحسب بالنقاط.",
+    "Aiming for consistency matters more than profit.", "Many traders buy there because support held.",
+    "In at the open, out at the close is a day-trading style.", "الستوب يحمي رأس المال.",
+    "التارجت يُحسب من نسبة المخاطرة.", "البيع على المكشوف مفهوم متقدّم.", "How to place a buy order.",
+    "E: exponential. S: simple.", "ضغط البيع الآن قوي.", "حجم البيع الآن مرتفع.",
+    "When you buy EURUSD you sell dollars.",
+])
+def test_guard_run90_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)
