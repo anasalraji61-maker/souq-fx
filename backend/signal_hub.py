@@ -192,13 +192,19 @@ def price_decimals(price: float | None) -> int:
 def _same_level(a: float, b: float, last: float | None) -> bool:
     """خطّان متساويان بحدود ضجيج الفاصلة العائمة (نسبةً إلى السعر): متوسّطا 1.1 المتطابقة قد يختلفان بـ1e-16."""
     scale = abs(last) if last else max(abs(a), abs(b), 1.0)
-    return abs(a - b) <= scale * 1e-9
+    # فرق لا يظهر حتى بأقصى منازل يقبلها التطبيق (12) = مستوى واحد بالعرض: SHIB 0.0000123 والفرق 2e-13
+    # كان يصوّت «فوق» والنصّ «0.0000123000 فوق 0.0000123000» (صنّف ما تعرضه)
+    return abs(a - b) <= scale * 1e-9 or round(a, _MAX_DP) == round(b, _MAX_DP)
+
+
+# أقصى منازل عشرية يعرضها التطبيق (كسقف `price_decimals`)
+_MAX_DP = 12
 
 
 def _distinct_decimals(a: float, b: float, dp: int) -> int:
     """منازل تُظهر الفرق بين رقمين مختلفين: «الخط 0.00001 فوق الإشارة 0.00001» نصّ يناقض نفسه."""
     d = dp
-    while d < 10 and round(a, d) == round(b, d):
+    while d < _MAX_DP and round(a, d) == round(b, d):
         d += 1
     return d
 

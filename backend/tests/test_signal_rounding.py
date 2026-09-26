@@ -161,3 +161,14 @@ def test_rsi_alert_fires_on_the_displayed_rsi(monkeypatch, rsi, cond, value, fir
     monkeypatch.setattr(main.ind_engine, "snapshot", lambda *a, **k: {"rsi": rsi})
     assert alert_worker._check_indicator(a) is fires
     assert main._check_indicator_alert(a, _wave()) is fires
+
+
+def test_ma_lines_equal_at_the_apps_max_decimals_are_the_same_level():
+    """SHIB 0.0000123: خطّان يفترقان بـ2e-13 كانا «0.0000123000 فوق 0.0000123000» (صوت على فرق لا يُعرض)."""
+    a, b = 1.23e-5 + 2e-13, 1.23e-5
+    assert signal_hub._same_level(a, b, b)
+    # فرق يظهر بمنازل ≤12 ما يزال مستويين، ويُعرض بمنازل كافية
+    c = 1.23e-5 + 3e-11
+    assert not signal_hub._same_level(c, b, b)
+    d = signal_hub._distinct_decimals(c, b, signal_hub.price_decimals(b))
+    assert round(c, d) != round(b, d) and d <= 12
