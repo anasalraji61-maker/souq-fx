@@ -1402,3 +1402,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (السادس والخمسون):** 0/12 فشل (diff منذ 041c50e بـ12 ملفّ `.tsx` بلا سطر نمط/زرّ جديد).
 **المراجعة (a — ميت/تصديرات):** `export` بلا أي مستعمل ⇒ 3 نتائج كاذبة (`initCrashReporting` يستورده `index.ts`؛ `UNANNOUNCED_SPAN_MS`/`DIRECTIONAL_OVERLAYS` للـselftests). **لا بند.**
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ متابعة QA135a (★ إن بقي بعد الدورة 137)؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 137
+**البناء:** أخضر 0 (على e0c8187) — لا إصلاح لازم. **Selftests:** 124/124 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت QA135a ← ui `341f533` (`ChartFrame.tsx:512`، `FocusChartModal.tsx:337` بـ`quoteBidShort`/`quoteAskShort`). سجلّات chart/tools 143/launch 208/backend 113 بلا طلب جديد. بعد السحب: جديد مُتحقَّق **ui126a → tools** (`TerminalScreen.tsx:1477` تغيّر اليوم بشريط الهاتف بلا حارس ±25%).
+**قائمة قبول DESIGN-PRO (السابع والخمسون):** 0/12 فشل (diff منذ 67695d4: تعبئة «منطقة/خطّ أساس» محتوى شارت، `pointerEvents` للهاتف، `aria-live` خفيّة 1px بالجولة).
+**المراجعة (b — نصوص ثابتة):** «Log»/«TPO»، `placeholder="EURUSD"` ×3، «MATRIX» ×2 — معروفة. **لا بند.**
+**الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
