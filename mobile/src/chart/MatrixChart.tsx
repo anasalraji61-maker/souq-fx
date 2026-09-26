@@ -2429,7 +2429,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     point: ChartPoint;
     drawingId?: string;
     axis?: 'price';
+    // الرمز|الفريم عند الفتح: التأثير أدناه يمسح القائمة بعد رسم الرمز الجديد، فكانت تظهر إطاراً فوقه بسعر السابق.
+    view: string;
   } | null>(null);
+  const ctxView = `${series.symbol}|${series.timeframe}`;
   const ctxMenuRef = useRef<View>(null);
   useEffect(() => {
     if (tool !== 'select') {
@@ -6385,7 +6388,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       // على الفراغ كالنقرة: يُسقط التحديد (ويعود وضع السحب إن كان تحديداً تلقائياً) والقائمة العامّة.
       setSelectedId(null);
     }
-    setCtxMenu({ x, y, point: pointFromXY(x, y), drawingId: hit ?? undefined });
+    setCtxMenu({ x, y, point: pointFromXY(x, y), drawingId: hit ?? undefined, view: ctxView });
   };
 
   // React Native Web forwards these browser pointer events to the host element.
@@ -6773,7 +6776,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const rect = event.currentTarget?.getBoundingClientRect?.();
             const y = Math.max(0, pointerXY(event).y - (rect?.top ?? 0));
             webKeyChart = keyToken.current;
-            setCtxMenu({ x: chartPlotW, y, point: pointFromXY(Math.max(0, chartPlotW - 1), y), axis: 'price' });
+            setCtxMenu({ x: chartPlotW, y, point: pointFromXY(Math.max(0, chartPlotW - 1), y), axis: 'price', view: ctxView });
           },
         } as const)
       : {};
@@ -10948,6 +10951,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         ) : null}
 
         {ctxMenu &&
+        ctxMenu.view === ctxView &&
         Platform.OS === 'web' &&
         canPan &&
         (ctxMenu.axis ? true : ctxMenu.drawingId ? selectedId === ctxMenu.drawingId : tool === 'none')
