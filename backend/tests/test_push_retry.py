@@ -254,3 +254,21 @@ def test_check_route_reread_failure_still_returns_triggered(worker):
     body = r.json()
     assert [a["id"] for a in body["triggered"]] == ["r72"]
     assert [a["triggered"] for a in body["alerts"]] == [True]
+
+
+def test_rate_limited_event_retry_waits_for_next_cycle(worker):
+    """حدث أُعيد إرساله ورُفض بحدّ المعدّل كان يُعاد فوراً بالدورة نفسها (إرسالان متتاليان)."""
+    calls: list = []
+
+    def limited(tokens, title, body, data):
+        calls.append(tokens)
+        return {"invalid_tokens": [], "retry_tokens": list(tokens)}
+
+    alert_worker._pending_events.append(
+        (None, "install-retry-device-1", {"kind": "price", "symbol": "EURUSD", "condition": "above", "price": 1.1},
+         None, alert_worker.time.time()))
+    worker.setattr(alert_worker.expo_push, "send_push", limited)
+    alert_worker._retry_pending_pushes()
+    assert len(calls) == 1 and len(alert_worker._pending_pushes) == 1
+    alert_worker._retry_pending_pushes()
+    assert len(calls) == 2

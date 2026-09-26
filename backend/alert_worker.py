@@ -459,6 +459,11 @@ def _deliver(tokens: list[str], title: str, body: str) -> list[str]:
 
 def _retry_pending_pushes() -> None:
     now = time.time()
+    # لقطة الدفعات المنتظرة **قبل** إعادة إرسال الأحداث: رفض MessageRateExceeded لحدث أُعيد الآن يُلحق
+    # بـ`_pending_pushes` فكان يُعاد إرساله فوراً بالدورة نفسها — ضدّ حدّ المعدّل. ينتظر الدورة التالية.
+    n_push = len(_pending_pushes)
+    due = _pending_pushes[:n_push][-_PUSH_RETRY_MAX_PENDING:]
+    del _pending_pushes[:n_push]
     n = len(_pending_events)
     events = _pending_events[:n][-_PUSH_RETRY_MAX_PENDING:]
     del _pending_events[:n]
@@ -467,13 +472,8 @@ def _retry_pending_pushes() -> None:
             log.warning("dropping push event after %.0fs of failed target lookups: %s", now - first_at, ev)
             continue
         _dispatch_one(owner, owner_key, ev, exclude_key, first_at)
-    if not _pending_pushes:
-        return
     # `dispatch` يُلحق من خيط آخر (BackgroundTask لـ/check): `clear()` بعد النسخ كان يمحو ما أُلحق بينهما
     # فيضيع دفع تنبيه عُلِّم مُطلَقاً. تُحذف العناصر المنسوخة وحدها (الإلحاق وحده يجري بالتوازي).
-    n = len(_pending_pushes)
-    due = _pending_pushes[:n][-_PUSH_RETRY_MAX_PENDING:]
-    del _pending_pushes[:n]
     for tokens, title, body, first_at in due:
         if now - first_at > _PUSH_RETRY_MAX_AGE:
             log.warning("dropping push after %.0fs of failed retries: %s", now - first_at, body)
