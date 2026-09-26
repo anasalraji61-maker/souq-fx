@@ -316,7 +316,9 @@ export function AccountScreen() {
             {notifState !== 'granted' && notifState !== 'unsupported' ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn}
+                accessibilityLabel={
+                  notifBusy ? t.a11yBusy : notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn
+                }
                 style={({ pressed }) => [
                   styles.notifBtn,
                   pressed && {
@@ -423,7 +425,7 @@ export function AccountScreen() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t.logout}
+            accessibilityLabel={logoutBusy ? t.a11yBusy : t.logout}
             style={({ pressed }) => [
               styles.btn,
               pressed && {
@@ -444,7 +446,7 @@ export function AccountScreen() {
           {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t.deleteAccount}
+            accessibilityLabel={deleteBusy ? t.a11yBusy : t.deleteAccount}
             style={({ pressed }) => [
               styles.dangerBtn,
               pressed && {
@@ -573,7 +575,7 @@ export function AccountScreen() {
             {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={mode === 'login' ? t.enter : t.createAccount}
+              accessibilityLabel={busy ? t.a11yBusy : mode === 'login' ? t.enter : t.createAccount}
               style={({ pressed }) => [
                 styles.btn,
                 pressed && {

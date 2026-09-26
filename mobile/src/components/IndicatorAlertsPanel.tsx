@@ -538,8 +538,8 @@ export function IndicatorAlertsPanel({
         ]}
         onPress={add}
         disabled={busy}
-        accessibilityState={{ disabled: busy }}
-        accessibilityLabel={t.indAlertsAddA11y}
+        accessibilityState={{ disabled: busy, busy }}
+        accessibilityLabel={busy ? t.a11yBusy : t.indAlertsAddA11y}
         hitSlop={8}
       >
         <Text style={styles.btnText}>{busy ? '...' : t.indAlertsAddBtn}</Text>
@@ -575,7 +575,9 @@ export function IndicatorAlertsPanel({
                 },
               ]}
               onPress={() => void enableNotifications()}
-              accessibilityLabel={notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn}
+              accessibilityLabel={
+                notifBusy ? t.a11yBusy : notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn
+              }
               hitSlop={6}
             >
               <Text style={styles.notifBtnText}>

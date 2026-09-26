@@ -566,7 +566,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               onPress={interrupt}
               disabled={asking}
               accessibilityState={{ disabled: asking, busy: asking }}
-              accessibilityLabel={t.lectureAskA11y}
+              accessibilityLabel={asking ? t.a11yBusy : t.lectureAskA11y}
               hitSlop={8}
             >
               <Text style={styles.askText}>{asking ? '...' : t.lectureAskBtn}</Text>

@@ -167,7 +167,7 @@ function SlotBox({
           disabled: draft.trim().length < 3 || localBusy || busy,
           busy: localBusy,
         }}
-        accessibilityLabel={t.ntpConfirmA11y}
+        accessibilityLabel={localBusy ? t.a11yBusy : t.ntpConfirmA11y}
         hitSlop={{ top: 4, bottom: 8, left: 8, right: 8 }}
       >
         <Text style={styles.slotGoText}>{localBusy ? '…' : '✓'}</Text>

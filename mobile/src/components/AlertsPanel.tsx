@@ -1003,7 +1003,7 @@ export function AlertsPanel({
             onPress={add}
             disabled={busy}
             accessibilityState={{ disabled: busy, busy }}
-            accessibilityLabel={editingId ? t.alertsSaveEdit : t.alertsAddA11y}
+            accessibilityLabel={busy ? t.a11yBusy : editingId ? t.alertsSaveEdit : t.alertsAddA11y}
           >
             <Text style={styles.addText}>{busy ? '...' : editingId ? t.alertsSaveEdit : t.addBtn}</Text>
           </Pressable>
@@ -1080,7 +1080,9 @@ export function AlertsPanel({
                 },
               ]}
               onPress={() => void enableNotifications()}
-              accessibilityLabel={notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn}
+              accessibilityLabel={
+                notifBusy ? t.a11yBusy : notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn
+              }
               hitSlop={6}
             >
               <Text style={styles.useCurrentText}>

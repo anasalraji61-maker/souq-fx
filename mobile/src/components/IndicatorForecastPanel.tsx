@@ -213,8 +213,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           ]}
           onPress={() => void run()}
           disabled={loading}
-          accessibilityState={{ disabled: loading }}
-          accessibilityLabel={t.forecastRunA11y}
+          accessibilityState={{ disabled: loading, busy: loading }}
+          accessibilityLabel={loading ? t.a11yBusy : t.forecastRunA11y}
           hitSlop={8}
         >
           <Text style={styles.refreshText}>{loading ? '...' : t.forecastRunBtn}</Text>

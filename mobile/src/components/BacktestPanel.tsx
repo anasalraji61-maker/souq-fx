@@ -233,8 +233,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         ]}
         onPress={run}
         disabled={loading}
-        accessibilityState={{ disabled: loading }}
-        accessibilityLabel={t.backtestRunA11y}
+        accessibilityState={{ disabled: loading, busy: loading }}
+        accessibilityLabel={loading ? t.a11yBusy : t.backtestRunA11y}
         hitSlop={8}
       >
         <Text style={styles.btnText}>{loading ? '...' : t.backtestRunBtn}</Text>
