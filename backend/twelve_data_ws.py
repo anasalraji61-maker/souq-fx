@@ -47,7 +47,9 @@ def _parse_price(msg: dict[str, Any]) -> tuple[str, float] | None:
     event = msg.get("event") or msg.get("type")
     if event and event not in ("price", "quote", "trade"):
         return None
-    sym = msg.get("symbol") or msg.get("meta", {}).get("symbol")
+    # `meta: null` (أو غير كائن) كان يرمي AttributeError خارج أي حارس ⇒ يُغلق الاتصال وتتوقّف تيكات كل الرموز 8ث
+    meta = msg.get("meta")
+    sym = msg.get("symbol") or (meta.get("symbol") if isinstance(meta, dict) else None)
     price = msg.get("price") or msg.get("close") or msg.get("last")
     if not sym or price is None:
         return None

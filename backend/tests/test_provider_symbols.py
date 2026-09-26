@@ -250,3 +250,10 @@ def test_chart_change_pct_says_how_many_bars_it_spans(monkeypatch):
     monkeypatch.setattr(market, "fetch_time_series_with_meta", lambda *a, **kw: (rows, {"kind": "provider"}))
     body = TestClient(main.app).get("/api/charts/EURUSD?timeframe=D").json()
     assert body["change_pct"] == 4.0 and body["change_bars"] == 4
+
+
+@pytest.mark.parametrize("meta", [None, "EUR/USD", 5])
+def test_ws_price_with_a_non_object_meta_is_skipped_not_a_crash(meta):
+    """`meta: null` كان يرمي AttributeError فيُغلق الاتصال كلّه (8ث بلا تيكات لكل الرموز)."""
+    assert td_ws._parse_price({"event": "price", "meta": meta, "price": "1.1"}) is None
+    assert td_ws._parse_price({"event": "price", "meta": {"symbol": "EUR/USD"}, "price": "1.1"}) == ("EURUSD", 1.1)
