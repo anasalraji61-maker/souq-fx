@@ -3433,3 +3433,37 @@ console.log('tradePlan levelLooksLikePips index/crypto selftest OK');
   for (const s of ['EURUSD', 'USDJPY', 'XAUUSD', 'XAGUSD', 'ZARJPY', 'EURUSD.PRO']) assert.notEqual(journalSpec(s), null, s);
 }
 console.log('tradePlan points-vs-pips wording selftest OK');
+
+// ---- entryLooksLikeDecimalSlip (tools102a): «10850» دخولاً لـEURUSD مع وقف 1.0820 ⇒ «هل تقصد 1.085؟» لا «1.082 pip؟» ----
+{
+  const tp = require('./tradePlan') as typeof import('./tradePlan');
+  const slip = (symbol: string, entry: number, levels: (number | null)[]) =>
+    tp.entryLooksLikeDecimalSlip({ symbol, entry, levels });
+  // الحالة المبلَّغة: الحارس القديم كان يلوم الوقف ويقترح 10849.99989
+  assert.deepEqual(slip('EURUSD', 10850, [1.082]), { price: 1.085, k: 4 });
+  assert.ok(tp.levelLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: 10850, level: 1.082, kind: 'sl' }));
+  assert.deepEqual(slip('EURUSD', 1085, [1.082, 1.09, null]), { price: 1.085, k: 3 });
+  assert.deepEqual(slip('USDJPY', 15740, [157.0]), { price: 157.4, k: 2 });
+  assert.deepEqual(slip('XAUUSD', 265000, [2640]), { price: 2650, k: 2 });
+  assert.deepEqual(slip('USDZAR', 182000, [18.0, 18.5]), { price: 18.2, k: 4 });
+  assert.deepEqual(slip('EURUSD.m', 10850, [1.082]), { price: 1.085, k: 4 });
+  // ذهب 2650 بوقف «260» نقاطاً: 26.50 ضمن 15% رقمياً لكنه ليس سعر ذهب ⇒ لا شيء (حارس النقاط يتولّاه)
+  assert.equal(slip('XAUUSD', 2650, [260]), null);
+  // دخولٌ صحيح، ومستوى نقاطٍ بين المستويات، وبلا مستويات، ومؤشر بلا pip ⇒ لا شيء
+  assert.equal(slip('EURUSD', 1.085, [1.082, 1.09]), null);
+  assert.equal(slip('EURUSD', 10850, [25, 1.09]), null);
+  assert.equal(slip('EURUSD', 10850, [null]), null);
+  assert.equal(slip('US30', 42000, [4150]), null);
+  assert.equal(slip('BTCUSD', 650000, [64000]), null);
+  // لا إنذار كاذب: صفقاتٌ صحيحة بمستويات حتى 50% من الدخول لكل الأزواج المعروفة
+  for (const [sym, px] of [['EURUSD', 1.085], ['USDJPY', 157.4], ['XAUUSD', 2650], ['XAGUSD', 31], ['USDZAR', 18.2], ['USDTRY', 34], ['XAUJPY', 380000]] as const) {
+    for (const f of [0.5, 0.8, 0.95, 0.999, 1.001, 1.05, 1.3, 2]) {
+      assert.equal(slip(sym, px, [px * f]), null, `${sym} ${f}`);
+    }
+  }
+  assert.equal(
+    tp.entryDecimalSlipText('Entry “{value}” — did you mean {price}? {price} $&', ' 10850 ', '1.08500'),
+    'Entry “10850” — did you mean 1.08500? 1.08500 $&'
+  );
+}
+console.log('tradePlan entryLooksLikeDecimalSlip selftest OK');

@@ -49,6 +49,8 @@ import {
   exitLooksLikePips,
   levelLooksLikePips,
   levelLooksLikePipsText,
+  entryLooksLikeDecimalSlip,
+  entryDecimalSlipText,
   netByInstrument,
   openRiskTotals,
   stackedCurrencyExposure,
@@ -691,7 +693,22 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    * «50» بخانة الهدف (من «TP 50 pips») أو «25» بخانة الوقف: نقاطٌ لا سعر (`levelLooksLikePips`) — كانت تُحفظ هدفاً عند 50.00
    * و«R:R 1:1960». الوقف أولاً؛ السطر يقترح السعر على تلك المسافة وتكتبه نقرته، والحفظ يُمنع حتى يُصحَّح.
    */
+  /**
+   * «10850» دخولاً لـEURUSD ووقف 1.0820: الدخول بلا فاصلة لا الوقف نقاطاً (`entryLooksLikeDecimalSlip`، tools102a) — كان حارس
+   * النقاط يلوم الوقف الصحيح ويقترح 10849.99989، والضغطة الثانية تحفظ −99.99%. السطر يقترح الدخول المقصود وتكتبه نقرته؛
+   * يسبق حارس النقاط ويمنع الحفظ بلا ضغطة ثانية (لا صفقة حقيقية دخولها ≥8× كل مستوياتها).
+   */
+  const entrySlip = useMemo(() => {
+    const sym = symbol.trim().toUpperCase();
+    const hit = entryLooksLikeDecimalSlip({ symbol: sym, entry: pnum(entry), levels: [pnum(sl), pnum(tp), pnum(exit)] });
+    if (!hit) return null;
+    const text = formatPrice(hit.price, journalSpec(sym)?.symbol ?? sym);
+    return { text, msg: entryDecimalSlipText(t.journalEntryDecimalSlip, entry, text) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, entry, sl, tp, exit, t]);
+
   const pipsLevel = useMemo(() => {
+    if (entrySlip) return null;
     const e = pnum(entry);
     const sym = symbol.trim().toUpperCase();
     // launch140b: مؤشر/رقمية بلا `journalSpec` تُقاس بالنقاط لا pip («50 pip تعني 41,950» على US30 خطأ لغةً)
@@ -730,7 +747,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, tp, exit, t]);
+  }, [symbol, side, entry, sl, tp, exit, t, entrySlip]);
 
   /** شرائح الرمز: أدوات المتداول نفسه أولاً («XAUUSD.m» كما يكتبها وسيطه)، ثم القائمة الثابتة — `quickJournalSymbols` */
   const symbolChips = useMemo(() => quickJournalSymbols(trades, QUICK_SYMBOLS), [trades]);
@@ -1083,6 +1100,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       : typedNote;
     // ضغطة حفظ ثانية على القيم نفسها = «السعر كما كتبته»: الفضة هبطت ~30% بيوم (يناير 2026) فهدف بيعٍ من 110 عند «85»
     // سعرٌ حقيقي لا 85 pip، ولا تمييز بالأرقام وحدها — المنع بلا مخرج كان يُجبر على كسرٍ وهمي أو السعر الخاطئ المقترح.
+    if (entrySlip) {
+      setFormError(entrySlip.msg);
+      return;
+    }
     const pipsKey = pipsLevel ? `${pipsLevel.kind}\u0001${formKeyRef.current}` : null;
     if (pipsLevel && pipsOverrideRef.current !== pipsKey) {
       pipsOverrideRef.current = pipsKey;
@@ -2097,7 +2118,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           })}
         </View>
       ) : null}
-      {pipsLevel ? (
+      {entrySlip ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={entrySlip.msg}
+          onPress={() => {
+            playSoftClick();
+            setEntry(entrySlip.text);
+            setFormError(null);
+          }}
+          style={({ pressed }) => pressed && { opacity: buttons.pressedOpacity }}
+        >
+          <Text style={[styles.formError, { textAlign: align }]}>{entrySlip.msg}</Text>
+        </Pressable>
+      ) : pipsLevel ? (
         pipsLevel.fixes.map((f) => (
           <Pressable
             key={f.text}

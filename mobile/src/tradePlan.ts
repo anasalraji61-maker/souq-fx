@@ -1464,6 +1464,43 @@ export function levelLooksLikePips(input: {
 }
 
 /**
+ * **الدخول بلا فاصلة عشرية** بالدفتر (tools102a): شراء EURUSD بدخول «10850» ووقف 1.0820 — كان `levelLooksLikePips` يلوم الوقف
+ * الصحيح («1.082 pip؟») ويقترح وقفاً عند 10849.99989، والضغطة الثانية تحفظ خسارة −99.99% «أسوأ صفقة» دائمة بالإحصاءات.
+ * الدخول ÷ 10^k (k من 1 إلى 6) يقع ضمن **15%** من **كل** مستوى مكتوب (وقف/هدف/خروج) ⇒ `{ price }` المقصود؛ و`null` لما عداه.
+ * شرطان يمنعان الإنذار الكاذب: (1) رمزٌ له pip معروف فقط — المؤشرات تُكتب مستوياتها نقاطاً («50» على US30) فتتشابه القراءتان؛
+ * (2) المقترح أقرب لسعر الأداة من المكتوب بمرجع `quickStopPips` (EURUSD ~1.10، الذهب ~2,500): ذهب 2650 بوقف «260» (نقاط)
+ * يعطي 26.50 رقمياً ضمن 15% لكنه أبعد عن سعر الذهب من 2650 ⇒ لا شيء (يبقى لحارس النقاط)، وذهب «265000» بوقف 2640 ⇒ 2650.
+ * مستوى نقاطٍ بين المستويات («25» مع هدف 1.0900) يُفشل «كل مستوى» ⇒ لا تخمين.
+ */
+export function entryLooksLikeDecimalSlip(input: {
+  symbol: string;
+  entry: number | null;
+  levels: readonly (number | null | undefined)[];
+}): { price: number; k: number } | null {
+  const { entry } = input;
+  const spec = journalSpec(input.symbol);
+  if (!spec || !finitePos(entry)) return null;
+  const refs = input.levels.filter((v): v is number => finitePos(v));
+  if (refs.length === 0) return null;
+  const ref = spec.base === 'XAU' ? 25000 : spec.base === 'XAG' ? 3000 : 11000;
+  const off = (px: number) => Math.abs(Math.log(px / spec.pipSize / ref));
+  for (let k = 1; k <= 6; k++) {
+    const price = Number((entry / 10 ** k).toPrecision(12));
+    if (refs.every((v) => Math.abs(price - v) <= v * 0.15)) return off(price) < off(entry) ? { price, k } : null;
+  }
+  return null;
+}
+
+/**
+ * نصّ `journalEntryDecimalSlip` («الدخول «{value}» يبدو بلا فاصلة عشرية — هل تقصد {price}؟»): القيم بدالّة لا نصّ بديل
+ * (كـ`levelLooksLikePipsText`) — خانةٌ فيها «$&» لا تُفسَّر نمطاً.
+ */
+export function entryDecimalSlipText(template: string, value: string, price: string): string {
+  const vals: Record<string, string> = { value: value.trim(), price };
+  return template.replace(/\{(value|price)\}/g, (_, k: string) => vals[k]);
+}
+
+/**
  * **نقاطٌ بخانة الخروج** بالدفتر: «25» (من «أغلقتُ +25») لشراء EURUSD على 1.0850 كانت تُحفظ خروجاً عند **25.00** بلا أي حارس
  * (الوقف والهدف لهما `levelLooksLikePips`) ⇒ «+239,150 pip · +2,204%» و+11,957R، ومتوسّط R للدفتر كلّه +3,986R. القاعدة نفسها،
  * لكن الخروج بأيّ جهة: `win` السعر على تلك المسافة بجهة الربح و`loss` بجهة الخسارة (`null` لما لا يقع ضمن القاعدة). `null` = ليس نقاطاً.
