@@ -133,6 +133,8 @@ const SYMBOL_TABS: readonly TabId[] = [
   'alerts',
   'indAlerts',
   'calendar',
+  // المساعد يُسأل عن رمزٍ (`AiPanel symbol`) — بلا الشريط كان يُسأل عن EURUSD دائماً والمتداول على الذهب
+  'ai',
 ];
 /** احتياط حين تتعذّر قراءة قائمة المتابعة (تخزين معطَّل/أول تشغيل) — أشهر ما يتابعه متداول فردي */
 // لا «DXY»: المزوّد لا يقدّمه (قرار أنس ٢) ⇒ شريحةٌ تفتح الحاسبة/الدفتر على رمز بلا سعر.
@@ -1013,7 +1015,7 @@ export function ToolsScreen() {
 
       {tab === 'ai' ? (
         <View style={{ flex: 1, padding: spacing.md }}>
-          <AiPanel />
+          <AiPanel symbol={signalSym} />
         </View>
       ) : null}
     </SafeAreaView>
