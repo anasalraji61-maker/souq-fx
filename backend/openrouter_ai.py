@@ -251,7 +251,7 @@ _LEVEL_WORD = (
     r"(?:\b(?:entry(?:\s?price)?(?!\s+of\s+the\b)|entries|enter|stop[- ]?loss(?:es)?|stops?(?![- ](?:run|hunt))"
     r"|s/?l\d?|take[- ]?profits?|t/?p\d?|pt|tgt|targets?(?!\s+of\s+th)|profit target|invalidation"
     r"|objective(?!\s+of\s+th)|exit(?!\s+of\b)|entrée|objectif|objetivo|entrada)(?![a-z])"
-    r"|\baim(?:ing)?\s+for\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
+    r"|\baim(?:ing)?\s+(?:for|at)\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
     r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
     r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
     + r"(?!\s+من\s+(?:هذ|ال|درس))"
@@ -314,6 +314,11 @@ _TRADE_CALL_RE = re.compile(
     # run 83: «Longs at 1.0850»، «Shorts from 1.0950»، «A long here at 1.0850»
     + r"|\b(?:longs|shorts|an?\s+(?:long|short)(?=\s+(?:here|from|at|near|around|above|below|@)\b))"
     r"\s+(?:here\s+)?(?:from|at|near|around|above|below|@)\s*" + _PRICE
+    # run 83: إعداد بصيغة وصفية «Consider a position around 1.0850 with protection under 1.0800»، «In: 1.0850 Out: 1.0950»
+    + r"|\b(?:consider|open|take|initiate)\s+an?\s+(?:new\s+)?position\b[^\n\d]{0,20}?" + _PRICE
+    + r"|\bprotection\s+(?:under|below|above|over|at|near|around)\s*" + _PRICE
+    + r"|\b(?:risk\s+it|reward)\s+(?:at|near|around|@)\s*" + _PRICE
+    + r"|\bin\s*:\s*\d+[.,]\d+[^\n\d]{0,10}\bout\s*:\s*" + _PRICE
     # run 83: أمر بأول الجملة «Scale in at 1.0850»، «Add at …»، «Close at …»، «Hold until …» («the daily close at» وصف)
     + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*)(?:scale\s+in|add(?:\s+more)?|close(?:\s+it)?|hold(?:\s+it)?)\s+"
     r"(?:at|near|around|until|@)\s*" + _PRICE

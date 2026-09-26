@@ -636,6 +636,8 @@ def test_guard_run80_education_left_alone(text):
     "Alış 1.0850, zarar durdur 1.0800, hedef 1.0950", "Giriş: 1.0850", "Satın al", "Kaufen bei 1.0850",
     "Oui, achetez.", "Achat à 1,0850", "Acheter à 1,0850", "Sí, compra.", "Recomiendo comprar",
     "Je recommande d'acheter",
+    "Consider a position around 1.0850 with protection under 1.0800 and aim at 1.0950.",
+    "Risk it at 1.0800, reward at 1.0950", "In: 1.0850 Out: 1.0950", "aim at 1.0950",
 ])
 def test_guard_flags_run83_leaks(text):
     assert openrouter_ai.has_trade_call(text), text
