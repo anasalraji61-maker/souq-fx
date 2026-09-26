@@ -168,6 +168,8 @@ ok('Ctrl+Alt ⇒ لا شيء (AltGr بويندوز)', drawToolShortcut('h', 'Key
 ok('Alt+Shift ⇒ لا شيء', drawToolShortcut('H', 'KeyH', { ...alt, shift: true }) === null);
 ok('حرف بلا أداة ⇒ لا شيء', drawToolShortcut('q', 'KeyQ', alt) === null);
 ok('وسم الاختصار', drawToolShortcutLabel('hline') === 'Alt+H');
+ok('Alt+B ⇒ مستطيل', drawToolShortcut('b', 'KeyB', alt) === 'rect');
+ok('Alt+R محجوز لإعادة العرض ⇒ لا أداة', drawToolShortcut('r', 'KeyR', alt) === null);
 ok('أداة بلا اختصار ⇒ فارغ', drawToolShortcutLabel('none') === '');
 
 if (failures) {

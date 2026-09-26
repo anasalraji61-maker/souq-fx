@@ -587,13 +587,6 @@ const COUNTDOWN_LINE_H = 13;
 let webKeyChart: object | null = null;
 
 /** Alt+حرف ⇒ أداة رسم (اختصارات TradingView الافتراضية)، بالموضع الفيزيائي `KeyboardEvent.code`. */
-const WEB_TOOL_HOTKEYS: Partial<Record<string, DrawTool>> = {
-  KeyT: 'trend',
-  KeyH: 'hline',
-  KeyV: 'vline',
-  KeyF: 'fib',
-};
-
 type DrawingHit = { id: string; dist: number } | null;
 
 /** جناحا رأس السهم على خطّ الترند (`Drawing.arrow`): طول كل جناح بالبكسل وزاويته عن الخطّ. */
@@ -5364,8 +5357,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     schedulePublishSync(false);
   }, [restXPan, schedulePublishSync]);
 
-  // اختصارات TradingView على الويب: Alt+T ترند، Alt+H أفقي، Alt+V عمودي، Alt+F فيبو، Alt+R إعادة
-  // العرض (كـAUTO). بـ`event.code` لا `event.key`: Alt على ماك يُخرج «†»/«˙»، وبلوحة عربية أو كردية
+  // Alt+R على الويب: إعادة العرض (كـAUTO). بـ`event.code` لا `event.key`: Alt على ماك يُخرج «†»/«˙»، وبلوحة عربية أو كردية
   // يُخرج حرفاً عربياً — الموضع الفيزيائي للمفتاح هو الثابت. `preventDefault` يمنع Alt+F من فتح
   // قائمة «ملف» بالمتصفّح. للشارت الذي لُمس أخيراً وحده، ولا يسرق المفاتيح من خانة كتابة.
   useEffect(() => {
@@ -5381,11 +5373,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         resetChartView();
         return;
       }
-      const next = WEB_TOOL_HOTKEYS[event.code];
-      if (!next || !interactive) return;
-      event.preventDefault();
-      setTool(next);
-      setPending(null);
+      // Alt+حرف لأدوات الرسم في مستمع الرسم (`drawToolShortcut`) وحده — كان هنا جدول ثانٍ للحروف نفسها.
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);

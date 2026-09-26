@@ -207,7 +207,8 @@ export const DRAW_TOOL_SHORTCUTS: Readonly<Record<string, DrawTool>> = {
   t: 'trend',
   h: 'hline',
   v: 'vline',
-  r: 'rect',
+  // مستطيل = B (box) لا R: Alt+R إعادة العرض (كـAUTO، `resetChartView`)؛ بـR كان المفتاح يفعل الاثنين معاً.
+  b: 'rect',
   f: 'fib',
   c: 'channel',
   m: 'measure',
