@@ -15,8 +15,18 @@ import { formatLocalStamp } from '../localStamp';
 
 /** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير.
  * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
- * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي). */
-type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string; arabicReply?: boolean; symbol?: string };
+ * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي).
+ * و`template`: ردّ `source: 'template'` (لا نموذج مربوط) قراءة شارت عامة تبدأ «بالنسبة لسؤالك:» ولا تجيب
+ * عنه — تُعرض بفقاعة الانقطاع الخافتة مع `reportAiFallbackNote` لا كجواب للمساعد. */
+type Turn = {
+  role: 'user' | 'ai';
+  text: string;
+  offline?: boolean;
+  template?: boolean;
+  priceAt?: string;
+  arabicReply?: boolean;
+  symbol?: string;
+};
 
 /** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
  * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت — يُعرض تحت الجواب بـ`t.aiPriceAsOf`. */
@@ -60,6 +70,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
               : undefined,
           // قرار ١٢ (backend-r78a): الخادم بلا قالب كردي بعد ⇒ `answer_lang: "ar"` لمستخدم غير عربي.
           arabicReply: res.answer_lang === 'ar' && lang !== 'ar',
+          template: res.source === 'template',
         },
       ]);
     } catch {
@@ -97,11 +108,14 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             style={[
               styles.bubble,
               turn.role === 'user' ? styles.user : styles.ai,
-              turn.offline && styles.aiOffline,
+              (turn.offline || turn.template) && styles.aiOffline,
             ]}
           >
             {turn.symbol ? (
               <Text style={[styles.symbolTag, { textAlign: align }]}>{turn.symbol}</Text>
+            ) : null}
+            {turn.template ? (
+              <Text style={[styles.langNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
             ) : null}
             {turn.arabicReply ? (
               <Text style={[styles.langNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text>
@@ -109,7 +123,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             <Text
               style={[
                 styles.text,
-                turn.offline && styles.textOffline,
+                (turn.offline || turn.template) && styles.textOffline,
                 // النصّ العربي يُحاذى يميناً ولو كانت الواجهة إنجليزية.
                 { textAlign: turn.arabicReply ? 'right' : align },
                 turn.arabicReply && styles.textRtl,
