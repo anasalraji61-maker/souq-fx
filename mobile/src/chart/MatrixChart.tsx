@@ -2230,8 +2230,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (alertNudgeTimer.current) clearTimeout(alertNudgeTimer.current);
   }, []);
   // قائمة الزرّ الأيمن على الويب (W4): موضعها داخل اللوح، والنقطة (فهرس + سعر بمغناطيس الرسم) تحت المؤشّر.
+  // التحديد بنقرة من وضع السحب (`onChartPress`): أداة «تحديد» مؤقّتة تنتهي بانتهاء التحديد. اختيارها من الشريط لا يمسّها.
+  const autoSelectRef = useRef(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; point: ChartPoint } | null>(null);
   const ctxMenuRef = useRef<View>(null);
+  useEffect(() => {
+    if (tool !== 'select') {
+      autoSelectRef.current = false;
+      return;
+    }
+    if (!selectedId && autoSelectRef.current) {
+      autoSelectRef.current = false;
+      setTool('none');
+    }
+  }, [tool, selectedId]);
   const createAlert = (price: number, origin?: 'drawing' | 'crosshair') => {
     if (!onCreateAlert) return;
     onCreateAlert(price, origin);
@@ -4779,6 +4791,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     }
 
     if (tool === 'none') {
+      // الويب: نقرة على رسم تحدّده مباشرةً (مقابض، سحب، حذف، قفل) كـTradingView — كان لا بدّ من اختيار أداة
+      // «تحديد» أوّلاً، فالنقر على خطّ مرسوم لا يفعل شيئاً. نقرة على الفراغ (أو Esc/حذف) تعيد وضع السحب
+      // (`autoSelectRef` أدناه). الهاتف كما هو: لمسة قرب خطّ تضع التقاطع، ولا تجمّد السحب بتحديد لم يُقصد.
+      const hit = Platform.OS === 'web' ? hitDrawing(x, y) : null;
+      if (hit) {
+        autoSelectRef.current = true;
+        setTool('select');
+        setSelectedId(hit);
+        return;
+      }
       setSelectedId(null);
       return;
     }
