@@ -216,6 +216,10 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > — كلاهما بلا تجربة على جهاز. لإفساح الإنجليزي اختُصرت أربع عبارات (قائمة المتابعة، التقويم، المساعد، الأكاديمية) بلا حذف ميزة.
 > العدّ بسكربت: **ar 3846 / en 3996** من 4000.
 
+> **2026-09-26 (launch 150)**: «مساعد ذكاء اصطناعي…» / «An AI assistant…» و«اسأل المدرّس…» / «Ask the teacher…» صادقان **فقط** إن كان مفتاح
+> OpenRouter مضبوطاً على خادم الإنتاج — بدونه ردّ الخادم قالب ثابت لا يجيب السؤال (تحقّقتُ: `main.py` `academy_interrupt`/`ai_ask`؛ و`ai_tutor` صار
+> يعكس ذلك منذ backend `e2e6307`). شرط بـ`RELEASE-MOBILE.md` §0: `GET /api/market/status` ⇒ `ai.openrouter: true` قبل الرفع، وإلا تُحذف الأسطر الأربعة.
+
 > **2026-09-25 (launch 77)**: محتوى الأكاديمية (44 محاضرة بعناوينها وسردها الصوتي، `backend/academy_data.py`) **عربي فقط** — تحقّقتُ: لا حقل
 > إنجليزي/كردي، و`CoursesScreen.tsx:269` يطبع `lec.title` كما هو. الوصف الإنجليزي كان يعد بـ«Audio lessons» بلا لغة فيجد المستخدم الإنجليزي دروساً
 > عربية. الآن «Audio lessons in Arabic» والنص الترويجي «the Arabic audio academy» (اختُصر «Built for» ⇒ «For» ليبقى ≤170). شرح المدرّس أثناء
