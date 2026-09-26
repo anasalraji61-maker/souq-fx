@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
+import { View, Text, Pressable, StyleSheet, TextInput, Platform } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import {
   loadLayouts,
@@ -267,6 +267,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
           ) : null}
         </Pressable>
       ))}
+      {/* launch165a: «حذف» مخفيّ وقت السكون (§5.2) ويظهر بالضغط المطوّل — على اللمس لا شيء يدلّ عليه. الويب يكشفه بالمرور. */}
+      {Platform.OS !== 'web' && layouts.some((l) => l.id !== 'default') ? (
+        <Text style={[styles.longPressHint, { textAlign: align }]}>{t.rowDeleteLongPressHint}</Text>
+      ) : null}
     </View>
   );
 }
@@ -318,6 +322,7 @@ const styles = StyleSheet.create({
   rowSub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   // §1: الأحمر لاتجاه السعر وحده — الإجراء نصّ ثانويّ، والتأكيد (`confirmDestructive`) يحمل الخطر.
   del: { color: colors.textMuted, fontWeight: '500', fontSize: 13 },
+  longPressHint: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   // §1: الأحمر لاتجاه السعر وحده — تعذّر الحفظ حالة متدهورة ⇒ `warn`.
   saveError: {
     color: colors.warn,
