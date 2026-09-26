@@ -2106,13 +2106,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // تقاطع بالمنطقة المستقبلية (`ahead` بعد آخر شمعة): يُنشر زمنه المستقبلي من آخر شمعة مصدر + `ahead` خطوة.
   // كان يُنشر زمن آخر شمعة وحده ⇒ خطّ التابعين على شمعتهم الحيّة والقائد بعدها بعشر شموع.
   const lastCandleTime = liveSeries.candles[liveSeries.candles.length - 1]?.time;
+  // بالإعادة آخر شمعة مكشوفة (`source.cut`) لا آخر السلسلة: كان الشرط لا يتحقّق أبداً ⇒ وسم القائد «الثلاثاء 13:00»
+  // (ثلاث خانات يمين شمعة الإعادة) والتابعون يرسمون خطّهم على «الثلاثاء 10:00». والشمعة الحيّة لا تدخل الأساس بالإعادة.
+  const crossEdgeBar = replayOn ? source.all[source.cut] : source.all[source.all.length - 1];
   const crossFutureSec =
-    cross?.ahead && crossBar && crossBar === source.all[source.all.length - 1] && lastCandleTime != null
+    cross?.ahead && crossBar && crossBar === crossEdgeBar && lastCandleTime != null
       ? // بتخطّي عطلة نهاية الأسبوع كوسم القائد نفسه (`projectBarTimeSec`): `+ ahead × step` كان يعدّ السبت والأحد
         // ⇒ قائد 1H يقرأ «الإثنين 01:00» والتابع 4H يرسم «الأحد 20:00»، شمعة يسار ما يقرأه المتداول.
         projectBarTimeSec(
           series.symbol,
-          Math.max(candleTimeSec(barTime(crossBar)), candleTimeSec(lastCandleTime)),
+          replayOn
+            ? candleTimeSec(barTime(crossBar))
+            : Math.max(candleTimeSec(barTime(crossBar)), candleTimeSec(lastCandleTime)),
           timeframeStepSec(series.timeframe),
           cross.ahead
         )
