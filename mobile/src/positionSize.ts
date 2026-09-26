@@ -2417,6 +2417,17 @@ export function lostTodayInCcy(lostToday: string, lostCcy: string | null, moneyC
 }
 
 /**
+ * حالة «خسارة اليوم» المخزَّنة بعد تغيّر عملة المال: حفظٌ أقدم بلا عملة ⇒ يُنسب لعملة المال الآن؛ غيره **لا يتغيّر**. كانت اللوحة
+ * تكتب الفارغ فوقها عند العبور لعملة أخرى (USD ⇒ EUR ⇒ USD، أو EURUSD ⇒ EURUSDc ⇒ EURUSD): خسارة 300 تضيع بصمت، والرصيد
+ * (المحفوظ لكل عملة) يعود بعد الخسارة ⇒ المتّسع 485 بدل 200 ويختفي «وقف هذه الصفقة وحده يتخطّى حدّك». الإخفاء بعملة أخرى
+ * للعرض والحساب وحدهما (`lostTodayInCcy`)، فيعود الرقم بالعودة لعملته. الكتابة بالخانة تنسبه لعملة المال الجديدة.
+ */
+export function lostTodayStateOnCcy(lostToday: string, lostCcy: string | null, moneyCcy: string): { lostToday: string; lostCcy: string | null } {
+  if (lostToday === '') return { lostToday, lostCcy };
+  return { lostToday, lostCcy: lostCcy ?? moneyCcy };
+}
+
+/**
  * العملة التي كُتبت بها خسارة اليوم حين **ليست** عملة المال الآن ⇒ اللوحة تقول «أعد كتابتها بـ{to}» تحت الخانة التي أفرغها
  * `lostTodayInCcy` (كانت تُفرَغ بصمت فيُحسب المتّسع كأن الخسارة 0). `null` = لا سطر: العملة نفسها، أو مجهولة (حفظٌ أقدم، أو
  * خانة أفرغها المستخدم بيده — اللوحة تُعيد `lostCcy` إلى null حينها فلا يُطلب منه إعادة ما لم يكتبه).

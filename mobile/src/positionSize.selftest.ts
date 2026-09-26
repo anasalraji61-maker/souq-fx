@@ -23,6 +23,7 @@ import {
   dailyRoomMaxLots,
   restoredLostToday,
   lostTodayInCcy,
+  lostTodayStateOnCcy,
   parseLostToday,
   lostTodayOtherCcy,
   restoredLostCcy,
@@ -4637,3 +4638,24 @@ console.log('positionSize pegged-quote stop pips selftest OK');
   assert.deepEqual(mlr({ slPips: 0, spreadPips: sp, pipValuePerLot: pv, balance: 100, riskPct: 0.5, contractSize: eu.contractSize }), { stop: null, withCosts: null });
 }
 console.log('positionSize min-lot risk with costs selftest OK');
+
+// ---- lostTodayStateOnCcy: «خسارة اليوم» لا تُمحى بالعبور لعملة أخرى والعودة ----
+{
+  // USD 300 ⇒ عرض EUR ⇒ عودة USD: المخزَّن باقٍ، والعرض يعود 300
+  let st = lostTodayStateOnCcy('300', 'USD', 'USD');
+  assert.deepEqual(st, { lostToday: '300', lostCcy: 'USD' });
+  st = lostTodayStateOnCcy(st.lostToday, st.lostCcy, 'EUR');
+  assert.deepEqual(st, { lostToday: '300', lostCcy: 'USD' });
+  assert.equal(lostTodayInCcy(st.lostToday, st.lostCcy, 'EUR'), ''); // بعملة أخرى: لا تُحسب
+  st = lostTodayStateOnCcy(st.lostToday, st.lostCcy, 'USC');
+  assert.equal(lostTodayInCcy(st.lostToday, st.lostCcy, 'USD'), '300');
+  // الأثر بالمال: الرصيد 9700 بعد الخسارة، حدّ 5%، وقف يخاطر 290 ⇒ المتّسع 200 ويتخطّى (القديم: 0 ⇒ 485 بلا تحذير)
+  const kept = dailyLossRoom({ balance: 9700, limitPct: 5, lostToday: Number(lostTodayInCcy(st.lostToday, st.lostCcy, 'USD')), riskAmount: 290 })!;
+  assert.ok(Math.abs(kept.room - 200) < 1e-9 && kept.breach);
+  const wiped = dailyLossRoom({ balance: 9700, limitPct: 5, lostToday: 0, riskAmount: 290 })!;
+  assert.ok(Math.abs(wiped.room - 485) < 1e-9 && !wiped.breach);
+  // حفظٌ أقدم بلا عملة ⇒ عملة المال الآن؛ فارغة ⇒ كما هي
+  assert.deepEqual(lostTodayStateOnCcy('300', null, 'EUR'), { lostToday: '300', lostCcy: 'EUR' });
+  assert.deepEqual(lostTodayStateOnCcy('', null, 'EUR'), { lostToday: '', lostCcy: null });
+  console.log('positionSize lostTodayStateOnCcy selftest OK');
+}

@@ -96,6 +96,7 @@ import {
   tradingDayKey,
   restoredLostToday,
   lostTodayInCcy,
+  lostTodayStateOnCcy,
   lostTodayOtherCcy,
   restoredLostCcy,
   spreadTooWide,
@@ -1161,11 +1162,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     setLostCcy(null);
   }, [lostExpired, dayTick]);
   useEffect(() => {
-    if (lostToday === '') return;
-    // حفظٌ أقدم بلا عملة: تُنسب لعملة المال التي فتحت عليها اللوحة
-    if (lostCcy == null) setLostCcy(moneyCcy);
-    else if (lostTodayNow !== lostToday) setLostToday(lostTodayNow);
-  }, [lostToday, lostCcy, moneyCcy, lostTodayNow]);
+    // حفظٌ أقدم بلا عملة: تُنسب لعملة المال التي فتحت عليها اللوحة. بعملة أخرى لا تُمحى (`lostTodayStateOnCcy`) — تعود بالعودة لعملتها
+    const next = lostTodayStateOnCcy(lostToday, lostCcy, moneyCcy);
+    if (next.lostCcy !== lostCcy) setLostCcy(next.lostCcy);
+  }, [lostToday, lostCcy, moneyCcy]);
   /** أُفرغت لأنها بعملةٍ أخرى ⇒ سطر «أعد كتابتها» بدل خانة فارغة بلا سبب (launch169a) */
   const lostOtherCcy = lostTodayOtherCcy(lostCcy, moneyCcy);
   // «-300» كما في سجلّ المنصّة و«$300» بعلامة عملة الحساب مقبولتان — راجع `parseLostToday`
