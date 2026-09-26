@@ -17,7 +17,9 @@ export const TF_TYPING_MAX = 10;
  */
 export function tfTypingChar(key: string, code: string | undefined): string {
   const digit = /^(?:Digit|Numpad)(\d)$/.exec(code ?? '');
-  if (digit) return digit[1]!;
+  // لوحة الأرقام بـNumLock مطفأ: الموضع «Numpad4» لكن المفتاح سهم/Home («ArrowLeft») ⇒ ليس رقماً. كان السهم
+  // يحرّك الشارت ثم بعد 600ms يبدّل إلى 30m (8 ⇒ 4H، 7/Home ⇒ D). الرقم حرف واحد، والأسماء أطول.
+  if (digit && (!code!.startsWith('Numpad') || key.length === 1)) return digit[1]!;
   const letter = /^Key([MHDW])$/.exec(code ?? '');
   if (letter) return letter[1]!.toLowerCase();
   // «-» فاصل التاريخ (`parseTypedDate`) — من الموضع كذلك (Minus/NumpadSubtract) لا من الحرف.

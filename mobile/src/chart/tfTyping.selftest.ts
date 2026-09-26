@@ -38,6 +38,9 @@ ok('«4h5» ⇒ لا شيء', parseTypedTimeframe('4h5') === null);
 
 ok('Digit5 بلوحة عربية ماك («٥») ⇒ 5', tfTypingChar('٥', 'Digit5') === '5');
 ok('Numpad1 ⇒ 1', tfTypingChar('1', 'Numpad1') === '1');
+ok('Numpad4 بـNumLock مطفأ (ArrowLeft) ⇒ لا شيء', tfTypingChar('ArrowLeft', 'Numpad4') === '');
+ok('Numpad7 بـNumLock مطفأ (Home) ⇒ لا شيء', tfTypingChar('Home', 'Numpad7') === '');
+ok('Numpad5 بـNumLock مطفأ (Clear) ⇒ لا شيء', tfTypingChar('Clear', 'Numpad5') === '');
 ok('KeyH بلوحة عربية («ا») ⇒ h', tfTypingChar('ا', 'KeyH') === 'h');
 ok('KeyD ⇒ d', tfTypingChar('d', 'KeyD') === 'd');
 ok('KeyQ ⇒ لا شيء', tfTypingChar('q', 'KeyQ') === '');
