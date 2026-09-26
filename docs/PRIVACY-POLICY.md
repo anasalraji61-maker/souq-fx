@@ -7,6 +7,9 @@
 >    يوضع بخانة Privacy Policy URL بالمتجرَين.
 > 3. قرّر تصنيف OpenRouter (`STORE-PRIVACY.md` §2) — النصّ أدناه يذكره صراحةً بالاسم، وهو الخيار المحافظ.
 > 4. سطر سجلّات الخادم (القسم 3) مكتوب بصيغة احتياط: لم أتحقّق من إعداد السجلّات على خادم الإنتاج — صحّحه إن عرفت.
+> 5. **Sentry (قرار ١٣)**: فقرتا «تقارير الأعطال» صحيحتان **فقط** إن بُنيت نسخة المتجر بـ`EXPO_PUBLIC_SENTRY_DSN` (بلا المفتاح لا يُهيَّأ
+>    Sentry ولا يخرج أي طلب — `mobile/src/crashReporting.ts`). بلا مفتاح ⇒ احذفهما وأعِد جملة «ولا تقارير أعطال من أطراف ثالثة».
+>    وبإعدادات مشروع Sentry فعّل **Prevent Storing of IP Addresses** وراجع مدّة الاحتفاظ بخطّتك (30 يوماً بالمجانية وقت الكتابة — تحقّق).
 >
 > أي تغيير بالكود يضيف حقلاً يُخزَّن أو طرفاً ثالثاً ⇒ يُحدَّث هذا الملف و`STORE-PRIVACY.md` معاً.
 
@@ -40,7 +43,7 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
 
 ### 2. ما لا نجمعه
 لا موقع جغرافي، لا جهات اتصال، لا صور ولا كاميرا ولا ميكروفون، لا بيانات دفع، لا بيانات حسابك لدى الوسيط.
-لا إعلانات، ولا أدوات تحليلات أو تتبّع أو تقارير أعطال من أطراف ثالثة، ولا نبيع بياناتك ولا نشاركها لأغراض إعلانية.
+لا إعلانات، ولا أدوات تحليلات أو تتبّع من أطراف ثالثة، ولا نبيع بياناتك ولا نشاركها لأغراض إعلانية. (تقارير الأعطال وحدها تذهب إلى Sentry — القسم 3.)
 
 ### 3. من يرى بياناتك
 - **المستخدمون الآخرون** يرون ما تنشره علناً: رسائل الدردشة العامة وأفكار الصفقات، باسم المستخدم الذي اخترته.
@@ -49,6 +52,10 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
   - **Expo** (خدمة الإشعارات): رمز جهازك ونصّ التنبيه (الرمز ومستوى السعر) — بلا بريدك أو اسمك.
   - **OpenRouter** (المساعد الذكي): نصّ سؤالك ورمز الأداة وسياق السوق — بلا بريدك أو اسمك أو معرّفك. لا تكتب
     في سؤالك معلومات شخصية.
+  - **Sentry** (Functional Software, Inc. — تقارير الأعطال): حين يتعطّل التطبيق يرسل جهازك إليه مباشرةً تقريراً تقنياً: نوع الخطأ
+    ومكانه بالكود، وسطراً قصيراً من نصّه، وطراز الجهاز ونظام التشغيل وإصدار التطبيق، وطلبات الشبكة الأخيرة (نوعها
+    ومسارها ونتيجتها فقط). **لا يحمل التقرير** بريدك ولا اسمك ولا معرّف حسابك، ولا لقطة شاشة، ولا ما كتبته أو
+    لمسته، ولا محتوى دفترك أو أسئلتك. التقرير غير مرتبط بحسابك، ويحتفظ به Sentry مدّةً محدودة ثم يُحذف.
 - بيانات الأسعار والأخبار والتقويم يجلبها خادمنا من مزوّديها **دون أن يرسل إليهم أي شيء عنك**.
 - كأي خادم ويب، قد يسجّل خادمنا عنوان IP وتوقيت الطلبات في سجلّات تقنية لتشغيله وحمايته.
 - قد نكشف بيانات إن ألزمنا القانون بذلك.
@@ -107,7 +114,7 @@ token and with each question to the assistant, so we can reply in your language.
 
 ### 2. What we don't collect
 No location, contacts, photos, camera, microphone, payment details, or broker account data.
-No ads, no third-party analytics, tracking or crash-reporting tools, and we do not sell your data or share it for advertising.
+No ads, no third-party analytics or tracking tools, and we do not sell your data or share it for advertising. (Crash reports alone go to Sentry — section 3.)
 
 ### 3. Who sees your data
 - **Other users** see what you post publicly — public chat messages and trade ideas — under your chosen username. There are
@@ -116,6 +123,11 @@ No ads, no third-party analytics, tracking or crash-reporting tools, and we do n
   - **Expo** (notifications): your device token and the alert text (symbol and price level) — not your email or name.
   - **OpenRouter** (AI assistant): the text of your question, the symbol and market context — not your email, name or ID.
     Don't put personal information in your questions.
+  - **Sentry** (Functional Software, Inc. — crash reporting): when the app crashes, your device sends Sentry a technical report
+    directly: the error type and where in the code it happened, a short line of its message, your device model, operating system and
+    app version, and recent network requests (their method, path and result only). **The report does
+    not contain** your email, username or account ID, a screenshot, anything you typed or tapped, or your journal or assistant
+    questions. It is not linked to your account, and Sentry keeps it for a limited period before deleting it.
 - Our server fetches prices, news and calendar data from their providers **without sending them anything about you**.
 - Like any web server, ours may record IP addresses and request times in technical logs to run and protect the service.
 - We may disclose data where the law requires us to.
@@ -153,6 +165,7 @@ Questions or requests about your data: [privacy email].
 | معرّف التثبيت العشوائي | `mobile/src/api.ts:30-70` (`matrix.install.v1`، ترويسة `X-Install-Id`) |
 | ما يبقى على الجهاز | مفاتيح AsyncStorage `matrix.drawings.v2`، `matrix.lang.v1`، `matrix.tools.riskCalc.v1`، `matrix.moderation.blockedUsers.v1` … |
 | Expo وOpenRouter وما يصلهما | `backend/expo_push.py` (المستدعي الوحيد `alert_worker.py:295`: عنوان ونصّ و`data` فارغة)، `backend/openrouter_ai.py` (رسالتا system/user وترويستا HTTP-Referer/X-Title — لا حقل مستخدم) (تفصيل بـ`STORE-PRIVACY.md` §2) |
+| Sentry وما يصله | `mobile/src/crashReporting.ts` (`e522621`): بلا `EXPO_PUBLIC_SENTRY_DSN` لا تهيئة؛ `sendDefaultPii: false`، `attachScreenshot`/`attachViewHierarchy: false`، `tracesSampleRate: 0`؛ `beforeSend` يحذف `user`/`request`/`extra`/`server_name` ويقصّ النصّ إلى 200 حرف؛ `beforeBreadcrumb` يُسقط console/touch/ui.input/ui.click ويُبقي من الشبكة الطريقة والمسار (بلا نطاق ولا استعلام) والحالة؛ `AppErrorBoundary` يبلّغ أخطاء العرض؛ `mobile/index.ts:7` |
 | لا SDK تحليلات/إعلانات، لا ميكروفون | `mobile/package.json`؛ `mobile/app.json` (`microphonePermission: false`، `RECORD_AUDIO` محظور) |
 | لا حذف تلقائي بمدّة | لا `DELETE` زمني بـ`backend/db.py` |
 | https | شرط النشر بـ`docs/DEPLOYMENT.md` — **اليوم `apiUrl` http محلي**؛ لا تُنشر السياسة قبل تحقّقه |
