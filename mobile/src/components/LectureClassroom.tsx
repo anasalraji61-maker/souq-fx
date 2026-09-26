@@ -609,11 +609,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   chartBox: {
+    // DESIGN-PRO §5.5: فاصل واحد — تعبئة بلا حدّ فوقها (كذلك الشاشة الكبيرة ووسام الإكمال).
     marginBottom: spacing.sm,
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.sm,
   },
   chartHead: {
@@ -638,8 +637,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.stageBg,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.heroBorder,
     padding: spacing.md,
     minHeight: 280,
   },
@@ -683,10 +680,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     alignSelf: 'flex-end',
     backgroundColor: 'rgba(232,184,109,0.14)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(232,184,109,0.4)',
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
   completeBadgeText: { color: colors.warmAccent, fontSize: 11, fontWeight: '500' },
