@@ -1342,12 +1342,15 @@ def report_content(kind: str, target_id: str, reporter_id: int, reason: str) -> 
 
 
 def list_reports(limit: int = 200) -> list[dict]:
-    """قائمة المراجعة للمشرف: كل عنصر مُبلَّغ عنه مع عدد البلاغات والأسباب ونصّه (إن بقي)."""
+    """قائمة المراجعة للمشرف: كل عنصر مُبلَّغ عنه مع عدد البلاغات والأسباب ونصّه (إن بقي).
+
+    الأقدم أولاً (بأول بلاغ): كانت الأحدث أولاً بحدّ 200 ⇒ فوق 200 عنصر معلّق يختفي الأقدم — وهو الأقرب
+    لتجاوز مهلة أبل (24 ساعة) — من القائمة وهو ما يزال مخفياً/معلّقاً. المعالَج يُحذف بلاغه فيخرج منها."""
     with _conn() as c:
         rows = c.execute(
             """SELECT kind, target_id, COUNT(*) AS n, GROUP_CONCAT(DISTINCT reason) AS reasons,
-                      MAX(created_at) AS last_at
-               FROM content_reports GROUP BY kind, target_id ORDER BY last_at DESC LIMIT ?""",
+                      MIN(created_at) AS first_at
+               FROM content_reports GROUP BY kind, target_id ORDER BY first_at ASC, kind, target_id LIMIT ?""",
             (limit,),
         ).fetchall()
         out = []
@@ -1367,6 +1370,14 @@ def list_reports(limit: int = 200) -> list[dict]:
                 "exists": t is not None,
             })
     return out
+
+
+def count_reported_items() -> int:
+    """عدد العناصر المعلّقة كلها (القائمة محدودة بـ200) — ليعرف المشرف أن بعدها المزيد."""
+    with _conn() as c:
+        return int(c.execute(
+            "SELECT COUNT(*) FROM (SELECT 1 FROM content_reports GROUP BY kind, target_id)"
+        ).fetchone()[0])
 
 
 def moderate(kind: str, target_id: str, action: str) -> bool:

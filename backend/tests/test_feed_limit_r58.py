@@ -34,3 +34,15 @@ def test_votes_limit_counts_visible_only(fresh):
         db.create_vote({**base, "id": f"bad{i}", "created_at": 10 + i}, 2)
         db.report_content("vote", f"bad{i}", 7, "spam")
     assert [v["id"] for v in db.list_votes(user_id=7, limit=3)] == ["ok3", "ok2", "ok1"]
+
+
+def test_moderation_queue_oldest_first_and_total(fresh, monkeypatch):
+    clock = iter(range(1000, 2000))
+    monkeypatch.setattr(db.time, "time", lambda: float(next(clock)))
+    for i in range(3):
+        db.add_group_message({"id": f"m{i}", "user": "a", "text": "x", "ts": "t", "created_at": i}, 1)
+        db.report_content("group_message", f"m{i}", 5, "spam")
+    # بلاغ جديد على الأقدم لا يُخرجه من رأس القائمة
+    db.report_content("group_message", "m0", 6, "spam")
+    assert [r["target_id"] for r in db.list_reports(limit=2)] == ["m0", "m1"]
+    assert db.count_reported_items() == 3

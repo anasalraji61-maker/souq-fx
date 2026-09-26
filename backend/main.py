@@ -1829,7 +1829,8 @@ def _require_moderator(x_moderation_token: str | None) -> None:
 @app.get("/api/moderation/reports")
 def moderation_reports(x_moderation_token: str | None = Header(default=None)):
     _require_moderator(x_moderation_token)
-    return {"reports": db.list_reports(), "hide_threshold": db.REPORT_HIDE_THRESHOLD}
+    return {"reports": db.list_reports(), "pending_total": db.count_reported_items(),
+            "hide_threshold": db.REPORT_HIDE_THRESHOLD}
 
 
 @app.post("/api/moderation/action")
