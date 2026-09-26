@@ -47,6 +47,17 @@ function fresh(sym: string, now: number): boolean {
   return now - e.at < (e.ok ? TTL_MS : FAIL_TTL_MS);
 }
 
+/**
+ * المخزَّن فقط إن كان لجلسة الآن. عند افتتاح الأحد كان إغلاق الخميس يبقى معروضاً حتى الفحص التالي وانتهاء الجلب
+ * (دقيقة أو أكثر): كل صفوف المتابعة تعرض حركة الجمعة ضمن «تغيّر اليوم» في اللحظة التي يُقرأ فيها فجوة العطلة،
+ * وPDH/PDL على اليوم السابق. غياب المرجع («—») أصدق من مرجع جلسة منتهية.
+ */
+function current(sym: string): Entry | undefined {
+  const e = cache.get(sym);
+  if (e && e.session != null && sessionKeyAt(Date.now() / 1000, e.weekendMerge, sym) !== e.session) return undefined;
+  return e;
+}
+
 function emit() {
   for (const l of listeners) l();
 }
@@ -115,7 +126,7 @@ function snapshot(symbols: readonly string[]): Record<string, number> {
   const out: Record<string, number> = {};
   for (const raw of symbols) {
     const sym = raw.toUpperCase();
-    const p = cache.get(sym)?.prevClose;
+    const p = current(sym)?.prevClose;
     if (typeof p === 'number') out[sym] = p;
   }
   return out;
@@ -128,12 +139,21 @@ export function useDailyRefs(symbols: readonly string[]): Record<string, number>
 
   useEffect(() => {
     const list = key ? key.split(',') : [];
-    const update = () => setRefs(snapshot(list));
+    const update = () =>
+      setRefs((prev) => {
+        const next = snapshot(list);
+        const keys = Object.keys(next);
+        const same = keys.length === Object.keys(prev).length && keys.every((k) => prev[k] === next[k]);
+        return same ? prev : next;
+      });
     listeners.add(update);
     update();
     request(list);
     // تجديد دوري: `fresh` يُسقط المخزَّن عند بدء جلسة جديدة أو انتهاء عمره، وإلا لا طلب
-    const timer = setInterval(() => request(list), CHECK_MS);
+    const timer = setInterval(() => {
+      update();
+      request(list);
+    }, CHECK_MS);
     return () => {
       listeners.delete(update);
       clearInterval(timer);
@@ -150,7 +170,7 @@ export function useDailyRefs(symbols: readonly string[]): Record<string, number>
 export function useDailyPrevBar(symbol: string | null): Candle | undefined {
   const sym = symbol ? symbol.toUpperCase() : '';
   const [bar, setBar] = useState<Candle | undefined>(() =>
-    sym ? cache.get(sym)?.prevBar ?? undefined : undefined
+    sym ? current(sym)?.prevBar ?? undefined : undefined
   );
 
   useEffect(() => {
@@ -158,11 +178,14 @@ export function useDailyPrevBar(symbol: string | null): Candle | undefined {
       setBar(undefined);
       return;
     }
-    const update = () => setBar(cache.get(sym)?.prevBar ?? undefined);
+    const update = () => setBar(current(sym)?.prevBar ?? undefined);
     listeners.add(update);
     update();
     request([sym]);
-    const timer = setInterval(() => request([sym]), CHECK_MS);
+    const timer = setInterval(() => {
+      update();
+      request([sym]);
+    }, CHECK_MS);
     return () => {
       listeners.delete(update);
       clearInterval(timer);
@@ -175,13 +198,13 @@ export function useDailyPrevBar(symbol: string | null): Candle | undefined {
 /** افتتاح الجلسة الجارية من شموع D1 (نفس مخزن `useDailyPrevBar`)؛ null = غير معروف. */
 export function useDailyCurrOpen(symbol: string | null): number | null {
   const sym = symbol ? symbol.toUpperCase() : '';
-  const [open, setOpen] = useState<number | null>(() => (sym ? cache.get(sym)?.currOpen ?? null : null));
+  const [open, setOpen] = useState<number | null>(() => (sym ? current(sym)?.currOpen ?? null : null));
   useEffect(() => {
     if (!sym) {
       setOpen(null);
       return;
     }
-    const update = () => setOpen(cache.get(sym)?.currOpen ?? null);
+    const update = () => setOpen(current(sym)?.currOpen ?? null);
     listeners.add(update);
     update();
     request([sym]);
