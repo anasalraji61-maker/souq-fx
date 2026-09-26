@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing, buttons, numeric } from '../theme';
+import { colors, radii, spacing, buttons, numeric, selectedMarkerWidth } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { headerChangePct, livePriceForChart, livePriceForHeader, tickPredatesLastBar } from '../chart/liveSeries';
@@ -40,7 +40,7 @@ const NO_INDICATORS: never[] = [];
 const NO_SYMBOLS: string[] = [];
 const isWeb = Platform.OS === 'web';
 
-/** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `phoneCellH`. */
+/** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `shortCellH`. */
 const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
 
 /** آخر شموع ناجحة لكل (رمز، فريم) عبر الجلسة، مشتركة مع التركيز — الرجوع لفريم أو إعادة فتح الرباعي فوري. */
@@ -63,24 +63,18 @@ export function QuadChartModal({
   const align = rtl ? ('right' as const) : ('left' as const);
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
-  // الهاتف: أربع خلايا بعمود واحد بلا تمرير. كانت كل خلية 28% من الشاشة + رأسها وسطر قراءتها
-  // وحشوها (~285pt على 844pt) فالأربع ≈ 1140pt: الخلية الرابعة (DXY) ونصف الثالثة خارج الشاشة
-  // ولا سبيل إليهما. الآن الارتفاع من الشبكة المقيسة فعلاً مقسوماً على أربع، والشارت بلا سطر
-  // القراءة (`dense`، كإطارات الشاشة الرئيسية المملوءة). الحدّ الأدنى 64 لا 96: بـ96 تحتاج الأربع
-  // 4×(96+32)+40 = 552pt — هاتف 360×640 (شبكة ≈524pt) أو iPhone SE الأول كان يقصّ خلية DXY تحت الشاشة
-  // بلا تمرير. 64pt شموع مضغوطة لكنها تُقرأ، والخلية الغائبة لا تُقرأ أبداً.
+  // قرار أنس ١٦: الرباعي على الهاتف **شارت واحد كامل مع تبديل سريع** — كانت أربع خلايا بعمود واحد، كلّ منها
+  // ربع الشبكة ناقص رأسها (~64–150pt بشموع مضغوطة لا تُقرأ ذيولها). الآن ألسنة الرموز الأربعة (الرمز والسعر ونسبة
+  // اليوم) فوق شارت واحد بكامل ما تبقّى، ولمسة على لسان تبدّله. الارتفاع من صندوق الشارت المقيس فعلاً.
   const [gridH, setGridH] = useState(0);
-  const phoneCellH =
-    gridH > 0
-      ? Math.max(64, (gridH - 5 * spacing.sm) / 4 - PHONE_CELL_CHROME)
-      : height * 0.18;
+  const [phoneChartH, setPhoneChartH] = useState(0);
   // هاتف بالعرض (844×390) يتجاوز حدّ العرض فيأخذ شبكة 2×2 اللوحيّ: خليتان بارتفاع 32% وحدّ أدنى 200pt
   // + الرأس وشريط الفريمات ≈ 530pt على 390pt ⇒ الصفّ الثاني (XAUUSD وDXY) تحت الشاشة بلا تمرير. الشاشة
   // القصيرة تقسم الشبكة المقيسة على صفّين بلا سطر القراءة كالهاتف.
   const short = !phone && height < 600;
   const shortCellH =
     gridH > 0 ? Math.max(80, (gridH - 3 * spacing.sm) / 2 - PHONE_CELL_CHROME) : height * 0.22;
-  const cellH = phone ? phoneCellH : short ? shortCellH : height * 0.32;
+  const cellH = short ? shortCellH : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
   // نسبة رأس الخلية = تغيّر اليوم (كقائمة المتابعة) لا «منذ أول شمعة محمّلة» — تختلف بين الخلايا بالفريم.
@@ -205,7 +199,151 @@ export function QuadChartModal({
     };
   }, [visible, symbols, tf]);
 
+  // قراءة خلية واحدة (السعر والنسبة والشموع المدموجة بالتيك) — مشتركة بين شبكة اللوح وألسنة الهاتف.
+  const cellData = (i: number) => {
+    const sym = symbols[i]!;
+    // رأس الخلية كان الرمز وحده: أربعة أزواج بلا سعر ولا نسبة، فالمقارنة — سبب فتح
+    // الرباعي أصلاً — تتطلّب قراءة محور كل شارت. السعر الحيّ (أو آخر إغلاق) بخانات
+    // الزوج، والنسبة بقاعدة رأس الإطار نفسها: اللون من الرقم المطبوع، وصفره مكتوم.
+    const s = series[i];
+    // السعر والنسبة من الرقم نفسه: كان السعر المطبوع التيك الخام (ولو تيك بثّ تجريبي بجانب شموع
+    // حقيقية، أو سعراً بعيداً عن السلسلة) والنسبة بجانبه من سعر الخادم — فيتناقضان.
+    // والتيك الأقدم من آخر شمعة جلبها التحديث (رمز غاب عن البثّ — `useMultiLiveTicks` يُبقيه حتى
+    // 20 ث) لا يُطبع: كان سعر الساعة الماضية يبقى بالرأس والشارت تحته يتحرّك مع كل تحديث 90 ث.
+    const tk = ticks[sym];
+    const tickOlder = s != null && tickPredatesLastBar(s, tk?.source.as_of);
+    const headPx = s && !tickOlder ? livePriceForHeader(s, tk ?? null) : null;
+    const px = headPx ?? s?.last ?? NaN;
+    // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
+    // إغلاق الشمعة الأخيرة وقبل الجلب التالي.
+    const livePct = s ? headerChangePct(s, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
+    // الشمعة الحيّة تأخذ التيك الواقع بها وحده.
+    const merged = s
+      ? livePriceForChart(s, ticks[sym] ?? null, {
+          tickAsOf: ticks[sym]?.source.as_of ?? null,
+          timeframe: s.timeframe,
+        })
+      : null;
+    const pct = s && Number.isFinite(livePct) ? livePct : null;
+    const pctDir = pctDirection(pct);
+    const pctColor = pctDir === 'up' ? colors.bull : pctDir === 'down' ? colors.bear : colors.textDim;
+    // backend-r19: رمز بلا بيانات حقيقية أصلاً (DXY) ⇒ لا سعر ولا نسبة ولا شموع بذرة.
+    const noReal = s != null && seriesHasNoRealData(s.data_source);
+    return { s, px, pct, pctColor, merged, noReal };
+  };
+
+  // chart-r47: الدوّار وحده كان لا يقول ماذا يُحمَّل — والخلايا الأربع تبدو متطابقة أثناء التحميل.
+  const renderLoading = (sym: string, h: number) => (
+    <View
+      style={[styles.cellLoading, { height: h }]}
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityState={{ busy: true }}
+      accessibilityLabel={t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', t.tfLabelsA11y[tf])}
+    >
+      <ActivityIndicator color={colors.accent} />
+      <Text style={styles.cellLoadingText} numberOfLines={2}>
+        {t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', t.tfLabels[tf])}
+      </Text>
+    </View>
+  );
+
   const chromeDim = chartTouch ? styles.chromeDim : null;
+
+  // الهاتف: ألسنة الرموز الأربعة ثم شارت اللسان المختار وحده. اللسان المختار = `leader` نفسه، فتدوير الهاتف
+  // بالعرض (شبكة 2×2) يُبقي الرمز الذي كان المتداول ينظر إليه قائداً. لا مزامنة زمن هنا — شارت واحد لا يُقارَن
+  // بشيء على الشاشة؛ كل رمز يُفتح على نافذته الافتراضية ويُسحب ويُقرص بحرّية.
+  const renderPhone = () => {
+    const focus = Math.min(leader, symbols.length - 1);
+    const sym = symbols[focus]!;
+    const { s, merged, noReal } = cellData(focus);
+    const chartH = phoneChartH > 0 ? phoneChartH : height * 0.5;
+    const demo = s != null && !noReal && normalizeProvenance(s.data_source).kind === 'demo';
+    return (
+      <View style={styles.phoneBody}>
+        <View style={[styles.tabs, rtl && styles.tabsRtl, chromeDim]} accessibilityRole="tablist">
+          {symbols.map((tabSym, i) => {
+            const on = i === focus;
+            const d = cellData(i);
+            const priceText =
+              d.s && !d.noReal && Number.isFinite(d.px) ? formatPrice(d.px, tabSym, d.s.last) : null;
+            const pctText = d.s && !d.noReal ? (d.pct == null ? '—' : formatPct(d.pct)) : null;
+            const a11y = [
+              tabSym,
+              priceText,
+              d.noReal
+                ? t.dsKindUnavailable
+                : d.s
+                  ? d.pct == null
+                    ? t.cfDayChangeNoneA11y
+                    : t.cfDayChangeA11y.replace('{pct}', formatPct(d.pct))
+                  : null,
+              closed[i] ? t.cfMarketClosedA11y : null,
+            ]
+              .filter(Boolean)
+              .join(' · ');
+            return (
+              <Pressable
+                key={`${i}:${tabSym}`}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={a11y}
+                onPress={() => setLeader(i)}
+                style={({ pressed }) => [
+                  styles.tab,
+                  on && styles.tabOn,
+                  pressed && { opacity: buttons.pressedOpacity },
+                ]}
+              >
+                <Text style={[styles.tabSym, on && styles.tabSymOn]} numberOfLines={1}>
+                  {tabSym}
+                </Text>
+                <Text style={styles.tabPrice} numberOfLines={1}>
+                  {priceText ?? '—'}
+                </Text>
+                <Text style={[styles.tabPct, { color: d.pct == null ? colors.textDim : d.pctColor }]} numberOfLines={1}>
+                  {pctText ?? ' '}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {closed[focus] || demo ? (
+          <View style={[styles.phoneTags, rtl && styles.cellHeadRtl]}>
+            {closed[focus] ? (
+              <Text style={styles.closedTag} accessibilityLabel={t.cfMarketClosedA11y}>
+                {t.cfMarketClosedTag}
+              </Text>
+            ) : null}
+            {demo ? <Text style={styles.demoTag}>{t.dsKindDemo}</Text> : null}
+          </View>
+        ) : null}
+        <View style={styles.phoneChart} onLayout={(e) => setPhoneChartH(Math.floor(e.nativeEvent.layout.height))}>
+          {noReal ? (
+            <ProviderUnavailableNotice symbol={sym} height={chartH} dataSource={s?.data_source} />
+          ) : s ? (
+            <MatrixChart
+              key={sym}
+              series={s}
+              height={chartH}
+              interactive={false}
+              persistDrawings={false}
+              livePrice={merged}
+              liveTickSource={ticks[sym]?.source ?? null}
+              accent={sym === 'DXY' ? colors.dxy : colors.accent}
+              initialLens="clean"
+              initialIndicators={NO_INDICATORS}
+              panControls
+              onTimeframeKey={setTfOverride}
+              onChartInteract={setChartTouch}
+            />
+          ) : (
+            renderLoading(sym, chartH)
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <Modal visible={visible} animationType="none" onRequestClose={onClose}>
@@ -233,178 +371,145 @@ export function QuadChartModal({
           >
             {t.quadTitlePrefix} · {t.tfLabels[tf]}
           </Text>
-          <Pressable
-            accessibilityRole="switch"
-            accessibilityState={{ checked: syncTime }}
-            accessibilityLabel={t.mcSyncToggleA11y}
-            onPress={() => setSyncTime((v) => !v)}
-            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-            style={({ pressed }) => [
-              styles.syncToggle,
-              syncTime && styles.syncToggleOn,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-          >
-            <Text style={[styles.syncToggleText, syncTime && styles.syncToggleTextOn]}>
-              {syncTime ? t.mcSyncTimeOn : t.mcSyncTimeOff}
-            </Text>
-          </Pressable>
+          {phone ? null : (
+            <Pressable
+              accessibilityRole="switch"
+              accessibilityState={{ checked: syncTime }}
+              accessibilityLabel={t.mcSyncToggleA11y}
+              onPress={() => setSyncTime((v) => !v)}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+              style={({ pressed }) => [
+                styles.syncToggle,
+                syncTime && styles.syncToggleOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+            >
+              <Text style={[styles.syncToggleText, syncTime && styles.syncToggleTextOn]}>
+                {syncTime ? t.mcSyncTimeOn : t.mcSyncTimeOff}
+              </Text>
+            </Pressable>
+          )}
         </View>
         <View style={[styles.tfRow, rtl && styles.tfRowRtl, chromeDim]}>
           <TimeframeBar value={tf} onChange={setTfOverride} compact />
         </View>
-        {syncTime ? (
+        {syncTime && !phone ? (
           <Text style={[styles.syncHint, { textAlign: align }, chromeDim]}>
             {`${t.mcSyncLeadHint} — ${symbols[leader]}`}
           </Text>
         ) : null}
-        <View
-          style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}
-          onLayout={(e) => setGridH(e.nativeEvent.layout.height)}
-        >
-          {symbols.map((sym, i) => {
-            const isLeader = i === leader;
-            const following = syncTime && !isLeader;
-            // رأس الخلية كان الرمز وحده: أربعة أزواج بلا سعر ولا نسبة، فالمقارنة — سبب فتح
-            // الرباعي أصلاً — تتطلّب قراءة محور كل شارت. السعر الحيّ (أو آخر إغلاق) بخانات
-            // الزوج، والنسبة بقاعدة رأس الإطار نفسها: اللون من الرقم المطبوع، وصفره مكتوم.
-            const s = series[i];
-            // السعر والنسبة من الرقم نفسه: كان السعر المطبوع التيك الخام (ولو تيك بثّ تجريبي بجانب شموع
-            // حقيقية، أو سعراً بعيداً عن السلسلة) والنسبة بجانبه من سعر الخادم — فيتناقضان.
-            // والتيك الأقدم من آخر شمعة جلبها التحديث (رمز غاب عن البثّ — `useMultiLiveTicks` يُبقيه حتى
-            // 20 ث) لا يُطبع: كان سعر الساعة الماضية يبقى بالرأس والشارت تحته يتحرّك مع كل تحديث 90 ث.
-            const tk = ticks[sym];
-            const tickOlder = s != null && tickPredatesLastBar(s, tk?.source.as_of);
-            const headPx = s && !tickOlder ? livePriceForHeader(s, tk ?? null) : null;
-            const px = headPx ?? s?.last ?? NaN;
-            // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
-            // إغلاق الشمعة الأخيرة وقبل الجلب التالي.
-            const livePct = s ? headerChangePct(s, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
-            // الشمعة الحيّة تأخذ التيك الواقع بها وحده.
-            const merged = s
-              ? livePriceForChart(s, ticks[sym] ?? null, {
-                  tickAsOf: ticks[sym]?.source.as_of ?? null,
-                  timeframe: s.timeframe,
-                })
-              : null;
-            const pct = s && Number.isFinite(livePct) ? livePct : null;
-            const pctDir = pctDirection(pct);
-            const pctColor = pctDir === 'up' ? colors.bull : pctDir === 'down' ? colors.bear : colors.textDim;
-            // backend-r19: رمز بلا بيانات حقيقية أصلاً (DXY) ⇒ لا سعر ولا نسبة ولا شموع بذرة.
-            const noReal = s != null && seriesHasNoRealData(s.data_source);
-            return (
-              <Pressable
-                key={`${i}:${sym}`}
-                // iOS/Android: الخلية `accessible` تخفي كل ما بداخلها — والمزامنة مفعّلة افتراضياً ⇒ الخلايا التابعة
-                // الثلاث كانت عنصراً واحداً «تفعيل مزامنة GBPUSD» لا يُبلغ منه السعر ولا النسبة ولا «مغلق»/«تجريبي»،
-                // والمقارنة سبب فتح الرباعي. كإطار ChartFrame: لا تُجمَّع على الجوال، والقيادة إجراء مخصّص على الرمز.
-                // الويب: الحاوية لا تخفي أبناءها ⇒ تبقى زرّاً للوحة المفاتيح.
-                accessible={isWeb && following}
-                accessibilityRole={isWeb && following ? 'button' : undefined}
-                accessibilityLabel={isWeb && following ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined}
-                disabled={!syncTime || isLeader}
-                accessibilityState={
-                  isWeb ? { disabled: !syncTime || isLeader, selected: syncTime && isLeader } : undefined
-                }
-                onPress={() => setLeader(i)}
-                style={[
-                  styles.cell,
-                  phone && styles.cellPhone,
-                  short && styles.cellShort,
-                  syncTime && isLeader && styles.cellLeader,
-                ]}
-              >
-                {/* شموع تجريبية (سلسلة demo قديمة من الخادم؛ فشل الطلب صار إشعاراً، launch121) كانت تُرسم هنا بلا أي
-                    وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
-                <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
-                  <Text
-                    style={[styles.sym, { textAlign: align }]}
-                    accessibilityActions={
-                      !isWeb && following ? [{ name: 'syncActivate', label: `${t.cfSyncActivateA11yPrefix}${sym}` }] : undefined
-                    }
-                    onAccessibilityAction={(e) => {
-                      if (e.nativeEvent.actionName === 'syncActivate') setLeader(i);
-                    }}
-                  >
-                    {sym}
-                  </Text>
-                  {syncTime ? (
-                    <Text style={[styles.syncBadge, isLeader && styles.syncBadgeLeader]}>
-                      {isLeader ? t.cfSyncLeaderBadge : t.cfSyncFollowBadge}
-                    </Text>
-                  ) : null}
-                  {s && !noReal && Number.isFinite(px) ? (
-                    <Text style={styles.cellPrice}>{formatPrice(px, sym, s?.last)}</Text>
-                  ) : null}
-                  {s && !noReal ? (
+        {phone ? (
+          renderPhone()
+        ) : (
+          <View
+            style={[styles.grid, rtl && styles.gridRtl]}
+            onLayout={(e) => setGridH(e.nativeEvent.layout.height)}
+          >
+            {symbols.map((sym, i) => {
+              const isLeader = i === leader;
+              const following = syncTime && !isLeader;
+              const { s, px, pct, pctColor, merged, noReal } = cellData(i);
+              return (
+                <Pressable
+                  key={`${i}:${sym}`}
+                  // iOS/Android: الخلية `accessible` تخفي كل ما بداخلها — والمزامنة مفعّلة افتراضياً ⇒ الخلايا التابعة
+                  // الثلاث كانت عنصراً واحداً «تفعيل مزامنة GBPUSD» لا يُبلغ منه السعر ولا النسبة ولا «مغلق»/«تجريبي»،
+                  // والمقارنة سبب فتح الرباعي. كإطار ChartFrame: لا تُجمَّع على الجوال، والقيادة إجراء مخصّص على الرمز.
+                  // الويب: الحاوية لا تخفي أبناءها ⇒ تبقى زرّاً للوحة المفاتيح.
+                  accessible={isWeb && following}
+                  accessibilityRole={isWeb && following ? 'button' : undefined}
+                  accessibilityLabel={isWeb && following ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined}
+                  disabled={!syncTime || isLeader}
+                  accessibilityState={
+                    isWeb ? { disabled: !syncTime || isLeader, selected: syncTime && isLeader } : undefined
+                  }
+                  onPress={() => setLeader(i)}
+                  style={[
+                    styles.cell,
+                    short && styles.cellShort,
+                    syncTime && isLeader && styles.cellLeader,
+                  ]}
+                >
+                  {/* شموع تجريبية (سلسلة demo قديمة من الخادم؛ فشل الطلب صار إشعاراً، launch121) كانت تُرسم هنا بلا أي
+                      وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
+                  <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
                     <Text
-                      style={[styles.cellPct, { color: pctColor }]}
-                      accessibilityLabel={
-                        pct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(pct))
+                      style={[styles.sym, { textAlign: align }]}
+                      accessibilityActions={
+                        !isWeb && following ? [{ name: 'syncActivate', label: `${t.cfSyncActivateA11yPrefix}${sym}` }] : undefined
                       }
+                      onAccessibilityAction={(e) => {
+                        if (e.nativeEvent.actionName === 'syncActivate') setLeader(i);
+                      }}
                     >
-                      {pct == null ? '—' : formatPct(pct)}
+                      {sym}
                     </Text>
-                  ) : null}
-                  {closed[i] ? (
-                    <Text style={styles.closedTag} accessibilityLabel={t.cfMarketClosedA11y}>
-                      {t.cfMarketClosedTag}
-                    </Text>
-                  ) : null}
-                  {noReal ? (
-                    // DXY: لا يقدّمه المزوّد أصلاً — الجملة مكان الشارت (backend-r19)، والوسم القصير هنا.
-                    <Text style={styles.demoTag}>{t.dsKindUnavailable}</Text>
-                  ) : series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
-                    <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
-                  ) : null}
-                </View>
-                {noReal ? (
-                  <ProviderUnavailableNotice symbol={sym} height={cellH} dataSource={s?.data_source} />
-                ) : series[i] ? (
-                  <MatrixChart
-                    series={series[i]!}
-                    height={cellH}
-                    interactive={false}
-                    persistDrawings={false}
-                    livePrice={merged}
-                    liveTickSource={ticks[sym]?.source ?? null}
-                    accent={sym === 'DXY' ? colors.dxy : colors.accent}
-                    initialLens="clean"
-                    initialIndicators={NO_INDICATORS}
-                    dense={phone || short}
-                    panControls={!syncTime || isLeader}
-                    syncWindow={following ? syncWindow : null}
-                    onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
-                    syncFollow={following}
-                    syncTimeOnly
-                    syncCrossTime={following ? crossTime : undefined}
-                    onCrossTime={syncTime && isLeader ? setCrossTime : undefined}
-                    // الويب: «15»/«4h» ثم Enter فوق أيّ خلية = شريط الفريمات المشترك أعلى النافذة.
-                    onTimeframeKey={setTfOverride}
-                    onChartInteract={setChartTouch}
-                  />
-                ) : (
-                  // chart-r47: الدوّار وحده كان لا يقول ماذا يُحمَّل — والخلايا الأربع تبدو متطابقة أثناء التحميل.
-                  <View
-                    style={[styles.cellLoading, { height: cellH }]}
-                    accessible
-                    accessibilityRole="progressbar"
-                    accessibilityState={{ busy: true }}
-                    accessibilityLabel={t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', t.tfLabelsA11y[tf])}
-                  >
-                    <ActivityIndicator color={colors.accent} />
-                    <Text style={styles.cellLoadingText} numberOfLines={2}>
-                      {t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', t.tfLabels[tf])}
-                    </Text>
+                    {syncTime ? (
+                      <Text style={[styles.syncBadge, isLeader && styles.syncBadgeLeader]}>
+                        {isLeader ? t.cfSyncLeaderBadge : t.cfSyncFollowBadge}
+                      </Text>
+                    ) : null}
+                    {s && !noReal && Number.isFinite(px) ? (
+                      <Text style={styles.cellPrice}>{formatPrice(px, sym, s?.last)}</Text>
+                    ) : null}
+                    {s && !noReal ? (
+                      <Text
+                        style={[styles.cellPct, { color: pctColor }]}
+                        accessibilityLabel={
+                          pct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(pct))
+                        }
+                      >
+                        {pct == null ? '—' : formatPct(pct)}
+                      </Text>
+                    ) : null}
+                    {closed[i] ? (
+                      <Text style={styles.closedTag} accessibilityLabel={t.cfMarketClosedA11y}>
+                        {t.cfMarketClosedTag}
+                      </Text>
+                    ) : null}
+                    {noReal ? (
+                      // DXY: لا يقدّمه المزوّد أصلاً — الجملة مكان الشارت (backend-r19)، والوسم القصير هنا.
+                      <Text style={styles.demoTag}>{t.dsKindUnavailable}</Text>
+                    ) : series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
+                      <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
+                    ) : null}
                   </View>
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
+                  {noReal ? (
+                    <ProviderUnavailableNotice symbol={sym} height={cellH} dataSource={s?.data_source} />
+                  ) : series[i] ? (
+                    <MatrixChart
+                      series={series[i]!}
+                      height={cellH}
+                      interactive={false}
+                      persistDrawings={false}
+                      livePrice={merged}
+                      liveTickSource={ticks[sym]?.source ?? null}
+                      accent={sym === 'DXY' ? colors.dxy : colors.accent}
+                      initialLens="clean"
+                      initialIndicators={NO_INDICATORS}
+                      dense={short}
+                      panControls={!syncTime || isLeader}
+                      syncWindow={following ? syncWindow : null}
+                      onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
+                      syncFollow={following}
+                      syncTimeOnly
+                      syncCrossTime={following ? crossTime : undefined}
+                      onCrossTime={syncTime && isLeader ? setCrossTime : undefined}
+                      // الويب: «15»/«4h» ثم Enter فوق أيّ خلية = شريط الفريمات المشترك أعلى النافذة.
+                      onTimeframeKey={setTfOverride}
+                      onChartInteract={setChartTouch}
+                    />
+                  ) : (
+                    renderLoading(sym, cellH)
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -437,7 +542,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   gridRtl: { flexDirection: 'row-reverse' },
-  gridPhone: { flexDirection: 'column', flexWrap: 'nowrap' },
   cell: {
     width: '49%',
     flexGrow: 1,
@@ -448,7 +552,6 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     minHeight: 200,
   },
-  cellPhone: { width: '100%', minHeight: 0 },
   cellShort: { minHeight: 0 },
   cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   cellHeadRtl: { flexDirection: 'row-reverse' },
@@ -462,6 +565,27 @@ const styles = StyleSheet.create({
   demoTag: { color: colors.warn, fontSize: 11, fontWeight: '500' },
   closedTag: { color: colors.warn, fontSize: 11, fontWeight: '500', opacity: 0.9 },
   // القيادة والتبعية موسومتان بالرأس وبحدّ الخلية: المزامنة لا تعمل بصمت.
+  // الهاتف (قرار ١٦): ألسنة الرموز فوق شارت واحد. اللسان المختار بتعبئة + علامة سفلية 2px (لا باللون وحده، §4)،
+  // والعلامة بلون النصّ لا التأكيد: الفريم النشط بالشريط فوقها هو عنصر التأكيد الوحيد (§1).
+  phoneBody: { flex: 1, paddingHorizontal: spacing.sm, paddingTop: spacing.sm },
+  tabs: { flexDirection: 'row', gap: spacing.xs },
+  tabsRtl: { flexDirection: 'row-reverse' },
+  tab: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: selectedMarkerWidth,
+    borderBottomColor: 'transparent',
+  },
+  tabOn: { backgroundColor: colors.selectedFill, borderBottomColor: colors.text },
+  tabSym: { color: colors.textDim, fontSize: 12, fontWeight: '500' },
+  tabSymOn: { color: colors.text },
+  tabPrice: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600' },
+  tabPct: { ...numeric, fontSize: 11, fontWeight: '500' },
+  phoneTags: { flexDirection: 'row', gap: spacing.sm, paddingTop: spacing.xs },
+  phoneChart: { flex: 1, marginTop: spacing.sm, marginBottom: spacing.sm },
   syncBadge: {
     color: colors.textDim,
     fontSize: 11,
