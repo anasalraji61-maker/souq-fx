@@ -1292,3 +1292,24 @@ console.log('newsRisk unannounced alongside timed selftest OK');
   assert.deepEqual(openPositionsUnannounced(['EURUSD', 'XAUUSD'], [g20], at, undefined, 0)?.symbols, ['EURUSD', 'XAUUSD']);
 }
 console.log('newsRisk open-positions unannounced selftest OK');
+
+// شريط الشبكة (قائمة `shownSymbol`): يُقاس بعملاتها معاً — لا برمز الرصيف وحده (قرار بنك كندا على USDCAD مفتوحة كان يسكت)
+{
+  const now = 1_800_000_000_000;
+  const ev = (id: string, currency: string, minutes: number): NewsEvent => ({
+    id, title: id, currency, impact: 'High', ts: (now + minutes * 60_000) / 1000,
+  });
+  const boc = ev('BOC', 'CAD', 20);
+  const grid = ['USDJPY', 'EURUSD', 'GBPUSD', 'XAUUSD'];
+  // الشبكة لا تذكر CAD ⇒ شريط المفتوحة يقوله (كان يسكت لأن رمز الرصيف USDCAD)
+  assert.equal(openPositionsNewsRisk(['USDCAD'], [boc], now, grid)!.event.id, 'BOC');
+  assert.equal(openPositionsNewsRisk(['USDCAD'], [boc], now, 'USDCAD'), null);
+  // الشبكة تذكر CAD لكن شريطها على خبر إسترليني أقرب ⇒ قرار كندا يبقى بشريط المفتوحة
+  const boe = ev('BoE', 'GBP', 10);
+  assert.equal(openPositionsNewsRisk(['USDCAD'], [boc, boe], now, ['GBPUSD', 'USDCAD'])!.event.id, 'BOC');
+  // والشبكة تعلن اللحظة نفسها لكل عملات المفتوحة ⇒ لا تحذيران
+  assert.equal(openPositionsNewsRisk(['USDCAD'], [boc], now, ['EURUSD', 'USDCAD']), null);
+  // قائمة فارغة/فراغات = لا شريط آخر
+  assert.equal(openPositionsNewsRisk(['USDCAD'], [boc], now, ['', ' '])!.event.id, 'BOC');
+}
+console.log('newsRisk grid shownSymbol selftest OK');

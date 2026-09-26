@@ -342,6 +342,12 @@ export function newsCurrencies(symbol: string): string[] {
  * (وتخطيطات 2–4 إطارات) تعرض DXY + ثلاثة أزواج محفوظة، والشريط كان يتبع `symbol` وحده — EURUSD الابتدائي الذي لا يُستعاد ولا
  * يُعرض — فقرار بنك إنجلترا بعد 10د لا يُحذَّر له وإطار GBPUSD على الشاشة. رمزٌ بلا عملات يسقط وحده.
  */
+/** `shownSymbol` رمزاً أو قائمة (شريط الشبكة) ⇒ قائمة بلا فراغ. */
+function shownList(shown: string | readonly string[] | undefined): string[] {
+  const list = typeof shown === 'string' ? [shown] : shown ?? [];
+  return list.map((x) => String(x ?? '').trim()).filter(Boolean);
+}
+
 export function shownNewsCurrencies(symbols: readonly string[]): string[] {
   const out: string[] = [];
   for (const s of symbols) for (const c of newsCurrencies(s)) if (!out.includes(c)) out.push(c);
@@ -581,12 +587,14 @@ export function bankHolidayToday(
  * `shownSymbol` = رمز شريطٍ آخر ظاهر بالشاشة نفسها (نموذج الدفتر، أو الشارت بجانب الرصيف/اللوح): إن كان شريطه يعلن **اللحظة
  * نفسها** (حدثه بالدقيقة نفسها) وعملاته تشمل كل عملة تحرّك المفتوحة ⇒ `null` — لا تحذيران متطابقان، ولا يُعلَن الخبر مرّتين
  * لقارئ الشاشة (كلاهما `alert`). خبرٌ آخر، أو عملة تحرّك المفتوحة لا يذكرها ذلك الشريط (GDP إسترليني مع الرواتب ⇒ EURGBP) ⇒ يبقى.
+ * **قائمة** رموز = شريط شبكة الطرفية (`alsoSymbols`): يُقاس بعملاتها معاً كما يختار حدثه. كان رمز الرصيف وحده ⇒ على الهاتف
+ * (الشبكة USDJPY/EURUSD/GBPUSD/XAUUSD) والدفتر لـUSDCAD، قرار بنك كندا على USDCAD مفتوحة **لا يُقال بأيّ شريط**.
  */
 export function openPositionsNewsRisk(
   symbols: readonly string[],
   events: readonly NewsEvent[],
   nowMs: number,
-  shownSymbol?: string
+  shownSymbol?: string | readonly string[]
 ): { event: NewsEvent; deltaMs: number; currencies: string[]; symbols: string[] } | null {
   const seen = new Set<string>();
   const uniq: { sym: string; ccys: string[] }[] = [];
@@ -602,8 +610,8 @@ export function openPositionsNewsRisk(
   const hit = nextHighImpact(events, currencies, nowMs);
   if (!hit) return null;
   const moving = new Set(sameMinuteCurrencyLabel(events, currencies, hit.event).split('/'));
-  if (shownSymbol) {
-    const shownCcys = newsCurrencies(shownSymbol);
+  if (shownList(shownSymbol).length) {
+    const shownCcys = shownNewsCurrencies(shownList(shownSymbol));
     const shown = nextHighImpact(events, shownCcys, nowMs);
     const sameMoment =
       shown != null && typeof shown.event.ts === 'number' && Math.abs(shown.event.ts - (hit.event.ts as number)) < 60;
@@ -629,7 +637,7 @@ export function openPositionsUnannounced(
   symbols: readonly string[],
   events: readonly NewsEvent[],
   nowMs: number,
-  shownSymbol?: string,
+  shownSymbol?: string | readonly string[],
   localOffsetMin?: number
 ): { currencies: string[]; titles: string[]; tomorrow: boolean; sameDay: boolean; symbols: string[] } | null {
   const seen = new Set<string>();
@@ -646,8 +654,8 @@ export function openPositionsUnannounced(
   const hit = unannouncedHighImpactToday(events, currencies, nowMs, NEWS_HORIZON_MS, localOffsetMin);
   if (!hit) return null;
   const moving = new Set(hit.currencies);
-  if (shownSymbol) {
-    const shownCcys = newsCurrencies(shownSymbol);
+  if (shownList(shownSymbol).length) {
+    const shownCcys = shownNewsCurrencies(shownList(shownSymbol));
     const shown = unannouncedHighImpactToday(events, shownCcys, nowMs, NEWS_HORIZON_MS, localOffsetMin);
     if (shown && [...moving].every((c) => c === 'ALL' || shown.currencies.includes(c))) return null;
   }
@@ -872,11 +880,11 @@ export function calendarUnavailable(cache: CalendarCache | null, symbol: string)
 export function openCalendarUnavailable(
   cache: CalendarCache | null,
   openSymbols: readonly string[],
-  shownSymbol?: string,
+  shownSymbol?: string | readonly string[],
   stale?: { serverStale: boolean; nowMs: number }
 ): boolean {
   const down = (s: string) => (stale ? calendarDown(cache, stale.serverStale, s, stale.nowMs) : calendarUnavailable(cache, s));
-  if (shownSymbol && down(shownSymbol)) return false;
+  if (shownList(shownSymbol).some(down)) return false;
   return openSymbols.some(down);
 }
 

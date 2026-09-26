@@ -121,7 +121,7 @@ import {
   journalChartSymbolAfterSave,
   saveOverrideAccepted,
 } from '../tradePlan';
-import { NewsRiskBanner } from './NewsRiskBanner';
+import { NewsRiskBanner, useChartBannerSymbols } from './NewsRiskBanner';
 
 /**
  * حدّ خانات السعر (دخول/خروج/وقف/هدف). كان 12: أندرويد يقصّ بـ`maxLength` حتى النصّ الذي يملؤه التطبيق — تعديل صفقة PEPE
@@ -224,6 +224,8 @@ const isChangedConcurrentlyError = (e: unknown) =>
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBannerVisible = false }: Props = {}) {
   const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
+  // شريط الشارت بالطرفية: رموزه كما يقيسها (شبكة الهاتف لا رمز الرصيف) — لشريط الصفقات المفتوحة أدناه
+  const chartBannerSymbols = useChartBannerSymbols();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   /** `/api/trades` `total` (backend-r1) — كل صفقات المتداول لا الصفحة. `null` بخادمٍ أقدم لا يرسله. */
@@ -1762,11 +1764,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
 
       {/* الرمز الذي يعلن شريطه خبره بالشاشة نفسها: بـ`flow` شريط النموذج (إلا عند التعديل — راجع أسفل)، وبالرصيف/اللوح
           شريط الشارت لرمزه (`defaultSymbol`) حين يكون ظاهراً (`chartBannerVisible`) — فلا تحذيران متطابقان ولا إعلانان
-          لقارئ الشاشة (QA38) */}
+          لقارئ الشاشة (QA38). وشريط الشارت بالطرفية قد يكون لشبكة رموز لا لرمز الرصيف: رموزه كما يقيسها (`useChartBannerSymbols`) */}
       {openSymbols.length > 0 ? (
         <NewsRiskBanner
           openSymbols={openSymbols}
-          shownSymbol={flow ? (editing ? undefined : symbol.trim()) : chartBannerVisible ? defaultSymbol : undefined}
+          shownSymbol={flow ? (editing ? undefined : symbol.trim()) : chartBannerVisible ? chartBannerSymbols ?? defaultSymbol : undefined}
         />
       ) : null}
       {openRiskLine ? <Text style={[styles.stat, { textAlign: align }]}>{openRiskLine}</Text> : null}

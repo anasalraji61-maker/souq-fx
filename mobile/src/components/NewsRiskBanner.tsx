@@ -105,18 +105,44 @@ type Props =
        * — راجع `shownNewsCurrencies`.
        */
       alsoSymbols?: readonly string[];
+      /** شريط الطرفية فوق الشارت: ينشر رموزه لشريط صفقات الدفتر بالرصيف (`useChartBannerSymbols`) */
+      chart?: boolean;
       openSymbols?: never;
       shownSymbol?: never;
     }
   | {
       symbol?: never;
       alsoSymbols?: never;
+      chart?: never;
       openSymbols: readonly string[];
-      /** رمز شريطٍ آخر ظاهر بالشاشة نفسها: اللحظة نفسها لا تُعلَن مرّتين — راجع `openPositionsNewsRisk` */
-      shownSymbol?: string;
+      /** رمز شريطٍ آخر ظاهر بالشاشة نفسها (أو رموزه كلها): اللحظة نفسها لا تُعلَن مرّتين — راجع `openPositionsNewsRisk` */
+      shownSymbol?: string | readonly string[];
     };
 
-export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSymbol }: Props) {
+/**
+ * رموز شريط الشارت بالطرفية كما يقيسها (`symbol` + `alsoSymbols`)؛ null = لا شريط شارت مركَّب. شريط صفقات الدفتر بالرصيف
+ * كان يفترض أنه لرمز الرصيف وحده ⇒ على شبكة الهاتف (USDJPY/EURUSD/GBPUSD/XAUUSD) والرصيف على USDCAD، يسكت عن قرار بنك
+ * كندا على USDCAD مفتوحة «لأن شريط الشارت يقوله» — وهو لا يقوله. الآن يُقاس بما يقيسه شريط الشارت فعلاً.
+ */
+let chartBannerSymbols: readonly string[] | null = null;
+const chartBannerListeners = new Set<() => void>();
+function publishChartBanner(next: readonly string[] | null) {
+  chartBannerSymbols = next;
+  chartBannerListeners.forEach((fn) => fn());
+}
+export function useChartBannerSymbols(): readonly string[] | null {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const fn = () => bump((v) => v + 1);
+    chartBannerListeners.add(fn);
+    return () => {
+      chartBannerListeners.delete(fn);
+    };
+  }, []);
+  return chartBannerSymbols;
+}
+
+export function NewsRiskBanner({ symbol = '', alsoSymbols, chart, openSymbols, shownSymbol }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
@@ -158,6 +184,12 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSym
   const shown = alsoSymbols?.length ? [symbol, ...alsoSymbols] : [symbol];
   const currencies = openSymbols ? [...new Set(openSymbols.flatMap((s) => newsCurrencies(s)))] : shownNewsCurrencies(shown);
   const currencyKey = currencies.join(',');
+  const shownKey = shown.join('|');
+  useEffect(() => {
+    if (!chart) return;
+    publishChartBanner(shownKey.split('|'));
+    return () => publishChartBanner(null);
+  }, [chart, shownKey]);
   // تبديل الرمز والشريط مركَّب (الطرفية، الحاسبة، كتابة رمز الدفتر): `now` كان آخر دقّة للساعة — حتى 60ث قديمة —
   // فخبر الزوج الجديد بعد 40ث يُكتب «بعد 1د» 35ث، ومؤقّت التجديد يُجدول من الفرق الخطأ نفسه
   useEffect(() => {

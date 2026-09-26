@@ -1492,7 +1492,7 @@ export function TerminalScreen() {
         </ScrollView>
       ) : null}
 
-      <NewsRiskBanner symbol={bannerFrameSymbols?.[0] ?? symbol} alsoSymbols={bannerFrameSymbols?.slice(1)} />
+      <NewsRiskBanner chart symbol={bannerFrameSymbols?.[0] ?? symbol} alsoSymbols={bannerFrameSymbols?.slice(1)} />
 
       <View style={styles.workspace}>
         {!phone ? (
