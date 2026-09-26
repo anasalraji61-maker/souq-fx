@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  mine: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  mine: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   user: { color: colors.accent, fontSize: 11, fontWeight: '500' },
   userFlex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

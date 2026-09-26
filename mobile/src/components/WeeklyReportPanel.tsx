@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  tileOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  tileOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   tileDisabled: { opacity: 0.4 },
   tileTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 15 },
   tileHint: { color: colors.textDim, textAlign: 'right', fontSize: 12 },

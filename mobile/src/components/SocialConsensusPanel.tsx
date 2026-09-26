@@ -328,9 +328,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
     maxWidth: 200,
   },
-  chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  chipOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  chipTextOn: { color: colors.accent },
+  chipTextOn: { color: colors.text },
   consensus: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,

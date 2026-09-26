@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgElevated,
   },
-  cellOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  cellOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   cellText: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
-  cellTextOn: { color: colors.accent },
+  cellTextOn: { color: colors.text },
 });

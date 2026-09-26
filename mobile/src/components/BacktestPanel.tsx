@@ -379,9 +379,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
   },
-  chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  chipOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
-  chipTextOn: { color: colors.accent },
+  chipTextOn: { color: colors.text },
   btn: {
     backgroundColor: colors.accent,
     borderRadius: radii.sm,

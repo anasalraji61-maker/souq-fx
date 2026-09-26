@@ -1199,9 +1199,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
   },
-  condOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  condOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   condText: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
-  condTextOn: { color: colors.accent },
+  condTextOn: { color: colors.text },
   addBtn: {
     flex: 1,
     backgroundColor: colors.accent,

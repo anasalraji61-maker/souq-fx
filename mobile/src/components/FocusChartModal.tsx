@@ -591,7 +591,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     backgroundColor: colors.bgPanel,
   },
-  watchOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  // المختار بالتعبئة وحدها (DESIGN-PRO §5.5)؛ الحدّ يبقى لـ`watchCompare` (لون خطّ المقارنة).
+  watchOn: { backgroundColor: colors.accentSoft },
   // لون خطّ المقارنة نفسه على الرسم (`COMPARE_COLOR`) — `infoAccent` هو لون SMA 50 فكان
   // يوحي بالخطّ الخطأ.
   watchCompare: { borderColor: COMPARE_COLOR },
@@ -610,7 +611,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  pillOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  pillOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   pillText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
-  pillTextOn: { color: colors.accent },
+  pillTextOn: { color: colors.text },
 });
