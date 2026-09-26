@@ -624,11 +624,12 @@ const styles = StyleSheet.create({
   },
   chartHeadRtl: { flexDirection: 'row-reverse' },
   chartLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  chartHide: { color: colors.accent, fontSize: 11, fontWeight: '500' },
+  // DESIGN-PRO §1: رابطا إخفاء/إظهار الشارت نصّ ثانوي — التأكيد يبقى لشريط التقدّم وحده بالدرس.
+  chartHide: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chartDemoTag: { color: colors.warn, fontWeight: '500' },
   chartPracticeNote: { color: colors.warn, fontSize: 11, marginTop: spacing.xs },
   showChart: {
-    color: colors.accent,
+    color: colors.textMuted,
     marginBottom: spacing.sm,
     fontWeight: '500',
     fontSize: 12,
@@ -653,7 +654,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.accent,
+    // النقطة بجانب نصّ الحالة («الصوت يعمل»/«متوقف») لا تحمل المعنى وحدها؛ بلا تأكيد ثانٍ بجانب شريط التقدّم.
+    backgroundColor: colors.textMuted,
   },
   voiceDotPaused: { backgroundColor: colors.warn },
   voiceBarText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
