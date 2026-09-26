@@ -3243,9 +3243,9 @@ const enUS: Dict = {
   riskCalcAccountCcy: 'Account currency',
   riskCalcBalance: 'Account balance',
   riskCalcRiskPct: 'Risk (% or amount)',
-  riskCalcRiskMoneyHint: 'Select {ccy} to enter the risk as an amount instead of a percent',
+  riskCalcRiskMoneyHint: 'Select {ccy} to enter the risk as an amount instead of a percentage',
   riskCalcRiskOverBalance:
-    'Your risk ({risk}) is larger than your account balance ({balance}) — a single stop-loss hit would wipe out the whole account. Check both fields: you may have typed an amount instead of a percent, or left a zero off the balance.',
+    'Your risk ({risk}) is larger than your account balance ({balance}) — a single stop-loss hit would wipe out the whole account. Check both fields: you may have typed an amount instead of a percentage, or left a zero off the balance.',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
   riskCalcLossStreak: '{n} losses in a row at this risk = −{pct}% of the account',
   riskCalcDailyLimit: 'Daily loss limit %',
