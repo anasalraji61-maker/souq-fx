@@ -54,7 +54,6 @@ function freshModule(disk: Disk) {
   const gate = new Promise<void>((r) => (release = r));
   stubs['@react-native-async-storage/async-storage'] = {
     __esModule: true,
-    __esModule: true,
     default: {
       getItem: async () => {
         await gate;
