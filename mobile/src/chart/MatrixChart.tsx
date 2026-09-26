@@ -986,6 +986,18 @@ function AlertDragHandle({
   );
 }
 
+// خطوط عتبات اللوحات وأرقامها (RSI 70/30، CCI ‎±100‎) وخطّ الصفر ثابتة على الشاشة كالمحور، لا تُزاح مع الأعمدة:
+// صفّ الأعمدة مُزاح بـ`viewXPan` (هامش اليمين وقت السكون −10% من اللوح) ⇒ الرقم عند ‎left: 3‎ كان يقع عند ‎−24px‎
+// على هاتف 360px فيُقصّ كلياً، والخطّ ينتهي قبل رأس اللوحة بـ27px. يُطرح الانزياح كما في `paneCrossLine`.
+const PaneXShift = React.createContext(0);
+function paneFixStyles(shift: number) {
+  return { line: { left: 2 - shift, right: 2 + shift }, label: { left: 3 - shift } };
+}
+function usePaneFix() {
+  const shift = React.useContext(PaneXShift);
+  return useMemo(() => paneFixStyles(shift), [shift]);
+}
+
 function PaneGuideLines({
   paneId,
   innerH,
@@ -995,6 +1007,7 @@ function PaneGuideLines({
   innerH: number;
   range?: { min: number; max: number };
 }) {
+  const paneFix = usePaneFix();
   const guides = placeGuides(paneId, innerH, range);
   if (guides.length === 0) return null;
   return (
@@ -1003,12 +1016,12 @@ function PaneGuideLines({
         <React.Fragment key={g.v}>
           <View
             pointerEvents="none"
-            style={[styles.paneGuideLine, g.kind === 'mid' && styles.paneGuideLineMid, { top: g.top }]}
+            style={[styles.paneGuideLine, paneFix.line, g.kind === 'mid' && styles.paneGuideLineMid, { top: g.top }]}
           />
           {g.label ? (
             // الرقم داخل View لا مباشرةً: `pointerEvents` خاصية View، و`Text` عارٍ قد يبتلع
             // بداية سحب الشارت عند أقصى اليسار.
-            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 6) }]}>
+            <View pointerEvents="none" style={[styles.paneGuideLabelBox, paneFix.label, { top: Math.max(0, g.top - 6) }]}>
               <Text style={styles.paneGuideLabel}>{g.label}</Text>
             </View>
           ) : null}
@@ -1455,6 +1468,7 @@ function TrendLineSeries({
    */
   levels?: readonly number[];
 }) {
+  const paneFix = usePaneFix();
   const innerH = Math.max(0, paneH - 16);
   const all = values.filter((x): x is number => x != null);
   const seen = vis ? values.slice(Math.max(0, vis.lo), vis.hi + 1).filter((x): x is number => x != null) : [];
@@ -1467,9 +1481,9 @@ function TrendLineSeries({
     <>
       {guides.map((g) => (
         <React.Fragment key={g.v}>
-          <View pointerEvents="none" style={[styles.paneGuideLine, { top: g.top }]} />
+          <View pointerEvents="none" style={[styles.paneGuideLine, paneFix.line, { top: g.top }]} />
           {g.label ? (
-            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 6) }]}>
+            <View pointerEvents="none" style={[styles.paneGuideLabelBox, paneFix.label, { top: Math.max(0, g.top - 6) }]}>
               <Text style={styles.paneGuideLabel}>{g.label}</Text>
             </View>
           ) : null}
@@ -1528,6 +1542,7 @@ function ZeroLineSeries({
    */
   levels?: readonly number[];
 }) {
+  const paneFix = usePaneFix();
   const reach = levels && levels.length ? Math.max(...levels.map(Math.abs)) : null;
   // `hist` بـmacdPaneGeom يدخل المقياس عند الشموع الصالحة وحدها — فسلسلة ثابتة بقيمة
   // أبعد مستوى تضمن اتّساع المقياس له دون أن تُرسم.
@@ -1537,15 +1552,15 @@ function ZeroLineSeries({
   const showLabels = g.innerH >= GUIDES_LABEL_MIN_INNER_H;
   return (
     <>
-      <View pointerEvents="none" style={[styles.paneZeroLine, { top: g.zeroY }]} />
+      <View pointerEvents="none" style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]} />
       {showLevels
         ? levels.map((lv) => (
             <React.Fragment key={lv}>
-              <View pointerEvents="none" style={[styles.paneGuideLine, { top: g.y(lv) }]} />
+              <View pointerEvents="none" style={[styles.paneGuideLine, paneFix.line, { top: g.y(lv) }]} />
               {showLabels ? (
                 <View
                   pointerEvents="none"
-                  style={[styles.paneGuideLabelBox, { top: Math.max(0, g.y(lv) - 6) }]}
+                  style={[styles.paneGuideLabelBox, paneFix.label, { top: Math.max(0, g.y(lv) - 6) }]}
                 >
                   <Text style={styles.paneGuideLabel}>{String(lv)}</Text>
                 </View>
@@ -4257,6 +4272,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         : { transform: [{ translateX: viewXPan }] },
     [viewXPan, slotFill, chartPlotW]
   );
+  const paneFix = useMemo(() => paneFixStyles(viewXPan), [viewXPan]);
   const toScale = (price: number) => (logScale ? Math.log(Math.max(price, 1e-12)) : price);
   const fromScale = (scaled: number) => (logScale ? Math.exp(scaled) : scaled);
 
@@ -11390,6 +11406,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       </View>
 
       {/* panes */}
+      <PaneXShift.Provider value={viewXPan}>
       {indicators.includes('volume') ? (
         <View style={[styles.pane, { height: paneH }]}>
           {/* بلا لون: أعمدة اللوحة ملوّنة باتجاه الشمعة (شراء/بيع)، فلونٌ ثانٍ على
@@ -11504,7 +11521,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxCog = visibleMax(cog, paneVis, true);
@@ -11538,7 +11555,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxSq = visibleMax(squeeze.momentum, paneVis, true);
@@ -11575,7 +11592,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxWc = visibleMax(woodieCci.cci, paneVis, true);
@@ -11690,7 +11707,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxC = visibleMax(cfo, paneVis, true);
@@ -11737,7 +11754,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   {vwMacd.hist.map((v, i) => {
                     if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
@@ -11785,7 +11802,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxD = visibleMax(disparityIndex, paneVis, true);
@@ -11863,7 +11880,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxP = visibleMax(pgo, paneVis, true);
@@ -11897,7 +11914,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxP = visibleMax(pfe, paneVis, true);
@@ -11931,7 +11948,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {/* مذبذب بإشارة (السعر فوق/تحت قوس المتوسّطات) حول الصفر — كان عمود تأكيد أحادي الجانب. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxR = visibleMax(rainbowOsc, paneVis, true);
@@ -11990,7 +12007,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxV = visibleMax(vpci, paneVis, true);
@@ -12024,7 +12041,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxT = visibleMax(ttf, paneVis, true);
@@ -12088,7 +12105,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxV = visibleMax(vfi, paneVis, true);
@@ -12140,7 +12157,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {twiggsMoneyFlow.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
@@ -12171,7 +12188,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {vzo.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
@@ -12202,7 +12219,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxG = visibleMax(gmmaOsc, paneVis, true);
@@ -12236,7 +12253,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               // محصورة نظرياً بصرامة داخل (−1,1) — نطاق ثابت معروف مسبقاً بدل تطبيع ديناميكي
@@ -12414,7 +12431,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxA = visibleMax(ao.v, paneVis, true);
@@ -12449,7 +12466,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxAc = visibleMax(ac.v, paneVis, true);
@@ -12484,7 +12501,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxF = visibleMax(fractalChaosOsc, paneVis, true);
@@ -12538,7 +12555,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxBp = visibleMax(bullPower, paneVis, true);
@@ -12572,7 +12589,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxBe = visibleMax(bearPower, paneVis, true);
@@ -12604,7 +12621,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {paneCrossLine}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxBb = visibleMax(bbPower, paneVis, true);
@@ -12649,7 +12666,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   <PaneLineLayer
                     innerH={g.innerH}
@@ -12710,7 +12727,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   {ppo.hist.map((v, i) => {
                     if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
@@ -12757,7 +12774,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxCv = visibleMax(chaikinVol, paneVis, true);
@@ -12791,7 +12808,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxQ = visibleMax(qstick, paneVis, true);
@@ -12864,7 +12881,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxPv = visibleMax(pvo, paneVis, true);
@@ -12898,7 +12915,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxA = visibleMax(apo, paneVis, true);
@@ -12932,7 +12949,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxVo = visibleMax(vo, paneVis, true);
@@ -13210,7 +13227,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   <PaneLineLayer
                     innerH={g.innerH}
@@ -13239,7 +13256,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxL = visibleMax(linRegSlope, paneVis, true);
@@ -13399,7 +13416,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxR = visibleMax(ravi, paneVis, true);
@@ -13475,15 +13492,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   {guides.map((gd) => (
                     <React.Fragment key={gd.v}>
-                      <View pointerEvents="none" style={[styles.paneGuideLine, { top: gd.top }]} />
+                      <View pointerEvents="none" style={[styles.paneGuideLine, paneFix.line, { top: gd.top }]} />
                       {gd.label ? (
                         <View
                           pointerEvents="none"
-                          style={[styles.paneGuideLabelBox, { top: Math.max(0, gd.top - 6) }]}
+                          style={[styles.paneGuideLabelBox, paneFix.label, { top: Math.max(0, gd.top - 6) }]}
                         >
                           <Text style={styles.paneGuideLabel}>{gd.label}</Text>
                         </View>
@@ -13531,7 +13548,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   <PaneLineLayer
                     innerH={g.innerH}
@@ -13761,14 +13778,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
               return (
                 <>
-                  <View pointerEvents="none" style={[styles.paneZeroLine, { top: y(0) }]} />
+                  <View pointerEvents="none" style={[styles.paneZeroLine, paneFix.line, { top: y(0) }]} />
                   {guides.map((gd) => (
                     <React.Fragment key={gd.v}>
-                      <View pointerEvents="none" style={[styles.paneGuideLine, { top: gd.top }]} />
+                      <View pointerEvents="none" style={[styles.paneGuideLine, paneFix.line, { top: gd.top }]} />
                       {gd.label ? (
                         <View
                           pointerEvents="none"
-                          style={[styles.paneGuideLabelBox, { top: Math.max(0, gd.top - 6) }]}
+                          style={[styles.paneGuideLabelBox, paneFix.label, { top: Math.max(0, gd.top - 6) }]}
                         >
                           <Text style={styles.paneGuideLabel}>{gd.label}</Text>
                         </View>
@@ -13799,7 +13816,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxM = visibleMax(smiErgodic, paneVis, true);
@@ -13844,7 +13861,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <>
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   <PaneLineLayer
                     innerH={g.innerH}
@@ -13958,7 +13975,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxV = visibleMax(volRoc, paneVis, true);
@@ -14041,7 +14058,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const vals = [...gator.upper, ...gator.lower].filter(
@@ -14118,7 +14135,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   {/* خطّ الصفر: مرجع التقاطع الذي كان غائباً */}
                   <View
                     pointerEvents="none"
-                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                    style={[styles.paneZeroLine, paneFix.line, { top: g.zeroY }]}
                   />
                   {macd.hist.map((v, i) => {
                     if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
@@ -14290,7 +14307,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
             <View
               pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+              style={[styles.paneZeroLine, paneFix.line, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
               const maxA = visibleMax(aroon, paneVis, true);
@@ -14324,6 +14341,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </View>
         </View>
       ) : null}
+
+      </PaneXShift.Provider>
 
       {/* شريط اللوحات المطويّة: بديل الفيض الصامت خارج صندوق الشارت.
           وبضغطة واحدة يعرض المطويّ بدل الظاهر — فالمؤشّر المطويّ لم يعد مفقوداً
