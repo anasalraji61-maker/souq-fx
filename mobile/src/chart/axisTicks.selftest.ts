@@ -326,6 +326,11 @@ console.log('axisTicks.selftest: PASS');
   const jpy = niceLogPriceTicks(75.5, 161.9, 7, 0.001);
   assert.ok(jpy.length >= nicePriceTicks(75.5, 161.9, 7, 0.001).length, `jpy log ≥ linear: ${jpy}`);
   assert.ok(niceLogPriceTicks(1.05, 2.4, 7, 0.00001).length >= 4, 'narrow log range keeps labels');
+  // مدى عدّة عقود: الوسوم تغطّي أعلى المحور لا أسفله وحده
+  const btc = niceLogPriceTicks(100, 70000, 7, 0.01);
+  assert.ok(Math.max(...btc) >= 50000, `BTC top labelled: ${btc.join(' ')}`);
+  const dec3 = niceLogPriceTicks(1, 1000, 7, 0.01);
+  for (let i = 1; i < dec3.length; i++) assert.ok(Math.log(dec3[i] / dec3[i - 1]) < 0.5 * Math.log(1000), `no half-axis gap: ${dec3.join(' ')}`);
   console.log('niceLogPriceTicks PASS');
 }
 

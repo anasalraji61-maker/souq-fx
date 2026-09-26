@@ -134,16 +134,30 @@ export function niceLogPriceTicks(lo: number, hi: number, maxCount: number, minS
   const k0 = Math.floor(Math.log10(lo)) - 1;
   const k1 = Math.ceil(Math.log10(hi));
   const kept: number[] = [];
+  // داخل كل درجة: الأبعد (بالسجلّ) عمّا قُبل أولاً. كان التصاعد من أصغر قوة عشرة يملأ الحدّ بالأسعار الدنيا:
+  // BTC ‏100..70000 ⇒ 100…10000 وأعلى 30% من المحور (حيث السعر الحالي) بلا وسم.
   for (const ladder of LOG_LADDERS) {
-    for (let k = k0; k <= k1 && kept.length < cap; k++) {
+    const cand: number[] = [];
+    for (let k = k0; k <= k1; k++) {
       for (const m of ladder) {
-        if (kept.length >= cap) break;
         const v = Number((m * Math.pow(10, k)).toFixed(Math.min(20, places)));
-        if (!(v > 0) || v < lo || v > hi) continue;
-        const lv = Math.log(v);
-        if (kept.some((x) => Math.abs(Math.log(x) - lv) < minGap)) continue;
-        kept.push(v);
+        if (v > 0 && v >= lo && v <= hi) cand.push(v);
       }
+    }
+    while (kept.length < cap) {
+      let best = -1;
+      let bestD = -1;
+      for (const v of cand) {
+        const lv = Math.log(v);
+        let d = Infinity;
+        for (const x of kept) d = Math.min(d, Math.abs(Math.log(x) - lv));
+        if (d >= minGap && d > bestD) {
+          bestD = d;
+          best = v;
+        }
+      }
+      if (best < 0) break;
+      kept.push(best);
     }
   }
   return kept.sort((x, y) => x - y);
