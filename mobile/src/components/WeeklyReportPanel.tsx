@@ -12,6 +12,7 @@ import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { FrameSizedGrid } from './FrameSizedGrid';
 import { useI18n } from '../i18n/I18nContext';
+import { formatSignedPct } from '../tradePlan';
 import type { Dict } from '../i18n/locales';
 
 type ReportKind = 'weekly_pnl' | 'performance' | 'matrix_advice' | 'risk_brief';
@@ -135,8 +136,8 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           .replace('{pnl}', String(s.total_pnl_pct))
           .replace('{best}', String(s.best))
           .replace('{worst}', String(s.worst))}`;
-        const pctOrDash = (v: number | null | undefined) =>
-          typeof v === 'number' && Number.isFinite(v) ? String(v) : '—';
+        // `formatSignedPct` كتبويب الدفتر («+1.20% / −0.80%»): `String(v)` كان «1.2% / -0.8%» — الربح بلا إشارة.
+        const pctOrDash = formatSignedPct;
         userJournalLine = `\n${[
           t.journalStatClosed.replace('{n}', String(count)),
           t.journalStatWinRate.replace('{pct}%', winRateText),
