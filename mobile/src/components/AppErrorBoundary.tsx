@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { buttons, colors, radii } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
 import { reportError } from '../crashReporting';
@@ -86,7 +86,7 @@ export function AppErrorBoundary({ children }: Props) {
     <ErrorBoundaryInner
       title={t.appCrashTitle}
       body={t.appCrashBody}
-      repeatBody={t.appCrashRepeatBody}
+      repeatBody={Platform.OS === 'web' ? t.appCrashRepeatBodyWeb : t.appCrashRepeatBody}
       retry={t.appCrashRetry}
       detailLabel={t.appCrashDetailLabel}
     >

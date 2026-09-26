@@ -378,6 +378,8 @@ export type Dict = {
   appCrashTitle: string;
   appCrashBody: string;
   appCrashRepeatBody: string;
+  /** `appCrashRepeatBody` بالمتصفّح: لا «قائمة تطبيقات مفتوحة» بالويب — المخرج إعادة تحميل الصفحة. */
+  appCrashRepeatBodyWeb: string;
   appCrashRetry: string;
   /** سطر تقني تحت نصّ التكرار (`AppErrorBoundary`)، يتبعه اسم الخطأ ورسالته بالإنجليزية كما هي. */
   appCrashDetailLabel: string;
@@ -1962,6 +1964,7 @@ const ar: Dict = {
   appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
   appCrashRepeatBody:
     'ما زالت الشاشة تتعثّر. أغلق MATRIX كلياً (اسحبه من قائمة التطبيقات المفتوحة) ثم افتحه من جديد — رسوماتك محفوظة.',
+  appCrashRepeatBodyWeb: 'ما زالت الشاشة تتعثّر. أعد تحميل الصفحة (F5، أو ⌘R على الماك) — رسوماتك محفوظة.',
   appCrashRetry: 'إعادة المحاولة',
   appCrashDetailLabel: 'تفصيل تقني (صوّره إن أبلغت عن المشكلة):',
   planSlWrongBuy: 'الوقف يجب أن يكون تحت سعر الدخول في صفقة الشراء',
@@ -3230,6 +3233,7 @@ const enUS: Dict = {
   appCrashBody: 'This screen couldn’t be displayed. Your data and drawings are safe — select “Try again” to continue.',
   appCrashRepeatBody:
     'Still not working. Fully close MATRIX (swipe it away from your recent apps) and open it again — your drawings are safe.',
+  appCrashRepeatBodyWeb: 'Still not working. Reload the page (F5, or ⌘R on a Mac) — your drawings are safe.',
   appCrashRetry: 'Try again',
   appCrashDetailLabel: 'Technical detail (screenshot it if you report this):',
   planSlWrongBuy: 'For a buy, the stop must be below the entry',
@@ -4541,6 +4545,7 @@ const ku: Dict = {
   appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
   appCrashRepeatBody:
     'هێشتا کار ناکات. MATRIX بە تەواوی دابخە (لە لیستی ئەپە کراوەکان لایبەرە) و دووبارە بیکەرەوە — کێشانەکانت پارێزراون.',
+  appCrashRepeatBodyWeb: 'هێشتا کار ناکات. پەڕەکە نوێ بکەرەوە (F5، یان ⌘R لەسەر ماک) — کێشانەکانت پارێزراون.',
   appCrashRetry: 'دووبارە هەوڵبدەرەوە',
   appCrashDetailLabel: 'وردەکاری تەکنیکی (ئەگەر کێشەکەت ڕاگەیاند وێنەی بگرە):',
   planSlWrongBuy: 'بۆ کڕین، وەستان دەبێت لە خوار نرخی چوونەژوورەوە بێت',
