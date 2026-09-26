@@ -1277,3 +1277,14 @@
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» تعليقات فقط؛ كل `Modal` بنطاقي يحمل `onRequestClose` (Esc على الويب).
 - مُلاحَظ ولم يُصلَح (ضعيف): نتائج البحث السابقة تبقى قابلة للنقر أثناء جلب نصّ جديد؛ `SubscriptionPlansPanel` أسعار ثابتة ($10/15/20) — مخفية بالراية (قرار ١٠)، تُراجَع إن فُتحت.
 - **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة.
+
+## 2026-09-26 — تشغيل 108
+صفّ واحد بـCOORDINATION (دورة QA 122) موجَّه إلى ui كمنفّذ — **أُنجز**. بوابة البناء خضراء (0) قبل الـcommit.
+
+| commit | ماذا | بند |
+|---|---|---|
+| ecfafb6 | `FocusChartModal`: رأس السعر `formatPrice(headPrice, sym, headSeries.last)`، ورسالة «مُسلَّح» بمرجع `series.last` للرمز الحالي، وB/A بمرجع `headSeries?.last ?? quote.bid` ⇒ منازل الرأس = منازل الشارت تحته والإطار/الرباعي (XNGUSD تيك 9.998 وlast 10.002 كان «9.99800» فوق «9.998») | chart103a |
+
+- مسح آلي بنطاقي: كل `Pressable`/`Touchable*` تفاعلي يحمل `accessibilityLabel` (الأغلفة `accessible={false}` للتحويم فقط) (بند القبول ٩)؛ أسعار/نسب/أوقات اللوحات (`AlertsPanel`، `VotePanel`، `DomLitePanel`، `ChartFrame`، `QuadChartModal`، `FocusChartModal`، `NewsPanel`، `SymbolSnapshot`) كلها بـ`...numeric` (بند ١).
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ `Alert.alert`/`window.confirm` تعليقات خارج `chart/confirmDestructive.ts`؛ منتقي التخطيط زرّ واحد بقائمة (`TerminalScreen:1237`).
+- **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة. للـQA: chart103a يُغلق بالكود.
