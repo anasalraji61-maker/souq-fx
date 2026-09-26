@@ -512,6 +512,8 @@ type PointerEventLike = {
     pointerId?: number;
     pointerType?: string;
     button?: number;
+    buttons?: number;
+    shiftKey?: boolean;
   };
   currentTarget?: {
     setPointerCapture?: (pointerId: number) => void;
@@ -4828,6 +4830,33 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // termination so a parent vertical ScrollView cannot steal a diagonal stroke mid-draw.
   const drawGestureHadPending = useRef(false);
   const drawAnchorRef = useRef<ChartPoint | null>(null);
+  // الويب: Shift مضغوط أثناء رسم خطّ اتجاه/شعاع/قناة يثبّت الطرف الثاني على سعر الأوّل (خطّ أفقي محدود بزمنين —
+  // قمّة نطاق بين شمعتين). من مستمع لوحة المفاتيح لا من الحدث: أحداث المستجيب على الويب لا تحمل `shiftKey`.
+  const shiftHeldRef = useRef(false);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const onKey = (e: KeyboardEvent) => {
+      shiftHeldRef.current = e.shiftKey;
+    };
+    const onBlur = () => {
+      shiftHeldRef.current = false;
+    };
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener('keyup', onKey, true);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('keyup', onKey, true);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+  const lockDrawEnd = useCallback(
+    (anchor: ChartPoint | null, end: ChartPoint): ChartPoint =>
+      anchor && shiftHeldRef.current && (tool === 'trend' || tool === 'ray' || tool === 'channel')
+        ? { ...end, price: anchor.price }
+        : end,
+    [tool]
+  );
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -4847,11 +4876,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         },
         onPanResponderMove: (evt) => {
           const { locationX, locationY } = evt.nativeEvent;
-          setDragEnd(pointFromXY(locationX, locationY));
+          setDragEnd(lockDrawEnd(drawAnchorRef.current, pointFromXY(locationX, locationY)));
         },
         onPanResponderRelease: (evt, g) => {
           const { locationX, locationY } = evt.nativeEvent;
-          const end = pointFromXY(locationX, locationY);
+          const end = lockDrawEnd(drawAnchorRef.current, pointFromXY(locationX, locationY));
           if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') {
             // من ref كباقي مسارات النقر: المستجيب لا يُبنى من جديد مع التمرير/التكبير/شمعة جديدة، فـ`onChartPress`
             // المغلَق عليه يحمل نافذة لحظة اختيار الأداة ⇒ التقاطع وقراءة OHLC على شمعة مجاورة أو بعيدة.
@@ -4875,8 +4904,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           }
         },
       }),
-    [interactive, tool, pending, pointFromXY, finalizeDrawing]
+    [interactive, tool, pending, pointFromXY, finalizeDrawing, lockDrawEnd]
   );
+
+  // الويب بأداة رسم: مرور الفأرة بلا زرّ يحرّك التقاطع (السعر على المحور حيث سيقع الطرف) وبعد النقرة الأولى يمدّ
+  // خطّ المعاينة من الطرف الأوّل إلى المؤشّر حتى النقرة الثانية. كان المستجيب لا يرى الحركة بلا زرّ ⇒ بعد النقرة
+  // الأولى لا شيء يتبع الفأرة، فيُوضع الطرف الثاني أعمى. إطار واحد لكل رسم كمعاينة التقاطع بوضع السحب.
+  const drawHoverHandlers =
+    Platform.OS === 'web' && interactive && tool !== 'none' && tool !== 'select'
+      ? {
+          onPointerMove: (event: PointerEventLike) => {
+            const native = event.nativeEvent ?? {};
+            if (native.pointerType === 'touch' || (native.buttons ?? 0) !== 0) return;
+            const rect = event.currentTarget?.getBoundingClientRect?.();
+            const point = pointerXY(event);
+            hoverPoint.current = {
+              x: Math.max(0, point.x - (rect?.left ?? 0)),
+              y: Math.max(0, point.y - (rect?.top ?? 0)),
+            };
+            if (native.shiftKey != null) shiftHeldRef.current = native.shiftKey;
+            if (hoverRaf.current != null) return;
+            hoverRaf.current = requestAnimationFrame(() => {
+              hoverRaf.current = null;
+              const { x, y } = hoverPoint.current;
+              crossAtRef.current(x, y, true);
+              if (pending) setDragEnd(lockDrawEnd(pending, pointFromXY(x, y)));
+            });
+          },
+          onPointerLeave: () => {
+            if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
+            hoverRaf.current = null;
+          },
+        }
+      : {};
 
   // حالة سحب المقبض بمراجع لا بمتغيّرات داخل `useMemo`: `selectPan` يُعاد بناؤه مع كل تغيّر بـ`drawings`
   // (وأوّل خطوة سحب تغيّرها)، ونظام المستجيب يستدعي معالجات **الخصائص الحالية** — فمتغيّر الإغلاق
@@ -7480,6 +7540,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ? { onPointerDown: chartHoldStart, onPointerUp: chartHoldEnd, onPointerCancel: chartHoldEnd }
           : {})}
         {...(interactive && tool !== 'none' && tool !== 'select' ? panResponder.panHandlers : {})}
+        {...drawHoverHandlers}
         {...(interactive && tool === 'select' ? selectPan.panHandlers : {})}
       >
         {!canPan || tool === 'select' ? (
