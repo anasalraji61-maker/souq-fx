@@ -146,7 +146,7 @@ import {
   type PositionSide,
 } from './positionTool';
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
-import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
+import { anchorDrawings, anchorPoint, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
 import { priceSpan } from './priceSpan';
@@ -2054,6 +2054,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     );
     if (next !== loadedDrawings) setDrawings(next);
   }, [drawings, loadedDrawings, source.all, kind, series.timeframe, liveSeries.candles, weekendClosed]);
+
+  // وكذلك آخر قياس مكتمل والنقطة الأولى المعلّقة: كانا بفهارس محفوظة ⇒ على M1 كلّ سقوط لأقدم شمعة
+  // (سقف السلسلة) يزلقهما شمعة يساراً عن الشمعتين اللتين قاسهما المتداول، ويتغيّر عدد الشموع والمدى.
+  useEffect(() => {
+    const bars = source.all as { time: number }[];
+    if (!bars.length) return;
+    const synthetic = isSyntheticKind(kind);
+    const step = timeframeStepSec(series.timeframe);
+    const end = liveSeries.candles[liveSeries.candles.length - 1]?.time;
+    const re = (p: ChartPoint) => anchorPoint(p, bars, step, synthetic, end, weekendClosed);
+    setMeasureDone((m) => {
+      if (!m) return m;
+      const a = re(m.a);
+      const b = re(m.b);
+      return a === m.a && b === m.b ? m : { a, b };
+    });
+    setPending((p) => (p ? re(p) : p));
+  }, [source.all, kind, series.timeframe, liveSeries.candles, weekendClosed]);
 
   const publishSyncWindow = useCallback(() => {
     if (syncFollow) return;

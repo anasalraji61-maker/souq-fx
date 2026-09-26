@@ -245,7 +245,7 @@ export function stampAtIndex(
   return { time };
 }
 
-function anchorPoint(
+export function anchorPoint(
   p: ChartPoint,
   bars: readonly TimeBar[],
   stepSec: number,
