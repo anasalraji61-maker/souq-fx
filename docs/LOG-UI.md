@@ -1089,11 +1089,11 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| fd23672 | `api.closeTrade(id, exit, seen?)` يرسل `{ ...seen, exit }` (`exit` بعدها فلا تغطّيه) ⇒ الدفتر يمرّر `journalCloseSeen(tr)` منذ قبل، فإغلاقٌ على صفّ عُدّل بجهاز آخر صار 409 `trade_changed_concurrently`. التحويل `CloseTradeWithSeen` بـ`TradeJournalPanel` صار زائداً — لـtools حذفه (ملفّه) | tools123a، backend-r82 |
-| 4470014 | قائمة `?` تُلحق `shortcutsMouseWeb` (launch `aaff5fb`) بعد أسطر لوحة المفاتيح: الزرّ الأيمن على الشارت/الرسم، والنقر للتحديد | chart-r93a |
-| da18adb | `FrameSizedGrid` الإطار المسحوب: حُذف الظلّ (كان حدّ+خلفية+ظلّ) — حدّ التأكيد وحده | DESIGN-PRO §5.5 |
+| 99d3f32 | `api.closeTrade(id, exit, seen?)` يرسل `{ ...seen, exit }` (`exit` بعدها فلا تغطّيه) ⇒ الدفتر يمرّر `journalCloseSeen(tr)` منذ قبل، فإغلاقٌ على صفّ عُدّل بجهاز آخر صار 409 `trade_changed_concurrently`. التحويل `CloseTradeWithSeen` بـ`TradeJournalPanel` صار زائداً — لـtools حذفه (ملفّه) | tools123a، backend-r82 |
+| 9d78a64 | قائمة `?` تُلحق `shortcutsMouseWeb` (launch `aaff5fb`) بعد أسطر لوحة المفاتيح: الزرّ الأيمن على الشارت/الرسم، والنقر للتحديد | chart-r93a |
+| f18d978 | `FrameSizedGrid` الإطار المسحوب: حُذف الظلّ (كان حدّ+خلفية+ظلّ) — حدّ التأكيد وحده | DESIGN-PRO §5.5 |
 
 - صفّ **backend-r78a + ui84a** ما زال بالجدول وهو منجز (`9f10840`) — لـQA حذفه.
-- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` داخل `confirmDestructive` وحده؛ «درجة الاتفاق» تعليقات فقط؛ «إعادة الجولة» `AccountScreen:268`؛ لا وزن 700 ولا ظلّ مكدّس بنطاقي بعد da18adb.
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` داخل `confirmDestructive` وحده؛ «درجة الاتفاق» تعليقات فقط؛ «إعادة الجولة» `AccountScreen:268`؛ لا وزن 700 ولا ظلّ مكدّس بنطاقي بعد f18d978.
 - **ui-r77** (لون الخطأ) و**ui85a** (DSN) ما زالا عند أنس.
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: إغلاق صفقة بالدفتر (الطلب يحمل `seen_*` والخادم يقبله 200)، وقائمة `?` بالأسطر الثلاثة الجديدة.
