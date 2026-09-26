@@ -4198,6 +4198,12 @@ console.log('tradePlan journalEditSeen selftest OK');
   assert.equal(journalEditForm({ ...row, side: 'SELL', sl: undefined, note: null }).side, 'buy');
   assert.equal(journalEditForm({ ...row, sl: undefined }).sl, '');
   assert.equal(journalEditForm({ ...row, note: null }).note, '');
+  {
+    const z = journalEditForm({ ...row, sl: 0, tp: 0, exit: 0 });
+    assert.equal(z.sl, '');
+    assert.equal(z.tp, '');
+    assert.equal(z.exit, '');
+  }
   // الجهاز الآخر صحّح الدخول، والمتداول هنا كتب ملاحظة ⇒ الدخول الجديد + ملاحظته (كان الدخول القديم يُكتب فوق التصحيح)
   const fresh = journalEditForm({ ...row, entry: 1.0845 });
   const mine = { ...base, note: 'breakout, moved SL later' };

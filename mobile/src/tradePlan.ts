@@ -752,7 +752,8 @@ export type JournalEditForm = {
 
 /**
  * نموذج التعديل من صفّ الدفتر: الأسعار كما سُجّلت بلا تقريب ولا صيغة أُسّية (`plainStopText` — «1.2e-9» لا يقرؤه `parseDecimal`
- * فلا يُحفظ تعديل PEPE أبداً)، والحجم 1 الذي افترضه الخادم لصفقة بلا حجم فارغٌ (`knownLots`)، والغائب ''.
+ * فلا يُحفظ تعديل PEPE أبداً)، والحجم 1 الذي افترضه الخادم لصفقة بلا حجم فارغٌ (`knownLots`)، والغائب ''. و0 المحفوظ بصفوف قديمة
+ * (الخادم يعدّه «لا قيمة»، كـ`journalEditSeen`) فارغٌ لا «0» — كان يمنع الحفظ برسالة «رقم غير صالح» على خانة لم يمسّها المتداول.
  */
 export function journalEditForm(tr: {
   symbol: string;
@@ -764,7 +765,7 @@ export function journalEditForm(tr: {
   tp?: number | null;
   note?: string | null;
 }): JournalEditForm {
-  const px = (v: number | null | undefined) => (typeof v === 'number' && Number.isFinite(v) ? plainStopText(v) : '');
+  const px = (v: number | null | undefined) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? plainStopText(v) : '');
   const kl = knownLots(tr.size, tr.note);
   return {
     symbol: tr.symbol,
