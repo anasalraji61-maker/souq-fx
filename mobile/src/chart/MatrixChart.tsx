@@ -24,7 +24,15 @@ import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { buttons, colors, numeric, radii, selectedMarkerWidth, spacing } from '../theme';
 import { isTimeframe, type Timeframe } from '../timeframes';
-import { parseTypedTimeframe, TF_TYPING_MAX, tfTypingChar, tfTypingStarts } from './tfTyping';
+import {
+  dateJump,
+  parseTypedDate,
+  parseTypedTimeframe,
+  TF_TYPING_MAX,
+  tfTypingChar,
+  tfTypingStarts,
+  typedDatePending,
+} from './tfTyping';
 import type { Candle, ChartSeries } from '../api';
 import {
   loadDrawings,
@@ -5397,8 +5405,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const onTimeframeKeyRef = useRef(onTimeframeKey);
   onTimeframeKeyRef.current = onTimeframeKey;
   const hasTfKey = !!onTimeframeKey;
+  // «2026-09-01» ثم Enter (`dateJump`): شمعة اليوم وسط اللوح والتقاطع مثبَّت عليها. حدّا اليوم بـUTC لشموع D/W
+  // (كما يكتبها المحور، `candleDateParts`) وبالمحلّي لما دونها. لا بالإعادة: القفز يكشف ما بعد شمعة الإعادة.
+  const dateJumpFor = (typed: string) => {
+    const d = parseTypedDate(typed);
+    if (!d || !canPan || replayOn) return null;
+    const utc = timeframeStepSec(series.timeframe) >= 86400;
+    const startMs = utc ? Date.UTC(d.year, d.month - 1, d.day) : new Date(d.year, d.month - 1, d.day).getTime();
+    const endMs = utc ? Date.UTC(d.year, d.month - 1, d.day + 1) : new Date(d.year, d.month - 1, d.day + 1).getTime();
+    const all = sourceRef.current.all as TimeBar[];
+    const secs = all.map((b) => (barTime(b) > 1e12 ? barTime(b) / 1000 : barTime(b)));
+    const jump = dateJump(secs, startMs / 1000, endMs / 1000, Date.now() / 1000, windowCountRef.current);
+    const bar = jump ? (all[jump.index] as (TimeBar & { close: number }) | undefined) : undefined;
+    return jump && bar ? { offset: jump.offset, time: bar.time, close: bar.close, sec: secs[jump.index]! } : null;
+  };
+  const dateJumpForRef = useRef(dateJumpFor);
+  dateJumpForRef.current = dateJumpFor;
+  const goToTypedDate = (typed: string) => {
+    const j = dateJumpForRef.current(typed);
+    if (!j) return;
+    offsetRef.current = j.offset;
+    setOffset(j.offset);
+    crossPinned.current = true;
+    crossFromSync.current = false;
+    setCrossHover(false);
+    setCross({ time: j.time, price: j.close });
+    schedulePublishSync(false);
+  };
+  const goToTypedDateRef = useRef(goToTypedDate);
+  goToTypedDateRef.current = goToTypedDate;
+  const tfTypingOn = hasTfKey || canPan;
   useEffect(() => {
-    if (Platform.OS !== 'web' || !hasTfKey) return;
+    if (Platform.OS !== 'web' || !tfTypingOn) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const put = (next: string) => {
       tfTypedRef.current = next;
@@ -5421,7 +5459,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           event.stopPropagation();
           const tf = parseTypedTimeframe(typed);
           put('');
-          if (tf) onTimeframeKeyRef.current?.(tf);
+          if (parseTypedDate(typed)) goToTypedDateRef.current(typed);
+          else if (tf) onTimeframeKeyRef.current?.(tf);
           return;
         }
         if (event.key === 'Escape' || event.key === 'Backspace') {
@@ -5433,8 +5472,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       const ch = tfTypingChar(event.key, event.code);
       if (!ch || (!typed && !tfTypingStarts(ch)) || typed.length >= TF_TYPING_MAX) return;
+      // شارت بلا مبدّل فريم (`onTimeframeKey`): التاريخ وحده — «15» لا تُظهر وسماً لا يفعل شيئاً.
+      const next = typed + ch;
+      if (!onTimeframeKeyRef.current && !/^[12]\d{0,3}$/.test(next) && !typedDatePending(next) && !parseTypedDate(next)) return;
       event.preventDefault();
-      put(typed + ch);
+      put(next);
     };
     document.addEventListener('keydown', onKey, true);
     return () => {
@@ -5442,8 +5484,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (timer) clearTimeout(timer);
       tfTypedRef.current = '';
     };
-  }, [hasTfKey]);
-  const tfTypedTarget = tfTyped ? parseTypedTimeframe(tfTyped) : null;
+  }, [tfTypingOn]);
+  const tfTypedTarget = tfTyped && hasTfKey ? parseTypedTimeframe(tfTyped) : null;
+  // الوسم للتاريخ: يوم الشمعة التي سيفتحها بأسماء أشهر المحور، و«…» ما دام التاريخ ناقصاً، و«✕» خارج المحمَّل.
+  const tfTypedDate = (() => {
+    if (!tfTyped || !parseTypedDate(tfTyped)) return null;
+    const j = dateJumpFor(tfTyped);
+    if (!j) return '✕';
+    const dt = new Date(j.sec * 1000);
+    const utc = timeframeStepSec(series.timeframe) >= 86400;
+    const p = candleDateParts(dt, utc);
+    return `${p.day} ${tr.mcMonths[p.month] ?? ''} ${p.year}`;
+  })();
 
   const priceAxisTap = useRef<AxisTap | null>(null);
   const timeAxisTap = useRef<AxisTap | null>(null);
@@ -9715,7 +9767,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 {tfTyped}
                 <Text style={styles.tfTypedHint}>
                   {'  →  '}
-                  {tfTypedTarget ? tr.tfLabels[tfTypedTarget] : '✕'}
+                  {tfTypedDate ?? (tfTypedTarget ? tr.tfLabels[tfTypedTarget] : typedDatePending(tfTyped) ? '…' : '✕')}
                 </Text>
               </Text>
             </View>
