@@ -349,6 +349,12 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
     return `${dayWord(d)} · ${timeTbdWord}`;
   };
 
+  /** `when` الخام حين لا `ts`. مسار RSS الاحتياطي بالخادم (`econ_calendar`) يرسل «هذا الأسبوع» **بالعربية**
+   * لكل اللغات (ومسار XML عند غياب التاريخ) ⇒ كانت الكردية والإنجليزية تعرضانها كما هي. الموعد فيها غير
+   * معلن فعلاً ⇒ كلمة الواجهة المترجمة. غير ذلك (تاريخ/ساعة XML) أرقام تُعرض كما هي. */
+  const whenRaw = (e: Ev): string =>
+    e.time_tbd || !e.when.trim() || /[\u0600-\u06FF]/.test(e.when) ? t.newsTimeTbdNeutral : e.when;
+
   /** «فعلي 0.4% · توقّع 0.3% · سابق 0.2%» — الفارغ يُحذف؛ باك-إند أقدم → نص `forecast` كما كان. */
   const figuresLine = (e: Ev): string => {
     if (e.forecast_value === undefined && e.previous === undefined && e.actual === undefined) {
@@ -417,7 +423,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
                       {` · ${impactWord(e.impact)}`}
                     </Text>
                   ) : null}
-                  {` · ${ts == null ? e.when : noHour ? fmtTbd(ts) : fmtLocal(ts)}`}
+                  {` · ${ts == null ? whenRaw(e) : noHour ? fmtTbd(ts) : fmtLocal(ts)}`}
                 </Text>
                 {figures ? (
                   <Text style={[styles.figures, { textAlign: align }]}>{figures}</Text>
