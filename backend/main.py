@@ -1596,6 +1596,8 @@ def backtest_run(body: BacktestRun):
     result["forming_bar_excluded"] = len(candles) < len(all_candles)
     # demo = مسار عشوائي بذري (المزوّد متعذّر): نسبة ربح/عائد عليه ليست أداء استراتيجية — العميل يرفضها.
     result["data_kind"] = series.data_source.kind
+    # وقت آخر جلب حقيقي للشموع (قد يكون كاشاً حتى 15د) — كان يُستعمل لإسقاط الشمعة الجارية ولا يُرسَل
+    result["as_of"] = series.data_source.as_of
     return result
 
 

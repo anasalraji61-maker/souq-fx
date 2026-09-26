@@ -501,3 +501,18 @@ def test_scan_repeated_symbol_and_filter_counted_once(client):
     assert body["count"] == len(body["results"]) == 1
     fm = body["results"][0]["filters_matched"]
     assert len(fm) == len(set(fm)) == 1
+
+
+def test_backtest_reports_when_its_candles_were_fetched_r127(client, monkeypatch):
+    """`as_of` كان يُستعمل لإسقاط الشمعة الجارية ولا يُرسَل ⇒ نتيجة على كاش عمره حتى 15د بلا وقت."""
+    now = time.time()
+    fetched = now - 42
+    cs = _wave_ending_at(int(now - 3 * 86400))
+    monkeypatch.setattr(market, "configured", lambda: True)
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (cs, {"kind": "provider", "as_of": fetched}),
+    )
+    r = client.post("/api/backtest", json={"symbol": "ETHUSD", "timeframe": "15m", "strategy": "ma_cross"}).json()
+    assert r["as_of"] == pytest.approx(fetched)
+    assert r["trades_truncated"] is False
