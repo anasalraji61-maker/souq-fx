@@ -1062,3 +1062,11 @@ backend r61: `change_pct` null لشمعة واحدة — `liveSeries.ts:201`، `
 **المراجعة (e — ما يُحرج أمام متداول):** `breakevenRR` بالصافي، وعند صافٍ ≤0 يظهر `riskCalcNetNegative` لا نسبة تعادل؛ ردّ الذكاء المقطوع يُسقط سطره الناقص. **لا بند.**
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (7e25ec3):** أخضر 0. وصلت 12 كوميتاً: تحسينات DESIGN-PRO (عنوان الترحيب والتوقّع 18⇐15، مسافات 3/5/6⇐4/8، لون الإشعار = التأكيد الواحد) ⇒ 0/12 باقٍ؛ لا طلب جديد.
+
+## 2026-09-26 — الدورة 96
+**البناء:** أخضر 0 (على a1be669) — لا إصلاح لازم. **Selftests:** 114/114 ناجح (`npx tsx`).
+**التحقّق بالكود:** tools110a ← tools `42e4e0e` (`TradeJournalPanel.tsx:1759`)؛ ui67a ← chart `ddf4557` (`chart/alpha.ts`، لا `244,63,94` متبقٍّ) ⇒ مُغلقان.
+tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` ⇒ مفتوحان → launch. backend `64499a5`/`a1be669` بلا طلب. سجلا chart/ui: لا طلب جديد غير ما سبق.
+**قائمة قبول DESIGN-PRO (السادس عشر):** 0/12 فشل (diff منذ bac6631، 9 ملفّات: شريط الرسم أيقونات 44px + label + تلميح `railHintAbove` داخل `dock` بلا `overflow`؛ «مسح الكل» ⌫ خلف `confirmDestructive`).
+**المراجعة (a — ميت/تصديرات):** `withAlpha`/`journalPayoffR` مستوردان؛ `styles.tool*` مستعملة. **QA96a → launch (منخفض)**: `mcUndo`/`mcRedo` بلا قارئ منذ `ae31a6a`.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
