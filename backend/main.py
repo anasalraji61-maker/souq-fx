@@ -698,6 +698,15 @@ class TradeUpdate(BaseModel):
     # (يُعاد تطبيق الخروج القديم على الصفّ الجديد: ربح +9% يصير خسارة) — مختلف ⇒ 409. غائبان = بلا فحص (عملاء قدامى).
     seen_status: Literal["open", "closed"] | None = None
     seen_exit: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    # run 80: الفحص كان للحالة والخروج فقط، والنموذج يعيد إرسال كل الحقول ⇒ تصحيح دخول/اتجاه/وقف من جهاز آخر
+    # كان يُمحى بحفظ ملاحظة من نموذج قديم (والنتيجة تُحسب من الدخول القديم). كل `seen_X` مُرسَل يُقارَن بالمخزَّن.
+    seen_symbol: str | None = Field(default=None, max_length=12)
+    seen_side: Literal["buy", "sell"] | None = None
+    seen_entry: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_size: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_note: str | None = Field(default=None, max_length=500)
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
@@ -1736,9 +1745,10 @@ def trades_update(
     # model_fields_set يميّز «لم يُرسَل» (لا تغيير) عن null صريح (مسح الوقف/الهدف/الخروج)
     fields = {k: getattr(body, k) for k in body.model_fields_set}
     # `seen_exit: null` صريح = «رأيتها مفتوحة بلا خروج» ⇒ يُفحص كذلك
-    expect = {k.removeprefix("seen_"): fields.pop(k) for k in ("seen_status", "seen_exit") if k in fields}
-    if expect.get("status", "") is None:
-        expect.pop("status")
+    expect = {k.removeprefix("seen_"): fields.pop(k) for k in list(fields) if k.startswith("seen_")}
+    for k in ("status", "symbol", "side", "entry"):
+        if expect.get(k, "") is None:
+            expect.pop(k)  # أعمدة لا تكون null بالجدول ⇒ null مُرسَل = «لم أرها» لا «رأيتها فارغة»
     for k in ("symbol", "side", "entry", "note"):
         if k in fields and fields[k] is None:
             fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف

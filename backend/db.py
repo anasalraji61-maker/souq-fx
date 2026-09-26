@@ -2314,6 +2314,18 @@ _TRADE_WRITE_COLS = ("symbol", "side", "entry", "exit", "size", "pnl", "note", "
 _SEEN_SQL = " AND ".join(f"{k} IS ?" for k in _TRADE_WRITE_COLS)
 
 
+def _seen_cmp(col: str, v):
+    """قيمة عمود كما يراها العميل: صفوف قديمة بخروج 0 (−100% قبل اشتراط الموجب) أو وقف 0 تصل النموذج
+    «بلا قيمة» ولا يستطيع إرسال 0 (422) ⇒ كانت كل محاولة تعديل — الطريق الوحيد لتصحيحها — تعيد 409 للأبد."""
+    if col in ("exit", "sl", "tp", "size"):
+        return _opt_level(v)
+    if col == "note":
+        return v or ""
+    if col == "symbol":
+        return str(v).strip().upper() if v is not None else None
+    return v
+
+
 class TradeUpdateConflict(Exception):
     """الصفقة تتغيّر (إغلاق/خروج) باستمرار بين القراءة والكتابة — لا نكتب فوق ما لم نقرأه."""
 
@@ -2328,7 +2340,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
         row = dict(r)
         row.pop("owner_key", None)
         seen = {k: row.get(k) for k in _TRADE_WRITE_COLS}
-        if any(seen[k] != v for k, v in expect.items()):
+        if any(_seen_cmp(k, seen[k]) != _seen_cmp(k, v) for k, v in expect.items()):
             raise TradeUpdateConflict(trade_id)
         if "symbol" in fields:
             row["symbol"] = str(fields["symbol"]).strip().upper()

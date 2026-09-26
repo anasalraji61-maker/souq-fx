@@ -942,3 +942,45 @@ def test_edit_with_matching_seen_state_is_applied(client):
     r = client.patch(f"/api/trades/{trade['id']}", json={"note": "ok"}, headers=_DEV1)
     assert r.status_code == 200 and r.json()["trade"]["note"] == "ok"
     assert "seen_status" not in r.json()["trade"]
+
+
+# ─── run 80: بقية حقول النموذج، وصفوف قديمة بخروج 0 ─────────────────────────
+
+def test_stale_edit_form_cannot_undo_an_entry_correction_from_another_device(client):
+    trade = _open_trade(client, sl=None, tp=None)
+    # الجهاز B صحّح الدخول؛ الجهاز A (نموذجه يعرض الدخول القديم) يحفظ ملاحظة ويعيد إرسال كل الحقول
+    assert client.patch(f"/api/trades/{trade['id']}", json={"entry": 1.09}, headers=_DEV1).status_code == 200
+    r = client.patch(f"/api/trades/{trade['id']}", json={
+        "note": "z", "entry": trade["entry"], "side": trade["side"],
+        "seen_status": "open", "seen_exit": None, "seen_entry": trade["entry"], "seen_side": trade["side"],
+    }, headers=_DEV1)
+    assert r.status_code == 409
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"][0]["entry"] == pytest.approx(1.09)
+
+
+@pytest.mark.parametrize("seen", [
+    {"seen_side": "sell"}, {"seen_sl": 1.0}, {"seen_tp": 2.0}, {"seen_size": 3.0},
+    {"seen_note": "other"}, {"seen_symbol": "GBPUSD"},
+])
+def test_any_differing_seen_field_is_a_conflict(client, seen):
+    trade = _open_trade(client, sl=None, tp=None)
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "z", **seen}, headers=_DEV1)
+    assert r.status_code == 409
+
+
+def test_matching_seen_fields_of_the_row_are_applied(client):
+    trade = _open_trade(client, sl=None, tp=None)
+    seen = {f"seen_{k}": trade[k] for k in ("symbol", "side", "entry", "size", "sl", "tp", "note", "exit", "status")}
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "ok", **seen}, headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["note"] == "ok"
+
+
+def test_legacy_row_with_exit_zero_is_still_editable(client):
+    """صفّ قديم أُغلق بخروج 0 (قبل اشتراط الموجب): النموذج يرسل seen_exit null (0 مرفوض 422) — كان 409
+    للأبد فلا يُصحَّح الصفّ إطلاقاً."""
+    trade = _open_trade(client, sl=None, tp=None)
+    with db._conn() as c:
+        c.execute("UPDATE trades SET exit=0, status='closed', pnl=-100 WHERE id=?", (trade["id"],))
+    r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.2, "seen_status": "closed", "seen_exit": None},
+                     headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["exit"] == pytest.approx(1.2)
