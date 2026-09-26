@@ -147,7 +147,7 @@ import {
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
-import { appendedAfter, offsetAtTime, reanchorAhead } from './holdView';
+import { appendedAfter, offsetAtTime, reanchorAhead, shiftAheadSlot } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
@@ -5088,6 +5088,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (nextOffset !== offsetRef.current) {
         offsetRef.current = nextOffset;
         setOffset(nextOffset);
+      }
+      // تقاطع مثبَّت بالمنطقة المستقبلية يبقى على خانته (`shiftAheadSlot`): `ahead` يُقاس من آخر مكشوفة، فكانت
+      // +1 تُسقطه على الشمعة التي كانت الأخيرة، و−1 تُخفيه مع شمعته.
+      const lastBar = bars[Math.max(0, Math.min(bars.length - 1, cut))];
+      if (!crossFromSync.current && lastBar) {
+        setCross((c) => {
+          if (!c?.ahead || c.time !== lastBar.time) return c;
+          const r = shiftAheadSlot(c.ahead, cut, newCut);
+          const bar = r ? bars[r.index] : undefined;
+          if (!r || !bar) return c;
+          return r.ahead ? { time: bar.time, price: c.price, ahead: r.ahead } : { time: bar.time, price: c.price };
+        });
       }
       setReplayAt(times[target]!);
       return true;

@@ -75,3 +75,31 @@ export function reanchorAhead(
   if (target <= len - 1) return { index: target, ahead: 0 };
   return { index: len - 1, ahead: target - (len - 1) };
 }
+
+/**
+ * تقاطع مثبَّت بالمنطقة المستقبلية حين يتحرّك «آخر مكشوف» بالإعادة (Bar Replay) خطوةً أو أكثر.
+ *
+ * بالإعادة `ahead` يُقاس من آخر شمعة **مكشوفة** (`lastIndex`)، والسلسلة كلّها ثابتة؛ خطوة +1 تكشف
+ * شمعة فكان التقاطع يسقط `ahead` ويقف على الشمعة التي كانت الأخيرة (ماضٍ). و−1 تُخفي شمعته فيختفي.
+ * هنا تبقى الخانة نفسها (الفهرس `lastIndex + ahead`) إلى الأمام والخلف: كُشفت ⇒ عليها بلا `ahead`،
+ * وإلا على آخر مكشوفة جديدة بما تبقّى. null ⇒ لا تغيير.
+ */
+export function shiftAheadSlot(
+  ahead: number,
+  lastIndex: number,
+  newLastIndex: number
+): { index: number; ahead: number } | null {
+  if (
+    !(ahead > 0) ||
+    !Number.isInteger(lastIndex) ||
+    !Number.isInteger(newLastIndex) ||
+    lastIndex < 0 ||
+    newLastIndex < 0 ||
+    lastIndex === newLastIndex
+  ) {
+    return null;
+  }
+  const target = lastIndex + ahead;
+  if (target <= newLastIndex) return { index: target, ahead: 0 };
+  return { index: newLastIndex, ahead: target - newLastIndex };
+}

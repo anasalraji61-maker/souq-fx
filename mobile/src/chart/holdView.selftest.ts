@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`holdView.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { appendedAfter, offsetAtTime, reanchorAhead } from './holdView';
+import { appendedAfter, offsetAtTime, reanchorAhead, shiftAheadSlot } from './holdView';
 
 // تيك داخل الشمعة نفسها ⇒ لا إضافة
 assert.equal(appendedAfter(300, [0, 100, 200, 300]), 0);
@@ -45,4 +45,14 @@ assert.deepEqual(reanchorAhead(2, 3, 13), { index: 11, ahead: 0 });
 assert.equal(reanchorAhead(0, 1, 11), null);
 assert.equal(reanchorAhead(3, 0, 11), null);
 assert.equal(reanchorAhead(3, 5, 5), null);
+// الإعادة: +3 بعد الأخيرة المكشوفة (فهرس 20)، خطوة +1 ⇒ الأخيرة الجديدة (21) + 2
+assert.deepEqual(shiftAheadSlot(3, 20, 21), { index: 21, ahead: 2 });
+// الخانة كُشفت ⇒ عليها بلا ahead
+assert.deepEqual(shiftAheadSlot(1, 20, 21), { index: 21, ahead: 0 });
+assert.deepEqual(shiftAheadSlot(2, 20, 25), { index: 22, ahead: 0 });
+// خطوة −1 ⇒ الخانة نفسها تبعد خانة أخرى
+assert.deepEqual(shiftAheadSlot(3, 20, 19), { index: 19, ahead: 4 });
+assert.equal(shiftAheadSlot(0, 20, 21), null);
+assert.equal(shiftAheadSlot(3, 20, 20), null);
+assert.equal(shiftAheadSlot(3, -1, 20), null);
 console.log('holdView.selftest: PASS');
