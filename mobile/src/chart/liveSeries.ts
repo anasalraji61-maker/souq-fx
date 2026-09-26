@@ -71,10 +71,14 @@ export function liveBarOpenSec(
   }
   // اليومي: الشمعة المختومة X تبدأ X−1 ‏17:00 نيويورك (`dailyBarStampSec`) — تيكات 21:00–24:00 UTC كانت تُلصق
   // بشمعة أُغلقت (إغلاقها وقمّتها من الجلسة التالية)، وبعد وصول ختم الغد تُهمل حتى منتصف الليل.
+  // الأسبوعي كذلك: شمعة الاثنين تبدأ الأحد 17:00 نيويورك ⇒ تيكات الأحد 21:00–24:00 UTC كانت k=−1 فتُهمل ويتجمّد
+  // الشارت ووسم السعر حتى منتصف الليل. يُقاس بختم يوم التداول لا بزمن التيك (الكريبتو أسبوع UTC كما هو).
   const k =
     symbol && stepSec === 86400
       ? Math.round((dailyBarStampSec(symbol, tickSec) - Math.floor(open / 86400) * 86400) / 86400)
-      : Math.floor((tickSec - open) / stepSec);
+      : symbol && stepSec === 604800 && !isCryptoSymbol(symbol)
+        ? Math.floor((dailyBarStampSec(symbol, tickSec) - Math.floor(open / 86400) * 86400) / stepSec)
+        : Math.floor((tickSec - open) / stepSec);
   if (k === 0) return open;
   if (k < 0 || k >= ROLL_MAX_BARS || stepSec > ROLL_MAX_STEP_SEC) return null;
   return open + k * stepSec;

@@ -228,6 +228,10 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.equal(liveBarOpenSec(mon, wed, W, wed + 1, 'EURUSD'), mon, 'W: midweek tick merges');
   assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1, 'BTCUSD'), mon, 'W: crypto trades the weekend');
   assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1), mon, 'no symbol: unchanged behaviour');
+  // شمعة الأسبوع الجديد (ختم الاثنين 21) موجودة عند افتتاح الأحد 20 ⇒ تيك الأحد 21:30 UTC لها لا يُهمل
+  const nextMon = mon + W;
+  assert.equal(liveBarOpenSec(nextMon, sunOpen, W, sunOpen + 1, 'EURUSD'), nextMon, 'W: Sunday tick merges into Monday-stamped bar');
+  assert.equal(liveBarOpenSec(nextMon, sunOpen - 3 * 3600, W, sunOpen + 1, 'EURUSD'), null, 'W: Friday-before tick is not this week');
   // D: الختم X يغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك
   const wedD = Date.UTC(2026, 8, 23) / 1000;
   const wed22 = wedD + 22 * 3600;
