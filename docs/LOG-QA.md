@@ -1228,3 +1228,12 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **بعد السحب (55be790، تعارض COORDINATION حُلّ):** أخضر 0، selftests 120/120. أُغلقت chart-r96a/b ← launch `d605f89` وlaunch181a ← ui `9d90fbb` (قبل رفع إدخالي). جديد مُتحقَّق: **backend-r86 → ui** (`useLastCloses.ts:50`). قائمة القبول على diff الجديد 0/12 (`demoTag` قائم، `flexGrow: 0`).
 **بعد السحب (98b85c2، تعارض ثانٍ حُلّ):** **tools126a → ui** مُتحقَّق (`PanSpeedSlider.tsx:270` تعبئة `accent` دائماً + `TimeframeBar.tsx:119`) = فشل البند ٢ من قائمة القبول فاتني سابقاً ⇒ 1/12.
 **بعد السحب (98b85c2):** backend-r86 ← ui `7f9ddde` مُغلق؛ selftests المتغيّرة (`vzoTv`/`positionSize`) ناجحة؛ أخضر 0. المفتوح لوكيل: tools126a → ui وحده.
+
+## 2026-09-26 — الدورة 115
+**البناء:** أخضر 0 (على e881642) — لا إصلاح لازم. **Selftests:** 122/122 ناجح (`npx tsx`).
+**ملاحظة:** مسودّة 115 السابقة غير المرفوعة تعارضت مع السحب (autostash) ⇒ أُعيد العمل على HEAD الجديد؛ المسودّة القديمة باقية بـ`git stash` للرجوع.
+**التحقّق بالكود:** أُغلقت tools126a ← ui `960096e` (`PanSpeedSlider.tsx:199/275–279`). مفتوحة مُتحقَّقة: **tools127a → chart** (`liveSeries.ts:265` يرجع إلى `liveChangePct` بلا `prevClose`؛ الطرفية وحدها محروسة `TerminalScreen.tsx:1778`).
+**قائمة قبول DESIGN-PRO (الخامس والثلاثون):** 0/12 فشل (diff منذ 98b85c2: أزرار الامتداد/عكس فيبو/السُمك/النمط مسمّاة + `SelMark`، `gap: 4`؛ سطر العطلة بلا عنبر؛ المنزلق محايد ساكناً).
+**المراجعة (e — ما يُحرج أمام متداول):** **QA115a → tools** (منخفض): «EURUSD cent»/«EURUSD micro» بمسافة مقبولة بالدفتر ومرفوضة بالحاسبة (`centAccountSymbol("EURUSD cent")` = null بـ`npx tsx`)، والتعليق `positionSize.ts:149–150` يدّعي القبول. الباقي سليم (نصوص «الماضي/المستقبل»، `fibIsDown` مصدر واحد).
+**الدورة القادمة:** المراجعة (a) — ميت/تصديرات (`lineStyle.ts`، `useChartBannerSymbols`، `fibIsDown`)؛ متابعة tools127a/QA115a؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (b9cfb2f، تعارض COORDINATION حُلّ):** أخضر 0؛ selftests المتغيّرة (`lineStyle`/`liveSeries`) ناجحة. أُغلقت tools127a ← chart `674f2e2` (`liveSeries.ts:266` `NaN`). جديد مُتحقَّق: **launch184a → tools** (`journalSymbolSuffixUnknown` بلا قارئ). `b9cfb2f` منطق رسم فقط ⇒ قائمة القبول 0/12.
