@@ -462,6 +462,25 @@ export function ToolsScreen() {
     return () => clearInterval(id);
   }, [ticksLive]);
 
+  /**
+   * وسم «السعر حتى …» ببطاقات الماسح يُحسب عند التصيير وحده، ولا شيء يُعيد تصيير تبويب الماسح (النبضة أعلاه للتيكات) ⇒ فحص 15m
+   * طازج 10:00 يبقى بلا وسم 10:45 وسعره وRSI يُقرآن حاليين. مؤقّتٌ واحد لأقرب لحظة يتخطّى فيها سعرُ بطاقةٍ شمعتين.
+   */
+  const [asOfBeat, setAsOfBeat] = useState(0);
+  useEffect(() => {
+    if (tab !== 'screener' || !screenFocused || !scanInfo || results.length === 0) return;
+    const barSec = isTimeframe(scanInfo.tf) ? TF_SECONDS[scanInfo.tf] : 15 * 60;
+    const now = serverNowSec();
+    let next = Infinity;
+    for (const r of results) {
+      const at = typeof r.price_as_of === 'number' && Number.isFinite(r.price_as_of) ? r.price_as_of + 2 * barSec : NaN;
+      if (at >= now && at < next) next = at;
+    }
+    if (!Number.isFinite(next)) return;
+    const id = setTimeout(() => setAsOfBeat((v) => v + 1), Math.min(2 ** 31 - 1, (next - now + 1) * 1000));
+    return () => clearTimeout(id);
+  }, [tab, screenFocused, scanInfo, results, asOfBeat]);
+
   // يُعاد القراءة عند كل عودة للتبويب: كانت تُقرأ مرة عند التركيب فقط، فتغيير أزواج/فريمات الشارت بالشاشة
   // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
   React.useEffect(() => {
