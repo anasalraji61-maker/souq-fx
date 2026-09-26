@@ -249,6 +249,8 @@ export function FocusChartModal({
   const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
 
   const pick = (next: string) => {
+    // chart-r117a: الرمز المقارَن صار رئيسياً ⇒ تسقط المقارنة (كان «GBPUSD vs GBPUSD» ولا تُزال).
+    if (next === compareSym) setCompareSym(null);
     setSym(next);
     onSymbolChange?.(next);
   };
