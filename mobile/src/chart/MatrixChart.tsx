@@ -9074,6 +9074,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   }
                   top = Math.min(top, laneBot - HILO_LABEL_H);
                 }
+                // مُنزَلاً تحت المفتاح: الخطّ القصير الأفقي كان يشير إلى منتصف الوسم — بكسلات تحت رأس الذيل، فيُقرأ السعر
+                // لشيء غير القمّة. كوعٌ عمودي من طرف الخطّ عند الشمعة يصعد إلى مستوى القمّة نفسها.
+                const drop = Math.round(top + HILO_LABEL_H / 2 - y);
                 return (
                   <View
                     key={`hilo-${which}`}
@@ -9090,6 +9093,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   >
                     <View style={styles.hiLoLeader} />
                     <Text style={styles.hiLoText}>{text}</Text>
+                    {drop > 1 ? (
+                      <View
+                        style={[
+                          styles.hiLoElbow,
+                          { top: HILO_LABEL_H / 2 - drop, height: drop, [m.leftSide ? 'right' : 'left']: 0 },
+                        ]}
+                      />
+                    ) : null}
                   </View>
                 );
               });
@@ -15195,6 +15206,7 @@ const styles = StyleSheet.create({
     zIndex: 6,
   },
   hiLoLeader: { width: 6, height: 1, backgroundColor: colors.textMuted, opacity: 0.8 },
+  hiLoElbow: { position: 'absolute', width: 1, backgroundColor: colors.textMuted, opacity: 0.8 },
   hiLoText: {
     ...numeric,
     color: colors.textMuted,
