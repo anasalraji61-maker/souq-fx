@@ -273,7 +273,7 @@ export function CommissionPlanPanel() {
               </View>
             )) ?? (
               <View style={[styles.tr, rowDir]}>
-                <Text style={[styles.td, styles.emptyHint, al]}>{loading || error || reportFailed ? '—' : t.cppNoEarnings}</Text>
+                <Text style={[styles.td, styles.emptyHint, al]}>{reportFailed && !loading && !error ? t.cppEarningsLoadError : loading || error ? '—' : t.cppNoEarnings}</Text>
               </View>
             )}
           </View>
