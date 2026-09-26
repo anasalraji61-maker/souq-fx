@@ -1707,6 +1707,10 @@ def market_quote(symbol: str):
             # وقت السعر (العميل يقرؤه كذلك — `quoteAsOfMs`)؛ `fetched_at` = لحظة جلب السلسلة (قد تسبق 15د مع `cache`)
             "as_of": price_at,
             "fetched_at": fetched,
+            # المزوّد يختم تيكات العطلة بوقت السبت (مُتحقَّق حيّاً) ⇒ `fetch_quote_book` يرفضها فيصل كل طلب
+            # عطلة إلى هنا: كان الردّ بلا `market_open` ⇒ الحاسبة تقرأ إغلاق الجمعة «متوقّفاً منذ 800 دقيقة»
+            # بدل «السوق مغلق · آخر إغلاق». بساعتنا: False بالعطلة، None (لا نعرف) خارجها.
+            "market_open": market._market_open(sym, None),
         }
     book["source"] = "twelvedata"
     book["data_kind"] = "provider"

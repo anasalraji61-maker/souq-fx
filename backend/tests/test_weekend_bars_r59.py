@@ -148,3 +148,25 @@ def test_friday_quote_served_on_saturday_is_not_market_open(routes, monkeypatch,
     routes["/quote"] = _Resp(body)
     q = market.fetch_quote_book(sym)
     assert q is not None and q["market_open"] is expected
+
+
+# run 88: المزوّد يختم تيك السبت بوقت السبت (حيّاً: last_quote_at Sat 10:05، is_market_open true) ⇒ الاقتباس
+# يُرفض ويخدم المسار إغلاق الجمعة من الشموع — كان بلا `market_open` فتقرؤه الحاسبة «متوقّفاً» لا «مغلقاً».
+@pytest.mark.parametrize("sym,now,expected", [
+    ("EURUSD", SAT, False), ("EURUSD", WED, None), ("BTCUSD", SAT, None),
+])
+def test_weekend_fallback_quote_says_market_closed(routes, monkeypatch, sym, now, expected):  # noqa: F811
+    from fastapi.testclient import TestClient
+
+    import main
+    from tests.test_signal_levels import _provider_series
+
+    monkeypatch.setattr(market, "_session_now", lambda: _ts(now))
+    monkeypatch.setattr(main, "build_series", _provider_series(0.001, sym))
+    monkeypatch.setattr(main, "_QUOTE_CACHE", {})
+    routes["/quote"] = _Resp({"close": "1.13913", "last_quote_at": int(_ts(SAT)), "is_market_open": True})
+    if now == WED or sym == "BTCUSD":  # لا اقتباس ⇒ فرع الشموع أيضاً
+        routes["/quote"] = _Resp({}, 429)
+    body = TestClient(main.app).get(f"/api/market/quote/{sym}").json()
+    assert body["source"] == "ohlc_fallback"
+    assert "market_open" in body and body["market_open"] is expected
