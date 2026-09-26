@@ -1,5 +1,6 @@
 /** فحص ذاتي لـ`positionTool.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
+import { formatPrice } from './indicators/utils';
 import {
   clampRr,
   isPositionTool,
@@ -217,6 +218,19 @@ assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.00001, r: -0.000
   // الحالة العادية كما هي
   assert.equal(positionLevels('short', 1.085, 1.088, 2, 'EURUSD').rr, 2);
   assert.equal(positionLevels('long', 1.0, 0.7, 5, 'EURUSD').rr, 5);
+}
+
+// الهدف على شبكة الزوج: R:R 1.5 بمخاطرة 11.3 نقطة ⇒ 1.086925 خام؛ المطبوع والمحسوب والإصابة من الرقم نفسه.
+{
+  const g = positionLevels('long', 1.08523, 1.0841, 1.5, 'EURUSD');
+  assert.equal(formatPrice(g.target, 'EURUSD', g.entry), String(g.target));
+  const j = positionLevels('long', 157.423, 157.31, 1.5, 'USDJPY');
+  assert.equal(j.target.toFixed(3), String(j.target));
+  const bars = [
+    { time: 0, open: 1.0852, high: 1.0853, low: 1.0851, close: 1.0852, volume: 0 },
+    { time: 60, open: 1.0853, high: g.target, low: 1.0852, close: 1.0868, volume: 0 },
+  ];
+  assert.equal(positionOutcome(g, bars, 0, Infinity, 1)?.state, 'target');
 }
 
 console.log('positionTool.selftest: PASS');

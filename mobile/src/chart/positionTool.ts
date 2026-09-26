@@ -81,7 +81,11 @@ export function positionLevels(
     const maxR = Math.floor(((entry / (stop - entry)) * 100) - 1e-9) / 100;
     if (maxR > 0 && r > maxR) r = maxR;
   }
-  const target = entry + (entry - stop) * r;
+  // على شبكة سعر الزوج كما يُطبع: 1.0869249 كان يُكتب «TP 1.08692» بينما المسافة 16.95 نقطة، وشمعة قمّتها 1.08692
+  // بالضبط (الهدف المكتوب) لا تُعدّ إصابة — فالوسم والنقاط وTP ✓ الآن من الرقم نفسه.
+  const rawTarget = entry + (entry - stop) * r;
+  const onGrid = Number(formatPrice(rawTarget, symbol, entry));
+  const target = Number.isFinite(onGrid) && onGrid > 0 ? onGrid : rawTarget;
   return { side, entry, stop, target, rr: r };
 }
 
