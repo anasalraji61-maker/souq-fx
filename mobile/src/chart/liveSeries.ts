@@ -204,7 +204,17 @@ export function withLiveExtremes(
   if (rolled) {
     const baseLast = base.candles[base.candles.length - 1]!.time;
     const bk = keyOf(baseLast);
-    closed = prev?.key === bk ? { key: bk, open: prev.open, high: prev.high, low: prev.low, close: prev.close } : prev?.closed?.key === bk ? prev.closed : null;
+    // أو من `between`: على 1m جلبٌ من ذاكرة الخادم (~45 ث) آخرُه 10:01 **جزئية** بينما 10:01 أُغلقت محلياً وهي بـ`between`
+    // ⇒ `inGap` يُسقطها (زمنها لم يعد بعد الجلب) وكانت 10:01 ترتدّ إلى أعلى/إغلاق الجلب الجزئي ويختفي ذيلها ~90 ث.
+    const fromGap = prev?.between?.find((b) => b.key === bk);
+    closed =
+      prev?.key === bk
+        ? { key: bk, open: prev.open, high: prev.high, low: prev.low, close: prev.close }
+        : prev?.closed?.key === bk
+          ? prev.closed
+          : fromGap
+            ? { key: bk, open: fromGap.open, high: fromGap.high, low: fromGap.low, close: fromGap.close }
+            : null;
     const prefix = keyOf(0).slice(0, -1);
     const inGap = (b: { key: string; time: number }) => b.key.startsWith(prefix) && b.time > baseLast && b.time < last.time;
     between = (prev?.between ?? []).filter(inGap);

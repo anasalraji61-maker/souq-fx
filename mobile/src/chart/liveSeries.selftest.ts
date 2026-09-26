@@ -181,12 +181,19 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   cs = feed(m1, 1.1709, t0 + 130);
   assert.equal(cs.length, 32, 'still held on the next tick');
   assert.equal(cs[30]!.high, 1.1715);
-  // الجلب يحمل 10:01 ⇒ المزوّد يغلب، لا شمعة مكرّرة
+  // الجلب يحمل 10:01 ⇒ لا شمعة مكرّرة؛ ذيل الجلب الأبعد يبقى، والإغلاق آخر تيك محلي كالشمعة المُغلقة للتوّ (`closed`)
   const fetched = { ...m1, candles: [...m1.candles, { time: t0 + 60, open: 1.1711, high: 1.1716, low: 1.1705, close: 1.1707 }] };
+  const saved = ext;
   cs = feed(fetched, 1.171, t0 + 140);
   assert.equal(cs.length, 32);
-  assert.equal(cs[30]!.close, 1.1707, 'fetched 10:01 is authoritative');
+  assert.deepEqual([cs[30]!.high, cs[30]!.low, cs[30]!.close], [1.1716, 1.1705, 1.1708]);
   assert.equal(cs[31]!.open, 1.1706, 'live 10:02 keeps its first tick');
+  // جلب من ذاكرة الخادم (~45 ث) آخرُه 10:01 **جزئية** (قبل قمّتها): القمّة والإغلاق المحليان لا يضيعان
+  ext = saved;
+  const partial = { ...m1, candles: [...m1.candles, { time: t0 + 60, open: 1.171, high: 1.1711, low: 1.1709, close: 1.171 }] };
+  cs = feed(partial, 1.171, t0 + 140);
+  assert.equal(cs.length, 32);
+  assert.deepEqual([cs[30]!.high, cs[30]!.close], [1.1715, 1.1708], 'partial fetch does not erase the 10:01 wick');
 }
 
 // نسبة الرأس = تغيّر اليوم من إغلاق الأمس، لا من أول شمعة محمّلة
