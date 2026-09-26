@@ -369,6 +369,14 @@ console.log('newsRisk calendarFetchEvents selftest OK');
   const nfp: NewsEvent = { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'High', ts: 1_800_000_000 + 1800 };
   assert.equal(nextHighImpact([nfp], symbolCurrencies('USDHUF'), 1_800_000_000_000)?.event.id, 'nfp');
   for (const c of ['USDTRX', 'USDBTC', 'BTCETH', 'ETHBTC']) assert.deepEqual(symbolCurrencies(c), [], c);
+  // ناشئةٌ يعرضها الوسطاء: كانت [] ⇒ لا تحذير قبل الرواتب ولا «التقويم غير متاح»
+  for (const q of ['NGN', 'ARS', 'PKR', 'KES', 'VND', 'ISK', 'UAH', 'PEN']) {
+    assert.deepEqual(symbolCurrencies('USD' + q), ['USD', q], q);
+    assert.equal(nextHighImpact([nfp], newsCurrencies('USD' + q), 1_800_000_000_000)?.event.id, 'nfp', q);
+  }
+  assert.deepEqual(symbolCurrencies('USDNGN.m'), ['USD', 'NGN']);
+  // الرقميّة كما كانت
+  for (const c of ['BTCUSD', 'ETHUSD', 'XRPUSD']) assert.deepEqual(symbolCurrencies(c), ['USD'], c);
 }
 console.log('newsRisk exotic-currency selftest OK');
 

@@ -36,6 +36,9 @@ const FIAT = new Set([
   // الرواتب الأمريكية وقرار الفيدرالي عن ساق الدولار. عملات ورقية بأكواد ISO فقط — لا عملات رقمية.
   'HUF', 'CZK', 'RON', 'THB', 'KRW', 'INR', 'IDR', 'MYR', 'PHP', 'TWD', 'BRL', 'CLP', 'COP',
   'RUB', 'KWD', 'QAR', 'BHD', 'OMR', 'JOD', 'EGP', 'KZT',
+  // وبقية ما يعرضه وسطاء الفوركس من الناشئة (USDNGN، USDARS، USDPKR…): كانت `[]` فلا تحذير رواتب ولا سطر «التقويم غير متاح»
+  'NGN', 'ARS', 'PKR', 'KES', 'VND', 'ISK', 'UAH', 'PEN', 'GHS', 'MAD', 'TND', 'DZD', 'LKR', 'BDT', 'UYU', 'GEL',
+  'AZN', 'UZS', 'IQD', 'LBP', 'BGN', 'RSD', 'UGX', 'TZS', 'ZMW', 'BWP', 'MUR', 'XOF', 'XAF', 'JMD', 'DOP', 'CRC',
 ]);
 /**
  * معادن تُسعَّر عالمياً بالدولار: الذهب والفضة، و**البلاتين والبلاديوم والنحاس** بأسماء منصّات MT5
