@@ -59,6 +59,11 @@ def _impact_from_title(title: str) -> str:
     return "unknown"
 
 
+_CLOCK_RE = re.compile(r"^\d{1,2}:\d{2}(:\d{2})?$")
+_OFFSET_RE = re.compile(r"^[+-]\d{4}$")
+_RFC_ZONES = {"UT", "UTC", "GMT", "Z", "EST", "EDT", "CST", "CDT", "MST", "MDT", "PST", "PDT"}
+
+
 def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, int | None]:
     """(نصّ الوقت، ثواني UTC) من `pubDate` بصيغة RFC 2822.
 
@@ -74,8 +79,16 @@ def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, i
     """
     if not raw:
         return default, None
+    text = raw.strip()
+    # «+03:00» (ISO بالخلاصة) ⇒ «+0300» التي يفهمها RFC 2822
+    text = re.sub(r"([+-]\d{2}):(\d{2})$", r"\1\2", text)
+    tail = text.split()[-1] if text.split() else ""
+    # run 91: ذيل ليس ساعةً ولا إزاحة ±HHMM ولا اسم منطقة معروفاً ⇒ لا وقت محسوب. `parsedate_to_datetime`
+    # يعيد «GMT+1»/«UT+2»/«EST5EDT» بلا منطقة (كانت تُقرأ UTC بفارق الإزاحة كلها) و«+05» إزاحة 5 دقائق.
+    if not (_CLOCK_RE.match(tail) or _OFFSET_RE.match(tail) or tail.upper() in _RFC_ZONES):
+        return text[:32] or default, None
     try:
-        dt = parsedate_to_datetime(raw.strip())
+        dt = parsedate_to_datetime(text)
         # سنة 9999 بإزاحة سالبة تفيض بـ`astimezone`/`timestamp` (OverflowError) — كانت تُسقط الخلاصة كلّها
         # اسم منطقة لا يعرفه `parsedate_to_datetime` (غير UT/GMT/Z والأمريكية: BST، CEST، JST…) يُعاد بلا
         # منطقة كأنه غائب ⇒ كان «14:30 BST» يُرسَل «14:30 UTC» (متأخّراً ساعة، والترتيب بـ`ts` خاطئ).
