@@ -23,7 +23,7 @@ import { COMPARE_COLOR } from '../chart/compare';
 import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { formatPct, pctDirection } from '../chart/dailyChange';
-import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { provenanceLabel, tickStatusLabel, normalizeProvenance, isSyntheticProvenance } from '../chart/dataSource';
 import {
   armedText,
   createChartAlert,
@@ -148,9 +148,8 @@ export function FocusChartModal({
           // زوجين يُبنى عليه قرار. الآن: لا خط + ملاحظة. وسلسلة demo من الخادم فوق شارت حقيقي = نفس الشيء.
           try {
             const c = await api.chart(compareSym, tf);
-            const fake =
-              normalizeProvenance(c.data_source).kind === 'demo' &&
-              normalizeProvenance(s.data_source).kind !== 'demo';
+            // و«غير متاح» (429 بلا ذاكرة خادم — شموع فارغة) كالتجريبي: لا خطّ + ملاحظة (chart-r109a).
+            const fake = isSyntheticProvenance(c.data_source) && !isSyntheticProvenance(s.data_source);
             if (alive) {
               setCompareSeries(fake ? null : c);
               setCompareFailed(fake);
@@ -190,7 +189,9 @@ export function FocusChartModal({
 
   // الجلب أعلاه مرّة لكل فتح/تبديل: على 15m بعد ربع ساعة يقع التيك خارج آخر شمعة فيقف الشارت
   // والرأس يطبع السعر الحيّ. تحديث صامت كل 90 ث كالرباعي والطرفية: شموع حقيقية جديدة تستبدل
-  // القديمة بلا «جاري التحميل»، وفشل الجلب أو رجوع بيانات تجريبية يُبقي المعروض.
+  // القديمة بلا «جاري التحميل»، وفشل الجلب أو رجوع بيانات تجريبية **أو غير متاحة** يُبقي المعروض — الخادم
+  // يردّ اليوم `unavailable` بشموع فارغة (429 بلا ذاكرة)، وكان يستبدل شارتاً سليماً بإشعار 90ث ويُضيّع التكبير
+  // والرسم الجاري (chart-r109a).
   useEffect(() => {
     if (!visible) return;
     let alive = true;
@@ -198,7 +199,7 @@ export function FocusChartModal({
       api
         .chart(sym, tf)
         .then((s) => {
-          if (!alive || normalizeProvenance(s.data_source).kind === 'demo') return;
+          if (!alive || isSyntheticProvenance(s.data_source)) return;
           rememberChartSeries(sym, tf, s);
           setSeries(s);
           setSeriesSym(sym);
@@ -209,7 +210,7 @@ export function FocusChartModal({
         api
           .chart(compareSym, tf)
           .then((c) => {
-            if (!alive || normalizeProvenance(c.data_source).kind === 'demo') return;
+            if (!alive || isSyntheticProvenance(c.data_source)) return;
             setCompareSeries(c);
             setCompareFailed(false);
           })
