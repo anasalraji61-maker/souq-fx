@@ -663,7 +663,20 @@ _TRADE_CALL_RE = re.compile(
     + r"|\b(?:eshtery|eshtiri|eshtry|ishtree|ishtry|shtri|bi3o|bee3o|ed5ol|da5la)\b"
     + r"|(?<!\w)بی?کر[ەه](?!\w)|(?<!\w)ک[ڕر]ین\s+لە\s*" + _NUM + r"|کاتی\s+ک[ڕر]ینە"
     + r"|\b(?:k[iî]r[iî]n|firotin)\s+li\s*" + _NUM + r"|\b(?:t[eê]keve|bikeve)\b"
-    + r"|\b(?:buy|sell|long|short)\s+(?:هون|هنا|هلأ|هلا|هلق|الان|هسه|عالدعم|ئێستا)",
+    + r"|\b(?:buy|sell|long|short)\s+(?:هون|هنا|هلأ|هلا|هلق|الان|هسه|عالدعم|ئێستا)"
+    # run 118: صياغات مرّت بلا سعر أو بفعل غير معروف («Get out of EURUSD.»، «Jump in now.»، «افتح مركزاً»، «خذ ربحك»)
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*|\d[.)]\s*)(?:get\s+out(?:\s+of)?|bail(?:\s+out)?|jump\s+in|hop\s+in|pile\s+in"
+    r"|scale\s+(?:in|out)|pyramid(?:\s+into)?|unload|offload|ditch|dump\s+(?:it|them|your|the\s+(?:pair|position|trade)|now|here|(?-i:[A-Z]{3,6}\b))|close\s+(?:it\s+|them\s+)?out)\b"
+    + r"|\b(?:jump|hop|pile|get)\s+in\s+(?:now|here|at|on|near|around|above|below)\b|\benter\s+(?:now|here|immediately)\b"
+    + r"|\b(?:i|we)(?:['’]d|\s+would)\s+(?:accumulate|add|pick\s+up|scale\s+in|load\s+up|buy|sell|short|get\s+(?:in|out))\b"
+    + r"|\b(?:consider|try)\s+(?:picking|scooping)\s+up\b|\b(?:bullish|bearish)\s+bet\b"
+    + r"|\b(?:good|great|nice|ideal|perfect)\s+(?:spot|place|time|level|area|zone)\s+to\s+(?:add|buy|sell|short|enter|exit"
+    r"|get\s+(?:in|out)|go\s+(?:long|short))\b"
+    + r"|\bclose\s+(?:it\s+|them\s+|the\s+trade\s+|your\s+(?:trade|position)\s+)?out\s+(?:if|at|here|now|near|around|when|below|above)\b"
+    + r"|\bprotective\s+(?:order|stop)\s+(?:at|near|around|below|above|under)\s*\d|\brisk\s+it\s+(?:down\s+)?to\s*\d"
+    + r"|\b(?:buy|sell)\s+the\s+(?:rip|bounce|pop|spike|strength|weakness|news)\b"
+    + r"|(?<!\w)[وف]?افتح\s+(?:لك\s+)?(?:مركز|صفق|شراء|بيع)|(?<!\w)[وف]?خذ\s+(?:ال)?(?:ربح|ارباح|أرباح)"
+    + r"|(?-i:\b(?:Kauf|Verkauf|Kaufe|Verkaufe)\s+[A-Z]{3,6}\b)|\b(?:achetez|vendez)\b|\b(?:achète|vends)\s+(?:maintenant|l['’]|le\s|la\s)",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
@@ -672,6 +685,12 @@ _GUARD_NOTE = {
     "ar": "_حُذف من الردّ ما يشبه توصية تداول (دخول/وقف/هدف أو شراء/بيع): مساعد MATRIX تعليمي ولا يقدّم توصيات._",
     "en": "_Part of this reply looked like a trade recommendation (entry/stop/target or buy/sell) and was removed: "
           "MATRIX's assistant is educational and does not give trade calls._",
+}
+# سطر حُذف لأنه يذكر رقماً ليس بالبيانات (لا لأنه توصية): «RSI is 63.2» والـRSI غير مُعطى للنموذج
+_GUARD_NUMBER_NOTE = {
+    "ar": "_حُذف من الردّ رقم لا يوجد في بيانات السوق المعطاة للمساعد: MATRIX لا يعرض أرقاماً غير مصدرها المزوّد._",
+    "en": "_A number that is not in the market data given to the assistant was removed from this reply: "
+          "MATRIX shows no figures that did not come from the data provider._",
 }
 _GUARD_REFUSAL = {
     "ar": "مساعد MATRIX تعليمي: لا يقدّم نقاط دخول ولا وقف خسارة ولا أهداف ولا توصيات شراء/بيع. "
@@ -807,17 +826,57 @@ def _trade_call_lines(lines: list[str]) -> set[int]:
     return bad
 
 
-def guard_answer(text: str, lang: str = "ar") -> str:
-    """يُسقط أسطر التوصيات من ردّ النموذج (قرار أنس ٤). لا سطر نظيف باقٍ ⇒ ردّ الاعتذار التعليمي."""
+# run 118: الحارس بالكلمات لا يحصي كل صياغة («افتح مركزاً عند 1.0850»، «خذ ربحك عند 1.0950»، «Hop in at 1.0850»،
+# «Scale in between 1.0850 and 1.0830» كانت تمرّ). التعليمة تقول «لا تكتب أي رقم سعر غير موجود حرفياً في السياق» —
+# والآن تُفرض: سعر عشري بسطر لا يطابق رقماً بالسياق (ولو مقرَّباً: 1.085 لـlast=1.08503) رقمٌ اخترعه النموذج ⇒ يُسقط السطر
+# مهما كان الفعل. لا يُحسب: نسبة/مضاعف/نقاط/ATR/R (`_NOT_PRICE_AFTER`)، ولا حجم لوت/وحدات («0.01 lot»).
+_UNGROUNDED_NUM_RE = re.compile(r"(?<![\d.,])" + _PRICE + r"(?!\s*(?:lots?|لوت|units?|وحد))", re.IGNORECASE)
+
+
+def _num(tok: str) -> float | None:
+    try:
+        return float(tok.replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _grounded_numbers(ground: str) -> list[float]:
+    return [v for v in (_num(m.group(0)) for m in re.finditer(r"\d+[.,]\d+", _guard_norm(ground))) if v is not None]
+
+
+def _ungrounded_price_lines(lines: list[str], allowed: list[float]) -> set[int]:
+    bad = set()
+    for i, ln in enumerate(lines):
+        for m in _UNGROUNDED_NUM_RE.finditer(_guard_norm(ln)):
+            tok = re.match(r"\d+[.,]\d+", m.group(0)).group(0)
+            x = _num(tok)
+            if x is None:
+                continue
+            tol = 0.5 * 10 ** -len(re.split(r"[.,]", tok)[1]) + 1e-12
+            if not any(abs(x - v) <= tol for v in allowed):
+                bad.add(i)
+                break
+    return bad
+
+
+def guard_answer(text: str, lang: str = "ar", ground: str | None = None) -> str:
+    """يُسقط أسطر التوصيات من ردّ النموذج (قرار أنس ٤). لا سطر نظيف باقٍ ⇒ ردّ الاعتذار التعليمي.
+    `ground`: النصّ الذي أُعطي للنموذج (سياق السوق / نصّ المقطع) ⇒ سطر فيه سعر عشري ليس منه يُسقط كذلك."""
     lines = (text or "").split("\n")
     bad = _trade_call_lines(lines)
+    only_numbers = False
+    if ground is not None:
+        extra = _ungrounded_price_lines(lines, _grounded_numbers(ground)) - bad
+        only_numbers = bool(extra) and not bad
+        bad |= extra
     if not bad:
         return text
     kept = [ln for i, ln in enumerate(lines) if i not in bad]
     if not any(re.search(r"\w", ln) for ln in kept):
         return _GUARD_REFUSAL["en" if lang == "en" else "ar"]
     body = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
-    return f"{body}\n\n{_GUARD_NOTE["en" if lang == "en" else "ar"]}"
+    note = _GUARD_NUMBER_NOTE if only_numbers else _GUARD_NOTE
+    return f"{body}\n\n{note["en" if lang == "en" else "ar"]}"
 
 
 def reply_lang(text: str, lang: str) -> str:

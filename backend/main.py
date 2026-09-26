@@ -2187,7 +2187,9 @@ def academy_interrupt(body: TeacherInterrupt):
     if openrouter_ai.configured():
         try:
             # قرار ٤ يشمل مدرّس الأكاديمية: الطالب قد يسأل «ماذا أشتري الآن؟» والتعليمة وحدها لا تضمن الامتثال
-            clarification = openrouter_ai.guard_answer(openrouter_ai.interrupt_answer(q, seg_title, seg_text, lang), lang)
+            clarification = openrouter_ai.guard_answer(
+                openrouter_ai.interrupt_answer(q, seg_title, seg_text, lang), lang, ground=f"{seg_title}\n{seg_text}"
+            )
             return {
                 "ok": True,
                 "paused": True,
@@ -2373,7 +2375,7 @@ def ai_ask(body: AiAsk):
     setup = {"direction": None, "entry": None, "sl": None, "tp": None, "win_probability": None}
     if openrouter_ai.configured():
         try:
-            answer = openrouter_ai.guard_answer(openrouter_ai.trading_answer(q, sym, context, lang), lang)
+            answer = openrouter_ai.guard_answer(openrouter_ai.trading_answer(q, sym, context, lang), lang, ground=context)
             return {
                 "answer": answer, "answer_lang": openrouter_ai.reply_lang(answer, lang), "symbol": sym,
                 "setup": setup, "live_price": live, "price_as_of": price_at, "source": "model",
