@@ -432,12 +432,12 @@ export function AlertsPanel({
   };
 
   /** 409 `alert_changed`: التنبيه تغيّر بجهاز آخر منذ عُرض هنا ⇒ لا يُكتب شيء، وتُعرض حاله الآن.
-   * `alertsChangedElsewhere` (بـ`{desc}`) مطلوب من launch — إلى أن يصل يظهر وصف الصفّ المخزَّن وحده
-   * (صادق، والقائمة تتحدّث تحته) لا «تحقّق من الاتصال». */
+   * نصّ launch (`alertsChangedElsewhere`، بلا `{desc}`) ثم وصف الصفّ المخزَّن — ليعرف المتداول ما صار عليه
+   * التنبيه قبل أن يحفظ ثانيةً، لا «تحقّق من الاتصال». */
   const changedElsewhereMsg = (a: PriceAlert) => {
     const desc = `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`;
-    const tpl = (t as unknown as Record<string, string | undefined>).alertsChangedElsewhere;
-    return tpl ? tpl.replace('{desc}', desc) : `⚠ ${desc}`;
+    const tpl = t.alertsChangedElsewhere;
+    return tpl.includes('{desc}') ? tpl.replace('{desc}', desc) : `${tpl}: ${desc}`;
   };
 
   /**
