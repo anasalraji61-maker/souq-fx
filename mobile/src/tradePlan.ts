@@ -2147,6 +2147,9 @@ export function liveStopChip(input: {
  * الشرطة **داخل** الاسم («US-30») تبقى فاصلاً يُحذف ⇒ «US30»؛ الاسم المجهول («AAPL#») يُرفض كما كان.
  */
 export function journalSymbol(raw: string): string | null {
+  // بادئة البورصة/المزوّد منسوخة من TradingView («OANDA:XAUUSD»، «FX:EURUSD») و«#» وسيطٍ بالأوّل («#US30») تسقط — كما يقشّرها
+  // `pipSpec` و`newsRisk`: كان تحذير أخبار الذهب يظهر لـ«OANDA:XAUUSD» ثم يُرفض الحفظ برسالة «رمز غير صالح» العامّة
+  raw = raw.trim().replace(/^[A-Z0-9_]+:\s*/i, '').replace(/^#+/, '');
   const up = raw.trim().toUpperCase();
   const spec = instrumentSpec(up);
   const pair = /^([A-Z]{3})[\s/_-]*([A-Z]{3})(.*)$/.exec(up);

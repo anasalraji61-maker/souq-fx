@@ -589,6 +589,14 @@ assert.equal(journalSymbol('ABCDEFGHIJKLM'), null);
 assert.equal(journalSymbol('ABCDEFGHIJKL'), 'ABCDEFGHIJKL');
 assert.equal(journalSymbol('يورو'), null);
 assert.equal(journalSymbol('EUR$USD'), null);
+// بادئة TradingView/الوسيط تسقط (كانت تُرفض كلّها بينما تحذير الأخبار يعرف الرمز)
+assert.equal(journalSymbol('OANDA:XAUUSD'), 'XAUUSD');
+assert.equal(journalSymbol('fx:eurusd'), 'EURUSD');
+assert.equal(journalSymbol('FX_IDC: GBP/JPY'), 'GBPJPY');
+assert.equal(journalSymbol('#US30'), 'US30');
+assert.equal(journalSymbol('BINANCE:BTCUSDT'), 'BTCUSDT');
+assert.equal(journalSymbol('OANDA:'), null);
+assert.equal(journalSymbol('#'), null);
 // كل ما يُقبل يوافق قيد الخادم (min_length=3, max_length=12) ولا يحوي مسافة/فاصلاً
 for (const raw of ['eur/usd', 'x a u / u s d', 'A-B', 'nas-100', 'a.b.c']) {
   const v = journalSymbol(raw);
