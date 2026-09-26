@@ -40,6 +40,22 @@ export function appendedAfter(
 }
 
 /**
+ * عكس `appendedAfter`: كم خانة سقطت من الطرف الأيمن. الشمعة الحيّة المحلّية (يفتحها التيك قبل أن يصل جلبها)
+ * تسقط حين يتقادم التيك (>20ث) ثم تعود مع التالي؛ العودة تُعدّ إضافةً فتُزاد الإزاحة، والسقوط لم يكن يُنقصها ⇒
+ * شارت مُمرَّر للخلف ينجرف شمعةً أقدم بكل انقطاع قصير للتيكات. `prevTimesSec`: أزمنة السلسلة قبل التحديث؛
+ * `lastSec`: زمن آخر خانة بعده. يُرجع عدد خانات القديمة بعد آخر ظهور لـ`lastSec`، أو 0 إن لم يُوجد (أو لم يسقط شيء).
+ */
+export function removedAtTail(prevTimesSec: readonly number[], lastSec: number | null): number {
+  if (lastSec == null || !Number.isFinite(lastSec) || prevTimesSec.length === 0) return 0;
+  for (let i = prevTimesSec.length - 1; i >= 0; i--) {
+    const t = prevTimesSec[i]!;
+    if (t === lastSec) return prevTimesSec.length - 1 - i;
+    if (t < lastSec) return 0;
+  }
+  return 0;
+}
+
+/**
  * الإزاحة التي تُبقي الطرف الأيمن على الزمن نفسه بعد تبديل نوع الشارت (شموع ⇔ Renko/Kagi/P&F/Range).
  *
  * الإزاحة بعدد الخانات، والخانات تتغيّر كلّياً بين الأنواع: 120 شمعة للخلف على الشموع كانت تصير 120

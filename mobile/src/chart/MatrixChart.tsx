@@ -147,7 +147,7 @@ import {
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
-import { appendedAfter, offsetAtTime, reanchorAhead, shiftAheadSlot } from './holdView';
+import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
@@ -1886,8 +1886,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // غير المكشوفة — الإعادة تتقدّم وحدها وتكشف المستقبل بلا ضغط +1.
     if (prev.key !== key || syncFollow || (offsetRef.current <= 0 && !replayOn)) return;
     const added = appendedAfter(prev.lastSec, all.map(barTime), prev.len);
-    if (added <= 0) return;
-    const next = Math.min(Math.max(0, all.length - 10), offsetRef.current + added);
+    // الشمعة الحيّة المحلّية سقطت (تيك متقادم) ⇒ الإزاحة تنقص بقدرها، فعودتها لاحقاً (+1) لا تجرّ النافذة شمعةً للخلف.
+    const removed = added > 0 ? 0 : removedAtTail(prev.all.map(barTime), lastSec);
+    if (added <= 0 && removed <= 0) return;
+    const next = Math.min(Math.max(0, all.length - 10), Math.max(0, offsetRef.current + added - removed));
     if (next === offsetRef.current) return;
     offsetRef.current = next;
     setOffset(next);

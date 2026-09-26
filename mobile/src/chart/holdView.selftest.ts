@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`holdView.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { appendedAfter, offsetAtTime, reanchorAhead, shiftAheadSlot } from './holdView';
+import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
 
 // تيك داخل الشمعة نفسها ⇒ لا إضافة
 assert.equal(appendedAfter(300, [0, 100, 200, 300]), 0);
@@ -55,4 +55,19 @@ assert.deepEqual(shiftAheadSlot(3, 20, 19), { index: 19, ahead: 4 });
 assert.equal(shiftAheadSlot(0, 20, 21), null);
 assert.equal(shiftAheadSlot(3, 20, 20), null);
 assert.equal(shiftAheadSlot(3, -1, 20), null);
+// الشمعة المحلّية سقطت (تيك متقادم) ⇒ خانة واحدة من الطرف
+assert.equal(removedAtTail([100, 200, 300, 400], 300), 1);
+assert.equal(removedAtTail([100, 200, 300, 400], 200), 2);
+assert.equal(removedAtTail([100, 200, 300, 400], 400), 0);
+// زمن جديد أحدث، أو غير موجود بالقديمة ⇒ 0
+assert.equal(removedAtTail([100, 200, 300, 400], 500), 0);
+assert.equal(removedAtTail([100, 200, 300, 400], 250), 0);
+assert.equal(removedAtTail([], 100), 0);
+assert.equal(removedAtTail([100], null), 0);
+// Renko: لبنتان بالزمن نفسه تبقيان، والثالثة بعدهما سقطت
+assert.equal(removedAtTail([100, 300, 300, 400], 300), 1);
+// سقوط ثم عودة = صفر انجراف: الإزاحة −1 ثم +1
+const dropped = removedAtTail([100, 200, 300, 400], 300);
+const back = appendedAfter(300, [100, 200, 300, 400], 3);
+assert.equal(dropped - back, 0);
 console.log('holdView.selftest: PASS');
