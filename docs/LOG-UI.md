@@ -846,7 +846,7 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| a1308a0 | سلّم الخطوط §2 (11/12/13/15/18) بنطاقي: عناوين اللوحات 14 ⇒ 13؛ عناوين الشاشات 20–24 ⇒ 18 (`AccountScreen`، `CoursesScreen`، `MessagesScreen`، `LectureClassroom`)؛ قراءات 14/16 ⇒ 15 (`FocusChartModal.price`، `DomLitePanel.value`، `SymbolPairMenu` الكبير)؛ `SubscriptionPlansPanel` 17/20/27 ⇒ 15/15/18. رموز الأيقونات (`⋯`، علامات الشريط السفلي 16) مُبقاة — أيقونات لا نصّ | DESIGN-PRO §2 |
+| 2839399 | سلّم الخطوط §2 (11/12/13/15/18) بنطاقي: عناوين اللوحات 14 ⇒ 13؛ عناوين الشاشات 20–24 ⇒ 18 (`AccountScreen`، `CoursesScreen`، `MessagesScreen`، `LectureClassroom`)؛ قراءات 14/16 ⇒ 15 (`FocusChartModal.price`، `DomLitePanel.value`، `SymbolPairMenu` الكبير)؛ `SubscriptionPlansPanel` 17/20/27 ⇒ 15/15/18. رموز الأيقونات (`⋯`، علامات الشريط السفلي 16) مُبقاة — أيقونات لا نصّ | DESIGN-PRO §2 |
 
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`.
 - خارج نطاقي بالحجم نفسه (لم يُلمس): `PositionSizePanel` 14/28، `TradeJournalPanel`/`BacktestPanel` 16، `ToolsScreen` 22 (tools)؛ `MatrixChart` 10/14/16 (chart).
