@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Modal, Platform, View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -48,8 +48,31 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
   // (`matrix.onboarding.v1`). من الخطوة الأولى يبقى الرجوع خروجاً كما يتوقّع المتداول.
   const back = () => (step > 0 ? go(step - 1) : finish());
 
+  // الويب (قرار ١٦، اللابتوب): ←/→ بين البطاقات — بالعربية والكردية «التالي» جهة اليسار كصفّ النقاط المقلوب — و**Esc يُغلق**
+  // الجولة كأيّ نافذة بالمتصفّح (كان يرجع بطاقةً كرجوع أندرويد؛ والجولة تُعاد من الحساب). ولا يصل مفتاح إلى ما خلفها:
+  // الأسهم كانت تسحب الشارت، و1–8 تبدّل فريمه، و«?» تفتح قائمة الاختصارات فوق الجولة. Tab/Enter/مسافة تبقى للأزرار.
+  const keyRef = useRef({ step, rtl, go, finish });
+  keyRef.current = { step, rtl, go, finish };
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visible || typeof window === 'undefined') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Tab' || e.key === 'Enter' || e.key === ' ') return;
+      e.stopPropagation();
+      const { step: i, rtl: r, go: goTo } = keyRef.current;
+      // Esc نفسه يُغلق من `onRequestClose` (react-native-web يستمع لرفع المفتاح) — هنا يُحجب عن الشارت فقط.
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      const forward = (e.key === 'ArrowRight') !== r;
+      const target = forward ? i + 1 : i - 1;
+      if (target >= 0 && target < steps.length) goTo(target);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [visible, steps.length]);
+
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={back}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={Platform.OS === 'web' ? finish : back}>
       <View style={styles.backdrop}>
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <View style={styles.card}>
