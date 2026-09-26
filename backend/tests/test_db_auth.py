@@ -495,3 +495,39 @@ def test_existing_look_alike_pair_does_not_break_startup(tmp_path, monkeypatch):
 def test_email_with_control_or_invisible_chars_is_rejected(_db, bad):
     with pytest.raises(ValueError, match="invalid email"):
         _register("trader9", email=bad)
+
+
+# ── محارف لا تُرى خارج الفئتين C/Z، وعلامات التركيب (run 71) ────────────────────
+@pytest.mark.parametrize("name", [
+    "alice͏", "alice️", "alice឴", "aliceᅟ", "alice⠀", "alice\U000e0100",
+])
+def test_invisible_marks_outside_c_and_z_are_rejected(_db, name):
+    with pytest.raises(ValueError, match="invisible"):
+        db.register_user(name, "hunter2", email="r@example.com")
+
+
+def test_combining_mark_twin_is_taken(_db):
+    _register("alice", email="a@example.com")
+    with pytest.raises(ValueError, match="taken"):
+        _register("ali̇ce", email="b@example.com")  # نقطة فوق i تُعرض «alice»
+
+
+def test_arabic_diacritics_do_not_block_ordinary_names(_db):
+    _register("كاوە", email="a@example.com")  # كردي: ە ليست علامة تركيب
+    assert db.login_user("كاوە", "hunter2")["token"]
+
+
+def test_skeleton_rule_change_recomputes_existing_rows(tmp_path, monkeypatch):
+    path = tmp_path / "old.db"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "DB_PATH", path)
+    db.init_db()
+    with db._conn() as c:
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('ali̇ce','x',0)")
+        c.execute("UPDATE users SET username_skel='ali̇ce'")  # هيكل بالقاعدة القديمة
+        c.execute("PRAGMA user_version=1")
+    db.init_db()
+    with db._conn() as c:
+        assert c.execute("SELECT username_skel FROM users").fetchone()[0] == "alice"
+    with pytest.raises(ValueError, match="taken"):
+        db.register_user("alice", "hunter2", email="n@example.com")

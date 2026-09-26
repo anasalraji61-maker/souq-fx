@@ -44,7 +44,15 @@ _SPACES = re.compile(r"\s+")
 
 
 def _username_skeleton(username: str) -> str:
-    return _SPACES.sub(" ", _username_key(username).translate(_SKELETON))
+    # علامات التركيب (Mn/Me) لا تغيّر مظهر الاسم بما يكفي: «ali̇ce» (نقطة فوق i) كان حساباً مستقلاً يُعرض
+    # كـ«alice». تُسقط بعد NFD (فتتصادم «josé»/«jose» والاسم المشكول وغيره — طيّ زائد مقبول كما أعلاه).
+    folded = unicodedata.normalize("NFD", _username_key(username).translate(_SKELETON))
+    folded = "".join(ch for ch in folded if unicodedata.category(ch) not in ("Mn", "Me"))
+    return _SPACES.sub(" ", unicodedata.normalize("NFC", folded))
+
+
+# نسخة قاعدة الهيكل: تُرفع حين تتغيّر `_username_skeleton` فيُعاد حساب العمود لكل الصفوف مرة واحدة.
+_SKEL_VERSION = 2
 
 
 def _fill_username_skel(c: sqlite3.Connection) -> None:
@@ -76,6 +84,9 @@ def _migrate_username_nocase(c: sqlite3.Connection) -> None:
         c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_key ON users(username_key)")
     if "username_skel" not in cols:
         c.execute("ALTER TABLE users ADD COLUMN username_skel TEXT")
+    if c.execute("PRAGMA user_version").fetchone()[0] < _SKEL_VERSION:
+        c.execute("UPDATE users SET username_skel=NULL")
+        c.execute(f"PRAGMA user_version={_SKEL_VERSION}")
     _fill_username_skel(c)
     # غير فريد: قاعدة قائمة قد تحوي شبيهين فعلاً (لا دمج آلياً) — التسجيل الجديد يُمنع بـ`_username_taken`
     c.execute("CREATE INDEX IF NOT EXISTS idx_users_username_skel ON users(username_skel)")
@@ -124,6 +135,13 @@ LINK_RE = re.compile(
 )
 
 
+# محارف لا تُرى وليست من الفئتين C/Z (فيفوتها الفحص أدناه): مُحدِّدات التنويع، رابط الحروف المركّبة، حرف
+# الخمير الصامت، حشوات الهانغول، فراغ برايل. «alice\ufe0f» و«alice\u2800» كانا يُقبلان بجانب «alice».
+_INVISIBLE_NON_CZ = re.compile(
+    "[\u034f\u115f\u1160\u17b4\u17b5\u180b-\u180f\u2800\u3164\ufe00-\ufe0f\uffa0\U000e0100-\U000e01ef]"
+)
+
+
 def _check_username(username: str) -> None:
     """ValueError لاسم محجوز أو يحمل محارف لا تُرى/تُطبَّع: «alice\u200b» (عرض صفري) و«ａｌｉｃｅ» (عرض
     كامل) كانا يُقبلان بجانب «alice» ويُعرضان مثله — انتحال لا يمنعه فهرس `NOCASE` (backend-r47)."""
@@ -136,7 +154,7 @@ def _check_username(username: str) -> None:
     if unicodedata.normalize("NFKC", username) != username or any(
         unicodedata.category(ch)[0] in "CZ" and ch != " " and not (ch == _ZWNJ and _zwnj_ok(username, i))
         for i, ch in enumerate(username)
-    ):
+    ) or _INVISIBLE_NON_CZ.search(username):
         raise ValueError("username has invisible or look-alike characters")
 
 
