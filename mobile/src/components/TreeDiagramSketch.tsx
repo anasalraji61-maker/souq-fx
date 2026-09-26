@@ -81,10 +81,10 @@ export function TreeDiagramSketch({ youLabel }: Props) {
     <View style={styles.wrap}>
       <Text style={[styles.caption, { textAlign: rtl ? 'right' : 'left' }]}>{t.tdsCaption}</Text>
 
-      <SplitLevel label={levelLabel(4, 8)} tint={colors.treeLevel4Tint} perSide={8} boxSize={36} />
-      <SplitLevel label={levelLabel(3, 4)} tint={colors.infoAccent} perSide={4} boxSize={44} />
-      <SplitLevel label={levelLabel(2, 2)} tint={colors.accent} perSide={2} boxSize={56} />
-      <SplitLevel label={t.tdsLevelOne} tint={colors.dxy} perSide={1} boxSize={72} />
+      <SplitLevel label={levelLabel(4, 8)} tint={colors.textDim} perSide={8} boxSize={36} />
+      <SplitLevel label={levelLabel(3, 4)} tint={colors.textDim} perSide={4} boxSize={44} />
+      <SplitLevel label={levelLabel(2, 2)} tint={colors.textDim} perSide={2} boxSize={56} />
+      <SplitLevel label={t.tdsLevelOne} tint={colors.textDim} perSide={1} boxSize={72} />
 
       <View style={styles.mainFork}>
         <View style={styles.forkArm} />
@@ -111,8 +111,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  // DESIGN-PRO §1: لون ثانوي واحد للمستويات والجهتين (كانت خمسة ألوان؛ المستوى والجهة مكتوبان) — «أنت» وحده بالتأكيد.
   caption: {
-    color: colors.accent,
+    color: colors.textMuted,
     fontWeight: '500',
     fontSize: 12,
     alignSelf: 'stretch',
@@ -129,8 +130,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sidePane: { flex: 1, alignItems: 'center', gap: 4 },
-  leftLbl: { color: colors.dxy, fontSize: 11, fontWeight: '500' },
-  rightLbl: { color: colors.treeRightTint, fontSize: 11, fontWeight: '500' },
+  leftLbl: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  rightLbl: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   midLine: { width: 2, alignSelf: 'stretch', minHeight: 36, opacity: 0.55 },
   railThin: { width: '85%', height: 2, opacity: 0.5, marginTop: spacing.xs },
   numRow: {

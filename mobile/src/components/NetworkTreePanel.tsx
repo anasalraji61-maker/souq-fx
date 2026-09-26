@@ -27,7 +27,9 @@ export type TreeNode = {
 };
 
 const LEVEL_SIZE = [2, 4, 8, 16] as const;
-const LEVEL_TINT = [colors.dxy, colors.accent, colors.infoAccent, colors.treeLevel4Tint] as const;
+// DESIGN-PRO §1: كان لكل مستوى لون (سماوي/تيل/بنفسجي/وردي) — أربعة ألوان لميزة واحدة، والمستوى مكتوب بعنوانه.
+// الآن لون ثانوي واحد لكل المستويات؛ المملوء يتميّز بحدّ متّصل وتعبئة لوحة، والفارغ بحدّ متقطّع.
+const LEVEL_TINT = [colors.textDim, colors.textDim, colors.textDim, colors.textDim] as const;
 
 type Props = {
   enabled: boolean;
@@ -482,8 +484,8 @@ const styles = StyleSheet.create({
   sideLeft: {},
   sideRight: {},
   sideTag: { fontSize: 11, fontWeight: '500' },
-  leftTag: { color: colors.dxy },
-  rightTag: { color: colors.treeRightTint },
+  leftTag: { color: colors.textMuted },
+  rightTag: { color: colors.textMuted },
   sideCount: { ...numeric, color: colors.textDim, fontSize: 11 },
   sideGap: {
     width: 16,
@@ -526,7 +528,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.bgPanel,
   },
-  slotFilled: { backgroundColor: colors.accentFaint },
+  slotFilled: { backgroundColor: colors.bgPanel },
   slotEmpty: { borderStyle: 'dashed' },
   slotLocked: {
     borderColor: colors.lockedBorder,
