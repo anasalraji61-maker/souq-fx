@@ -129,6 +129,24 @@ def test_pubdate_becomes_utc_with_a_time_not_a_bare_date(raw, expected_when):
     assert isinstance(ts, int) and ts > 0
 
 
+@pytest.mark.parametrize("raw", ["Tue, 23 Sep 2026 14:30:00 BST", "Tue, 23 Sep 2026 14:30:00 CEST", "Tue, 23 Sep 2026 14:30:00 JST"])
+def test_unknown_zone_name_is_not_labelled_utc(raw):
+    """`parsedate_to_datetime` لا يعرف BST/CEST/JST فيعيد وقتاً بلا منطقة — كان «14:30 BST» يُرسَل
+    «2026-09-23 14:30 UTC» بـ`ts` متأخّر ساعة. المنطقة مذكورة ومجهولة ⇒ النصّ كما هو بلا `ts`."""
+    when, ts = nf.when_and_ts(raw)
+    assert ts is None and "UTC" not in when and when == raw
+
+
+@pytest.mark.parametrize("raw,expected_when", [
+    ("Tue, 23 Sep 2026 14:30:00 GMT", "2026-09-23 14:30 UTC"),
+    ("Tue, 23 Sep 2026 14:30:00 EDT", "2026-09-23 18:30 UTC"),
+    ("Tue, 23 Sep 2026 14:30:00 -0000", "2026-09-23 14:30 UTC"),
+])
+def test_known_zone_names_still_convert(raw, expected_when):
+    when, ts = nf.when_and_ts(raw)
+    assert when == expected_when and isinstance(ts, int)
+
+
 @pytest.mark.parametrize("raw", ["not a date at all", "", None])
 def test_unreadable_pubdate_keeps_a_string_and_no_ts(raw):
     """تاريخ لا يُقرأ لا يُسقط الخبر ولا يخترع وقتاً: نصّه كما هو (أو «اليوم») و`ts` فارغ."""

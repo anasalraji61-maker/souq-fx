@@ -77,7 +77,12 @@ def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, i
     try:
         dt = parsedate_to_datetime(raw.strip())
         # سنة 9999 بإزاحة سالبة تفيض بـ`astimezone`/`timestamp` (OverflowError) — كانت تُسقط الخلاصة كلّها
-        # خلاصة بلا منطقة زمنية: تُقرأ UTC ولا تُخمَّن منطقة
+        # اسم منطقة لا يعرفه `parsedate_to_datetime` (غير UT/GMT/Z والأمريكية: BST، CEST، JST…) يُعاد بلا
+        # منطقة كأنه غائب ⇒ كان «14:30 BST» يُرسَل «14:30 UTC» (متأخّراً ساعة، والترتيب بـ`ts` خاطئ).
+        # المنطقة مذكورة ومجهولة ⇒ لا وقت محسوب، كنصّ لا يُقرأ.
+        if not dt.tzinfo and raw.strip().split()[-1].isalpha():
+            return raw.strip()[:32] or default, None
+        # خلاصة بلا منطقة زمنية (أو -0000): تُقرأ UTC ولا تُخمَّن منطقة
         at = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
         return at.strftime("%Y-%m-%d %H:%M UTC"), int(at.timestamp())
     except (TypeError, ValueError, OverflowError):
