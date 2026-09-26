@@ -43,6 +43,7 @@ import {
   floatingResult,
   formatPips,
   formatR,
+  formatRAbs,
   journalLossStreaks,
   journalMaxDrawdownR,
   journalPayoffR,
@@ -128,9 +129,6 @@ const PRICE_MAX_LEN = 20;
  * كان بلا سطر عائم.
  */
 const MAX_LIVE_QUOTES = 4;
-
-/** 3 / 2.5 — مقدار R بلا إشارة (منزلة واحدة كـformatR) لقوالب «{r}R». */
-const formatRAbs = (r: number): string => (Number.isInteger(r) ? String(Math.abs(r)) : Math.abs(r).toFixed(1));
 
 /** +80 / −12.5 pip — نفس علامة الناقص المطبعية لـformatR. */
 const formatSignedPips = (p: number): string => {
@@ -906,13 +904,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       note: noteToSave(pnum(entry), pnum(sl)),
     });
     if (!p) return null;
-    const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
-    const pips = formatPips(p.pips == null ? null : Math.abs(p.pips));
     const r = formatR(p.r);
+    // الإشارة من القيمة المقرَّبة لا الخام (QA105a): −0.04 pip / −0.004% كانا «−0.0 pip» و«−0.00%»
     const text = [
-      pips != null ? `${sign(p.pips ?? 0)}${pips} ${pipUnit(lang)}` : null,
+      p.pips != null && Number.isFinite(p.pips) ? `${formatSignedPips(p.pips)} ${pipUnit(lang)}` : null,
       p.cash ? formatJournalMoney(p.cash, t.journalMoneyUsc, true) : null,
-      `${sign(p.pct)}${Math.abs(p.pct).toFixed(2)}%`,
+      `${formatSignedPct(p.pct)}%`,
       r ? t.journalResultR.replace('{r}', r) : null,
     ]
       .filter(Boolean)
@@ -1377,7 +1374,6 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const confirmClose = (tr: Trade, exitPx: number, source: 'market' | 'field', fieldText?: string) => {
     const trSide = tr.side === 'sell' ? 'sell' : 'buy';
     const mv = realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx });
-    const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
     /**
      * والنتيجة بالـR حين للصفقة وقفٌ مسجَّل — الرقم الذي يقرّر به المتداول «هل أغلق الآن؟» (+0.4R
      * إغلاقٌ مبكر، −0.9R قريبٌ من وقفه)، وسطر الصفقة يعرضه أصلاً فكان التأكيد وحده يُسقطه. المسطرة
@@ -1396,7 +1392,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         : null;
     const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
     const result = mv
-      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} ${pipUnit(lang)} · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
+      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} ${pipUnit(lang)} · ` : ''}${cashText}${formatSignedPct(mv.pct)}%${rText ? ` · ${rText}` : ''}`
       : '';
     const body = source === 'market' ? t.journalCloseMarketConfirmBody : t.journalCloseMarketConfirmBody.split('\n\n')[0];
     // `confirmDestructive` لا `Alert.alert`: الأخيرة دالّة فارغة بـreact-native-web ⇒ «أغلق بالسوق»/«أغلق» كانا
@@ -1558,8 +1554,6 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             const mv = closed
               ? realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: tr.exit })
               : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live, note: tr.note });
-            const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
-            const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
             const rText = !closed && mv && 'r' in mv ? formatR(mv.r as number | null) : null;
             /**
              * **كم ربحتُ/خسرتُ بالمال** بعملة التسعير (`journalPnl`؛ USC لسنت الدولار): النسبة بالسطر نسبة حركة السعر
@@ -1574,9 +1568,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
                 : null;
             const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
             const result = mv
-              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} ${pipUnit(lang)} · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(
-                  mv.pct
-                ).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
+              ? `${
+                  mv.pips != null && Number.isFinite(mv.pips) ? `${formatSignedPips(mv.pips)} ${pipUnit(lang)} · ` : ''
+                }${cashText}${formatSignedPct(mv.pct)}%${rText ? ` · ${rText}` : ''}`
               : '';
             if (!closed && !result && !tr.note) return null;
             // الكلمة تسبق النتيجة بالمغلقة؛ بالمفتوحة لا كلمة (السطر الأول يقول «(مفتوحة)») فلا يبدأ

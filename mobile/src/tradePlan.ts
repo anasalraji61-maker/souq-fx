@@ -1171,8 +1171,18 @@ export function formatSignedPct(v: number | null | undefined): string {
 
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;
-  const abs = Number.isInteger(r) ? String(Math.abs(r)) : Math.abs(r).toFixed(1);
-  return `${r > 0 ? '+' : r < 0 ? '−' : ''}${abs}R`;
+  const abs = formatRAbs(r);
+  // كـ`formatPips` (QA105a): ما يُقرَّب صفراً بلا إشارة — لا «−0.0R»
+  return `${abs === '0' ? '' : r > 0 ? '+' : '−'}${abs}R`;
+}
+
+/**
+ * 3 ⇒ «3»، ‏−2.5 ⇒ «2.5»: مقدار R بلا إشارة، منزلة واحدة كحدّ أقصى. يُقرَّب **قبل** فحص الصحيح (QA105a):
+ * ‏0.96 كان «1.0» و0.04 «0.0»؛ الآن «1» و«0».
+ */
+export function formatRAbs(r: number): string {
+  const a = Number(Math.abs(r).toFixed(1));
+  return Number.isInteger(a) ? String(a) : a.toFixed(1);
 }
 
 /**

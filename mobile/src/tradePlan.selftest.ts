@@ -53,6 +53,7 @@ import {
   floatingResult,
   formatPips,
   formatR,
+  formatRAbs,
   formatRR,
   journalSymbol,
   quoteSymbol,
@@ -248,6 +249,17 @@ assert.equal(formatR(-1), '−1R');
 assert.equal(formatR(1.5), '+1.5R');
 assert.equal(formatR(0), '0R');
 assert.equal(formatR(null), null);
+// QA105a (أخت formatPips): التقريب قبل فحص الصحيح، والصفر المقرَّب بلا إشارة
+assert.equal(formatR(0.96), '+1R');
+assert.equal(formatR(0.04), '0R');
+assert.equal(formatR(-0.04), '0R');
+assert.equal(formatR(-0.96), '−1R');
+assert.equal(formatR(-2.45), '−2.5R');
+assert.equal(formatR(1.04), '+1R');
+assert.equal(formatRAbs(3), '3');
+assert.equal(formatRAbs(-2.5), '2.5');
+assert.equal(formatRAbs(2.96), '3');
+assert.equal(formatRAbs(0.04), '0');
 
 console.log('tradePlan selftest OK');
 
