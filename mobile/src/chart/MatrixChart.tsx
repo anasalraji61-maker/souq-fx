@@ -4178,8 +4178,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       bb: { upper: overlays.bbUpper, lower: overlays.bbLower },
       keltner,
       donchian,
+      // نطاقات بالشكل نفسه: STARC (SMA ± ATR) كان شارة «STARC» بلا رقم وبلا وسمين على المحور، وKeltner بجانبها برقميه.
+      envelopes,
+      starcBands,
+      accelBands,
+      stdErrorBands,
+      vwapBands,
+      linRegChannel,
     };
-  }, [dense, chartPlotW, overlays, keltner, donchian]);
+  }, [
+    dense, chartPlotW, overlays, keltner, donchian, envelopes, starcBands, accelBands, stdErrorBands, vwapBands,
+    linRegChannel,
+  ]);
   // متعدّدة الخطوط: قيمة كل خطّ بلونه — إيشيموكو Tenkan/Kijun (المتأخر = إغلاق بعد 25 شمعة، فارغ عند
   // الأخيرة فلا يُطبع) والتمساح الفكّ/الأسنان/الشفاه. الألوان حرفياً كمواضع رسمها.
   const legendMulti = useMemo((): Readonly<Record<string, { lines: readonly (readonly (number | null)[])[]; colors: readonly string[] } | null>> => {
