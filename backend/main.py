@@ -619,7 +619,12 @@ class TradeCreate(BaseModel):
         if dt.year < 1970:
             raise ValueError("is before 1970")
         if dt.tzinfo is not None:
-            dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
+            try:
+                dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
+            except OverflowError:  # «9999-12-31T23:59-12:00» يفيض بعد سنة 9999 ⇒ كان 500
+                raise ValueError("is in the future") from None
+            if dt.year < 1970:  # «1970-01-01T00:00+14:00» ⇒ 1969 بتوقيت الخادم
+                raise ValueError("is before 1970")
         # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
         # الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية حتى يحين ذلك التاريخ. سماح 5 دقائق لفرق ساعة الجهاز.
         if dt.replace(tzinfo=None) > datetime.now() + timedelta(minutes=5):

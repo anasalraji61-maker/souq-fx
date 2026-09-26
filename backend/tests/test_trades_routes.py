@@ -765,7 +765,11 @@ def test_a_padded_symbol_is_stored_stripped(client):
     assert _open_trade(client, symbol="  gbpusd ")["symbol"] == "GBPUSD"
 
 
-@pytest.mark.parametrize("when", ["0999-01-01", "0001-01-01T00:00:00+05:00", "1969-12-31 23:59"])
+@pytest.mark.parametrize("when", [
+    "0999-01-01", "0001-01-01T00:00:00+05:00", "1969-12-31 23:59",
+    "9999-12-31T23:59:00-12:00",  # يفيض بـ`astimezone` ⇒ كان 500
+    "1970-01-01T00:00:00+14:00",  # 1969 بتوقيت الخادم
+])
 def test_an_ancient_opened_at_is_refused_not_sorted_as_newest(client, when):
     """«0999-01-01» كان يُحفظ «999-01-01 00:00» فيتصدّر الدفتر نصّياً؛ سنة 1 بإزاحة كانت 500."""
     r = client.post("/api/trades", json={**_TRADE, "opened_at": when}, headers=_DEV1)
