@@ -45,6 +45,7 @@ import {
   formatR,
   journalLossStreaks,
   journalMaxDrawdownR,
+  journalPayoffR,
   formatRR,
   breakevenWinRatePct,
   journalSymbol,
@@ -945,6 +946,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const avg = averageR(visibleTrades);
     const streak = journalLossStreaks(visibleTrades);
     const dd = journalMaxDrawdownR(visibleTrades);
+    const payoff = journalPayoffR(visibleTrades);
     /**
      * ثلاث أدوات بالسطر وما بعدها «+N» كي لا يطول سطر الإحصاءات (الترتيب من `netByInstrument`). المال
      * بعملة تسعير الأداة بجانب نقاطها حين يُعرف حجم كل صفقاتها — «EURUSD +25 (+125.00 USD)».
@@ -971,6 +973,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       streak: streak && streak.longest > 0 ? streak : null,
       /** بلا تراجع قطّ لا سطر؛ الرقم بلا إشارة كنصّ «{r}R» */
       dd: dd && dd.max > 0 ? { max: formatRAbs(dd.max), now: formatRAbs(dd.current), n: dd.n } : null,
+      /** متوسط الرابحة والخاسرة بالـR ونسبة النجاح اللازمة بالعائد المحقَّق مقابل الفعلية — بلا رابحة وخاسرة معاً لا سطر */
+      payoff: payoff
+        ? { win: formatRAbs(payoff.avgWin), loss: formatRAbs(payoff.avgLoss), need: String(payoff.needPct), actual: String(payoff.winPct) }
+        : null,
       /** مبلغٌ بالسنت الأمريكي بالسطر المعروض — `journalCentMoneyNote` يقول إن USC هي وحدة حساب السنت (100 = 1 USD) */
       usc: (whole ? [ranked[0]!] : shown).some((v) => v.cash?.ccy === 'USC'),
     };
@@ -1748,6 +1754,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
                 .replace('{r}', extraStats.dd.max)
                 .replace('{now}', extraStats.dd.now)
                 .replace('{n}', String(extraStats.dd.n))}
+            </Text>
+          ) : null}
+          {!statsMixScopes && extraStats.payoff ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatPayoff
+                .replace('{win}', extraStats.payoff.win)
+                .replace('{loss}', extraStats.payoff.loss)
+                .replace('{need}', extraStats.payoff.need)
+                .replace('{actual}', extraStats.payoff.actual)}
             </Text>
           ) : null}
           <Text style={[styles.stat, { textAlign: align }]}>
