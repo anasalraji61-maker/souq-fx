@@ -1550,8 +1550,8 @@
 
 | commit | ماذا | بند |
 |---|---|---|
-| 201c079 | `FocusChartModal`: سعر الرأس والعرض/الطلب وسطر «مُسلَّح» بمنازل الشارت الثابتة (`useStickyPriceRef(sym, headSeries?.last)` كـ`ChartFrame:214`) — لرمز بلا مواصفة (LTCUSD حول 100) كان الرأس يقفز 3↔2 منازل والشارت تحته ثابت | chart-r113a |
-| 5f2baa6 | `AlertsPanel`: 409 `alert_changed` ⇒ جملة launch `alertsChangedElsewhere` ثم «: EURUSD ≥ 1.2000» (الصفّ المخزَّن) — المفتاح وصل بلا `{desc}` فكان المستوى الجديد يسقط من الرسالة؛ أُزيل التحويل `as unknown` | ui128a |
+| 5e845c6 | `FocusChartModal`: سعر الرأس والعرض/الطلب وسطر «مُسلَّح» بمنازل الشارت الثابتة (`useStickyPriceRef(sym, headSeries?.last)` كـ`ChartFrame:214`) — لرمز بلا مواصفة (LTCUSD حول 100) كان الرأس يقفز 3↔2 منازل والشارت تحته ثابت | chart-r113a |
+| 9a2f54a | `AlertsPanel`: 409 `alert_changed` ⇒ جملة launch `alertsChangedElsewhere` ثم «: EURUSD ≥ 1.2000» (الصفّ المخزَّن) — المفتاح وصل بلا `{desc}` فكان المستوى الجديد يسقط من الرسالة؛ أُزيل التحويل `as unknown` | ui128a |
 
 - chart-r113a وui128a جاهزان للإغلاق.
 - مراجعة آلية لنطاقي (68 ملفاً، بلا chart/i18n/tools): لا نصّ ثابت يتخطّى `t.`، لا اختيار باللون وحده (~45 زرّاً كلها بـ`accessibilityState`)، لا رقم مختلق، لا وزن 700؛ كل ملف يطبع سعراً/نسبة يستورد `numeric`.
