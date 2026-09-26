@@ -1909,8 +1909,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const lastCandleTime = liveSeries.candles[liveSeries.candles.length - 1]?.time;
   const crossFutureSec =
     cross?.ahead && crossBar && crossBar === source.all[source.all.length - 1] && lastCandleTime != null
-      ? Math.max(candleTimeSec(barTime(crossBar)), candleTimeSec(lastCandleTime)) +
-        cross.ahead * timeframeStepSec(series.timeframe)
+      ? // بتخطّي عطلة نهاية الأسبوع كوسم القائد نفسه (`projectBarTimeSec`): `+ ahead × step` كان يعدّ السبت والأحد
+        // ⇒ قائد 1H يقرأ «الإثنين 01:00» والتابع 4H يرسم «الأحد 20:00»، شمعة يسار ما يقرأه المتداول.
+        projectBarTimeSec(
+          series.symbol,
+          Math.max(candleTimeSec(barTime(crossBar)), candleTimeSec(lastCandleTime)),
+          timeframeStepSec(series.timeframe),
+          cross.ahead
+        )
       : null;
   const crossTimeSec = cross
     ? crossFutureSec ?? candleTimeSec(crossBar ? barTime(crossBar) : cross.time)
@@ -1985,8 +1991,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // Renko/Kagi/P&F/Range: خانة بعد آخر لبنة ليست خطوة فريم (لبنةٌ قد تستغرق ساعات أو ثوانٍ) — كان الخطّ يُرسم
     // k لبنةً يمينها فيوحي بزمن لا يقابله شيء؛ لا خطّ بالمستقبل هنا (تقاطع المتداول نفسه لا يدخله كذلك).
     if (!synthetic && syncCrossTime != null && atSeriesEnd && lastCandle && step > 0) {
-      const k = Math.floor((syncCrossTime - candleTimeSec(lastCandle.time)) / step);
-      if (k >= 1 && k <= CROSS_SYNC_MAX_AHEAD) {
+      // أكبر k تقع خانته المسقَطة (بتخطّي العطلة، كوسم زمن هذا الشارت) عند زمن القائد أو قبله. خطوة خطوة
+      // (الإسقاط تراكمي) فالكلفة k لا k².
+      let k = 0;
+      for (let t = candleTimeSec(lastCandle.time), j = 1; j <= CROSS_SYNC_MAX_AHEAD; j++) {
+        t = projectBarTimeSec(series.symbol, t, step, 1);
+        if (t > syncCrossTime) break;
+        k = j;
+      }
+      // أبعد من الحدّ ⇒ لا خطّ بالمستقبل (كما كان).
+      if (k >= 1 && k < CROSS_SYNC_MAX_AHEAD) {
         time = source.plot[source.plot.length - 1]!.time;
         ahead = k;
       }
@@ -2001,7 +2015,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ? { time, price: null, ahead }
             : { time, price: null }
     );
-  }, [syncCrossTime, source.plot, source.all, kind, liveSeries.candles, series.timeframe]);
+  }, [syncCrossTime, source.plot, source.all, kind, liveSeries.candles, series.timeframe, series.symbol]);
 
   // الرسومات تتبع شموعها بالزمن لا بالخانة — راجع `drawingAnchors.ts`. لا يعمل قبل أن
   // تُحمَّل رسومات هذا الرمز/الفريم (`drawings === loadedDrawings`)، ويعيد المصفوفة نفسها
