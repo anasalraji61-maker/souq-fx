@@ -292,6 +292,17 @@ class DmSend(BaseModel):
     from_user: str = "أنت"
 
 
+# رمز يُحفظ ويُجلب لاحقاً (تنبيه/متابعة/ماسح): حروف لاتينية وأرقام وفواصل رموز المزوّد (EUR/USD، BRK.A،
+# AAPL:BMV) فقط. سطر جديد أو NUL أو إيموجي أو حرف غير لاتيني كان يُحفظ «يراقب» ولا يعرفه المزوّد أبداً.
+_SYMBOL_CHARS_RE = re.compile(r"[A-Z0-9][A-Z0-9/.:_&-]*")
+
+
+def _symbol_chars(v: str) -> str:
+    if not _SYMBOL_CHARS_RE.fullmatch(v):
+        raise ValueError("symbol must be latin letters/digits")
+    return v
+
+
 def _alertable_symbol(v: str) -> str:
     """DXY لا يقدّمه المزوّد: تنبيه عليه يُحفظ «يراقب» ولا يُطلق أبداً (الـworker يسجّل «لا سعر» كل دقيقة).
     ويُقصّ ويُكبَّر أولاً: «EURUSD » كان يُحفظ بمسافته فلا يعرفه المزوّد ويبقى «يراقب» إلى الأبد، و« dxy»
@@ -299,6 +310,7 @@ def _alertable_symbol(v: str) -> str:
     v = market.canonical_symbol(v)  # «EUR/USD» ⇒ «EURUSD»: وإلا لا قصّ جمعة ولا سعر WS المخزّن باسم MATRIX
     if len(v) < 3:
         raise ValueError("symbol too short")
+    _symbol_chars(v)
     if market.unavailable_reason(v):
         raise ValueError("symbol unavailable at provider")
     return v
@@ -411,7 +423,7 @@ class WatchlistAdd(BaseModel):
         v = market.canonical_symbol(v)
         if len(v) < 3:
             raise ValueError("symbol too short")
-        return v
+        return _symbol_chars(v)
 
 
 class ProgressSave(BaseModel):

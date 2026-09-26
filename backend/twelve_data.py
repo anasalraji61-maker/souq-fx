@@ -8,6 +8,7 @@ import re
 import sqlite3
 import threading
 import time
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -546,8 +547,13 @@ def canonical_symbol(symbol: str) -> str:
     كان «EUR/USD» يُمرَّر كما هو فيجلب شموع اليورو الحقيقية، لكن `bar_end` لا يعرفه (لا بالخريطة ولا
     زوج ISO) فلا يقصّ عند إغلاق الجمعة: شمعة W/D «جارية» طوال العطلة ⇒ تنبيه تقاطع يُسلَّح السبت يُطلق
     على تقاطع الأسبوع الماضي، و`price_as_of` بالماسح والتوقّع = وقت الجلب لا إغلاق الجمعة. رموز أخرى
-    بشرطة (أسهم «BRK/A») تبقى كما هي."""
-    sym = (symbol or "").strip().upper()
+    بشرطة (أسهم «BRK/A») تبقى كما هي.
+
+    ويُطبَّع NFKC وتُحذف حروف التنسيق غير المرئية (Cf): «EURUSD» منسوخاً من نصّ عربي يحمل علامة اتجاه
+    (U+200F) وعرض كامل «ＥＵＲＵＳＤ» كانا يُحفظان تنبيهاً يبدو EURUSD «يراقب» ولا يعرفه المزوّد فلا يُطلق أبداً."""
+    sym = "".join(
+        ch for ch in unicodedata.normalize("NFKC", symbol or "") if unicodedata.category(ch) != "Cf"
+    ).strip().upper()
     if sym in _TD_TO_MATRIX:
         return _TD_TO_MATRIX[sym]
     if sym.count("/") == 1:
