@@ -8,9 +8,8 @@ import {
   calendarAfterFetch,
   calendarFetchEvents,
   calendarSourceMs,
-  calendarStaleSilent,
-  calendarUnavailable,
   openCalendarUnavailable,
+  calendarDown,
   newsCountdown,
   newsBannerText,
   newsCurrencies,
@@ -221,26 +220,34 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSym
   // عطلة بنوك اليوم لعملتَي الرمز — حين لا خبر قوي فقط (الخبر أخطر ويشغل الشريط). لا للصفقات المفتوحة ولا للرقمية (سوقٌ بلا عطلة)
   const holiday =
     !hit && !openSymbols && holidayCache ? bankHolidayToday(holidayCache.events, shownHolidayCurrencies(shown), now) : null;
+  // التقويم لا يغطّي الرمز (فشلٌ بلا محفوظ، أو محفوظٌ أقدم من ساعة والجلب يفشل) — `calendarDown`.
+  // شريط الصفقات المفتوحة يسكت حين يقولها شريطُ النموذج (`shownSymbol`)، وبلا نموذج (أثناء تعديل صفقة) يقول القِدم كذلك
+  const down = openSymbols
+    ? openCalendarUnavailable(cache, openSymbols, shownSymbol, { serverStale: cacheServerStale, nowMs: now })
+    : shown.some((s) => calendarDown(cache, cacheServerStale, s, now));
   if (holiday) {
     const text = `${t.newsHolidayToday
       .split('{ccy}')
       .join(holiday.currencies.join('/'))
       .split('{title}')
       .join(holiday.titles.length ? ` · ${holiday.titles.join(t.listSep)}` : '')}`;
+    // يوم العطلة والتقويم متعطّل: كان سطر العطلة وحده يُعرض ويُخفي «تعذّر تحديث التقويم» — فيُقرأ «سيولة ضعيفة» كأنها كل القصة
+    const label = down ? `${text}. ${t.newsUnavailable}` : text;
     return (
-      <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={text}>
+      <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={label}>
         <Text style={[styles.hint, styles.unavailable, { textAlign: align }]} numberOfLines={2}>
           {text}
         </Text>
+        {down ? (
+          <Text style={[styles.hint, styles.unavailable, { textAlign: align }]} numberOfLines={2}>
+            {`⚠ ${t.newsUnavailable}`}
+          </Text>
+        ) : null}
       </View>
     );
   }
   if (!hit) {
-    // وتقويمٌ محفوظ قديم بلا خبرٍ فيه يُقال كذلك — كان يبدو «لا خبر» والأحداث الجديدة غائبة (`calendarStaleSilent`).
-    // للرمز المعروض فقط: شريط الصفقات المفتوحة يسكت عن التعطّل حين يقوله شريطٌ آخر، كـ`openCalendarUnavailable`
-    const down = openSymbols
-      ? openCalendarUnavailable(cache, openSymbols, shownSymbol)
-      : shown.some((s) => calendarUnavailable(cache, s) || calendarStaleSilent(cache, cacheServerStale, s, now));
+    // وتقويمٌ محفوظ قديم بلا خبرٍ فيه يُقال كذلك — كان يبدو «لا خبر» والأحداث الجديدة غائبة (`calendarStaleSilent`)
     if (!down) return null;
     // فشلٌ بلا محفوظ: الغياب كان يُقرأ «لا خطر» — سطرٌ هادئ (عنبري لا أحمر: لا نعرف بخبر، نعرف أننا لا نعرف)
     return (

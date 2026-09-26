@@ -872,8 +872,19 @@ export function calendarUnavailable(cache: CalendarCache | null, symbol: string)
 export function openCalendarUnavailable(
   cache: CalendarCache | null,
   openSymbols: readonly string[],
-  shownSymbol?: string
+  shownSymbol?: string,
+  stale?: { serverStale: boolean; nowMs: number }
 ): boolean {
-  if (shownSymbol && calendarUnavailable(cache, shownSymbol)) return false;
-  return openSymbols.some((s) => calendarUnavailable(cache, s));
+  const down = (s: string) => (stale ? calendarDown(cache, stale.serverStale, s, stale.nowMs) : calendarUnavailable(cache, s));
+  if (shownSymbol && down(shownSymbol)) return false;
+  return openSymbols.some(down);
+}
+
+/**
+ * التقويم لا يغطّي الرمز الآن: فشلٌ بلا محفوظ (`calendarUnavailable`) **أو** محفوظٌ أقدم من ساعة والجلب يفشل
+ * (`calendarStaleSilent`). كان شريط الصفقات المفتوحة يفحص الأول وحده ⇒ أثناء تعديل صفقة (لا شريط نموذج) وتقويمٍ محفوظ
+ * عمره ساعتان والجلب يفشل، يسكت فيبدو «لا خبر» — وشريط النموذج للمحفوظ نفسه يقول «تعذّر تحديث التقويم».
+ */
+export function calendarDown(cache: CalendarCache | null, serverStale: boolean, symbol: string, nowMs: number): boolean {
+  return calendarUnavailable(cache, symbol) || calendarStaleSilent(cache, serverStale, symbol, nowMs);
 }

@@ -9,6 +9,7 @@ import {
   calendarAfterFetch,
   calendarUnavailable,
   openCalendarUnavailable,
+  calendarDown,
   calendarFetchEvents,
   newsCountdown,
   newsTickDelayMs,
@@ -530,6 +531,33 @@ console.log('newsRisk calendarUnavailable selftest OK');
   assert.equal(openCalendarUnavailable(null, ['EURUSD'], undefined), false);
 }
 console.log('newsRisk openCalendarUnavailable selftest OK');
+// openCalendarUnavailable مع `stale`: المحفوظ القديم (> ساعة والجلب يفشل) يُقال كذلك — كان يُقال بشريط النموذج وحده
+{
+  const H = 60 * 60 * 1000;
+  const t0 = Date.UTC(2026, 8, 25, 10, 0);
+  const nfp = { title: 'NFP', country: 'USD', impact: 'High', ts: (t0 + 30 * H) / 1000 };
+  const ok = calendarAfterFetch(null, [nfp as never], t0);
+  const staleCache = calendarAfterFetch(ok, null, t0 + 2 * H); // فشلٌ بعد ساعتين، المحفوظ باقٍ
+  const now = t0 + 2 * H;
+  const st = { serverStale: false, nowMs: now };
+  // أثناء التعديل (لا شريط نموذج) ⇒ يقولها الآن؛ وبلا `stale` كالسابق (لا يفحص القِدم)
+  assert.equal(openCalendarUnavailable(staleCache, ['EURUSD'], undefined, st), true);
+  assert.equal(openCalendarUnavailable(staleCache, ['EURUSD'], undefined), false);
+  // شريط النموذج على EURUSD يقولها ⇒ لا تكرار؛ النموذج على رمزٍ بلا عملات ⇒ يقولها المفتوح
+  assert.equal(openCalendarUnavailable(staleCache, ['GBPJPY'], 'EURUSD', st), false);
+  assert.equal(openCalendarUnavailable(staleCache, ['GBPJPY'], 'AAPL', st), true);
+  // عثرةٌ لدقائق (المحفوظ أحدث من ساعة) ⇒ لا شيء؛ نجاحٌ طازج ⇒ لا شيء
+  assert.equal(openCalendarUnavailable(calendarAfterFetch(ok, null, t0 + 10 * 60 * 1000), ['EURUSD'], undefined, { serverStale: false, nowMs: t0 + 10 * 60 * 1000 }), false);
+  assert.equal(openCalendarUnavailable(ok, ['EURUSD'], undefined, st), false);
+  // الفشل بلا محفوظ يبقى مقولاً مع `stale`
+  assert.equal(openCalendarUnavailable(calendarAfterFetch(null, null, t0), ['EURUSD'], undefined, st), true);
+  // calendarDown = الحالتان
+  assert.equal(calendarDown(staleCache, false, 'EURUSD', now), true);
+  assert.equal(calendarDown(calendarAfterFetch(null, null, t0), false, 'EURUSD', t0), true);
+  assert.equal(calendarDown(ok, false, 'EURUSD', now), false);
+  assert.equal(calendarDown(staleCache, false, 'AAPL', now), false);
+}
+console.log('newsRisk openCalendarUnavailable stale selftest OK');
 
 // حساب micro بلاحقة ملاصقة (XM) أو سنت بفاصل: عملات الزوج العادي — كانت «EURUSDmicro» `[]` بلا تحذير
 {
