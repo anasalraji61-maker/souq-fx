@@ -6,11 +6,19 @@ BOS / CHOCH belong under ICT+SMC (Order Blocks & Fair Value Gaps), not separate 
 from __future__ import annotations
 
 
+# سرعة إلقاء الصوت (كلمة/دقيقة) لتقدير مدّة المحاضرة من نصّها
+NARRATION_WPM = 130
+
+
 def _lec(lid: str, title: str, minutes: int, outline: list[str], script: list[dict]) -> dict:
+    """`minutes` المكتوب يدوياً (20–48) لا يُرسَل: المحاضرة = نصّ `script_segments` بالصوت وحده، وأطولها
+    72 كلمة (<1 دقيقة) ⇒ «45 د · محاضرة كاملة» لنصّ 7 كلمات كانت مدّة مخترَعة. المدّة من النصّ نفسه."""
+    words = sum(len(seg["narration"].split()) for seg in script)
     return {
         "id": lid,
         "title": title,
-        "duration_min": minutes,
+        "duration_min": max(1, -(-words // NARRATION_WPM)),
+        "narration_words": words,
         "format": "screen_voice",  # big screen + ElevenLabs voice only
         "video_status": "script_ready",  # later: elevenlabs audio + screen slides
         "outline": outline,

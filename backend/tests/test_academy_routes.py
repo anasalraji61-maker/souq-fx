@@ -189,3 +189,14 @@ def test_progress_for_a_lecture_that_does_not_exist_or_past_its_end_is_refused(c
 def test_interrupt_on_unknown_lecture_is_404(client):
     r = client.post("/api/academy/interrupt", json={"school_id": "basics", "lecture_id": "zzz", "question": "why?"})
     assert r.status_code == 404
+
+
+def test_lecture_duration_comes_from_its_narration_not_a_hand_written_number():
+    """run 55: «45 د» لمحاضرة نصّها 7 كلمات (ثوانٍ من الصوت) — مدّة مخترَعة."""
+    import academy_data
+    for school in academy_data.ACADEMY_SCHOOLS:
+        for level in school["levels"]:
+            for lec in level["lectures"]:
+                words = sum(len(s["narration"].split()) for s in lec["script_segments"])
+                assert lec["narration_words"] == words
+                assert lec["duration_min"] == max(1, -(-words // academy_data.NARRATION_WPM))
