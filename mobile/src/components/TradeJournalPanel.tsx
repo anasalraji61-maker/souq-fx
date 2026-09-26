@@ -51,6 +51,7 @@ import {
   formatRR,
   breakevenWinRatePct,
   journalSymbol,
+  journalFormSymbol,
   quoteSymbol,
   levelSideIssue,
   exitLooksLikePips,
@@ -230,7 +231,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   /** `open_total` مع `open_first` (tools103b) — كل المفتوحة بالصفحة الأولى ⇒ مجموع خطرها كامل ولو لم يُحمَّل الدفتر كلّه */
   const [openTotal, setOpenTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [symbol, setSymbol] = useState(defaultSymbol || 'EURUSD');
+  /** الخانة كما تُكتب; `symbol` = الرمز الذي يُحفظ وتُفحص به كل الخانات (`journalFormSymbol` — «EURUSD m» ⇒ «EURUSDM») */
+  const [symbolText, setSymbol] = useState(defaultSymbol || 'EURUSD');
+  const symbol = useMemo(() => journalFormSymbol(symbolText), [symbolText]);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   /** رمز السعر والجهة **الآن** — لسعرٍ حيّ يصل بعد تبديل أحدهما (راجع `fillLivePrice`) */
   const liveKeyRef = useRef('');
@@ -249,11 +252,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const [busy, setBusy] = useState(false);
   /** النموذج **الآن** — صفقةٌ بدأت كتابتها أثناء طلب الإضافة لا يمسحها `resetForm` حين يصل الردّ */
   const formKeyRef = useRef('');
-  const formKey = [symbol, side, entry, exit, size, sl, tp, note].join('\u0001');
+  const formKey = [symbolText, side, entry, exit, size, sl, tp, note].join('\u0001');
   formKeyRef.current = formKey;
   // خطأٌ عن نموذجٍ تغيّر لم يعد عنه: «دخول غير صالح» كان يبقى تحت الزرّ بعد تصحيح الدخول أو تبديل الجهة حتى الضغطة التالية.
   // الأخطاء كلّها تُضبط بلا تغيير بالنموذج (الحفظ الممنوع، فشل الطلب، لا سعر حيّ) فلا يمحوها هذا في لحظتها
-  useEffect(() => setFormError(null), [formKey]);
+  // استثناء واحد: نموذج التعارض (409) يُملأ بقيم الجهاز الآخر **مع** رسالته — كان التغيّر يمحوها لحظة ظهورها فيتبدّل النموذج بلا تفسير.
+  // `keepErrorForRef` = مفتاح النموذج الذي تبقى له الرسالة؛ أوّل تعديل بعده يمحوها كالعادة
+  const keepErrorForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (keepErrorForRef.current === formKey) return;
+    keepErrorForRef.current = null;
+    setFormError(null);
+  }, [formKey]);
   /** مفتاح النموذج الذي عُرض عليه «نقاطٌ بخانة سعر» عند الحفظ ووقته — ضغطة ثانية بلا تعديل (لا نقرٌ مزدوج) تحفظ السعر كما كُتب. */
   const pipsOverrideRef = useRef<{ key: string; at: number } | null>(null);
   /** جلب «السعر الحالي» لخانة الدخول جارٍ */
@@ -1303,6 +1313,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               journalEditForm(fresh)
             );
             setEditing(fresh);
+            keepErrorForRef.current = [merged.symbol, merged.side, merged.entry, merged.exit, merged.size, merged.sl, merged.tp, merged.note].join(
+              '\u0001'
+            );
             fillEditForm(merged);
             if (merged.size !== size || merged.symbol !== symbol) setSizeFor(fresh.symbol);
           }
@@ -1929,7 +1942,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       </View>
       <TextInput
         style={[styles.input, { textAlign: align }]}
-        value={symbol}
+        value={symbolText}
         onChangeText={pickSymbol}
         placeholder={t.journalSymbolPlaceholder}
         placeholderTextColor={colors.textDim}

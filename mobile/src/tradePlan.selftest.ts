@@ -56,6 +56,7 @@ import {
   formatRAbs,
   formatRR,
   journalSymbol,
+  journalFormSymbol,
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
@@ -4011,3 +4012,24 @@ console.log('tradePlan closeTermsChangedElsewhere selftest OK');
     assert.ok(['seen_symbol', 'seen_side', 'seen_entry', 'seen_size', 'seen_sl', 'seen_note'].includes(k), k);
 }
 console.log('tradePlan journalCloseSeen selftest OK');
+
+{
+  // journalFormSymbol: فحوص النموذج على الرمز المحفوظ — مسافة قبل لاحقة الوسيط كانت تُسقطها
+  assert.equal(journalFormSymbol('EURUSD m'), 'EURUSDM');
+  assert.equal(journalFormSymbol('EURUSD c'), 'EURUSDC');
+  assert.equal(journalFormSymbol('GBPUS'), 'GBPUS');
+  assert.equal(journalFormSymbol('EU'), 'EU');
+  // الحفظ لا يغيّر ما تفحصه: journalSymbol(الرمز المفحوص) = الرمز المفحوص
+  for (const raw of ['EURUSD m', 'EUR USD c', 'XAUUSD c', 'USDJPY m', 'eur/usd', 'EURUSD.m', 'GOLD#', 'BTCUSD#', 'US30', 'EURUSD-cent', 'EURUSD_micro', 'EURUSD.MINI']) {
+    const f = journalFormSymbol(raw);
+    assert.equal(journalSymbol(f), journalSymbol(raw), raw);
+    assert.equal(journalFormSymbol(f), f, raw);
+  }
+  // «10000» بـ«EURUSD m» ⇒ اقتراح 0.10 لوت كما لـ«EURUSDM»؛ و5000 سنت بـ«EURUSD c» فوق حدّ ١٠٠٠ (قرار ١٥)
+  assert.equal(journalSizeLooksLikeUnits(10000, 'EURUSD m'), null); // النصّ الخام: الفحص كان يسقط
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, journalFormSymbol('EURUSD m')), { lots: 0.1 });
+  assert.deepEqual(journalSizeLooksLikeUnits(5000, journalFormSymbol('EURUSD c')), { lots: null });
+  assert.equal(journalMoneyLots('10000', journalFormSymbol('EURUSD m')), null);
+  assert.equal(journalSizeLooksLikeUnits(500, journalFormSymbol('EURUSD c')), null);
+}
+console.log('tradePlan journalFormSymbol selftest OK');
