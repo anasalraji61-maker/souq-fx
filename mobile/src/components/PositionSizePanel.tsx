@@ -82,6 +82,9 @@ import {
   breakevenRR,
   lossStreakDrawdownPct,
   scaleOutHalfAtOneR,
+  dailyLossRoom,
+  localDayKey,
+  restoredLostToday,
   spreadTooWide,
   spreadMaybePrice,
   stopInsideSpread,
@@ -180,6 +183,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const [riskPct, setRiskPct] = useState('1');
   /** رافعة الحساب — ثابتة للمتداول كرصيده، فتُحفظ معه. فارغة = لا سطر هامش */
   const [leverage, setLeverage] = useState('');
+  /** حدّ الخسارة اليومي % وخسارة اليوم (مطويّتان حتى تُفتحا أو يُحفظ حدّ) — راجع `dailyLossRoom` */
+  const [dailyLimit, setDailyLimit] = useState('');
+  const [lostToday, setLostToday] = useState('');
+  const [dailyOpen, setDailyOpen] = useState(false);
   const [slPips, setSlPips] = useState('');
   /** سبريد الأداة بالنقاط (اختياري) — يخصّ الأداة لا الحساب، فلا يُحفظ ويُمسح بتبديلها */
   const [spread, setSpread] = useState('');
@@ -248,7 +255,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             leverage?: string;
             commission?: string;
             commissionMode?: CommissionMode;
+            dailyLimit?: string;
+            lostToday?: string;
+            lostDay?: string;
           };
+          if (typeof p.dailyLimit === 'string' && p.dailyLimit.trim() !== '') {
+            setDailyLimit(p.dailyLimit);
+            setDailyOpen(true);
+          }
+          // خسارة الأمس لا تُقرأ اليوم — راجع `restoredLostToday`
+          setLostToday(restoredLostToday(p, new Date()));
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
@@ -359,11 +375,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         leverage,
         commission,
         commissionMode: commissionModeRef.current,
+        dailyLimit,
+        lostToday,
+        lostDay: localDayKey(new Date()),
       })
     ).catch(() => {
       /* ignore */
     });
-  }, [balance, centBalance, otherBalances, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy]);
+  }, [balance, centBalance, otherBalances, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy, dailyLimit, lostToday]);
   const balanceText = cent ? centBalance : balance;
   const setBalanceText = cent ? setCentBalance : setBalance;
   /** لاحقة الوضع الحالي (null = حساب عادي) */
@@ -992,6 +1011,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * المخاطرة كلّها — كان السطر يسكت حينها و«0.01 lot» فوقه تُقرأ ضمن النسبة. راجع `costsLotsAdvice`.
    */
   const costsAdvice = costsLotsAdvice(lots, withSpread);
+  /**
+   * حدّ الخسارة اليومي: المتّسع من رصيد بداية اليوم، بمخاطرة هذه الصفقة **شاملة التكاليف** حين تُكتب (ما يخسره الوقف فعلاً).
+   * خانة خسارة اليوم الفارغة = 0؛ رقم مرفوض فيها أو بالحدّ ⇒ لا سطر. راجع `dailyLossRoom`.
+   */
+  const lostTodayNum = lostToday.trim() === '' ? 0 : parseDecimal(lostToday, { amount: true });
+  const dailyLimitNum = parseDecimal(dailyLimit, { percent: true });
+  const dailyRoom =
+    result && lots != null && dailyLimitNum != null && lostTodayNum != null
+      ? dailyLossRoom({
+          balance: balanceNum,
+          limitPct: dailyLimitNum,
+          lostToday: lostTodayNum,
+          riskAmount: withSpread?.risk ?? result.actualRisk,
+        })
+      : null;
   /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
   const costParts = [
     spreadPips ? `${spreadPips} ${pipUnit(lang)}` : null,
@@ -1555,6 +1589,18 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         </Text>
       ) : null}
 
+      {/* حدّ الخسارة اليومي: مطويّ حتى يُطلب (لا يُثقل الشاشة لمن لا يستعمله)، ويُفتح وحده حين يُحفظ حدّ */}
+      <View style={[styles.chips, rtl && styles.chipsRtl]}>
+        {chip(t.riskCalcDailyLimit, dailyOpen, () => setDailyOpen((o: boolean) => !o), t.riskCalcDailyLimit)}
+      </View>
+      {dailyOpen ? (
+        <>
+          {input(dailyLimit, setDailyLimit, '5', t.riskCalcDailyLimit)}
+          <Text style={[styles.label, { textAlign: align }]}>{`${t.riskCalcLostToday} (${moneyCcy})`}</Text>
+          {input(lostToday, setLostToday, '0', t.riskCalcLostToday)}
+        </>
+      ) : null}
+
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcLeverage}</Text>
       {input(leverage, setLeverage, '100', t.riskCalcLeverage)}
 
@@ -1763,6 +1809,19 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
               {actualNow ? ` (${formatRiskPct(actualNow.pct)})` : ''} · {t.riskCalcUnits}:{' '}
               {group(String(result.units))}
             </Text>
+            {dailyRoom ? (
+              <Text
+                style={[dailyRoom.breach ? styles.warn : styles.resultMeta, { textAlign: align }]}
+                accessibilityLiveRegion="polite"
+              >
+                {dailyRoom.breach
+                  ? t.riskCalcDailyBreach.replace('{room}', money(dailyRoom.room))
+                  : t.riskCalcDailyRoom
+                      .replace('{room}', money(dailyRoom.room))
+                      .replace('{n}', String(dailyRoom.losses))
+                      .replace('{pct}', String(dailyRoom.maxRiskPct))}
+              </Text>
+            ) : null}
             {/* لوت السنت/micro بلوت الحساب العادي — ليطابقه المتداول مع ما يعرفه («4.00» = 0.04) */}
             {small ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>

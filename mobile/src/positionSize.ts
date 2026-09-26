@@ -1946,6 +1946,21 @@ export function dailyLossRoom(input: {
   };
 }
 
+/** مفتاح اليوم **المحلّي** «YYYY-MM-DD» — خانة «خسارة اليوم» تُحفظ به (`restoredLostToday`) */
+export function localDayKey(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
+ * «خسارة اليوم» المحفوظة تُستعاد **في اليوم نفسه فقط**: خسارة الأمس تُقرأ اليوم فتُصغّر المتّسع قبل الحدّ (أو تقول «توقّف
+ * لليوم») بلا سبب. يومٌ آخر أو حفظٌ قديم بلا يوم أو قيمة ليست نصّاً ⇒ «» (الخانة فارغة = 0). الحدّ نفسه نسبةٌ تبقى بلا يوم.
+ */
+export function restoredLostToday(saved: { lostToday?: unknown; lostDay?: unknown }, now: Date): string {
+  if (typeof saved.lostToday !== 'string' || typeof saved.lostDay !== 'string') return '';
+  return saved.lostDay === localDayKey(now) ? saved.lostToday : '';
+}
+
 /**
  * **جني ربح جزئي**: إغلاق `closePct`% من المركز عند الهدف الأول (`r1` بالـR) والباقي إلى الهدف الثاني (`r2`) أو إلى وقفٍ
  * نُقل للتعادل. اللوت يُقسم على خطوة 0.01 (`LOT_STEP`) لا بالنسبة الاسمية: «نصف» 0.05 لوت ليس 0.025 (لا يُنفَّذ) بل 0.03 و0.02،

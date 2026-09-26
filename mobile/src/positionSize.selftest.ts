@@ -12,6 +12,8 @@ import {
   dailyLossRoom,
   scaleOutPlan,
   scaleOutHalfAtOneR,
+  localDayKey,
+  restoredLostToday,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3808,3 +3810,18 @@ console.log('positionSize scaleOutPlan selftest OK');
   }
 }
 console.log('positionSize scaleOutHalfAtOneR selftest OK');
+
+// ---- restoredLostToday: خسارة اليوم لا تعبر إلى الغد ----
+{
+  const d = new Date(2026, 8, 6, 23, 59);
+  assert.equal(localDayKey(d), '2026-09-06');
+  assert.equal(localDayKey(new Date(2026, 0, 1, 0, 0)), '2026-01-01');
+  assert.equal(restoredLostToday({ lostToday: '300', lostDay: '2026-09-06' }, d), '300');
+  // منتصف الليل المحلّي ⇒ يوم جديد
+  assert.equal(restoredLostToday({ lostToday: '300', lostDay: '2026-09-06' }, new Date(2026, 8, 7, 0, 0)), '');
+  // حفظ قديم بلا يوم، أو نوع غريب
+  assert.equal(restoredLostToday({ lostToday: '300' }, d), '');
+  assert.equal(restoredLostToday({ lostToday: 300, lostDay: '2026-09-06' }, d), '');
+  assert.equal(restoredLostToday({}, d), '');
+}
+console.log('positionSize restoredLostToday selftest OK');
