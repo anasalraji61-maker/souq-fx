@@ -1643,7 +1643,7 @@
 
 | commit | ماذا | بند |
 |---|---|---|
-| e18106a | `api.ts` `updateTrade`: نوع `body` يحمل `closed_at`/`opened_at` (tools150c، backend `46dcc3c`) وحقول `seen_*` مع `seen_opened_at` — نوع فقط بلا منطق. `TradeJournalPanel:1490` كان يمرّرها بمتغيّر لأن النوع يخلو منها | tools150c (نصف ui) |
+| c981777 | `api.ts` `updateTrade`: نوع `body` يحمل `closed_at`/`opened_at` (tools150c، backend `46dcc3c`) وحقول `seen_*` مع `seen_opened_at` — نوع فقط بلا منطق. `TradeJournalPanel:1490` كان يمرّرها بمتغيّر لأن النوع يخلو منها | tools150c (نصف ui) |
 
 - **لـtools:** تعديل وقت الفتح بالنموذج صار ممكناً بنوع صريح (`opened_at` + `seen_opened_at` حرفياً كما أرسله الخادم)؛ 422 `invalid_opened_at`.
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» تعليقان فقط؛ «درجة الاتفاق» تعليقات فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده (إصابتا الحساب والدفتر تعليقات).
