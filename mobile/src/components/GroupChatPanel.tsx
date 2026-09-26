@@ -19,6 +19,13 @@ import { ModerationActions, ModerationToggle } from './ModerationActions';
 // اتجاه الواجهة يتبع لغة المستخدم المختارة عبر useI18n().rtl — لا نفرض RTL على النظام بالكامل هنا
 void I18nManager;
 
+/**
+ * محارف تنسيق غير مرئية (فئة يونيكود Cf: U+200B، علامات الاتجاه، U+FEFF…) لا يقطعها `trim()`. الخادم
+ * (`_blank` بـ`main.py`) يرفض رسالة منها وحدها بـ`empty` — وكانت تُرسَل فتبقى فقاعة «مرسلة» فارغة عندك وحدك.
+ */
+const INVISIBLE_FORMAT = /[\u00AD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB]/g;
+const isBlankMessage = (s: string) => s.replace(INVISIBLE_FORMAT, '').trim() === '';
+
 export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -60,7 +67,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
 
   const send = async () => {
     const msg = text.trim();
-    if (!msg) return;
+    if (isBlankMessage(msg)) return;
     setText('');
     const local: ChatMsg = {
       id: `local-${Date.now()}`,
@@ -79,10 +86,12 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         setNotice(t.chatLoginRequired);
         return;
       }
-      if (r && r.ok === false && r.error === 'links_not_allowed') {
+      if (r && r.ok === false) {
+        // رفضٌ مؤكَّد (روابط، أو سبب لا يعرفه هذا الإصدار): الرسالة لم تُنشر — كانت تبقى فقاعةً «مرسلة»
+        // والنصّ ممسوحاً. تُزال ويعود النصّ للحقل؛ الشرح للسبب المعروف وحده.
         setMessages((m) => m.filter((x) => x.id !== local.id));
         setText(msg);
-        setNotice(t.chatLinksNotAllowed);
+        setNotice(r.error === 'links_not_allowed' ? t.chatLinksNotAllowed : null);
         return;
       }
       if (r && r.message) {
