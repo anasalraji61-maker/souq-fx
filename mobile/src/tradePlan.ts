@@ -1897,14 +1897,24 @@ export function journalOpenTotal(res: unknown): number | null {
   return r.open_first === true && typeof n === 'number' && Number.isInteger(n) && n >= 0 ? n : null;
 }
 
-/** يُلحق صفحةً أقدم بالقائمة بلا تكرار (بالمعرّف، أول ظهور يبقى) — التداخل وإزاحة الإضافات يعيدان صفوفاً وصلت. */
+/**
+ * يُلحق صفحةً أقدم بالقائمة بلا تكرار (بالمعرّف) — التداخل وإزاحة الإضافات يعيدان صفوفاً وصلت. صفٌّ موجود تُحلّ محلّه
+ * نسخة الصفحة **بمكانه** (الصفحة الأحدث جلباً): صفقة أُغلقت بجهاز آخر تهبط من «المفتوحة أولاً» إلى الأقدم، فكانت النسخة
+ * «مفتوحة» تبقى ⇒ خطر مفتوح 200 وصافي/متوسط R بلا الصفقة والإحصاءات (من الردّ نفسه) تقول مغلقة. التكرار داخل الصفحة: الأول.
+ */
 export function mergeJournalPage<T extends { id: string }>(list: readonly T[], page: readonly T[]): T[] {
-  const seen = new Set(list.map((x) => x.id));
+  const at = new Map(list.map((x, i) => [x.id, i]));
   const out = list.slice();
+  const fromPage = new Set<string>();
   for (const x of page) {
-    if (seen.has(x.id)) continue;
-    seen.add(x.id);
-    out.push(x);
+    if (fromPage.has(x.id)) continue;
+    fromPage.add(x.id);
+    const i = at.get(x.id);
+    if (i != null) out[i] = x;
+    else {
+      at.set(x.id, out.length);
+      out.push(x);
+    }
   }
   return out;
 }

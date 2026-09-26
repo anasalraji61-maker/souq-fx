@@ -3473,11 +3473,20 @@ console.log('tradePlan crypto suffix quote selftest OK');
     assert.equal(tp.journalOpenTotal({ open_first: true, open_total: '2' }), null);
     assert.equal(tp.journalOpenTotal(null), null);
   }
-  // الترتيب والأول يبقيان
+  // الترتيب يبقى؛ الموجود تُحلّ محلّه نسخة الصفحة بمكانه؛ التكرار داخل الصفحة: الأول
   assert.deepEqual(
-    tp.mergeJournalPage([{ id: 'a', v: 1 }], [{ id: 'a', v: 2 }, { id: 'b', v: 3 }, { id: 'b', v: 4 }]),
-    [{ id: 'a', v: 1 }, { id: 'b', v: 3 }],
+    tp.mergeJournalPage([{ id: 'a', v: 1 }, { id: 'c', v: 0 }], [{ id: 'a', v: 2 }, { id: 'b', v: 3 }, { id: 'b', v: 4 }]),
+    [{ id: 'a', v: 2 }, { id: 'c', v: 0 }, { id: 'b', v: 3 }],
   );
+  // صفقة أُغلقت بجهاز آخر تهبط إلى الصفحة الأقدم: الصفّ يصير مغلقاً، فلا خطر مفتوح يُحسب لها
+  {
+    const open = { id: 'x', symbol: 'EURUSD', side: 'buy', entry: 1.08, sl: 1.078, lot: 1, status: 'open' };
+    const closed = { ...open, status: 'closed', exit: 1.084 };
+    const merged = tp.mergeJournalPage([open], [closed]);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].status, 'closed');
+    assert.equal((merged[0] as typeof closed).exit, 1.084);
+  }
 }
 console.log('tradePlan journal paging selftest OK');
 
