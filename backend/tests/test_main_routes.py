@@ -934,3 +934,27 @@ def test_a_layout_with_a_nested_infinity_is_422_and_the_list_still_loads(client)
     assert client.get("/api/layouts", headers=_DEV1).json()["layouts"] == []
     ok = client.post("/api/layouts", json={"name": "x", "payload": {"a": 1.5}}, headers=_DEV1)
     assert ok.status_code == 200
+
+
+# ─── التخطيط: عمق وحجم ─────────────────────────────────────────────────────────
+
+def test_deeply_nested_layout_is_422_not_a_permanent_500(client):
+    """1000 مستوى: كان يُحفظ ثم 500 (RecursionError بـ`jsonable_encoder`) وكل GET للمالك 500."""
+    body = '{"name":"x","payload":{"a":' + "[" * 1000 + "]" * 1000 + "}}"
+    r = client.post("/api/layouts", content=body, headers={**_DEV1, "Content-Type": "application/json"})
+    assert r.status_code == 422, r.text
+    assert client.get("/api/layouts", headers=_DEV1).status_code == 200
+
+
+def test_oversized_layout_is_422(client):
+    r = client.post("/api/layouts", json={"name": "x", "payload": {"b": "A" * 1_000_001}}, headers=_DEV1)
+    assert r.status_code == 422
+    assert client.get("/api/layouts", headers=_DEV1).json()["layouts"] == []
+
+
+def test_a_real_sized_layout_still_saves(client):
+    drawings = [{"type": "trendline", "points": [{"t": 1700000000 + i, "p": 1.1}] * 2} for i in range(300)]
+    payload = {"id": "l1", "symbol": "EURUSD", "panes": [{"indicators": [{"id": "rsi", "params": {"n": 14}}]}],
+               "drawings": drawings}
+    r = client.post("/api/layouts", json={"name": "x", "payload": payload}, headers=_DEV1)
+    assert r.status_code == 200, r.text

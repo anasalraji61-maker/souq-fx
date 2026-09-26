@@ -132,7 +132,16 @@ async def _validation_error_stays_422(request: Request, exc: RequestValidationEr
     الشكل نفسه (`{"detail": [...]}`) كي لا يتغيّر عقد الخطأ على أيّ عميل — القيمة غير المنتهية
     وحدها تُعرض نصّاً — و`jsonable_encoder` يبقى كما بالمعالج الافتراضي لأن `ctx` بأخطاء
     `model_validator` يحمل كائن `ValueError` نفسه (إسقاطه كان يُسقط 14 اختباراً قائماً بـ500)."""
-    return JSONResponse(status_code=422, content={"detail": _json_safe(jsonable_encoder(exc.errors()))})
+    errors = exc.errors()
+    for e in errors:
+        # جسم التخطيط المرفوض لعمقه/حجمه كان يُعاد كاملاً بـ`input` ⇒ `jsonable_encoder` التعاودي يفشل
+        # (500 بدل 422) أو 20MB تُعاد. لا يُعاد ما رُفض لأنه كبير.
+        v = e.get("input")
+        if isinstance(v, (dict, list)) and _json_depth(v) > LAYOUT_DEPTH_MAX:
+            e["input"] = None
+        elif isinstance(v, (dict, list, str)) and len(json.dumps(v, default=str)) > 10_000:
+            e["input"] = None
+    return JSONResponse(status_code=422, content={"detail": _json_safe(jsonable_encoder(errors))})
 
 
 # ─── Models ───────────────────────────────────────────────────────────────────
@@ -306,6 +315,23 @@ class PushRegister(BaseModel):
     lang: str | None = Field(default=None, max_length=10)
 
 
+LAYOUT_PAYLOAD_MAX = 1_000_000  # تخطيط الطرفية مع رسومه أصغر بكثير
+LAYOUT_DEPTH_MAX = 32  # التخطيط الحقيقي ~3 مستويات
+
+
+def _json_depth(v: object) -> int:
+    """عمق التداخل بلا تعاود (المدخل نفسه قد يكون أعمق من حدّ التعاود)."""
+    deepest, stack = 0, [(v, 1)]
+    while stack:
+        node, d = stack.pop()
+        if isinstance(node, (dict, list)):
+            deepest = max(deepest, d)
+            if d > LAYOUT_DEPTH_MAX:
+                return d
+            stack.extend((c, d + 1) for c in (node.values() if isinstance(node, dict) else node))
+    return deepest
+
+
 class LayoutSave(BaseModel):
     # العميل يرسل معرّفه المحلي فيبقى تخطيط واحد لكل تخطيط محلي (كان كل حفظ يُنشئ صفاً جديداً)
     id: str | None = Field(default=None, max_length=64)
@@ -318,9 +344,15 @@ class LayoutSave(BaseModel):
         """NaN/Infinity متداخلة (`{"a": Infinity}` من عميل غير متصفّح) كانت تُحفظ ثم يفشل ترميز الردّ ⇒ 500،
         وكل `GET /api/layouts` للمالك 500 للأبد."""
         try:
-            json.dumps(v, allow_nan=False)
+            text = json.dumps(v, allow_nan=False)
         except ValueError as exc:
             raise ValueError("payload must not contain NaN or Infinity") from exc
+        # 1000 مستوى تداخل: `json.dumps` (C) يقبلها و`jsonable_encoder` (تعاودي) يفشل ⇒ 500 الحفظ وكل
+        # `GET /api/layouts` للمالك إلى الأبد. وبلا حدّ حجم: 20MB لكل طلب مجهول تُحفظ وتُعاد كاملة.
+        if len(text) > LAYOUT_PAYLOAD_MAX:
+            raise ValueError(f"payload must be at most {LAYOUT_PAYLOAD_MAX} bytes")
+        if _json_depth(v) > LAYOUT_DEPTH_MAX:
+            raise ValueError(f"payload must be nested at most {LAYOUT_DEPTH_MAX} levels")
         return v
 
 
