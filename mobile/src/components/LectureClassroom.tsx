@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topRtl: { flexDirection: 'row-reverse' },
-  back: { color: colors.accent, fontWeight: '500' },
+  back: { color: colors.textMuted, fontWeight: '500', fontSize: 13 },
   meta: { color: colors.textDim, fontSize: 12 },
   title: {
     color: colors.text,
