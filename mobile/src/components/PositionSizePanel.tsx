@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
-import { api } from '../api';
+import { api, type Candle } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import {
   ACCOUNT_CCYS,
@@ -97,7 +97,8 @@ import {
   fillExampleOrDrop,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
-import { isRealQuote } from '../chart/dataSource';
+import { isRealQuote, isSyntheticProvenance, serverNowSec } from '../chart/dataSource';
+import { cachedChartSeries, rememberChartSeries } from '../hooks/chartSeriesCache';
 import { pipUnit } from '../chart/measureReadout';
 import { formatPrice } from '../chart/math';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -120,6 +121,9 @@ import {
   type TradeSide,
   QUICK_SYMBOLS,
   minStopPips,
+  atrStopPips,
+  ATR_STOP_TF,
+  journalSpec,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -678,6 +682,42 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       setSlPips('');
     }
   }, [derivedSl]);
+  /**
+   * شريحة وقف التقلّب تحت خانة النقاط (`atrStopPips`: 1.5 × ATR14 على شموع الساعة المغلقة) — كشريحة الدفتر. الشموع من ذاكرة
+   * الشارت المشتركة أو طلبٌ واحد بعد توقّف الكتابة، للزوج العادي (رموز السنت/micro بزوجها)؛ التجريبية لا تُستعمل، وردٌّ لرمزٍ
+   * سابق يُرمى. لا جلب واللوحة غير ظاهرة (`active`).
+   */
+  const atrKey = spec ? journalSpec(symbol)?.symbol ?? null : null;
+  const [atrSeries, setAtrSeries] = useState<{ key: string; candles: Candle[] } | null>(null);
+  useEffect(() => {
+    if (!atrKey || !active) return;
+    const cached = cachedChartSeries(atrKey, ATR_STOP_TF);
+    if (cached && !isSyntheticProvenance(cached.data_source)) {
+      setAtrSeries({ key: atrKey, candles: cached.candles });
+      return;
+    }
+    let alive = true;
+    const id = setTimeout(() => {
+      api
+        .chart(atrKey, ATR_STOP_TF, 60)
+        .then((s) => {
+          const r = rememberChartSeries(atrKey, ATR_STOP_TF, s);
+          if (alive && !isSyntheticProvenance(r.data_source)) setAtrSeries({ key: atrKey, candles: r.candles });
+        })
+        .catch(() => {});
+    }, 600);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+    };
+  }, [atrKey, active]);
+  const atrPips = useMemo(
+    () =>
+      atrKey && atrSeries?.key === atrKey
+        ? atrStopPips({ symbol: atrKey, candles: atrSeries.candles, nowSec: serverNowSec() })
+        : null,
+    [atrKey, atrSeries]
+  );
   const onSlPipsChange = (v: string) => {
     slFromPrices.current = false;
     setSlPips(v);
@@ -1506,6 +1546,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         {spec ? ` · 1 pip = ${pipLabel}` : ''}
       </Text>
       {input(slPips, onSlPipsChange, typicalSlPipsExample(spec), t.riskCalcSlPips)}
+      {atrPips != null ? (
+        <View style={[styles.chips, rtl && styles.chipsRtl]}>
+          {chip(
+            `ATR ${atrPips} ${pipUnit(lang)}`,
+            parseSlPips(slPips, spec) === atrPips,
+            () => onSlPipsChange(String(atrPips)),
+            `${t.riskCalcSlPips}: ${atrPips} ${pipUnit(lang)} (ATR)`
+          )}
+        </View>
+      ) : null}
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcFromPrice}</Text>
       <View style={[styles.pxRow, rtl && styles.pxRowRtl]}>
         <View style={styles.pxCell}>
