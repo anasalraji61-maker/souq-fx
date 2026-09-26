@@ -45,6 +45,7 @@ import {
   stopTooClose,
   journalStats,
   journalLossStreaks,
+  journalOutcome,
   breakevenWinRatePct,
   journalMaxDrawdownR,
   journalPayoffR,
@@ -1076,9 +1077,32 @@ console.log('tradePlan journalSymbol index-suffix selftest OK');
   assert.equal(be.avg_loss, -1); // التعادل لا يخفّف متوسط الخسارة
   assert.equal(be.breakeven_count, 3);
   assert.equal(be.trade_count, 5);
-  // ضجيج الفاصلة العائمة (≤ 1e-9) تعادل؛ فوقه ربح/خسارة
-  const eps = journalStats([1e-10, -1e-10, 2e-9, -2e-9].map((pnl) => ({ status: 'closed', pnl })));
-  assert.deepEqual([eps.win_count, eps.loss_count, eps.breakeven_count], [1, 1, 2]);
+  // التعادل = ما يُطبع «0.00%» (`journalOutcome`، قرار ٣: «عند الدخول ± شيء ضئيل»): ضجيج الفاصلة العائمة وانزلاق 0.1 pip
+  // تعادلٌ؛ 0.01% (≈1 pip يورو) ربح/خسارة
+  const eps = journalStats([1e-10, -1e-10, 2e-9, -2e-9, 0.0049, -0.0049, 0.01, -0.01].map((pnl) => ({ status: 'closed', pnl })));
+  assert.deepEqual([eps.win_count, eps.loss_count, eps.breakeven_count], [1, 1, 6]);
+  assert.equal(journalOutcome(0.005), 1); // 0.005 الثنائية فوق النصف: `round(0.005, 2)` بايثون = 0.01 كذلك
+  assert.equal(journalOutcome(0.015), 1);
+  assert.equal(journalOutcome(-0.0051), -1);
+  // المُعاد إنتاجه: +0.5%، −0.3%، وشراء 1.0850 نُقل وقفه للدخول فضُرب عند 1.08499 (−0.1 pip) ⇒ 50% لا 33.3%، والخسارة −0.3 لا −0.15
+  const slipPnl = ((1.08499 - 1.085) / 1.085) * 100;
+  const slip = journalStats([0.5, -0.3, slipPnl].map((pnl) => ({ status: 'closed', pnl })));
+  assert.deepEqual([slip.win_rate, slip.loss_count, slip.breakeven_count, slip.avg_loss], [50, 1, 1, -0.3]);
+  // سلسلة الخسائر: خسارة، تعادل بانزلاق، خسارة ⇒ 2 (التعادل لا يطيلها) لا 3
+  const at = (d: number) => `2026-09-0${d} 10:00`;
+  assert.deepEqual(
+    journalLossStreaks([-0.3, slipPnl, -0.2].map((pnl, i) => ({ status: 'closed', pnl, closed_at: at(i + 1) }))),
+    { longest: 2, current: 2 }
+  );
+  // العائد بالـR: +2R، −1R، والتعادل بانزلاق (وقفه الأصلي 1.0830 بالملاحظة) لا يُعدّ خاسرة بـ−0.005R
+  const pay = journalPayoffR([
+    { symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.089, status: 'closed' },
+    { symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.083, status: 'closed' },
+    { symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, exit: 1.08499, note: '1R @ 1.083', status: 'closed' },
+    { symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.085, exit: 1.08501, note: '1R @ 1.087', status: 'closed' },
+  ])!;
+  assert.deepEqual([pay.avgWin, pay.avgLoss, pay.payoff, pay.winPct, pay.n], [2, 1, 2, 50, 2]);
+  assert.equal(pay.needPct, 33.4);
 }
 console.log('tradePlan journalStats selftest OK');
 

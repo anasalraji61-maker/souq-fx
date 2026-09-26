@@ -1186,8 +1186,22 @@ export type JournalStats = {
 export const JOURNAL_BREAKEVEN_EPS = 1e-9;
 
 /**
+ * جهة نتيجة صفقة مغلقة لإحصاءات الدفتر من `pnl` (نسبة حركة السعر): 1 ربح، −1 خسارة، 0 **تعادل** — والتعادل هو ما يُطبع
+ * «0.00%» بالصفّ (`realizedMove.pct`: منزلتان بالنصف إلى الزوجي، كـ`round(pnl, 2)` بايثون).
+ *
+ * لماذا (قرار أنس ٣: «الخروج عند الدخول ± شيء ضئيل» ليس خسارة): التعادل كان `|pnl| ≤ 1e-9` ⇒ الخروج عند الدخول **حرفياً**
+ * وحده. وقفٌ نُقل للدخول وضُرب بانزلاق 0.1 pip (1.0850 ⇒ 1.08499) صفّه «0.00%» و«0R» لكنه عُدّ **خسارة**: نسبة الفوز 50% ⇒ 33.3%،
+ * وسلسلة الخسائر تطول (قاعدة «أتوقّف بعد 3» تنطلق مبكّراً)، و«−0.005R» نصّفت متوسط الخسارة فصار «اللازم للتعادل» 20% بدل 33%.
+ * الحدّ ~0.5 pip على اليورو، ~0.7 على الين عند 150، ~1.3 pip ذهب عند 2600 — انزلاق لا قرار.
+ */
+export function journalOutcome(pnl: number): -1 | 0 | 1 {
+  const r = roundHalfEven(pnl, 2);
+  return r > 0 ? 1 : r < 0 ? -1 : 0;
+}
+
+/**
  * إحصاءات الدفتر لقائمة صفقات (الدفتر مفلتراً على أداة) **بمعادلة الخادم نفسها** (`db.trade_stats`):
- * المغلقة ذات `pnl` منتهٍ فقط، الربح > ε والخسارة < −ε و**التعادل وحده** (backend-r1: كان `<= 0` خسارةً فمتداولٌ ينقل
+ * المغلقة ذات `pnl` منتهٍ فقط، الربح والخسارة و**التعادل وحده** بـ`journalOutcome` (ما يُطبع «0.00%» تعادل — الخادم ما زال ±1e-9، طُلب منه) (backend-r1: كان `<= 0` خسارةً فمتداولٌ ينقل
  * وقفه للتعادل يرى نسبة فوزه تهبط)؛ نسبة النجاح = رابحة ÷ (رابحة + خاسرة) بخانة والبقيّة
  * بخانتين بتقريب بايثون (`roundHalfEven`). كانت محسوبة داخل اللوحة بلا اختبار — ورقمٌ يخالف ما يقوله
  * الخادم لنفس الصفقات (6.3% هنا و6.2% بلا فلتر) يجعل المتداول يشكّ بالدفتر كلّه.
@@ -1205,8 +1219,8 @@ export function journalStats(
       win_count: 0, loss_count: 0, breakeven_count: 0,
     };
   }
-  const wins = pnls.filter((v) => v > JOURNAL_BREAKEVEN_EPS);
-  const losses = pnls.filter((v) => v < -JOURNAL_BREAKEVEN_EPS);
+  const wins = pnls.filter((v) => journalOutcome(v) > 0);
+  const losses = pnls.filter((v) => journalOutcome(v) < 0);
   const decided = wins.length + losses.length;
   const r2 = (v: number) => roundHalfEven(v, 2);
   return {
@@ -1242,7 +1256,7 @@ function closedChronological<T extends { status: string; closed_at?: string | nu
 
 /**
  * **سلسلة الخسائر**: أطول عدد صفقات خاسرة متتالية (`longest`) والخاسرة المتتالية حتى آخر صفقة مغلقة (`current`) —
- * بتصنيف `journalStats` نفسه (المغلقة ذات `pnl` منتهٍ؛ خسارة < −ε، ربح > ε).
+ * بتصنيف `journalStats` نفسه (المغلقة ذات `pnl` منتهٍ؛ `journalOutcome`: ما يُطبع «0.00%» تعادل).
  *
  * لماذا: نسبة النجاح ومتوسط R لا يقولان للمتداول **كم خسارة تأتي متتالية** — وهو الرقم الذي يحدّد نسبة المخاطرة المحتملة
  * (6 خسائر متتالية بـ2% = −11.4% من الحساب) وقاعدة «أتوقّف بعد 3 خسائر اليوم». `current` يقول إنه **الآن** داخل سلسلة.
@@ -1260,11 +1274,12 @@ export function journalLossStreaks(
   let run = 0;
   let decided = 0;
   for (const pnl of rows) {
-    if (pnl < -JOURNAL_BREAKEVEN_EPS) {
+    const o = journalOutcome(pnl);
+    if (o < 0) {
       run += 1;
       decided += 1;
       if (run > longest) longest = run;
-    } else if (pnl > JOURNAL_BREAKEVEN_EPS) {
+    } else if (o > 0) {
       run = 0;
       decided += 1;
     }
@@ -1320,7 +1335,7 @@ export function journalMaxDrawdownR(
  * خاسر بـ45% مهما كانت أهدافه المخطَّطة 1:2. `planBreakevenWinRate` بالحاسبة يقول ما يطلبه الهدف **المخطَّط**؛ هذا يقول ما
  * يطلبه ما **حدث فعلاً** (إغلاق مبكّر، انزلاق).
  *
- * R لكل صفقة بمسطرة «متوسط R» (`exactR`)؛ صفقة بلا R تُتخطّى. رابحة > ε وخاسرة < −ε والتعادل لا يُعدّ (كـ`journalStats`)،
+ * R لكل صفقة بمسطرة «متوسط R» (`exactR`)؛ صفقة بلا R تُتخطّى. التعادل (نسبته تُطبع «0.00%»، `journalOutcome`) لا يُعدّ، والباقي بجهة R،
  * و`winPct` = رابحة ÷ (رابحة + خاسرة) من **هذه** الصفقات لا من `win_rate` الخادم (مجموعة أخرى: كل المغلقة ذات `pnl`) — المقارنة
  * بين رقمين من العيّنة نفسها. `winPct` لمنزلة بالنصف إلى الزوجي (`roundHalfEven`، كـ`win_rate` — فوزٌ من 16 = 6.2 بالسطرين لا 6.2/6.3)، و`needPct` للأعلى. `null` ما لم توجد رابحة **و**خاسرة.
  */
@@ -1343,6 +1358,9 @@ export function journalPayoffR(
     if (tr.status !== 'closed') continue;
     const r = exactR({ symbol: tr.symbol, side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit, note: tr.note });
     if (r == null) continue;
+    // التعادل بتعريف `journalOutcome` (ما يُطبع «0.00%») لا بـR: انزلاق 0.1 pip عن الدخول «−0.005R» كان خاسرةً تنصّف متوسط الخسارة
+    const mv = realizedMove({ symbol: tr.symbol ?? '', side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, exit: tr.exit });
+    if (mv && mv.pct === 0) continue;
     if (r > JOURNAL_BREAKEVEN_EPS) {
       winSum += r;
       wins += 1;
