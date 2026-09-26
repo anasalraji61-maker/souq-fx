@@ -30,23 +30,23 @@ def _login(client, u, p, dev):
 def test_member_locks_out_sponsor(client):
     tok = client.post("/api/auth/register",
                       json={"username": "alice", "email": "a@example.com", "password": "pass1234"}).json()["token"]
-    client.post("/api/commissions/place", json={"username": "bobby", "side": "left", "password": "known1"},
+    client.post("/api/commissions/place", json={"username": "bobby", "side": "left", "password": "known123"},
                 headers={"Authorization": f"Bearer {tok}"})
-    _, sponsor_tok = _login(client, "bobby", "known1", DEV_B)
-    _, member_tok = _login(client, "bobby", "known1", DEV_A)
+    _, sponsor_tok = _login(client, "bobby", "known123", DEV_B)
+    _, member_tok = _login(client, "bobby", "known123", DEV_A)
     for dev, t in ((DEV_A, member_tok), (DEV_B, sponsor_tok)):
         assert client.post("/api/push/register", json={"token": f"ExponentPushToken[{dev}]"},
                            headers={"Authorization": f"Bearer {t}", "X-Install-Id": dev}).status_code == 200
     h = {"Authorization": f"Bearer {member_tok}", "X-Install-Id": DEV_A}
     r = client.post("/api/auth/password", json={"current_password": "wrong", "new_password": "mine5678"}, headers=h)
     assert r.status_code == 400
-    r = client.post("/api/auth/password", json={"current_password": "known1", "new_password": "abc"}, headers=h)
+    r = client.post("/api/auth/password", json={"current_password": "known123", "new_password": "abc"}, headers=h)
     assert r.status_code == 400
-    r = client.post("/api/auth/password", json={"current_password": "known1", "new_password": "mine5678"}, headers=h)
+    r = client.post("/api/auth/password", json={"current_password": "known123", "new_password": "mine5678"}, headers=h)
     assert r.status_code == 200
     assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {sponsor_tok}"}).status_code == 401
     assert client.get("/api/auth/me", headers=h).status_code == 200
-    assert _login(client, "bobby", "known1", DEV_B)[0] == 401
+    assert _login(client, "bobby", "known123", DEV_B)[0] == 401
     assert _login(client, "bobby", "mine5678", DEV_A)[0] == 200
     uid = client.get("/api/auth/me", headers=h).json()["user_id"]
     assert db.push_tokens_for(uid) == [f"ExponentPushToken[{DEV_A}]"]

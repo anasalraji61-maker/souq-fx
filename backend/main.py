@@ -325,7 +325,7 @@ def _alert_level(price: float) -> float:
 class AuthRegister(BaseModel):
     username: str = Field(min_length=3, max_length=32)
     email: str = Field(min_length=5, max_length=120)
-    password: str = Field(min_length=4, max_length=128)
+    password: str = Field(min_length=db.PASSWORD_MIN, max_length=128)
     # التسجيل الذاتي «متداول» فقط: كان أي عميل يرسل `role: "company"` فيمنح نفسه 8 مستويات توازن
     # بخطة العمولات (`commissions.levels_for_role`) بلا أي تحقّق. التطبيق يرسل `trader` دائماً (`api.ts`).
     role: Literal["trader"] = "trader"

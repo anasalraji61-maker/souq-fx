@@ -22,7 +22,7 @@ def client(tmp_path, monkeypatch):
     return TestClient(main.app, raise_server_exceptions=False)
 
 
-def _register(client, name="alice", pw="old1234"):
+def _register(client, name="alice", pw="old12345"):
     r = client.post("/api/auth/register", json={"username": name, "email": f"{name}@example.com", "password": pw})
     return r.json()["token"], r.json()["user_id"]
 
@@ -51,17 +51,17 @@ def test_legacy_rehash_does_not_revert_password_change(client, monkeypatch):
     tok, uid = _register(client)
     with db._conn() as c:
         c.execute("UPDATE users SET password_hash=? WHERE id=?",
-                  (f"pbkdf2_sha256$500$abcd${db._hash_password_pbkdf2('old1234', 'abcd', 500)}", uid))
-    _during_login_verify(monkeypatch, lambda: db.change_password(uid, tok, "old1234", "new5678", None))
-    assert _login(client, "alice", "old1234").status_code == 401
-    assert _login(client, "alice", "old1234").status_code == 401
-    assert _login(client, "alice", "new5678").status_code == 200
+                  (f"pbkdf2_sha256$500$abcd${db._hash_password_pbkdf2('old12345', 'abcd', 500)}", uid))
+    _during_login_verify(monkeypatch, lambda: db.change_password(uid, tok, "old12345", "new56789", None))
+    assert _login(client, "alice", "old12345").status_code == 401
+    assert _login(client, "alice", "old12345").status_code == 401
+    assert _login(client, "alice", "new56789").status_code == 200
 
 
 def test_login_racing_password_change_gets_no_session(client, monkeypatch):
     tok, uid = _register(client)
-    _during_login_verify(monkeypatch, lambda: db.change_password(uid, tok, "old1234", "new5678", None))
-    r = _login(client, "alice", "old1234")
+    _during_login_verify(monkeypatch, lambda: db.change_password(uid, tok, "old12345", "new56789", None))
+    r = _login(client, "alice", "old12345")
     assert r.status_code == 401
     with db._conn() as c:
         assert [x[0] for x in c.execute("SELECT token FROM sessions WHERE user_id=?", (uid,))] == [tok]
@@ -71,7 +71,7 @@ def test_login_racing_account_deletion_gets_no_session(client, monkeypatch):
     tok, uid = _register(client)
     h = {"Authorization": f"Bearer {tok}"}
     _during_login_verify(monkeypatch, lambda: client.request("DELETE", "/api/auth/account", headers=h))
-    assert _login(client, "alice", "old1234").status_code == 401
+    assert _login(client, "alice", "old12345").status_code == 401
     with db._conn() as c:
         assert c.execute("SELECT COUNT(*) FROM sessions WHERE user_id=?", (uid,)).fetchone()[0] == 0
 
@@ -80,8 +80,8 @@ def test_legacy_rehash_still_upgrades(client):
     _, uid = _register(client)
     with db._conn() as c:
         c.execute("UPDATE users SET password_hash=? WHERE id=?",
-                  (f"pbkdf2_sha256$500$abcd${db._hash_password_pbkdf2('old1234', 'abcd', 500)}", uid))
-    assert _login(client, "alice", "old1234").status_code == 200
+                  (f"pbkdf2_sha256$500$abcd${db._hash_password_pbkdf2('old12345', 'abcd', 500)}", uid))
+    assert _login(client, "alice", "old12345").status_code == 200
     with db._conn() as c:
         assert c.execute("SELECT password_hash FROM users WHERE id=?", (uid,)).fetchone()[0].startswith(
             "pbkdf2_sha256$1000$")
@@ -98,11 +98,11 @@ def test_unknown_username_costs_a_hash(client, monkeypatch):
 
 def test_password_change_without_install_id_unbinds_keyless_push(client):
     tok, uid = _register(client)
-    sponsor = _login(client, "alice", "old1234").json()["token"]
+    sponsor = _login(client, "alice", "old12345").json()["token"]
     assert client.post("/api/push/register", json={"token": "ExponentPushToken[sponsorXX]"},
                        headers={"Authorization": f"Bearer {sponsor}"}).status_code == 200
     assert db.push_tokens_for(uid) == ["ExponentPushToken[sponsorXX]"]
-    r = client.post("/api/auth/password", json={"current_password": "old1234", "new_password": "new5678"},
+    r = client.post("/api/auth/password", json={"current_password": "old12345", "new_password": "new56789"},
                     headers={"Authorization": f"Bearer {tok}"})
     assert r.status_code == 200
     assert db.push_tokens_for(uid) == []

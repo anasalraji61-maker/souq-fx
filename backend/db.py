@@ -524,6 +524,12 @@ _PBKDF2_ALGO = "pbkdf2_sha256"
 _PBKDF2_ITERATIONS = 210_000
 
 
+# قرار أنس ٧ (`docs/DECISIONS-ANAS.md`): ٨ أحرف حدّاً أدنى في التسجيل ووضع الراعي وتغيير كلمة المرور.
+# الدخول لا يفحص الطول ⇒ الحسابات القديمة بكلمات ٤–٧ أحرف تبقى تدخل. نصّ الخطأ «password too short» ثابت
+# (التطبيق يطابقه حرفياً في `AccountScreen.tsx`).
+PASSWORD_MIN = 8
+
+
 def _hash_password_legacy(password: str, salt: str) -> str:
     """الصيغة القديمة: sha256(salt:password) بجولة واحدة.
 
@@ -591,7 +597,7 @@ def register_user(
 
     username = _clean_username(username)
     email_norm = (email or "").strip().lower()
-    if len(username) < 3 or len(password) < 4:
+    if len(username) < 3 or len(password) < PASSWORD_MIN:
         raise ValueError("username/password too short")
     _check_username(username)
     # محارف تحكّم/تنسيق («b\x00@x.com»، عرض صفري) كانت تُقبل ⇒ بريد يُحفظ ويُعاد بمحرف لا يُرى
@@ -833,7 +839,7 @@ def place_under_sponsor(
     if not pwd:
         # فارغ = «ولّد لي كلمة مرور» — تُعاد بـ`temp_password` أدناه
         pwd = secrets.token_urlsafe(8)
-    elif len(pwd) < 4:
+    elif len(pwd) < PASSWORD_MIN:
         # كانت تُستبدل بعشوائية **لا تُعاد** (`temp_password` None لأن كلمة كُتبت): العضو يُنشأ ويُعدّ
         # بساق الراعي ولا يستطيع أحد الدخول بحسابه أبداً. نفس حدّ التسجيل (`register_user`).
         raise ValueError("password too short")
@@ -1688,7 +1694,7 @@ def change_password(
     أو استلمها `temp_password` ولم يكن له مسار لتغييرها ⇒ الراعي يدخل حسابه (دفتره، تنبيهاته، حذفه) للأبد.
     تُلغى كل الجلسات الأخرى ويُفكّ Push الأجهزة الأخرى (إلا جهاز هذا الطلب) — وإلا بقي هاتف الراعي
     يتلقّى إشعارات تنبيهات العضو. ValueError: الحالية خاطئة أو الجديدة قصيرة (حدّ التسجيل نفسه)."""
-    if len(new or "") < 4:
+    if len(new or "") < PASSWORD_MIN:
         raise ValueError("password too short")
     with _conn() as c:
         c.execute("BEGIN IMMEDIATE")

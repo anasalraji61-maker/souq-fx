@@ -57,7 +57,7 @@ def _stored_hash(path, username: str) -> str:
 # ─── صيغة التجزئة ────────────────────────────────────────────────────────────
 
 def test_encode_password_shape(_db):
-    stored = db._encode_password("hunter2")
+    stored = db._encode_password("hunter22")
     algo, iters, salt, digest = stored.split("$")
     assert algo == "pbkdf2_sha256"
     assert int(iters) == _FAST_ITERATIONS
@@ -66,8 +66,8 @@ def test_encode_password_shape(_db):
 
 
 def test_same_password_gets_a_different_salt_each_time(_db):
-    a = db._encode_password("hunter2")
-    b = db._encode_password("hunter2")
+    a = db._encode_password("hunter22")
+    b = db._encode_password("hunter22")
     assert a != b
     assert a.split("$")[2] != b.split("$")[2]
 
@@ -81,36 +81,36 @@ def test_real_iteration_count_is_not_lowered():
 # ─── _verify_password ────────────────────────────────────────────────────────
 
 def test_verify_roundtrip_correct_password(_db):
-    ok, needs = db._verify_password("hunter2", db._encode_password("hunter2"))
+    ok, needs = db._verify_password("hunter22", db._encode_password("hunter22"))
     assert (ok, needs) == (True, False)
 
 
 def test_verify_rejects_wrong_password(_db):
-    ok, needs = db._verify_password("wrong", db._encode_password("hunter2"))
+    ok, needs = db._verify_password("wrong", db._encode_password("hunter22"))
     assert (ok, needs) == (False, False)
 
 
 def test_legacy_hash_verifies_and_asks_for_rehash(_db):
-    stored = _legacy_hash("hunter2", "abc123")
-    assert db._verify_password("hunter2", stored) == (True, True)
+    stored = _legacy_hash("hunter22", "abc123")
+    assert db._verify_password("hunter22", stored) == (True, True)
 
 
 def test_legacy_hash_rejects_wrong_password(_db):
-    stored = _legacy_hash("hunter2", "abc123")
+    stored = _legacy_hash("hunter22", "abc123")
     assert db._verify_password("wrong", stored) == (False, False)
 
 
 def test_lower_iteration_count_asks_for_rehash(_db):
-    weak = db._hash_password_pbkdf2("hunter2", "abc123", 10)
+    weak = db._hash_password_pbkdf2("hunter22", "abc123", 10)
     stored = f"pbkdf2_sha256$10$abc123${weak}"
-    assert db._verify_password("hunter2", stored) == (True, True)
+    assert db._verify_password("hunter22", stored) == (True, True)
 
 
 def test_higher_iteration_count_is_never_downgraded(_db):
     strong_iters = _FAST_ITERATIONS * 4
-    digest = db._hash_password_pbkdf2("hunter2", "abc123", strong_iters)
+    digest = db._hash_password_pbkdf2("hunter22", "abc123", strong_iters)
     stored = f"pbkdf2_sha256${strong_iters}$abc123${digest}"
-    assert db._verify_password("hunter2", stored) == (True, False)
+    assert db._verify_password("hunter22", stored) == (True, False)
 
 
 @pytest.mark.parametrize(
@@ -130,27 +130,27 @@ def test_higher_iteration_count_is_never_downgraded(_db):
     ],
 )
 def test_malformed_stored_hashes_are_rejected_without_raising(_db, stored):
-    assert db._verify_password("hunter2", stored) == (False, False)
+    assert db._verify_password("hunter22", stored) == (False, False)
 
 
 def test_none_stored_hash_is_rejected(_db):
-    assert db._verify_password("hunter2", None) == (False, False)  # type: ignore[arg-type]
+    assert db._verify_password("hunter22", None) == (False, False)  # type: ignore[arg-type]
 
 
 # ─── register_user / login_user ──────────────────────────────────────────────
 
-def _register(username="trader1", password="hunter2", email="t1@example.com"):
+def _register(username="trader1", password="hunter22", email="t1@example.com"):
     return db.register_user(username, password, email=email)
 
 
 def test_register_then_login_by_username(_db):
     _register()
-    assert db.login_user("trader1", "hunter2")["token"]
+    assert db.login_user("trader1", "hunter22")["token"]
 
 
 def test_register_then_login_by_email_case_insensitively(_db):
     _register()
-    assert db.login_user("T1@EXAMPLE.COM", "hunter2")["token"]
+    assert db.login_user("T1@EXAMPLE.COM", "hunter22")["token"]
 
 
 def test_login_with_wrong_password_raises(_db):
@@ -161,12 +161,12 @@ def test_login_with_wrong_password_raises(_db):
 
 def test_unknown_user_raises(_db):
     with pytest.raises(ValueError):
-        db.login_user("nobody", "hunter2")
+        db.login_user("nobody", "hunter22")
 
 
 def test_stored_hash_is_never_the_plaintext(_db):
     _register()
-    assert "hunter2" not in _stored_hash(_db, "trader1")
+    assert "hunter22" not in _stored_hash(_db, "trader1")
 
 
 def test_registration_writes_the_new_format(_db):
@@ -198,21 +198,21 @@ def _downgrade_to_legacy(path, username: str, password: str, salt: str = "oldsal
 
 def test_legacy_row_logs_in_and_is_upgraded_in_place(_db):
     _register()
-    legacy = _downgrade_to_legacy(_db, "trader1", "hunter2")
+    legacy = _downgrade_to_legacy(_db, "trader1", "hunter22")
     assert _stored_hash(_db, "trader1") == legacy
 
-    assert db.login_user("trader1", "hunter2")["token"]
+    assert db.login_user("trader1", "hunter22")["token"]
 
     upgraded = _stored_hash(_db, "trader1")
     assert upgraded != legacy
     assert upgraded.startswith(f"pbkdf2_sha256${_FAST_ITERATIONS}$")
     # وكلمة المرور نفسها ما زالت تعمل بعد الترقية
-    assert db.login_user("trader1", "hunter2")["token"]
+    assert db.login_user("trader1", "hunter22")["token"]
 
 
 def test_failed_login_does_not_upgrade_the_row(_db):
     _register()
-    legacy = _downgrade_to_legacy(_db, "trader1", "hunter2")
+    legacy = _downgrade_to_legacy(_db, "trader1", "hunter22")
     with pytest.raises(ValueError):
         db.login_user("trader1", "wrong")
     assert _stored_hash(_db, "trader1") == legacy
@@ -220,13 +220,13 @@ def test_failed_login_does_not_upgrade_the_row(_db):
 
 def test_weak_iteration_row_is_upgraded_on_login(_db):
     _register()
-    weak = f"pbkdf2_sha256$10$abc123${db._hash_password_pbkdf2('hunter2', 'abc123', 10)}"
+    weak = f"pbkdf2_sha256$10$abc123${db._hash_password_pbkdf2('hunter22', 'abc123', 10)}"
     con = sqlite3.connect(_db)
     con.execute("UPDATE users SET password_hash=? WHERE username=?", (weak, "trader1"))
     con.commit()
     con.close()
 
-    assert db.login_user("trader1", "hunter2")["token"]
+    assert db.login_user("trader1", "hunter22")["token"]
     assert _stored_hash(_db, "trader1").startswith(f"pbkdf2_sha256${_FAST_ITERATIONS}$")
 
 
@@ -256,8 +256,8 @@ def test_the_database_itself_refuses_a_case_twin(_db):
 
 
 def test_login_is_case_insensitive_on_the_username(_db):
-    _register("Ali", password="hunter2", email="a@example.com")
-    session = db.login_user("ali", "hunter2")
+    _register("Ali", password="hunter22", email="a@example.com")
+    session = db.login_user("ali", "hunter22")
     assert session["username"] == "Ali"
 
 
@@ -271,13 +271,13 @@ def test_an_existing_case_collision_does_not_break_startup_or_guess_on_login(tmp
     with sqlite3.connect(path) as c:
         c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, "
                   "password_hash TEXT NOT NULL, created_at REAL NOT NULL)")
-        pw = db._encode_password("hunter2")
+        pw = db._encode_password("hunter22")
         c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('Ali',?,0)", (pw,))
         c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('ali',?,0)", (pw,))
     db.init_db()  # لا يسقط
-    assert db.login_user("Ali", "hunter2")["username"] == "Ali", "المطابقة الحرفية أولاً"
+    assert db.login_user("Ali", "hunter22")["username"] == "Ali", "المطابقة الحرفية أولاً"
     with pytest.raises(ValueError):
-        db.login_user("ALI", "hunter2")
+        db.login_user("ALI", "hunter22")
     with pytest.raises(ValueError, match="taken"):
         _register("aLI", email="z@example.com")
 
@@ -288,7 +288,7 @@ def test_a_non_ascii_case_twin_is_taken(_db, first, twin):
     _register(first, email="a@example.com")
     with pytest.raises(ValueError, match="taken"):
         _register(twin, email="b@example.com")
-    assert db.login_user(twin, "hunter2")["username"] == first
+    assert db.login_user(twin, "hunter22")["username"] == first
 
 
 def test_the_database_refuses_a_non_ascii_key_twin(_db):
@@ -310,11 +310,11 @@ def test_legacy_rows_get_their_key_backfilled(tmp_path, monkeypatch):
         c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, "
                   "password_hash TEXT NOT NULL, created_at REAL NOT NULL)")
         c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('Şêrko',?,0)",
-                  (db._encode_password("hunter2"),))
+                  (db._encode_password("hunter22"),))
     db.init_db()
     with pytest.raises(ValueError, match="taken"):
         _register("şêrko", email="z@example.com")
-    assert db.login_user("ŞÊRKO", "hunter2")["username"] == "Şêrko"
+    assert db.login_user("ŞÊRKO", "hunter22")["username"] == "Şêrko"
 
 
 def test_deleted_account_placeholder_keeps_a_key(_db):
@@ -336,8 +336,8 @@ def test_place_member_short_password_is_rejected_not_silently_replaced(_db):
     with pytest.raises(ValueError, match="password too short"):
         db.place_under_sponsor(sid, "dave", "abc", "left")
     # لم يُنشأ العضو ولم تُحجز الساق
-    assert db.place_under_sponsor(sid, "dave", "abcd", "left")["ok"]
-    assert db.login_user("dave", "abcd")
+    assert db.place_under_sponsor(sid, "dave", "abcd1234", "left")["ok"]
+    assert db.login_user("dave", "abcd1234")
 
 
 def test_place_member_blank_password_returns_the_generated_one(_db):
@@ -352,18 +352,18 @@ def test_place_member_blank_password_returns_the_generated_one(_db):
 @pytest.mark.parametrize("name", ["deleted_user_2", "Deleted_User_2", "DELETED_USER_x", "أنت"])
 def test_reserved_names_cannot_be_registered(_db, name):
     with pytest.raises(ValueError, match="reserved"):
-        db.register_user(name, "hunter2", email="r@example.com")
+        db.register_user(name, "hunter22", email="r@example.com")
 
 
 @pytest.mark.parametrize("name", ["alice​", "al‍ice", "ａｌｉｃｅ", "ali ce", "ali\tce", "‮ecila"])
 def test_invisible_or_look_alike_characters_are_rejected(_db, name):
     with pytest.raises(ValueError, match="invisible"):
-        db.register_user(name, "hunter2", email="r@example.com")
+        db.register_user(name, "hunter22", email="r@example.com")
 
 
 @pytest.mark.parametrize("name", ["ali ahmed", "علي_الفوركس", "Trader-7"])
 def test_ordinary_names_still_register(_db, name):
-    assert db.register_user(name, "hunter2", email="ok@example.com")["username"] == name
+    assert db.register_user(name, "hunter22", email="ok@example.com")["username"] == name
 
 
 def test_a_squatted_placeholder_no_longer_blocks_account_deletion(_db):
@@ -385,29 +385,29 @@ def test_a_squatted_placeholder_no_longer_blocks_account_deletion(_db):
 
 def test_direction_marks_pasted_around_an_arabic_name_are_trimmed_not_rejected(_db):
     """نسخ اسم عربي ولصقه يجلب LRM/RLM/ALM بالطرفين — كان يُرفض «محارف مخفية» (launch142b)."""
-    out = db.register_user("‏علي_الفوركس‎ ", "hunter2", email="a@example.com")
+    out = db.register_user("‏علي_الفوركس‎ ", "hunter22", email="a@example.com")
     assert out["username"] == "علي_الفوركس"
-    assert db.login_user("؜علي_الفوركس", "hunter2")["username"] == "علي_الفوركس"
+    assert db.login_user("؜علي_الفوركس", "hunter22")["username"] == "علي_الفوركس"
 
 
 def test_a_direction_mark_inside_the_name_is_still_rejected(_db):
     with pytest.raises(ValueError, match="invisible"):
-        db.register_user("ali‏ce", "hunter2", email="a@example.com")
+        db.register_user("ali‏ce", "hunter22", email="a@example.com")
 
 
 def test_zwnj_between_arabic_letters_is_a_real_name(_db):
-    assert db.register_user("می‌خواهم", "hunter2", email="z@example.com")["username"] == "می‌خواهم"
+    assert db.register_user("می‌خواهم", "hunter22", email="z@example.com")["username"] == "می‌خواهم"
 
 
 @pytest.mark.parametrize("name", ["alice‌", "ali‌ce", "‌علي", "علي‌"])
 def test_zwnj_elsewhere_is_still_invisible(_db, name):
     with pytest.raises(ValueError, match="invisible"):
-        db.register_user(name, "hunter2", email="z@example.com")
+        db.register_user(name, "hunter22", email="z@example.com")
 
 
 def test_a_deleted_accounts_referral_code_no_longer_carries_the_name_or_sponsors(_db):
     """رمز «ALICE0001» كان يبقى بشجرة الآخرين (جزء من الاسم المحذوف) ويقبل تسجيلات تحت حساب لا يملكه أحد."""
-    alice = db.register_user("alice", "hunter2", email="alice@example.com")
+    alice = db.register_user("alice", "hunter22", email="alice@example.com")
     old_code = alice["referral_code"]
     db.delete_user_account(alice["user_id"])
     with sqlite3.connect(_db) as c:
@@ -417,25 +417,25 @@ def test_a_deleted_accounts_referral_code_no_longer_carries_the_name_or_sponsors
     assert "ALICE" not in code
     for attempt in (old_code, code, code.lower()):
         with pytest.raises(ValueError, match="sponsor code not found"):
-            db.register_user("bob", "hunter2", email="bob@example.com", sponsor_code=attempt, side="right")
+            db.register_user("bob", "hunter22", email="bob@example.com", sponsor_code=attempt, side="right")
 
 
 def test_a_live_referral_code_still_sponsors(_db):
-    alice = db.register_user("alice", "hunter2", email="alice@example.com")
+    alice = db.register_user("alice", "hunter22", email="alice@example.com")
     bob = db.register_user(
-        "bob", "hunter2", email="bob@example.com", sponsor_code=alice["referral_code"], side="left"
+        "bob", "hunter22", email="bob@example.com", sponsor_code=alice["referral_code"], side="left"
     )
     assert bob["user_id"]
 
 
 def test_deleting_a_reporters_account_keeps_the_reported_message_hidden(_db):
     """حذف حساب مُبلِّغ كان يمحو بلاغاته ⇒ العدّاد تحت العتبة فتعود رسالة الاحتيال ظاهرة للجميع."""
-    scammer = db.register_user("scammer", "hunter2", email="s@example.com")
+    scammer = db.register_user("scammer", "hunter22", email="s@example.com")
     db.add_group_message(
         {"id": "m1", "user": "scammer", "text": "vip signals", "ts": "00:00"}, scammer["user_id"]
     )
     reporters = [
-        db.register_user(f"rep{i}", "hunter2", email=f"r{i}@example.com")
+        db.register_user(f"rep{i}", "hunter22", email=f"r{i}@example.com")
         for i in range(db.REPORT_HIDE_THRESHOLD)
     ]
     for r in reporters:
@@ -465,7 +465,7 @@ def test_a_look_alike_username_is_taken(_db, first, twin):
 
 def test_look_alike_check_does_not_change_login_or_block_distinct_names(_db):
     _register("علی", email="a@example.com")  # كردي بـی يدخل باسمه كما كتبه
-    assert db.login_user("علی", "hunter2")["token"]
+    assert db.login_user("علی", "hunter22")["token"]
     _register("alice", email="b@example.com")
     _register("alico", email="c@example.com")
 
@@ -503,7 +503,7 @@ def test_email_with_control_or_invisible_chars_is_rejected(_db, bad):
 ])
 def test_invisible_marks_outside_c_and_z_are_rejected(_db, name):
     with pytest.raises(ValueError, match="invisible"):
-        db.register_user(name, "hunter2", email="r@example.com")
+        db.register_user(name, "hunter22", email="r@example.com")
 
 
 def test_combining_mark_twin_is_taken(_db):
@@ -523,7 +523,7 @@ def test_accented_greek_cyrillic_twin_is_taken(_db, twin, orig):
 
 def test_arabic_diacritics_do_not_block_ordinary_names(_db):
     _register("كاوە", email="a@example.com")  # كردي: ە ليست علامة تركيب
-    assert db.login_user("كاوە", "hunter2")["token"]
+    assert db.login_user("كاوە", "hunter22")["token"]
 
 
 def test_skeleton_rule_change_recomputes_existing_rows(tmp_path, monkeypatch):
@@ -539,4 +539,4 @@ def test_skeleton_rule_change_recomputes_existing_rows(tmp_path, monkeypatch):
     with db._conn() as c:
         assert c.execute("SELECT username_skel FROM users").fetchone()[0] == "alice"
     with pytest.raises(ValueError, match="taken"):
-        db.register_user("alice", "hunter2", email="n@example.com")
+        db.register_user("alice", "hunter22", email="n@example.com")
