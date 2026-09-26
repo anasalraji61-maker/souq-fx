@@ -1025,10 +1025,12 @@ const styles = StyleSheet.create({
   head: { padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { color: colors.text, fontSize: 22, fontWeight: '500' },
   sub: { color: colors.textDim, fontSize: 12 },
-  tabsScroll: { maxHeight: 52, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  // W5 (كـ`phoneWatch` بالطرفية): `maxHeight` 52/46 قصّ أسفل التبويبات (المحتوى ~58: حشوة 8+8 + تبويب 12+سطر+12 + حدّ) والشرائح (~48).
+  // `flexGrow: 0` ⇒ ارتفاع المحتوى بلا تمدّد عمودي.
+  tabsScroll: { flexGrow: 0, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   tabs: { flexDirection: 'row', padding: spacing.sm, gap: spacing.sm },
   tabsRtl: { flexDirection: 'row-reverse' },
-  symBarScroll: { maxHeight: 46, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  symBarScroll: { flexGrow: 0, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   symBar: { flexDirection: 'row', paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, gap: 4 },
   symBarRtl: { flexDirection: 'row-reverse' },
   tab: {
