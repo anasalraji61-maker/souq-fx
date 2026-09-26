@@ -33,6 +33,7 @@ import {
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { PriceFlash } from './PriceFlash';
 import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/dailyChange';
+import { isCryptoSymbol } from '../chart/newsRisk';
 import { isForexMarketOpen } from '../chart/marketHours';
 import { useLastCloses } from '../hooks/useLastCloses';
 import { symbolGroupLabel } from './SymbolPairMenu';
@@ -414,7 +415,13 @@ export function WatchlistPanel({
                   : '';
             const isDxy = sym === 'DXY';
             // تغيّر اليوم فقط مع سعر حيّ + مرجع حقيقي — لا نسبة من سعر افتراضي.
-            const chg = live != null && !tickIsDemo ? dailyChange(live, dailyRefs[sym]) : null;
+            const chgRaw = live != null && !tickIsDemo ? dailyChange(live, dailyRefs[sym]) : null;
+            // حارس `headerChangePct` نفسه (>25%، الكريبتو −80…+400%: مرجع أداة أخرى) — كان رأس الشارت «—»
+            // والقائمة «+30.00%» خضراء للرمز نفسه.
+            const chg =
+              chgRaw && (isCryptoSymbol(sym) ? chgRaw.pct >= -80 && chgRaw.pct <= 400 : Math.abs(chgRaw.pct) <= 25)
+                ? chgRaw
+                : null;
             const tickDir = live != null && !tickIsDemo ? tickDirs[sym]?.dir : undefined;
             const pctText = chg ? formatPct(chg.pct) : null;
             /**
