@@ -305,6 +305,7 @@ export function MatrixBottomDock({
               key={tb.id}
               style={({ pressed }) => [
                 styles.tab,
+                rtl && styles.tabRtl,
                 on && styles.tabOn,
                 pressed && {
                   opacity: buttons.pressedOpacity,
@@ -327,6 +328,7 @@ export function MatrixBottomDock({
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.tab,
+            rtl && styles.tabRtl,
             moreOn && styles.tabOn,
             pressed && {
               opacity: buttons.pressedOpacity,
@@ -349,10 +351,16 @@ export function MatrixBottomDock({
 }
 
 const styles = StyleSheet.create({
+  /**
+   * عيب أنس W3 على الهاتف: الرصيف فوق شريط التنقّل مباشرةً وكلاهما `bgElevated` وأيقونة فوق تسمية ⇒
+   * بدَوا شريطاً مكرّراً. الرصيف أدوات **الشارت** لا تنقّل: خلفيته خلفية الشارت (`bg`) وحدّه الخفيف
+   * يفصله عن الشموع، والأيقونة بجانب التسمية بسطر واحد (شريط أدوات)؛ شريط التنقّل تحته يبقى
+   * `bgElevated` بأيقونة فوق تسمية. فاصل واحد لكل عنصر (§5.5).
+   */
   wrap: {
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.bgElevated,
+    borderTopColor: colors.borderSoft,
+    backgroundColor: colors.bg,
   },
   sheet: {
     maxHeight: 320,
@@ -422,8 +430,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   tabsRtl: { flexDirection: 'row-reverse' },
+  tabRtl: { flexDirection: 'row-reverse' },
   tab: {
     flex: 1,
+    flexDirection: 'row',
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
@@ -442,6 +452,6 @@ const styles = StyleSheet.create({
   },
   tabMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   tabMarkOn: { color: colors.text },
-  tabLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
+  tabLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500', flexShrink: 1 },
   tabLabelOn: { color: colors.text },
 });
