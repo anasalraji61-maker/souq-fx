@@ -663,6 +663,8 @@ export type Dict = {
   reportAiFallbackNote: string;
   reportJournalDataLine: string;
   reportJournalEmptyLine: string;
+  /** سطر أول فوق إحصاءات الدفتر بالتقرير الأسبوعي: الأرقام لكل المغلقة، لا للأسبوع (ui141a). */
+  reportAllTimeNote: string;
   reportJournalUnavailableLine: string;
   reportFallbackWeekly: string;
   reportFallbackPerformance: string;
@@ -2187,6 +2189,7 @@ const ar: Dict = {
   reportJournalDataLine:
     'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades}، نجاح={winRate}%، مجموع حركة السعر={pnl}%، أفضل صفقة={best}%، أسوأ صفقة={worst}%. النسب حركة سعر من الدخول للخروج بلا حجم الصفقة — ليست ربحاً أو خسارة من الحساب، فلا تسمّها كذلك. اعتمد عليها في التقرير.',
   reportJournalEmptyLine: '(لا توجد صفقات مغلقة في الدفتر بعد — لا أرقام أداء لعرضها).',
+  reportAllTimeNote: 'أرقام الدفتر أدناه لكل صفقاتك المغلقة، لا لهذا الأسبوع وحده.',
   reportJournalUnavailableLine: '(تعذّرت قراءة دفتر الصفقات الآن — التقرير بلا أرقامك).',
   reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب «الدفتر» لبناء تقرير أدق.',
   reportFallbackPerformance: 'تقييم مبني على الدفتر{journalLine}',
@@ -3482,6 +3485,7 @@ const enUS: Dict = {
   reportJournalDataLine:
     'Actual trade journal data (all closed trades, not just this week): trades={trades}, win rate={winRate}%, sum of price moves={pnl}%, best trade={best}%, worst trade={worst}%. The percentages are price moves from entry to exit with lot size ignored — not account profit or loss, so do not call them that. Base the report on it.',
   reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
+  reportAllTimeNote: 'Journal figures below cover all your closed trades, not just this week.',
   reportJournalUnavailableLine: '(Couldn’t read the trade journal right now — this report has none of your numbers).',
   reportFallbackWeekly:
     'Report from the trade journal{journalLine}\nLog your trades in the “Journal” tab for a more accurate report.',
@@ -4837,6 +4841,7 @@ const ku: Dict = {
   reportJournalDataLine:
     'زانیاری ڕاستەقینەی دەفتەری مامەڵە (هەموو مامەڵە داخراوەکان، نەک تەنها ئەم هەفتەیە): مامەڵە={trades}، ڕێژەی سەرکەوتن={winRate}%، کۆی جووڵەی نرخ={pnl}%، باشترین مامەڵە={best}%، خراپترین مامەڵە={worst}%. ڕێژەکان جووڵەی نرخن لە چوونەژوورەوە تا دەرچوون بێ قەبارەی مامەڵە — قازانج یان زیانی هەژمار نین، بەو ناوە ناویان مەبە. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
   reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەکی داخراو لە دەفتەرەکەدا نییە — ژمارەی ئەدا نییە بۆ پیشاندان).',
+  reportAllTimeNote: 'ژمارەکانی دەفتەری خوارەوە بۆ هەموو مامەڵە داخراوەکانتن، نەک تەنها ئەم هەفتەیە.',
   reportJournalUnavailableLine: '(ئێستا دەفتەری مامەڵە نەخوێندرایەوە — ئەم ڕاپۆرتە ژمارەکانی تۆی تێدا نییە).',
   reportFallbackWeekly:
     'ڕاپۆرت لە دەفتەری مامەڵە{journalLine}\nمامەڵەکانت لە تابی «دەفتەر» تۆماربکە بۆ ڕاپۆرتێکی وردتر.',
