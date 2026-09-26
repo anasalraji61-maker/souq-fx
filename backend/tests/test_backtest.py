@@ -299,3 +299,27 @@ def test_ma_cross_trades_the_first_cross_when_slow_is_long():
     trades = backtest.run_backtest(candles, "ma_cross", 5, 30)["trades"]
     assert [(t["side"], (t["entry_time"] - 1_700_000_000) // 900) for t in trades] == [
         ("long", 30), ("short", 71), ("long", 111)]
+
+
+def _series(closes):
+    return [{"time": 1_700_000_000 + i * 900, "open": x, "high": x + 0.0005, "low": x - 0.0005, "close": x}
+            for i, x in enumerate(closes)]
+
+
+def test_signals_before_bar_27_are_traded():
+    """r64: `start_i` كان 27 لكل استراتيجية ⇒ تشبّع RSI على الشمعات 15–21 (ثم صعود 3%) = 0 صفقات، وتقاطع
+    5/10 عند الشمعة 25 يُسقط. كل إشارة تفحص جاهزية مؤشّرها بنفسها."""
+    closes = [1.10 - 0.004 * i for i in range(22)] + [1.012 + 0.0015 * i for i in range(60)] + [1.10] * 40
+    trades = backtest.run_backtest(_series(closes), "rsi_reversal")["trades"]
+    first = (trades[0]["entry_time"] - 1_700_000_000) // 900
+    assert trades[0]["side"] == "long" and 14 <= first < 22, trades[0]
+    closes = [1.10 + 0.001 * i for i in range(20)] + [1.12 - 0.002 * i for i in range(40)] + [1.04] * 60
+    trades = backtest.run_backtest(_series(closes), "ma_cross", 5, 10)["trades"]
+    assert trades and trades[0]["side"] == "short"
+    assert (trades[0]["entry_time"] - 1_700_000_000) // 900 < 27
+
+
+def test_slow_period_does_not_block_non_ma_strategies_on_short_series():
+    cs = _candles(179)
+    assert "error" not in backtest.run_backtest(cs, "rsi_reversal", slow=176)
+    assert backtest.run_backtest(cs, "ma_cross", slow=176)["error"] == "not enough candles"

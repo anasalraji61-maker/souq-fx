@@ -149,7 +149,8 @@ def run_backtest(
 ) -> dict[str, Any]:
     """`spread`: تكلفة السبريد بوحدات السعر، تُخصم مرة لكل صفقة (دخول+خروج بسعري bid/ask)."""
     # الأطول من الفترتين: سريع 178 على 179 شمعة كان يعطي «0 صفقات» (لا تقاطع ممكن) لا «شموع غير كافية»
-    if len(candles) < max(slow, fast, 30) + 5:
+    # والفترتان لـ`ma_cross` وحده: RSI بـslow=176 على 179 شمعة كان «شموع غير كافية» وهو لا يستعمل المتوسّطين
+    if len(candles) < (max(slow, fast, 30) if strategy == "ma_cross" else 30) + 5:
         return {"error": "not enough candles", "trades": [], "stats": {}}
 
     closes = [float(c["close"]) for c in candles]
@@ -180,7 +181,9 @@ def run_backtest(
     # بصمت (8 صفقات ⇒ 1) والنتيجة تُعرض أداءً على السلسلة كلها.
     # أول تقاطع ممكن لـ`ma_cross` عند الشمعة `slow` (أول قيمتين للبطيء: slow-1 وslow) — كان `slow+1` فيُسقط
     # التقاطع الأول حين slow ≥ 26 (fast=5/slow=30: صفقة الشراء عند الشمعة 30 تغيب عن النتيجة).
-    start_i = max(slow, 27) if strategy == "ma_cross" else 27
+    # ولا بداية ثابتة عند 27 (بقيّة `max(slow, 26) + 1`): كل إشارة تفحص جاهزية مؤشّرها (None قبلها) ⇒ RSI من
+    # الشمعة 14 وبولنجر من 19 وMA من `slow` — كان تشبّع RSI على الشمعات 15–21 ثم صعود 3% يُسقط بصمت (0 صفقات).
+    start_i = 1
 
     def close_trade(exit_i: int, still_open: bool = False) -> None:
         """يسجّل صفقة المركز الحالي مغلقةً عند إغلاق الشمعة `exit_i`.
