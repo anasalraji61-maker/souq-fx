@@ -1505,6 +1505,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     loadedDrawingsKey.current === drawingsKey(series.symbol, series.timeframe)
       ? loadedDrawings
       : NO_DRAWINGS;
+  // الحالة الخام (ولو محجوبة): ما رُسم **أثناء** انتظار التحميل يعيش هنا فقط — يُدمج عند وصول القائمة بدل أن تستبدله.
+  const loadedRawRef = useRef(loadedDrawings);
+  loadedRawRef.current = loadedDrawings;
   // تراجع الرسم: لم يكن هناك أي تراجع إطلاقاً — خط ترند في غير موضعه كان يُصلَّح إما
   // بتبديل الأداة لـ«تحديد» واصطياد طرفه ثم تأكيد حذف، أو بمسح كل الرسومات. لقطات
   // محدودة العدد (لا حالة مشتقّة) لأن `drawings` بأكملها صغيرة ويحفظها التأثير الموجود.
@@ -1718,6 +1721,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setCross(null);
     crossPinned.current = false;
     syncKeyRef.current = '';
+    // نقطة أولى معلّقة (ترند، قياس) فهرسها من الفريم السابق: على شارت بلا حفظ لا يمسحها تحميل ⇒ معاينة 15m على 4H
+    // بتاريخ آخر، ثم يقفز الخطّ عند النقرة الثانية.
+    setPending(null);
+    setDragEnd(null);
     // الإعادة تخرج مع التبديل: خطوتها فهرس داخل نافذة الفريم السابق، فكانت الخطوة 12 من 80 على 15m
     // (~17 ساعة للخلف) تصير على 1H ~68 ساعة ويوماً آخر، وعلى زوج آخر يستمرّ التشغيل فوق شموع لم يخترها.
     if (replayOnRef.current) setReplayEndedNotice(true);
@@ -2483,6 +2490,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const unpersistedFor = useRef<string | null>(null);
   useEffect(() => {
     if (drawingsPersisted) {
+      // تجريبي ⇒ حقيقي على الرمز نفسه: لقطات التراجع من رسوم «التدريب» — تراجعٌ بعدها كان يعرض خطّ تدريب ويحفظه
+      // فوق قائمة الرمز الحقيقية.
+      if (unpersistedFor.current !== null) {
+        drawHistory.current = [];
+        redoHistory.current = [];
+        setCanUndo(false);
+        setCanRedo(false);
+      }
       unpersistedFor.current = null;
       return;
     }
@@ -2507,6 +2522,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // قد ينطلق بعد التبديل فيكتب رسوماته تحت مفتاح الرمز الجديد.
     saveQueue.flush();
     loadedDrawingsKey.current = null;
+    loadedRawRef.current = NO_DRAWINGS;
     setDrawings(NO_DRAWINGS);
     setSelectedId(null);
     setPending(null);
@@ -2529,9 +2545,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     };
     loadDrawings(series.symbol, series.timeframe).then((d) => {
       if (!alive) return;
+      const early = loadedRawRef.current;
       loadedDrawingsKey.current = k;
       savedDrawingsSig.current = drawingsSignature(d);
-      setDrawings(anchorHere(d));
+      if (early === NO_DRAWINGS || early.length === 0) {
+        setDrawings(anchorHere(d));
+        return;
+      }
+      // رُسم خطّ قبل وصول القائمة (أوّل فتح للرمز، ترحيل v1 بطيء): كان يُستبدل فيختفي بلا حفظ، ولقطة التراجع
+      // المسجّلة وقتها فارغة ⇒ «تراجع» يعرض [] ويحفظه فوق كل رسومات الرمز. الآن يُدمج (فيُحفظ)، والتاريخ يُفرَغ.
+      const ids = new Set(d.map((x) => x.id));
+      drawHistory.current = [];
+      redoHistory.current = [];
+      setCanUndo(false);
+      setCanRedo(false);
+      setDrawings(anchorHere([...d, ...early.filter((x) => !ids.has(x.id))]));
     });
     // شارت آخر على الرمز نفسه كتب (نافذة التركيز فوق الشاشة، أو فريم آخر): يُعرض هنا
     // فوراً، ولا يبقى هنا قديمه ليُكتب فوقه عند أوّل تعديل. تاريخ التراجع يخصّ القائمة
@@ -6625,7 +6653,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     setDrawings([]);
                     setPending(null);
                     setSelectedId(null);
-                    void clearDrawings(series.symbol, drawingsOwner);
+                    // سلسلة تجريبية/شارت بلا حفظ: المسح محلّي فقط — وإلا مسح «تدريب» على شموع وهمية قائمة الرمز الحقيقية المحفوظة.
+                    if (drawingsPersisted) void clearDrawings(series.symbol, drawingsOwner);
                   },
                 });
               }}
@@ -12799,7 +12828,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     setDrawings([]);
                     setPending(null);
                     setSelectedId(null);
-                    void clearDrawings(series.symbol, drawingsOwner);
+                    // سلسلة تجريبية/شارت بلا حفظ: المسح محلّي فقط — وإلا مسح «تدريب» على شموع وهمية قائمة الرمز الحقيقية المحفوظة.
+                    if (drawingsPersisted) void clearDrawings(series.symbol, drawingsOwner);
                   },
                 });
               }}
