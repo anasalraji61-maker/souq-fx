@@ -106,6 +106,9 @@ export function AlertsPanel({
   const [price, setPrice] = useState('');
   const [condition, setCondition] = useState<'above' | 'below'>('above');
   const [note, setNote] = useState('');
+  /** DESIGN-PRO §5.2: «حذف» مخفيّ وقت السكون — يظهر بالمرور (ويب) أو للصفّ المفتوح بالنقر للتعديل (لمس)،
+   *  كالدفتر؛ ولقارئ الشاشة إجراء «حذف» على الصفّ نفسه بلا حاجة لإظهاره. */
+  const [hoverId, setHoverId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
@@ -718,6 +721,15 @@ export function AlertsPanel({
    * نافذة تملأ خليّة الشبكة (`embedded`)، أو نافذة بسقف ثابت بالمواضع الضيّقة، أو سرد متدفّق
    * حين تملك اللوحة الصفحة وحدها (`flow`). الكتلة منقولة كما هي حرفياً من داخل `ScrollView`.
    */
+  const askRemove = (a: PriceAlert) =>
+    confirmDestructive({
+      title: t.alertsDeleteConfirmTitle,
+      body: `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`,
+      cancelText: t.cancel,
+      confirmText: t.deleteWord,
+      onConfirm: () => void remove(a.id),
+    });
+
   const rows = (
     <>
           {alerts.length > 0 ? (
@@ -762,14 +774,21 @@ export function AlertsPanel({
             </Text>
           ) : (
             orderedAlerts.map((a) => (
-              <View
+              <Pressable
                 key={a.id}
+                accessible={false}
+                onHoverIn={() => setHoverId(a.id)}
+                onHoverOut={() => setHoverId((h) => (h === a.id ? null : h))}
                 style={[styles.item, rtl && styles.itemRtl, editingId === a.id && styles.itemEditing]}
               >
                 <Pressable
                   style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: buttons.pressedOpacity }]}
                   onPress={() => startEdit(a)}
                   accessibilityRole="button"
+                  accessibilityActions={[{ name: 'delete', label: t.deleteWord }]}
+                  onAccessibilityAction={(e) => {
+                    if (e.nativeEvent.actionName === 'delete') askRemove(a);
+                  }}
                   // الوسم يحلّ محلّ نصّ الأبناء عند قارئ الشاشة: الحالة (مُطلق/مُفعّل) والملاحظة كانتا تُقرآن
                   // باللون وحده، والصفّ قيد التعديل بإطار ملوّن وحده ⇒ الحالة + `selected`
                   accessibilityState={{ selected: editingId === a.id }}
@@ -812,32 +831,26 @@ export function AlertsPanel({
                     <Text style={styles.rearm}>{t.alertsRearmBtn}</Text>
                   </Pressable>
                 ) : null}
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() =>
-                    confirmDestructive({
-                      title: t.alertsDeleteConfirmTitle,
-                      body: `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`,
-                      cancelText: t.cancel,
-                      confirmText: t.deleteWord,
-                      onConfirm: () => void remove(a.id),
-                    })
-                  }
-                  accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
-                    a.price,
-                    a.symbol
-                  )}`}
-                  hitSlop={8}
-                >
-                  <Text style={styles.del}>{t.deleteWord}</Text>
-                </Pressable>
-              </View>
+                {hoverId === a.id || editingId === a.id ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() => askRemove(a)}
+                    accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
+                      a.price,
+                      a.symbol
+                    )}`}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.del}>{t.deleteWord}</Text>
+                  </Pressable>
+                ) : null}
+              </Pressable>
             ))
           )}
     </>

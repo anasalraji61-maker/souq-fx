@@ -122,6 +122,10 @@ export function IndicatorAlertsPanel({
   const [tf, setTf] = useState<AlertTf>(asAlertTf(defaultTimeframe) ?? '1H');
   /** تأكيد «مفعَّل» بعد الإضافة الناجحة — كانت الإضافة تنجح بصمت (نقرة صوتية فقط). */
   const [armed, setArmed] = useState<string | null>(null);
+  /** DESIGN-PRO §5.2: «حذف» مخفيّ وقت السكون — يظهر بالمرور (ويب) أو بالضغط الطويل على الصفّ (لمس)؛
+   *  ولقارئ الشاشة إجراء «حذف» على الصفّ نفسه بلا حاجة لإظهاره (كقائمة المتابعة و`LayoutPanel`). */
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [revealId, setRevealId] = useState<string | null>(null);
   /**
    * **وعدٌ بإشعارٍ لن يصل — باللوحة الأخرى عولج، وهذه أخته.** هذه اللوحة تنادي `pushPriceAlert`
    * عند كل تقاطع/بلوغ (`check`) ولم تكن **تطلب الإذن أصلاً ولا تقرأ حالته**: فمن دخل التطبيق
@@ -395,6 +399,21 @@ export function IndicatorAlertsPanel({
    * صفوف قائمة التنبيهات — تُركَّب مرّة واحدة وتُعرض بصندوقين مختلفين بحسب من يستضيف اللوحة
    * (انظر `flow` بالخصائص أعلاه). الكتلة منقولة كما هي حرفياً من داخل `ScrollView` السابق.
    */
+  const askDelete = (a: IndAlert) =>
+    confirmDestructive({
+      title: t.indAlertsDeleteConfirmTitle,
+      body: describeIndAlert(a, t),
+      cancelText: t.cancel,
+      confirmText: t.deleteWord,
+      onConfirm: () => {
+        setRevealId(null);
+        void api
+          .deleteIndicatorAlert(a.id)
+          .then(refresh)
+          .catch(() => notify(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody));
+      },
+    });
+
   const rows = (
     <>
           {alerts.length === 0 ? (
@@ -403,14 +422,30 @@ export function IndicatorAlertsPanel({
             </Text>
           ) : (
             alerts.map((a) => (
-              <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
-                <Text style={[styles.itemText, { textAlign: align }]}>
-                  {describeIndAlert(a, t)}
-                  {/* كان «✓» غامضاً (مفعَّل؟ تحقّق؟) — الآن حالة مسمّاة: يراقب / أُطلق (لا يُعاد إطلاقه) */}
-                  <Text style={a.triggered ? styles.tagFired : styles.tagWatching}>
-                    {` · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
+              <Pressable
+                key={a.id}
+                accessible={false}
+                onHoverIn={() => setHoverId(a.id)}
+                onHoverOut={() => setHoverId((h) => (h === a.id ? null : h))}
+                style={[styles.item, rtl && styles.itemRtl]}
+              >
+                <Pressable
+                  style={styles.itemTextHit}
+                  onLongPress={() => setRevealId((r) => (r === a.id ? null : a.id))}
+                  accessibilityActions={[{ name: 'delete', label: t.deleteWord }]}
+                  onAccessibilityAction={(e) => {
+                    if (e.nativeEvent.actionName === 'delete') askDelete(a);
+                  }}
+                  accessibilityLabel={`${describeIndAlert(a, t)} · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
+                >
+                  <Text style={[styles.itemText, { textAlign: align }]}>
+                    {describeIndAlert(a, t)}
+                    {/* كان «✓» غامضاً (مفعَّل؟ تحقّق؟) — الآن حالة مسمّاة: يراقب / أُطلق (لا يُعاد إطلاقه) */}
+                    <Text style={a.triggered ? styles.tagFired : styles.tagWatching}>
+                      {` · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
+                    </Text>
                   </Text>
-                </Text>
+                </Pressable>
                 <View style={[styles.itemActions, rtl && styles.itemRtl]}>
                   {a.triggered ? (
                     <Pressable
@@ -431,34 +466,24 @@ export function IndicatorAlertsPanel({
                       <Text style={styles.rearm}>{t.indAlertsRearmBtn}</Text>
                     </Pressable>
                   ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      pressed && {
-                        opacity: buttons.pressedOpacity,
-                        transform: [{ scale: buttons.pressedScale }],
-                      },
-                    ]}
-                    onPress={() =>
-                      confirmDestructive({
-                        title: t.indAlertsDeleteConfirmTitle,
-                        body: describeIndAlert(a, t),
-                        cancelText: t.cancel,
-                        confirmText: t.deleteWord,
-                        onConfirm: () =>
-                          api
-                            .deleteIndicatorAlert(a.id)
-                            .then(refresh)
-                            .catch(() => notify(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)),
-                      })
-                    }
-                    accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
-                    hitSlop={8}
-                  >
-                    <Text style={styles.del}>{t.deleteWord}</Text>
-                  </Pressable>
+                  {hoverId === a.id || revealId === a.id ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      style={({ pressed }) => [
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
+                      onPress={() => askDelete(a)}
+                      accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.del}>{t.deleteWord}</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
-              </View>
+              </Pressable>
             ))
           )}
     </>
@@ -662,6 +687,7 @@ const styles = StyleSheet.create({
   empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
   itemRtl: { flexDirection: 'row-reverse' },
+  itemTextHit: { flex: 1 },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '500' },
   itemActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
