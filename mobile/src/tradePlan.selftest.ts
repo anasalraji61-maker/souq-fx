@@ -3203,6 +3203,24 @@ console.log('tradePlan crypto suffix quote selftest OK');
     assert.ok(Math.abs((sum(all) ?? 0) - 4250) < 1e-6);
     assert.equal(tp.journalOpenRiskComplete(200, 250), false);
   }
+  // tools103b: الخادم يرتّب المفتوحة أولاً (`open_first`) ⇒ 200 من 250 محمَّلة وكل المفتوحة (2 من 2) بينها ⇒ المجموع كامل (4,250 USD يُعرض)
+  {
+    assert.equal(tp.journalOpenRiskComplete(200, 250, 2, 2), true);
+    // 230 مفتوحة والصفحة 200 ⇒ ناقص ولو كانت الصفحة كلها مفتوحة
+    assert.equal(tp.journalOpenRiskComplete(200, 450, 200, 230), false);
+    // لا مفتوحة أصلاً ⇒ كامل (الأسطر لا تُعرض لكن الحكم صادق)
+    assert.equal(tp.journalOpenRiskComplete(200, 250, 0, 0), true);
+    // خادمٌ أقدم (بلا open_total) ⇒ القاعدة القديمة
+    assert.equal(tp.journalOpenRiskComplete(200, 250, 2, null), false);
+    assert.equal(tp.journalOpenTotal({ open_first: true, open_total: 2 }), 2);
+    assert.equal(tp.journalOpenTotal({ open_first: true, open_total: 0 }), 0);
+    // عددٌ بلا إعلان الترتيب لا يُصدَّق (المفتوحة الأقدم قد تكون خارج الصفحة)
+    assert.equal(tp.journalOpenTotal({ open_total: 2 }), null);
+    assert.equal(tp.journalOpenTotal({ open_first: true, open_total: -1 }), null);
+    assert.equal(tp.journalOpenTotal({ open_first: true, open_total: 1.5 }), null);
+    assert.equal(tp.journalOpenTotal({ open_first: true, open_total: '2' }), null);
+    assert.equal(tp.journalOpenTotal(null), null);
+  }
   // الترتيب والأول يبقيان
   assert.deepEqual(
     tp.mergeJournalPage([{ id: 'a', v: 1 }], [{ id: 'a', v: 2 }, { id: 'b', v: 3 }, { id: 'b', v: 4 }]),

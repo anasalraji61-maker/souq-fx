@@ -30,6 +30,7 @@ import {
   JOURNAL_PAGE,
   journalRefreshPages,
   journalOpenRiskComplete,
+  journalOpenTotal,
   mergeJournalPage,
   executionPrice,
   exitShortcuts,
@@ -199,6 +200,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const [stats, setStats] = useState<Stats | null>(null);
   /** `/api/trades` `total` (backend-r1) — كل صفقات المتداول لا الصفحة. `null` بخادمٍ أقدم لا يرسله. */
   const [total, setTotal] = useState<number | null>(null);
+  /** `open_total` مع `open_first` (tools103b) — كل المفتوحة بالصفحة الأولى ⇒ مجموع خطرها كامل ولو لم يُحمَّل الدفتر كلّه */
+  const [openTotal, setOpenTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [symbol, setSymbol] = useState(defaultSymbol || 'EURUSD');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
@@ -353,6 +356,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       setStats(res.stats as Stats);
       const tot = (res as { total?: unknown }).total;
       setTotal(typeof tot === 'number' && Number.isFinite(tot) && tot >= 0 ? tot : null);
+      setOpenTotal(journalOpenTotal(res));
       setListError(false);
       setOlderError(false);
       void loadOpenQuotes(list);
@@ -362,6 +366,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         setTrades([]);
         setStats(null);
         setTotal(null);
+        setOpenTotal(null);
         setListError(true);
       }
     } finally {
@@ -389,6 +394,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       setStats(res.stats as Stats);
       const tot = (res as { total?: unknown }).total;
       setTotal(typeof tot === 'number' && Number.isFinite(tot) && tot >= 0 ? tot : null);
+      setOpenTotal(journalOpenTotal(res));
       void loadOpenQuotes(list);
     } catch {
       if (mountedRef.current && gen === listGenRef.current) setOlderError(true);
@@ -870,7 +876,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    */
   const openRiskLine = useMemo(() => {
     // مفتوحةٌ أقدم قد تقع خارج الصفحات المحمَّلة ⇒ لا مجموع (أسطر «بلا وقف»/«مجهول» تبقى: صادقةٌ عمّا حُمّل) — `journalOpenRiskComplete`
-    const complete = journalOpenRiskComplete(trades.length, total);
+    // والخادم يرتّب المفتوحة أولاً (tools103b) ⇒ كاملٌ متى حُمّلت كل المفتوحة ولو لم يُحمَّل الدفتر كلّه
+    const complete = journalOpenRiskComplete(
+      trades.length,
+      total,
+      trades.reduce((n, tr) => n + (tr.status === 'open' ? 1 : 0), 0),
+      openTotal
+    );
     const o = complete ? openRiskTotals(visibleTrades) : null;
     if (!o) {
       // السبب الأشيع لغياب المجموع: مفتوحة بلا وقف — يُقال بدل الصمت (حجمٌ مجهول وحده يبقى بلا سطر)
@@ -882,7 +894,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       return t.journalOpenRiskUnknown.replace('{n}', String(unknown));
     }
     return `${t.planRiskWord} ${t.journalOpenSuffix}: ${o.totals.map((c) => formatJournalMoney(c, t.journalMoneyUsc)).join(' · ')}`;
-  }, [visibleTrades, trades.length, total, t]);
+  }, [visibleTrades, trades, total, openTotal, t]);
 
   /**
    * «صفقات مفتوحة تراهن على USD بالاتجاه نفسه: 3 — خبرٌ واحد يضربها معاً» (`stackedCurrencyExposure`): EURUSD وGBPUSD

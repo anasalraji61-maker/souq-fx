@@ -1195,8 +1195,29 @@ export function journalRefreshPages(loaded: number, total?: number | null): { li
  * مفتوحةٌ أقدم بمخاطرة 4,000 USD غائبة: مجموعٌ جزئي يطمئن كذباً. شرط سطر «أحدث N» نفسه (`total` إن أرسله الخادم، وإلا
  * صفحةٌ ممتلئة = ربما أكثر). false ⇒ لا مجموع حتى تُحمَّل الأقدم.
  */
-export function journalOpenRiskComplete(loaded: number, total: number | null | undefined): boolean {
+export function journalOpenRiskComplete(
+  loaded: number,
+  total: number | null | undefined,
+  /**
+   * **tools103b** (backend `9012172`): الخادم يرتّب المفتوحة أولاً ويرسل `open_total` ⇒ المجموع كامل متى حُمّلت كل المفتوحة،
+   * ولو كان الدفتر 250 والمحمَّل 200. `openLoaded` عدد المفتوحة بين المحمَّلة؛ `openTotal` من `journalOpenTotal` (null = خادمٌ أقدم).
+   */
+  openLoaded?: number,
+  openTotal?: number | null
+): boolean {
+  if (openTotal != null && openLoaded != null) return openLoaded >= openTotal;
   return total != null ? loaded >= total : loaded < JOURNAL_PAGE;
+}
+
+/**
+ * `open_total` من ردّ `GET /api/trades` — **فقط** مع `open_first: true` (الترتيب الذي يجعله ذا معنى). خادمٌ أقدم بلا
+ * الترتيب قد يرسل عدداً والمفتوحة الأقدم خارج الصفحة ⇒ null فيعود الحكم إلى `total`. عددٌ غير صحيح/سالب ⇒ null.
+ */
+export function journalOpenTotal(res: unknown): number | null {
+  if (!res || typeof res !== 'object') return null;
+  const r = res as { open_first?: unknown; open_total?: unknown };
+  const n = r.open_total;
+  return r.open_first === true && typeof n === 'number' && Number.isInteger(n) && n >= 0 ? n : null;
 }
 
 /** يُلحق صفحةً أقدم بالقائمة بلا تكرار (بالمعرّف، أول ظهور يبقى) — التداخل وإزاحة الإضافات يعيدان صفوفاً وصلت. */
