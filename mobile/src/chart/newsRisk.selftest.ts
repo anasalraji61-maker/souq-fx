@@ -459,9 +459,19 @@ console.log('newsRisk crypto selftest OK');
     ['BTCEURm', ['USD', 'EUR']], ['XAUUSDm', ['USD']], ['EURUSDm', ['EUR', 'USD']], ['us30m', ['USD']],
   ] as [string, string[]][])
     assert.deepEqual(symbolCurrencies(c), want, c);
-  // اسمٌ مجهول بـm يبقى صامتاً؛ حرف ملاصق غير m لا يُقبل؛ m وحدها أو اسم قصير لا يُقرأ
-  for (const c of ['AAPLm', 'US30x', 'NAS1000m', 'Mm', 'OIm', 'ETHBTCm', 'ZZZUSDm', 'US30mm'])
+  // اسمٌ مجهول بـm يبقى صامتاً؛ m وحدها أو اسم قصير أو حرفان ملاصقان لا يُقرأ
+  for (const c of ['AAPLm', 'NAS1000m', 'Mm', 'OIm', 'ETHBTCm', 'ZZZUSDm', 'US30mm', 'NAS1000i', 'DAXi', 'AAPLi'])
     assert.deepEqual(symbolCurrencies(c), [], c);
+  // وأيّ حرف ملاصق بعد اسمٍ معروف من 4 فأكثر (كانت `[]` و«GOLDm» بجانبها تحذّر): «GOLDi»، «US30z»…
+  for (const [c, want] of [
+    ['GOLDi', ['USD']], ['GOLDz', ['USD']], ['SILVERi', ['USD']], ['US30x', ['USD']], ['US30z', ['USD']],
+    ['NAS100i', ['USD']], ['USOILi', ['USD']], ['UK100z', ['GBP']], ['JP225i', ['JPY']], ['GER40i', ['EUR']],
+  ] as [string, string[]][])
+    assert.deepEqual(symbolCurrencies(c), want, c);
+  // اسمٌ معروف بحرفه يُطابَق كاملاً (سند 30 سنة لا الداو — العملة نفسها) ودمج الدفتر لا يتغيّر
+  assert.deepEqual(symbolCurrencies('US30Y'), ['USD']);
+  assert.equal(knownSingleName('GOLDi'), null);
+  assert.equal(knownSingleName('US30z'), null);
   // مفتاح الأداة بالدفتر كما كان: لا دمج «US30M» مع «US30»
   assert.equal(knownSingleName('US30m'), null);
   assert.equal(knownSingleName('BTCUSDm'), null);
@@ -703,8 +713,8 @@ console.log('newsRisk broker spellings selftest OK');
   // ما لا يكون زوجاً معروفاً بعد إسقاط الحرف يبقى بلا عملة (لا تخمين)
   assert.deepEqual(symbolCurrencies('ABCDEFG'), []);
   assert.deepEqual(symbolCurrencies('BTCETHX'), []);
-  // اسم مؤشر بحرف ملاصق غير m/c يبقى مرفوضاً (قد يكون أداة أخرى)
-  assert.deepEqual(symbolCurrencies('US30X'), []);
+  // اسم مؤشر معروف بحرف ملاصق غير m/c: قد يكون عقداً آخر لكن بالعملة نفسها ⇒ يحذّر (للتحذير وحده)
+  assert.deepEqual(symbolCurrencies('US30X'), ['USD']);
 }
 console.log('newsRisk glued letter selftest OK');
 

@@ -284,8 +284,17 @@ function currenciesOnce(symbol: string): string[] {
    * قبل الرواتب قد يكلّف. «BTCUSDC» تُقرأ عملةً مستقرّة قبل هذا (`CRYPTO`) فلا تتغيّر.
    */
   const glued = /^[A-Z0-9]{3,}[MC]$/.test(bare) ? bare.slice(0, -1) : null;
+  /**
+   * **وأيّ حرف ملاصق واحد بعد اسمٍ معروف من 4 فأكثر** («GOLDi»، «SILVERi»، «US30z»، «NAS100i»، «USOILi» — لواحق حسابات أخرى):
+   * كانت `[]` بينما «GOLDm» و«XAUUSDi» بجانبها تحذّر. الحرف قد يغيّر العقد لكن لا يغيّر عملته (داوٌ آخر يقفز بخبر الدولار كذلك)،
+   * وللتحذير وحده كـ`glued`؛ اسمٌ معروف بحرفه («US30Y») يُطابَق كاملاً قبله. دمج مفتاح الأداة بالدفتر لا يتغيّر.
+   */
+  const gluedAny = /^[A-Z0-9]{4,}[A-Z]$/.test(bare) ? bare.slice(0, -1) : null;
   const single =
-    SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ?? SINGLE_CCY[bare] ?? (glued ? SINGLE_CCY[glued] : undefined);
+    SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ??
+    SINGLE_CCY[bare] ??
+    (glued ? SINGLE_CCY[glued] : undefined) ??
+    (gluedAny ? SINGLE_CCY[gluedAny] : undefined);
   if (single) return [single];
   const coin =
     CRYPTO.exec(bare.replace(/[-_]/g, '')) ?? CRYPTO.exec(letters) ?? (glued ? CRYPTO.exec(glued.replace(/[-_]/g, '')) : null);
