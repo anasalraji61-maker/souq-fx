@@ -4829,6 +4829,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // طرف ويشوّه خطاً لمسه المتداول ليحدّده فقط: المقبض يحرّك طرفه، والجسم يحرّك الرسم كلّه.
           if (Math.min(da, db) > DRAW_HANDLE_R) return grabBody();
           end = db < da ? 'b' : 'a';
+        } else if (hitDrawing(locationX, locationY) !== d.id) {
+          // أفقي/شعاع أفقي/عمودي/ملاحظة بلا طرف ثانٍ: السحب كان يأخذ المرساة من **أيّ** مكان بالشارت ⇒ خطّ
+          // 1.08500 المحدَّد يقفز إلى 1.09120 تحت سحبةٍ بعيدة (أو لمسةٍ مرتجفة موجَّهة لرسمٍ آخر) ويُحفظ هناك.
+          // الآن يُسحب من جسمه فقط، كبقية الرسومات.
+          return;
         }
         selDragEnd.current = end;
         selDragAt.current = drawingEnd(d, end);
