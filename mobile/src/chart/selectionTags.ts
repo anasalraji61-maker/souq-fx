@@ -7,6 +7,7 @@
  */
 import { boxesTouch } from './axisTicks';
 import { channelLinePrices } from './channel';
+import { drawingExtend } from './drawEdit';
 import { signedDistanceText } from './measureReadout';
 import { positionLevels, isPositionTool } from './positionTool';
 import type { Drawing } from './types';
@@ -49,7 +50,7 @@ export function selectionPrices(
     }
   }
   if ((d.tool === 'trend' || d.tool === 'ray') && nowIndex != null) {
-    const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray', log);
+    const now = drawnLineValueAt(d, nowIndex, log);
     // عند طرفٍ بالضبط (رُسم على الشمعة الحيّة) ⇒ وسم الطرف يكفي.
     if (now != null && now !== d.a.price && now !== d.b.price) out.push({ price: now, tone: 'now' });
   }
@@ -86,6 +87,24 @@ export function lineValueAt(
 }
 
 /**
+ * سعر الترند/الشعاع عند شمعة **كما يُرسم**: الترند الممدَّد (`drawingExtend`) يعبر الشمعة الحيّة خلف طرفه —
+ * كان وسم «الآن» وسطر «1.08520 · −6.2 pip» يغيبان عنه لأن `lineValueAt` يقف عند الطرف، والخطّ مرسوم عبرها.
+ * «الماضي» يسار أيّاً كان الطرف المرسوم أوّلاً (كالرسم، `extendedSegment`).
+ */
+export function drawnLineValueAt(d: Drawing, index: number, log = false): number | null {
+  if (!d.b) return null;
+  if (d.tool === 'ray') return lineValueAt(d.a, d.b, index, true, log);
+  const ext = drawingExtend(d);
+  const lo = Math.min(d.a.index, d.b.index);
+  const hi = Math.max(d.a.index, d.b.index);
+  const reach =
+    (index >= lo && index <= hi) ||
+    (index > hi && (ext === 'future' || ext === 'both')) ||
+    (index < lo && (ext === 'past' || ext === 'both'));
+  return reach ? lineValueAt(d.a, d.b, index, true, log, true) : null;
+}
+
+/**
  * «1.08520 · −6.2 pip»: أين يقع الترند/الشعاع المحدَّد عند الشمعة الحيّة وكم يبعد السعر عنه — نصّ
  * وسم الهاتف وسطر القراءة. وسم المحور يعطي السعر وحده، والمتداول ينتظر الكسر/الارتداد فيسأل «كم
  * بقي؟». الإشارة كالخطّ الأفقي: من السعر إلى الخطّ (+ الخطّ فوقه، − تحته). `null` لغير الترند/الشعاع
@@ -104,7 +123,7 @@ export function lineNowText(
   priceRef?: number | null
 ): string | null {
   if ((d.tool !== 'trend' && d.tool !== 'ray') || !d.b || !Number.isFinite(livePrice)) return null;
-  const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray', log);
+  const now = drawnLineValueAt(d, nowIndex, log);
   if (now == null) return null;
   const dist = signedDistanceText(symbol, livePrice, now, lang, priceRef);
   return dist ? `${fmt(now)} · ${dist}` : null;

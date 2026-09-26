@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`selectionTags.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
+import { drawnLineValueAt, lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import type { Drawing } from './types';
 
 const d = (tool: Drawing['tool'], a: number, b?: number, rr?: number): Drawing => ({
@@ -93,3 +93,21 @@ console.log('selectionTags.selftest: PASS');
   assert.equal(lineNowText(d('ray', 100, 103), 7, 104, 'NOPE123', fmt, 'en', false, 104), `${fmt(106)} · +2.00`);
 }
 console.log('selectionTags lineNowText OK');
+
+// الترند الممدَّد يعبر الشمعة الحيّة ⇒ سعره «الآن» ووسمه (كان null فغابا والخطّ مرسوم عبرها)
+{
+  const tr = d('trend', 1.08, 1.083); // الطرفان 1 و4
+  assert.equal(drawnLineValueAt(tr, 7), null, 'plain trend stops at B');
+  assert.ok(Math.abs(drawnLineValueAt({ ...tr, extend: 'future' }, 7)! - 1.086) < 1e-12, 'future reaches live bar');
+  assert.ok(Math.abs(drawnLineValueAt({ ...tr, extend: 'both' }, 7)! - 1.086) < 1e-12);
+  assert.equal(drawnLineValueAt({ ...tr, extend: 'past' }, 7), null, 'past does not reach the right');
+  assert.ok(Math.abs(drawnLineValueAt({ ...tr, extend: 'past' }, 0)! - 1.079) < 1e-12, 'past reaches the left');
+  // مرسوم من اليمين إلى اليسار: «المستقبل» يمين أيضاً
+  const rev: Drawing = { ...tr, a: { index: 4, price: 1.083 }, b: { index: 1, price: 1.08 }, extend: 'future' };
+  assert.ok(Math.abs(drawnLineValueAt(rev, 7)! - 1.086) < 1e-12, 'future is right whichever end came first');
+  assert.equal(drawnLineValueAt(rev, 0), null);
+  const tags = selectionPrices({ ...tr, extend: 'future' }, 'EURUSD', 7);
+  assert.ok(tags.some((t) => t.tone === 'now' && Math.abs(t.price - 1.086) < 1e-12), 'now tag present');
+  assert.ok(lineNowText({ ...tr, extend: 'future' }, 7, 1.085, 'EURUSD', (p) => p.toFixed(5)) != null, 'now text present');
+}
+console.log('selectionTags extend: OK');
