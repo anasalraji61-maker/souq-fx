@@ -84,6 +84,8 @@ export function WeeklyReportPanel({ grid = false }: Props) {
   /** وضوح الحالة: يعلم المستخدم إذا فشل استدعاء الذكاء الاصطناعي وأن التقرير المعروض قالب عام
    * ثابت بدل تحليل فعلي مخصَّص (لا ادّعاء فشل قبل حدوثه). */
   const [aiFallback, setAiFallback] = useState(false);
+  /** الخادم بلا قالب كردي (أو اعتذار الحارس) يردّ `answer_lang: 'ar'` — يُقال ويُحاذى يميناً كـ`AiPanel`. */
+  const [arabicReply, setArabicReply] = useState(false);
 
   /**
    * **اللوحة الوحيدة بالتطبيق بلا حارس تركيب** — وهي صاحبة أطول طلب فيه. `run` ينتظر نداءين
@@ -108,7 +110,10 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     setActive(kind);
     setText('');
     setAiFallback(false);
+    setArabicReply(false);
     let journalLine = '';
+    // ما يراه المستخدم في القالب البديل: `reportJournalDataLine` تعليمات للنموذج («لا تسمّها كذلك. اعتمد عليها»).
+    let userJournalLine = '';
     let hasJournalData = false;
     try {
       // الإحصاء وحده مطلوب (`stats` على كل المغلقة بالخادم) — لا حاجة لصفحة 200 صفقة.
@@ -130,13 +135,23 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           .replace('{pnl}', String(s.total_pnl_pct))
           .replace('{best}', String(s.best))
           .replace('{worst}', String(s.worst))}`;
+        const pctOrDash = (v: number | null | undefined) =>
+          typeof v === 'number' && Number.isFinite(v) ? String(v) : '—';
+        userJournalLine = `\n${[
+          t.journalStatClosed.replace('{n}', String(count)),
+          t.journalStatWinRate.replace('{pct}%', winRateText),
+          t.journalStatPriceMoveSum.replace('{pct}', pctOrDash(s.total_pnl_pct)),
+          t.journalStatBestWorst.replace('{best}', pctOrDash(s.best)).replace('{worst}', pctOrDash(s.worst)),
+        ].join('\n')}`;
       } else {
         // صفر صفقات مغلقة: «صفقات=0 نجاح=0% PnL=0%» ليست بيانات — تُقرأ كأسبوع خاسر/جامد.
         journalLine = `\n${t.reportJournalEmptyLine}`;
+        userJournalLine = journalLine;
       }
     } catch {
       // فشل القراءة ≠ دفتر فارغ: لا نقول «لا صفقات» وربما لديه صفقات.
       journalLine = `\n${t.reportJournalUnavailableLine}`;
+      userJournalLine = journalLine;
     }
     try {
       const res = await api.aiAsk(
@@ -146,17 +161,18 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       );
       if (!mountedRef.current) return;
       setText(res.answer.replace(/\*\*/g, ''));
+      setArabicReply(res.answer_lang === 'ar' && lang !== 'ar');
       playSoftClick();
     } catch {
       if (!mountedRef.current) return;
       setText(
         kind === 'weekly_pnl'
-          ? t.reportFallbackWeekly.replace('{journalLine}', journalLine)
+          ? t.reportFallbackWeekly.replace('{journalLine}', userJournalLine)
           : kind === 'performance'
-            ? t.reportFallbackPerformance.replace('{journalLine}', journalLine)
+            ? t.reportFallbackPerformance.replace('{journalLine}', userJournalLine)
             : kind === 'risk_brief'
-              ? t.reportFallbackRisk.replace('{journalLine}', journalLine)
-              : t.reportFallbackAdvice.replace('{journalLine}', journalLine)
+              ? t.reportFallbackRisk.replace('{journalLine}', userJournalLine)
+              : t.reportFallbackAdvice.replace('{journalLine}', userJournalLine)
       );
       setAiFallback(true);
     } finally {
@@ -193,20 +209,25 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     ),
   }));
 
+  const output = text ? (
+    <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
+      {aiFallback ? (
+        <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
+      ) : null}
+      {arabicReply ? <Text style={[styles.langNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text> : null}
+      <Text style={[styles.outText, { textAlign: arabicReply ? 'right' : align }, arabicReply && styles.textRtl]}>
+        {text}
+      </Text>
+    </ScrollView>
+  ) : null;
+
   if (grid) {
     return (
       <View style={styles.wrap}>
         <Text style={[styles.title, { textAlign: align }]}>{t.reportsTitle}</Text>
         <Text style={[styles.sub, { textAlign: align }]}>{t.reportsSubGrid}</Text>
         <FrameSizedGrid storageKey="matrix.tools.reports.order.v1" showAll items={tiles} />
-        {text ? (
-          <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
-            {aiFallback ? (
-              <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
-            ) : null}
-            <Text style={[styles.outText, { textAlign: align }]}>{text}</Text>
-          </ScrollView>
-        ) : null}
+        {output}
       </View>
     );
   }
@@ -239,14 +260,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           {loading === k.id ? <ActivityIndicator color={colors.accent} /> : null}
         </Pressable>
       ))}
-      {text ? (
-        <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
-          {aiFallback ? (
-            <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
-          ) : null}
-          <Text style={[styles.outText, { textAlign: align }]}>{text}</Text>
-        </ScrollView>
-      ) : null}
+      {output}
     </View>
   );
 }
@@ -304,5 +318,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   outText: { color: colors.text, textAlign: 'right', lineHeight: 22, fontSize: 13 },
+  langNote: { color: colors.textMuted, fontSize: 11 },
+  textRtl: { writingDirection: 'rtl' },
   aiFallbackNote: { color: colors.warn, fontWeight: '500', textAlign: 'right', fontSize: 12 },
 });
