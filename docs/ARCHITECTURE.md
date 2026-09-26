@@ -27,7 +27,7 @@ mobile/src/
                         # + سجل مؤشرات إضافي لاحقاً (registerIndicator) بدل union ثابت
     drawing-tools/      # أدوات الرسم (trend/ray/hline/…)، drawingStore.ts
     social/             # VotePanel, GroupChatPanel, SocialConsensusPanel, AnalystsPanel,
-                        # NetworkTreePanel, CommissionPlanPanel, MessagesScreen
+                        # NetworkTreePanel, CommissionPlanPanel (MessagesScreen حُذفت — قرار أنس ٩)
     account/            # AuthContext, AccountScreen (هوية فقط — لا شبكة/عمولات)
     academy/            # CoursesScreen, LectureClassroom, academyChart.ts, academy.ts
     tools-panels/       # (حُذف 2026-09-25: registry.ts لم يستورده أحد قط — يُستعاد من 3c27653 عند النقل الفعلي)
