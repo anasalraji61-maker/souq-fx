@@ -1,4 +1,4 @@
-"""Run 102: price_decimals follows the instrument (as the app's `symbolPriceDecimals`), not the price size."""
+"""Run 92: price_decimals follows the instrument (as the app's `symbolPriceDecimals`), not the price size."""
 import pytest
 
 import signal_hub

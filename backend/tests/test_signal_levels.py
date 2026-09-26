@@ -160,7 +160,7 @@ def test_normal_prices_keep_five_decimals():
 @pytest.mark.parametrize("x,ref,want", [
     (157.4234567, 157.4, 157.423),   # USDJPY: 3 منازل لا 157.42346
     (2651.432187, 2650.0, 2651.43),  # الذهب
-    (42123.4567, 42000.0, 42123.46),  # مؤشر/BTC: منزلتان حدّاً أدنى (run 102)
+    (42123.4567, 42000.0, 42123.46),  # مؤشر/BTC: منزلتان حدّاً أدنى (run 92)
 ])
 def test_levels_above_ten_use_the_price_decimals_not_five(x, ref, want):
     """كانت 5 منازل فوق 10 ⇒ وقف USDJPY «157.88916» مع `price_decimals: 3` — دقّة دون تسعيرة المزوّد."""

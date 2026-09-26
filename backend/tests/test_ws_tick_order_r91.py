@@ -37,7 +37,7 @@ def test_late_older_tick_still_dropped(monkeypatch):
 
 
 def test_far_future_timestamp_does_not_freeze_symbol(monkeypatch):
-    # run 102: one tick with a garbage far-future time (unit error) was kept as the ordering reference ⇒
+    # run 92: one tick with a garbage far-future time (unit error) was kept as the ordering reference ⇒
     # every later real tick looked older and was dropped until restart
     monkeypatch.setattr(td_ws, "_PROVIDER_TS", {})
     _feed(monkeypatch, [
