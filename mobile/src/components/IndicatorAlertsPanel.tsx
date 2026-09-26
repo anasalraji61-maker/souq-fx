@@ -539,15 +539,17 @@ export function IndicatorAlertsPanel({
       <View style={[styles.row, styles.rowCenter, rtl && styles.rowRtl]}>
         <Text style={styles.rowLabel}>{t.indAlertsTfLabel}</Text>
         {ALERT_TFS.map((x) =>
+          // اسم الفريم بلغة الواجهة كصفوف القائمة أسفلها (`describeIndAlert`)، ولقارئ الشاشة «15 دقيقة»
+          // لا «15m» (كان يُنطق «15 متراً» و«D» حرفاً).
           chip(
             x,
-            x,
+            t.tfLabels[x],
             tf === x,
             () => {
               setTf(x);
               setArmed(null);
             },
-            `${t.indAlertsTfLabel} ${x}`
+            `${t.indAlertsTfLabel} ${t.tfLabelsA11y[x]}`
           )
         )}
       </View>
