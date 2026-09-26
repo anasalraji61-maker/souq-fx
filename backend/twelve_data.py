@@ -948,7 +948,8 @@ def status() -> dict:
     return {
         "configured": configured(),
         "provider": "twelvedata.com",
-        "plan_hint": "Grow ($29) — ~55 credits/min shared with trading robot",
+        # لا «plan_hint» ثابتاً: كان يُعلن باقة المزوّد («Grow $29») على /health العامّ دون تحقّق —
+        # الباقة الفعلية سؤال ترخيص مفتوح عند أنس، والخادم لا يعرفها من المفتاح.
         "cache_mode": _CACHE_MODE,
         "cache_entries": len(_cache),
         "symbols": list(SYMBOL_MAP.keys()),
