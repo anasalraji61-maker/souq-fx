@@ -1091,6 +1091,13 @@ export function TerminalScreen() {
    * و`series` null = الجلب لم يصل بعد (chart-r47 c): مؤشّر تحميل لا شموع بذرة، ولا وسم مصدر لها.
    */
   const heroNoRealData = series != null && seriesHasNoRealData(series.data_source);
+  // chart-r88a: التبديل لرمز/فريم غير مخزَّن يجعل `series` null — كان مؤشّر التحميل يحلّ محلّ `MatrixChart` فيُهدم ويضيع
+  // التكبير والتراجع وإخفاء الرسوم. الآن آخر سلسلة معروضة تبقى مركَّبة باهتةً بلا لمس تحت المؤشّر (كـ`FocusChartModal`)،
+  // والمؤشّر الكامل بأوّل تحميل فقط. بعد إشعار «غير متاح» الشارت مفكوك أصلاً ⇒ لا سلسلة قديمة تُعرض.
+  const lastShownSeriesRef = useRef<ChartSeries | null>(null);
+  if (series) lastShownSeriesRef.current = heroNoRealData ? null : series;
+  const shownSeries = series ?? lastShownSeriesRef.current;
+  const chartStale = series == null && shownSeries != null;
   // chart-r47: الدوّار وحده لا يقول ماذا يُحمَّل — النصّ ظاهر وهو نفسه الـlabel.
   // launch120: `{tf}` باسمه المترجَم («15 د»/«يومي») لا المعرّف الخام «D»، والـlabel بصيغته المنطوقة («15 دقيقة»).
   const firstLoadText = t.chartFirstLoad.replace('{symbol}', symbol).replace('{tf}', t.tfLabels[tf]);
@@ -1626,7 +1633,7 @@ export function TerminalScreen() {
                   dataSource={series?.data_source}
                   timeframe={series?.timeframe ?? tf}
                 />
-              ) : !series ? (
+              ) : !shownSeries ? (
                 <View
                   style={[styles.heroLoading, { height: desktopChartHeight }]}
                   accessible
@@ -1640,6 +1647,8 @@ export function TerminalScreen() {
                   </Text>
                 </View>
               ) : (
+                <View accessibilityState={{ busy: chartStale }}>
+                <View pointerEvents={chartStale ? 'none' : 'auto'} style={chartStale ? styles.chartStale : undefined}>
                 <MatrixChart
                   onChartInteract={setChartTouch}
                   onCreateAlert={alertFromChart}
@@ -1647,19 +1656,19 @@ export function TerminalScreen() {
                   onToolChange={setTool}
                   // chart-r82a: كتابة «4h»+Enter على الشارت الرئيسي (الويب) تبدّل الفريم كشريط الفريمات تحته.
                   onTimeframeKey={setTf}
-                  series={series}
+                  series={shownSeries}
                   shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
                     // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم
-                    if (!sec || sec.symbol !== series.symbol || (sec.candles?.length ?? 0) < 1) return [];
+                    if (!sec || sec.symbol !== shownSeries.symbol || (sec.candles?.length ?? 0) < 1) return [];
                     return [sec];
                   })}
                   shadowTags={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
                     // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم
-                    if (!sec || sec.symbol !== series.symbol || (sec.candles?.length ?? 0) < 1) return [];
+                    if (!sec || sec.symbol !== shownSeries.symbol || (sec.candles?.length ?? 0) < 1) return [];
                     return [tag];
                   })}
                   height={desktopChartHeight}
@@ -1668,20 +1677,30 @@ export function TerminalScreen() {
                   persistDrawings
                   panSpeed={panSpeed}
                   accent={colors.accent}
-                  livePrice={livePriceForChart(
-                    series,
-                    liveTicks[symbol] ?? null,
-                    {
-                      tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
-                      timeframe: series.timeframe,
-                    }
-                  )}
-                  liveTickSource={liveTicks[symbol]?.source ?? null}
+                  // شموع الرمز السابق أثناء التحميل: لا يُرسم تيك الرمز الجديد فوقها
+                  livePrice={
+                    chartStale
+                      ? null
+                      : livePriceForChart(shownSeries, liveTicks[symbol] ?? null, {
+                          tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
+                          timeframe: shownSeries.timeframe,
+                        })
+                  }
+                  liveTickSource={chartStale ? null : liveTicks[symbol]?.source ?? null}
                   initialTool={tool}
                   initialLens={lens}
                   initialKind={kind}
                   initialIndicators={indicators}
                 />
+                </View>
+                {chartStale ? (
+                  <ActivityIndicator
+                    color={colors.textMuted}
+                    style={styles.chartStaleSpinner}
+                    accessibilityLabel={firstLoadA11y}
+                  />
+                ) : null}
+                </View>
               )}
             </View>
 
@@ -1793,7 +1812,7 @@ export function TerminalScreen() {
                   dataSource={series?.data_source}
                   timeframe={series?.timeframe ?? tf}
                 />
-              ) : !series ? (
+              ) : !shownSeries ? (
                 <View
                   style={[styles.heroLoading, { height: desktopChartHeight }]}
                   accessible
@@ -1807,6 +1826,8 @@ export function TerminalScreen() {
                   </Text>
                 </View>
               ) : (
+                <View accessibilityState={{ busy: chartStale }}>
+                <View pointerEvents={chartStale ? 'none' : 'auto'} style={chartStale ? styles.chartStale : undefined}>
                 <MatrixChart
                   onChartInteract={setChartTouch}
                   onCreateAlert={alertFromChart}
@@ -1816,27 +1837,37 @@ export function TerminalScreen() {
                   key="single"
                   onToolChange={setTool}
                   onTimeframeKey={setTf}
-                  series={series}
+                  series={shownSeries}
                   height={desktopChartHeight}
                   interactive
                   compactUi
                   persistDrawings
                   panSpeed={panSpeed}
                   accent={colors.accent}
-                  livePrice={livePriceForChart(
-                    series,
-                    liveTicks[symbol] ?? null,
-                    {
-                      tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
-                      timeframe: series.timeframe,
-                    }
-                  )}
-                  liveTickSource={liveTicks[symbol]?.source ?? null}
+                  // شموع الرمز السابق أثناء التحميل: لا يُرسم تيك الرمز الجديد فوقها
+                  livePrice={
+                    chartStale
+                      ? null
+                      : livePriceForChart(shownSeries, liveTicks[symbol] ?? null, {
+                          tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
+                          timeframe: shownSeries.timeframe,
+                        })
+                  }
+                  liveTickSource={chartStale ? null : liveTicks[symbol]?.source ?? null}
                   initialTool={tool}
                   initialLens={lens}
                   initialKind={kind}
                   initialIndicators={indicators}
                 />
+                </View>
+                {chartStale ? (
+                  <ActivityIndicator
+                    color={colors.textMuted}
+                    style={styles.chartStaleSpinner}
+                    accessibilityLabel={firstLoadA11y}
+                  />
+                ) : null}
+                </View>
               )}
             </View>
 
@@ -2339,6 +2370,8 @@ const styles = StyleSheet.create({
   statusText: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500' },
   desktopChart: { flex: 1, paddingHorizontal: 8, paddingTop: 8 },
   heroLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  chartStale: { opacity: 0.35 },
+  chartStaleSpinner: { position: 'absolute', top: 40, alignSelf: 'center' },
   heroLoadingText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.md },
   // §1: تأكيد تسليح التنبيه ليس اتجاه سعر — نصّ أساسي (العلامة ✓ تحمل المعنى)
   chartArmed: {
