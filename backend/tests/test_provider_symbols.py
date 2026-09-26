@@ -51,10 +51,11 @@ def test_dxy_quote_has_no_price_and_says_why(monkeypatch):
     assert body["unavailable_reason"] == "not_offered_by_provider"
 
 
-def test_dxy_chart_is_labelled_demo_with_the_reason(monkeypatch):
+def test_dxy_chart_is_labelled_unavailable_with_the_reason(monkeypatch):
+    """run 84: كان `demo` بـ`as_of` = الآن ⇒ شارة «تجريبي» على شارت فارغ، والقائمة «—» لا «غير متاح»."""
     monkeypatch.setattr(market, "_api_key", lambda: "k")
     series = main.build_series("DXY", "15m")
-    assert series.data_source.kind == "demo"
+    assert series.data_source.kind == "unavailable" and series.data_source.as_of is None
     assert series.data_source.unavailable_reason == "not_offered_by_provider"
 
 
@@ -102,7 +103,8 @@ def test_known_or_unknown_symbol_gets_no_seed_when_provider_fails(monkeypatch, h
     body = TestClient(main.app).get(f"/api/charts/{symbol}?timeframe=1H").json()
     assert body["candles"] == []
     assert body["last"] is None and body["change_pct"] is None and body["change_bars"] is None
-    assert body["data_source"]["kind"] == "demo"  # كل مسار حسابي يرفضها كما قبل
+    assert body["data_source"]["kind"] == "unavailable"  # كل مسار حسابي يرفضها كما قبل
+    assert body["data_source"]["as_of"] is None  # لا وقت «الآن» لبيانات غير موجودة
     assert body["data_source"]["unavailable_reason"] == "provider_unavailable"
     assert body["data_source"]["channel"] is None
     assert body["timeframe"] == "1H"

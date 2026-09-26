@@ -169,7 +169,7 @@ class Candle(BaseModel):
 class DataProvenance(BaseModel):
     """Honest candle/tick origin — never imply live market from HTTP/WS alone."""
 
-    kind: Literal["provider", "demo", "cache", "unknown"] = "unknown"
+    kind: Literal["provider", "demo", "cache", "unavailable", "unknown"] = "unknown"
     as_of: float | None = None
     channel: str | None = None
     # لماذا ليست بيانات مزوّد (مثلاً `not_offered_by_provider` لـDXY) — None حين لا سبب معروف.
@@ -805,8 +805,15 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
         candles=[],
         change_pct=None,
         last=None,
-        data_source=DataProvenance(kind="demo", as_of=time.time(), channel=None, unavailable_reason=why),
+        # `unavailable` بلا `as_of`: كانت `demo` بـ`as_of` = الآن ⇒ شارة «تجريبي» ووقت «الآن» على شارت فارغ (توحي
+        # بأرقام تجريبية موجودة)، وقائمة المتابعة (`useLastCloses` يفحص `unavailable`) تعرض DXY «—» لا «غير متاح».
+        data_source=DataProvenance(kind="unavailable", as_of=None, channel=None, unavailable_reason=why),
     )
+
+
+def _no_real_data(series: ChartSeries) -> bool:
+    """سلسلة بلا شموع مزوّد حقيقية (`unavailable`؛ `demo` لسلاسل قديمة/محقونة) — لا يُحسب عليها شيء."""
+    return series.data_source.kind in ("unavailable", "demo")
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -1409,7 +1416,7 @@ def check_indicator_alerts(
                 # سلسلة بذرية (المزوّد متعذّر) = شموع مختلَقة: كان تقاطع/RSI عليها يُطلق التنبيه ويعلّمه
                 # «مُطلَق» نهائياً بلا حدث سوقي حقيقي. نتخطّاها كفشل (يُعاد الفحص بالطلب التالي).
                 # وكاش قديم (حتى 15د عند 429) أقدم من شمعة من الفريم: تقاطع حدث قبل ربع ساعة يُطلق «الآن».
-                if series.data_source.kind == "demo" or not alert_worker.series_fresh_enough(
+                if _no_real_data(series) or not alert_worker.series_fresh_enough(
                     series.data_source.as_of, str(a["timeframe"])
                 ):
                     cache[ck] = None
@@ -1477,7 +1484,7 @@ def screener_filters():
 @app.post("/api/backtest")
 def backtest_run(body: BacktestRun):
     series = build_series(body.symbol.upper(), body.timeframe)
-    if series.data_source.kind == "demo":
+    if _no_real_data(series):
         # لا يُشغَّل على مسار عشوائي بذري: نسبة ربح/عائد عليه أرقام مخترَعة بشكل أداء استراتيجية.
         # الوسم `demo` باقٍ لأن العميل يعرض عليه «لا بيانات حيّة».
         return {
@@ -1536,7 +1543,7 @@ def indicators_library():
 def indicator_snapshot(symbol: str, timeframe: str = "15m"):
     _require_timeframe(timeframe)
     series = build_series(symbol.upper(), timeframe)
-    if series.data_source.kind == "demo":
+    if _no_real_data(series):
         # لا RSI ولا تقاطعات ولا «تغيّر %» على شموع مختلَقة (كانت تُحسب وتُعاد موسومة demo — رقم ينتظر
         # عميلاً ينسى فحص الوسم). `SymbolSnapshot` بلا `rsi` لا يعرض شيئاً. الوسم باقٍ للعميل.
         return {
@@ -1574,7 +1581,7 @@ def analysts_forecast(symbol: str, timeframe: str = "15m"):
 @app.post("/api/signals/indicators/forecast")
 def indicators_forecast(body: IndicatorForecastBody):
     series = build_series(body.symbol.upper(), body.timeframe)
-    if series.data_source.kind == "demo":
+    if _no_real_data(series):
         # لا أصوات ولا اتجاه على شموع مختلَقة (كانت تُحسب وتُعاد موسومة demo). الوسم باقٍ للعميل.
         return {
             "symbol": body.symbol.upper(), "mode": "indicators", "direction": None,
@@ -1659,7 +1666,7 @@ def market_quote(symbol: str):
         book = None
     if not book:
         series = build_series(sym, "15m")
-        if series.data_source.kind == "demo":
+        if _no_real_data(series):
             # السلسلة البذرية ليست سعراً: كان إغلاقها يُعاد كـ«price» موسوماً demo — رقم مخترَع ينتظر
             # عميلاً ينسى فحص الوسم (سعر إغلاق «بسعر السوق» بالدفتر، سعر تحويل الحاسبة).
             return {
@@ -2165,7 +2172,7 @@ def ai_ask(body: AiAsk):
     sym = market.canonical_symbol(body.symbol or "") or "EURUSD"
     lang = openrouter_ai.normalize_lang(body.lang)
     series = build_series(sym)
-    live = series.data_source.kind != "demo"
+    live = not _no_real_data(series)
     # `change_pct` = التغيّر على **كامل السلسلة** (180 شمعة: ~45 ساعة على 15m) لا «لحظي» — والنصّ يقول
     # ذلك. تغيّر صفريّ لا اتجاه له: كان `>= 0` يجعله «صاعداً» بسيناريو شراء كامل.
     # الشموع التي تغطّيها النسبة: من إغلاق الأولى إلى إغلاق الأخيرة = N−1 (كـ`change_bars` بـ`indicators.snapshot`)
