@@ -1666,6 +1666,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // تُؤخذ من سعره الجاري لا من كل رقم على حدة (`formatPrice`، `ref`).
   const priceDecimalsRef = series.last;
   const fmtPrice = (v: number) => formatPrice(v, series.symbol, priceDecimalsRef);
+  // السعر كما يُطبع رقماً — لسحب/إزاحة/نسخ الرسوم: US30/BTC/DE40 (بلا منازل معروفة) كانت تُترك بضجيج عشري
+  // (وقف 38950.2371 مكتوب «SL 38950.24») فشمعة قاعها 38950.24 بالضبط لا تُعدّ ضرباً للوقف، وتنبيه الخطّ يُحفظ
+  // بغير الرقم المكتوب. المنازل نفسها التي يطبعها الوسم.
+  const onShownGrid = (p: number) => {
+    const r = Number(fmtPrice(p));
+    return Number.isFinite(r) && r > 0 ? r : p;
+  };
   const [replayOn, setReplayOn] = useState(false);
   const replayOnRef = useRef(false);
   replayOnRef.current = replayOn;
@@ -4322,7 +4329,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       (price) => {
         if (!shift.px) return price;
         const moved = fromScale(toScale(price) - shift.px * pxScaled);
-        return pip ? nudgePipPrice(price, Math.round((moved - price) / pip), pip) : moved;
+        return pip ? nudgePipPrice(price, Math.round((moved - price) / pip), pip) : onShownGrid(moved);
       },
       (index) =>
         stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed),
@@ -4432,7 +4439,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       d,
       bars,
       (price) =>
-        !steps ? price : pip ? nudgePipPrice(price, steps, pip) : fromScale(toScale(price) + steps * pxScaled),
+        !steps ? price : pip ? nudgePipPrice(price, steps, pip) : onShownGrid(fromScale(toScale(price) + steps * pxScaled)),
       (index) =>
         stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed),
       logScale
@@ -5278,13 +5285,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             weekendClosed
           );
           // على شبكة سعر الزوج (كالأسهم والاستنساخ): سحب صفقة الشراء كان يترك الوقف 1.0827371 ⇒ «SL 1.08274» مكتوباً
-          // وشمعة قاعها 1.08274 بالضبط لا تُعدّ ضرباً للوقف (فتُقرأ «TP ✓»). أداة بلا منازل معروفة تبقى بلا تقريب.
-          const gridDec = symbolPriceDecimals(series.symbol);
-          const onGrid = (p: number) => {
-            if (gridDec == null) return p;
-            const r = Number(p.toFixed(gridDec));
-            return r > 0 ? r : p;
-          };
+          // وشمعة قاعها 1.08274 بالضبط لا تُعدّ ضرباً للوقف (فتُقرأ «TP ✓»). أداة بلا منازل معروفة بمنازل وسمها.
+          const onGrid = onShownGrid;
           const next = translateDrawing(
             fromNow!,
             drawIndex(locationX) - drawIndex(from.x),
