@@ -1216,7 +1216,7 @@ export type Dict = {
    * بلا أداة «تحديد» (`6175bb6`). الأسماء كبنود القائمة (`mcCloneDrawing`، `mcLockDrawing`، `deleteWord`).
    */
   shortcutsMouseWeb: string;
-  /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
+  /** الويب بالفأرة وأداة رسم نشطة: Shift يثبّت طرف الترند/الشعاع/القناة الثاني على سعر الأوّل (`lockDrawEnd`، chart `71468ae`)، Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
   mcHintDrawWeb: string;
   /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`). */
   mcHintSelectedWeb: string;
@@ -2572,7 +2572,7 @@ const ar: Dict = {
   shortcutsSheetTitle: 'اختصارات لوحة المفاتيح',
   mcHintTypeDateWeb: ' · Home/End لأقدم شمعة وللحيّ · اكتب 2026-09-01 ثم Enter للانتقال إلى ذلك اليوم',
   shortcutsMouseWeb: ' · الزرّ الأيمن على الشارت: تنبيه أو خطّ أفقي عند ذلك السعر، أو إعادة العرض · الزرّ الأيمن على رسم: نسخه أو قفله أو حذفه · انقر رسماً لتحديده وتحريكه',
-  mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
+  mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Shift يُبقي الترند أو الشعاع أو القناة أفقياً · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
   mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
@@ -3818,7 +3818,7 @@ const enUS: Dict = {
   shortcutsSheetTitle: 'Keyboard shortcuts',
   mcHintTypeDateWeb: ' · Home/End for oldest bar / live · type 2026-09-01 then Enter to jump to that day',
   shortcutsMouseWeb: ' · Right-click the chart: alert or horizontal line at that price, or reset the view · Right-click a drawing: clone, lock or delete it · Click a drawing to select and move it',
-  mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
+  mcHintDrawWeb: 'Drag to draw, or click two points · Shift keeps a trend, ray or channel level · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
   mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
@@ -5112,7 +5112,7 @@ const ku: Dict = {
   shortcutsSheetTitle: 'کورتبڕەکانی کیبۆرد',
   mcHintTypeDateWeb: ' · Home/End بۆ کۆنترین مۆم و ڕاستەوخۆ · 2026-09-01 بنووسە و Enter دابگرە بۆ چوون بۆ ئەو ڕۆژە',
   shortcutsMouseWeb: ' · کلیکی ڕاست لەسەر چارت: ئاگادارکردنەوە یان هێڵی ئاسۆیی لەو نرخەدا، یان ڕێکخستنەوەی پیشاندان · کلیکی ڕاست لەسەر وێنەکێشانێک: کۆپی، قوفڵ یان سڕینەوەی · کلیک لە وێنەکێشانێک بکە بۆ دیاریکردن و جوولاندنی',
-  mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
+  mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Shift ترێند، تیشک یان کەناڵ بە ئاسۆیی دەهێڵێتەوە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
   mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
