@@ -45,6 +45,12 @@ export function tickPlausibleForSeries(series: ChartSeries, price: number): bool
 const ROLL_MAX_STEP_SEC = 3600;
 /** تيك بعد أكثر من شمعتين فارغتين من آخر شمعة ⇒ فجوة (عطلة/انقطاع) ينتظر فيها الشارت الجلب لا يخمّنها. */
 const ROLL_MAX_BARS = 3;
+/**
+ * أقصى تأخّر لآخر شمعة جلبها التحديث عن «الآن» في دورة عادية: استطلاع 90 ث + ذاكرة 1m بالخادم 45 ث + هامش.
+ * على 1m يبلغ آخر شمعة مجلوبة ~105 ث قبل الجلب التالي ⇒ تيك +185 ث كان k=3 فيُرمى، وتختفي الشمعتان المبنيّتان
+ * محلياً ويرتدّ وسم السعر لإغلاق الجلب حتى يصل. الحدّ بالشموع يتّسع للفريم الصغير بقدر هذه النافذة لا أكثر.
+ */
+const ROLL_REFRESH_SEC = 180;
 
 /**
  * افتتاح الشمعة التي يقع فيها التيك نسبةً لآخر شمعة بالسلسلة: افتتاحها نفسه إن وقع فيها، أو افتتاح شمعة
@@ -80,7 +86,8 @@ export function liveBarOpenSec(
         ? Math.floor((dailyBarStampSec(symbol, tickSec) - Math.floor(open / 86400) * 86400) / stepSec)
         : Math.floor((tickSec - open) / stepSec);
   if (k === 0) return open;
-  if (k < 0 || k >= ROLL_MAX_BARS || stepSec > ROLL_MAX_STEP_SEC) return null;
+  const maxBars = Math.max(ROLL_MAX_BARS, Math.ceil(ROLL_REFRESH_SEC / stepSec) + 1);
+  if (k < 0 || k >= maxBars || stepSec > ROLL_MAX_STEP_SEC) return null;
   return open + k * stepSec;
 }
 

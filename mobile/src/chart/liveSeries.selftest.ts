@@ -258,4 +258,13 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.equal(tickPredatesLastBar(h, null), false);
 }
 
+// 1m: آخر شمعة مجلوبة متأخّرة ~105 ث قبل الجلب التالي ⇒ تيك +185 ث يفتح 10:03 لا يُرمى؛ 5m و15m بثلاث شموع كما كانت
+{
+  const t0 = Date.UTC(2026, 8, 23, 10, 0) / 1000;
+  assert.equal(liveBarOpenSec(t0, t0 + 185, 60, t0 + 186), t0 + 180, '1m: third bar after the fetch still rolls');
+  assert.equal(liveBarOpenSec(t0, t0 + 245, 60, t0 + 246), null, '1m: 4 bars on = real gap, wait for the fetch');
+  assert.equal(liveBarOpenSec(t0, t0 + 2 * 300 + 5, 300, t0 + 2 * 300 + 6), t0 + 600, '5m: k=2 rolls');
+  assert.equal(liveBarOpenSec(t0, t0 + 3 * 300 + 5, 300, t0 + 3 * 300 + 6), null, '5m: k=3 unchanged (gap)');
+}
+
 console.log('liveSeries selftest: OK');
