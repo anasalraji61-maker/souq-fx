@@ -1747,6 +1747,21 @@ console.log('tradePlan editExitValue selftest OK');
     assert.equal(journalLocalFieldToIso('2026-07-15 10:00')?.iso, '2026-07-15T10:00:00+02:00');
     // ساعة سقطت بقفزة الربيع (29 مارس 02:00 ⇒ 03:00) ⇒ غير موجودة
     assert.equal(journalLocalFieldToIso('2026-03-29 02:30'), null);
+    // الساعة المكرَّرة (25 أكتوبر 02:00–02:59 مرّتين): الأولى صيفية و`later` الشتوية؛ خارجها لا `later`
+    const amb = journalLocalFieldToIso('2026-10-25 02:30');
+    assert.equal(amb?.iso, '2026-10-25T02:30:00+02:00');
+    assert.equal(amb?.later?.iso, '2026-10-25T02:30:00+01:00');
+    assert.equal(amb!.later!.ms - amb!.ms, 3_600_000);
+    assert.equal(journalLocalFieldToIso('2026-10-25 01:59')?.later, undefined);
+    assert.equal(journalLocalFieldToIso('2026-10-25 03:00')?.later, undefined);
+    assert.equal(journalLocalFieldToIso('2026-07-15 10:00')?.later, undefined);
+    // فُتحت 02:10 الثانية (+01:00) وأُغلقت 02:30 الشتوية ⇒ مقبولة بالإزاحة الشتوية (كانت «قبل 02:10»)
+    const dstBase = { exitSent: 1.1, startedClosed: true, initial: '2026-10-25 02:35', initialIso: null, nowMs: Date.parse('2026-10-26T00:00:00Z') };
+    assert.deepEqual(editClosedAtSend({ ...dstBase, text: '2026-10-25 02:30', openedIso: '2026-10-25T02:10:00+01:00' }), { send: '2026-10-25T02:30:00+01:00' });
+    // فُتحت 02:10 الأولى (+02:00) ⇒ 02:30 الأولى كما كانت
+    assert.deepEqual(editClosedAtSend({ ...dstBase, text: '2026-10-25 02:30', openedIso: '2026-10-25T02:10:00+02:00' }), { send: '2026-10-25T02:30:00+02:00' });
+    // قبل الفتح بكلتا القراءتين ⇒ ما زال خطأ
+    assert.deepEqual(editClosedAtSend({ ...dstBase, text: '2026-10-25 02:05', openedIso: '2026-10-25T02:10:00+01:00' }), { error: 'beforeOpen', opened: '2026-10-25 02:10' });
     assert.equal(journalIsoToLocalField('2026-01-15T09:00:00Z'), '2026-01-15 10:00');
     assert.equal(journalIsoToLocalField('2026-07-15T09:00:00Z'), '2026-07-15 11:00');
     // غربي: نيويورك −04:00 صيفاً

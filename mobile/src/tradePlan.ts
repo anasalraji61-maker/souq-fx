@@ -553,7 +553,7 @@ export function journalRowWhen(row: { status?: string | null; opened_at_iso?: st
  * الهندية. تاريخ غير موجود (31 أبريل، 29 فبراير بسنة عادية) أو ساعة سقطت بقفزة الصيف ⇒ null: `Date` كان سيزيحها بصمت
  * لليوم/الساعة التالية فيُحفظ وقتٌ لم يكتبه المتداول.
  */
-export function journalLocalFieldToIso(text: string): { iso: string; ms: number } | null {
+export function journalLocalFieldToIso(text: string): { iso: string; ms: number; later?: { iso: string; ms: number } } | null {
   // `normalizeDigits` كبقية خانات الدفتر: علامات الاتجاه (RLM/LRM من نسخٍ بمحادثة عربية) والأرقام كاملة العرض (لوحة يابانية)
   // كانت ⇒ null ⇒ «وقت غير صالح» لوقتٍ صحيح. وفواصل كاملة العرض «：－／．» ⇒ مقابلاتها.
   const norm = normalizeDigits(text)
@@ -568,13 +568,24 @@ export function journalLocalFieldToIso(text: string): { iso: string; ms: number 
   if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || dt.getHours() !== h || dt.getMinutes() !== mi) {
     return null;
   }
-  const off = -dt.getTimezoneOffset();
-  const sign = off < 0 ? '-' : '+';
-  const a = Math.abs(off);
-  return {
-    iso: `${y}-${pad2(mo)}-${pad2(d)}T${pad2(h)}:${pad2(mi)}:00${sign}${pad2(Math.floor(a / 60))}:${pad2(a % 60)}`,
-    ms: dt.getTime(),
+  const at = (t: Date) => {
+    const off = -t.getTimezoneOffset();
+    const sign = off < 0 ? '-' : '+';
+    const a = Math.abs(off);
+    return {
+      iso: `${y}-${pad2(mo)}-${pad2(d)}T${pad2(h)}:${pad2(mi)}:00${sign}${pad2(Math.floor(a / 60))}:${pad2(a % 60)}`,
+      ms: t.getTime(),
+    };
   };
+  // الساعة المكرَّرة بعودة الشتاء (برلين 25 أكتوبر 02:00–02:59 مرّتين): `Date` يختار الأولى (الصيفية) دائماً ⇒ `later` = الثانية
+  // إن وُجدت (الفرق = قفزة الإزاحة بعد ساعات، 60 د أو 30 د بلورد هاو)، ليختار المستدعي منهما.
+  const shift = (-dt.getTimezoneOffset() - -new Date(dt.getTime() + 6 * 3_600_000).getTimezoneOffset()) * 60_000;
+  const d2 = shift > 0 ? new Date(dt.getTime() + shift) : null;
+  const later =
+    d2 && d2.getFullYear() === y && d2.getMonth() === mo - 1 && d2.getDate() === d && d2.getHours() === h && d2.getMinutes() === mi
+      ? at(d2)
+      : undefined;
+  return later ? { ...at(dt), later } : at(dt);
 }
 
 /** سماح الخادم لساعة جهازٍ متقدّمة (`_journal_time`: «بالمستقبل» = أبعد من الآن + 5 دقائق ⇒ 422). */
@@ -612,12 +623,16 @@ export function editClosedAtSend(a: {
     return { send: text && a.initialIso ? a.initialIso : undefined };
   }
   if (!text) return { send: null };
-  const p = journalLocalFieldToIso(text);
-  if (!p) return { error: 'invalid' };
-  if (p.ms > a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) return { error: 'future' };
+  const parsed = journalLocalFieldToIso(text);
+  if (!parsed) return { error: 'invalid' };
+  if (parsed.ms > a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) return { error: 'future' };
   const openedMs = typeof a.openedIso === 'string' && journalIsoToLocalField(a.openedIso) != null ? Date.parse(a.openedIso) : NaN;
   // الخادم يقارن بدقّة الدقيقة (`closed_at < opened_at` نصّاً) ⇒ الدقيقة نفسها مقبولة
-  if (Number.isFinite(openedMs) && p.ms < Math.floor(openedMs / 60_000) * 60_000) {
+  const beforeOpen = (ms: number) => Number.isFinite(openedMs) && ms < Math.floor(openedMs / 60_000) * 60_000;
+  let p: { iso: string; ms: number } = parsed;
+  // الساعة المكرَّرة: صفقة فُتحت 02:10 الثانية (شتوية) وأُغلقت 02:30 الشتوية كانت «قبل الفتح» بقراءة 02:30 الصيفية
+  if (beforeOpen(p.ms) && parsed.later && parsed.later.ms <= a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) p = parsed.later;
+  if (beforeOpen(p.ms)) {
     return { error: 'beforeOpen', opened: journalIsoToLocalField(a.openedIso) as string };
   }
   return { send: p.iso };
