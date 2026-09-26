@@ -227,6 +227,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
   const segments: ScriptSegment[] = lecture?.script_segments ?? [];
   const current = segments[segIndex];
+  /** لا صوت يُشغَّل: فشل الـTTS، أو مقطع بلا نصّ شرح — كان الشريط «شرح صوتي نشط» و«يشرح الآن» فوق صمت. */
+  const voiceSilent = !voiceBusy && (voiceError != null || !current?.narration);
 
   const progress = useMemo(() => {
     if (!segments.length) return 0;
@@ -409,8 +411,14 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         <Text style={[styles.voiceErr, { textAlign: align }]}>{t.lectureLoadFailedNote}</Text>
       ) : null}
       <Text style={[styles.voiceHint, { textAlign: align }]}>
-        {t.lectureFullScreenTag} ·{' '}
-        {paused ? t.lectureVoicePausedForQ : voiceBusy ? t.lecturePreparingVoice : t.lectureExplainingNow}
+        {t.lectureFullScreenTag}
+        {paused
+          ? ` · ${t.lectureVoicePausedForQ}`
+          : voiceBusy
+            ? ` · ${t.lecturePreparingVoice}`
+            : voiceSilent
+              ? ''
+              : ` · ${t.lectureExplainingNow}`}
       </Text>
       {voiceError ? <Text style={[styles.voiceErr, { textAlign: align }]}>{voiceError}</Text> : null}
 
@@ -471,9 +479,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
       <View style={styles.bigScreen}>
         <View style={[styles.voiceBar, rtl && styles.voiceBarRtl]}>
-          <View style={[styles.voiceDot, (paused || voiceError) && styles.voiceDotPaused]} />
+          <View style={[styles.voiceDot, (paused || voiceSilent) && styles.voiceDotPaused]} />
           <Text style={styles.voiceBarText}>
-            {paused ? t.lectureVoiceStopped : voiceBusy ? t.lectureGenerating : t.lectureVoiceActive}
+            {paused || voiceSilent ? t.lectureVoiceStopped : voiceBusy ? t.lectureGenerating : t.lectureVoiceActive}
           </Text>
         </View>
         <Text style={[styles.screenTitle, { textAlign: align }]}>{current?.title || '—'}</Text>
