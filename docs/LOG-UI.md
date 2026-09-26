@@ -851,3 +851,15 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`.
 - خارج نطاقي بالحجم نفسه (لم يُلمس): `PositionSizePanel` 14/28، `TradeJournalPanel`/`BacktestPanel` 16، `ToolsScreen` 22 (tools)؛ `MatrixChart` 10/14/16 (chart).
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: سعر الخطة بـ18 ما زال يقرأ كالعنصر الأبرز ببطاقة الاشتراك.
+
+## 2026-09-26 — تشغيل 70
+لا صفّ بـCOORDINATION موجَّه إلى ui (دورة QA 97). بوابة البناء خضراء (tsc 0) قبل كل commit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 690d717 | `VotePanel`: شريط الموافقة بالتأكيد على كل بطاقة فكرة ⇒ `textMuted`؛ سطر خطة المسودة (يتغيّر مع الكتابة) تأكيد على تعبئة تأكيد بجانب زرّ النشر ⇒ `controlBg` + `colors.text`؛ سطرا الخطة (مسودة وبطاقة) بـ`numeric` | DESIGN-PRO §1، §2 |
+| 381bec9 | `GroupChatPanel`: اسم الكاتب بالتأكيد على كل رسالة ورسائلك بتعبئة `accentSoft` ⇒ `textMuted` و`bgPanel`؛ `CoursesScreen`: عنوان المدرسة بالتأكيد على كل بطاقة ⇒ `colors.text` | DESIGN-PRO §1 |
+
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` بتعليقين فقط والاستدعاءات كلها `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ `useMultiLiveTicks` يرفض السعر المتجمّد (`acceptTick` + `ticks_at`)؛ فحص آلي: لا ملفّ بنطاقي فيه نمط اختيار شرطي بلا `accessibilityState`.
+- باقٍ بالتأكيد وقت السكون (مقبول غالباً، عنصر واحد برأس لوحته): روابط `close`/`back`/`refresh`/`rearm`؛ `MessagesScreen` (launch52، غير مستوردة).
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: تمييز رسالتك بـ`bgPanel` مقابل `bgElevated` بالمحادثة، ووضوح شريط الموافقة المحايد فوق `colors.border`.
