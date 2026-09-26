@@ -64,7 +64,8 @@ export function barCloseCountdown(
   const remaining = closeSec - nowMs / 1000;
   if (!(remaining > 0) || remaining > stepSec + 1) return null;
   const total = Math.min(stepSec, Math.ceil(remaining));
-  if (total > 86400) {
+  // يوم كامل باقٍ على شمعة أسبوعية «1d 00:00» كالثانية قبلها — لا «24:00:00» (اليومي عند افتتاحه يبقى 24:00:00).
+  if (total > 86400 || (total === 86400 && stepSec > 86400)) {
     const d = Math.floor(total / 86400);
     const hh = String(Math.floor((total % 86400) / 3600)).padStart(2, '0');
     const mm = String(Math.floor((total % 3600) / 60)).padStart(2, '0');

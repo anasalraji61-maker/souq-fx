@@ -101,4 +101,6 @@ assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'EURUSD'), null);
 }
 // الكريبتو: 7 أيام من ختم الاثنين
 assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'BTCUSD'), '2:00:00');
+// أسبوعي BTC بيوم واحد بالضبط ⇒ «1d 00:00» لا «24:00:00»
+assert.equal(barCloseCountdown(Date.UTC(2026, 8, 21) / 1000, 604800, Date.UTC(2026, 8, 27), 'BTCUSD'), '1d 00:00');
 console.log('barCountdown.selftest: PASS');
