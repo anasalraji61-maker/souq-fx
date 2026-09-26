@@ -131,7 +131,8 @@ const styles = StyleSheet.create({
   cell: { flex: 1, alignItems: 'center', gap: 4 },
   label: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   value: { ...numeric, fontSize: 15, fontWeight: '600' },
-  bid: { color: colors.bear },
-  ask: { color: colors.bull },
+  // DESIGN-PRO §1: الأخضر/الأحمر لاتجاه السعر وحده — Bid/Ask طرفا الاقتباس لا حركة، فالتسمية تميّزهما لا اللون.
+  bid: { color: colors.text },
+  ask: { color: colors.text },
   spread: { color: colors.text },
 });
