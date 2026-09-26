@@ -616,13 +616,16 @@ def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tu
     with _cache_lock:
         for key, (at, rows) in _cache.items():
             o_sym, o_tf, _size = key.rsplit("|", 2)
-            if not rows or o_sym != sym or o_tf == tf or not as_of < at < end:
+            if not rows or o_sym != sym or o_tf == tf:
                 continue
-            # سلسلة الجلب الأحدث متأخّرة (آخر شمعة فيها انتهت قبل جلبنا) ⇒ إغلاقها ليس سعر لحظة جلبها
-            if bar_end(sym, rows[-1]["time"], TF_SECONDS.get(o_tf, 900)) <= as_of:
+            # وقت السعر المنسوخ = min(جلبه، نهاية آخر شمعة فيه): مزوّد متأخّر (آخر 1m انتهت 09:53 وجُلبت 09:58)
+            # كان يُختم as_of 09:58 على شارت 1H بينما شارت 1m يقول 09:53 للسعر نفسه. وسلسلة متأخّرة عن جلبنا
+            # (آخر شمعة فيها انتهت قبله) ⇒ إغلاقها أقدم من إغلاقنا فلا يُنسخ.
+            price_at = min(at, bar_end(sym, rows[-1]["time"], TF_SECONDS.get(o_tf, 900)))
+            if not as_of < price_at < end:
                 continue
-            if newest is None or at > newest[0]:
-                newest = (at, rows[-1]["close"])
+            if newest is None or price_at > newest[0]:
+                newest = (price_at, rows[-1]["close"])
         # الاقتباس بوقت سعره عند المزوّد (لا لحظة جلبه): بعد جلبنا وقبل نهاية شمعتنا ⇒ داخلها. `time` لا يصلح
         # حدّاً أدنى: شمعة D موسومة 00:00 UTC لتاريخ إغلاقها وتبدأ 17:00 نيويورك من اليوم السابق.
         mark = _quote_marks.get(sym)
