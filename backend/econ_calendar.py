@@ -63,6 +63,17 @@ def _impact(raw: str | None) -> str:
     return "unknown"
 
 
+# tools147a: الخلاصة الحيّة تضع «Daylight Saving Time Shift» (NZD ‏`2026-09-26T10:00:00-04:00` = 14:00 UTC، لحظة
+# تقديم ساعة نيوزيلندا فعلاً) بتأثير `Holiday` ⇒ كانت تُعرض «عطلة» بلا ساعتها. تغيير الساعة ليس عطلة بنوك (الأسواق
+# تعمل) ولا خبراً اقتصادياً ⇒ «none» بوقته الحقيقي.
+_DST_TITLE = re.compile(r"\bdaylight\s+sav(?:ing|ings)\b|\bDST\b|\bclocks?\s+(?:change|shift|go)", re.IGNORECASE)
+
+
+def _event_impact(raw: str | None, title: str) -> str:
+    imp = _impact(raw)
+    return "none" if imp == "holiday" and _DST_TITLE.search(title or "") else imp
+
+
 # عملات ForexFactory (و`ALL` لأحداث عالمية كاجتماعات G20). رمز خارجها ليس عملة: فرع RSS كان يأخذ
 # أوّل كلمة من 3 أحرف كبيرة ⇒ «CPI m/m» عملتها «CPI» و«ECB President Speaks» عملتها «ECB»؛ وحدث
 # بلا بلد كان يُوسَم «USD» فيظهر بفلتر الدولار كخبر أمريكي. المجهول الآن فارغ — لا عملة مخترَعة.
@@ -141,7 +152,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 "id": _stable_id(country, title, when),
                 "title": title[:160],
                 "currency": _currency(country),
-                "impact": _impact(_text(ev.find("impact"))),
+                "impact": _event_impact(_text(ev.find("impact")), title),
                 "when": when[:32],
                 "forecast": forecast[:40],
                 **_figures(fc_raw, prev_raw, _text(ev.find("actual"))),
@@ -245,7 +256,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                     ts = int(dt.timestamp())
                     # العطلة يوم كامل بلا ساعة مهما كان وقت الخلاصة: الخلاصة الحيّة تؤرّخها `T19:00:00-04:00`
                     # (عطلة اليابان 21/9 ⇒ «2026-09-20 23:00 UTC» بعدّ تنازلي لساعة لا وجود لها، واليوم السابق)
-                    time_tbd = _json_time_unannounced(dt) or _impact(str(ev.get("impact") or "")) == "holiday"
+                    time_tbd = _json_time_unannounced(dt) or _event_impact(str(ev.get("impact") or ""), title) == "holiday"
                     # بلا ساعة معلنة: التاريخ وحده — «04:00 UTC» كان ساعة لم يعلنها أحد. اليوم = تاريخ UTC لـ`ts`+12س
                     # (قاعدة `CalendarPanel.fmtTbd` نفسها): منتصف ليل نيويورك ⇒ اليوم نفسه، و19:00 نيويورك ⇒ التالي
                     when = (
@@ -265,7 +276,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                 "id": _stable_id(country, title, raw_date),
                 "title": title[:160],
                 "currency": _currency(country),
-                "impact": _impact(str(ev.get("impact") or "")),
+                "impact": _event_impact(str(ev.get("impact") or ""), title),
                 "when": when[:32],
                 "forecast": forecast[:40],
                 **_figures(fc_raw, prev_raw, _figure_text(ev.get("actual"))),

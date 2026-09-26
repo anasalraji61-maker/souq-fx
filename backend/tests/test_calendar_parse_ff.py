@@ -282,3 +282,18 @@ def test_numeric_zero_forecast_is_kept_not_shown_as_missing():
     out = cal._parse_ff_json('[{"title":"Rate","country":"JPY","impact":"High",'
                              '"date":"2026-09-25T08:30:00-04:00","forecast":0,"previous":0.0,"actual":null}]')
     assert out[0]["forecast"] == "0"
+
+
+def test_dst_shift_is_not_a_bank_holiday_and_keeps_its_time_tools147a():
+    """الخلاصة الحيّة تضع تغيير الساعة بتأثير Holiday: كان يُعرض «عطلة» بلا ساعته (14:00 UTC لتقديم ساعة نيوزيلندا)."""
+    out = cal._parse_ff_json(
+        '[{"title":"Daylight Saving Time Shift","country":"NZD","impact":"Holiday","date":"2026-09-26T10:00:00-04:00"},'
+        '{"title":"Bank Holiday","country":"JPY","impact":"Holiday","date":"2026-09-21T19:00:00-04:00"}]'
+    )
+    dst = next(e for e in out if e["currency"] == "NZD")
+    assert dst["impact"] == "none" and dst["time_tbd"] is False
+    assert dst["when"] == "2026-09-26 14:00 UTC" and dst["ts"] == 1790431200
+    hol = next(e for e in out if e["currency"] == "JPY")
+    assert hol["impact"] == "holiday" and hol["time_tbd"] is True
+    xml = cal._parse_ff(_events(_event("DST Shift", impact="Holiday")))
+    assert xml[0]["impact"] == "none"
