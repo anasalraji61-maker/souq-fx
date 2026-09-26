@@ -184,6 +184,7 @@ export function ChartFrame({
   // والنسبة تتبع السعر الحيّ المطبوع بجانبها (`livePriceForHeader`) لا الجلب الأخير وحده.
   // بالإعادة الرأس يقرأ شمعة الإعادة: كان يطبع سعر اليوم ونسبته و«حيّ» والسبريد فوق شموع الأسبوع
   // الماضي — الجواب مكشوف قبل أن يقرّر المتداول. النسبة تغيّر يوم شمعة الإعادة (`replayPrevClose`).
+  const [chartTouch, setChartTouch] = useState(false);
   const [replay, setReplay] = useState<{ price: number; time: number | null } | null>(null);
   const replayPrice = replay?.price ?? null;
   const onReplayPrice = useCallback(
@@ -316,6 +317,12 @@ export function ChartFrame({
   };
 
   const isWeb = Platform.OS === 'web';
+  // DESIGN-PRO §5.6 — مسك شارت الإطار يُخفت شريط فريماته وزرّ ⛶ إلى 40% كشريط الشارت نفسه؛ الرمز والسعر يبقيان.
+  // كان المضيف يُخفت شريطه العلويّ والجانبيّ فقط ⇒ فريمات الإطار الملموس تبقى أعلى صوتاً من الشموع تحت الإصبع.
+  const handleChartInteract = (active: boolean) => {
+    setChartTouch(active);
+    onChartInteract?.(active);
+  };
   const frameSymbol = (pendingSwitch?.symbol || label || series.symbol).toUpperCase();
   // القائد لا يُفعَّل (هو المفعَّل) — إجراء بلا أثر يُربك القارئ. شارته («قائد») نصّ مقروء بجانب الرمز.
   const syncA11yActions =
@@ -327,6 +334,7 @@ export function ChartFrame({
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.focusBtn,
+        chartTouch && styles.chromeDim,
         pressed && {
           opacity: buttons.pressedOpacity,
           transform: [{ scale: buttons.pressedScale }],
@@ -362,7 +370,7 @@ export function ChartFrame({
       }
     >
       {showTimeframes && onTimeframeChange ? (
-        <View style={styles.tfTopLeft}>
+        <View style={[styles.tfTopLeft, chartTouch && styles.chromeDim]}>
           <TimeframeBar
             value={pendingSwitch?.tf ?? series.timeframe}
             onChange={switchTimeframe}
@@ -586,7 +594,7 @@ export function ChartFrame({
             syncFollow={syncFollow}
             syncTimeOnly
             onReplayPrice={onReplayPrice}
-            onChartInteract={onChartInteract}
+            onChartInteract={handleChartInteract}
             askOffset={askOffset}
             onTimeframeKey={showTimeframes && onTimeframeChange ? switchTimeframe : undefined}
           />
@@ -650,6 +658,7 @@ const styles = StyleSheet.create({
   // بيانات الفريم/الرمز السابق أثناء انتظار الجديد: باهتة لا مخفيّة — الإطار لا يقفز،
   // والمتداول يرى أنها ليست أرقام ما ضغط عليه بعد.
   stale: { opacity: 0.38 },
+  chromeDim: { opacity: 0.4 },
   // DESIGN-PRO §1/§2 — وسوم الرأس 11px ولا تأكيد على شارة: «جارٍ التبديل» حالة عابرة تخفت (والبيانات نفسها باهتة `stale`).
   switchTag: {
     color: colors.textMuted,
