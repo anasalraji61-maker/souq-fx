@@ -43,6 +43,8 @@ import {
   floatingResult,
   formatPips,
   formatR,
+  journalLossStreaks,
+  journalMaxDrawdownR,
   formatRR,
   journalSymbol,
   quoteSymbol,
@@ -123,6 +125,9 @@ const PRICE_MAX_LEN = 20;
  */
 const MAX_LIVE_QUOTES = 4;
 
+/** 3 / 2.5 — مقدار R بلا إشارة (منزلة واحدة كـformatR) لقوالب «{r}R». */
+const formatRAbs = (r: number): string => (Number.isInteger(r) ? String(Math.abs(r)) : Math.abs(r).toFixed(1));
+
 /** +80 / −12.5 pip — نفس علامة الناقص المطبعية لـformatR. */
 const formatSignedPips = (p: number): string => {
   const abs = formatPips(Math.abs(p)) ?? '0';
@@ -144,6 +149,8 @@ type Trade = {
   note: string;
   status: string;
   opened_at: string;
+  /** وقت الإغلاق من الخادم — ترتيب سلسلة الخسائر والتراجع بالـR (`closedChronological`)؛ غائب ⇒ `opened_at`. */
+  closed_at?: string | null;
 };
 
 /** «+2R» بصفّ الصفقة — المصدر نفسه لـ«متوسط R» (`realizedR`: الوقف الأصلي «1R @ …» ثم `sl`)؛ '' بلا R. */
@@ -935,6 +942,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
      */
     const ranked = netByInstrument(visibleTrades);
     const avg = averageR(visibleTrades);
+    const streak = journalLossStreaks(visibleTrades);
+    const dd = journalMaxDrawdownR(visibleTrades);
     /**
      * ثلاث أدوات بالسطر وما بعدها «+N» كي لا يطول سطر الإحصاءات (الترتيب من `netByInstrument`). المال
      * بعملة تسعير الأداة بجانب نقاطها حين يُعرف حجم كل صفقاتها — «EURUSD +25 (+125.00 USD)».
@@ -957,6 +966,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       pipsBySymbol: ranked.length > 0 && !whole ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
       avgR: avg ? formatR(avg.r) : null,
       rN: avg?.n ?? 0,
+      /** بلا خسارة قطّ لا سطر (0 · 0 ضجيج) */
+      streak: streak && streak.longest > 0 ? streak : null,
+      /** بلا تراجع قطّ لا سطر؛ الرقم بلا إشارة كنصّ «{r}R» */
+      dd: dd && dd.max > 0 ? { max: formatRAbs(dd.max), now: formatRAbs(dd.current), n: dd.n } : null,
       /** مبلغٌ بالسنت الأمريكي بالسطر المعروض — `journalCentMoneyNote` يقول إن USC هي وحدة حساب السنت (100 = 1 USD) */
       usc: (whole ? [ranked[0]!] : shown).some((v) => v.cash?.ccy === 'USC'),
     };
@@ -1719,6 +1732,21 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           {!statsMixScopes && extraStats.avgR != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatAvgR.replace('{r}', extraStats.avgR).replace('{n}', String(extraStats.rN))}
+            </Text>
+          ) : null}
+          {!statsMixScopes && extraStats.streak ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatLossStreak
+                .replace('{max}', String(extraStats.streak.longest))
+                .replace('{now}', String(extraStats.streak.current))}
+            </Text>
+          ) : null}
+          {!statsMixScopes && extraStats.dd ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatMaxDrawdownR
+                .replace('{r}', extraStats.dd.max)
+                .replace('{now}', extraStats.dd.now)
+                .replace('{n}', String(extraStats.dd.n))}
             </Text>
           ) : null}
           <Text style={[styles.stat, { textAlign: align }]}>
