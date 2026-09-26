@@ -6343,7 +6343,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       pivotLevels.filter((lv) => {
         if (pivotStartX === Infinity) return false;
         const y = yOf(lv.price);
-        return y >= 11 && y <= chartPlotH - 2;
+        // W9: كان `y >= 11` ⇒ PDH/R2 عند قمّة اللوح يُرسم خطّاً بلا وسم. الوسم يُقلب تحته كالخطّ الأفقي.
+        return y >= 0 && y <= chartPlotH - 2;
       }),
       (lv) => yOf(lv.price),
       (lv) => pivotLabelRank(lv.label),
@@ -7354,8 +7355,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* grid */}
         {!hideGrid
           ? // على أسعار علامات المحور نفسها (كما بـTradingView)، لا على الأرباع — خطّ الشبكة يقرأ سعراً.
+            // W9: خطّ شبكة بلا رقمه على المحور (أُسقط بالتزاحم) يُقرأ خطّاً شارداً — أبيض باهت بلا وسم أعلى
+            // GBPUSD. الشبكة تتبع أرقام المحور المطبوعة؛ بلا أرقام أصلاً (`hidePriceLabels`) تبقى كلّها.
             priceTicks
-              .filter((t) => t.ratio * chartPlotH > 2 && t.ratio * chartPlotH < chartPlotH - 2)
+              .filter(
+                (t, i) =>
+                  t.ratio * chartPlotH > 2 &&
+                  t.ratio * chartPlotH < chartPlotH - 2 &&
+                  (hidePriceLabels || (priceTickBoxes[i] != null && !priceTickBoxes[i].hidden))
+              )
               .map((t) => (
                 <View
                   key={t.price}
@@ -9063,6 +9071,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   style={[
                     styles.levelPriceLabel,
                     { color: lv.color },
+                    y < LEVEL_LABEL_H && styles.levelLabelBelow,
                     pivotLabelAtEnd && { left: undefined, right: PRICE_AXIS_WIDTH + 4 },
                   ]}
                   numberOfLines={1}
