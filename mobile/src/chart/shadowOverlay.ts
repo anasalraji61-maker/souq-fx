@@ -132,7 +132,9 @@ export function mapShadowCandles(
     // لا ترسم ظلاً خارج تغطية السلسلة الثانوية
     if (hi < secLo || lo > secHi) continue;
 
-    let inBar = secs.filter((s) => s.t >= lo && s.t < hi + 1);
+    // نصف مفتوح [lo, hi): شمعة الثانوية عند `hi` هي أوّل شمعة الأساسي التالي — `< hi + 1` كان يرسمها في الاثنين
+    // (خمس شموع 15m داخل كل ساعة، والخامسة مكرّرة في الساعة التالية).
+    let inBar = secs.filter((s) => s.t >= lo && s.t < hi);
     if (!inBar.length) {
       // شمعة واحدة ممثلة إن وُجدت داخل تمديد بسيط
       const pad = Math.max(3600, (hi - lo) * 0.15);
