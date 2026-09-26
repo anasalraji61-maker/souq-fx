@@ -353,7 +353,7 @@ function forexWeekAround(sec: number, symbol = ''): { open: number; close: numbe
 /**
  * فترات التداول داخل أسبوع `wk` (تصاعدياً): الأسبوع ناقص جلستَي عطلة الفوركس (25/12، 1/1 — `isForexHolidaySession`)
  * إن وقعتا فيه. بدونها كان ترند رُسم قبل الميلاد ويُعرض على M15 بعده يبدأ يوماً كاملاً (96 شمعة) يساراً.
- * نهاية الجلسة 17:00 نيويورك (+ساعة لرموز CME كـ`nextForexOpenSec`).
+ * نهاية الجلسة 17:00 نيويورك (+ساعة لرموز CME كـ`nextForexOpenSec`). ويُطرح الكسر اليومي لرموز CME/ICE.
  */
 function weekTradingSpans(wk: { open: number; close: number }, symbol = ''): [number, number][] {
   const late = isLateOpenSymbol(symbol.trim()) ? 3600 : 0;
@@ -366,6 +366,19 @@ function weekTradingSpans(wk: { open: number; close: number }, symbol = ''): [nu
       const lo = Math.max(hs, wk.open);
       const hi = Math.min(he, wk.close);
       if (hi > lo && !holidays.some(([a, b]) => a === lo && b === hi)) holidays.push([lo, hi]);
+    }
+  }
+  // الكسر اليومي (كـ`isForexMarketOpen`): CME ساعة 17:00 نيويورك، DXY ثلاث ساعات، برنت 23:00–01:00 لندن
+  // (الاثنين–الخميس). كان يُعدّ تداولاً ⇒ ترند ذهب رُسم قبل أسبوع يرسو 4 شموع M15 لكل ليلة يساراً (DXY 12).
+  const sym = symbol.trim();
+  const brent = BRENT_RE.test(sym);
+  const breakLen = isLateOpenSymbol(sym) ? 3600 : DXY_RE.test(sym) ? 3 * 3600 : brent ? 2 * 3600 : 0;
+  if (breakLen > 0) {
+    for (let d = Math.floor(wk.open / DAY_SEC) * DAY_SEC; d < wk.close; d += DAY_SEC) {
+      if (brent && new Date(d * 1000).getUTCDay() === 0) continue; // ليلة الأحد افتتاح لا كسر
+      const lo = Math.max(brent ? londonElevenPmUtcSec(d) : nyFivePmUtcSec(d), wk.open);
+      const hi = Math.min((brent ? londonElevenPmUtcSec(d) : nyFivePmUtcSec(d)) + breakLen, wk.close);
+      if (hi > lo) holidays.push([lo, hi]);
     }
   }
   holidays.sort((x, z) => x[0] - z[0]);

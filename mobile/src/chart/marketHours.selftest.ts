@@ -178,3 +178,26 @@ console.log('marketHours.selftest (session week open): PASS');
   assert.equal(forexTimeBeforeTrading(Date.UTC(2025, 11, 26) / 1000, 3 * H, 'EURUSD'), Date.UTC(2025, 11, 24, 21) / 1000);
 }
 console.log('marketHours.selftest (holiday sessions): PASS');
+
+// الكسر اليومي ليس زمن تداول: عدّ دقيقةً بدقيقة بـ`isForexMarketOpen` لكل رمز جلسة عبر أسبوعين (صيف/شتاء)
+// وعبر الميلاد ورأس السنة، وذهاب وإياب.
+{
+  const H = 3600;
+  const spans: [number, number][] = [
+    [Date.UTC(2026, 8, 16, 9) / 1000, Date.UTC(2026, 8, 30, 15) / 1000],
+    [Date.UTC(2026, 10, 25) / 1000, Date.UTC(2026, 11, 9) / 1000],
+    [Date.UTC(2026, 11, 22, 6) / 1000, Date.UTC(2027, 0, 6, 6) / 1000],
+  ];
+  for (const sym of ['XAUUSD', 'US500', 'DXY', 'UKOIL', 'EURUSD']) {
+    for (const [a, b] of spans) {
+      let brute = 0;
+      for (let t = a; t < b; t += 60) if (isForexMarketOpen(sym, new Date(t * 1000))) brute += 60;
+      assert.equal(forexTradingSecBetween(a, b, sym), brute, `${sym} ${new Date(a * 1000).toISOString()}`);
+      const back = forexTimeBeforeTrading(b, brute, sym);
+      assert.equal(forexTradingSecBetween(back, b, sym), brute, `${sym} round trip`);
+    }
+  }
+  // الذهب: الثلاثاء 12:00Z → الأربعاء 12:00Z (صيفاً) = 23 ساعة (كسر 21:00–22:00Z)
+  assert.equal(forexTradingSecBetween(Date.UTC(2026, 8, 22, 12) / 1000, Date.UTC(2026, 8, 23, 12) / 1000, 'XAUUSD'), 23 * H);
+}
+console.log('marketHours.selftest (daily breaks): PASS');
