@@ -903,6 +903,18 @@ console.log('newsRisk cryptoPairOf selftest OK');
   assert.equal(bankHolidayToday(usd, ['EUR', 'GBP'], at(3)), null);
   assert.equal(bankHolidayToday([ev({ sample: true })], ['USD'], at(3)), null);
   assert.equal(bankHolidayToday([ev({ ts: null })], ['USD'], at(3)), null);
+  // تغيير الساعة بتأثير «Holiday» (الخلاصة الحيّة: NZD 2026-09-26T10:00:00-04:00) ليس عطلة بنوك؛ وعطلة حقيقية معه تبقى
+  {
+    const dstTs = Date.UTC(2026, 8, 26, 14) / 1000;
+    const nzNoon = Date.UTC(2026, 8, 27, 0); // الأحد 12:00 بتوقيت ويلنغتون الصيفي
+    const dst = ev({ title: 'Daylight Saving Time Shift', currency: 'NZD', ts: dstTs });
+    assert.equal(bankHolidayToday([dst], ['NZD', 'USD'], nzNoon), null);
+    assert.equal(bankHolidayToday([ev({ title: 'DST Shift', currency: 'NZD', ts: dstTs })], ['NZD'], nzNoon), null);
+    assert.deepEqual(bankHolidayToday([dst, ev({ title: 'Bank Holiday', currency: 'NZD', ts: dstTs })], ['NZD'], nzNoon), {
+      currencies: ['NZD'],
+      titles: ['Bank Holiday'],
+    });
+  }
   assert.equal(bankHolidayToday([ev({ impact: 'low' })], ['USD'], at(3)), null);
   assert.equal(bankHolidayToday([ev({ impact: 'high' })], ['USD'], at(3)), null);
   assert.ok(bankHolidayToday([ev({ impact: 'Holiday', currency: 'usd' })], ['USD'], at(3)));

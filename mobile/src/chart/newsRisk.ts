@@ -589,6 +589,15 @@ export function holidayDayEndMs(ccy: string, tsSec: number): number {
  * ما يُعدّ: `impact` = `holiday`، لا أمثلة، وقت دقيق، عملة من عملات الزوج، والآن داخل يوم العطلة **بتوقيت بلدها** (`holidayDayStartMs`). العملات بترتيب الزوج
  * بلا تكرار، والعنوان الأول لكل عملة (عطلتان باليوم نفسه لعملة = سطرٌ واحد). `null` = لا عطلة اليوم.
  */
+/**
+ * ForexFactory يضع تغيير الساعة (NZD «Daylight Saving Time Shift» 2026-09-26، ومثله للدولار والإسترليني واليورو) بتأثير
+ * «Holiday» — فكان الشريط يقول «عطلة بنوك اليوم · NZD — سيولة أقل» يوم الأحد النيوزيلندي. تغيير الساعة ليس عطلة، ويقع بعطلة
+ * الأسبوع أصلاً؛ أثره الوحيد (مواعيد الجلسات) لا يخصّ هذا السطر.
+ */
+function isClockChange(title: unknown): boolean {
+  return /daylight\s*saving|\bDST\b|clocks?\s+(go|change|shift)/i.test(String(title ?? ''));
+}
+
 export function bankHolidayToday(
   events: readonly NewsEvent[],
   currencies: readonly string[],
@@ -599,6 +608,7 @@ export function bankHolidayToday(
     if (!e || e.sample) continue;
     if (String(e.impact).toLowerCase() !== 'holiday') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts)) continue;
+    if (isClockChange(e.title)) continue;
     const c = String(e.currency).toUpperCase();
     if (!currencies.includes(c) || byCcy.has(c)) continue;
     const start = holidayDayStartMs(c, e.ts);
