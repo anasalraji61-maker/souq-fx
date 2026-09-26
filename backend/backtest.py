@@ -171,6 +171,10 @@ def run_backtest(
         mean = sum(window) / 20
         var = sum((x - mean) ** 2 for x in window) / 20
         std = var**0.5
+        # نطاق بعرض صفر (20 إغلاقاً متطابقة، زوج مربوط كـUSDHKD): ضجيج الجمع العشري يعطي std≈1e-16 فكان
+        # أيّ ذيل سفلي «يلمس» حدّاً تحت السعر بشعرة ⇒ 60+ صفقة وهمية بالسعر نفسه. كفحص التوقعات (signal_hub) ⇒ لا حدّ.
+        if std <= abs(mean) * 1e-9:
+            continue
         bb_upper[i] = mean + 2 * std
         bb_lower[i] = mean - 2 * std
 

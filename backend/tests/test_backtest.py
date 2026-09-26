@@ -329,3 +329,16 @@ def test_slow_period_does_not_block_non_ma_strategies_on_short_series():
     cs = _candles(179)
     assert "error" not in backtest.run_backtest(cs, "rsi_reversal", slow=176)
     assert backtest.run_backtest(cs, "ma_cross", slow=176)["error"] == "not enough candles"
+
+
+def test_bb_bounce_no_trades_on_zero_width_band():
+    # 20 إغلاقاً متطابقة (زوج مربوط) = نطاق بعرض صفر: ضجيج الجمع العشري كان يصنع حدّاً تحت السعر بشعرة
+    # ⇒ 66 صفقة شراء/بيع بالسعر نفسه على USDHKD تُعرض أداءً للاستراتيجية
+    for close in (7.8123, 3.6725, 1.1, 2348.6):
+        c = []
+        for i in range(120):
+            w = close * 0.0001
+            c.append({"time": 1_700_000_000 + i * 60, "open": close, "close": close,
+                      "high": close + (w if i % 2 else 0.0), "low": close - (0.0 if i % 2 else w)})
+        res = backtest.run_backtest(c, "bb_bounce")
+        assert res["stats"]["trade_count"] == 0, close
