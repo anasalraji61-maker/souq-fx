@@ -9,7 +9,10 @@ import {
   NEWS_GRACE_MS,
   NEWS_HORIZON_MS,
   UNANNOUNCED_SPAN_MS,
+  newsClockMs,
+  newsCountdown,
   newsCurrencyMatches,
+  newsTickDelayMs,
   newsTimeUnannounced,
 } from '../chart/newsRisk';
 
@@ -130,18 +133,37 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   const [serverStale, setServerStale] = useState(false);
   /** `as_of` للجلب الناجح السابق (ثوانٍ UTC) حين `stale` — null إن غاب أو لم يُقرأ ⇒ السطر العام بلا وقت. */
   const [serverAsOf, setServerAsOf] = useState<number | null>(null);
-  /** ساعة داخلية للعدّ التنازلي ("بعد 2س 15د") — تُحدَّث كل دقيقة */
-  const [now, setNow] = useState(() => Date.now());
+  /**
+   * ساعة العدّ التنازلي ("بعد 2س 15د") — بساعة **الخادم** المصحَّحة (`newsClockMs`) كشريط الأخبار فوق الشارت
+   * (QA124a): كانت `Date.now()` فجهاز متأخّر 4 دقائق يكتب الخبر نفسه «بعد 1د» على الشارت و«بعد 5د» هنا.
+   */
+  const [now, setNow] = useState(() => newsClockMs());
 
   useEffect(() => {
     if (!active) return;
-    // ضبطٌ فوري عند العودة: بلا ذلك يبقى العدّ التنازلي **دقيقةً كاملة** على رقمٍ عمره غيابُ
-    // الشاشة كلّه («بعد 3س» لحدثٍ صدر منذ ساعة). ومناداتها لحظة التركيب لا تغيّر معروضاً —
-    // القيمة الابتدائية هي `Date.now()` نفسها والعدّ بدقّة الدقيقة.
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
+    // ضبطٌ فوري عند العودة: بلا ذلك يبقى العدّ التنازلي على رقمٍ عمره غيابُ الشاشة كلّه
+    // («بعد 3س» لحدثٍ صدر منذ ساعة).
+    setNow(newsClockMs());
   }, [active]);
+
+  /** أقرب حدث موقوت لم يخرج من نافذة «الآن» — يضبط موعد التجديد التالي على لحظة تغيّر نصّه. */
+  const nextTs = useMemo(() => {
+    let best: number | null = null;
+    for (const e of events) {
+      if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || newsTimeUnannounced(e)) continue;
+      if (e.ts * 1000 + NOW_WINDOW_MS < now) continue;
+      if (best == null || e.ts < best) best = e.ts;
+    }
+    return best;
+  }, [events, now]);
+
+  useEffect(() => {
+    if (!active) return;
+    // كالشريط (`newsTickDelayMs`): يُجدَّد **عند** تغيّر النصّ لا كل دقيقة من لحظة التركيب — وإلا بقي
+    // «بعد 3د» والخبر بعد 2:10. الأحداث على دقائق كاملة فلحظة التغيّر واحدة لكل الصفوف؛ السقف دقيقة.
+    const id = setTimeout(() => setNow(newsClockMs()), newsTickDelayMs(nextTs == null ? null : nextTs * 1000 - now));
+    return () => clearTimeout(id);
+  }, [active, now, nextTs]);
 
   useEffect(() => {
     let alive = true;
@@ -341,9 +363,12 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
 
   const relLabel = (ts: number) => {
     const diff = ts * 1000 - now;
-    if (Math.abs(diff) <= NOW_WINDOW_MS) return t.calNow;
-    if (diff < 0) return t.calPast;
-    const mins = Math.round(diff / 60_000);
+    if (diff < -NOW_WINDOW_MS) return t.calPast;
+    // تقريب الشريط نفسه (`newsCountdown`، للأسفل، «الآن» بالدقيقة الأخيرة أو بعد الصدور): كان `Math.round`
+    // و«الآن» لربع ساعة قبل الحدث ⇒ الشارت «بعد 10د» والتقويم «الآن» للخبر نفسه.
+    const c = newsCountdown(diff);
+    if (c.now) return t.calNow;
+    const mins = c.h * 60 + c.m;
     // التقويم أسبوعي (حدث الجمعة يبعد ~96س يوم الاثنين): «بعد 4ي 2س» أوضح من «بعد 96س 15د»
     if (mins >= 1440) {
       const days = Math.floor(mins / 1440);
