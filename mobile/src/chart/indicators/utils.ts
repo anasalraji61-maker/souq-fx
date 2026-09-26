@@ -17,6 +17,9 @@ export function symbolPriceDecimals(symbol: string): number | null {
     // المطابقة التامّة لـDXY/USDX وحدهما كانت تطبع 104.24 لهذه كلها.
     const bare = symbol.trim().toUpperCase().replace(/^[A-Z0-9_]+:/, '').replace(/[^A-Z]/g, '');
     if (/^(DXY|USDX|USDINDEX)/.test(bare)) return 3;
+    // النفط (WTI/برنت وأسماء الوسطاء: XTIUSD، SpotCrude، USOIL.m…) بثلاث منازل ثابتة: التقدير من حجم السعر
+    // كان يقلبها عند عبور 100$ من 3 إلى 2 ⇒ خطّ محفوظ عند 99.953 يُطبع «99.95» والمحور والتقاطع يفقدان خانة.
+    if (/^(USOIL|UKOIL|USCRUDE|UKBRENT|WTI|BRENT|XTI|XBR|SPOTCRUDE|SPOTBRENT|CLOIL|CRUDE)/.test(bare)) return 3;
     // الفورنت مسعَّر بثلاث منازل عند وسطاء MT4/MT5 (USDHUF 350.123، EURHUF 395.456). بلا مواصفة pip
     // (الحاسبة لا تدعم HUF عمداً) فكان التقدير من الحجم (≥100 ⇒ منزلتان) يقصّ خانته بالمحور والتقاطع والرأس.
     return /^[A-Z]{3}HUF/.test(bare) ? 3 : null;

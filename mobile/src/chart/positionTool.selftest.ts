@@ -83,8 +83,13 @@ assert.equal(lab.stop, 'SL 42064.60 · 35.40');
 lab = positionLabels(positionLevels('short', 64000, 64000.8, 1, 'BTCUSD'), 'BTCUSD');
 assert.equal(lab.stop, 'SL 64000.80 · 0.80');
 assert.equal(lab.target, 'TP 63999.20 · 0.80 · R:R 1');
-// النفط حول 100: الهدف والوقف بمنازل الدخول لا بحجم كلٍّ منهما («99.800» مقابل «100.20»)
+// سهم حول 100: الهدف والوقف بمنازل الدخول لا بحجم كلٍّ منهما («99.800» مقابل «100.20»)
+lab = positionLabels(positionLevels('long', 100.05, 99.8, 1, 'NKE'), 'NKE');
+assert.equal(lab.stop, 'SL 99.80 · 0.25');
+// النفط بثلاث منازل ثابتة أيّاً كان جانب 100
 lab = positionLabels(positionLevels('long', 100.05, 99.8, 1, 'USOIL'), 'USOIL');
+assert.equal(lab.stop, 'SL 99.800 · 0.250');
+lab = positionLabels(positionLevels('long', 100.05, 99.8, 1, 'NKE'), 'NKE');
 assert.equal(lab.stop, 'SL 99.80 · 0.25');
 assert.equal(lab.target, 'TP 100.30 · 0.25 · R:R 1');
 // غاز حول 10: منازل الشارت (`priceRef` = آخر سعر 10.02 ⇒ ثلاث) لا منازل الدخول 9.985 (خمس)
