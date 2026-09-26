@@ -138,8 +138,17 @@ export function ChartFrame({
   // شريط الفريمات والكتابة فوق الشارت على الويب («15»/«4h» ثم Enter) يمرّان من هنا.
   // العودة للفريم الحاليّ قبل وصول المطلوب تُلغي الانتظار — كان الشريط يبقى على
   // الفريم المتروك والشارت باهتاً «قيد التبديل» حتى مهلة 8 ثوانٍ.
+  // الطلبان يُدمجان لا يستبدل أحدهما الآخر: EURUSD ثم 1H قبل وصول الشموع كان يمحو الرمز المنتظَر ⇒ الرأس يعود
+  // «XAUUSD · مغلق» بسعر الذهب حتى تصل؛ و1H ثم رمز كان يُرجع شريط الفريمات إلى 15m.
+  const mergePending = (part: { tf?: Timeframe; symbol?: string }) =>
+    setPendingSwitch((p) => {
+      const n = { ...p, ...part };
+      if (n.tf === series.timeframe) delete n.tf;
+      if (n.symbol === series.symbol) delete n.symbol;
+      return n.tf || n.symbol ? n : null;
+    });
   const switchTimeframe = (next: Timeframe) => {
-    setPendingSwitch(next !== series.timeframe ? { tf: next } : null);
+    mergePending({ tf: next });
     onTimeframeChange?.(next);
   };
   const navigate = panControls || interactive;
@@ -241,9 +250,15 @@ export function ChartFrame({
       });
   // يُعاد فحصه كل 30ث: عند إغلاق الجمعة (أو كسر الذهب اليومي) تتوقّف التيكات فلا يُعاد الرسم،
   // وكان الوسم يبقى بلا «مغلق» حتى يلمس المتداول شيئاً.
-  const [marketClosed, setMarketClosed] = useState(() => !isForexMarketOpen(series.symbol));
+  // موسوم برمزه: الحالة يحدّثها تأثير بعد الرسم ⇒ أوّل رسم بشموع EURUSD كان يقرأ «مغلق» الذهب (استراحة 17:00) إطاراً.
+  const [closedState, setMarketClosed] = useState(() => ({
+    sym: series.symbol,
+    v: !isForexMarketOpen(series.symbol),
+  }));
+  const marketClosed =
+    closedState.sym === series.symbol ? closedState.v : !isForexMarketOpen(series.symbol);
   useEffect(() => {
-    const check = () => setMarketClosed(!isForexMarketOpen(series.symbol));
+    const check = () => setMarketClosed({ sym: series.symbol, v: !isForexMarketOpen(series.symbol) });
     check();
     const id = setInterval(check, 30_000);
     return () => clearInterval(id);
@@ -565,7 +580,7 @@ export function ChartFrame({
           <SymbolListPicker
             value={series.symbol}
             onChange={(next) => {
-              setPendingSwitch(next !== series.symbol ? { symbol: next } : null);
+              mergePending({ symbol: next });
               onSymbolChange?.(next);
             }}
             onClose={() => setWheelOpen(false)}
