@@ -444,7 +444,8 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   headBarLtr: { flexDirection: 'row' },
-  chev: { color: colors.accent, fontSize: 18, fontWeight: '500', width: 22, textAlign: 'center' },
+  // DESIGN-PRO §1: السهم محايد — «تحديث» وحده بالتأكيد في رأس اللوحة.
+  chev: { color: colors.textMuted, fontSize: 18, fontWeight: '500', width: 22, textAlign: 'center' },
   title: { color: colors.text, fontWeight: '500', fontSize: 13, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 0 },
   refresh: { color: colors.accent, fontWeight: '500', fontSize: 11 },

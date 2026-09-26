@@ -308,8 +308,9 @@ const styles = StyleSheet.create({
   },
   /** اتجاه الصفوف للغات LTR — الأصل `row-reverse` للعربية والكردية */
   rowLtr: { flexDirection: 'row' },
+  // DESIGN-PRO §1: السهم محايد — «تحديث» وحده بالتأكيد في رأس اللوحة.
   chev: {
-    color: colors.accent,
+    color: colors.textMuted,
     fontSize: 18,
     fontWeight: '500',
     width: 22,
@@ -357,7 +358,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: spacing.xs,
   },
-  accent: { color: colors.accent, fontWeight: '500' },
+  // كانت بالتأكيد على كل صفّ (3 أعمدة × كل المستويات) ⇒ الوزن وحده يبرز القيمة (DESIGN-PRO §1).
+  accent: { color: colors.text, fontWeight: '500' },
   colType: { flex: 1.4, textAlign: 'right' },
   colRate: { width: 42 },
   colCond: { flex: 1.6, textAlign: 'right' },
