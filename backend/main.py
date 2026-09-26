@@ -332,7 +332,7 @@ class AlertUpdate(AlertCreate):
     التسليح، فجهاز بقائمة قديمة يحفظ ملاحظة كان يُرجِع المستوى الذي نقله جهاز آخر (1.2000 ⇒ 1.1000) بلا
     تنبيه، ويعيد تسليح تنبيه أُطلق بعد قراءته فيُطلق فوراً ويُدفع مرّة ثانية. مختلف ⇒ 409. غائب = بلا فحص."""
 
-    seen_symbol: str | None = Field(default=None, max_length=12)
+    seen_symbol: str | None = Field(default=None, max_length=40)  # صفّ قديم قد يحمل رمزاً أطول/غير مطبَّع
     seen_condition: Literal["above", "below"] | None = None
     seen_price: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_triggered: bool | None = None
@@ -714,7 +714,7 @@ class TradeClose(BaseModel):
     exit: float = Field(gt=0, allow_inf_nan=False, strict=True)
     # run 82 (tools122a): الصفّ كما بُنيت عليه نافذة التأكيد. تصحيح دخول/اتجاه/حجم/وقف من جهاز آخر بعد
     # فتحها كان يُغلق بصمت على شروط لم يرها المتداول ⇒ مختلف ⇒ 409 كقاعدة PATCH. غائب = بلا فحص.
-    seen_symbol: str | None = Field(default=None, max_length=12)
+    seen_symbol: str | None = Field(default=None, max_length=40)  # صفّ قديم قد يحمل رمزاً أطول/غير مطبَّع
     seen_side: Literal["buy", "sell"] | None = None
     seen_entry: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_size: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
@@ -759,7 +759,7 @@ class TradeUpdate(BaseModel):
     seen_exit: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     # run 80: الفحص كان للحالة والخروج فقط، والنموذج يعيد إرسال كل الحقول ⇒ تصحيح دخول/اتجاه/وقف من جهاز آخر
     # كان يُمحى بحفظ ملاحظة من نموذج قديم (والنتيجة تُحسب من الدخول القديم). كل `seen_X` مُرسَل يُقارَن بالمخزَّن.
-    seen_symbol: str | None = Field(default=None, max_length=12)
+    seen_symbol: str | None = Field(default=None, max_length=40)  # صفّ قديم قد يحمل رمزاً أطول/غير مطبَّع
     seen_side: Literal["buy", "sell"] | None = None
     seen_entry: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_size: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
@@ -1305,10 +1305,12 @@ def update_alert(
     uid = user["user_id"] if user else None
     expect = {k.removeprefix("seen_"): getattr(body, k) for k in body.model_fields_set if k.startswith("seen_")}
     expect = {k: v for k, v in expect.items() if v is not None}
+    # القيمة كما أُرسلت **أو** مطبَّعة: التطبيق يعيد الصفّ المخزَّن حرفياً، وصفّ قديم (RLM قبل c4ecd74،
+    # «EUR/USD»، سعر `round(x, 5)` بأكثر من 10 أرقام) لا يساوي صيغته المطبَّعة ⇒ كان 409 للأبد ولا يُعدَّل.
     if "symbol" in expect:
-        expect["symbol"] = market.canonical_symbol(expect["symbol"])
+        expect["symbol"] = (expect["symbol"], market.canonical_symbol(expect["symbol"]))
     if "price" in expect:
-        expect["price"] = _alert_level(expect["price"])
+        expect["price"] = (expect["price"], _alert_level(expect["price"]))
     try:
         alert = db.update_alert(alert_id, data, uid, owner_key=key, expect=expect)
     except db.AlertChanged as e:

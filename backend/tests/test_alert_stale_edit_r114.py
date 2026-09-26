@@ -50,3 +50,36 @@ def test_without_seen_fields_edit_is_unchanged_and_foreign_is_404(client):
     # مالك آخر بـ`seen_*` خاطئة: 404 لا 409 (لا يكشف الصفّ)
     assert _edit(client, aid, 1.5, headers=_OTHER_DEVICE, seen_price=9.9).status_code == 404
     assert _get(client, aid)["price"] == 1.2
+
+
+def _legacy(aid, **cols):
+    with db._conn() as c:
+        for k, v in cols.items():
+            c.execute(f"UPDATE alerts SET {k}=? WHERE id=?", (v, aid))
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("cols", [
+    {"symbol": "‏EURUSD"},  # RLM محفوظ قبل c4ecd74
+    {"symbol": "EUR/USD"},
+    {"price": round(100000.123456, 5)},  # `round(x, 5)` القديم: 11 رقماً معنوياً ≠ `_alert_level`
+])
+def test_legacy_row_echoed_back_as_seen_can_be_edited(client, cols):
+    """التطبيق يعيد الصفّ المخزَّن حرفياً في `seen_*`؛ كان يُطبَّع قبل المقارنة بالعمود الخام ⇒ 409 للأبد
+    (وإعادة المحاولة بالصفّ المُعاد 409 أيضاً) فلا يُنقل تنبيه قديم ولا تُعدَّل ملاحظته."""
+    aid = _create(client, 1.1000)
+    _legacy(aid, **cols)
+    a = _get(client, aid)
+    r = _edit(client, aid, 1.2000, note="n", seen_symbol=a["symbol"], seen_condition=a["condition"],
+              seen_price=a["price"], seen_triggered=a["triggered"], seen_ts=a["ts"])
+    assert r.status_code == 200 and r.json()["alert"]["price"] == 1.2
+
+
+def test_normalised_seen_still_detects_a_real_change(client):
+    aid = _create(client, 1.1000)
+    a = _get(client, aid)
+    assert _edit(client, aid, 1.2000, seen_symbol="GBPUSD", seen_ts=a["ts"]).status_code == 409
+    assert _edit(client, aid, 1.2000, seen_price=1.1000000001, seen_ts=a["ts"]).status_code == 200  # ضجيج عائم
+    assert _edit(client, aid, 1.3000, seen_price=1.1, seen_ts=a["ts"]).status_code == 409

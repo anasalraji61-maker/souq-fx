@@ -1343,9 +1343,11 @@ def update_alert(
     sql, args = _owner_clause(user_id, owner_key)
     cond, cargs = "", ()
     for k, v in (expect or {}).items():
-        if k in _ALERT_EXPECT_COLS:
-            cond += f" AND {k} IS ?"
-            cargs += (int(v) if k == "triggered" else v,)
+        if k not in _ALERT_EXPECT_COLS:
+            continue
+        alts = v if isinstance(v, tuple) else (int(v) if k == "triggered" else v,)  # tuple = أيّ واحدة تكفي
+        cond += " AND (" + " OR ".join(f"{k} IS ?" for _ in alts) + ")"
+        cargs += alts
     with _conn() as c:
         cur = c.execute(
             f"""UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
