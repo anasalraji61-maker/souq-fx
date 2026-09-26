@@ -29,4 +29,8 @@ const count = (xs: (number | null)[], v?: number) => xs.filter((x) => (v == null
   assert.equal(r.length, candles.length);
 }
 
+// فترة 0 ⇒ فارغة لا ±Infinity (كان يُفسد مقياس السعر).
+for (const f of ['ema(close,0)', 'highest(high,0)', 'lowest(low,0)', 'sma(close,0)']) {
+  assert.ok(evalPineLite(f, candles).every((v) => v === null), f);
+}
 console.log('pineLite.selftest: PASS');

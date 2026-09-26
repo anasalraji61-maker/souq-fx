@@ -134,31 +134,32 @@ function src(candles: Candle[], name: string): number[] {
 }
 
 function resolveAtom(atom: string, candles: Candle[]): (number | null)[] {
+  // الفترات من 1: `ema(close,0)` كان يُخرج ±Infinity يُفسد مقياس السعر فتختفي الشموع — الآن ذرّة غير معروفة (فارغة).
   const f = atom.trim();
   const closes = candles.map((c) => c.close);
 
-  const smaM = f.match(/^sma\((close|high|low|open|hl2|hlc3|ohlc4),(\d+)\)$/);
+  const smaM = f.match(/^sma\((close|high|low|open|hl2|hlc3|ohlc4),([1-9]\d*)\)$/);
   if (smaM) return sma(src(candles, smaM[1]), parseInt(smaM[2], 10));
-  const emaM = f.match(/^ema\((close|high|low|open|hl2|hlc3|ohlc4),(\d+)\)$/);
+  const emaM = f.match(/^ema\((close|high|low|open|hl2|hlc3|ohlc4),([1-9]\d*)\)$/);
   if (emaM) return ema(src(candles, emaM[1]), parseInt(emaM[2], 10));
-  const rsiM = f.match(/^rsi\((close|high|low|open),(\d+)\)$/);
+  const rsiM = f.match(/^rsi\((close|high|low|open),([1-9]\d*)\)$/);
   if (rsiM) return rsi(src(candles, rsiM[1]), parseInt(rsiM[2], 10));
-  const atrM = f.match(/^atr\((\d+)\)$/);
+  const atrM = f.match(/^atr\(([1-9]\d*)\)$/);
   if (atrM) return atr(candles, parseInt(atrM[1], 10));
-  const stochM = f.match(/^stoch\((\d+)\)$/);
+  const stochM = f.match(/^stoch\(([1-9]\d*)\)$/);
   if (stochM) return stochK(candles, parseInt(stochM[1], 10));
   if (f === 'macd') return macdLine(closes);
-  const bbMid = f.match(/^bbmid\((\d+)\)$/);
+  const bbMid = f.match(/^bbmid\(([1-9]\d*)\)$/);
   if (bbMid) return bb(closes, parseInt(bbMid[1], 10), 2, 'mid');
-  const bbUp = f.match(/^bbupper\((\d+)\)$/);
+  const bbUp = f.match(/^bbupper\(([1-9]\d*)\)$/);
   if (bbUp) return bb(closes, parseInt(bbUp[1], 10), 2, 'upper');
-  const bbLo = f.match(/^bblower\((\d+)\)$/);
+  const bbLo = f.match(/^bblower\(([1-9]\d*)\)$/);
   if (bbLo) return bb(closes, parseInt(bbLo[1], 10), 2, 'lower');
-  const hiM = f.match(/^highest\((close|high|low|open),(\d+)\)$/);
+  const hiM = f.match(/^highest\((close|high|low|open),([1-9]\d*)\)$/);
   if (hiM) return highest(src(candles, hiM[1]), parseInt(hiM[2], 10));
-  const loM = f.match(/^lowest\((close|high|low|open),(\d+)\)$/);
+  const loM = f.match(/^lowest\((close|high|low|open),([1-9]\d*)\)$/);
   if (loM) return lowest(src(candles, loM[1]), parseInt(loM[2], 10));
-  const chM = f.match(/^change\((close|high|low|open)(?:,(\d+))?\)$/);
+  const chM = f.match(/^change\((close|high|low|open)(?:,([1-9]\d*))?\)$/);
   if (chM) return change(src(candles, chM[1]), chM[2] ? parseInt(chM[2], 10) : 1);
   const momM = f.match(/^mom\((close|high|low|open),(\d+)\)$/);
   if (momM) return mom(src(candles, momM[1]), parseInt(momM[2], 10));
