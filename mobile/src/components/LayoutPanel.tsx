@@ -290,8 +290,6 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
     color: colors.text,
     fontSize: 13,
     padding: spacing.sm,
