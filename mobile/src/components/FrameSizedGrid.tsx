@@ -574,27 +574,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
+    // §5.5: خلفية وحدها — كان حدّاً وخلفية معاً.
     backgroundColor: colors.controlBg,
     alignSelf: 'flex-end',
     marginBottom: spacing.sm,
   },
+  // DESIGN-PRO §1: «الفريمات» تسمية لا زرّ — كانت بالتأكيد داخل صندوق كزرّ بجانب الزرّ المختار (عنصرا
+  // تأكيد بشريط واحد، وتسمية تشبه زرّاً لا يستجيب). الآن نصّ ثانوي بلا صندوق؛ التأكيد للمختار وحده.
   phoneModeTag: {
     height: 32,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    backgroundColor: colors.bgPanel,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
   phoneModeTagText: {
-    color: colors.accent,
+    color: colors.textMuted,
     fontSize: 11,
     fontWeight: '500',
   },
