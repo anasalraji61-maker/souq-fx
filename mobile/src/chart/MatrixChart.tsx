@@ -4236,7 +4236,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // زرّ «نسخة» (chart12): نسخة مستقلّة من الرسم المحدَّد بجانبه (`cloneShift`) تصير هي المحدَّدة، فيسحبها
   // المتداول ويعدّلها وحده — كنسخ مستوى دعم لقمّة أخرى أو مركز شراء بنفس المسافة. قابلة للتراجع.
   const cloneSelectedDrawing = (source?: Drawing) => {
-    const d = source ?? (selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null);
+    // لقطة Ctrl+C قديمة الفهارس: إغلاق شمعة حيّة بعد النسخ يُسقط أقدم شمعة فتزحف الفهارس، فكان لصق خطّ عمودي
+    // (إزاحته 3 شموع بالفهرس) يقع شمعتين **قبل** أصله. تُرسى بزمنها على السلسلة الحالية أولاً، كسحب الجسم.
+    const d = source
+      ? anchorDrawings(
+          [source],
+          sourceRef.current.all as { time: number }[],
+          timeframeStepSec(series.timeframe),
+          isSyntheticKind(kindRef.current),
+          sourceEndTime(),
+          weekendClosed
+        )[0]
+      : selectedId
+        ? drawingsRef.current.find((x) => x.id === selectedId)
+        : null;
     if (!d) return;
     const shift = cloneShift(d.tool, yOf(d.a.price) > chartPlotH / 2);
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
@@ -4256,6 +4269,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     pushDrawHistory();
     setDrawings((list) => [...list, next]);
     setSelectedId(next.id);
+    // لصق والرسوم مخفية كان يضيف نسخة محدَّدة لا تُرى — Delete والأسهم تعمل على ما لا يراه المتداول.
+    setDrawingsHidden(false);
     return next;
   };
   const cloneDrawingRef = useRef(cloneSelectedDrawing);
