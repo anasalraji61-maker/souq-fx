@@ -22,6 +22,7 @@ import {
   shownHolidayCurrencies,
   shownNewsCurrencies,
   unannouncedHighImpactToday,
+  openPositionsUnannounced,
   type CalendarCache,
 } from '../chart/newsRisk';
 
@@ -172,10 +173,12 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSym
     return () => clearTimeout(id);
   }, [now, hitDelta]);
   // خبرٌ قويّ اليوم **بلا ساعة معلنة** (قرار بنك اليابان «Tentative»): كان يُعدّ لمنتصف ليل نيويورك كأنه موعد — الآن سطرٌ
-  // كالخبر الموقوت بلا عدّ. للرمز المعروض فقط (الصفقات المفتوحة تبقى على الموقوت). **ومع خبرٍ موقوت كذلك** سطراً ثانياً: يوم
+  // كالخبر الموقوت بلا عدّ. وللصفقات المفتوحة كذلك. **ومع خبرٍ موقوت كذلك** سطراً ثانياً: يوم
   // بنك اليابان «BOJ Policy Rate» بلا ساعة والمؤتمر الصحفي 06:30 UTC — من 03:31 كان السطر «بعد 2س 59د · المؤتمر» وحده، والقرار
   // نفسه (يصدر عادةً 03:00–04:30) قد يسقط أيّ دقيقة
-  const tbd = !openSymbols && cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
+  // الصفقات المفتوحة كذلك (`openPositionsUnannounced`): حاملُ USDJPY ليلاً كان لا يرى قرار بنك اليابان «Tentative» إطلاقاً
+  const tbdOpen = openSymbols && cache ? openPositionsUnannounced(openSymbols, cache.events, now, shownSymbol) : null;
+  const tbd = openSymbols ? tbdOpen : cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
   // يومُه غداً بتقويم الجهاز (21:00–24:00 نيويورك بالأمريكتين) ⇒ «غداً» لا «اليوم» — `unannouncedHighImpactToday().tomorrow`
   const tbdText = tbd
     ? newsBannerText({
@@ -190,18 +193,21 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSym
   if (tbdText && !hit) {
     const text = tbdText;
     const stale = cache != null && (!cache.ok || cacheServerStale);
+    const tbdHint = tbdOpen?.symbols.length
+      ? t.newsRiskOpenHint.replace('{symbols}', () => tbdOpen.symbols.join(t.listSep))
+      : t.newsRiskHint;
     return (
       <View
         style={styles.wrap}
         accessible
         accessibilityRole="alert"
-        accessibilityLabel={`${text}. ${t.newsRiskHint}${stale ? `. ${t.newsStale}` : ''}`}
+        accessibilityLabel={`${text}. ${tbdHint}${stale ? `. ${t.newsStale}` : ''}`}
       >
         <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
           {text}
         </Text>
-        <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
-          {t.newsRiskHint}
+        <Text style={[styles.hint, { textAlign: align }]} numberOfLines={tbdOpen ? 2 : 1}>
+          {tbdHint}
         </Text>
         {stale ? (
           <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>

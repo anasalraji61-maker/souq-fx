@@ -605,6 +605,45 @@ export function openPositionsNewsRisk(
 }
 
 /**
+ * **خبرٌ قوي بلا ساعة معلنة على صفقاتٍ مفتوحة** (`unannouncedHighImpactToday` لعملاتها معاً). شريط المفتوحة كان للموقوت وحده
+ * (`nextHighImpact` يتخطّى ما لا ساعة له): حاملُ USDJPY ليلاً لا يرى شيئاً قبل قرار بنك اليابان «Tentative» — أكبر خبر ين
+ * بالشهر — بينما شريط النموذج للرمز نفسه يقوله. `symbols` = المفتوحة التي تمسّها عملاته (`ALL` يمسّ الكل)، كالموقوت.
+ *
+ * `shownSymbol`: شريطه يقول السطر نفسه لكل عملاتنا ⇒ `null` — لا تحذيران متطابقان.
+ */
+export function openPositionsUnannounced(
+  symbols: readonly string[],
+  events: readonly NewsEvent[],
+  nowMs: number,
+  shownSymbol?: string,
+  localOffsetMin?: number
+): { currencies: string[]; titles: string[]; tomorrow: boolean; symbols: string[] } | null {
+  const seen = new Set<string>();
+  const uniq: { sym: string; ccys: string[] }[] = [];
+  for (const raw of symbols) {
+    const sym = String(raw ?? '').trim();
+    const key = sym.toUpperCase();
+    if (!sym || seen.has(key)) continue;
+    seen.add(key);
+    const ccys = newsCurrencies(sym);
+    if (ccys.length) uniq.push({ sym, ccys });
+  }
+  const currencies = [...new Set(uniq.flatMap((u) => u.ccys))];
+  const hit = unannouncedHighImpactToday(events, currencies, nowMs, NEWS_HORIZON_MS, localOffsetMin);
+  if (!hit) return null;
+  const moving = new Set(hit.currencies);
+  if (shownSymbol) {
+    const shownCcys = newsCurrencies(shownSymbol);
+    const shown = unannouncedHighImpactToday(events, shownCcys, nowMs, NEWS_HORIZON_MS, localOffsetMin);
+    if (shown && [...moving].every((c) => c === 'ALL' || shown.currencies.includes(c))) return null;
+  }
+  return {
+    ...hit,
+    symbols: uniq.filter((u) => moving.has('ALL') || u.ccys.some((c) => moving.has(c))).map((u) => u.sym),
+  };
+}
+
+/**
  * أحداثٌ قوية **أخرى** لعملات الزوج بالدقيقة نفسها لحدث الشريط — «+2» بجانبه. الرواتب الأمريكية تصدر مع البطالة ومتوسط
  * الأجور بثانية واحدة (والفائدة مع البيان)، والشريط يعرض واحداً منها — فيظنّ المتداول خبراً واحداً بينما القفزة من ثلاثة.
  * نفس مرشّحات `nextHighImpact` (لا أمثلة، عالي التأثير، وقت دقيق)، ونسخةٌ مكرّرة بالتقويم (العنوان والعملة والوقت) لا تُعدّ.

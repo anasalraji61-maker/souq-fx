@@ -16,6 +16,7 @@ import {
   nextHighImpact,
   newsCurrencyMatches,
   openPositionsNewsRisk,
+  openPositionsUnannounced,
   unannouncedHighImpactToday,
   sameMinuteHighImpact,
   sameMinuteCurrencyLabel,
@@ -1214,3 +1215,26 @@ console.log('newsRisk shown-frames currencies selftest OK');
   assert.deepEqual(tbd?.titles, ['BOJ Policy Rate']);
 }
 console.log('newsRisk unannounced alongside timed selftest OK');
+
+// ── صفقات مفتوحة وقرار بنك اليابان بلا ساعة: كان شريط المفتوحة صامتاً (الموقوت وحده) ──
+{
+  const boj: NewsEvent = { id: 'b', title: 'BOJ Policy Rate', currency: 'JPY', impact: 'High', ts: Date.UTC(2026, 8, 25, 4) / 1000 };
+  const at = Date.UTC(2026, 8, 25, 2, 45);
+  // الموقوت لا يرى شيئاً — لهذا كان الشريط فارغاً
+  assert.equal(openPositionsNewsRisk(['USDJPY'], [boj], at), null);
+  assert.deepEqual(openPositionsUnannounced(['USDJPY', 'EURUSD', 'usdjpy', 'GBPJPY'], [boj], at, undefined, 0), {
+    currencies: ['JPY'],
+    titles: ['BOJ Policy Rate'],
+    tomorrow: false,
+    symbols: ['USDJPY', 'GBPJPY'],
+  });
+  // لا مفتوحة بالين ⇒ لا شيء
+  assert.equal(openPositionsUnannounced(['EURUSD', 'GBPUSD'], [boj], at, undefined, 0), null);
+  // شريط USDJPY الظاهر يقوله ⇒ لا تكرار؛ شريط EURUSD لا يقوله ⇒ يبقى
+  assert.equal(openPositionsUnannounced(['USDJPY'], [boj], at, 'USDJPY', 0), null);
+  assert.ok(openPositionsUnannounced(['USDJPY'], [boj], at, 'EURUSD', 0));
+  // G20 «ALL» يمسّ كل مفتوحة
+  const g20: NewsEvent = { ...boj, id: 'g', title: 'G20 Meetings', currency: 'ALL' };
+  assert.deepEqual(openPositionsUnannounced(['EURUSD', 'XAUUSD'], [g20], at, undefined, 0)?.symbols, ['EURUSD', 'XAUUSD']);
+}
+console.log('newsRisk open-positions unannounced selftest OK');
