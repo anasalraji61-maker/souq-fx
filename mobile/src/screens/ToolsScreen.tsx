@@ -1112,7 +1112,8 @@ const styles = StyleSheet.create({
   /** نقطة صغيرة تقول «هذا الزوج مفتوح على شارتك» — الشريحة وحدها لا تفسّر ظهور زوج خارج المتابعة */
   chipOnChartMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   filterHints: { gap: 4, marginTop: 4 },
-  filterHintText: { color: colors.textDim, fontSize: 11 },
+  // DESIGN-PRO §2: «يعرض 8 من {total}» عدّادٌ يتغيّر
+  filterHintText: { ...numeric, color: colors.textDim, fontSize: 11 },
   hitCard: {
     flex: 1,
     height: '100%',
@@ -1134,7 +1135,9 @@ const styles = StyleSheet.create({
   },
   runBtnDisabled: { opacity: 0.4 },
   runText: { color: colors.text, fontWeight: '500' },
+  // «فُحص {k} من {total}» يتقدّم أثناء الفحص — أرقام ثابتة العرض (DESIGN-PRO §2)
   scanHint: {
+    ...numeric,
     color: colors.warn,
     fontSize: 12,
     fontWeight: '500',
