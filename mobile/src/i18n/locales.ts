@@ -1621,11 +1621,17 @@ export type Dict = {
    * `dsKindUnavailable` — `DataOriginKind` `'unavailable'` (ui3/chart-r35) للوسم القصير (ووسم حالة الشارت الرئيسي لـDXY، `b1d1adb`).
    * `backtestNotEnoughCandles` — backend-r117: `/api/backtest` بـ200 و`error: "not enough candles"` و`stats: {}` (أقلّ من 35 شمعة مغلقة، أو
    *   `max(slow,fast,30)+5` لـma_cross). يُعرض بدل لوحة الإحصاء (لا «صفقات: undefined»)؛ لا متغيّرات.
+   * `backtestRuined` — backend `c670673`: `stats.ruined_at_trade` رقم (لا null) ⇒ صفقة خسرت ≥100% والمحاكاة توقّفت عندها؛
+   *   `{n}` = `ruined_at_trade` (يساوي `trade_count`). يُعرض تحت «صفقات» حين الرقم موجود؛ `final_equity` حينها 0.
+   * `backtestTradesTruncated` — `trades_truncated: true` ⇒ قائمة الصفقات آخر 40 فقط و`trade_count` على كلّها. `{shown}` = طول
+   *   `trades`، `{n}` = `trade_count`. سطر فوق القائمة.
    */
   impactHoliday: string;
   newsHolidayToday: string;
   backtestBeforeCosts: string;
   backtestNotEnoughCandles: string;
+  backtestRuined: string;
+  backtestTradesTruncated: string;
   forecastDetail: {
     rsi_overbought: string;
     rsi_oversold: string;
@@ -2961,6 +2967,8 @@ const ar: Dict = {
   newsHolidayToday: 'عطلة بنوك اليوم · {ccy}{title} — سيولة أقل: سبريد أوسع، وانزلاق وفجوات محتملة',
   backtestBeforeCosts: 'النتائج قبل السبريد والعمولة — لا تقدير سبريد لهذا الرمز، فالنتيجة الفعلية أسوأ من المعروضة.',
   backtestNotEnoughCandles: 'لا يوجد تاريخ كافٍ لهذا الرمز على هذا الفريم لتشغيل الاختبار — جرّب فريماً أصغر أو رمزاً آخر.',
+  backtestRuined: 'الحساب صُفِّر عند الصفقة {n}: خسرت 100% أو أكثر، فتوقّف الاختبار عندها. الأرقام أعلاه حتى تلك الصفقة.',
+  backtestTradesTruncated: 'تظهر آخر {shown} صفقة من {n}.',
   forecastDetail: {
     rsi_overbought: 'تشبّع شراء ({rsi})',
     rsi_oversold: 'تشبّع بيع ({rsi})',
@@ -4261,6 +4269,8 @@ const enUS: Dict = {
   newsHolidayToday: 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
   backtestBeforeCosts: "Results are before spread and commission — there’s no spread estimate for this symbol, so real results would be worse.",
   backtestNotEnoughCandles: 'Not enough history for this symbol on this timeframe to run the test — try a shorter timeframe or another symbol.',
+  backtestRuined: 'Account wiped out at trade {n}: it lost 100% or more, so the test stops there. The figures above run up to that trade.',
+  backtestTradesTruncated: 'Showing the last {shown} of {n} trades.',
   forecastDetail: {
     rsi_overbought: 'Overbought ({rsi})',
     rsi_oversold: 'Oversold ({rsi})',
@@ -5624,6 +5634,8 @@ const ku: Dict = {
   newsHolidayToday: 'پشووی بانکەکان ئەمڕۆ · {ccy}{title} — شلەیی کەمتر: سپرێدی فراوانتر، و لەوانەیە خزان و بۆشایی هەبێت',
   backtestBeforeCosts: 'ئەنجامەکان پێش سپرێد و کۆمیسیۆنن — هیچ خەمڵاندنێکی سپرێد بۆ ئەم هێمایە نییە، بۆیە ئەنجامی ڕاستەقینە خراپتر دەبێت.',
   backtestNotEnoughCandles: 'مێژووی پێویست بۆ ئەم هێمایە لەسەر ئەم کاتە نییە بۆ ئەنجامدانی تاقیکردنەوەکە — کاتێکی بچووکتر یان هێمایەکی تر تاقی بکەرەوە.',
+  backtestRuined: 'هەژمارەکە لە مامەڵەی {n} سفر بوو: 100% یان زیاتری دۆڕاند، بۆیە تاقیکردنەوەکە لەوێ ڕاوەستا. ژمارەکانی سەرەوە تا ئەو مامەڵەیەن.',
+  backtestTradesTruncated: 'دوایین {shown} مامەڵە لە {n} پیشان دەدرێت.',
   forecastDetail: {
     rsi_overbought: 'زۆر کڕدراو ({rsi})',
     rsi_oversold: 'زۆر فرۆشراو ({rsi})',
