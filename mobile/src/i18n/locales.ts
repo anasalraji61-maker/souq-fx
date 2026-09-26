@@ -312,6 +312,11 @@ export type Dict = {
    * كان «إشعار عند التفعيل» يُقرأ «حين تضغط تفعيل»، وبالكردية «حين يصبح نشطاً».
    */
   alertsSub: string;
+  /**
+   * الويب (قرار ١٦): `pushPriceAlert` لا يعمل بالمتصفّح ⇒ بدل «إشعار حين يتحقّق الشرط»: يُوسَم «انطلق ✓» (`alertsStatusTriggered`) هنا،
+   * والإشعار يصل هواتف الحساب (`db._push_owner_sql`). ينتظر ui: `Platform.OS === 'web' ? t.alertsSubWeb : t.alertsSub` (`AlertsPanel.tsx:893/899`).
+   */
+  alertsSubWeb: string;
   alertsPushTitle: string;
   /** اسم قناة إشعارات أندرويد كما يراه المتداول بإعدادات النظام */
   notifChannelName: string;
@@ -325,6 +330,8 @@ export type Dict = {
   alertsNoteA11y: string;
   alertsAddError: string;
   alertsFirstBadge: string;
+  /** الويب: بديل `alertsFirstBadge` («سنُعلمك…» وعدٌ بإشعار لا يصل المتصفّح) — ينتظر ui بـ`AlertsPanel.tsx:1145`. */
+  alertsFirstBadgeWeb: string;
   alertsLoadError: string;
   alertsEmpty: string;
   alertsDeleteConfirmTitle: string;
@@ -1909,6 +1916,7 @@ const ar: Dict = {
   forecastError: 'تعذّر حساب إجماع المؤشرات — تحقّق من الاتصال ثم اضغط «احسب»',
   alertsTitle: 'تنبيهات السعر',
   alertsSub: 'عند المستوى أو فوقه / أو تحته · أسعار Twelve Data تُفحص كل دقيقة تقريباً · إشعار حين يتحقّق الشرط',
+  alertsSubWeb: 'عند المستوى أو فوقه / أو تحته · أسعار Twelve Data تُفحص كل دقيقة تقريباً · ما يتحقّق يُوسَم «انطلق ✓» هنا',
   alertsPushTitle: 'MATRIX · تنبيه سعر',
   notifChannelName: 'تنبيهات الأسعار والمؤشرات',
   notifChannelDesc: 'إشعار حين يبلغ السعر مستوىً ضبطتَه أو يتحقّق شرط مؤشر اخترتَه (يُفحص كل دقيقة تقريباً)',
@@ -1921,6 +1929,7 @@ const ar: Dict = {
   alertsNoteA11y: 'ملاحظة التنبيه (اختياري)',
   alertsAddError: 'تعذّر إضافة التنبيه — تحقّق من الاتصال وحاول مرة أخرى',
   alertsFirstBadge: '✓ أول تنبيه مضبوط — سنُعلمك حين يبلغ السعر مستواك (الفحص كل دقيقة تقريباً)',
+  alertsFirstBadgeWeb: '✓ أول تنبيه مضبوط — حين يبلغ السعر مستواك يظهر هنا «انطلق ✓» (الفحص كل دقيقة تقريباً). وليصلك إشعاره على هاتفك ادخل بالحساب نفسه هنا وعلى الهاتف',
   alertsLoadError: 'تعذّر تحميل التنبيهات — تحقّق من الاتصال. تنبيهاتك المحفوظة لم تُحذف.',
   alertsEmpty:
     'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه. أو من الشارت: المس المستوى ثم زرّ التنبيه الذي يظهر بسعره.',
@@ -3181,6 +3190,7 @@ const enUS: Dict = {
   forecastError: 'Couldn’t compute the indicator consensus — check your connection, then select “Compute”',
   alertsTitle: 'Price alerts',
   alertsSub: 'At or above / at or below a level · Twelve Data prices checked about once a minute · notified when it triggers',
+  alertsSubWeb: 'At or above / at or below a level · Twelve Data prices checked about once a minute · marked “Triggered ✓” here when it fires',
   alertsPushTitle: 'MATRIX · Price alert',
   notifChannelName: 'Price & indicator alerts',
   notifChannelDesc: 'A notification when price reaches a level you set or an indicator condition you chose is met (checked about once a minute)',
@@ -3193,6 +3203,7 @@ const enUS: Dict = {
   alertsNoteA11y: 'Alert note (optional)',
   alertsAddError: 'Couldn’t add the alert — check your connection and try again',
   alertsFirstBadge: "✓ First alert set — we’ll notify you when the price reaches your level (checked about once a minute)",
+  alertsFirstBadgeWeb: '✓ First alert set — when the price reaches your level it shows “Triggered ✓” here (checked about once a minute). To get it as a notification on your phone, log in to the same account here and on the phone',
   alertsLoadError: 'Couldn’t load your alerts — check your connection. Your saved alerts haven’t been deleted.',
   alertsEmpty:
     'No alerts yet — enter a price above (or select “Use it” for the current price), pick above/below, and you’ll be notified when price gets there. Or from the chart: pick a level, then the alert button showing its price.',
@@ -4200,6 +4211,7 @@ const enGB: Dict = {
   regErrUsernameTaken: 'That username is already registered — pick another one, or sign in if it’s yours',
   login: 'Sign in',
   notifStatusUnsupported: 'Not available in the browser — sign in to the same account here and on your phone to get your alerts there',
+  alertsFirstBadgeWeb: '✓ First alert set — when the price reaches your level it shows “Triggered ✓” here (checked about once a minute). To get it as a notification on your phone, sign in to the same account here and on the phone',
   onboardStep4BodyWeb:
     'Tap a level on the chart, then the alert button showing its price — no typing — or right-click at that price. Price is checked about once a minute, and the browser can’t receive notifications: an alert that fires shows “Triggered ✓” in the alerts panel, and to get it as a notification on your phone, sign in to the same account here and on the phone. To move it, drag its label at the edge of the chart. Indicator alerts are in the alerts panel.',
   register: 'Register',
@@ -4497,6 +4509,7 @@ const ku: Dict = {
   forecastError: 'نەکرا کۆدەنگی پێوەرەکان بژمێردرێت — پەیوەندییەکەت بپشکنە و پاشان «بژمێرە» دابگرە',
   alertsTitle: 'ئاگادارکردنەوەی نرخ',
   alertsSub: 'لە ئاستەکە یان سەرووی / یان خوارووی · نرخەکانی Twelve Data نزیکەی خولەکێک جارێک دەپشکنرێن · ئاگادارکردنەوە کاتێک مەرجەکە دێتەدی',
+  alertsSubWeb: 'لە ئاستەکە یان سەرووی / یان خوارووی · نرخەکانی Twelve Data نزیکەی خولەکێک جارێک دەپشکنرێن · ئەوەی هاتەدی لێرە «دەرچوو ✓» دەنووسرێت',
   alertsPushTitle: 'MATRIX · ئاگادارکردنەوەی نرخ',
   notifChannelName: 'ئاگادارکردنەوەی نرخ و پێوەر',
   notifChannelDesc: 'ئاگادارکردنەوە کاتێک نرخ دەگاتە ئەو ئاستەی خۆت دیاریت کردووە یان مەرجی پێوەرێک دێتەدی (نزیکەی هەر خولەکێک دەپشکنرێت)',
@@ -4508,7 +4521,8 @@ const ku: Dict = {
   alertsNotePlaceholder: 'تێبینی (ئیختیاری)',
   alertsNoteA11y: 'تێبینی ئاگادارکردنەوە (ئیختیاری)',
   alertsAddError: 'نەکرا ئاگادارکردنەوە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
-  alertsFirstBadge: '✓ یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە ئاگادارت دەکەینەوە',
+  alertsFirstBadge: '✓ یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە ئاگادارت دەکەینەوە (نزیکەی خولەکێک جارێک دەپشکنرێت)',
+  alertsFirstBadgeWeb: '✓ یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە لێرە «دەرچوو ✓» پیشان دەدات (نزیکەی خولەکێک جارێک دەپشکنرێت). بۆ ئەوەی لەسەر مۆبایلەکەت ئاگاداری بگات، لێرە و لەسەر مۆبایل بە هەمان هەژمار بچۆ ژوورەوە',
   alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن — پەیوەندییەکەت بپشکنە. ئاگادارکردنەوە پاشەکەوتکراوەکانت نەسڕاونەتەوە.',
   alertsEmpty:
     'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە (یان «بەکاری بهێنە» بۆ نرخی ئێستا دابگرە) و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە. یان لە چارتەوە: دەست لە ئاستەکە بدە پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات.',
