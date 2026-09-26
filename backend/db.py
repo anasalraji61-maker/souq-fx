@@ -1397,12 +1397,15 @@ def _hidden_ids(c: sqlite3.Connection, kind: str, viewer_id: int | None) -> set[
 
 def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]:
     with _conn() as c:
+        hidden = _hidden_ids(c, "group_message", viewer_id)
+        # الحدّ بعد الإخفاء: كان `LIMIT` قبله ⇒ 150 رسالة سبام مُبلَّغ عنها بين آخر 200 تترك 50 ظاهرة والأقدم
+        # السليمة لا تُجلب. جلب `limit + len(hidden)` يكفي دائماً (كل مخفيّ يُسقط صفّاً واحداً على الأكثر).
         rows = c.execute(
             "SELECT id,user_name,text,ts,created_at,user_id FROM group_messages ORDER BY rowid DESC LIMIT ?",
-            (limit,),
+            (limit + len(hidden),),
         ).fetchall()
-        hidden = _hidden_ids(c, "group_message", viewer_id)
-    rows = [r for r in reversed(rows) if r["id"] not in hidden]
+    rows = [r for r in rows if r["id"] not in hidden][:limit]
+    rows.reverse()
     return [
         {
             "id": r["id"],
@@ -1496,9 +1499,10 @@ def list_votes(user_id: int | None = None, limit: int = 200) -> list[dict]:
     # بحدّ كمحادثة المجموعة (`group_messages` 200): كانت كل الأفكار منذ الإطلاق تُرسَل بكل فتح للشاشة
     # (مسار عامّ) — حساب واحد ينشر بحلقة يجعل كل تحميل ميغابايتات ويبطئ القاعدة للجميع.
     with _conn() as c:
-        rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC LIMIT ?", (limit,)).fetchall()
         hidden = _hidden_ids(c, "vote", user_id)
-        rows = [r for r in rows if r["id"] not in hidden]
+        # الحدّ بعد الإخفاء (كمحادثة المجموعة): الأفكار المخفية كانت تستهلك من الـ200
+        rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC LIMIT ?", (limit + len(hidden),)).fetchall()
+        rows = [r for r in rows if r["id"] not in hidden][:limit]
         mine: dict[str, str] = {}
         if user_id is not None:
             mine = {
