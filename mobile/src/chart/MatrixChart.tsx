@@ -5335,6 +5335,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // موضع بدء اللمسة: نقرة بلا سحب تُعامَل كنقرة اللوح (`onChartPress`) — النقرة على شمعة لا تصل زرّ اللوح الشفّاف
   // (أخٌ تحت أعمدة الشموع لا جدّ لها)، فكانت نقرة الفراغ فوق الشموع لا تُسقط التحديد ولا تحدّد رسماً آخر ولا تعيد وضع السحب.
   const selTapFrom = useRef<{ x: number; y: number } | null>(null);
+  // بُعد المقبض عن الإصبع عند اللمس: الطرف يتبع الإصبع **بهذا الفارق** — كان يُنقل إلى الإصبع نفسه مع أوّل
+  // ارتجافة، فلمسة على حافّة المقبض (حتى 14px منه) تُزيح طرف الترند بلا سحب وتُحفظ.
+  const selGrabOff = useRef({ x: 0, y: 0 });
   const selectPan = useMemo(() => {
     return PanResponder.create({
       onStartShouldSetPanResponder: () => interactive && tool === 'select',
@@ -5349,8 +5352,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         selBodyFrom.current = null;
         selBodyLast.current = null;
         selTapFrom.current = { x: evt.nativeEvent.locationX, y: evt.nativeEvent.locationY };
+        selGrabOff.current = { x: 0, y: 0 };
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
+        const grabAt = (hx: number, hy: number) => {
+          selGrabOff.current = { x: hx - locationX, y: hy - locationY };
+        };
         const d = drawings.find((x) => x.id === selectedId);
         if (!d) return;
         // مقفول ⇒ لا جسم ولا مقابض؛ لمسةٌ عليه تُظهر لماذا لم يتحرّك بدل صمتٍ يبدو عطلاً.
@@ -5378,6 +5385,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const grabbed = handles[0][0];
           selDragEnd.current = grabbed;
           selDragAt.current = grabbed === 't' ? null : drawingEnd(d, grabbed);
+          if (grabbed === 'a') grabAt(box.xEntry, box.yEntry);
+          else if (grabbed === 'b') grabAt(box.xEnd, box.yStop);
           selDragRr.current = grabbed === 't' ? box.lv.rr : null;
           return;
         }
@@ -5400,6 +5409,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const grabbed = handles[0][0];
           selDragEnd.current = grabbed;
           selDragAt.current = grabbed === 'w' ? null : drawingEnd(d, grabbed);
+          if (grabbed === 'a') grabAt(xOf(aL), yOf(d.a.price));
+          else if (grabbed === 'b') grabAt(xOf(bL), yOf(d.b.price));
           return;
         }
         if (d.b) {
@@ -5409,6 +5420,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // طرف ويشوّه خطاً لمسه المتداول ليحدّده فقط: المقبض يحرّك طرفه، والجسم يحرّك الرسم كلّه.
           if (Math.min(da, db) > DRAW_HANDLE_R) return grabBody();
           end = db < da ? 'b' : 'a';
+          const e = end === 'b' ? d.b : d.a;
+          grabAt(xOf(e.index - source.start), yOf(e.price));
         } else if (hitDrawing(locationX, locationY) !== d.id) {
           // أفقي/شعاع أفقي/عمودي/ملاحظة بلا طرف ثانٍ: السحب كان يأخذ المرساة من **أيّ** مكان بالشارت ⇒ خطّ
           // 1.08500 المحدَّد يقفز إلى 1.09120 تحت سحبةٍ بعيدة (أو لمسةٍ مرتجفة موجَّهة لرسمٍ آخر) ويُحفظ هناك.
@@ -5485,7 +5498,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           setChannelWidth(selectedId, width);
           return;
         }
-        const p = pointFromXY(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
+        const off = end === 't' ? { x: 0, y: 0 } : selGrabOff.current;
+        const p = pointFromXY(evt.nativeEvent.locationX + off.x, evt.nativeEvent.locationY + off.y);
         if (end === 't') {
           const d = drawings.find((x) => x.id === selectedId);
           if (!d?.b || !isPositionTool(d.tool)) return;
