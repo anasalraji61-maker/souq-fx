@@ -1157,7 +1157,8 @@ function PaneValueHead({
    * - `'trend'`: صعوداً أم هبوطاً عن الشمعة السابقة — للوحة **موجبة دائماً** (ATR،
    *   BBW، الانحراف المعياري): إشارتها لا تتغيّر أبداً فتلوين الجانب يجعل الرقم أخضر
    *   أبداً ولا يقول شيئاً، بينما ما يقرؤه المتداول من هذه اللوحات هو **التوسّع أم
-   *   الانكماش**. نفس منطق رأس Gator.
+   *   الانكماش**. نفس منطق رأس Gator. وAO/AC: أعمدتهما بالارتفاع عن السابق (`risingBars`) — الجانب
+   *   كان يطبع رقماً أخضر فوق عمود أحمر (AO موجب يهبط).
    * - `'cross'`: فوق الإشارة أم تحتها — للوحات التي يُلوَّن خطّها بالتقاطع (TSI، KST، RVI، PMO،
    *   Fisher). كان الرقم يُلوَّن بالجانب والخطّ بالتقاطع ⇒ TSI ‎−5‎ فوق إشارته ‎−8‎: خطّ أخضر ورقم أحمر.
    *   المقارنة كالخطّ تماماً (`>=` على الخام، وبلا إشارة ⇒ أخضر). ولـMACD/PPO/VW-MACD: الهيستوغرام
@@ -12254,7 +12255,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ao ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="AO" priceDec={paneDec} values={ao.v} at={crossIndex} />
+          <PaneValueHead name="AO" priceDec={paneDec} values={ao.v} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12289,7 +12290,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ac ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="AC" priceDec={paneDec} values={ac.v} at={crossIndex} />
+          <PaneValueHead name="AC" priceDec={paneDec} values={ac.v} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
