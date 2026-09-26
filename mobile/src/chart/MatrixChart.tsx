@@ -12879,11 +12879,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t.label}
+                {...railHintProps(t.label)}
                 accessibilityState={{ selected: tool === t.id }}
                 key={t.id}
                 style={({ pressed }) => [
-                  styles.tool,
-                  tool === t.id && styles.toolOn,
+                  styles.compactTool,
+                  tool === t.id && styles.compactToolOn,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                 ]}
                 onPress={() => {
@@ -12891,26 +12892,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   setPending(null);
                 }}
               >
-                <Text style={[styles.toolText, tool === t.id && styles.toolTextOn]}>{t.label}</Text>
+                <Text style={[styles.compactToolIcon, tool === t.id && styles.compactToolTextOn]}>
+                  {COMPACT_TOOL_ICONS[t.id]}
+                </Text>
                 {tool === t.id ? <SelMark accent /> : null}
               </Pressable>
             ))}
             {drawings.length ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={drawingsHidden ? tr.mcShowDrawings : tr.mcHideDrawings}
+                accessibilityLabel={drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings}
+                {...railHintProps(drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings)}
                 accessibilityState={{ selected: drawingsHidden }}
                 style={({ pressed }) => [
-                  styles.tool,
-                  drawingsHidden && styles.toolOn,
+                  styles.compactTool,
+                  drawingsHidden && styles.compactToolOn,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                 ]}
                 onPress={toggleDrawingsHidden}
               >
-                <Text style={[styles.toolText, drawingsHidden && styles.toolTextOn]}>
-                  {drawingsHidden
-                    ? `◎ ${tr.mcShowDrawings} (${drawings.length})`
-                    : `◉ ${tr.mcHideDrawings}`}
+                <Text style={[styles.compactToolIcon, drawingsHidden && styles.compactToolTextOn]}>
+                  {drawingsHidden ? '◎' : '◉'}
                 </Text>
                 {drawingsHidden ? <SelMark /> : null}
               </Pressable>
@@ -12918,36 +12920,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo}
+              {...railHintProps(canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo)}
               accessibilityState={{ disabled: !canUndo }}
               disabled={!canUndo}
               style={({ pressed }) => [
-                styles.tool,
+                styles.compactTool,
                 !canUndo && styles.toolDisabled,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={undoDrawing}
             >
-              <Text style={styles.toolText}>↶ {tr.mcUndo}</Text>
+              <Text style={styles.compactToolIcon}>↶</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={canRedo ? tr.mcRedoA11y : tr.mcNothingToRedo}
+              {...railHintProps(canRedo ? tr.mcRedoA11y : tr.mcNothingToRedo)}
               accessibilityState={{ disabled: !canRedo }}
               disabled={!canRedo}
               style={({ pressed }) => [
-                styles.tool,
+                styles.compactTool,
                 !canRedo && styles.toolDisabled,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={redoDrawing}
             >
-              <Text style={styles.toolText}>↷ {tr.mcRedo}</Text>
+              <Text style={styles.compactToolIcon}>↷</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={tr.mcClearWord}
+              accessibilityLabel={tr.mcClearAllTitle}
+              {...railHintProps(tr.mcClearAllTitle)}
               style={({ pressed }) => [
-                styles.tool,
+                styles.compactTool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
@@ -12967,9 +12972,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 });
               }}
             >
-              <Text style={styles.toolText}>{tr.mcClearWord}</Text>
+              <Text style={styles.compactToolIcon}>⌫</Text>
             </Pressable>
           </ScrollView>
+          {/* §4 — الأدوات أيقونات فقط؛ الاسم تلميح بعد 400ms مرور (ويب) أو بضغطة مطوّلة، فوق الشريط لا تحت (الصفّ التالي مؤشرات). */}
+          {railHint ? (
+            <View pointerEvents="none" style={[styles.railHint, styles.railHintAbove]}>
+              <Text style={styles.railHintText} numberOfLines={1}>
+                {railHint}
+              </Text>
+            </View>
+          ) : null}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {localizedIndicators(tr).map((ind) => {
               const on = selectedInd.includes(ind.id);
@@ -13323,6 +13336,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   railHintText: { color: colors.text, fontSize: 12, fontWeight: '500' },
+  railHintAbove: { top: undefined, bottom: '100%', marginTop: 0, marginBottom: 4 },
   compactToolTextOn: { color: colors.text },
   toolbar: { gap: 8 },
   row: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 4 },
