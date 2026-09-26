@@ -5107,6 +5107,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         },
         onPanResponderMove: (evt) => {
           const { locationX, locationY } = evt.nativeEvent;
+          if (!drawAnchorRef.current) return; // أُلغيت بـEsc/اختصار أداة — لا معاينة من جديد
           drawRawXY.current = { x: locationX, y: locationY };
           setDragEnd(lockDrawEnd(drawAnchorRef.current, pointFromXY(locationX, locationY)));
         },
@@ -5456,6 +5457,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (shortcutTool) {
         event.preventDefault();
         setTool(shortcutTool);
+        // ضغطة معلّقة (سحبة لم تُرفع بعد): تُنسى كي لا يرسم الإفلات خطاً بالأداة الجديدة من السحبة القديمة.
+        drawAnchorRef.current = null;
+        drawGestureHadPending.current = false;
         setPending(null);
         setDragEnd(null);
         setSelectedId(null);
@@ -5463,6 +5467,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       if (key === 'Escape') {
         if (pending) {
+          // Esc وسط السحبة يلغيها فعلاً — كان الإفلات يقرأ المرساة من ref ويحفظ الخطّ الذي أخفاه Esc.
+          drawAnchorRef.current = null;
+          drawGestureHadPending.current = false;
           setPending(null);
           setDragEnd(null);
         } else if (selectedId) {
@@ -5502,7 +5509,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ? arrowNudge(key, event.shiftKey)
           : null;
       if (!nudge) return;
-      if (nudgeSelectedDrawing(nudge.bars, nudge.steps)) event.preventDefault();
+      // سهم مضغوط باستمرار يكرّر ~30 مرّة/ث: لقطة تراجع واحدة للضغطة كلّها (كإمساك ▲▼) — لا تمحو 25 لقطة سجلّ التراجع.
+      if (nudgeSelectedDrawing(nudge.bars, nudge.steps, !event.repeat)) event.preventDefault();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
