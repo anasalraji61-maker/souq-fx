@@ -1911,6 +1911,41 @@ export function lossStreakDrawdownPct(riskPct: number, n: number, compounding: b
   return Math.min(100, Math.ceil(Math.round(lost * 1000 * 1e6) / 1e6) / 10);
 }
 
+/**
+ * **حدّ الخسارة اليومي** (قاعدة حسابات التمويل الشائعة «لا تخسر أكثر من 5% اليوم»، وقاعدة شخصية عند كثيرين): كم يبقى قبل
+ * الحدّ، وكم خسارةً كاملة بمخاطرة الصفقة التالية تتّسع له، وهل وقف الصفقة التالية وحده يتخطّاه.
+ *
+ * الحدّ من رصيد **بداية اليوم** لا الرصيد الحالي: بعد خسارة 300 من 10,000 الرصيد 9,700، و5% منه 485 لا 500 — كان سيُقال
+ * «يبقى 185» والحقيقة 200. `balance` الرصيد الحالي و`lostToday` الخسارة المحقَّقة اليوم (موجبة؛ صافي يوم رابح = 0) ⇒ البداية
+ * مجموعهما. `riskAmount` ما يخسره وقف الصفقة التالية بعملة الحساب (`actualRisk`).
+ *
+ * `room` مقرَّب للأسفل لسنت (لا يُعرض متّسعٌ أكبر من الحقيقي)، و`losses` عدد الخسائر الكاملة **داخل** الحدّ (الحدّ بالضبط
+ * يُعدّ — «لا تتجاوز»)، و`breach` = هذه الصفقة وحدها تتخطّاه. `maxRiskPct` أكبر مخاطرة للصفقة التالية لا تتخطّاه، نسبةً من
+ * الرصيد **الحالي** (خانة المخاطرة تُحسب منه)، للأسفل لمنزلتين. `null` لمدخل غير صالح.
+ */
+export function dailyLossRoom(input: {
+  balance: number;
+  limitPct: number;
+  lostToday: number;
+  riskAmount: number;
+}): { room: number; losses: number; breach: boolean; maxRiskPct: number } | null {
+  const { balance, limitPct, lostToday, riskAmount } = input;
+  if (!Number.isFinite(balance) || balance <= 0) return null;
+  if (!Number.isFinite(limitPct) || limitPct <= 0 || limitPct > 100) return null;
+  if (!Number.isFinite(lostToday) || lostToday < 0) return null;
+  if (!Number.isFinite(riskAmount) || riskAmount <= 0) return null;
+  const limit = ((balance + lostToday) * limitPct) / 100;
+  // هامش الفاصلة العائمة بالسنت: 10,000 × 5% − 300 = 199.99999… لا تُقصّ إلى 199.99
+  const room = Math.max(0, Math.floor(Math.round((limit - lostToday) * 100 * 1e6) / 1e6) / 100);
+  const ratio = Math.round((room / riskAmount) * 1e9) / 1e9;
+  return {
+    room,
+    losses: Math.floor(ratio),
+    breach: ratio < 1,
+    maxRiskPct: Math.floor(Math.round((room / balance) * 100 * 100 * 1e6) / 1e6) / 100,
+  };
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 /**

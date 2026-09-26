@@ -9,6 +9,7 @@ import type { CommissionMode } from './positionSize';
 import {
   manualConvLooksInverted,
   lossStreakDrawdownPct,
+  dailyLossRoom,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3659,3 +3660,64 @@ console.log('positionSize loss-streak drawdown selftest OK');
   assert.equal(breakevenRR(null, null), null);
 }
 console.log('positionSize breakevenRR selftest OK');
+
+// ---- dailyLossRoom: حدّ الخسارة اليومي من رصيد بداية اليوم ----
+{
+  // 10,000 بداية اليوم، خسر 300 ⇒ الرصيد 9,700؛ 5% من البداية = 500 ⇒ يبقى 200 (لا 185 من 5% × 9,700)
+  const a = dailyLossRoom({ balance: 9700, limitPct: 5, lostToday: 300, riskAmount: 100 })!;
+  assert.equal(a.room, 200);
+  assert.equal(a.losses, 2);
+  assert.equal(a.breach, false);
+  // 200 ÷ 9,700 = 2.0618% ⇒ 2.06 (للأسفل)
+  assert.equal(a.maxRiskPct, 2.06);
+  // الحدّ بالضبط يُعدّ: مخاطرة 200 = خسارة واحدة داخل الحدّ؛ 200.01 تتخطّاه
+  assert.deepEqual(dailyLossRoom({ balance: 9700, limitPct: 5, lostToday: 300, riskAmount: 200 }), {
+    room: 200,
+    losses: 1,
+    breach: false,
+    maxRiskPct: 2.06,
+  });
+  const over = dailyLossRoom({ balance: 9700, limitPct: 5, lostToday: 300, riskAmount: 200.01 })!;
+  assert.equal(over.losses, 0);
+  assert.equal(over.breach, true);
+  // يومٌ بلا خسارة: 5 خسائر بـ1% تتّسع
+  assert.deepEqual(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 0, riskAmount: 100 }), {
+    room: 500,
+    losses: 5,
+    breach: false,
+    maxRiskPct: 5,
+  });
+  // تخطّى الحدّ أصلاً ⇒ لا متّسع، وأيّ صفقة تتخطّاه
+  assert.deepEqual(dailyLossRoom({ balance: 9400, limitPct: 5, lostToday: 600, riskAmount: 10 }), {
+    room: 0,
+    losses: 0,
+    breach: true,
+    maxRiskPct: 0,
+  });
+  // خسارة اليوم = الحدّ بالضبط ⇒ متّسع 0؛ ومتّسعٌ 99.7 لا 99.69؛ والفاصلة العائمة: 0.3 ÷ 0.1 = ثلاث خسائر لا اثنتان
+  assert.equal(dailyLossRoom({ balance: 29.7, limitPct: 1, lostToday: 0.3, riskAmount: 0.1 })!.room, 0);
+  assert.equal(dailyLossRoom({ balance: 9999.7, limitPct: 1, lostToday: 0.3, riskAmount: 10 })!.room, 99.7);
+  assert.equal(dailyLossRoom({ balance: 1000, limitPct: 0.03, lostToday: 0, riskAmount: 0.1 })!.losses, 3);
+  // خاصية: المتّسع لا يزيد على الحقيقي ولا ينقص عنه بسنت؛ والخسائر المعدودة × المخاطرة داخل المتّسع، وواحدة أخرى تتخطّاه
+  for (let i = 0; i < 3000; i++) {
+    const balance = Math.round((100 + Math.random() * 200000) * 100) / 100;
+    const lostToday = Math.random() < 0.3 ? 0 : Math.round(Math.random() * balance * 0.08 * 100) / 100;
+    const limitPct = [1, 2, 3, 4, 5, 10][i % 6];
+    const riskAmount = Math.round((0.5 + Math.random() * balance * 0.03) * 100) / 100;
+    const r = dailyLossRoom({ balance, limitPct, lostToday, riskAmount })!;
+    const truth = Math.max(0, ((balance + lostToday) * limitPct) / 100 - lostToday);
+    assert.ok(r.room <= truth + 1e-6 && r.room > truth - 0.01 - 1e-6, `room ${balance} ${lostToday} ${limitPct}`);
+    assert.ok(r.losses * riskAmount <= r.room + 1e-6);
+    assert.ok((r.losses + 1) * riskAmount > r.room - 1e-6);
+    assert.equal(r.breach, r.losses === 0);
+    assert.ok((r.maxRiskPct / 100) * balance <= r.room + 1e-6);
+  }
+  // مدخل غير صالح
+  assert.equal(dailyLossRoom({ balance: 0, limitPct: 5, lostToday: 0, riskAmount: 100 }), null);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 0, lostToday: 0, riskAmount: 100 }), null);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 101, lostToday: 0, riskAmount: 100 }), null);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: -1, riskAmount: 100 }), null);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 0, riskAmount: 0 }), null);
+  assert.equal(dailyLossRoom({ balance: NaN, limitPct: 5, lostToday: 0, riskAmount: 100 }), null);
+}
+console.log('positionSize dailyLossRoom selftest OK');
