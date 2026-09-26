@@ -8,13 +8,14 @@ import { quoteBookValid, quoteSpreadPips } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipUnit } from '../chart/measureReadout';
 import { api } from '../api';
+import { formatLocalStamp } from '../localStamp';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   symbol?: string;
 };
 
-type Quote = { price: number; bid: number | null; ask: number | null };
+type Quote = { price: number; bid: number | null; ask: number | null; asOf: number | null; marketOpen: boolean | null };
 
 /** تحديث الاقتباس — كان يُطلب مع كل تيك (`last`)؛ 15ث كافية لسبريد يتغيّر ببطء. */
 const REFRESH_MS = 15_000;
@@ -41,7 +42,13 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
         .then((q) => {
           if (!alive) return;
           if (isRealQuote(q)) {
-            setQuote({ price: q.price, bid: q.bid ?? null, ask: q.ask ?? null });
+            setQuote({
+              price: q.price,
+              bid: q.bid ?? null,
+              ask: q.ask ?? null,
+              asOf: typeof q.as_of === 'number' && Number.isFinite(q.as_of) ? q.as_of : null,
+              marketOpen: typeof q.market_open === 'boolean' ? q.market_open : null,
+            });
             setState('ok');
           } else {
             setQuote(null);
@@ -106,6 +113,18 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
           <Text style={[styles.value, styles.spread, { textAlign: align }]}>
             {formatPrice(quote!.price, symbol)}
           </Text>
+          {/* بلا Bid/Ask يردّ الخادم إغلاق آخر شمعة (حتى 15د كاشاً، أو إغلاق الجمعة بالعطلة) — كان يُطبع بلا
+              وقت فيُقرأ سعراً حالياً. وقته دائماً، و«السوق مغلق» حين يقولها الخادم. */}
+          {quote!.asOf != null || quote!.marketOpen === false ? (
+            <Text style={[styles.sub, styles.asOf, { textAlign: align }]}>
+              {[
+                quote!.marketOpen === false ? t.dsMarketClosed : null,
+                quote!.asOf != null ? t.screenerPriceAsOf.replace('{time}', formatLocalStamp(quote!.asOf, lang)) : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </Text>
+          ) : null}
           <Text style={[styles.sub, { textAlign: align }]}>{t.domNoBidAsk}</Text>
         </>
       ) : null}
@@ -125,6 +144,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontWeight: '500', fontSize: 13 },
   sub: { color: colors.textDim, fontSize: 11 },
+  asOf: { ...numeric, color: colors.warn },
   warn: { color: colors.warn, fontSize: 12, fontWeight: '500', paddingVertical: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.xs },
   rowRtl: { flexDirection: 'row-reverse' },

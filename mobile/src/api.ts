@@ -845,6 +845,10 @@ export const api = {
       source?: string;
       /** provider/cache = سعر حقيقي؛ demo = سلسلة بذرية تجريبية (لا تصلح لحساب رقمي). */
       data_kind?: DataOriginKind;
+      /** وقت السعر بثوانٍ (ساعة الخادم)؛ بفرع الشموع (بلا Bid/Ask) = وقت آخر شمعة. */
+      as_of?: number | null;
+      /** false = السوق مغلق بساعة الخادم (عطلة)؛ null/غائب = لا نعرف. */
+      market_open?: boolean | null;
     }>(`/api/market/quote/${encodeURIComponent(symbol)}`),
   /** صفحة من الدفتر، الأحدث أولاً (backend-r1). `total` لكل الصفقات و`stats` على كل المغلقة لا الصفحة؛
    *  خادم أقدم يتجاهل المعاملين ولا يرسل `total`/`limit`/`offset`. */
