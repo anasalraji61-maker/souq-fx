@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`noteLabel.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { noteBox, noteTextWidth, NOTE_FONT, NOTE_PAD_W } from './noteLabel';
+import { noteBox, noteBoxDistance, noteTextWidth, NOTE_FONT, NOTE_LINE_H, NOTE_PAD_W } from './noteLabel';
 import { propTextWidth } from './textWidth';
 
 let failures = 0;
@@ -40,6 +40,15 @@ ok('حافّة: عرض موجب', edge.width > 0 && edge.flipped);
 // لوح أضيق من الهامش ⇒ لا قيم سالبة.
 const tiny = noteBox(0, 'A', 1);
 ok('لوح ضيّق جداً: لا سالب', tiny.width >= 0 && tiny.left >= 0);
+
+// اللمس على النصّ لا الركن وحده.
+const noteTxt = 'Retest of breakout';
+ok('منتصف النصّ ⇒ صفر', noteBoxDistance(157, 106, 100, 100, noteTxt, 360) === 0);
+ok('فوق السطر بعيداً ⇒ خارج', noteBoxDistance(157, 80, 100, 100, noteTxt, 360) >= 20);
+ok('تحت السطر بعيداً ⇒ خارج', noteBoxDistance(157, 100 + NOTE_LINE_H + 20, 100, 100, noteTxt, 360) >= 20);
+const fb = noteBox(330, noteTxt, 360);
+ok('مقلوبة: منتصف نصّها يسار الإرساء ⇒ صفر', fb.flipped && noteBoxDistance(fb.left + fb.width / 2, 106, 330, 100, noteTxt, 360) === 0);
+ok('مقلوبة: يمين الإرساء ليس نصّاً', noteBoxDistance(350, 106, 330, 100, noteTxt, 360) >= 19);
 
 if (failures) {
   console.error(`noteLabel selftest: ${failures} failure(s)`);

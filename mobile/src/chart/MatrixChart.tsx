@@ -194,7 +194,7 @@ import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './z
 import { isCryptoSymbol } from './newsRisk';
 import { loadZigzagDeviation, saveZigzagDeviation, subscribeZigzagDeviation } from './zigzagPrefs';
 import { paneInlineFits, paneValueTooWide } from './paneHeadFit';
-import { noteBox, NOTE_FONT } from './noteLabel';
+import { noteBox, noteBoxDistance, NOTE_FONT } from './noteLabel';
 import { isNotOfferedSymbol } from '../providerSymbols';
 import { playSoftClick } from '../audio/playSoftClick';
 import { chartPipSpec } from './pipSpec';
@@ -4803,11 +4803,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           continue;
         }
         if (d.tool === 'vline') {
+          // يُرسم فقط والإرساء بين أوّل خانة وآخرها — خطّ عند الخانة −1 (x≈−3) كان يُلمس عند x=5 ويُحذف بلا أن يُرى.
+          if (aLocal < 0 || aLocal > lastDrawLocal) continue;
           best = considerHit(d.id, Math.abs(x - ax), BODY_R, best);
           continue;
         }
         if (d.tool === 'note') {
+          // كما يُرسم: الإرساء داخل النافذة فقط (`drawingOnScreen` يسمح بخانتين خارجها للخطوط)، والنصّ كلّه يُلمس لا الركن.
+          if (aLocal < 0 || aLocal > lastDrawLocal) continue;
           best = considerHit(d.id, Math.hypot(x - ax, y - ay), HANDLE_R, best);
+          best = considerHit(d.id, noteBoxDistance(x, y, ax, ay, d.text || tr.mcNoteDefault, chartPlotW), 6, best);
           continue;
         }
         if (!d.b) continue;
@@ -4893,7 +4898,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return best?.id ?? null;
     },
-    [drawings, drawingsHidden, source.start, source.plot.length, source.slots, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal]
+    [drawings, drawingsHidden, source.start, source.plot.length, source.slots, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal, tr]
   );
 
   const exportChart = async () => {

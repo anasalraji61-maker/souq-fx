@@ -36,3 +36,18 @@ export function noteBox(anchorX: number, text: string, plotW: number): NoteBox {
   const width = Math.min(want, leftRoom);
   return { left: anchorX - width, width, flipped: true };
 }
+
+/** ارتفاع سطر الملاحظة المرسوم (خطّ 11px + حشوة إطار التحديد) — هدف اللمس رأسياً من `top` = سعر الإرساء. */
+export const NOTE_LINE_H = 16;
+
+/**
+ * بُعد النقطة (x, y) بالبكسل عن صندوق نصّ الملاحظة كما يُرسم (`noteBox`، من سعر الإرساء نزولاً سطراً واحداً) —
+ * صفر داخله. كان التحديد والسحب بدائرة 18px حول نقطة الإرساء وحدها ⇒ لمسة على منتصف «Retest of breakout»
+ * (57px من الإرساء) لا تحدّد شيئاً، وملاحظة مقلوبة يسار الإرساء لا يُلمس نصّها إطلاقاً.
+ */
+export function noteBoxDistance(x: number, y: number, anchorX: number, anchorY: number, text: string, plotW: number): number {
+  const box = noteBox(anchorX, text, plotW);
+  const dx = Math.max(box.left - x, 0, x - (box.left + box.width));
+  const dy = Math.max(anchorY - y, 0, y - (anchorY + NOTE_LINE_H));
+  return Math.hypot(dx, dy);
+}
