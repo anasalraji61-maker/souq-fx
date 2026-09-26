@@ -272,10 +272,26 @@ def _serve_stale(cache_key: str, now: float) -> tuple[list[dict], float] | None:
     return None
 
 
+# أحجام الطلب من المزوّد. كان الكاش بمفتاح `outputsize` كما طُلب (50–5000) بلا إخلاء ⇒ `?outputsize=51`،
+# `52`… كلٌّ طلبٌ جديد من الحدّ المشترك مع الروبوت، وكل ردّ يُحفظ للأبد. يُطلب الحجم الأعلى التالي ويُقصّ.
+_SIZE_BUCKETS = (16, 50, 120, 180, 300, 500, 1000, 2000, 5000)
+
+
+def _size_bucket(outputsize: int) -> int:
+    n = max(1, min(int(outputsize), 5000))
+    return next(b for b in _SIZE_BUCKETS if b >= n)
+
+
 def fetch_time_series_with_meta(
     matrix_symbol: str, timeframe: str, outputsize: int = 120
 ) -> tuple[list[dict], dict]:
-    """Candles + provenance: kind provider|cache, as_of unix, channel twelvedata."""
+    """Candles + provenance: kind provider|cache, as_of unix, channel twelvedata. آخر `outputsize` شمعة."""
+    n = max(1, min(int(outputsize), 5000))
+    candles, meta = _fetch_bucket(matrix_symbol, timeframe, _size_bucket(n))
+    return candles[-n:], meta
+
+
+def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[list[dict], dict]:
     key = _api_key()
     if not key:
         raise RuntimeError("TWELVE_DATA_API_KEY missing")

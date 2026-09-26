@@ -202,7 +202,7 @@ def test_chart_route_sends_null_volume_for_forex(provider):
     assert body["candles"] and all(c["volume"] is None for c in body["candles"])
 
 
-@pytest.mark.parametrize("asked,sent", [(-5, "1"), (0, "1"), (180, "180"), (99_999, "5000")])
+@pytest.mark.parametrize("asked,sent", [(-5, "16"), (0, "16"), (180, "180"), (99_999, "5000")])
 def test_outputsize_never_leaves_as_a_non_positive_number(provider, asked, sent):
     market.fetch_time_series_with_meta("EURUSD", "15m", asked)
     assert provider["sink"]["params"]["outputsize"] == sent
@@ -278,3 +278,25 @@ def test_a_sub_rounding_change_is_zero_not_minus_zero(provider):
     provider["payload"] = {"values": rows}
     pct = main.build_series("EURUSD", "15m", 180).change_pct
     assert pct == 0 and str(pct) == "0.0"
+
+
+def test_arbitrary_outputsizes_share_one_provider_request(provider):
+    """run 55: `?outputsize=251`، `252`… كان كلٌّ طلباً جديداً من الحدّ المشترك وإدخالاً دائماً بالكاش."""
+    from datetime import datetime, timedelta
+    t0 = datetime(2026, 9, 1)
+    provider["payload"] = {"values": [
+        {"datetime": (t0 + timedelta(minutes=15 * i)).strftime("%Y-%m-%d %H:%M:%S"),
+         "open": "1.1", "high": "1.2", "low": "1.0", "close": "1.1"} for i in range(300)]}
+    before = market._stats["api_calls"]
+    last = None
+    for n in (181, 250, 299, 300):
+        candles, _ = market.fetch_time_series_with_meta("EURUSD", "15m", n)
+        assert len(candles) == n
+        last = last or candles[-1]["time"]
+        assert candles[-1]["time"] == last  # الأحدث دائماً، لا أوّل n
+    assert provider["sink"]["params"]["outputsize"] == "300"
+    assert market._stats["api_calls"] - before == 1 and len(market._cache) == 1
+
+
+def test_size_bucket():
+    assert [market._size_bucket(n) for n in (1, 16, 17, 180, 181, 5000, 9999)] == [16, 16, 50, 180, 300, 5000, 5000]
