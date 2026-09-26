@@ -2409,7 +2409,8 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.4 },
   formError: {
     ...numeric,
-    color: colors.bear,
+    // DESIGN-PRO §1: أحمر/أخضر لاتجاه السعر وحده — خطأ الخانة و«هل تقصد …؟» بلون التحذير، كسطر الحاسبة نفسه (`PositionSizePanel` `warn`)
+    color: colors.warn,
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
