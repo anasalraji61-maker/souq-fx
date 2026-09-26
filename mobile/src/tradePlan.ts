@@ -1464,11 +1464,31 @@ export function levelLooksLikePips(input: {
 }
 
 /**
+ * قيمة تقريبية بالدولار لكل عملة/معدن تقبله `instrumentSpec` (2026، بمعامل 2 تقريباً) — لقرار «أيّ القراءتين سعر هذه الأداة» فقط
+ * (`entryLooksLikeDecimalSlip`): القراءتان تختلفان ×10 فيكفي أن يقع التقدير ضمن √10 ≈ 3.2 من السعر الحقيقي. **ليست سعر تحويل**
+ * ولا تدخل أيّ حساب مال. كان المرجع EURUSD وحده (1.10 لكل pip 0.0001) ⇒ ZARJPY (8.5، pip 0.01) بدخول «85» ووقف 8.40 يُقرأ 85
+ * «أقرب» ⇒ لا سطر، وحارس النقاط يقترح وقفاً عند 84.916 (−90% بالضغطة الثانية) — الخطأ الذي أصلحه tools102a، على هذه الأزواج.
+ */
+const USD_BALLPARK: Record<string, number> = {
+  EUR: 1.1, GBP: 1.3, AUD: 0.65, NZD: 0.6, USD: 1, CAD: 0.73, CHF: 1.2, JPY: 0.0067,
+  SEK: 0.1, NOK: 0.095, DKK: 0.15, PLN: 0.27, TRY: 0.025, ZAR: 0.055, MXN: 0.053, SGD: 0.77,
+  HKD: 0.128, CNH: 0.14, ILS: 0.28, SAR: 0.267, AED: 0.272, XAU: 3500, XAG: 40,
+};
+
+/** سعر الأداة التقريبي (أساس ÷ تسعير بـ`USD_BALLPARK`)؛ عملة غائبة ⇒ مرجع pip القديم (EURUSD 1.10 لكل 0.0001). */
+function pairBallpark(spec: { base: string; quote: string; pipSize: number }): number {
+  const b = USD_BALLPARK[spec.base];
+  const q = USD_BALLPARK[spec.quote];
+  if (b && q) return b / q;
+  return spec.pipSize * (spec.base === 'XAU' ? 25000 : spec.base === 'XAG' ? 3000 : 11000);
+}
+
+/**
  * **الدخول بلا فاصلة عشرية** بالدفتر (tools102a): شراء EURUSD بدخول «10850» ووقف 1.0820 — كان `levelLooksLikePips` يلوم الوقف
  * الصحيح («1.082 pip؟») ويقترح وقفاً عند 10849.99989، والضغطة الثانية تحفظ خسارة −99.99% «أسوأ صفقة» دائمة بالإحصاءات.
  * الدخول ÷ 10^k (k من 1 إلى 6) يقع ضمن **15%** من **كل** مستوى مكتوب (وقف/هدف/خروج) ⇒ `{ price }` المقصود؛ و`null` لما عداه.
  * شرطان يمنعان الإنذار الكاذب: (1) رمزٌ له pip معروف فقط — المؤشرات تُكتب مستوياتها نقاطاً («50» على US30) فتتشابه القراءتان؛
- * (2) المقترح أقرب لسعر الأداة من المكتوب بمرجع `quickStopPips` (EURUSD ~1.10، الذهب ~2,500): ذهب 2650 بوقف «260» (نقاط)
+ * (2) المقترح أقرب لسعر الأداة من المكتوب (`pairBallpark`: EURUSD ~1.10، الذهب ~3,500، ZARJPY ~8): ذهب 2650 بوقف «260» (نقاط)
  * يعطي 26.50 رقمياً ضمن 15% لكنه أبعد عن سعر الذهب من 2650 ⇒ لا شيء (يبقى لحارس النقاط)، وذهب «265000» بوقف 2640 ⇒ 2650.
  * مستوى نقاطٍ بين المستويات («25» مع هدف 1.0900) يُفشل «كل مستوى» ⇒ لا تخمين.
  */
@@ -1482,8 +1502,7 @@ export function entryLooksLikeDecimalSlip(input: {
   if (!spec || !finitePos(entry)) return null;
   const refs = input.levels.filter((v): v is number => finitePos(v));
   if (refs.length === 0) return null;
-  const ref = spec.base === 'XAU' ? 25000 : spec.base === 'XAG' ? 3000 : 11000;
-  const off = (px: number) => Math.abs(Math.log(px / spec.pipSize / ref));
+  const off = (px: number) => Math.abs(Math.log(px / pairBallpark(spec)));
   for (let k = 1; k <= 6; k++) {
     const price = Number((entry / 10 ** k).toPrecision(12));
     if (refs.every((v) => Math.abs(price - v) <= v * 0.15)) return off(price) < off(entry) ? { price, k } : null;

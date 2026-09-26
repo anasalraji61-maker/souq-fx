@@ -3447,6 +3447,12 @@ console.log('tradePlan points-vs-pips wording selftest OK');
   assert.deepEqual(slip('XAUUSD', 265000, [2640]), { price: 2650, k: 2 });
   assert.deepEqual(slip('USDZAR', 182000, [18.0, 18.5]), { price: 18.2, k: 4 });
   assert.deepEqual(slip('EURUSD.m', 10850, [1.082]), { price: 1.085, k: 4 });
+  // أزواج بعيدة عن مرجع EURUSD (مرجع pip واحد كان يُسقطها ⇒ حارس النقاط يقترح وقف 84.916): بتقدير سعر الأداة نفسها
+  assert.deepEqual(slip('ZARJPY', 85, [8.4]), { price: 8.5, k: 1 });
+  assert.deepEqual(slip('MXNJPY', 780, [7.7, 7.95]), { price: 7.8, k: 2 });
+  assert.deepEqual(slip('USDTRY', 3400, [33.5]), { price: 34, k: 2 });
+  assert.deepEqual(slip('EURSEK', 1150, [11.4]), { price: 11.5, k: 2 });
+  assert.deepEqual(slip('XAGUSD', 3100, [30.5]), { price: 31, k: 2 });
   // الحاسبة تمرّر NaN لخانة فارغة (`priceNum`): وقفٌ فارغ وهدف 1.0900 ⇒ الهدف وحده يكفي
   assert.deepEqual(slip('EURUSD', 10850, [NaN, 1.09]), { price: 1.085, k: 4 });
   assert.equal(slip('EURUSD', NaN, [1.082]), null);
@@ -3459,7 +3465,7 @@ console.log('tradePlan points-vs-pips wording selftest OK');
   assert.equal(slip('US30', 42000, [4150]), null);
   assert.equal(slip('BTCUSD', 650000, [64000]), null);
   // لا إنذار كاذب: صفقاتٌ صحيحة بمستويات حتى 50% من الدخول لكل الأزواج المعروفة
-  for (const [sym, px] of [['EURUSD', 1.085], ['USDJPY', 157.4], ['XAUUSD', 2650], ['XAGUSD', 31], ['USDZAR', 18.2], ['USDTRY', 34], ['XAUJPY', 380000]] as const) {
+  for (const [sym, px] of [['EURUSD', 1.085], ['USDJPY', 157.4], ['XAUUSD', 2650], ['XAGUSD', 31], ['USDZAR', 18.2], ['USDTRY', 34], ['XAUJPY', 380000], ['ZARJPY', 8.5], ['MXNJPY', 7.8], ['EURSEK', 11.5], ['USDHKD', 7.8], ['EURNOK', 11.7], ['XAUUSD', 4200], ['XAUUSD', 1900]] as const) {
     for (const f of [0.5, 0.8, 0.95, 0.999, 1.001, 1.05, 1.3, 2]) {
       assert.equal(slip(sym, px, [px * f]), null, `${sym} ${f}`);
     }
