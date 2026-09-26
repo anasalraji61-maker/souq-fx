@@ -736,3 +736,15 @@
 - فحص آلي بنطاقي: كل Pressable باختيار شرطي يحمل `accessibilityState` (إصابتان كاذبتان)؛ كل عنصر تفاعلي بـ`accessibilityLabel` عدا `MessagesScreen` غير المركّبة (launch52، تسميتها من نصّها)؛ لا وزن ≥700، لا مسافة خارج 4؛ الأسعار بـ`numeric`؛ لا عربي ثابت ظاهر (الباقي تعليقات، ومفردات المحلّل، وتعليمات الذكاء الاصطناعي والخادم يختار لغة الردّ).
 - باقٍ من ميزانية التأكيد (لم يُمسّ، يحتاج نظرة بصرية): `NetworkTreePanel` `youBox` و`TreeDiagramSketch` `you` و`LectureClassroom` `clarifyBox` بحدّ تأكيد + تعبئة (§5.5)؛ ظلّ `FrameSizedGrid.cellDragging` مُبقى عمداً (أثناء السحب فقط، إيحاء لمسي).
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
+
+## 2026-09-26 — تشغيل 60
+لا صفّ بـCOORDINATION موجَّه إلى ui (ui59a سُلّم لـtools ونُفّذ `fdb72a0`). بوابة البناء خضراء (tsc 0) قبل كل commit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 4776121 | «أنت» بـ`NetworkTreePanel`/`TreeDiagramSketch` وصندوق التوضيح بـ`LectureClassroom`: كان حدّ تأكيد فوق تعبئة تأكيد (ونصّان بلون التأكيد) ⇒ التعبئة وحدها، والنصّ محايد (الباقي من تشغيل 59) | DESIGN-PRO §5.5، §1 |
+| 7c2225a | `PairDrumWheel` الزوج الجاري: حدّ + تعبئة + نصّ بالتأكيد ⇒ تعبئة وحدها، و`accessibilityState={{ selected: true }}` | DESIGN-PRO §5.5، §1، §4 |
+
+- مُبقى عمداً: `FrameSizedGrid.cellHover` (حدّ + تعبئة) يظهر أثناء السحب فقط كهدف إفلات — ليس وقت السكون.
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ فحص آلي: كل Pressable باختيار شرطي يحمل `accessibilityState`؛ لا عربي ثابت ظاهر بنطاقي خارج `MessagesScreen` (launch52) — «،» مع `rtl` صحيح للكردية أيضاً.
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده.
