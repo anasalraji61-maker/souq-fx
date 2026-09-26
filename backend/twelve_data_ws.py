@@ -10,7 +10,7 @@ from typing import Any
 
 import websockets
 
-from twelve_data import SYMBOL_MAP
+from twelve_data import SYMBOL_MAP, redact
 
 WS_URL = "wss://ws.twelvedata.com/v1/quotes/price"
 
@@ -124,7 +124,7 @@ async def run_forever() -> None:
             raise
         except Exception as exc:  # noqa: BLE001
             _connected = False
-            _last_error = str(exc)[:200]
+            _last_error = redact(exc)[:200]  # حالة عامة (`/api/status`): رابط الـWS يحمل المفتاح
             await asyncio.sleep(8)
 
 

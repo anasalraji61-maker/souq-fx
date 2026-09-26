@@ -998,7 +998,7 @@ def symbols_search(
     try:
         results, ambiguous = market.search_listings(q, limit=limit)
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=502, detail=market.redact(exc)) from None
     return {"results": results, "ambiguous": ambiguous}
 
 

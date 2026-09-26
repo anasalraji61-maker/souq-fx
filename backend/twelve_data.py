@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -163,6 +164,17 @@ def _api_key() -> str:
 
 def configured() -> bool:
     return bool(_api_key())
+
+
+_APIKEY_PARAM = re.compile(r"(apikey=)[^&\s'\"]+", re.I)
+
+
+def redact(text: str) -> str:
+    """نصّ خطأ بلا المفتاح: `HTTPStatusError` يحمل الرابط كاملاً (`…&apikey=<المفتاح>`) وكان يصل
+    العميل بـ502 البحث (مسار بلا دخول) وسجلّات الخادم وحالة الـWS العامة. المفتاح مشترك مع الروبوت."""
+    key = _api_key()
+    out = _APIKEY_PARAM.sub(r"\1***", str(text))
+    return out.replace(key, "***") if key else out
 
 
 # رموز ISO 4217 لعملات ومعادن يسعّرها المزوّد أزواجاً «AAA/BBB» (`Physical Currency`). البحث يعيد
@@ -345,7 +357,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         if stale:
             candles, as_of = stale
             return candles, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}
-        raise RuntimeError(str(exc)) from exc
+        raise RuntimeError(redact(exc)) from None  # لا سلسلة: سجلّ `exc_info` كان يطبع الرابط بالمفتاح
 
     _stats["api_calls"] = int(_stats["api_calls"] or 0) + 1
 
@@ -562,7 +574,10 @@ def search_listings(query: str, limit: int = 20) -> tuple[list[dict], list[dict]
             f"{API_BASE}/symbol_search",
             params={"symbol": q, "outputsize": str(_SEARCH_FETCH), "apikey": key},
         )
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except httpx.HTTPStatusError as exc:  # نصّه الرابط بالمفتاح ⇒ الرمز وحده
+            raise RuntimeError(f"Twelve Data symbol_search HTTP {exc.response.status_code}") from None
         data = r.json()
     if data.get("status") == "error":
         raise RuntimeError(data.get("message", "search failed"))
