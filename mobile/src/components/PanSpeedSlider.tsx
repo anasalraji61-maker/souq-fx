@@ -94,6 +94,8 @@ export function PanSpeedSlider({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const trackW = useRef(72);
   const [width, setWidth] = useState(72);
+  // DESIGN-PRO §1: الفريم النشط هو تأكيد الشريط العلوي الوحيد — التعبئة محايدة وقت السكون، وبالتأكيد أثناء السحب فقط.
+  const [dragging, setDragging] = useState(false);
 
   const setFromX = useCallback(
     (x: number) => {
@@ -110,11 +112,14 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: (e: GestureResponderEvent) => {
+          setDragging(true);
           setFromX(e.nativeEvent.locationX);
         },
         onPanResponderMove: (e: GestureResponderEvent) => {
           setFromX(e.nativeEvent.locationX);
         },
+        onPanResponderRelease: () => setDragging(false),
+        onPanResponderTerminate: () => setDragging(false),
       }),
     [setFromX]
   );
@@ -191,7 +196,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         }}
       >
         <View style={styles.track}>
-          <View style={[styles.fill, { width: fill }]} />
+          <View style={[styles.fill, dragging && styles.fillDragging, { width: fill }]} />
           <View
             style={[
               styles.thumb,
@@ -267,6 +272,9 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 3,
+    backgroundColor: colors.textMuted,
+  },
+  fillDragging: {
     backgroundColor: colors.accent,
   },
   thumb: {
