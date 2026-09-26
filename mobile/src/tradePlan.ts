@@ -20,7 +20,7 @@ import {
   smallContractPair,
   LOT_STEP,
   MAX_SANE_LOTS,
-  MAX_SMALL_LOTS,
+  JOURNAL_MAX_SMALL_LOTS,
   formatMoney,
   pipsBetween,
   pnlInQuoteCcy,
@@ -85,7 +85,7 @@ export function isMiniJournalSymbol(symbol: string | null | undefined): boolean 
  * حجمٌ بخانة الدفتر يبدو **وحداتٍ لا لوتات** (`sizeLooksLikeUnits`) — وبرمز حساب سنت أيضاً.
  *
  * التحذير كان على `instrumentSpec` وحده، فـ«EURUSDC» بحجم «10000» لا يُنبَّه عليها ولا يُمنع حفظها: صفقة بعشرة
- * آلاف لوت بالدفتر. السنت يُكشف بضعف الحدّ (`MAX_SANE_LOTS` × 2: لوت السنت أصغر بمئة مرّة فأرقامه أكبر بطبيعتها،
+ * آلاف لوت بالدفتر. السنت يُكشف بـ`JOURNAL_MAX_SMALL_LOTS` (1000، قرار أنس ١٥ — كان 200: لوت السنت أصغر بمئة مرّة فأرقامه أكبر بطبيعتها،
  * ومنع حفظ صفقة حقيقية أسوأ من تركها)، و**بلا اقتراح تحويل** (`lots: null`): حجم عقد
  * السنت بالوحدات يختلف بين الوسطاء، و«0.10» مقترحة خطأً بمئة ضعف أسوأ من سطرٍ يقول «تحقّق من الحجم».
  */
@@ -100,7 +100,7 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   }
   // micro («EURUSDMICRO») كالسنت: لوتها أصغر بمئة مرّة فأرقامها أكبر، وعشرة آلاف لوت خطأ كتابة بها أيضاً
   if (!smallContractPair(up)) return null;
-  return Number.isFinite(size) && size > MAX_SMALL_LOTS ? { lots: null } : null;
+  return Number.isFinite(size) && size > JOURNAL_MAX_SMALL_LOTS ? { lots: null } : null;
 }
 
 /**
@@ -2079,12 +2079,12 @@ export function journalContractKind(symbol: string | null | undefined): 'std' | 
 /**
  * حجم صفقة سنت/micro بلوت الحساب العادي لسطر `riskCalcSmallLotsStdEquiv` تحت خانة الحجم («4 = 0.04 لوت بالحساب
  * العادي») — الحاسبة تعرضه منذ حسبت لوت السنت، والدفتر لا: «4» لـ«EURUSDC» ثم نقرة على شريحة «EURUSD» تبقي «4»
- * (مئة ضعف) بلا ما يذكّر بمعناها. `null` = لا سطر: رمزٌ عادي/مجهول، حجمٌ غير صالح، أو فوق `MAX_SMALL_LOTS` (يعرض
+ * (مئة ضعف) بلا ما يذكّر بمعناها. `null` = لا سطر: رمزٌ عادي/مجهول، حجمٌ غير صالح، أو فوق `JOURNAL_MAX_SMALL_LOTS` (يعرض
  * سطر الوحدات بدله، `journalSizeLooksLikeUnits`).
  */
 export function journalSmallLotsStdEquiv(size: number | null | undefined, symbol: string | null | undefined): string | null {
   if (journalContractKind(symbol) !== 'small') return null;
-  if (size == null || !Number.isFinite(size) || size <= 0 || size > MAX_SMALL_LOTS) return null;
+  if (size == null || !Number.isFinite(size) || size <= 0 || size > JOURNAL_MAX_SMALL_LOTS) return null;
   return smallLotsStdEquiv(size);
 }
 
@@ -2092,7 +2092,7 @@ export function journalSmallLotsStdEquiv(size: number | null | undefined, symbol
  * حجمٌ كُتب لرمز سنت/micro ثم تبدّل الرمز إلى عقدٍ عادي معروف (`journalSizeFromSmallFix`): «4» لـ«EURUSDC» = 0.04 لوت عادي،
  * وبعد شريحة «EURUSD» تبقى «4» بالخانة = **4 لوت عادي** — مئة ضعف، وسطر «= 0.04» يختفي مع الرمز فلا شيء يذكّر. `std` =
  * `smallLotsStdEquiv(size)` تُقترح بنقرة. `typedFor` = الرمز الذي كُتب له الحجم (آخر كتابة/شريحة/تعديل). `null` = لا سطر:
- * العقد لم يتبدّل من صغير إلى عادي، الرمز الحالي مجهول (وسط الكتابة «EURUS»)، أو الحجم غير صالح/فوق `MAX_SMALL_LOTS`.
+ * العقد لم يتبدّل من صغير إلى عادي، الرمز الحالي مجهول (وسط الكتابة «EURUS»)، أو الحجم غير صالح/فوق `JOURNAL_MAX_SMALL_LOTS`.
  */
 export function journalSizeFromSmall(
   size: number | null | undefined,
@@ -2148,7 +2148,7 @@ export function recentLotSizes(
    */
   const want = forSymbol == null ? null : journalContractKind(forSymbol);
   const wantMini = forSymbol == null ? null : isMiniJournalSymbol(forSymbol);
-  const cap = want === 'small' ? MAX_SMALL_LOTS : MAX_SANE_LOTS;
+  const cap = want === 'small' ? JOURNAL_MAX_SMALL_LOTS : MAX_SANE_LOTS;
   const out: number[] = [];
   for (const tr of newestRecordedFirst(trades)) {
     if (out.length >= max) break;

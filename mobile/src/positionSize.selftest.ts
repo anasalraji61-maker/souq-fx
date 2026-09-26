@@ -83,6 +83,7 @@ import {
   riskIsHigh,
   MAX_SANE_LOTS,
   MAX_SMALL_LOTS,
+  JOURNAL_MAX_SMALL_LOTS,
   parseSpreadPips,
   ambiguousSpreadPips,
   spreadRisk,
@@ -1565,6 +1566,16 @@ console.log('positionSize toggleRiskUnit selftest OK');
   const mid = positionSize({ balance: 75_000, riskPct: 1, slPips: 1, pipValuePerLot: 10, contractSize: 100_000 })!;
   assert.equal(mid.lots, 75);
   assert.equal(lotsOverOrderMax(mid), 75);
+  // قرار أنس ١٥: حدّ الدفتر للسنت 1000 lot منفصل عن تحذير أمر السنت بالحاسبة (200): 500 lot سنت تُحذَّر بالحاسبة (الأمر)
+  // ولا يعدّها الدفتر وحدات؛ والحدّ الأعلى ≥ الأدنى ⇒ ما تخرجه الحاسبة بلا تحذير يقبله الدفتر دائماً
+  assert.equal(MAX_SMALL_LOTS, 200);
+  assert.equal(JOURNAL_MAX_SMALL_LOTS, 1000);
+  assert.ok(JOURNAL_MAX_SMALL_LOTS >= MAX_SMALL_LOTS);
+  const cent500 = positionSize({ balance: 50_000, riskPct: 1, slPips: 1, pipValuePerLot: 1, contractSize: 1_000 })!;
+  assert.equal(cent500.lots, 500);
+  assert.equal(lotsOverOrderMax(cent500, true), 500);
+  const cent200 = positionSize({ balance: 20_000, riskPct: 1, slPips: 1, pipValuePerLot: 1, contractSize: 1_000 })!;
+  assert.equal(lotsOverOrderMax(cent200, true), null);
   // حدّ الدفتر (وحدات لا لوتات) لم يتغيّر: 75 لوتاً حجمٌ حقيقي هناك
   assert.equal(MAX_SANE_LOTS, 100);
   assert.equal(sizeLooksLikeUnits(75, instrumentSpec('EURUSD')), null);

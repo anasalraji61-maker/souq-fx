@@ -1116,8 +1116,9 @@ console.log('tradePlan journalStats selftest OK');
   assert.deepEqual(recentLotSizes(mixed, 3, 'EURU'), [0.04, 0.1, 0.5]);
   // بلا رمز = كما كان (كل الصفقات، حدّ 100)
   assert.deepEqual(recentLotSizes(mixed), [4, 2.5, 0.04]);
-  // حدّ السنت ضعف العادي (كـ`journalSizeLooksLikeUnits`): 200 تُقترح، 200.01 لا
-  assert.deepEqual(recentLotSizes([{ symbol: 'EURUSDC', size: 200.01 }, { symbol: 'EURUSDC', size: 200 }], 3, 'EURUSDC'), [200]);
+  // حدّ السنت بالدفتر 1000 (قرار أنس ١٥، كـ`journalSizeLooksLikeUnits`؛ كان 200): 1000 و500 تُقترحان، 1000.01 لا
+  assert.deepEqual(recentLotSizes([{ symbol: 'EURUSDC', size: 1000.01 }, { symbol: 'EURUSDC', size: 1000 }], 3, 'EURUSDC'), [1000]);
+  assert.deepEqual(recentLotSizes([{ symbol: 'EURUSDC', size: 500 }, { symbol: 'EURUSDC', size: 200.01 }], 3, 'EURUSDC'), [500, 200.01]);
   assert.deepEqual(recentLotSizes([{ symbol: 'EURUSD', size: 150 }], 3, 'EURUSD'), []);
   // صفقة بلا رمز (نسخة قديمة) تُعدّ عادية
   assert.deepEqual(recentLotSizes([{ size: 0.2 }, { symbol: 'EURUSDC', size: 3 }], 3, 'EURUSD'), [0.2]);
@@ -1859,9 +1860,14 @@ console.log('tradePlan draftRiskFigures selftest OK');
   assert.equal(journalSizeLooksLikeUnits(100, 'EURUSD'), null);
   // السنت: كان null (يُحفظ بعشرة آلاف لوت)
   assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSDC'), { lots: null });
-  assert.deepEqual(journalSizeLooksLikeUnits(250, 'GOLDC'), { lots: null });
   // أحجام سنت معقولة لا تُمنع — حتى فوق حدّ العادي
   for (const n of [0.01, 1, 150, 200]) assert.equal(journalSizeLooksLikeUnits(n, 'EURUSDC'), null, String(n));
+  // قرار أنس ١٥: حدّ السنت بالدفتر 1000 lot (= 10 عادي) لا 200 — 201/500/1000 صفقات مشروعة تُحفظ بلا تحذير، 1000.01 يُحذَّر
+  for (const n of [201, 500, 999.99, 1000]) assert.equal(journalSizeLooksLikeUnits(n, 'EURUSDC'), null, String(n));
+  for (const n of [250, 1000]) assert.equal(journalSizeLooksLikeUnits(n, 'XAUUSD.micro'), null, String(n));
+  assert.deepEqual(journalSizeLooksLikeUnits(1000.01, 'EURUSDC'), { lots: null });
+  assert.deepEqual(journalSizeLooksLikeUnits(1000.01, 'EURUSDMICRO'), { lots: null });
+  assert.deepEqual(journalSizeLooksLikeUnits(1250, 'GOLDC'), { lots: null });
   // مجهول: لا حكم
   assert.equal(journalSizeLooksLikeUnits(10000, 'US30'), null);
   assert.equal(journalSizeLooksLikeUnits(10000, ''), null);
@@ -2014,7 +2020,10 @@ console.log('tradePlan small-contract instrument key selftest OK');
   assert.equal(journalSmallLotsStdEquiv(200, 'XAUUSD_cent'), '2');
   assert.equal(journalSmallLotsStdEquiv(0.01, 'GBPJPYc'), '0.0001');
   for (const s of ['EURUSD', 'XAUUSD', '', null, undefined, 'FOOBAR']) assert.equal(journalSmallLotsStdEquiv(4, s), null, String(s));
-  for (const v of [0, -1, NaN, Infinity, null, undefined, 201, 10000]) assert.equal(journalSmallLotsStdEquiv(v, 'EURUSDc'), null, String(v));
+  for (const v of [0, -1, NaN, Infinity, null, undefined, 1000.01, 10000]) assert.equal(journalSmallLotsStdEquiv(v, 'EURUSDc'), null, String(v));
+  // قرار ١٥: 201–1000 lot سنت لها سطر المعادل (كانت بلا سطر فوق 200)
+  assert.equal(journalSmallLotsStdEquiv(500, 'EURUSDc'), '5');
+  assert.equal(journalSmallLotsStdEquiv(1000, 'EURUSDc'), '10');
 }
 console.log('tradePlan journal small-lot std equivalent selftest OK');
 
@@ -2070,7 +2079,9 @@ console.log('tradePlan journalStats python-sum selftest OK');
   // الرمز الحالي مجهول (وسط الكتابة) ⇒ لا سطر بعد
   for (const s of ['EURUS', '', 'FOOBAR', null]) assert.equal(journalSizeFromSmall(4, 'EURUSDc', s), null, String(s));
   // حجم غير صالح أو فوق حدّ السنت (سطر الوحدات يتكفّل به)
-  for (const v of [0, -1, NaN, Infinity, null, undefined, 201]) assert.equal(journalSizeFromSmall(v, 'EURUSDc', 'EURUSD'), null, String(v));
+  for (const v of [0, -1, NaN, Infinity, null, undefined, 1000.01]) assert.equal(journalSizeFromSmall(v, 'EURUSDc', 'EURUSD'), null, String(v));
+  // قرار ١٥: 201 lot سنت ثم «EURUSD» ⇒ اقتراح 2.01 (كان بلا سطر فوق 200 فتبقى «201» لوتاً عادياً)
+  assert.deepEqual(journalSizeFromSmall(201, 'EURUSDc', 'EURUSD'), { std: '2.01', prev: 'EURUSDC' });
 }
 console.log('tradePlan journal size from small contract selftest OK');
 
