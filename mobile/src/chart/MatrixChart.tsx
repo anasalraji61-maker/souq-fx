@@ -6710,7 +6710,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         `L ${fmtPrice(denseOhlc.low)}  C ${fmtPrice(denseOhlc.close)}`,
         crossChange?.pctText ?? null,
         denseOhlcRangeText,
-        chartPlotW,
+        // عرض الكتلة الفعلي: `styles.denseOhlc` بـ`left: 6` و`right: محور + 6` ⇒ اللوح − 12. كان اللوح كلّه
+        // ⇒ خطة «سطر واحد مع التغيّر والمدى» على لوح يزيد 1–12px عمّا يتّسع فيُقصّ ذيله بـ«…».
+        chartPlotW - 12,
         `C ${fmtPrice(denseOhlc.close)}`
       )
     : null;
