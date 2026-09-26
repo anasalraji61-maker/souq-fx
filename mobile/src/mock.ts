@@ -43,9 +43,3 @@ export function mockSeries(
     data_source: { kind: 'demo', as_of: Date.now() / 1000, channel: 'mock' },
   };
 }
-
-export const mockPeers = [
-  { user: 'سارة', last: 'شفت السيولة عند 1.0850؟', ts: '20:40' },
-  { user: 'كريم', last: 'أرسلتك سيناريو الذهب', ts: '19:15' },
-  { user: 'أحمد', last: 'جاهز للجلسة؟', ts: '18:02' },
-];

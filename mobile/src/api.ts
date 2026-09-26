@@ -959,10 +959,4 @@ export const api = {
        * المزوّد أو بأيام بعطلة الأسبوع؛ null بلا سعر حقيقي؛ غيابه = خادم أقدم. */
       price_as_of?: number | null;
     }>('/api/ai/ask', { question, symbol, lang }),
-  dmList: () =>
-    getJson<{ peers: { user: string; last: string; ts: string }[] }>('/api/dm'),
-  dmThread: (peer: string) =>
-    getJson<{ peer: string; messages: ChatMsg[] }>(`/api/dm/${encodeURIComponent(peer)}`),
-  sendDm: (to_user: string, text: string) =>
-    postJson('/api/dm', { to_user, text, from_user: 'أنت' }),
 };
