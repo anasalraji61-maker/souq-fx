@@ -104,6 +104,25 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   return Number.isFinite(size) && size > JOURNAL_MAX_SMALL_LOTS ? { lots: null } : null;
 }
 
+/** فوقه يُسأل عن حجم ذهب/فضة «أونصات أم لوتات؟» (`journalSizeMaybeMetalUnits`): 10 لوت ذهب = 1,000 أونصة ≈ 3 ملايين دولار. */
+export const JOURNAL_METAL_UNITS_HINT_LOTS = 10;
+
+/**
+ * حجم ذهب/فضة **قد يكون أونصات** (cTrader وبعض المنصّات تعرض حجم المعدن بالأونصة: 0.50 لوت ذهب = «50 Oz»). `sizeLooksLikeUnits`
+ * لا يسأل تحت 100 ⇒ «50» على XAUUSD تُحفظ 50 لوتاً بلا إشارة ومخاطرة وقف 5$ تُكتب 25,000 USD بدل 250. فوق
+ * `JOURNAL_METAL_UNITS_HINT_LOTS` وحتى 100 وحين تقع القسمة على حجم العقد على خطوة اللوت ⇒ `{ lots }` لشريحة «حوّل إلى 0.50 lot»
+ * **لا تمنع الحفظ**: 20 لوت ذهب صفقةٌ حقيقية عند متداولٍ كبير، ومنع حفظها أسوأ من سؤالٍ يتجاهله. `null` = لا سؤال.
+ */
+export function journalSizeMaybeMetalUnits(size: number, symbol: string | null | undefined): { lots: number } | null {
+  const spec = instrumentSpec((symbol || '').trim().toUpperCase());
+  if (!spec || (spec.base !== 'XAU' && spec.base !== 'XAG')) return null;
+  if (!Number.isFinite(size) || size <= JOURNAL_METAL_UNITS_HINT_LOTS || size > MAX_SANE_LOTS) return null;
+  const raw = size / spec.contractSize;
+  const steps = Math.round(raw / LOT_STEP);
+  if (steps < 1 || Math.abs(raw / LOT_STEP - steps) > 1e-6) return null;
+  return { lots: Math.round(steps * LOT_STEP * 100) / 100 };
+}
+
 /**
  * الحجم الذي **يُحسب به مال** سطور مسودّة الدفتر (المخاطرة، الربح المحتمل، معاينة الخروج) من نصّ الخانة كما كُتب:
  * `null` حين لا حجم، أو يبدو وحدات (`journalSizeLooksLikeUnits`)، أو «10.000» المبهم (`journalSizeDottedThousands`).

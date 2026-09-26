@@ -4222,3 +4222,26 @@ console.log('tradePlan journalUnknownSuffixPair selftest OK');
   }
 }
 console.log('tradePlan journalRowWhen selftest OK');
+
+// ——— حجم ذهب/فضة قد يكون أونصات (cTrader: 0.50 لوت ذهب = «50 Oz») — سؤال لا يمنع الحفظ ———
+{
+  const { journalSizeMaybeMetalUnits, journalSizeLooksLikeUnits } = require('./tradePlan') as typeof import('./tradePlan');
+  // «50» على الذهب ⇒ «0.50 lot؟» (كانت تُحفظ 50 لوتاً بلا سؤال: وقف 5$ = 25,000 USD بدل 250)
+  assert.deepEqual(journalSizeMaybeMetalUnits(50, 'XAUUSD'), { lots: 0.5 });
+  assert.deepEqual(journalSizeMaybeMetalUnits(100, 'xauusd.m'), { lots: 1 });
+  assert.deepEqual(journalSizeMaybeMetalUnits(11, 'XAUUSD'), { lots: 0.11 });
+  // الفضة 5000 أونصة: 50 = 0.01 لوت؛ 25 ليست خطوة لوت ⇒ لا اقتراح
+  assert.deepEqual(journalSizeMaybeMetalUnits(50, 'XAGUSD'), { lots: 0.01 });
+  assert.equal(journalSizeMaybeMetalUnits(25, 'XAGUSD'), null);
+  // ≤ 10 لوت حجمٌ عادي؛ > 100 يتولّاه تحذير الوحدات المانع؛ كسرٌ لا يقع على خطوة ⇒ لا سؤال
+  assert.equal(journalSizeMaybeMetalUnits(10, 'XAUUSD'), null);
+  assert.equal(journalSizeMaybeMetalUnits(2, 'XAUUSD'), null);
+  assert.equal(journalSizeMaybeMetalUnits(150, 'XAUUSD'), null);
+  assert.ok(journalSizeLooksLikeUnits(150, 'XAUUSD'));
+  assert.equal(journalSizeMaybeMetalUnits(12.345, 'XAUUSD'), null);
+  // الفوركس والمجهول بلا سؤال: 50 لوت EURUSD ليست أونصات
+  assert.equal(journalSizeMaybeMetalUnits(50, 'EURUSD'), null);
+  assert.equal(journalSizeMaybeMetalUnits(50, 'US30'), null);
+  assert.equal(journalSizeMaybeMetalUnits(50, null), null);
+}
+console.log('tradePlan journalSizeMaybeMetalUnits selftest OK');

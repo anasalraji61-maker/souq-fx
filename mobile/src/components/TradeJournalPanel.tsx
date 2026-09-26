@@ -73,6 +73,7 @@ import {
   journalInstrumentKey,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
+  journalSizeMaybeMetalUnits,
   journalMoneyLots,
   parseJournalSize,
   journalSizeDottedThousands,
@@ -597,6 +598,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const l = num(size);
     // رمز سنت كذلك، بلا اقتراح تحويل (`journalSizeLooksLikeUnits`)
     return l != null ? journalSizeLooksLikeUnits(l, symbol) : null;
+  })();
+  /** ذهب/فضة «50» — أونصات (0.50 lot) أم لوتات؟ سؤالٌ بشريحة **لا يمنع الحفظ** (`journalSizeMaybeMetalUnits`) */
+  const sizeMetal = (() => {
+    const l = num(size);
+    return !sizeUnits && l != null ? journalSizeMaybeMetalUnits(l, symbol) : null;
   })();
   const sizeUnitsText = (): string => {
     const l = num(size) ?? 0;
@@ -2259,7 +2265,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         آخر أحجام اللوت المختلفة (الأحدث أولاً): المتداول يكرّر حجماً أو اثنين، وكتابة خانة المال بيدٍ كل
         صفقة هي حيث تُحفظ «5» بدل «0.5». تُخفى حين يظهر تحذير «هذا بالوحدات» كي لا تتزاحم شريحتان للخانة.
       */}
-      {lotChips.length > 0 && !sizeUnits ? (
+      {lotChips.length > 0 && !sizeUnits && !sizeMetal ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {lotChips.map((l: number) => {
             const text = `${l.toFixed(2)} lot`;
@@ -2315,6 +2321,30 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           ) : (
             <Text style={[styles.planWarn, { textAlign: align }]}>{sizeUnitsText()}</Text>
           )}
+        </View>
+      ) : null}
+      {sizeMetal ? (
+        <View style={[styles.qChips, rtl && styles.rowRtl]}>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.qChip,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => {
+              setSize(sizeMetal.lots.toFixed(2));
+              setSizeFor(symbol);
+              setFormError(null);
+            }}
+            accessibilityLabel={t.journalSizeUnitsFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
+          >
+            <Text style={styles.qChipText}>
+              {t.journalSizeUnitsFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
+            </Text>
+          </Pressable>
         </View>
       ) : null}
       {/*
