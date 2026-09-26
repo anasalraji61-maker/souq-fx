@@ -18,12 +18,15 @@ import { rememberChartSeries } from './chartSeriesCache';
 
 const TTL_MS = 2 * 60 * 1000;
 const FAIL_TTL_MS = 60 * 1000;
+/** أقدم جلب ناجح يُعرض سعره. ما بعده «—»: سعر من ساعات مضت ليس «إغلاقاً محفوظاً» (رمز كان يصله تيك ثم أُغلق السوق، أو فشل متتالٍ). */
+const SHOW_MAX_AGE_MS = 10 * 60 * 1000;
 
 export type LastClose =
   | { state: 'price'; price: number; kind: ProvenanceKind; asOf: number | null }
   | { state: 'unavailable' };
 
-type Entry = { value: LastClose | null; at: number };
+/** `at` = موعد إعادة الجلب؛ `okAt` = آخر جلب **ناجح** أنتج `value` (لا يتقدّم بالفشل). */
+type Entry = { value: LastClose | null; at: number; okAt: number };
 
 const cache = new Map<string, Entry>();
 const inflight = new Set<string>();
@@ -56,11 +59,16 @@ async function drain() {
         } else if (src.kind !== 'demo' && typeof last === 'number' && Number.isFinite(last) && last > 0) {
           value = { state: 'price', price: last, kind: src.kind, asOf: src.as_of ?? null };
         }
-        cache.set(sym, { value, at: Date.now() });
+        const now = Date.now();
+        cache.set(sym, { value, at: now, okAt: now });
       } catch {
-        // تعثّر تحديث لا يمحو سعراً معروضاً — يُعاد المحاولة بعد `FAIL_TTL_MS`.
+        // تعثّر تحديث لا يمحو سعراً معروضاً فوراً (يبقى حتى `SHOW_MAX_AGE_MS` من آخر نجاح) — يُعاد بعد `FAIL_TTL_MS`.
         const old = cache.get(sym);
-        cache.set(sym, old?.value ? { value: old.value, at: Date.now() - TTL_MS + FAIL_TTL_MS } : { value: null, at: Date.now() });
+        const now = Date.now();
+        cache.set(
+          sym,
+          old?.value ? { value: old.value, at: now - TTL_MS + FAIL_TTL_MS, okAt: old.okAt } : { value: null, at: now, okAt: 0 },
+        );
       } finally {
         inflight.delete(sym);
       }
@@ -83,9 +91,10 @@ function request(symbols: readonly string[]) {
 
 function snapshot(symbols: readonly string[]): Record<string, LastClose> {
   const out: Record<string, LastClose> = {};
+  const now = Date.now();
   for (const sym of symbols) {
-    const v = cache.get(sym)?.value;
-    if (v) out[sym] = v;
+    const e = cache.get(sym);
+    if (e?.value && now - e.okAt < SHOW_MAX_AGE_MS) out[sym] = e.value;
   }
   return out;
 }
