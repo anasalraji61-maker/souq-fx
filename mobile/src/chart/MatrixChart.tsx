@@ -6,6 +6,7 @@ import React, {
   useLayoutEffect,
   useMemo,
   useRef,
+  useReducer,
   useState,
 } from 'react';
 import {
@@ -1477,8 +1478,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [kind, setKind] = useState<ChartKind>(initialKind ?? 'candles');
   const kindRef = useRef(kind);
   kindRef.current = kind;
-  // مفتاح الشمعة التي انتهى عدّادها (رمز|فريم|وقت) — يُقصَّر وسم السعر لسطر واحد حتى شمعة جديدة.
-  const [countdownEndedKey, setCountdownEndedKey] = useState<string | null>(null);
+  // انتهاء العدّاد يُعيد رسم الشارت فقط ليُقصَّر وسم السعر لسطر واحد (`showCountdown` يعيد حسابه). كان مزلاجاً بمفتاح
+  // الشمعة يُخفي العدّاد حتى شمعة جديدة ⇒ الكسر اليومي للذهب/المؤشرات (ساعة 17:00 نيويورك وسط شمعة 4H/D) يُطفئه
+  // لبقية الشمعة: XAUUSD 4H يعود السوق 22:00 UTC والعدّاد غائب حتى الإغلاق — الساعتان اللتان ينتظرها فيهما المتداول.
+  const [, bumpCountdownEnded] = useReducer((n: number) => n + 1, 0);
   const [lens, setLens] = useState<LensMode>(initialLens ?? 'clean');
   const [extraInd, setExtraInd] = useState<IndicatorId[]>(initialIndicators ?? []);
   const [tool, setTool] = useState<DrawTool>(initialTool ?? 'none');
@@ -6323,10 +6326,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const countdownStep = timeframeStepSec(series.timeframe);
   const countdownSynthetic =
     isSyntheticKind(kind);
-  const countdownKey = lastRawBar ? `${series.symbol}|${countdownStep}|${lastRawBar.time}` : null;
   const showCountdown =
     !hidePriceLabels &&
-    countdownKey !== countdownEndedKey &&
     !replayOn &&
     !countdownSynthetic &&
     lastRawBar != null &&
@@ -9634,7 +9635,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 stepSec={countdownStep}
                 symbol={series.symbol}
                 style={[styles.currentPriceCountdown, { color: currentTagInk }]}
-                onEnd={() => setCountdownEndedKey(countdownKey)}
+                onEnd={bumpCountdownEnded}
               />
             ) : null}
           </View>
