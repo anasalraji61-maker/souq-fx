@@ -685,6 +685,24 @@ export function typedExitQuoteToAccount(
 const TYPED_EXIT_MAX_LOG_OFF = Math.log(10) / 2;
 
 /**
+ * سعر تحويل **مجلوب** من المزوّد بعيدٌ عن سعر زوجه التقريبي (`USD_BALLPARK`) بأكثر من √10 ⇒ `true` (يُعامَل كفشل الجلب:
+ * المحاولة التالية أو الجسر أو الإدخال اليدوي). الحاسبة تطلب الزوج المعكوس حين يفشل المتوقَّع («JPYEUR» لحساب ين على
+ * EURUSD…)؛ مزوّدٌ يعيد لرمزٍ معكوس سعرَ الزوج المعتاد (EURJPY 160 بدل 0.00625) كان يُقلب فيصير سعر التحويل
+ * 1 ÷ 160 بدل 160 ⇒ قيمة pip أصغر ×25,600 ⇒ **لوت أكبر ×25,600** (يُقصّ عند حدّ اللوت، وخسارته أضعاف المخاطرة). الأمر نفسه لساق
+ * جسر الدولار. سعرٌ حقيقي يقع دائماً داخل √10 من المرجع (بمعامل 2 تقريباً). رمزٌ ليس 6 أحرف أو عملةٌ خارج الجدول ⇒ `false`
+ * (لا مرجع — كما كان).
+ */
+export function fetchedConvPriceLooksWrong(symbol: string, price: number): boolean {
+  if (!Number.isFinite(price) || price <= 0) return false;
+  const sym = symbol.trim().toUpperCase();
+  if (!/^[A-Z]{6}$/.test(sym)) return false;
+  const b = USD_BALLPARK[sym.slice(0, 3)];
+  const q = USD_BALLPARK[sym.slice(3, 6)];
+  if (!b || !q) return false;
+  return Math.abs(Math.log(price / (b / q))) > TYPED_EXIT_MAX_LOG_OFF;
+}
+
+/**
  * نقاط وقفٍ مكتوبة يدوياً تبقى عند تبديل الأداة **ضمن الصنف نفسه** فقط: فوركس ⇄ فوركس (EURUSD ⇒ GBPUSD ⇒ USDJPY: «20 pip»
  * مسافةٌ بالمعنى نفسه)، أو المعدن نفسه بعملة أخرى قريبة السعر (XAUUSD ⇒ XAUEUR؛ لا XAUJPY). بين صنفين تُمسح: «20» لـEURUSD تصير على الذهب **2$**
  * (pip الذهب 0.1) — وقفٌ أضيق من سبريد الذهب نفسه أحياناً، واللوت يخرج أكبر بعشرات المرّات من مركزٍ بوقف ذهبٍ معتاد (150–300

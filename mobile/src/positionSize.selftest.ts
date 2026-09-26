@@ -4270,3 +4270,33 @@ console.log('positionSize manualConvDecimalSlip selftest OK');
   assert.equal(typedExitQuoteToAccount(uj, 'USD', 1500, NaN, 20), null);
 }
 console.log('positionSize priceDecimalSlip selftest OK');
+
+// ——— fetchedConvPriceLooksWrong: رمزٌ معكوس أعاد له المزوّد سعر الزوج المعتاد ———
+{
+  const { fetchedConvPriceLooksWrong, reversedConversion, quoteToAccountRate } =
+    require('./positionSize') as typeof import('./positionSize');
+  // أسعار 2026 الحقيقية (والمعكوسة الصحيحة) مقبولة — بلا هذا تفشل الحاسبة على زوج تحويل عادي
+  const real: [string, number][] = [
+    ['EURUSD', 1.17], ['GBPUSD', 1.34], ['USDJPY', 148.5], ['USDCHF', 0.8], ['USDCAD', 1.38], ['AUDUSD', 0.66],
+    ['NZDUSD', 0.59], ['EURJPY', 173], ['GBPJPY', 199], ['CHFJPY', 185], ['EURGBP', 0.87], ['AUDCAD', 0.91],
+    ['USDTRY', 41.3], ['USDZAR', 17.6], ['USDMXN', 18.5], ['XAUUSD', 3750], ['XAGUSD', 44], ['XAUEUR', 3200],
+    ['JPYEUR', 1 / 173], ['JPYUSD', 1 / 148.5], ['CADCHF', 0.58], ['CHFCAD', 1 / 0.58], ['TRYUSD', 1 / 41.3],
+  ];
+  for (const [sym, px] of real) assert.equal(fetchedConvPriceLooksWrong(sym, px), false, `${sym} ${px}`);
+  // المعكوس بسعر المعتاد: JPYEUR = 173 ⇒ مرفوض. بلا الحارس سعر التحويل 1/173 بدل 173 (قيمة pip أصغر ×29,929)
+  const conv = { symbol: 'EURJPY', invert: false };
+  const rev = reversedConversion(conv);
+  assert.equal(rev.symbol, 'JPYEUR');
+  assert.equal(fetchedConvPriceLooksWrong(rev.symbol, 173), true);
+  assert.ok(Math.abs(quoteToAccountRate(rev, 173)! - 1 / 173) < 1e-12); // ما كان سيُستعمل
+  for (const [sym, px] of [['JPYUSD', 148.5], ['TRYUSD', 41.3], ['CHFJPY', 1 / 185], ['USDJPY', 1 / 148.5], ['ZARUSD', 17.6]] as [string, number][])
+    assert.equal(fetchedConvPriceLooksWrong(sym, px), true, `${sym} ${px}`);
+  // بلا مرجع (رمز ليس 6 أحرف، عملة خارج الجدول) أو سعر غير صالح ⇒ لا حكم، كما كان
+  assert.equal(fetchedConvPriceLooksWrong('US30', 42000), false);
+  assert.equal(fetchedConvPriceLooksWrong('EURXYZ', 1000), false);
+  assert.equal(fetchedConvPriceLooksWrong('EURUSD', NaN), false);
+  assert.equal(fetchedConvPriceLooksWrong(' eurusd ', 1.17), false);
+  // ما لا يرصده (موثَّق): زوجٌ قرب 1 مقلوبه قريبٌ أيضاً (EURGBP 0.87 ↔ 1.15)
+  assert.equal(fetchedConvPriceLooksWrong('GBPEUR', 0.87), false);
+}
+console.log('positionSize fetchedConvPriceLooksWrong selftest OK');

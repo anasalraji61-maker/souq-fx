@@ -19,6 +19,7 @@ import {
   quoteAsOfMs,
   marginQuoteUsable,
   reversedConversion,
+  fetchedConvPriceLooksWrong,
   usdBridge,
   bridgedRate,
   quoteToAccountRate,
@@ -509,10 +510,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     // سعر تجريبي بذري (المزوّد غير متاح أو لا يعرف الزوج — كان يُعيد ~1.0 لزوج مجهول) يُعامَل كفشل:
     // حساب لوت من سعر تحويل مختلَق أخطر من طلب السعر يدوياً (راجع `isRealQuote`).
     // `as_of` (إن أرسله الخادم مع سعرٍ مخزّن) يصير وقت السعر، لا لحظة الجلب — راجع `quoteAsOfMs`.
+    // سعرٌ بعيد عن مرجع زوجه (معكوسٌ أعاد المزوّد له سعر الزوج المعتاد) = فشل أيضاً — `fetchedConvPriceLooksWrong`
     const fetchPrice = (sym: string) =>
       api.marketQuote(sym).then(
         (q) =>
-          isRealQuote(q)
+          isRealQuote(q) && !fetchedConvPriceLooksWrong(sym, q.price)
             ? { price: q.price, at: quoteAsOfMs((q as { as_of?: unknown }).as_of, Date.now()), marketOpen: quoteMarketOpen(q) }
             : null,
         () => null
@@ -915,7 +917,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const sPx = priceNum(stopPx);
     if (!spec || planSide == null || derivedSl == null || derivedSl < 1) return [];
     // الأساس = عملة الحساب ⇒ «1:2» بالمال كما يقرؤها سطر R:R (`moneyRewardRisk`): الخسارة بسعر تحويل الوقف والربح بـ1 ÷ الهدف.
-    // هدفٌ يبعد > 20% عن الحيّ يُحوَّل هناك بسعر الوقف (`targetQuoteToAccount` = null) ⇒ المسافة وحدها كما كانت
+    // الربح بـ1 ÷ الهدف أيّاً كان بُعده عن الحيّ (`targetQuoteToAccount`)؛ null فقط لمدخل غير صالح أو أساسٍ ليس عملة الحساب ⇒ المسافة وحدها
     const moneyStop = riskRate != null && spec.base === convAccount ? riskRate : null;
     return QUICK_RR.flatMap((rr) => {
       const plain = targetAtRR({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, rr });
