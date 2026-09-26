@@ -222,9 +222,9 @@ def run_backtest(
         signal: Literal["buy", "sell", "flat"] | None = None
 
         if strategy == "ma_cross":
-            if ind.cross_up(f_sma[: i + 1], s_sma[: i + 1]):
+            if ind.cross_up(f_sma[: i + 1], s_sma[: i + 1], price):
                 signal = "buy"
-            elif ind.cross_down(f_sma[: i + 1], s_sma[: i + 1]):
+            elif ind.cross_down(f_sma[: i + 1], s_sma[: i + 1], price):
                 signal = "sell"
         elif strategy == "rsi_reversal":
             rv = r[i]
@@ -234,9 +234,9 @@ def run_backtest(
                 elif rv >= rsi_high:
                     signal = "sell"
         elif strategy == "macd_cross":
-            if ind.cross_up(m_line[: i + 1], m_sig[: i + 1]):
+            if ind.cross_up(m_line[: i + 1], m_sig[: i + 1], price):
                 signal = "buy"
-            elif ind.cross_down(m_line[: i + 1], m_sig[: i + 1]):
+            elif ind.cross_down(m_line[: i + 1], m_sig[: i + 1], price):
                 signal = "sell"
         elif strategy == "bb_bounce":
             lo = bb_lower[i]

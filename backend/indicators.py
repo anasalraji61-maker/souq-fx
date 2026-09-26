@@ -102,24 +102,42 @@ def atr(candles: list[dict[str, Any]], period: int = 14) -> list[float | None]:
     return out
 
 
-def cross_up(fast: list[float | None], slow: list[float | None]) -> bool:
+def _side(a: float, b: float, scale: float | None) -> int:
+    """موضع a من b: 1 فوق، −1 تحت، 0 مستوى واحد. فرق بحجم ضجيج الفاصلة العائمة (≤ 1e-12 من السعر)
+    = مستوى واحد: SMA9 وSMA21 على إغلاقات 3.7502 متطابقة خرجا 3.7502000000000004 و3.7502 ⇒ «تقاطع صاعد»
+    بالماسح وصوت توقّع وتنبيه وصفقة اختبار خلفي على زوج مربوط بلا أي حركة. `scale` = السعر (MACD قيمة
+    صغيرة قرب الصفر وضجيجها بحجم السعر لا بحجمها)؛ بدونه أكبر القيمتين."""
+    s = abs(scale) if scale else max(abs(a), abs(b))
+    d = a - b
+    if abs(d) <= s * 1e-12:
+        return 0
+    return 1 if d > 0 else -1
+
+
+def _last_two(fast: list[float | None], slow: list[float | None]) -> tuple[float, float, float, float] | None:
     if len(fast) < 2 or len(slow) < 2:
-        return False
+        return None
     a0, a1 = fast[-2], fast[-1]
     b0, b1 = slow[-2], slow[-1]
     if None in (a0, a1, b0, b1):
-        return False
-    return a0 <= b0 and a1 > b1
+        return None
+    return a0, a1, b0, b1  # type: ignore[return-value]
 
 
-def cross_down(fast: list[float | None], slow: list[float | None]) -> bool:
-    if len(fast) < 2 or len(slow) < 2:
+def cross_up(fast: list[float | None], slow: list[float | None], scale: float | None = None) -> bool:
+    v = _last_two(fast, slow)
+    if v is None:
         return False
-    a0, a1 = fast[-2], fast[-1]
-    b0, b1 = slow[-2], slow[-1]
-    if None in (a0, a1, b0, b1):
+    a0, a1, b0, b1 = v
+    return _side(a0, b0, scale) <= 0 and _side(a1, b1, scale) > 0
+
+
+def cross_down(fast: list[float | None], slow: list[float | None], scale: float | None = None) -> bool:
+    v = _last_two(fast, slow)
+    if v is None:
         return False
-    return a0 >= b0 and a1 < b1
+    a0, a1, b0, b1 = v
+    return _side(a0, b0, scale) >= 0 and _side(a1, b1, scale) < 0
 
 
 def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> dict[str, Any]:
@@ -145,8 +163,8 @@ def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> di
         "sma_slow": s[-1],
         "macd": m_line[-1],
         "macd_signal": m_sig[-1],
-        "ma_cross_up": cross_up(f, s),
-        "ma_cross_down": cross_down(f, s),
-        "macd_cross_up": cross_up(m_line, m_sig),
-        "macd_cross_down": cross_down(m_line, m_sig),
+        "ma_cross_up": cross_up(f, s, last),
+        "ma_cross_down": cross_down(f, s, last),
+        "macd_cross_up": cross_up(m_line, m_sig, last),
+        "macd_cross_down": cross_down(m_line, m_sig, last),
     }

@@ -165,3 +165,42 @@ def test_snapshot_single_close_has_no_change_not_zero():
     """إغلاق واحد = لا حركة تُقاس: كان «0.00%» (يُقرأ «ثابت») على رمز أعاد المزوّد له شمعة واحدة."""
     out = ind.snapshot([{"close": 1.1}])
     assert out["change_pct"] is None and out["change_bars"] == 0
+
+
+def _flat_after_blip(price: float, blip: float, n_flat: int = 21) -> list[dict]:
+    closes = [price] * 158 + [blip] + [price] * n_flat
+    return [{"open": c, "high": c, "low": c, "close": c} for c in closes]
+
+
+def test_equal_smas_from_float_noise_are_not_a_cross():
+    # زوج مربوط: نقطة واحدة ثم 21 إغلاقاً متطابقاً ⇒ SMA9 = SMA21 = 3.7502 لكن جمع الفاصلة العائمة
+    # يعطي 3.7502000000000004 مقابل 3.7502 ⇒ كان «تقاطع صاعد» بالماسح والتوقّع والتنبيه
+    snap = ind.snapshot(_flat_after_blip(3.7502, 3.7503))
+    assert snap["sma_fast"] != snap["sma_slow"]  # الضجيج موجود فعلاً
+    assert snap["ma_cross_up"] is False
+    assert snap["ma_cross_down"] is False
+
+
+def test_no_noise_cross_across_prices_and_blips():
+    for price in (0.6543, 1.0871, 3.7502, 7.8123, 149.37, 1934.55):
+        for blip in (price * 1.0001, price * 0.9999, price * 1.001):
+            for n_flat in range(21, 30):  # النقطة خرجت من النافذتين ⇒ الخطّان متساويان رياضياً
+                snap = ind.snapshot(_flat_after_blip(price, blip, n_flat))
+                assert not snap["ma_cross_up"] and not snap["ma_cross_down"], (price, blip, n_flat)
+
+
+def test_real_tiny_cross_still_counts():
+    # فرق حقيقي بحجم نقطة عُشرية على 1.1 (1e-6) أكبر بكثير من التسامح (1.1e-12)
+    assert ind.cross_up([1.1, 1.100001], [1.1000005, 1.1000005]) is True
+    assert ind.cross_down([1.100001, 1.1], [1.1000005, 1.1000005]) is True
+
+
+def test_touch_within_noise_then_real_move_is_a_cross():
+    # الأمس «مستوى واحد» بحدود الضجيج (فوق بـ4e-16) واليوم فوق فعلاً ⇒ تقاطع (كـa0 <= b0)
+    assert ind.cross_up([3.7502000000000004, 3.7503], [3.7502, 3.7502]) is True
+
+
+def test_macd_noise_is_measured_against_price_not_macd():
+    # MACD قرب الصفر: فرق 1e-15 نسبيّ لقيمته كبير، لكنه ضجيج بالنسبة لسعر 3.75
+    assert ind.cross_up([1e-6, 1e-6 + 1e-15], [1e-6 + 1e-15, 1e-6], scale=3.75) is False
+    assert ind.cross_up([1e-6, 2e-6], [1.5e-6, 1.5e-6], scale=3.75) is True
