@@ -45,6 +45,16 @@ near(tw[8], 1.1);
 near(tw[9], 1.2, 'twap reset at rollover');
 near(tw[23], 1.2);
 near(computeTwap(candles)[9]!, (1.1 * 9 + 1.2) / 10, 'twap continuous unchanged');
+// المصدر ohlc4 كـTradingView لا (H+L+C)/3
+{
+  const two = [
+    { time: 0, open: 1.1, high: 1.105, low: 1.099, close: 1.104 },
+    { time: 60, open: 1.104, high: 1.106, low: 1.1, close: 1.101 },
+  ] as Candle[];
+  const t2 = computeTwap(two);
+  near(t2[0], 1.102, 'twap ohlc4');
+  near(t2[1], (1.102 + 1.10275) / 2, 'twap ohlc4 cumulative');
+}
 
 // اليومي (Anchor = Session كـTradingView): كل شمعة جلستها ⇒ VWAP = (H+L+C)/3 لا تراكم يتغيّر مع التاريخ المحمَّل
 const d1: (Candle & { volume: number })[] = [
