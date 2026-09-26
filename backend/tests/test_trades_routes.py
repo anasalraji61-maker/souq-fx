@@ -660,6 +660,34 @@ def test_future_opened_at_is_rejected(client):
     assert _open_trade(client, opened_at=soon)["opened_at"] == soon
 
 
+
+def test_opened_at_in_repeated_dst_hour_is_not_future(monkeypatch):
+    """خادم بتوقيت برلين، الساعة 02:30 الشتوية بعد الرجوع (01:30 UTC في 2026-10-25): فتح بـ«02:50+02:00»
+    (00:50 UTC، قبل 40 دقيقة) كان يُرفض «is in the future» — المقارنة كانت بساعتين محلّيتين بلا منطقة."""
+    import time as _time
+    from datetime import datetime as _dt, timezone as _tz
+
+    if not hasattr(_time, "tzset"):
+        pytest.skip("tzset unavailable")
+    monkeypatch.setenv("TZ", "Europe/Berlin")
+    _time.tzset()
+    try:
+        now = _dt(2026, 10, 25, 1, 30, tzinfo=_tz.utc)
+
+        class _Frozen(_dt):
+            @classmethod
+            def now(cls, tz=None):
+                return now.astimezone(tz) if tz else now.astimezone().replace(tzinfo=None)
+
+        monkeypatch.setattr(main, "datetime", _Frozen)
+        t = main.TradeCreate(**{**_TRADE, "opened_at": "2026-10-25T02:50+02:00"})
+        assert t.opened_at == "2026-10-25 02:50"
+        with pytest.raises(ValueError):  # 01:40 UTC = بعد 10 دقائق ⇒ مستقبل
+            main.TradeCreate(**{**_TRADE, "opened_at": "2026-10-25T02:40+01:00"})
+    finally:
+        monkeypatch.undo()  # يعيد TZ الأصلي قبل tzset
+        _time.tzset()
+
 # ─── إغلاق/تعديل متزامنان: النتيجة من الدخول القائم لا المقروء قبل التصحيح ───────────
 
 def _race_before(monkeypatch, prefix: str, other_sql: str, trade_id: str, times: int = 1):

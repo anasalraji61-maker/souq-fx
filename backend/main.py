@@ -659,7 +659,9 @@ class TradeCreate(BaseModel):
                 raise ValueError("is before 1970")
         # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
         # الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية حتى يحين ذلك التاريخ. سماح 5 دقائق لفرق ساعة الجهاز.
-        if dt.replace(tzinfo=None) > datetime.now() + timedelta(minutes=5):
+        # المقارنة بلحظة مطلقة: ساعتان محلّيتان بلا منطقة كانتا تُرفضان في الساعة المكرَّرة عند نهاية التوقيت
+        # الصيفي (02:50+02:00 قبل الرجوع = ماضٍ، لكنّ «الآن» 02:30 بالساعة الشتوية)
+        if dt.astimezone(timezone.utc) > datetime.now(timezone.utc) + timedelta(minutes=5):
             raise ValueError("is in the future")
         return dt.strftime("%Y-%m-%d %H:%M")
 
