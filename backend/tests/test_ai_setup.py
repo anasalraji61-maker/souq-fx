@@ -521,3 +521,69 @@ def test_move_larger_than_atr_is_not_called_flat_when_its_percent_rounds_to_zero
     body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "symbol": "USDHKD", "lang": lang}).json()
     assert "**صاعد**" in body["answer"] or "**bullish**" in body["answer"]
     assert "ATR14 —" not in body["answer"] and "أصغر من" not in body["answer"]
+
+
+# run 78: صيغ كانت تمرّ من الحارس (فحص عدائي — قرار ٤ «بأي صياغة»)
+@pytest.mark.parametrize("text", [
+    "tgt 1.0950", "PT 1.0950", "S/L 1.0800", "T/P 1.0950", "SL1.0800", "TP1 1.0950 TP2 1.1000", "TP1: 1.0950",
+    "Take profits at 1.0950", "exit at 1.0950", "Close the trade at 1.0950", "Invalidation: 1.0800",
+    "Get in at 1.0850.", "BTC: get in around 64000, exit at 68000, cut losses at 62000",
+    "Stops go below 1.0800 and profits get taken at 1.0950", "SL: 20 pips below 1.0850",
+    "Long gold at 2350", "Accumulate gold below 2350.", "long EURUSD", "Long EURUSD.", "short gold",
+    "Short gold now.", "Go long.", "Short it.", "Buy.", "buy EUR/USD", "Load up on EURUSD here.",
+    "Consider buying EURUSD", "Consider a long at 1.0850", "This is a long opportunity at 1.0850",
+    "I'd be a buyer at 1.0850", "I'd get long here", "I'm long EURUSD", "It's a buy.", "EURUSD is a strong buy",
+    "Strong sell on gold", "Now is the time to buy.", "Recommendation — Buy", "Verdict: bullish, buy",
+    "Pending buy order at 1.0850", "**Entry:** 1.0850", "Target 1.0850 1.0900",
+    "اشتري اليورو دولار", "بع الذهب", "بِع الذهب الآن", "افتح صفقة شراء", "افتح مركز بيع على الذهب",
+    "أدخل صفقة بيع", "هدفنا 1.0950", "يُفضّل الشراء عند 1.0850",
+    "کڕین لە 1.0850", "کڕین بکە ئێستا", "فرۆشتنی زێڕ ئێستا", "خاڵی چوونەژوورەوە 1.0850", "ستۆپ لۆس 1.0800",
+    "Achetez EURUSD à 1.0850", "Vende oro ahora", "Entrée: 1.0850",
+])
+def test_guard_flags_adversarial_trade_calls(text):
+    assert openrouter_ai.has_trade_call(text)
+
+
+@pytest.mark.parametrize("text", [
+    "ATR(14) is 0.0065, so a 1.5× ATR stop would be about 0.0098 away.",
+    "يوضع وقف الخسارة عادة على بعد 1.5 ضعف ATR", "الهدف من هذا الدرس شرح مؤشر RSI 14",
+    "The stop run below 1.0800 swept liquidity.", "We were at 1.0850 at the entry of the London session.",
+    "Many traders sell at resistance like 1.0950 — that's why it acts as a ceiling.",
+    "Retail traders tend to buy near 1.0800, which is why liquidity pools there.",
+    "Long-term traders often use the 200 EMA.", "Long upper wicks near 1.0900 show rejection.",
+    "Long EMA periods smooth noise.", "The exit of the UK from the EU in 2020 hit the pound.",
+    "It's a long way from 1.0800 to 1.1000.", "This is a sell signal in textbook terms.",
+    "أدخل مؤشر RSI على الشارت من القائمة.", "اشتريت الكتاب أمس.", "فشاری فرۆشتن زیاد بوو",
+    "1. Long wicks show rejection.", "Sell signals appear when RSI crosses below 70.",
+])
+def test_guard_adversarial_education_left_alone(text):
+    assert openrouter_ai.guard_answer(text, "en") == text
+
+
+@pytest.mark.parametrize("text", [
+    "RSI is 55.\nEntry:\n1.0850", "RSI is 55.\n- Entry\n  - 1.0850", "RSI is 55.\n1. Stop loss —\n\n1.0800",
+    "RSI is 55.\n| Entry | Stop | Target |\n|---|---|---|\n| 1.0850 | 1.0800 | 1.0950 |",
+])
+def test_guard_catches_a_level_split_across_lines(text):
+    out = openrouter_ai.guard_answer(text, "en")
+    assert "RSI is 55." in out and "was removed" in out
+    assert not any(p in out for p in ("1.0850", "1.0800", "1.0950"))
+
+
+@pytest.mark.parametrize("text", [
+    "Stop-loss placement:\n1.5×ATR beyond the swing is common.",
+    "| Indicator | Value |\n|---|---|\n| RSI | 55.2 |\n| EMA 50 | 1.0840 |",
+    "Targets in harmonic patterns are Fibonacci ratios:\n0.618 and 1.272 extensions.",
+])
+def test_guard_multiline_education_left_alone(text):
+    assert openrouter_ai.guard_answer(text, "en") == text
+
+
+def test_template_reply_does_not_quote_a_trade_call_question(monkeypatch):
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    c = TestClient(main.app)
+    ans = c.post("/api/ai/ask", json={"question": "اشترِ عند 1.0850 الآن", "lang": "ar"}).json()["answer"]
+    assert "1.0850" not in ans and "بالنسبة لسؤالك:" in ans
+    ans = c.post("/api/ai/ask", json={"question": "ما هو RSI؟", "lang": "ar"}).json()["answer"]
+    assert "«ما هو RSI؟»" in ans

@@ -229,49 +229,85 @@ def parse_setup_hint(text: str) -> dict[str, Any]:
 # سعر) أو توصية شراء/بيع صريحة، ويقول ذلك للمستخدم. الرقم الملاصق لـ×/pips/نقطة/%/ATR أو «1:2» ليس سعراً
 # (شرح إدارة المخاطر مسموح: «ضع الوقف على بعد 1.5×ATR»). الكلمات الوصفية («صاعد»، «bullish») مسموحة: وصف
 # الشارت ليس توصية.
-_NUM = r"\d+(?:[.,]\d+)?(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|[.,]?\d))"
+# «away/apart/ضعف»: مسافة لا سعر («a 1.5× ATR stop would be about 0.0098 away»، «على بعد 1.5 ضعف ATR»)
+_NOT_PRICE_AFTER = r"(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|away\b|apart\b|ضعف|أضعاف)|[.,]?\d)"
+_NUM = r"\d+(?:[.,]\d+)?" + _NOT_PRICE_AFTER
+# run 78: فجوة بين كلمة المستوى والسعر تتخطّى مسافة بالنقاط («SL: 20 pips below 1.0850» كان يمرّ)
+_GAP = r"(?:[^\n\d]|\d+(?:[.,]\d+)?\s*(?:pips?|points?|نقط\w*|[x×]\s*ATR)(?!\w))"
+# run 78: اختصارات وصيغ كانت تمرّ (tgt/PT/S/L/T/P/TP1/SL1.0800، take profits، exit، invalidation، get in،
+# cut losses، close the trade، «هدفنا»، الكردية والفرنسية/الإسبانية). «stop run/hunt» و«the entry of the
+# London session» و«الهدف من هذا الدرس» وصف لا مستوى.
 _LEVEL_WORD = (
-    r"(?:\b(?:entry|entries|enter|stop[- ]?loss|stop|sl|take[- ]?profit|tp|targets?|profit target)\b"
-    r"|\baim(?:ing)?\s+for\b"
-    r"|" + _AR_PRE + r"(?:دخول|ادخل|وقف|هدف|أهداف|اهداف|جني الربح|جني الأرباح)" + _AR_SUF + r")"
+    r"(?:\b(?:entry(?!\s+of\s+the\b)|entries|enter|stop[- ]?loss(?:es)?|stops?(?![- ](?:run|hunt))"
+    r"|s/?l\d?|take[- ]?profits?|t/?p\d?|pt|tgt|targets?(?!\s+of\s+th)|profit target|invalidation"
+    r"|objective(?!\s+of\s+th)|exit(?!\s+of\b)|entrée|objectif|objetivo|entrada)(?![a-z])"
+    r"|\baim(?:ing)?\s+for\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
+    r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
+    r"|" + _AR_PRE + r"(?:دخول|ادخل|وقف|هدف|أهداف|اهداف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
+    + r"(?!\s+من\s+(?:هذ|ال|درس))"
+    r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان)"
 )
-_PRICE = r"\d+[.,]\d+(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|[.,]?\d))"
+_PRICE = r"\d+[.,]\d+" + _NOT_PRICE_AFTER
 # فعل صفقة (لا وصف): «selling pressure»/«sell-off»/«buy-side»/«short-term» وصف للسوق ⇒ مستثناة
+# «Many traders sell at resistance like 1.0950» / «tend to buy near 1.0800»: وصف سلوك المتداولين، لا أمر
 _EN_ACT = (
-    r"\b(?:buy|sell|buying|selling|shorting|short\s+(?:it|this|here)|go(?:ing)?\s+(?:long|short)"
+    r"(?<!traders )(?<!tend to )(?<!often )(?<!usually )(?<!typically )\b(?:buy|sell|buying|selling|shorting|short\s+(?:it|this|here)|go(?:ing)?\s+(?:long|short)"
     r"|enter(?:ing)?\s+(?:long|short)|an?\s+(?:long|short)\s+(?:position|trade|entry)|(?:long|short)\s+position)\b"
-    r"(?![-\u2011](?:off|side))(?!\s+(?:pressure|interest|volume|climax|momentum|activity|power|wave|orders?)\b)"
+    r"(?![-‑](?:off|side))(?!\s+(?:pressure|interest|volume|climax|momentum|activity|power|wave|orders?)\b)"
 )
 _AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?:ال)?(?:شراء|بيع)(?!\w)"
+# أمر صفقة بأول الجملة: «Buy.»، «Go long.»، «Short it.»، «long EURUSD»، «Accumulate gold below 2350».
+# الرمز حساس لحالة الأحرف (EURUSD، EUR/USD) — «Long wicks»/«Short-term» ليست أمراً.
+_EN_ORDER = (
+    r"(?:^|[.!?]\s+|[-*•>]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
+    r"|load\s+up(?:\s+on)?|accumulate|consider\s+(?:buying|selling|shorting|going\s+(?:long|short)|an?\s+(?:long|short)))"
+    r"(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|above|below|on|if|when|it|this|gold|silver|oil|crude|bitcoin|btc"
+    r"|the\s+(?:pair|dip|breakout|retest|rally|euro|dollar|yen|pound))\b|(?-i:(?!(?:EMA|SMA|WMA|RSI|MACD|ATR|ADX|CCI|MFI|OBV|VWAP)\b)[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
+)
 _TRADE_CALL_RE = re.compile(
     # كلمة المستوى ثم رقم سعر بالسطر نفسه («entry 1.0843»، «وقف الخسارة عند 1.0812»)
-    _LEVEL_WORD + r"[^\n\d]{0,30}?" + _NUM
+    _LEVEL_WORD + _GAP + r"{0,30}?" + _NUM
     # رقم ثم كلمة المستوى («1.0950 as the target»)
     + r"|\d+[.,]\d+\s*(?:as\s+(?:an?|the|your)\s+)?" + _LEVEL_WORD
     # توصية صريحة
     + r"|\b(?:i|we)(?:\s+would|['’]d)?\s+(?:recommend|suggest|advise)\s+(?:you\s+)?(?:to\s+)?"
     r"(?:buy|sell|buying|selling|go(?:ing)?\s+(?:long|short)|a\s+(?:long|short|buy|sell))\b"
     + r"|\b(?:recommendation|signal|call|direction|action|trade|advice|suggestion|verdict|bias|idea|setup|position)"
-    r"\s*[:\-–]\s*(?:buy|sell|long|short)\b"
+    r"\s*[:\-–—]\s*(?:[^\n.:]{0,20}?[\s,])?(?:buy|sell|long|short)\b(?![-‑])"
     # سعر ثم كلمة المستوى بعدها بالسطر نفسه («1.0950, a good place to take profit»)
     + r"|" + _PRICE + r"[^\n\d]{0,40}?" + _LEVEL_WORD
     # فعل صفقة ثم سعر («You could buy near 1.0850»، «Short it at 1.0900»)
     + r"|" + _EN_ACT + r"[^\n\d]{0,30}?" + _PRICE
+    # … أو سعر صحيح (ذهب/بيتكوين) بعد حرف جرّ («buy near 2350»)
+    + r"|" + _EN_ACT + r"[^\n\d]{0,30}?\b(?:at|near|around|below|above|from|under|over|@)\s*\d{3,}(?![\d.,%])"
+    + r"|\b(?:pending\s+)?(?:buy|sell)\s+(?:limit\s+|stop\s+)?orders?\s+(?:at|near|around|@)\s*\d"
+    + r"|" + _EN_ORDER
     # حثّ بفعل مساعد على الآن/هنا/هذا الزوج — «you would buy when the fast MA crosses» شرح استراتيجية، مسموح
     + r"|\b(?:you|traders?|one)\s+(?:should|could|might|may|can|must|need\s+to|(?:might\s+|may\s+)?want\s+to)\s+"
     r"(?:(?:consider|look\s+to|think\s+about)\s+)?(?:buy(?:ing)?|sell(?:ing)?|short(?:ing)?|go(?:ing)?\s+(?:long|short)|enter)\b"
     r"(?=\s*(?:[.!?]|$)|[^\n.!?]{0,40}?(?:\bnow\b|\bhere\b|\btoday\b|\bthis\b|\bit\b|\bthe\s+pair\b|" + _PRICE + r"))"
-    + r"|\b(?:i|we)(?:['’]d|['’]ll|\s+would|\s+will)\s+(?:be\s+)?(?:buy(?:ing)?|sell(?:ing)?|go(?:ing)?\s+(?:long|short)|short(?:ing)?)\b"
+    + r"|\b(?:i|we)(?:['’]d|['’]ll|\s+would|\s+will)\s+(?:be\s+)?(?:an?\s+)?(?:buy(?:ing|er)?|sell(?:ing|er)?"
+    r"|go(?:ing)?\s+(?:long|short)|get(?:ting)?\s+(?:long|short|in)|short(?:ing)?)\b"
+    + r"|\b(?:i['’]m|i\s+am|we['’]re|we\s+are)\s+(?:long|short)\b(?![-‑])(?!\s+(?:on|of)\b)"
     + r"|\b(?:good|right|best|ideal|great)\s+(?:time|moment|opportunity|place|spot|level|chance)\s+to\s+"
     r"(?:buy|sell|short|go\s+long|go\s+short|enter)\b"
+    + r"|\btime\s+to\s+(?:buy|sell|short|go\s+(?:long|short)|get\s+in)\b"
+    + r"|\b(?:is|it['’]s|looks\s+like)\s+an?\s+(?:strong\s+|clear\s+|good\s+)?(?:buy|sell)\b(?![-‑])"
+    r"(?!\s+(?:signal|zone|side|order|stop|limit)s?\b)"
+    + r"|\bstrong\s+(?:buy|sell)\b(?![-‑])(?!\s+signals?\b)"
+    + r"|\b(?:long|short)\s+(?:opportunit(?:y|ies)|setup|entry|trade\s+idea)\b"
     + r"|" + _AR_ACT + r"\s+(?:من|عند|قرب|فوق|تحت|حول|الآن|الان|فورا|فوراً)(?!\w)"
-    + r"|(?:يفضل|يُفضّل|يفضّل|الأفضل|الافضل|من الأفضل|فرصة|فرصه)\s+(?:ل|ال|لل)?(?:شراء|بيع|دخول)(?!\w)"
-    + r"|(?:^|[.!?]\s+|[-*•]\s*)(?:buy|sell|go\s+long|go\s+short)\s+(?:now|here|at|above|below|on|if|when|it|"
-    r"this|the\s+(?:pair|dip|breakout|retest|rally)|[A-Z]{3,6}\b)"
-    + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|يُنصح|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
-    + r"|توصية\s*[:\-–]?\s*(?:ب|ب?ال)?(?:شراء|بيع)"
-    + r"|(?:الاتجاه|القرار|الصفقة)\s*[:\-–]\s*(?:شراء|بيع)"
-    + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشترِ|اشتر|بِع|ادخل)(?!\w)",
+    + r"|(?:يفضل|الأفضل|الافضل|من الأفضل|فرصة|فرصه)\s+(?:ل|ال|لل)?(?:شراء|بيع|دخول)(?!\w)"
+    + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
+    + r"|توصية\s*[:\-–—]?\s*(?:ب|ب?ال)?(?:شراء|بيع)"
+    + r"|(?:الاتجاه|القرار|الصفقة)\s*[:\-–—]\s*(?:شراء|بيع)"
+    + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشتر|اشتري|بع|ادخل)(?!\w)"
+    + r"|(?:افتح|أدخل|ادخل|نفذ|خذ)\s+(?:صفقة|صفقه|مركز)\s+(?:ال)?(?:شراء|بيع)"
+    # الكردية (سۆرانی): کڕین/فرۆشتن مع سعر أو «ئێستا» (الآن) أو «بکە» (افعل)
+    + r"|(?:کڕین|فرۆشتن)\w*[^\n\d]{0,25}?(?:\d|ئێستا|بکە)"
+    # الفرنسية/الإسبانية: فعل أمر صفقة مع سعر أو «الآن»
+    + r"|\b(?:achetez|achète|achetons|vendez|vends|compra|compre|vende|venda|ingresa)\b[^\n\d]{0,30}?"
+    r"(?:\d|maintenant|ahora)",
     re.IGNORECASE | re.MULTILINE,
 )
 # الكردية على النصّ العربي (نفس الأبجدية) كقالب `ai_ask` الاحتياطي — لا مراجعة لغوية كردية.
@@ -288,16 +324,52 @@ _GUARD_REFUSAL = {
 }
 
 
+def _guard_norm(text: str) -> str:
+    # التشكيل («بِع»، «اشترِ»، «يُفضّل») وتنسيق Markdown («**Entry:** 1.0850») لا يغيّران المعنى
+    return re.sub(r"[*_`]", "", _TASHKEEL.sub("", text or ""))
+
+
 def has_trade_call(text: str) -> bool:
-    return bool(_TRADE_CALL_RE.search(text or ""))
+    return bool(_TRADE_CALL_RE.search(_guard_norm(text)))
+
+
+# run 78: الحارس كان يفحص كل سطر وحده ⇒ «Entry:\n1.0850» وقائمة «- Entry\n  - 1.0850» وجدول
+# «| Entry | Stop | Target |» صفوفه أسعار كانت تمرّ كاملة.
+_LABEL_END_RE = re.compile(_LEVEL_WORD + r"[\s:：\-–—=→←>|]*$", re.IGNORECASE)
+_STARTS_NUM_RE = re.compile(r"^[\s\-*•>|:=→←]*\d")
+
+
+def _trade_call_lines(lines: list[str]) -> set[int]:
+    bad = {i for i, ln in enumerate(lines) if has_trade_call(ln)}
+    # كلمة مستوى تنتهي بها سطر، والسطر غير الفارغ التالي يبدأ برقم
+    filled = [i for i, ln in enumerate(lines) if ln.strip()]
+    for a, b in zip(filled, filled[1:]):
+        if (_LABEL_END_RE.search(_guard_norm(lines[a])) and _STARTS_NUM_RE.match(_guard_norm(lines[b]))
+                and has_trade_call(lines[a] + " " + lines[b])):
+            bad |= {a, b}
+    # جدول Markdown: رأسه فيه كلمة مستوى وصفوفه أسعار ⇒ يُحذف الجدول كله
+    i = 0
+    while i < len(lines):
+        if not lines[i].lstrip().startswith("|"):
+            i += 1
+            continue
+        j = i
+        while j < len(lines) and lines[j].lstrip().startswith("|"):
+            j += 1
+        flat = re.sub(r"[|\-:\s]+", " ", " ".join(lines[i:j]))
+        if re.search(_LEVEL_WORD, _guard_norm(lines[i]), re.IGNORECASE) and has_trade_call(flat):
+            bad |= set(range(i, j))
+        i = j
+    return bad
 
 
 def guard_answer(text: str, lang: str = "ar") -> str:
     """يُسقط أسطر التوصيات من ردّ النموذج (قرار أنس ٤). لا سطر نظيف باقٍ ⇒ ردّ الاعتذار التعليمي."""
     lines = (text or "").split("\n")
-    kept = [ln for ln in lines if not has_trade_call(ln)]
-    if len(kept) == len(lines):
+    bad = _trade_call_lines(lines)
+    if not bad:
         return text
+    kept = [ln for i, ln in enumerate(lines) if i not in bad]
     if not any(re.search(r"\w", ln) for ln in kept):
         return _GUARD_REFUSAL["en" if lang == "en" else "ar"]
     body = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
