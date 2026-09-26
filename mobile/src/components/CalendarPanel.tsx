@@ -538,8 +538,10 @@ const styles = StyleSheet.create({
   rowRtl: { flexDirection: 'row-reverse' },
   rowSoon: { backgroundColor: colors.accentFaint, borderRadius: radii.sm, paddingHorizontal: spacing.xs },
   rowDone: { opacity: 0.45 },
-  rel: { color: colors.textDim, fontSize: 11, fontWeight: '500', marginTop: 4 },
-  relSoon: { color: colors.accent },
+  // عدّ تنازلي يتغيّر كل دقيقة ⇒ `numeric` (§2). «قريب» كان بالتأكيد على كل صفّ قريب (عدة أحداث بالساعة نفسها
+  // ⇒ عدة عناصر تأكيد بلوحة واحدة، §1) ⇒ نصّ أساسي: أوضح من الخافت بلا لون.
+  rel: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
+  relSoon: { color: colors.text },
   tzNote: { ...numeric, color: colors.textDim, fontSize: 11 },
   sampleNote: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '500' },
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
