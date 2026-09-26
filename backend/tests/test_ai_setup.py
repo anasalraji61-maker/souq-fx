@@ -414,8 +414,9 @@ def test_empty_model_reply_is_an_error_not_the_answer_none(monkeypatch, content)
     with pytest.raises(RuntimeError):
         openrouter_ai.chat("s", "u")
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
-    out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟"}).json()
-    assert out["answer"] and out["answer"] not in ("None", "")
+    r = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟"})
+    # النموذج مربوط وردّه فارغ ⇒ خطأ صريح (التطبيق يعرض «غير متاح»/بديل التقرير)، لا «None» ولا القالب
+    assert r.status_code == 503 and r.json()["detail"] == {"error": "ai_unavailable"}
 
 
 def test_ai_symbol_is_bounded():
@@ -586,7 +587,7 @@ def test_template_reply_does_not_quote_a_trade_call_question(monkeypatch):
     ans = c.post("/api/ai/ask", json={"question": "اشترِ عند 1.0850 الآن", "lang": "ar"}).json()["answer"]
     assert "1.0850" not in ans and "بالنسبة لسؤالك:" in ans
     ans = c.post("/api/ai/ask", json={"question": "ما هو RSI؟", "lang": "ar"}).json()["answer"]
-    assert "«ما هو RSI؟»" in ans
+    assert "ما هو RSI؟" not in ans and "بالنسبة لسؤالك:" in ans
 
 
 # قرار أنس ١٢: الكردي يُجاب بالقالب العربي عند غياب النموذج ⇒ الردّ يقول لغته ليقولها التطبيق صراحةً
@@ -1006,3 +1007,37 @@ def test_guard_flags_run109_leaks(text):
 ])
 def test_guard_run109_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+# التشغيل 114: النموذج مربوط وتعذّر ⇒ 503 لا قالب «EURUSD صاعد (+x%)» بـ200 يعرضه تقرير الأداء تقريراً
+@pytest.mark.parametrize("lang", ["ar", "en", "ku"])
+def test_ai_ask_model_failure_is_503_not_the_template(monkeypatch, lang):
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+
+    def boom(*a, **k):
+        raise RuntimeError("openrouter down")
+
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", boom)
+    r = TestClient(main.app).post("/api/ai/ask", json={"question": "تقرير الأداء الأسبوعي", "lang": lang})
+    assert r.status_code == 503 and r.json()["detail"] == {"error": "ai_unavailable"}
+
+
+def test_ai_ask_says_whether_the_answer_is_model_or_template(monkeypatch):
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    c = TestClient(main.app)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    assert c.post("/api/ai/ask", json={"question": "RSI?"}).json()["source"] == "template"
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "RSI measures momentum.")
+    assert c.post("/api/ai/ask", json={"question": "RSI?"}).json()["source"] == "model"
+
+
+def test_template_does_not_print_a_report_prompt_back(monkeypatch):
+    """سؤال التقرير قالب داخلي بتعليمات للنموذج — كان القالب العربي يقتبسه كاملاً للمستخدم."""
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    q = "اكتب تقرير أداء أسبوعي.\nصفقات مغلقة=12 — لا تسمّها أرباحاً فلا تسمّها كذلك. اعتمد عليها في التقرير."
+    for lang in ("ar", "ku"):
+        ans = TestClient(main.app).post("/api/ai/ask", json={"question": q, "lang": lang}).json()["answer"]
+        assert "اعتمد عليها في التقرير" not in ans and "صفقات مغلقة=12" not in ans

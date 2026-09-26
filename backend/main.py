@@ -2339,10 +2339,13 @@ def ai_ask(body: AiAsk):
             answer = openrouter_ai.guard_answer(openrouter_ai.trading_answer(q, sym, context, lang), lang)
             return {
                 "answer": answer, "answer_lang": openrouter_ai.reply_lang(answer, lang), "symbol": sym,
-                "setup": setup, "live_price": live, "price_as_of": price_at,
+                "setup": setup, "live_price": live, "price_as_of": price_at, "source": "model",
             }
         except Exception:
-            pass
+            # النموذج مربوط وتعذّر ⇒ خطأ صريح لا القالب المحلي: كان يعود 200 بـ«تحليل سريع لـ EURUSD … صاعد
+            # (+1.63%)» فيعرضه تقرير الأداء الأسبوعي (`WeeklyReportPanel`) تقريراً — اتجاه سوق بلا أيّ رقم
+            # من دفتره ولا «الذكاء غير متاح»؛ وبديل التطبيق الصادق (إحصاءات الدفتر) لا يعمل إلا على خطأ.
+            raise HTTPException(503, {"error": "ai_unavailable"})
 
     if lang == "en":
         # نفس القالب التعليمي بالإنجليزية لمستخدمي en-US/en-GB (بلا اقتباس السؤال: بعض الأسئلة
@@ -2391,12 +2394,12 @@ def ai_ask(body: AiAsk):
             )
         else:
             read = "لا يتوفر سعر حي الآن، لذلك لا قراءة اتجاه.\n\n"
-        # سؤال فيه توصية («اشترِ عند 1.0850») لا يُقتبس في الردّ — كان يظهر بصوت المساعد (قرار ٤)
-        quoted = ":" if openrouter_ai.has_trade_call(q) else f": «{q}»"
+        # السؤال لا يُقتبس في الردّ (كالقالب الإنجليزي): سؤال فيه توصية كان يظهر بصوت المساعد (قرار ٤)، وأسئلة
+        # التقارير قوالب داخلية («…فلا تسمّها كذلك. اعتمد عليها في التقرير.») كانت تُطبع للمستخدم
         answer = (
             f"**تحليل سريع لـ {sym}**\n\n"
             f"{read}"
-            f"بالنسبة لسؤالك{quoted}\n"
+            f"بالنسبة لسؤالك:\n"
             f"- قوة الدولار تظهر على أكثر من زوج (EURUSD وUSDJPY) لا على شارت واحد.\n"
             f"- كسر المستوى يُعدّ مؤكَّداً عادةً بعد إغلاق شمعة خلفه لا بمجرّد لمسه.\n"
             f"- إدارة المخاطر: كثير من المتداولين لا يخاطرون بأكثر من نحو 1% من رأس المال في الصفقة الواحدة.\n\n"
@@ -2411,6 +2414,8 @@ def ai_ask(body: AiAsk):
         "live_price": live,
         # وقت السعر الذي بُني عليه الجواب (إغلاق آخر شمعة، ثوانٍ UTC) — null بلا سعر حقيقي
         "price_as_of": price_at,
+        # «template» = قالب محلي (لا نموذج مربوط): قراءة شارت عامة، لا جواب عن السؤال — لا يصلح تقريراً
+        "source": "template",
     }
 
 
