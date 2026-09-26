@@ -1160,7 +1160,8 @@ function PaneValueHead({
    *   الانكماش**. نفس منطق رأس Gator.
    * - `'cross'`: فوق الإشارة أم تحتها — للوحات التي يُلوَّن خطّها بالتقاطع (TSI، KST، RVI، PMO،
    *   Fisher). كان الرقم يُلوَّن بالجانب والخطّ بالتقاطع ⇒ TSI ‎−5‎ فوق إشارته ‎−8‎: خطّ أخضر ورقم أحمر.
-   *   المقارنة كالخطّ تماماً (`>=` على الخام، وبلا إشارة ⇒ أخضر).
+   *   المقارنة كالخطّ تماماً (`>=` على الخام، وبلا إشارة ⇒ أخضر). ولـMACD/PPO/VW-MACD: الهيستوغرام
+   *   تحت الرقم هو «الخطّ − الإشارة»، فالرقم الأخضر فوق أعمدة حمراء (MACD موجب تحت إشارته) كان تناقضاً.
    * - `'none'`: بلا لون — حيث تحمل الأعمدة دلالةً أخرى (اتجاه الشمعة مثلاً) فيتنافس
    *   لونان على معنيين مختلفين.
    */
@@ -11565,6 +11566,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name={volName('VW-MACD')}
+            tone="cross"
             priceDec={paneDec}
             values={vwMacd.macdLine}
             at={crossIndex}
@@ -12539,6 +12541,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="PPO"
+            tone="cross"
             values={ppo.ppo}
             at={crossIndex}
             signal={{ values: ppo.signal, color: colors.warn }}
@@ -13944,6 +13947,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="MACD"
+            tone="cross"
             priceDec={paneDec}
             values={macd.macdLine}
             at={crossIndex}
