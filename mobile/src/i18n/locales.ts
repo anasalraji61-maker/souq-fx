@@ -1631,19 +1631,19 @@ const ar: Dict = {
   notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
   onboardStep1Title: 'بدّل الزوج بلمسة',
   onboardStep1Body:
-    'اضغط أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل إليه الشارت، وتغيّر اليوم ▲▼ بجانبه. اقرص بإصبعين للتكبير، واسحب محور السعر لتطول الشموع أو تقصر، وزرّ «تلقائي» بزاوية المحورين يعيد العرض. المس شمعة لتقرأ أسعارها (O H L C)، أو اضغط مطوّلاً ثم اسحب لتمرّ على الشموع واحدةً واحدة.',
+    'اختر الزوج من قائمة المتابعة بجانب الشارت (وعلى الهاتف: من الشريط فوقه)، ومعه تغيّر اليوم ▲▼. كبّر بعجلة الفأرة أو بإصبعين، و«تلقائي» يعيد العرض. مرّر الفأرة على شمعة أو المسها لتقرأ أسعارها (O H L C). وعلى اللابتوب اضغط ? لترى اختصارات لوحة المفاتيح.',
   onboardStep2Title: 'أدوات الرسم',
   onboardStep2Body:
-    'أدوات الرسم في الشريط الجانبي بجوار الشارت (وعلى الهاتف: تبويب «رسم» بالشريط السفلي) — خطوط الترند وفيبوناتشي وباقي الأدوات على الشارت مباشرةً، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. ولتخطيط صفقة استعمل «خطة شراء» أو «خطة بيع»: اسحب من الدخول إلى الوقف فيظهر الهدف وبُعده بالـpip ونسبة العائد إلى المخاطرة. المس رسماً لتحدّده: اسحبه لتحريكه أو أزِحه بأزرار ▲▼◀▶ (pip واحد أو شمعة واحدة بكل لمسة، واضغط مطوّلاً ليتكرّر ثم يُسرع)، أو اضغط «نسخة» ❐ لتضع المستوى نفسه في مكان آخر. أخطأت؟ «تراجع» ↶ يلغي آخر تغيير، و«إعادة» ↷ يرجعه إن تراجعتَ أكثر مما أردت.',
+    'أدوات الرسم في الشريط الجانبي بجوار الشارت (وعلى الهاتف: تبويب «رسم» بالشريط السفلي)، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. لتخطيط صفقة اختر «خطة شراء» أو «خطة بيع» واسحب من الدخول إلى الوقف لترى الهدف ونسبة العائد إلى المخاطرة. أخطأت؟ «تراجع» ↶ يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
-    'اختر من عشرات المؤشرات (RSI وMACD وبولنجر…) أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (بالفوركس الفوليوم وCVD تقدير من الشموع، لا حجم ولا تدفّق أوامر حقيقي). قيم المتوسطات وحدود بولنجر تظهر على محور السعر بلون خطوطها. وللفوركس: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
+    'اختر من عشرات المؤشرات، أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD. بالفوركس الفوليوم وCVD تقدير من الشموع لا حجم حقيقي. وللفوركس أيضاً «Sessions» لجلسات طوكيو ولندن ونيويورك، و«PDH / PDL» لأعلى وأدنى الأمس.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
-    'أسرع طريق: المس المستوى على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. ولنقله اسحب وسمه (السهم والسعر) على حافة الشارت إلى السعر الجديد. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
+    'المس مستوىً على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام. يصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، ولنقله اسحب وسمه على حافة الشارت. تنبيهات المؤشرات وتفعيل الإشعارات في لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
-    'قبل أي صفقة افتح «أدوات ← المخاطرة»: اختر الرمز كما يكتبه وسيطك (EURUSDc لحساب السنت)، وأدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip لا بنقاط MT4/MT5 — 250 نقطة عادةً 25 pip — أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب (وأضف السبريد والعمولة ليشملهما الرقم)، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
+    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip (لا بنقاط MT4/MT5 — 250 نقطة عادةً 25 pip) لتعرف حجم اللوت المناسب، ثم «سجّل هذه الخطة بالدفتر» لتراجعها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
   onboardRiskNote:
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardStepCounterA11y: 'الخطوة {n} من {total}',
@@ -2875,19 +2875,19 @@ const enUS: Dict = {
   notifOpenSettingsBtn: 'Open device settings',
   onboardStep1Title: 'Switch pairs in one tap',
   onboardStep1Body:
-    'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) to switch the chart, with today’s change ▲▼ beside it. Pinch to zoom, drag the price axis to make candles taller or shorter, and AUTO resets the view. Tap a candle to read its O H L C, or press and hold, then drag to step through the candles one by one.',
+    'Pick a pair from the watchlist beside the chart (on a phone: the strip above it), with today’s change ▲▼. Zoom with the mouse wheel or a pinch; AUTO resets the view. Hover over or tap a candle to read its O H L C. On a laptop, press ? to see the keyboard shortcuts.',
   onboardStep2Title: 'Drawing tools',
   onboardStep2Body:
-    'Drawing tools sit in the side rail next to the chart (on a phone: the Draw tab in the bottom bar) — trend lines, Fibonacci and more, right on the chart; a line drawn on 4H stays when you drop to 1H. To plan a trade, use Buy plan or Sell plan: drag from entry to stop to see the target, pips and reward-to-risk. Tap a drawing to select it: drag to move it or nudge it with ▲▼◀▶ (one pip or one candle per tap; hold to repeat, faster after a moment), or press Clone ❐ to reuse the same level somewhere else. Drew something wrong? Undo ↶ reverses the last change, and Redo ↷ brings it back if you went one step too far.',
+    'Drawing tools sit in the side rail next to the chart (on a phone: the Draw tab in the bottom bar), and a line drawn on 4H stays when you drop to 1H. To plan a trade, pick Buy plan or Sell plan and drag from entry to stop to see the target and reward-to-risk. Drew something wrong? Undo ↶ reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
-    'Pick from dozens of indicators (RSI, MACD, Bollinger…) or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (on forex, volume and CVD are estimated from candles, not real volume or order flow). Moving averages and Bollinger bands show their values on the price axis in tags that match their lines. For forex: Sessions shades Tokyo, London and New York at their correct hours through daylight saving, and PDH / PDL marks yesterday’s session high and low.',
+    'Pick from dozens of indicators, or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD. On forex, volume and CVD are estimated from candles, not real volume. Also for forex: Sessions shades Tokyo, London and New York, and PDH / PDL marks yesterday’s high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
-    'Fastest way: tap a level on the chart, then the alert button showing its price — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. To move it, drag its label (arrow and price) at the edge of the chart to the new price. Indicator alerts and notification settings are in the alerts panel.',
+    'Tap a level on the chart, then the alert button showing its price — no typing. You get a notification when price reaches it (checked about once a minute). To move it, drag its label at the edge of the chart. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
-    'Before any trade, open Tools → Risk: pick the symbol as your broker writes it (EURUSDc for a cent account), enter your balance, risk % and stop loss (in pips, not MT4/MT5 points — 250 points is usually 25 pips — or as entry and stop prices) to get the right lot size (add spread and commission to include them), then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
+    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss in pips (not MT4/MT5 points — 250 points is usually 25 pips) to get the right lot size, then “Log this plan to the journal” to review it later. Many traders risk no more than 1–2% per trade.',
   onboardRiskNote:
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardStepCounterA11y: 'Step {n} of {total}',
@@ -4157,19 +4157,19 @@ const ku: Dict = {
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
   onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
   onboardStep1Body:
-    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. بە دوو پەنجە گەورەی بکە، تەوەری نرخ ڕابکێشە بۆ درێژکردن یان کورتکردنی مۆمەکان، و «خۆکار» لە گۆشەی تەوەرەکان دیمەنەکە دەگەڕێنێتەوە. دەست لە مۆمێک بدە بۆ خوێندنەوەی نرخەکانی (O H L C)، یان پەنجە ڕابگرە پاشان ڕایبکێشە بۆ تێپەڕین بە مۆمەکاندا یەک بە یەک.',
+    'جووتێک لە لیستی چاودێری تەنیشت چارتەکە هەڵبژێرە (لە مۆبایل: لە شریتی سەرەوەی)، لەگەڵ گۆڕانی ئەمڕۆ ▲▼. بە تایەی ماوس یان بە دوو پەنجە گەورەی بکە، و «خۆکار» دیمەنەکە دەگەڕێنێتەوە. ماوس ببە سەر مۆمێک یان دەستی لێ بدە بۆ خوێندنەوەی نرخەکانی (O H L C). لە لاپتۆپ ? دابگرە بۆ بینینی کورتبڕەکانی کیبۆرد.',
   onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
   onboardStep2Body:
-    'ئامرازەکانی وێنەکێشان لە شریتی لاتەنیشتی چارتن (لە مۆبایل: تابی «وێنەکێشان» لە شریتی خوارەوە) — هێڵی ترێند و فیبۆناتچی و ئامرازەکانی تر ڕاستەوخۆ لەسەر چارت، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» بەکاربهێنە: لە چوونەژوورەوە بۆ وەستان ڕایبکێشە و ئامانج و pip و ڕێژەی قازانج بۆ مەترسی دەبینیت. دەست لە وێنەیەک بدە بۆ هەڵبژاردنی: ڕایبکێشە بۆ جوولاندنی یان بە دوگمەکانی ▲▼◀▶ بیجووڵێنە (یەک pip یان یەک مۆم بە هەر دەستدانێک؛ پەنجەت ڕابگرە بۆ دووبارەبوونەوە، دواتر خێراتر)، یان «کۆپی» ❐ دابگرە بۆ دانانی هەمان ئاست لە شوێنێکی تر. هەڵەت کرد؟ «گەڕاندنەوە» ↶ دوایین گۆڕانکاری هەڵدەوەشێنێتەوە، و «دووبارەکردنەوە» ↷ دەیگەڕێنێتەوە ئەگەر زیاتر لە پێویست گەڕاندتەوە.',
+    'ئامرازەکانی وێنەکێشان لە شریتی لاتەنیشتی چارتن (لە مۆبایل: تابی «وێنەکێشان» لە شریتی خوارەوە)، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» هەڵبژێرە و لە چوونەژوورەوە بۆ وەستان ڕایبکێشە بۆ بینینی ئامانج و ڕێژەی قازانج بۆ مەترسی. هەڵەت کرد؟ «گەڕاندنەوە» ↶ دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
-    'لە دەیان پێوەر هەڵبژێرە (RSI، MACD، بۆلینجەر…)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (لە فۆرێکس قەبارە و CVD خەمڵێنراون لە مۆمەکان، نەک قەبارە یان ڕەوتی ڕاستەقینەی فەرمانەکان). بەهای ناوەندە جووڵاوەکان و سنوورەکانی بۆلینجەر لەسەر تەوەرەی نرخ بە ڕەنگی هێڵەکانیان دەردەکەوێت. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
+    'لە دەیان پێوەر هەڵبژێرە، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD. لە فۆرێکس قەبارە و CVD لە مۆمەکانەوە خەمڵێنراون، نەک قەبارەی ڕاستەقینە. هەروەها بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک ڕەنگ دەکات، و «PDH / PDL» بەرزترین و نزمترینی دوێنێ نیشان دەدات.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
-    'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. بۆ گواستنەوەی، نیشانەکەی (تیر و نرخ) لە لێواری چارت ڕابکێشە بۆ نرخە نوێیەکە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
+    'دەست لە ئاستێک بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت). بۆ گواستنەوەی، نیشانەکەی لە لێواری چارت ڕابکێشە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
-    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: هێماکە هەڵبژێرە وەک بڕۆکەرەکەت دەینووسێت (EURUSDc بۆ هەژماری سەنت)، باڵانس و ڕێژەی مەترسی و وەستانی زیان (بە pip نەک بە خاڵی MT4/MT5 — 250 خاڵ زۆرجار 25 pipە — یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت (سپرێد و کۆمیسیۆن زیاد بکە بۆ ئەوەی ژمارەکە بیانگرێتەوە)، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
+    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و وەستانی زیان بە pip بنووسە (نەک بە خاڵی MT4/MT5 — 250 خاڵ زۆرجار 25 pipە) بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر پێیدا بچیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
   onboardRiskNote:
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
