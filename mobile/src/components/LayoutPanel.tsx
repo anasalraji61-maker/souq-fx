@@ -133,7 +133,9 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
   const saveNow = async () => {
     const layoutName = name.trim().slice(0, LAYOUT_NAME_MAX).trim() || t.layoutFallbackName;
     // نفس الاسم = تحديث ذلك التخطيط لا نسخة مكرّرة (الاسم الافتراضي «تخطيطي» كان يُكدّس نسخاً متطابقة الاسم).
-    const existing = layouts.find((x) => x.id !== 'default' && x.name === layoutName);
+    // والمخزَّن أيضاً: حفظٌ قبل وصول القائمة المحمّلة (الحالة `[DEFAULT_LAYOUT]` بعد) كان يُنشئ نسخة ثانية بالاسم نفسه.
+    const sameName = (x: TerminalLayout) => x.id !== 'default' && x.name === layoutName;
+    const existing = layouts.find(sameName) ?? (await loadLayouts()).find(sameName);
     const layout: TerminalLayout = {
       id: existing?.id ?? `l${Date.now()}`,
       name: layoutName,
