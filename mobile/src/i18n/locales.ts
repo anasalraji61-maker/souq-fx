@@ -716,6 +716,8 @@ export type Dict = {
   journalOpenTimeInvalid: string;
   journalOpenTimeFuture: string;
   journalCloseTimeNeedsOpen: string;
+  /** launch219a: وقت فتح بنموذج التعديل بعد وقت إغلاق الصفقة المحفوظ (أو 422 `invalid_opened_at`) — `{closed}` = الإغلاق بتوقيت الجهاز */
+  journalOpenTimeAfterClose: string;
   journalSizePlaceholder: string;
   journalSizeA11y: string;
   journalSizeUnitsFix: string;
@@ -2224,6 +2226,7 @@ const ar: Dict = {
   journalOpenTimeInvalid: 'اكتب الوقت بهذه الصيغة: {example}',
   journalOpenTimeFuture: 'وقت الفتح بعد الآن — هل نسخته بتوقيت الوسيط؟ اكتبه بتوقيت جهازك',
   journalCloseTimeNeedsOpen: 'اكتب وقت الفتح أيضاً — لا يُحفظ وقت إغلاق بلا وقت فتح',
+  journalOpenTimeAfterClose: 'وقت الفتح بعد وقت إغلاق الصفقة ({closed}) — راجعه',
   journalSizePlaceholder: 'الحجم لوت (اختياري)',
   journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
   journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
@@ -3517,6 +3520,7 @@ const enUS: Dict = {
   journalOpenTimeInvalid: 'Type the time like this: {example}',
   journalOpenTimeFuture: 'The open time is later than now — did you copy your broker’s server time? Type it in your device’s time',
   journalCloseTimeNeedsOpen: 'Add the open time too — a close time can’t be saved without one',
+  journalOpenTimeAfterClose: 'The open time is after the trade was closed ({closed}) — check it',
   journalSizePlaceholder: 'Size in lots (optional)',
   journalSizeA11y: 'Trade size in lots (optional)',
   journalSizeUnitsFix: '⚠ {n} looks like units, not lots — select it to convert to {lots} lot',
@@ -4870,6 +4874,7 @@ const ku: Dict = {
   journalOpenTimeInvalid: 'کاتەکە بەم شێوەیە بنووسە: {example}',
   journalOpenTimeFuture: 'کاتی کردنەوە دوای ئێستایە — کاتی بڕۆکەرت کۆپی کردووە؟ بە کاتی ئامێرەکەت بینووسە',
   journalCloseTimeNeedsOpen: 'کاتی کردنەوەش بنووسە — کاتی داخستن بێ کاتی کردنەوە پاشەکەوت ناکرێت',
+  journalOpenTimeAfterClose: 'کاتی کردنەوە دوای کاتی داخستنی مامەڵەکەیە ({closed}) — پشکنینی بکە',
   journalSizePlaceholder: 'قەبارە بە لۆت (ئیختیاری)',
   journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
   journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
