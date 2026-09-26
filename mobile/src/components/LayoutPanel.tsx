@@ -52,6 +52,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
    *  ولقارئ الشاشة إجراء «حذف» على الصفّ نفسه بلا حاجة لإظهاره (كقائمة المتابعة). */
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [revealId, setRevealId] = useState<string | null>(null);
+  /** ويب بلوحة المفاتيح: Tab يصل للصفّ ثم «حذف» — كان لا يُركَّز أبداً لأنه غير مُركَّب حتى المرور بالفأرة. */
+  const [focusId, setFocusId] = useState<string | null>(null);
   /** حفظ جارٍ — نقرتان سريعتان كانتا تحفظان نسختين بالاسم نفسه (القائمة لم تتحدّث بعد فلا «existing»). */
   const savingRef = useRef(false);
 
@@ -254,6 +256,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
               onApply(l);
             }}
             onLongPress={l.id !== 'default' ? () => setRevealId((r) => (r === l.id ? null : l.id)) : undefined}
+            onFocus={() => setFocusId(l.id)}
+            onBlur={() => setFocusId((f) => (f === l.id ? null : f))}
             accessibilityActions={l.id !== 'default' ? [{ name: 'delete', label: t.deleteWord }] : undefined}
             onAccessibilityAction={(e) => {
               if (e.nativeEvent.actionName === 'delete') askRemove(l);
@@ -267,12 +271,18 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
             </Text>
             <Text style={[styles.rowSub, { textAlign: align }]}>{describe(l)}</Text>
           </Pressable>
-          {l.id !== 'default' && (hoverId === l.id || revealId === l.id) ? (
+          {l.id !== 'default' && (Platform.OS === 'web' || hoverId === l.id || revealId === l.id) ? (
+            // الويب: مُركَّب دائماً ليبلغه Tab، شفّافاً وبلا نقر حتى المرور/التركيز/الضغط المطوّل (§5.2) —
+            // على ويب اللمس لا مرور، فلا تُصاب الخانة الخفيّة بنقرة عابرة.
             <Pressable
               accessibilityRole="button"
               onPress={() => askRemove(l)}
+              onFocus={() => setFocusId(l.id)}
+              onBlur={() => setFocusId((f) => (f === l.id ? null : f))}
+              pointerEvents={hoverId === l.id || revealId === l.id || focusId === l.id ? 'auto' : 'none'}
               style={({ pressed }) => [
                 styles.delHit,
+                !(hoverId === l.id || revealId === l.id || focusId === l.id) && styles.delHidden,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
@@ -285,13 +295,21 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
           ) : null}
         </Pressable>
       ))}
-      {/* launch165a: «حذف» مخفيّ وقت السكون (§5.2) ويظهر بالضغط المطوّل — على اللمس لا شيء يدلّ عليه. الويب يكشفه بالمرور. */}
-      {Platform.OS !== 'web' && layouts.some((l) => l.id !== 'default') ? (
+      {/* launch165a: «حذف» مخفيّ وقت السكون (§5.2) ويظهر بالضغط المطوّل — على اللمس لا شيء يدلّ عليه. الويب يكشفه بالمرور،
+          إلا ويب اللمس (آيباد/متصفّح الهاتف: لا مرور) فيحتاج التلميح نفسه. */}
+      {(Platform.OS !== 'web' || WEB_NO_HOVER) && layouts.some((l) => l.id !== 'default') ? (
         <Text style={[styles.longPressHint, { textAlign: align }]}>{t.rowDeleteLongPressHint}</Text>
       ) : null}
     </View>
   );
 }
+
+/** متصفّح بلا مرور (لمس) — `(hover: none)`؛ يُقرأ مرة: الجهاز لا يتبدّل أثناء الجلسة. */
+const WEB_NO_HOVER =
+  Platform.OS === 'web' &&
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(hover: none)').matches;
 
 const styles = StyleSheet.create({
   wrap: {
@@ -340,6 +358,7 @@ const styles = StyleSheet.create({
   rowSub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   // §1: الأحمر لاتجاه السعر وحده — الإجراء نصّ ثانويّ، والتأكيد (`confirmDestructive`) يحمل الخطر.
   del: { color: colors.textMuted, fontWeight: '500', fontSize: 13 },
+  delHidden: { opacity: 0 },
   longPressHint: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   // §1: الأحمر لاتجاه السعر وحده — تعذّر الحفظ حالة متدهورة ⇒ `warn`.
   saveError: {
