@@ -10511,7 +10511,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         canPan &&
         (ctxMenu.axis ? true : ctxMenu.drawingId ? selectedId === ctxMenu.drawingId : tool === 'none')
           ? (() => {
-              const items: { key: string; label: string; price?: number; run: () => void }[] = [];
+              const items: { key: string; label: string; price?: number; a11y?: string; run: () => void }[] = [];
               const at = ctxMenu.point.price;
               if (ctxMenu.axis) {
                 // المقياس المفعَّل بعلامة ✓ لا باللون وحده (DESIGN-PRO §4)؛ اللوغاريتمي والنسبة متنافيان كزرّيهما.
@@ -10539,13 +10539,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 const dr = drawings.find((x) => x.id === drawingId);
                 if (dr && onCreateAlert && (dr.tool === 'hline' || dr.tool === 'hray')) {
                   const p = dr.a.price;
-                  items.push({ key: 'alert', label: `⚑ ${tr.mcAlertLine}`, price: p, run: () => createAlert(p) });
+                  items.push({
+                    key: 'alert',
+                    label: `⚑ ${tr.mcAlertLine}`,
+                    price: p,
+                    a11y: tr.mcAlertLineA11y.replace('{price}', fmtPrice(p)),
+                    run: () => createAlert(p),
+                  });
                 } else if (dr?.tool === 'zone' && dr.b && onCreateAlert) {
                   const hi = Math.max(dr.a.price, dr.b.price);
                   const lo = Math.min(dr.a.price, dr.b.price);
                   items.push({
                     key: 'alert',
                     label: `⚑ ${tr.mcAlertZone}`,
+                    // تنبيهان لا واحد — قارئ الشاشة يقولها مع الحدّين (launch185a).
+                    a11y: tr.mcAlertZoneA11y.replace('{hi}', fmtPrice(hi)).replace('{lo}', fmtPrice(lo)),
                     run: () => {
                       createAlert(hi);
                       createAlert(lo);
@@ -10601,7 +10609,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     <Pressable
                       key={it.key}
                       accessibilityRole="menuitem"
-                      accessibilityLabel={it.price != null ? `${it.label} ${fmtPrice(it.price)}` : it.label}
+                      accessibilityLabel={it.a11y ?? (it.price != null ? `${it.label} ${fmtPrice(it.price)}` : it.label)}
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       style={(state: any) => [styles.ctxItem, (state.hovered || state.pressed) && styles.ctxItemOn]}
                       onPress={() => {
@@ -14243,7 +14251,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     return (
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={tr.mcAlertLine}
+                        accessibilityLabel={tr.mcAlertLineA11y.replace('{price}', fmtPrice(d.a.price))}
                         style={({ pressed }) => [
                           styles.tool,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -14260,7 +14268,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     return (
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={tr.mcAlertZone}
+                        accessibilityLabel={tr.mcAlertZoneA11y
+                          .replace('{hi}', fmtPrice(Math.max(aPrice, bPrice)))
+                          .replace('{lo}', fmtPrice(Math.min(aPrice, bPrice)))}
                         style={({ pressed }) => [
                           styles.tool,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
