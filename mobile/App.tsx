@@ -149,7 +149,11 @@ export default function App() {
         <StatusBar style="light" />
         <AppErrorBoundary>
           <AuthProvider>
-            <NavigationContainer theme={navTheme}>
+            <NavigationContainer
+              theme={navTheme}
+              // Web: the browser tab reads "Home · MATRIX", not a bare "Home" among ten tabs.
+              documentTitle={{ formatter: (o, r) => `${o?.title ?? r?.name} · MATRIX` }}
+            >
               <RootTabs />
             </NavigationContainer>
             <KeyboardShortcutsSheet />
