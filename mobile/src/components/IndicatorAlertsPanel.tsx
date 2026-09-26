@@ -149,8 +149,11 @@ export function IndicatorAlertsPanel({
   /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة تنبيه مؤشر بدل صمت كامل */
   const [formError, setFormError] = useState<string | null>(null);
 
+  // رسالة «مُسلَّح: EURUSD · RSI…» أو خطأ الرمز السابق لا تبقى فوق نموذج صار GBPUSD — كشرائح الرمز وخانته.
   useEffect(() => {
     setSymbol(defaultSymbol);
+    setArmed(null);
+    setFormError(null);
   }, [defaultSymbol]);
 
   useEffect(() => {
