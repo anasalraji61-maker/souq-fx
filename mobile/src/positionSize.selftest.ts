@@ -11,6 +11,7 @@ import {
   LOT_UNIT,
   manualConvLooksInverted,
   lossStreakDrawdownPct,
+  lossRiskPct,
   dailyLossRoom,
   scaleOutPlan,
   scaleOutHalfAtOneR,
@@ -4046,3 +4047,33 @@ console.log('positionSize silver price-in-pips selftest OK');
   assert.equal(restoredLostCcy({ lostCcy: 5, lostDay: today }, now), null);
 }
 console.log('positionSize lostTodayOtherCcy selftest OK');
+
+// ---- lossRiskPct: سلسلة الخسائر وتحذير «عالية» بالنسبة الشاملة للتكاليف ----
+{
+  // EURUSD رصيد 10,000، 1%، وقف 5 نقاط، سبريد 1، عمولة 7/لوت ⇒ 2.00 لوت، الخسارة 2×6×10 + 2×7 = 134 = 1.34%
+  const eur = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(eur, 1);
+  const r = positionSize({ balance: 10000, riskPct: 1, slPips: 5, pipValuePerLot: pv, contractSize: eur.contractSize })!;
+  assert.equal(r.lots, 2);
+  const ws = spreadRisk({ lots: r.lots, slPips: 5, spreadPips: 1, pipValuePerLot: pv, balance: 10000, riskPct: 1, contractSize: eur.contractSize, commissionPerLot: 7 })!;
+  assert.ok(Math.abs(ws.risk - 134) < 1e-9);
+  const lp = lossRiskPct(1, ws)!;
+  assert.ok(Math.abs(lp - 1.34) < 1e-9);
+  // خمس خسائر مركّبة: 1 − 0.9866^5 = 6.52…% ⇒ 6.6 (للأعلى)، وكانت بالمكتوبة 1 − 0.99^5 = 4.90…% ⇒ 5.0
+  assert.equal(lossStreakDrawdownPct(lp, 5, true), 6.6);
+  assert.equal(lossStreakDrawdownPct(1, 5, true), 5);
+  // بوقف 3 نقاط: 1.8% ⇒ 6.00 لوت × (4×10 + 7) = 282 = 2.82% ⇒ «عالية» تظهر (المكتوبة 1.8 وحدها لا)
+  const r3 = positionSize({ balance: 10000, riskPct: 1.8, slPips: 3, pipValuePerLot: pv, contractSize: eur.contractSize })!;
+  assert.equal(r3.lots, 6);
+  const ws3 = spreadRisk({ lots: r3.lots, slPips: 3, spreadPips: 1, pipValuePerLot: pv, balance: 10000, riskPct: 1.8, contractSize: eur.contractSize, commissionPerLot: 7 })!;
+  assert.equal(riskIsHigh(1.8), false);
+  assert.equal(riskIsHigh(lossRiskPct(1.8, ws3)), true);
+  // بلا تكاليف (`spreadRisk` = null) ⇒ المكتوبة كما هي
+  assert.equal(lossRiskPct(2, null), 2);
+  // الشاملة أصغر من المكتوبة (تقريب اللوت للأسفل) ⇒ المكتوبة
+  assert.equal(lossRiskPct(1, { pct: 0.97 }), 1);
+  // مدخل غير صالح ⇒ null
+  assert.equal(lossRiskPct(NaN, { pct: 3 }), null);
+  assert.equal(lossRiskPct(0, null), null);
+}
+console.log('positionSize lossRiskPct selftest OK');

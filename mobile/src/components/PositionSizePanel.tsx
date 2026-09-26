@@ -81,6 +81,7 @@ import {
   riskIsHigh,
   breakevenRR,
   lossStreakDrawdownPct,
+  lossRiskPct,
   scaleOutHalfAtOneR,
   dailyLossRoom,
   dailyRoomMaxLots,
@@ -1502,8 +1503,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * سقف الـ100 كان يُسكِت التحذير **عند الطرف الأخطر بالضبط**: من يكتب «20» فيصير الرقم «200»
    * بضغطة زائدة يرى ⚠ عند 20% ثم يختفي التحذير كلّه عند 200%. الشرط الآن بلا سقف.
    */
-  const riskHigh = riskIsHigh(riskNum);
-  const lossStreakPct = lossStreakDrawdownPct(riskNum, LOSS_STREAK_N, riskIn?.amount == null);
+  // شاملةً السبريد والعمولة حين تُكتب — كسطر «شاملة التكاليف» وحدّ الخسارة اليومي. راجع `lossRiskPct`
+  const lossPct = lossRiskPct(riskNum, withSpread);
+  const riskHigh = riskIsHigh(lossPct);
+  const lossStreakPct = lossPct != null ? lossStreakDrawdownPct(lossPct, LOSS_STREAK_N, riskIn?.amount == null) : null;
   /**
    * نسبة فوق 100% مستحيلة (لا يُخاطَر بأكثر من الرصيد كلّه) فيرفضها `positionSize` وتعود النتيجة
    * `null` — وكان الصندوق يقول حينها «أدخل الرصيد ونسبة المخاطرة ووقف الخسارة» والثلاثة مكتوبة
