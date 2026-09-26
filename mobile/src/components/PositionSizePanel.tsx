@@ -79,6 +79,7 @@ import {
   lowRewardWarning,
   lotsOverOrderMax,
   riskIsHigh,
+  breakevenRR,
   lossStreakDrawdownPct,
   spreadTooWide,
   spreadMaybePrice,
@@ -1138,7 +1139,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   /** R:R بالمال: الأساس = عملة الحساب ⇒ الخسارة بسعر الوقف والربح بسعر الهدف (USDJPY 1:2.0 مسافةً = 1:1.96 مالاً) — `moneyRewardRisk` */
   const planRR = plan?.ok ? moneyRewardRisk(plan.rr, rate, targetRate ?? rate) : null;
   const lowWarn = plan?.ok ? lowRewardWarning(planRR, netAfterCosts) : null;
-  const breakevenPct = breakevenWinRatePct(planRR);
+  // الصافية حين تُكتب التكاليف: التعادل الحقيقي بعد السبريد والعمولة — راجع `breakevenRR`
+  const breakevenPct = breakevenWinRatePct(breakevenRR(planRR, netAfterCosts));
 
   /**
    * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
@@ -1811,7 +1813,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
               {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} {pipUnit(lang)} · R:R {formatRR(planRR)}
               {potentialProfit != null ? ` · ${t.riskCalcPotentialProfit} ≈ ${money(potentialProfit)}` : ''}
             </Text>
-            {/* R:R بالمال نفسها المعروضة أعلاه — راجع `breakevenWinRatePct` */}
+            {/* من R:R بالمال (الصافية حين تُكتب التكاليف) — راجع `breakevenRR` */}
             {breakevenPct != null ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>
                 {t.planBreakevenWinRate.replace('{pct}', String(breakevenPct))}

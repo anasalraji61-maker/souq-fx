@@ -115,9 +115,10 @@ import {
   costsLotsAdvice,
   profitAfterCosts,
   rewardBelowRisk,
+  breakevenRR,
   lowRewardWarning,
 } from './positionSize';
-import { formatRR } from './tradePlan';
+import { breakevenWinRatePct, formatRR } from './tradePlan';
 import { DICTS } from './i18n/locales';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -3637,3 +3638,24 @@ console.log('positionSize spread-maybe-price warning selftest OK');
   assert.equal(lossStreakDrawdownPct(2, 2.5, true), null);
 }
 console.log('positionSize loss-streak drawdown selftest OK');
+
+// ---- breakevenRR: نسبة النجاح اللازمة للتعادل من R:R الصافية حين تُكتب التكاليف ----
+{
+  // سكالبينغ EURUSD 5/5، لوت واحد، سبريد 1، عمولة 7: الإجمالي 1:1 ⇒ 50%، والصافي 33 ÷ 67 ⇒ 1:0.49 ⇒ 67 ÷ (33 + 67) = 67%
+  const sc = profitAfterCosts({ grossProfit: 50, lots: 1, spreadPips: 1, pipValuePerLot: 10, commissionPerLot: 7, riskWithCosts: 67 })!;
+  assert.equal(breakevenWinRatePct(breakevenRR(1, null)), 50);
+  assert.equal(breakevenRR(1, sc), sc.rr);
+  const need = breakevenWinRatePct(breakevenRR(1, sc))!;
+  assert.equal(need, 67);
+  // التعادل فعلاً بالمال: need% × الصافي ≥ (100 − need)% × المخاطرة شاملة التكاليف، وبـneed − 0.1 لا
+  assert.ok(need * sc.net >= (100 - need) * 67 - 1e-9);
+  assert.ok((need - 0.1) * sc.net < (100 - need + 0.1) * 67);
+  // التكاليف تبتلع الهدف ⇒ لا نسبة تُعادِل
+  const eaten = profitAfterCosts({ grossProfit: 10, lots: 1, spreadPips: 1, pipValuePerLot: 10, commissionPerLot: 7, riskWithCosts: 67 })!;
+  assert.ok(eaten.net <= 0);
+  assert.equal(breakevenRR(1, eaten), null);
+  assert.equal(breakevenWinRatePct(breakevenRR(1, eaten)), null);
+  // بلا تكاليف ولا R:R ⇒ null
+  assert.equal(breakevenRR(null, null), null);
+}
+console.log('positionSize breakevenRR selftest OK');
