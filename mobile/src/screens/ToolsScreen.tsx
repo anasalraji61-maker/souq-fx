@@ -198,8 +198,7 @@ const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
 
 /**
- * `insufficient_data` من `/api/screener/run` (backend-r69) — خادم أقدم لا يرسله، ونوع `screenerRun` بـ`api.ts` لا يصفه بعد
- * (طلب لـui). يُقبل كائن رمز → قائمة نصوص فقط؛ غير ذلك يُهمل فيبقى السلوك القديم.
+ * `insufficient_data` من `/api/screener/run` (backend-r69) — خادم أقدم لا يرسله، والنوع لا يضمن الشكل وقت التشغيل. يُقبل كائن رمز → قائمة نصوص فقط؛ غير ذلك يُهمل فيبقى السلوك القديم.
  */
 function readInsufficient(raw: unknown): Record<string, string[]> {
   const out: Record<string, string[]> = {};
@@ -528,7 +527,7 @@ export function ToolsScreen() {
         failed: res.failed ?? [],
         total: res.total,
         tf,
-        short: readInsufficient((res as { insufficient_data?: unknown }).insufficient_data),
+        short: readInsufficient(res.insufficient_data),
       });
       lastScanKey.current = key;
       setProviderConfigured(res.provider_configured !== false);
