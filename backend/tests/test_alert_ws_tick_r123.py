@@ -45,3 +45,33 @@ def test_tick_returns_price_with_its_own_time(monkeypatch):
     assert td_ws.tick("EURUSD", max_age=180) == (1.1, now - 10)
     assert td_ws.tick("GBPUSD", max_age=180) is None  # أقدم من 3 دقائق
     assert td_ws.tick("USDJPY", max_age=180) is None
+
+
+def test_dead_token_delete_failure_does_not_drop_other_devices(monkeypatch):
+    """حذف رمز ميت يفشل (قاعدة مقفلة) ⇒ جهاز المالك الآخر (لغة أخرى) يُرسَل له، ورموز الإعادة لا تُسقط."""
+    import sqlite3
+
+    import db
+    import expo_push
+
+    monkeypatch.setattr(alert_worker, "_pending_pushes", [])
+    monkeypatch.setattr(alert_worker, "_pending_events", [])
+    monkeypatch.setattr(db, "push_targets_for", lambda *a, **k: [
+        ("ExponentPushToken[old-ar]", "ar"), ("ExponentPushToken[busy-ar]", "ar"), ("ExponentPushToken[new-en]", "en"),
+    ])
+    sent = []
+
+    def fake_send(tokens, title, body, data):
+        sent.append(list(tokens))
+        return {"ok": True, "invalid_tokens": [t for t in tokens if "old" in t],
+                "retry_tokens": [t for t in tokens if "busy" in t]}
+
+    def locked(tok):
+        raise sqlite3.OperationalError("database is locked")
+
+    monkeypatch.setattr(expo_push, "send_push", fake_send)
+    monkeypatch.setattr(db, "delete_push_token", locked)
+    ev = alert_worker.price_event({"user_id": 7, "owner_key": None, "symbol": "EURUSD", "condition": "above", "price": 1.1})
+    alert_worker.dispatch([ev])
+    assert ["ExponentPushToken[new-en]"] in sent
+    assert [p[0] for p in alert_worker._pending_pushes] == [["ExponentPushToken[busy-ar]"]]

@@ -484,8 +484,14 @@ def _deliver(tokens: list[str], title: str, body: str) -> list[str]:
                 retry.extend(chunk)
             continue
         for tok in result.get("invalid_tokens") or []:
-            db.delete_push_token(tok)
-            log.info("removed invalid push token (%s…)", tok[:24])
+            # الإشعار أُرسل؛ حذف رمز ميت يفشل («database is locked») كان يرمي خارج `_deliver` ⇒ أجهزة المالك
+            # بلغة أخرى لا تُرسل لها، و`retry_tokens` الدفعة تُسقط — والتنبيه موسوم مُطلَقاً فلا يُعاد (run 123).
+            # الرمز يُعاد رفضه بالإرسال التالي فيُحذف حينها.
+            try:
+                db.delete_push_token(tok)
+                log.info("removed invalid push token (%s…)", tok[:24])
+            except Exception:
+                log.warning("could not remove invalid push token (%s…)", tok[:24], exc_info=True)
         retry.extend(result.get("retry_tokens") or [])
     return retry
 
