@@ -126,6 +126,8 @@ import {
   QUICK_SYMBOLS,
   plainStopText,
   openQuotesRefreshDue,
+  openQuotesSnapUsable,
+  OPEN_QUOTES_POLL_MS,
   computedPriceText,
   journalDraftTyped,
   journalChartSymbolAfterSave,
@@ -225,6 +227,11 @@ type Props = {
    * يُحذف لأن شارت EURUSD «يعلنه»، ولا يرى المتداول أيّ تحذير. تكرار التحذير أهون من غيابه.
    */
   chartBannerVisible?: boolean;
+  /**
+   * الدفتر ظاهر فعلاً (شاشة الأدوات مركَّزة): لقطة أسعار الصفقات المفتوحة تتجدّد كل `OPEN_QUOTES_POLL_MS` وعند العودة للشاشة.
+   * غائب ⇒ ظاهر (مواضع المشاركة الأخرى).
+   */
+  active?: boolean;
 };
 
 /** لقطة اقتباس أداة صفقة مفتوحة — Bid/Ask قد يغيبان (يُستعمل السعر المفرد حينها). */
@@ -239,7 +246,7 @@ const isChangedConcurrentlyError = (e: unknown) =>
   isAlreadyClosedError(e) &&
   (e as { detail?: { error?: unknown } }).detail?.error === 'trade_changed_concurrently';
 
-export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBannerVisible = false }: Props = {}) {
+export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBannerVisible = false, active = true }: Props = {}) {
   const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   // شريط الشارت بالطرفية: رموزه كما يقيسها (شبكة الهاتف لا رمز الرصيف) — لشريط الصفقات المفتوحة أدناه
@@ -333,6 +340,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const quoteGenRef = useRef(0);
   /** وقت آخر لقطة ناجحة وقائمتها — للتجديد عند العودة من الخلفية (`openQuotesRefreshDue`) */
   const quotesAtRef = useRef<number | null>(null);
+  /** نسخة الحالة من `quotesAtRef` للتصيير: لقطةٌ قديمة لا يُحسب عليها السطر العائم (`openQuotesSnapUsable`) */
+  const [quotesAt, setQuotesAt] = useState<number | null>(null);
   const tradesRef = useRef<Trade[]>([]);
 
   /**
@@ -359,6 +368,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const gen = ++quoteGenRef.current;
     if (syms.length === 0) {
       quotesAtRef.current = null;
+      if (mountedRef.current) setQuotesAt(null);
       // لا صفقات مفتوحة ⇒ لا طلب أصلاً، ويُفرَّغ الكائن (بالمرجع نفسه إن كان فارغاً: لا تصيير زائد)
       if (mountedRef.current) setQuotes((cur) => (Object.keys(cur).length === 0 ? cur : {}));
       return;
@@ -384,6 +394,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const next: Record<string, QuoteSnap> = {};
     for (const pair of got) if (pair) next[pair[0]] = pair[1];
     quotesAtRef.current = Date.now();
+    setQuotesAt(quotesAtRef.current);
     setQuotes(next);
   }, []);
 
@@ -398,6 +409,19 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     });
     return () => sub.remove();
   }, [loadOpenQuotes]);
+
+  /**
+   * **والدفتر ظاهر**: تجديدٌ كل `OPEN_QUOTES_POLL_MS`، وفوراً عند العودة للشاشة إن مضت دقيقة. تبديل تبويب الشريط السفلي لا يمرّ
+   * بالخلفية فكانت اللقطة تبقى من لحظة فتح الدفتر؛ وما فات تجديده يسقط من السطر العائم (`openQuotesSnapUsable`) لا يُعرض قديماً.
+   */
+  useEffect(() => {
+    if (!active) return;
+    if (openQuotesRefreshDue(quotesAtRef.current, Date.now())) void loadOpenQuotes(tradesRef.current);
+    const id = setInterval(() => {
+      if (quotesAtRef.current != null) void loadOpenQuotes(tradesRef.current);
+    }, OPEN_QUOTES_POLL_MS);
+    return () => clearInterval(id);
+  }, [active, loadOpenQuotes]);
 
   /**
    * رقم آخر طلب للقائمة: أول تحميل بطيء والنموذج يعمل تحته — تُضاف صفقة فيصل تحديثُ ما بعد الإضافة أولاً، ثم يصل
@@ -1738,7 +1762,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             // بالسعر الوسطي كان شراء ذهب 1 لوت يعرض +500 USD والإغلاق يسجّل +480
             const live = closed
               ? null
-              : floatingExitPrice({ side: trSide, live: ticks?.[trSym], snap: quotes[trSym] ?? null });
+              : floatingExitPrice({
+                  side: trSide,
+                  live: ticks?.[trSym],
+                  snap: openQuotesSnapUsable(quotesAt, Date.now()) ? quotes[trSym] ?? null : null,
+                });
             const mv = closed
               ? realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: tr.exit })
               : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live, note: tr.note });

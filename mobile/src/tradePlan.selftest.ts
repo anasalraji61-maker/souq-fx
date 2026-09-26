@@ -16,6 +16,9 @@ import {
   calcMinStopPips,
   computedPriceText,
   openQuotesRefreshDue,
+  openQuotesSnapUsable,
+  OPEN_QUOTES_POLL_MS,
+  OPEN_QUOTES_SNAP_MAX_AGE_MS,
   OPEN_QUOTES_REFRESH_AFTER_MS,
   openRiskTotals,
   openTradesWithoutStop,
@@ -4363,3 +4366,23 @@ console.log('tradePlan journalSizeMaybeMetalUnits selftest OK');
   assert.equal(parseJournalSize('50 Oz'), null);
 }
 console.log('tradePlan journalSizeOunces selftest OK');
+
+// ---- openQuotesSnapUsable: لقطة أسعار الصفقات المفتوحة القديمة لا يُحسب عليها السطر العائم ----
+{
+  const t0 = 1_790_000_000_000;
+  assert.equal(openQuotesSnapUsable(t0, t0), true);
+  assert.equal(openQuotesSnapUsable(t0, t0 + OPEN_QUOTES_POLL_MS), true);
+  // تجديدٌ فائت واحد لا يُسقط الرقم
+  assert.equal(openQuotesSnapUsable(t0, t0 + 2 * OPEN_QUOTES_POLL_MS + 29_000), true);
+  assert.equal(openQuotesSnapUsable(t0, t0 + OPEN_QUOTES_SNAP_MAX_AGE_MS), false);
+  // اللقطة من 10:00 والعودة للتبويب 12:00 ⇒ لا رقم عائم (كان «+20 pip» من سعر 10:00)
+  assert.equal(openQuotesSnapUsable(t0, t0 + 2 * 3_600_000), false);
+  // ساعة رجعت للخلف / بلا لقطة / غير رقمي
+  assert.equal(openQuotesSnapUsable(t0, t0 - 1000), false);
+  assert.equal(openQuotesSnapUsable(null, t0), false);
+  assert.equal(openQuotesSnapUsable(NaN, t0), false);
+  assert.equal(openQuotesSnapUsable(t0, NaN), false);
+  // التجديد أسرع من السقوط: رقمٌ لا يختفي بين تجديدين ناجحين
+  assert.ok(OPEN_QUOTES_POLL_MS < OPEN_QUOTES_SNAP_MAX_AGE_MS);
+  console.log('tradePlan openQuotesSnapUsable selftest OK');
+}

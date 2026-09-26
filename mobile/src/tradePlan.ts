@@ -2875,6 +2875,22 @@ export function openQuotesRefreshDue(lastAt: number | null, now: number): boolea
   return age < 0 || age >= OPEN_QUOTES_REFRESH_AFTER_MS;
 }
 
+/** كل كم تُجدَّد لقطة أسعار الصفقات المفتوحة والدفتر ظاهر (طلبٌ لكل رمز مفتوح، حتى 4). */
+export const OPEN_QUOTES_POLL_MS = 3 * 60_000;
+/** لقطةٌ أقدم من هذا لا يُحسب عليها السطر العائم: تجديدٌ فائت واحد + هامش. */
+export const OPEN_QUOTES_SNAP_MAX_AGE_MS = 2 * OPEN_QUOTES_POLL_MS + 30_000;
+
+/**
+ * هل تصلح لقطة أسعار الصفقات المفتوحة (أُخذت عند `at`) للسطر العائم الآن؟ كانت تُؤخذ مع تحميل الدفتر والعودة من الخلفية فقط:
+ * تبويبٌ آخر بالشريط السفلي ثم العودة (بلا خلفية) ⇒ USDCAD «+20 pip · +$X» من سعر قبل ساعتين بلون الحيّ نفسه. أقدم من
+ * `OPEN_QUOTES_SNAP_MAX_AGE_MS` أو بلا وقت أو ساعةٌ رجعت للخلف ⇒ لا — السطر بلا رقم عائم خيرٌ من رقمٍ قديم يُقرأ حالياً.
+ */
+export function openQuotesSnapUsable(at: number | null, now: number): boolean {
+  if (at == null || !Number.isFinite(at) || !Number.isFinite(now)) return false;
+  const age = now - at;
+  return age >= 0 && age < OPEN_QUOTES_SNAP_MAX_AGE_MS;
+}
+
 /** أقلّ مهلة بين ضغطة المنع والضغطة التي تقول «السعر كما كتبته» — دون ذلك نقرٌ مزدوج لم يُقرأ فيه التحذير */
 export const SAVE_OVERRIDE_MIN_MS = 600;
 

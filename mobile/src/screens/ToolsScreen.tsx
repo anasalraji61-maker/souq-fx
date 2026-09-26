@@ -740,7 +740,7 @@ export function ToolsScreen() {
           بدل نافذة 220px معشَّشة داخل تمرير الصفحة. */}
       {tab === 'journal' ? (
         <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
-          <TradeJournalPanel flow defaultSymbol={signalSym} ticks={livePrices} />
+          <TradeJournalPanel flow defaultSymbol={signalSym} ticks={livePrices} active={screenFocused} />
         </ScrollView>
       ) : null}
 
