@@ -725,13 +725,13 @@ export function ToolsScreen() {
       {/* تبويب الدفتر: اللوحة تملك الصفحة وحدها، فالصفقات تُسرَد متدفّقة وتُمرَّر الصفحةُ نفسها —
           بدل نافذة 220px معشَّشة داخل تمرير الصفحة. */}
       {tab === 'journal' ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
           <TradeJournalPanel flow defaultSymbol={signalSym} ticks={livePrices} />
         </ScrollView>
       ) : null}
 
       {tab === 'risk' ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
           <PositionSizePanel defaultSymbol={signalSym} active={screenFocused} />
         </ScrollView>
       ) : null}
@@ -936,7 +936,7 @@ export function ToolsScreen() {
       ) : null}
 
       {tab === 'backtest' ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
           <BacktestPanel defaultSymbol={signalSym} />
         </ScrollView>
       ) : null}
@@ -944,13 +944,13 @@ export function ToolsScreen() {
       {/* تبويب تنبيهات السعر: اللوحة تملك الصفحة وحدها، فالقائمة تُسرَد متدفّقة وتُمرَّر الصفحةُ
           نفسها — بدل نافذة 160px بخليّة شبكة تشاركها ثلاث لوحات أخرى. */}
       {tab === 'alerts' ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
           <AlertsPanel flow defaultSymbol={signalSym} ticks={livePrices} active={screenFocused} />
         </ScrollView>
       ) : null}
 
       {tab === 'indAlerts' ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
           <IndicatorAlertsPanel flow defaultSymbol={signalSym} active={screenFocused} />
         </ScrollView>
       ) : null}
@@ -964,7 +964,7 @@ export function ToolsScreen() {
       ) : null}
 
       {tab === 'layouts' ? (
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.formBody} keyboardShouldPersistTaps="handled">
           <LayoutPanel
             frameTfs={frameTfs}
             frameSymbols={frameSymbols}
@@ -1048,6 +1048,17 @@ const styles = StyleSheet.create({
   tabText: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   tabTextOn: { color: colors.text },
   body: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: spacing.sm, paddingBottom: 48 },
+  // تبويبات النماذج (الدفتر، الحاسبة، الاختبار، التنبيهات، التخطيطات) بعمود 720 بالوسط: على لابتوب 1440px كانت الخانة
+  // بعرض الشاشة كلّه والشرائح في أقصاها (قرار ١٦). الهاتف أضيق من الحدّ ⇒ كما كان.
+  formBody: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+    paddingBottom: 48,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+  },
   pageScroll: { flex: 1 },
   toolbar: { gap: 4 },
   hubSectionTabs: { flexDirection: 'row', gap: spacing.sm },
