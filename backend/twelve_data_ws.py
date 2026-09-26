@@ -51,7 +51,7 @@ def _parse_price(msg: dict[str, Any]) -> tuple[str, float] | None:
     meta = msg.get("meta")
     sym = msg.get("symbol") or (meta.get("symbol") if isinstance(meta, dict) else None)
     price = msg.get("price") or msg.get("close") or msg.get("last")
-    if not sym or price is None:
+    if not sym or price is None or isinstance(price, bool):  # `true` كان سعراً 1.0
         return None
     try:
         p = float(price)
@@ -86,8 +86,12 @@ def _quoted_at(msg: dict[str, Any], received: float) -> float:
 def _store(msg: dict[str, Any]) -> None:
     parsed = _parse_price(msg)
     if parsed:
+        at = _quoted_at(msg, time.time())
+        # تيك متأخّر الوصول (وقته عند المزوّد أقدم من المخزَّن) كان يمحو سعراً أحدث ويُقرأ للتنبيهات حتى يتقادم
+        if at < LATEST_AT.get(parsed[0], 0.0):
+            return
         LATEST[parsed[0]] = parsed[1]
-        LATEST_AT[parsed[0]] = _quoted_at(msg, time.time())
+        LATEST_AT[parsed[0]] = at
 
 
 async def run_forever() -> None:
