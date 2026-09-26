@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 121، على 62f494f) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 122، على f8a1999) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -20,13 +20,9 @@
 | ui | أنس | **ui-r77** DESIGN-PRO §1 يقصر الأحمر على اتجاه السعر، لكن `colors.bear` هو أيضاً نصّ الأخطاء و«حذف» وزرّ حذف الحساب (`AccountScreen`/`AlertsPanel`/`IndicatorAlertsPanel`/`SocialConsensusPanel`/`NetworkTreePanel`/`SymbolSearchBar`)، واللوحة بلا لون خطأ و`warn` محجوز للبيانات المتأخّرة. لون خطأ مستقلّ، أم نصّ عادي بعلامة، أم استثناء؟ | ui77 |
 | QA | أنس | **QA107a** (بلا قرار سابق — القرار ٤ خاصّ بالمساعد): «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض «مستويات محسوبة: دخول · وقف · هدف» بأسعار (ATR من `/api/signals/indicators/forecast`، backend أبقاه عمداً). المنطق نفسه (`app.json` «لا يقدّم نصيحة استثمارية») ينطبق؟ إخفاء المستويات وإبقاء التصويت، أم كما هي؟ | QA107 |
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
-| QA | tools | **QA120a** (منخفض، مراجعة e): حقل «وقت الإغلاق» يرفض الثواني ⇒ سجلّ MT5 ينسخ «2026.09.26 14:05:30» فيظهر «اكتب الوقت بهذه الصيغة» (`journalLocalFieldToIso` بـ`tradePlan.ts:511` ينتهي بـ`(\d{2})$`؛ بـ`npx tsx`: «2026-09-26 14:05:30» = null، «2026.09.26 14:05» مقبول). قبول `:SS` اختيارية وإسقاطها (الخادم بالدقيقة) | QA120 |
-
-| launch | tools | **launch191a** (`7359274`، `journalRowWhen` بـ`tradePlan.ts:505`): الصفّ يُسقط السنة ⇒ «مغلقة 09-10 14:30». بلا سنة تصير «09-10» شهراً-يوماً، والقارئ العربي والكردي يقرأ اليوم أولاً ⇒ 9 أكتوبر بدل 10 سبتمبر (كل تاريخ يومه ≤ 12 ملتبس). المقترح الأبسط: **أبقِ السنة دائماً** («2026-09-10 14:30» — صيغة الحقل نفسها، ISO لا تُقرأ بترتيبين، بلا ترجمة). بديل إن ضاق السطر: launch يضيف مفاتيح أسماء الشهور المختصرة (ar/en/ku) ⇒ «10 سبتمبر 14:30» — اطلبها هنا | launch191 |
-
-**تحقّق الدورة 121 (بالكود، على 62f494f):** البناء أخضر 0، selftests 123/123 ناجح.
-**أُغلق:** tools131a ← tools `a3f3134` (`TradeJournalPanel.tsx:576–577` `journalCloseTimeFuture`، والتعليق `:574` صُحّح)؛ tools132a ← ui `33d8f91` (`AiPanel.tsx:45–56` `askedSymbol` مع السؤال والجواب، الوسم `:103–104`).
-**مفتوحان مُتحقَّقان:** QA120a (`tradePlan.ts:525` ما زال ينتهي بـ`(\d{2})$`)؛ launch191a (`tradePlan.ts:511` `field.slice(5)` يُسقط السنة).
-**قائمة قبول DESIGN-PRO (الحادي والأربعون): 0 من 12 فشل** — diff منذ ed8c6f7: وسم الرمز بالمساعد `textMuted` 11/500 `marginBottom: 4`؛ وقت الصفّ بـ`tradeMeta` (`numeric`)؛ الباقي منطق.
-**المراجعة (a — ميت/تصديرات):** مسح كل `export` بـ`src/`: لا تصدير بلا مستعمل (`initCrashReporting`/`CoursesScreen` يستوردهما `index.ts`/`App.tsx` خارج `src`)؛ `seriesTf` مقروء (`FocusChartModal.tsx:306`). **لا بند.**
 | chart | ui | **chart103a** (وجده مراجِع، مُعاد إنتاجه): رأس `FocusChartModal.tsx:383` `formatPrice(headPrice, sym)` بلا مرجع ⇒ منازله من رقم الرأس وحده، والشارت تحته (`fmtPrice` بمرجع `series.last`) والإطار/الرباعي (`ChartFrame.tsx:474`، `QuadChartModal.tsx:269`) بمرجع ⇒ حين يعبر التيك حدّ 10/100 عن `series.last` يختلفان: XNGUSD تيك 9.998 وlast 10.002 ⇒ الرأس «9.99800» والشارت «9.998»؛ SOLUSD 99.95/100.02 ⇒ «99.950» مقابل «99.95». الحلّ: `formatPrice(headPrice, sym, headSeries?.last)`، وكذلك `:286` (رسالة «مُسلَّح») و`:336` (B/A بمرجع `headSeries?.last` بدل `quote.bid`) | chart103 |
+
+**تحقّق الدورة 122 (بالكود، على f8a1999):** البناء أخضر 0، selftests 123/123 ناجح.
+**أُغلق:** QA120a ← tools `0434306` (`tradePlan.ts:522` ثوانٍ اختيارية؛ بـ`npx tsx` TZ=Asia/Baghdad: «2026.09.26 14:05:30» ⇒ `14:05:00+03:00`، «:61» ⇒ null)؛ launch191a ← tools `6e7541f` (`tradePlan.ts:506–508` ⇒ «2026-09-10 14:30»). **بعد السحب (286c28f):** جديد مُتحقَّق **chart103a → ui** (`FocusChartModal.tsx:383` `formatPrice(headPrice, sym)` بلا مرجع، `:286` كذلك، `:336` بمرجع `quote.bid`؛ `ChartFrame.tsx:474`/`QuadChartModal.tsx:269` بمرجع `last`).
+**قائمة قبول DESIGN-PRO (الثاني والأربعون): 0 من 12 فشل** — diff منذ 62f494f: «⋯» `selectedFill`+`text` بلا حدّ ولا ظلّ (`ModerationActions.tsx`)؛ الباقي منطق (`marketHours` كسر الشمعة، `tradePlan`).
+**المراجعة (b — نصوص ثابتة):** وسوم JSX = مصطلحات (Log، TPO، MA/MACD، MATRIX)، `placeholder="EURUSD"` ×3؛ العربية خارج `i18n` = مفاتيح خريطة الخادم (`CommissionPlanPanel`)، موجّهات المساعد (`WeeklyReportPanel`)، بدائل احتياطية (`measureReadout`)، ومحتوى `academy.ts` بحقول `_en`. **لا بند.**
