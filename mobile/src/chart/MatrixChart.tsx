@@ -1603,6 +1603,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
+  const canClearAll = drawings.length > 0 || pending != null;
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
   drawEscPendingRef.current = !!interactive && (!!pending || !!selectedId || tool !== 'none');
   // مرساة التقاطع **بزمن الشمعة** لا بفهرسها داخل النافذة — راجع `crossAnchor.ts`:
@@ -7531,8 +7532,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               accessibilityRole="button"
               accessibilityLabel={tr.mcClearAllTitle}
               {...railHintProps(tr.mcClearAllTitle)}
+              // شارت بلا رسوم: «مسح الكل» معطّل كـ«إعادة» — كان يُؤكَّد على لا شيء ويُفرغ سجلّ الإعادة
+              accessibilityState={{ disabled: !canClearAll }}
+              disabled={!canClearAll}
               style={({ pressed }) => [
                 styles.compactTool,
+                !canClearAll && styles.toolDisabled,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
@@ -13973,8 +13978,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               accessibilityRole="button"
               accessibilityLabel={tr.mcClearAllTitle}
               {...railHintProps(tr.mcClearAllTitle)}
+              // شارت بلا رسوم: «مسح الكل» معطّل كـ«إعادة» — كان يُؤكَّد على لا شيء ويُفرغ سجلّ الإعادة
+              accessibilityState={{ disabled: !canClearAll }}
+              disabled={!canClearAll}
               style={({ pressed }) => [
                 styles.compactTool,
+                !canClearAll && styles.toolDisabled,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
