@@ -8573,7 +8573,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           kind === 'lineBreak') &&
           source.plot.map((c, i) => {
             const bull = c.close >= c.open;
-            const color = bull ? candleBull : candleBear;
+            // المجوّفة كعُرفها المتداول: التعبئة من الإغلاق مقابل الافتتاح (مجوّفة = صاعدة داخل الشمعة)، واللون من
+            // الإغلاق مقابل **الإغلاق السابق**. كان اللون بالافتتاح أيضاً ⇒ «مجوّفة» = «شموع» بجسم فارغ، وتضيع
+            // الحالتان اللتان وُجد النوع لهما: فجوة هبوط تُغلق فوق افتتاحها (مجوّفة حمراء) وفجوة صعود تُغلق تحته
+            // (ممتلئة خضراء). أوّل شمعة بالسلسلة بلا سابقة ⇒ بالافتتاح.
+            const prevC = kind === 'hollow' ? source.all[source.start + i - 1] : undefined;
+            const up = prevC && prevC.time < c.time ? c.close >= prevC.close : bull;
+            const color = (kind === 'hollow' ? up : bull) ? candleBull : candleBear;
             const yP = hasShadows ? yPrimary : yOf;
             const top = yP(c.high);
             const bodyTop = yP(Math.max(c.open, c.close));
