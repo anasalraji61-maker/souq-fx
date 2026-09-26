@@ -6813,7 +6813,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         }
         return;
       }
-      const delta = event.deltaY * panSpeedMulRef.current;
+      // `lineMul` للتكبير أيضاً: Firefox (ويندوز/لينكس) يرسل الحزّة بالأسطر (deltaY ≈ 3) ⇒ كانت الحزّة تكبّر ~2% لا ~80% كـChrome.
+      const delta = event.deltaY * lineMul * panSpeedMulRef.current;
       const factor = Math.exp(delta * 0.006);
       if (overPrice) {
         zoomPrice(factor);
