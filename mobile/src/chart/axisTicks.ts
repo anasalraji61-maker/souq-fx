@@ -380,7 +380,9 @@ export function percentScaleTicks(
 /** «+0.25%» / «−0.10%» / «0.00%» — علامة ناقص حقيقية كرأس الشارت (`formatPct`)، وصفر بلا إشارة. */
 export function formatScalePercent(pct: number, places = 2): string {
   if (!Number.isFinite(pct)) return '—';
-  const r = Number(pct.toFixed(places));
+  // تصحيح خطأ التمثيل الثنائي كـ`formatPct` (رأس الشارت): 1.005 كان «+1.00%» هنا و«+1.01%» بالرأس.
+  const k = 10 ** places;
+  const r = (Math.sign(pct) * Math.round(Math.round(Math.abs(pct) * k * 1e6) / 1e6)) / k;
   if (r === 0) return `${(0).toFixed(places)}%`;
   return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(places)}%`;
 }

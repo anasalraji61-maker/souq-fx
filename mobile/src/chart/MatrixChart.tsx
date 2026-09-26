@@ -6101,6 +6101,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const percentBase = percentScale && !logScale ? firstVisibleClose ?? null : null;
   const percentTicks =
     percentBase != null ? percentScaleTicks(priceTickLo, priceTickHi, percentBase, priceTickCap) : [];
+  // منازل وسمَي السعر الحالي والتقاطع = منازل المحور بجانبهما: كانا بمنزلتين دائماً ⇒ «0.00%» بجانب علامة «+0.004%».
+  const percentPlaces = percentTicks.length ? percentTicks[0]!.label.split('.')[1]?.replace('%', '').length ?? 2 : 2;
   const priceTicks: { ratio: number; price: number; label?: string }[] = (
     percentTicks.length
       ? percentTicks.map((t) => ({ ratio: (priceFrame.max - toScale(t.price)) / priceFrame.span, price: t.price, label: t.label }))
@@ -6324,7 +6326,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // والوسم كان سعراً فقط، فالمتداول يطابق المستوى بعينه. السعر يبقى الأول: الوقف يوضع بسعر لا بنسبة.
   const crossPctText =
     crossPrice != null && percentBase != null && percentBase > 0
-      ? formatScalePercent((crossPrice / percentBase - 1) * 100)
+      ? formatScalePercent((crossPrice / percentBase - 1) * 100, percentPlaces)
       : null;
   const crossTagH =
     PRICE_TAG_H + (crossPipsText ? COUNTDOWN_LINE_H : 0) + (crossPctText ? COUNTDOWN_LINE_H : 0);
@@ -6434,7 +6436,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const currentTagLabel =
     offMark(currentPriceOff) +
     (percentBase != null && percentBase > 0
-      ? formatScalePercent((currentPrice / percentBase - 1) * 100)
+      ? formatScalePercent((currentPrice / percentBase - 1) * 100, percentPlaces)
       : fmtPrice(currentPrice));
 
   // سلسلة بلا شموع (`candles: []` — DXY بعد backend-r19): المدى Infinity/−Infinity ⇒ المحور يطبع «NaN» مكرَّراً،

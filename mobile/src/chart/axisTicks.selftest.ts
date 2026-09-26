@@ -346,6 +346,9 @@ console.log('axisTicks.selftest: PASS');
   assert.deepEqual(percentScaleTicks(1, 2, 0, 5), []);
   assert.equal(formatScalePercent(-0.0001), '0.00%');
   assert.equal(formatScalePercent(1.234), '+1.23%');
+  assert.equal(formatScalePercent(1.005), '+1.01%'); // كـformatPct برأس الشارت
+  assert.equal(formatScalePercent(-1.005), '−1.01%');
+  assert.equal(formatScalePercent(0.0037, 3), '+0.004%');
   console.log('percentScaleTicks OK');
 }
 
