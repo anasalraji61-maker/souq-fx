@@ -1453,4 +1453,5 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (الثالث والستّون):** 0/12 فشل (diff منذ dfab4b9: `MatrixChart.tsx`/`ToolsScreen.tsx` منطق فقط).
 **المراجعة (c — `accessibilityLabel`):** 7 نتائج كاذبة (6 `useRef<TextInput>`، خانة ملاحظة موسومة `TradeJournalPanel.tsx:2692`). **لا بند.**
 **بعد السحب (1215e8b):** أخضر 0؛ `tradePlan.selftest` ناجح؛ diff الدفتر بلا سطر نمط ⇒ 0/12. جديدان مُتحقَّقان **launch216a → backend + ui** (`main.py:2159` بلا `source`) و**chart-r117a → ui** (`FocusChartModal.tsx:251`).
-**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة launch216a وchart-r117a؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (daff023):** أخضر 0. أُغلقت chart-r117a ← ui `66631a3` (`FocusChartModal.tsx:252`)؛ حصّة ui من launch216a ← `e77fb5c` (`LectureClassroom.tsx:341/512`) ⇒ الباقي → backend. diff بلا سطر نمط ⇒ 0/12.
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة launch216a (backend)؛ وإعادة قائمة DESIGN-PRO.
