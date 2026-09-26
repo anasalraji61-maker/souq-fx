@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric } from '../theme';
-import { api, type PriceAlert } from '../api';
+import { api, alertChangedRow, alertSeen, type PriceAlert } from '../api';
 import {
   ensureAlertNotifications,
   getNotificationPermissionState,
@@ -182,6 +182,9 @@ export function AlertsPanel({
   /** تعديل تنبيه قائم: الضغط على سطره يحمّل قيمه بالنموذج؛ الحفظ = إنشاء الجديد ثم حذف القديم
    * (لا يوجد مسار تحديث بالباك-إند، وهذا الترتيب لا يُفقد التنبيه القديم إن فشل الإنشاء). */
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** الصفّ الذي بُني منه النموذج (backend-r114b): يُرسَل `seen_*` مع الحفظ، فإن نقل جهاز آخر المستوى أو
+   * أُطلق التنبيه أثناء التعديل ردّ الخادم 409 بدل إرجاع المستوى القديم بصمت. */
+  const editingRowRef = useRef<PriceAlert | null>(null);
   /** نص السعر المكتوب + هل اختار المتداول الاتجاه بنفسه — ليُستنتج الاتجاه أيضاً حين يصل السعر الحالي
    * **بعد** كتابة الرقم (تأخير 600ms + الشبكة): كان يبقى «فوق» الافتراضي فيُطلق تنبيه «1.0800» فوراً. */
   const priceTextRef = useRef('');
@@ -407,6 +410,7 @@ export function AlertsPanel({
   };
 
   const startEdit = (a: PriceAlert) => {
+    editingRowRef.current = a;
     setEditingId(a.id);
     setSymbol(a.symbol);
     // بلا صيغة أُسّية: `String(1.23456e-8)` = «1.23456e-8» يرفضه `parseDecimal` فلا يُحفظ تعديل تنبيه عملة رقمية صغيرة.
@@ -421,9 +425,19 @@ export function AlertsPanel({
   };
 
   const cancelEdit = () => {
+    editingRowRef.current = null;
     setEditingId(null);
     clearDraft();
     setSymbol(defaultSymbolRef.current);
+  };
+
+  /** 409 `alert_changed`: التنبيه تغيّر بجهاز آخر منذ عُرض هنا ⇒ لا يُكتب شيء، وتُعرض حاله الآن.
+   * `alertsChangedElsewhere` (بـ`{desc}`) مطلوب من launch — إلى أن يصل يظهر وصف الصفّ المخزَّن وحده
+   * (صادق، والقائمة تتحدّث تحته) لا «تحقّق من الاتصال». */
+  const changedElsewhereMsg = (a: PriceAlert) => {
+    const desc = `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`;
+    const tpl = (t as unknown as Record<string, string | undefined>).alertsChangedElsewhere;
+    return tpl ? tpl.replace('{desc}', desc) : `⚠ ${desc}`;
   };
 
   /**
@@ -598,9 +612,18 @@ export function AlertsPanel({
        * (لا يُفقد القديم إن فشل الإنشاء). أي خطأ آخر (شبكة/500) يظهر كخطأ عادي دون إنشاء مكرر. */
       let fallbackDelete: string | null = null;
       if (replacing) {
+        const seenRow = editingRowRef.current?.id === replacing ? editingRowRef.current : null;
         try {
-          await api.updateAlert(replacing, body);
+          await api.updateAlert(replacing, seenRow ? { ...body, ...alertSeen(seenRow) } : body);
         } catch (e) {
+          const stored = alertChangedRow(e);
+          if (stored) {
+            // النموذج يبقى بما كتبه المتداول؛ الحفظ الثاني مقصود فوق الحال الجديدة
+            editingRowRef.current = stored;
+            if (mountedRef.current) setFormError(changedElsewhereMsg(stored));
+            await refresh();
+            return;
+          }
           const status = (e as { status?: number }).status;
           if (status !== 404 && status !== 405) throw e;
           await api.createAlert(body);
@@ -615,6 +638,7 @@ export function AlertsPanel({
       condManualRef.current = false;
       setNote('');
       if (replacing) setSymbol(defaultSymbolRef.current);
+      editingRowRef.current = null;
       setEditingId(null);
       if (fallbackDelete) {
         try {
@@ -663,8 +687,16 @@ export function AlertsPanel({
     try {
       let stale: string | null = null;
       try {
-        await api.updateAlert(a.id, body);
+        await api.updateAlert(a.id, { ...body, ...alertSeen(a) });
       } catch (e) {
+        const stored = alertChangedRow(e);
+        if (stored) {
+          // أُعيد تسليحه أو نُقل بجهاز آخر: إعادة تسليح ثانية كانت تكتب فوق ذلك
+          if (editingRowRef.current?.id === a.id) editingRowRef.current = stored;
+          if (mountedRef.current) setFormError(changedElsewhereMsg(stored));
+          await refresh();
+          return;
+        }
         const status = (e as { status?: number }).status;
         if (status !== 404 && status !== 405) throw e;
         await api.createAlert(body);

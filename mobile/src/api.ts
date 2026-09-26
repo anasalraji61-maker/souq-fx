@@ -166,6 +166,35 @@ export type PriceAlert = {
   ts: string;
 };
 
+/** الصفّ كما عُرض (backend-r114b): الخادم يردّ 409 `alert_changed` إن نقل جهاز آخر المستوى أو أُطلق
+ * التنبيه بعد القراءة — كان التعديل يُرجِع المستوى القديم بصمت ويعيد تسليح المُطلَق فيُدفع مرّتين. */
+export type AlertSeen = {
+  seen_symbol?: string;
+  seen_condition?: 'above' | 'below';
+  seen_price?: number;
+  seen_triggered?: boolean;
+  seen_ts?: string;
+};
+
+export function alertSeen(a: PriceAlert): AlertSeen {
+  return {
+    seen_symbol: a.symbol,
+    seen_condition: a.condition,
+    // الخادم يرفض (422) صفراً/لانهائياً — غيابه = بلا فحص للسعر لا فشل التعديل
+    ...(Number.isFinite(a.price) && a.price > 0 ? { seen_price: a.price } : {}),
+    seen_triggered: !!a.triggered,
+    ...(typeof a.ts === 'string' && a.ts && a.ts.length <= 40 ? { seen_ts: a.ts } : {}),
+  };
+}
+
+/** 409 `alert_changed` ⇒ الصفّ المخزَّن الآن؛ غيره ⇒ null. */
+export function alertChangedRow(e: unknown): PriceAlert | null {
+  const err = e as { status?: number; detail?: { error?: string; alert?: PriceAlert } } | null;
+  if (err?.status !== 409 || err.detail?.error !== 'alert_changed') return null;
+  const a = err.detail.alert;
+  return a && typeof a.id === 'string' ? a : null;
+}
+
 export type ChatMsg = {
   id: string;
   /** اسم حساب المرسل؛ null لرسالة قديمة بلا مرسل معروف (الواجهة تكتب «متداول») */
@@ -315,8 +344,14 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
     WRITE_TIMEOUT_MS
   );
   if (!res.ok) {
-    const err = new Error(`HTTP ${res.status}`) as Error & { status?: number };
+    // `detail` كـ`postJson`: 409 `alert_changed` يحمل الصفّ المخزَّن (backend-r114b).
+    const err = new Error(`HTTP ${res.status}`) as Error & { status?: number; detail?: unknown };
     err.status = res.status;
+    try {
+      err.detail = ((await res.json()) as { detail?: unknown })?.detail;
+    } catch {
+      /* جسم ليس JSON */
+    }
     throw err;
   }
   return res.json() as Promise<T>;
@@ -553,7 +588,12 @@ export const api = {
    * alert 404 — AlertsPanel then falls back to create-then-delete. */
   updateAlert: (
     id: string,
-    body: { symbol: string; condition: 'above' | 'below'; price: number; note?: string }
+    body: {
+      symbol: string;
+      condition: 'above' | 'below';
+      price: number;
+      note?: string;
+    } & AlertSeen
   ) => patchJson<{ ok: boolean; alert: PriceAlert }>(`/api/alerts/${encodeURIComponent(id)}`, body),
   /** Sends the auth token: the backend only deletes the caller's own (or legacy anonymous) alerts. */
   deleteAlert: (id: string) =>
