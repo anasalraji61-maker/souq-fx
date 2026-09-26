@@ -676,7 +676,21 @@ _TRADE_CALL_RE = re.compile(
     + r"|\bprotective\s+(?:order|stop)\s+(?:at|near|around|below|above|under)\s*\d|\brisk\s+it\s+(?:down\s+)?to\s*\d"
     + r"|\b(?:buy|sell)\s+the\s+(?:rip|bounce|pop|spike|strength|weakness|news)\b"
     + r"|(?<!\w)[وف]?افتح\s+(?:لك\s+)?(?:مركز|صفق|شراء|بيع)|(?<!\w)[وف]?خذ\s+(?:ال)?(?:ربح|ارباح|أرباح)"
-    + r"|(?-i:\b(?:Kauf|Verkauf|Kaufe|Verkaufe)\s+[A-Z]{3,6}\b)|\b(?:achetez|vendez)\b|\b(?:achète|vends)\s+(?:maintenant|l['’]|le\s|la\s)",
+    + r"|(?-i:\b(?:Kauf|Verkauf|Kaufe|Verkaufe)\s+[A-Z]{3,6}\b)|\b(?:achetez|vendez)\b|\b(?:achète|vends)\s+(?:maintenant|l['’]|le\s|la\s)"
+    # run 120: توصية بلا سعر كانت تمرّ حرفياً («Now is the moment to sell gold.»، «Take the long.»، «Close your shorts.»،
+    # «Put your stop-loss under the swing low.»، «نصيحتي تشتري الذهب»، «أنا بايع اليورو»، «اخرج من الصفقة الآن»).
+    # «Open a long position requires margin» / «Traders often place stops below support» / «If the trade is long, …» تبقى
+    + r"|\bnow\s+is\s+the\s+(?:moment|time)\s+to\s+(?:buy|sell|short|go\s+(?:long|short)|enter|exit|get\s+(?:in|out))\b"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>]\s*)(?:take|initiate|open|put\s+on|establish)\s+(?:a|the)\s+(?:long|short)(?:\s+(?:position|trade))?"
+    r"(?=\s*(?:[.!]|$|\s+(?:here|now|on|in|at)\b|\s+(?-i:[A-Z]{3,6})\b))"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>]\s*)(?:close|cover)\s+(?:all\s+)?(?:your\s+)?(?:shorts|longs)\b|\b(?:close|cover)\s+(?:all\s+)?your\s+(?:shorts|longs)\b"
+    + r"|\bthe\s+(?:trade|play|call)\s+(?:here\s+|now\s+)?is\s+(?:long|short)(?=\s*(?:[.!]|$|\s+(?:here|now|on|in)\b|\s+(?-i:[A-Z]{3,6})\b))"
+    + r"|\b(?:put|place|set|move|keep)\s+your\s+(?:stop(?:[- ]loss)?|sl|target|tp|take[- ]profit)\s+"
+    r"(?:at|under|below|beneath|above|over|near|around|just|on|to|behind)\b"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>]\s*)take\s+(?:your\s+)?profits?\s+(?:at|near|around|above|below|on|here|now)\b"
+    + r"|(?<!\w)(?:نصيحتي|انصحك|بنصحك)\s+(?:ان\s+)?(?:ت?شتري|ت?بيع|تدخل|تطلع|تخرج)"
+    + r"|(?<!\w)انا\s+(?:بايع|شاري|داخل\s+(?:شرا|شراء|بيع))(?!\w)"
+    + r"|(?<!\w)[وف]?(?:اخرج|سكر|اقفل|اغلق)\s+(?:من\s+)?(?:ال)?صفق",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
