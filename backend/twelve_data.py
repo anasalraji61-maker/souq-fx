@@ -483,8 +483,8 @@ def _weeks_from_days(days: list[dict], drop_first: bool) -> list[dict]:
             w["high"] = max(w["high"], d["high"])
             w["low"] = min(w["low"], d["low"])
             w["close"] = d["close"]
-            if d.get("volume") is not None:
-                w["volume"] = (w["volume"] or 0) + d["volume"]
+            # يوم بلا حجم ⇒ الأسبوع بلا حجم: كان يُجمع الموجود فقط فيُعرض مجموع جزئي كحجم الأسبوع كله
+            w["volume"] = None if w["volume"] is None or d.get("volume") is None else w["volume"] + d["volume"]
         else:
             weeks.append({**d, "time": monday})
     return weeks[1:] if drop_first else weeks

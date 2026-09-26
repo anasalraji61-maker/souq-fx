@@ -101,3 +101,11 @@ def test_daily_bar_ends_at_new_york_five_pm(day, end):
 
 def test_crypto_daily_bar_end_unchanged():
     assert market.bar_end("BTCUSD", _ts(2026, 9, 24), 86400) == _ts(2026, 9, 25)
+
+
+def test_week_volume_is_none_when_any_day_lacks_volume():
+    """كان مجموع الأيام التي لها حجم فقط ⇒ [None,100,200,None,50] أسبوع بحجم 350 كأنه الأسبوع كله."""
+    for vols in ([None, 100.0, 200.0, None, 50.0], [10.0, None, None, None, None]):
+        days = [{"time": _ts(2026, 8, 24 + i), "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": v}
+                for i, v in enumerate(vols)]
+        assert market._weeks_from_days(days, drop_first=False)[0]["volume"] is None
