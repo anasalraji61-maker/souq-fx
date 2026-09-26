@@ -1079,3 +1079,11 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **المراجعة (b — نصوص ثابتة):** العربي خارج `locales.ts` تعليقات/اختبارات + launch52. **QA97a → tools (منخفض)**: «lot» ثابتة بـ`PositionSizePanel.tsx:1044/1831/1858/1939` مقابل «لوت» بـ`riskCalcLots`.
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (1890f0d):** أخضر 0. backend r65 (`7d62607` تقاطع SMA من ضجيج الفاصلة، `024beb1` قفل نقل صفوف الجهاز و`ballot` لحساب محذوف) — لا يمسّ backend-r51(1) (صاحب الفكرة يصوّت) ⇒ يبقى لأنس؛ launch 162 توثيق فقط. لا طلب جديد.
+
+## 2026-09-26 — الدورة 98
+**البناء:** أخضر 0 (على 1d7282b) — لا إصلاح لازم. **Selftests:** 115/115 ناجح (`npx tsx`؛ جديد `tfTyping.selftest`).
+**التحقّق بالكود:** QA97a ← tools `dcec067` (`positionSize.ts:867` `LOT_UNIT`/`formatLots`، قرار صريح بإبقاء «lot») ⇒ مُغلق. launch163a باقٍ (`mcHintTypeTfWeb` بلا قارئ) → chart.
+جديد مُتحقَّق: **chart-r82a** (تحسين) `onTimeframeKey` غير ممرَّر لـ`TerminalScreen.tsx:1633` → tools و`FocusChartModal.tsx:492` → ui. سجلات tools/launch/ui/backend: لا طلب جديد.
+**قائمة قبول DESIGN-PRO (الثامن عشر):** 0/12 فشل (diff منذ 1890f0d، 14 ملفّاً: `tfTypedBox` تعبئة فقط، مسافات 8/12، `...numeric`؛ ui أزال التأكيد عن اسم الكاتب/شريط الموافقة/عنوان المدرسة).
+**المراجعة (c — `accessibilityLabel`):** مسح AST لكل `.tsx` ⇒ 3 `Pressable` بـ`MessagesScreen.tsx` فقط (غير مركّبة، launch52). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
