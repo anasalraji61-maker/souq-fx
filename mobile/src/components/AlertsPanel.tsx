@@ -23,6 +23,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievements';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
+import { formatLocalStamp } from '../localStamp';
 import { isNotOfferedSymbol, isSymbolUnavailableError } from '../providerSymbols';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
@@ -134,6 +135,11 @@ export function AlertsPanel({
   /** السعر الحالي للرمز المكتوب — يُعرض بجانب النموذج ويُستخدم لاختيار الاتجاه تلقائياً (فوق/تحت)
    * وللتحذير من تنبيه سيُطلق فوراً. null = غير معروف (لا اتصال/مزوّد غير مهيأ) فيعمل النموذج كما كان. */
   const [current, setCurrent] = useState<number | null>(null);
+  /**
+   * `current` بلا دفتر أسعار (`bid` null) هو إغلاق آخر شمعة لا سعر حيّ — كاش حتى 15د، أو إغلاق الجمعة طوال
+   * العطلة — وكان يُطبع «السعر الحالي» بلا وقت. وقته، و«السوق مغلق» حين يقولها الخادم؛ null لاقتباس حيّ.
+   */
+  const [currentStale, setCurrentStale] = useState<{ asOf: number | null; closed: boolean } | null>(null);
   const quoteGen = useRef(0);
   /**
    * تحذير «مزوّد الأسعار لا يعرف هذا الرمز»: تنبيه على خطأ كتابة («EURSUD») يجلس بالقائمة
@@ -229,6 +235,7 @@ export function AlertsPanel({
     const sym = symbol.trim().toUpperCase();
     const gen = ++quoteGen.current;
     setCurrent(null);
+    setCurrentStale(null);
     setUnknownSymbol(false);
     // اللوحة خارج الشاشة: لا استطلاع. والمسح أعلاه يقع **قبل** الخروج عمداً — فبالعودة لا يُعرض
     // رقمٌ عمره جلسةٌ كاملة ولو للحظة، وعليه تُبنى شرائح «±20 نقطة» وتحذير «سيُطلق فوراً».
@@ -246,6 +253,9 @@ export function AlertsPanel({
           const real = isRealQuote(q);
           const cur = real ? q.price : null;
           setCurrent(cur);
+          const asOf = typeof q.as_of === 'number' && Number.isFinite(q.as_of) ? q.as_of : null;
+          const closed = q.market_open === false;
+          setCurrentStale(real && (q.bid == null || closed) ? { asOf, closed } : null);
           if (real) providerRealRef.current = true;
           setUnknownSymbol(!real && providerRealRef.current);
           const typed = parseDecimal(priceTextRef.current);
@@ -354,7 +364,18 @@ export function AlertsPanel({
    * **ولا يمسّ هذا استنتاج `unknownSymbol`**: غياب رمزٍ عن البثّ يعني أن الخادم لا يشترك به، لا
    * أنه رمز مجهول — وذلك الحكم يبقى على REST وحده حيث كان.
    */
-  const currentPx = (spec ? ticks?.[spec.symbol] : undefined) ?? current;
+  const tickPx = spec ? ticks?.[spec.symbol] : undefined;
+  const currentPx = tickPx ?? current;
+  /** وسم الاحتياط وحده — التيك الحيّ لا يحمله. */
+  const currentStaleText =
+    tickPx == null && currentStale && (currentStale.closed || currentStale.asOf != null)
+      ? [
+          currentStale.closed ? t.dsMarketClosed : null,
+          currentStale.asOf != null ? t.screenerPriceAsOf.replace('{time}', formatLocalStamp(currentStale.asOf, lang)) : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : null;
 
   /** الاتجاه يُستنتج من موقع السعر المدخل بالنسبة للسعر الحالي — المستخدم يكتب الرقم فقط،
    * ويبقى قادراً على قلب الاتجاه يدوياً بعدها (مع تحذير إن صار التنبيه سيُطلق فوراً). */
@@ -960,6 +981,7 @@ export function AlertsPanel({
           <View style={[styles.currentRow, rtl && styles.rowRtl]}>
             <Text style={[styles.currentText, { textAlign: align }]}>
               {t.alertsCurrentPrefix}: <Text style={styles.currentVal}>{fmtPrice(currentPx)}</Text>
+              {currentStaleText ? <Text style={styles.currentStale}>{` · ${currentStaleText}`}</Text> : null}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -1294,6 +1316,7 @@ const styles = StyleSheet.create({
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
   currentText: { color: colors.textDim, fontSize: 11, flex: 1 },
   currentVal: { ...numeric, color: colors.text, fontWeight: '600' },
+  currentStale: { ...numeric, color: colors.warn },
   // DESIGN-PRO §1: زرّ ساكن بحدّ محايد كشرائح المسافة بجانبه — كان حدّاً ونصّاً بلون التأكيد بجانب زرّ «إضافة».
   useCurrent: {
     borderWidth: 1,
