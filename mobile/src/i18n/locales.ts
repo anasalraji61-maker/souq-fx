@@ -1166,6 +1166,11 @@ export type Dict = {
    * يبدأ بفاصل « · » لأنه ذيل. أمثلة المكتوب بحروف لاتينية كما تُضغط («15»، «4h»)؛ Enter اسم المفتاح.
    */
   mcHintTypeTfWeb: string;
+  /**
+   * الويب: يُلحق بـ`mcHintNavigateWeb` حين يمكن تحريك الشارت وليس بالإعادة — كتابة تاريخ ثم Enter تقفز لشمعة ذلك اليوم وتثبّت التقاطع
+   * (`parseTypedDate`/`dateJump` بـ`tfTyping.ts` — `304ddfa`). يبدأ بفاصل « · ». المثال بصيغة YYYY-MM-DD اللاتينية كما تُكتب.
+   */
+  mcHintTypeDateWeb: string;
   /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
   mcHintDrawWeb: string;
   /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`). */
@@ -2509,6 +2514,7 @@ const ar: Dict = {
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
   mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · Alt+R لإعادة العرض · Alt+T ترند، H أفقي، V عمودي، F فيبو',
   mcHintTypeTfWeb: ' · اكتب 15 أو 4h ثم Enter لتبديل الفريم',
+  mcHintTypeDateWeb: ' · اكتب 2026-09-01 ثم Enter للانتقال إلى ذلك اليوم',
   mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
   mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
@@ -3743,6 +3749,7 @@ const enUS: Dict = {
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
   mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · Alt+R resets the view · Alt+T trend, H H-line, V V-line, F Fib',
   mcHintTypeTfWeb: ' · type 15 or 4h then Enter to switch timeframe',
+  mcHintTypeDateWeb: ' · type 2026-09-01 then Enter to jump to that day',
   mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
   mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
@@ -5024,6 +5031,7 @@ const ku: Dict = {
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
   mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T ترێند، H ئاسۆیی، V ستوونی، F فیبۆ',
   mcHintTypeTfWeb: ' · 15 یان 4h بنووسە و Enter دابگرە بۆ گۆڕینی تایم‌فرەیم',
+  mcHintTypeDateWeb: ' · 2026-09-01 بنووسە و Enter دابگرە بۆ چوون بۆ ئەو ڕۆژە',
   mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
   mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
