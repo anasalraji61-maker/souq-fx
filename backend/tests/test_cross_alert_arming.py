@@ -59,8 +59,19 @@ def test_macd_cross_uses_the_same_rule():
     assert alert_worker.cross_predates_arming(a, _candles(FRI)) is True
 
 
+def test_rsi_level_on_bars_closed_before_arming_does_not_fire():
+    """run 128: «RSI فوق 50» أُنشئ السبت كان يُطلق على RSI شموع الجمعة (إشعار والسوق مغلق)."""
+    a = _alert(SAT, alert_type="rsi", condition="above", value=50, timeframe="1H")
+    assert alert_worker.cross_predates_arming(a, _candles(FRI + 20 * 3600, step=3600)) is True
+    assert main._check_indicator_alert(a, _candles(FRI + 20 * 3600, step=3600)) is False
+
+
+def test_rsi_level_on_the_bar_forming_at_arming_is_eligible():
+    a = _alert(FRI_AFTERNOON, alert_type="rsi", condition="above", value=50, timeframe="1H")
+    assert alert_worker.cross_predates_arming(a, _candles(FRI + 9 * 3600, step=3600)) is False
+
+
 @pytest.mark.parametrize("a", [
-    _alert(SAT, alert_type="rsi", condition="above", value=50),  # شرط مستوى لا حدث
     _alert(SAT, ts="not-a-date"),  # بلا لحظة تسليح مقروءة ⇒ السلوك القديم
     _alert(SAT, timeframe="3D"),  # فريم مجهول
 ])
