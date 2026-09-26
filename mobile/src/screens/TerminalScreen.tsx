@@ -555,6 +555,19 @@ export function TerminalScreen() {
     []
   );
 
+  const [layoutMenuOpen, setLayoutMenuOpen] = useState(false);
+  const pickLayout = useCallback(
+    (count: FrameLayoutCount, shape: FrameLayoutShape) => {
+      setLayoutMenuOpen(false);
+      void changeLayout(count, shape);
+    },
+    [changeLayout]
+  );
+  const layoutA11y = (count: FrameLayoutCount, shape: FrameLayoutShape) =>
+    shape === 'shadow'
+      ? t.termShadowFrameA11y
+      : `${shape === 'rect' ? t.termLayoutRectA11yPrefix : t.termLayoutSquareA11yPrefix} ${count}`;
+
   const multiCharts =
     !phone && layoutShape !== 'shadow' && layoutCount > 1;
   const timeSyncActive = timeSyncEnabled && multiCharts;
@@ -1192,131 +1205,95 @@ export function TerminalScreen() {
         ) : null}
 
         {!phone ? (
-          <View style={styles.layoutSwitcher}>
-            <View style={styles.layoutSwitcherTag}>
-              <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
-              <Text style={styles.layoutSwitcherTagBottom}>{t.termSquareWord}</Text>
-            </View>
-            {([1, 2, 3, 4] as FrameLayoutCount[]).map((count) => {
-              const active = layoutCount === count && layoutShape === 'square';
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  key={`sq-${count}`}
-                  style={({ pressed }) => [
-                    styles.layoutSwitchBtn,
-                    active && styles.layoutSwitchBtnOn,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => void changeLayout(count, 'square')}
-                  accessibilityLabel={`${t.termLayoutSquareA11yPrefix} ${count}`}
-                  accessibilityState={{ selected: active }}
-                >
-                  <View style={styles.layoutSwitchMini}>
-                    {Array.from({ length: count }).map((_, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.layoutSwitchCell,
-                          active && styles.layoutSwitchCellOn,
-                        ]}
-                      />
-                    ))}
-                  </View>
-                  <Text
-                    style={[
-                      styles.layoutSwitchNum,
-                      active && styles.layoutSwitchNumOn,
-                    ]}
-                  >
-                    {count}
-                  </Text>
-                </Pressable>
-              );
-            })}
-            <View style={styles.layoutSwitchSep} />
-            <View style={styles.layoutSwitcherTag}>
-              <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
-              <Text style={styles.layoutSwitcherTagBottom}>{t.termRectWord}</Text>
-            </View>
-            {([2, 3, 4] as FrameLayoutCount[]).map((count) => {
-              const active = layoutCount === count && layoutShape === 'rect';
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  key={`rect-${count}`}
-                  style={({ pressed }) => [
-                    styles.layoutSwitchBtn,
-                    active && styles.layoutSwitchBtnOn,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => void changeLayout(count, 'rect')}
-                  accessibilityLabel={`${t.termLayoutRectA11yPrefix} ${count}`}
-                  accessibilityState={{ selected: active }}
-                >
-                  <View
-                    style={[
-                      styles.layoutSwitchMini,
-                      count === 2 && styles.layoutSwitchMiniRow,
-                      count === 3 && styles.layoutSwitchMiniRow3,
-                      count === 4 && styles.layoutSwitchMiniRow4,
-                    ]}
-                  >
-                    {Array.from({ length: count }).map((_, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.layoutSwitchCellRect,
-                          count === 2 && styles.layoutSwitchCellRect2,
-                          count === 3 && styles.layoutSwitchCellRect3,
-                          count === 4 && styles.layoutSwitchCellRect4,
-                          active && styles.layoutSwitchCellOn,
-                        ]}
-                      />
-                    ))}
-                  </View>
-                  <Text
-                    style={[
-                      styles.layoutSwitchNum,
-                      active && styles.layoutSwitchNumOn,
-                    ]}
-                  >
-                    {count}
-                  </Text>
-                </Pressable>
-              );
-            })}
-            <View style={styles.layoutSwitchSep} />
+          // Anas W2 / DESIGN-PRO §7: كانت تسعة أزرار (مربّع 1–4، مستطيل 2–4، الظل) للوظيفة نفسها ⇒ زرّ واحد يعرض التخطيط الحالي وقائمة منسدلة.
+          <View style={styles.layoutMenuWrap}>
             <Pressable
               accessibilityRole="button"
+              accessibilityState={{ expanded: layoutMenuOpen }}
               style={({ pressed }) => [
-                styles.layoutSwitcherTag,
-                layoutShape === 'shadow' && styles.layoutSwitchBtnOn,
+                styles.layoutMenuTrigger,
+                layoutMenuOpen && styles.layoutSwitchBtnOn,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
-              onPress={() => void changeLayout(1, 'shadow')}
-              accessibilityLabel={t.termShadowFrameA11y}
-              accessibilityState={{ selected: layoutShape === 'shadow' }}
+              onPress={() => setLayoutMenuOpen((v) => !v)}
+              accessibilityLabel={layoutA11y(layoutCount, layoutShape)}
+              hitSlop={4}
             >
-              <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
-              <Text
-                style={[
-                  styles.layoutSwitcherTagBottom,
-                  layoutShape === 'shadow' && styles.layoutSwitchNumOn,
-                ]}
-              >
-                {t.termShadowWord}
-              </Text>
+              {layoutShape === 'shadow' ? (
+                <Text style={styles.layoutSwitchNum}>{t.termShadowWord}</Text>
+              ) : (
+                <>
+                  <LayoutGlyph count={layoutCount} shape={layoutShape} active={false} />
+                  <Text style={styles.layoutSwitchNum}>{layoutCount}</Text>
+                </>
+              )}
+              <Text style={styles.layoutMenuCaret}>{layoutMenuOpen ? '▴' : '▾'}</Text>
             </Pressable>
+            {layoutMenuOpen ? (
+              <View style={styles.layoutMenuPanel}>
+                {(
+                  [
+                    ['square', [1, 2, 3, 4], t.termSquareWord],
+                    ['rect', [2, 3, 4], t.termRectWord],
+                  ] as [FrameLayoutShape, FrameLayoutCount[], string][]
+                ).map(([shape, counts, word]) => (
+                  <View key={shape} style={styles.layoutMenuRow}>
+                    <Text style={styles.layoutMenuRowTag}>{word}</Text>
+                    {counts.map((count) => {
+                      const active = layoutCount === count && layoutShape === shape;
+                      return (
+                        <Pressable
+                          accessibilityRole="button"
+                          key={`${shape}-${count}`}
+                          style={({ pressed }) => [
+                            styles.layoutSwitchBtn,
+                            active && styles.layoutSwitchBtnOn,
+                            pressed && {
+                              opacity: buttons.pressedOpacity,
+                              transform: [{ scale: buttons.pressedScale }],
+                            },
+                          ]}
+                          onPress={() => pickLayout(count, shape)}
+                          accessibilityLabel={layoutA11y(count, shape)}
+                          accessibilityState={{ selected: active }}
+                        >
+                          <LayoutGlyph count={count} shape={shape} active={active} />
+                          <Text style={[styles.layoutSwitchNum, active && styles.layoutSwitchNumOn]}>
+                            {count}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ))}
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.layoutMenuShadow,
+                    layoutShape === 'shadow' && styles.layoutSwitchBtnOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => pickLayout(1, 'shadow')}
+                  accessibilityLabel={t.termShadowFrameA11y}
+                  accessibilityState={{ selected: layoutShape === 'shadow' }}
+                >
+                  <Text
+                    style={[
+                      styles.layoutSwitchNum,
+                      layoutShape === 'shadow' && styles.layoutSwitchNumOn,
+                    ]}
+                  >
+                    {t.termShadowFrameA11y}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -2159,6 +2136,42 @@ export function TerminalScreen() {
   );
 }
 
+/** أيقونة التخطيط المصغّرة: خلايا مربّع 2×2 أو صفّ مستطيلات. */
+function LayoutGlyph({
+  count,
+  shape,
+  active,
+}: {
+  count: FrameLayoutCount;
+  shape: FrameLayoutShape;
+  active: boolean;
+}) {
+  const rect = shape === 'rect';
+  return (
+    <View
+      style={[
+        styles.layoutSwitchMini,
+        rect && count === 2 && styles.layoutSwitchMiniRow,
+        rect && count === 3 && styles.layoutSwitchMiniRow3,
+        rect && count === 4 && styles.layoutSwitchMiniRow4,
+      ]}
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <View
+          key={index}
+          style={[
+            rect ? styles.layoutSwitchCellRect : styles.layoutSwitchCell,
+            rect && count === 2 && styles.layoutSwitchCellRect2,
+            rect && count === 3 && styles.layoutSwitchCellRect3,
+            rect && count === 4 && styles.layoutSwitchCellRect4,
+            active && styles.layoutSwitchCellOn,
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   topBar: {
@@ -2175,43 +2188,49 @@ const styles = StyleSheet.create({
   },
   topBarPhone: { flexWrap: 'wrap', paddingVertical: spacing.xs },
   tfScroll: { flexGrow: 0, flexShrink: 1, maxWidth: 520, minWidth: 200 },
-  layoutSwitcher: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
+  // Anas W2: زرّ التخطيط الواحد وقائمته (نمط `SymbolPairMenu`: غلاف نسبي ولوحة مطلقة تحت الشريط)
+  layoutMenuWrap: { position: 'relative', zIndex: 85 },
+  layoutMenuTrigger: {
+    minWidth: 40,
+    height: 32,
     paddingHorizontal: 8,
-    paddingVertical: spacing.xs,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.controlBg,
-  },
-  // DESIGN-PRO §2/§7: وسما السطرين 11px — الحاوية تتّسع («Rectangle»/«چوارچێوە») لا الخطّ يصغر
-  layoutSwitcherTag: {
-    minWidth: 48,
-    minHeight: 36,
-    paddingVertical: 4,
     borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    backgroundColor: colors.bgPanel,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    flexDirection: 'row',
+    gap: 4,
   },
-  layoutSwitcherTagTop: {
+  layoutMenuCaret: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
+  layoutMenuPanel: {
+    position: 'absolute',
+    top: 36,
+    left: 0,
+    zIndex: 90,
+    gap: spacing.xs,
+    padding: 8,
+    backgroundColor: colors.bgElevated,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  layoutMenuRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // DESIGN-PRO §2: 11px حدّ أدنى، الحاوية تتّسع («Rectangle»/«چوارچێوە») لا الخطّ يصغر
+  layoutMenuRowTag: {
+    minWidth: 64,
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '500',
-    lineHeight: 13,
-    textAlign: 'center',
   },
-  layoutSwitcherTagBottom: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '500',
-    lineHeight: 13,
-    textAlign: 'center',
+  layoutMenuShadow: {
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   timeSyncBtn: {
     paddingHorizontal: 12,
@@ -2306,12 +2325,6 @@ const styles = StyleSheet.create({
   layoutSwitchCellOn: { backgroundColor: colors.text },
   layoutSwitchNum: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   layoutSwitchNumOn: { color: colors.text },
-  layoutSwitchSep: {
-    width: 1,
-    height: 18,
-    backgroundColor: colors.border,
-    marginHorizontal: 4,
-  },
   panSpeedSlot: {
     flexShrink: 0,
     marginHorizontal: 4,
