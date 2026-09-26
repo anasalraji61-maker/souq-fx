@@ -925,44 +925,90 @@ export function journalStats(
 }
 
 /**
+ * المغلقة **زمنياً** بوقت الإغلاق (`closed_at`، ثم `opened_at` إن غاب) — بصيغة الخادم `%Y-%m-%d %H:%M` فالمقارنة النصّية زمنية.
+ * التساوي (الدقيقة نفسها) بترتيب الخادم العكسي (الأحدث أولاً ⇒ الأبعد بالمصفوفة أقدم).
+ */
+function closedChronological<T extends { status: string; closed_at?: string | null; opened_at?: string | null }>(
+  trades: readonly T[]
+): T[] {
+  const at = (tr: T) =>
+    typeof tr.closed_at === 'string' && tr.closed_at ? tr.closed_at : typeof tr.opened_at === 'string' ? tr.opened_at : '';
+  return trades
+    .map((tr, i) => ({ tr, i, at: at(tr) }))
+    .filter(({ tr }) => tr.status === 'closed')
+    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : b.i - a.i))
+    .map(({ tr }) => tr);
+}
+
+/**
  * **سلسلة الخسائر**: أطول عدد صفقات خاسرة متتالية (`longest`) والخاسرة المتتالية حتى آخر صفقة مغلقة (`current`) —
  * بتصنيف `journalStats` نفسه (المغلقة ذات `pnl` منتهٍ؛ خسارة < −ε، ربح > ε).
  *
  * لماذا: نسبة النجاح ومتوسط R لا يقولان للمتداول **كم خسارة تأتي متتالية** — وهو الرقم الذي يحدّد نسبة المخاطرة المحتملة
  * (6 خسائر متتالية بـ2% = −11.4% من الحساب) وقاعدة «أتوقّف بعد 3 خسائر اليوم». `current` يقول إنه **الآن** داخل سلسلة.
  *
- * الترتيب زمني بوقت الإغلاق (`closed_at`، ثم `opened_at` إن غاب) — بصيغة الخادم `%Y-%m-%d %H:%M` فالمقارنة النصّية زمنية.
- * التساوي (الدقيقة نفسها) بترتيب الخادم العكسي (الأحدث أولاً ⇒ الأبعد بالمصفوفة أقدم). **التعادل لا يقطع السلسلة ولا يطيلها**:
+ * الترتيب زمني (`closedChronological`). **التعادل لا يقطع السلسلة ولا يطيلها**:
  * نقل الوقف للتعادل بين خسارتين لا يعني أن النظام توقّف عن الخسارة. `null` بلا صفقة حاسمة.
  */
 export function journalLossStreaks(
   trades: readonly { status: string; pnl?: number | string | null; closed_at?: string | null; opened_at?: string | null }[]
 ): { longest: number; current: number } | null {
-  const rows = trades
-    .map((tr, i) => ({ tr, i }))
-    .filter(
-      ({ tr }) => tr.status === 'closed' && tr.pnl != null && String(tr.pnl).trim() !== '' && Number.isFinite(Number(tr.pnl))
-    )
-    .map(({ tr, i }) => ({
-      pnl: Number(tr.pnl),
-      at: typeof tr.closed_at === 'string' && tr.closed_at ? tr.closed_at : typeof tr.opened_at === 'string' ? tr.opened_at : '',
-      i,
-    }))
-    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : b.i - a.i));
+  const rows = closedChronological(trades)
+    .filter((tr) => tr.pnl != null && String(tr.pnl).trim() !== '' && Number.isFinite(Number(tr.pnl)))
+    .map((tr) => Number(tr.pnl));
   let longest = 0;
   let run = 0;
   let decided = 0;
-  for (const r of rows) {
-    if (r.pnl < -JOURNAL_BREAKEVEN_EPS) {
+  for (const pnl of rows) {
+    if (pnl < -JOURNAL_BREAKEVEN_EPS) {
       run += 1;
       decided += 1;
       if (run > longest) longest = run;
-    } else if (r.pnl > JOURNAL_BREAKEVEN_EPS) {
+    } else if (pnl > JOURNAL_BREAKEVEN_EPS) {
       run = 0;
       decided += 1;
     }
   }
   return decided ? { longest, current: run } : null;
+}
+
+/**
+ * **أقصى تراجع بالـR**: أكبر هبوط من قمّة إلى قاع في مجموع R التراكمي للمغلقة زمنياً (`closedChronological`)، والتراجع
+ * **الحالي** عن آخر قمّة. R لكل صفقة بمسطرة «متوسط R» نفسها (`exactR`: الوقف الأصلي «1R @ …» ثم `sl`، ووقفٌ أضيق من
+ * 1 pip لا يُحسب)؛ صفقة بلا R تُتخطّى — لا تُعدّ صفراً. القمّة تبدأ من 0 (قبل أوّل صفقة).
+ *
+ * لماذا: «متوسط +0.4R» يُخفي أن النظام مرّ بـ−7R قبل أن يتعافى. التراجع بالـR هو ما يُضرب بنسبة المخاطرة لتعرف ما كان
+ * سيحدث للحساب (−7R بمخاطرة 2% ≈ −13%)، ويقول هل المخاطرة الحالية تحتمل النظام. بالـR لا بالمال: مستقلٌّ عن الحجم والعملة.
+ *
+ * `n` = الصفقات المحسوبة. `null` بلا صفقة ذات R.
+ */
+export function journalMaxDrawdownR(
+  trades: readonly {
+    symbol?: string;
+    side: string;
+    entry: number;
+    sl?: number | null;
+    exit?: number | null;
+    note?: string | null;
+    status: string;
+    closed_at?: string | null;
+    opened_at?: string | null;
+  }[]
+): { max: number; current: number; n: number } | null {
+  let cum = 0;
+  let peak = 0;
+  let max = 0;
+  let n = 0;
+  for (const tr of closedChronological(trades)) {
+    const r = exactR({ symbol: tr.symbol, side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit, note: tr.note });
+    if (r == null) continue;
+    n += 1;
+    cum += r;
+    if (cum > peak) peak = cum;
+    if (peak - cum > max) max = peak - cum;
+  }
+  // `roundR` لمنزلة واحدة كسائر أرقام R؛ −0 من الطرح يُطبع 0
+  return n ? { max: roundR(max) || 0, current: roundR(peak - cum) || 0, n } : null;
 }
 
 /**

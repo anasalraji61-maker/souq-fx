@@ -42,6 +42,7 @@ import {
   stopTooClose,
   journalStats,
   journalLossStreaks,
+  journalMaxDrawdownR,
   journalWinRateLine,
   roundHalfEven,
   floatingResult,
@@ -3607,4 +3608,49 @@ console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
     { longest: 1, current: 1 }
   );
   console.log('tradePlan journalLossStreaks selftest OK');
+}
+
+// ---- journalMaxDrawdownR: أكبر هبوط قمّة⇒قاع بمجموع R، زمنياً ----
+{
+  // شراء EURUSD دخول 1.0850 وقف 1.0830 (20 pip = 1R): الخروج يحدّد R
+  const t = (exit: number, closed_at: string, extra: Record<string, unknown> = {}) => ({
+    symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit, status: 'closed', closed_at, ...extra,
+  });
+  // زمنياً: +2R، −1R، −1R، −1R، +1R، −1R ⇒ التراكمي 2،1،0،−1،0،−1 ⇒ القمّة 2، أقصى تراجع 3R، والحالي 3R
+  const rows = [
+    t(1.089, '2026-09-01 10:00'), t(1.083, '2026-09-02 10:00'), t(1.083, '2026-09-03 10:00'),
+    t(1.083, '2026-09-04 10:00'), t(1.087, '2026-09-05 10:00'), t(1.083, '2026-09-06 10:00'),
+  ];
+  assert.deepEqual(journalMaxDrawdownR(rows), { max: 3, current: 3, n: 6 });
+  // ترتيب الخادم (الأحدث أولاً) النتيجة نفسها
+  assert.deepEqual(journalMaxDrawdownR([...rows].reverse()), { max: 3, current: 3, n: 6 });
+  // قمّة جديدة بعد التراجع ⇒ الحالي 0 والأقصى يبقى
+  assert.deepEqual(journalMaxDrawdownR([...rows, t(1.093, '2026-09-07 10:00')]), { max: 3, current: 0, n: 7 });
+  // القمّة تبدأ من 0: أوّل صفقتين −1R ⇒ 2R تراجعاً (لا 1R)
+  assert.deepEqual(journalMaxDrawdownR([t(1.083, '2026-09-01 10:00'), t(1.083, '2026-09-02 10:00')]), { max: 2, current: 2, n: 2 });
+  // بيع USDJPY 150/150.5 (50 pip = 1R) يخرج 151 ⇒ −2R
+  assert.deepEqual(
+    journalMaxDrawdownR([{ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.5, exit: 151, status: 'closed', closed_at: '2026-09-01 10:00' }]),
+    { max: 2, current: 2, n: 1 }
+  );
+  // الوقف الأصلي بالملاحظة هو الـ1R: وقفٌ نُقل للتعادل لا يجعل الخسارة لاحقاً «∞R»
+  assert.deepEqual(
+    journalMaxDrawdownR([t(1.084, '2026-09-01 10:00', { sl: 1.085, note: '1R @ 1.083' })]),
+    { max: 0.5, current: 0.5, n: 1 }
+  );
+  // بلا وقف، وقفٌ أضيق من 1 pip، مفتوحة، أو بلا خروج ⇒ تُتخطّى (لا صفر) ⇒ null
+  assert.equal(
+    journalMaxDrawdownR([
+      t(1.083, '2026-09-01 10:00', { sl: null }),
+      t(1.083, '2026-09-02 10:00', { sl: 1.08499 }),
+      t(1.083, '2026-09-03 10:00', { status: 'open' }),
+      t(1.083, '2026-09-04 10:00', { exit: null }),
+    ]),
+    null
+  );
+  // كلها رابحة ⇒ 0 و0 (لا −0)
+  const up = journalMaxDrawdownR([t(1.087, '2026-09-01 10:00'), t(1.087, '2026-09-02 10:00')]);
+  assert.deepEqual(up, { max: 0, current: 0, n: 2 });
+  assert.ok(!Object.is(up!.max, -0) && !Object.is(up!.current, -0));
+  console.log('tradePlan journalMaxDrawdownR selftest OK');
 }
