@@ -6982,7 +6982,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
             style={({ pressed }) => [
               styles.crossAlertBtn,
-              { borderColor: accent },
               pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
             onPress={() => createAlert(crossPrice, 'crosshair')}
@@ -13418,8 +13417,8 @@ const styles = StyleSheet.create({
   },
   zoomRow: { flexDirection: 'row', gap: 4 },
   chromeDim: { opacity: 0.4 },
+  // §5.5 فاصل واحد: التعبئة وحدها (كان حدّ بلون التأكيد + خلفية) — النصّ بلون التأكيد يكفي ليُقرأ زرّاً.
   crossAlertBtn: {
-    borderWidth: 1,
     borderRadius: radii.sm,
     paddingHorizontal: 8,
     height: 24,
