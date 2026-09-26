@@ -1481,3 +1481,14 @@
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ «درجة الاتفاق» تعليقات فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ لا وزن 700 بنطاقي؛ `Delete` بقائمة المتابعة يظهر بالمرور/الضغط المطوّل فقط؛ `useMultiLiveTicks` يرفض الأقدم من `TICK_STALE_MS` ويكنس عند العودة.
 - مسح `tabular-nums`: كل ملف بنطاقي يطبع رقماً منسَّقاً يستعمل `numeric`.
 - **لم يُتحقَّق بصرياً**: لا خادم على `:8081` ولا متصفّح بالبيئة. للـQA/الويب يوم عطلة: لوح Bid/Ask ونموذج التنبيه ⇒ «السوق مغلق · إغلاق {الجمعة}».
+
+## 2026-09-26 — تشغيل 124
+صفّان بـCOORDINATION (دورة QA 134) موجَّهان إلى ui كمنفّذ: **QA134a** منجز سلفاً بـ`0fff6ed` (تشغيل 123؛ `ScreenerMini.tsx:94` `serverNowSec()`) — جاهز للإغلاق؛ **launch207a أُنجز**. بوابة البناء خضراء (0) قبل الـcommit.
+
+| commit | ماذا | بند |
+|---|---|---|
+| 62522e0 | الويب: `documentTitle.formatter` على `NavigationContainer` ⇒ عنوان التبويب «الرئيسية · MATRIX» لا «الرئيسية» وحدها (بلا مفتاح نصّ جديد)؛ `mobile/public/index.html` = قالب Expo 57 نفسه (`%LANG_ISO_CODE%`/`%WEB_TITLE%`) + `background-color:#0B1220` لـ`html,body` ⇒ لا وميض أبيض قبل نزول الحزمة | launch207a (قرار ١٦) |
+
+- launch207a جاهز للإغلاق.
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ «درجة الاتفاق» تعليقات فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ لا وزن 700 بنطاقي؛ كل زرّ اختيار شرطي بـ`TimeframeBar`/`ScreenerMini`/`SymbolPairMenu`/`MatrixEdgeRails`/`MatrixBottomDock` يحمل `accessibilityState`.
+- **لم يُتحقَّق بصرياً**: لا خادم على `:8081` ولا متصفّح بالبيئة. للـQA/الويب: عنوان التبويب «… · MATRIX» ويتغيّر مع التبويب؛ إعادة تحميل بشبكة بطيئة (DevTools «Slow 3G») ⇒ خلفية داكنة من أول لحظة.
