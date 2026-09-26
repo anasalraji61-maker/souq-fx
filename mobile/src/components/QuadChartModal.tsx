@@ -20,6 +20,7 @@ import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
 import { isSyntheticProvenance, normalizeProvenance } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
+import { useStickyPriceRefs } from '../chart/useStickyPriceRef';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
 import { cachedChartSeries, rememberChartSeries, sharedSeriesCache } from '../hooks/chartSeriesCache';
@@ -76,6 +77,8 @@ export function QuadChartModal({
     gridH > 0 ? Math.max(80, (gridH - 3 * spacing.sm) / 2 - PHONE_CELL_CHROME) : height * 0.22;
   const cellH = short ? shortCellH : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
+  // منازل الرأس/الألسنة ثابتة كمحور الشارت تحتها (LTCUSD ‏99.98⇄100.01 كان يقلبها 3↔2)
+  const priceRefs = useStickyPriceRefs(symbols, symbols.map((_, i) => series[i]?.last));
   const ticks = useMultiLiveTicks(symbols, visible);
   // نسبة رأس الخلية = تغيّر اليوم (كقائمة المتابعة) لا «منذ أول شمعة محمّلة» — تختلف بين الخلايا بالفريم.
   const dailyRefs = useDailyRefs(visible ? symbols : NO_SYMBOLS);
@@ -270,7 +273,7 @@ export function QuadChartModal({
             const tabDemo = d.s != null && !d.noReal && normalizeProvenance(d.s.data_source).kind === 'demo';
             const tabTag = d.noReal ? t.dsKindUnavailable : tabDemo ? t.dsKindDemo : null;
             const priceText =
-              d.s && !tabTag && Number.isFinite(d.px) ? formatPrice(d.px, tabSym, d.s.last) : null;
+              d.s && !tabTag && Number.isFinite(d.px) ? formatPrice(d.px, tabSym, priceRefs[i] ?? d.s.last) : null;
             const pctText = d.s && !tabTag ? (d.pct == null ? '—' : formatPct(d.pct)) : null;
             const a11y = [
               tabSym,
@@ -463,7 +466,7 @@ export function QuadChartModal({
                       </Text>
                     ) : null}
                     {s && !noReal && Number.isFinite(px) ? (
-                      <Text style={styles.cellPrice}>{formatPrice(px, sym, s?.last)}</Text>
+                      <Text style={styles.cellPrice}>{formatPrice(px, sym, priceRefs[i] ?? s?.last)}</Text>
                     ) : null}
                     {s && !noReal ? (
                       <Text
