@@ -106,6 +106,7 @@ import {
   liveEntryQuoteState,
   restoredSmallSymbol,
   manualConvLooksInverted,
+  manualConvForPair,
   typicalSlPipsExample,
   typicalSpreadPipsExample,
   fillExampleOrDrop,
@@ -240,7 +241,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const [convLoading, setConvLoading] = useState(false);
   const [convFailed, setConvFailed] = useState(false);
   /** إدخال يدوي لسعر التحويل عند تعذّر جلبه — لا تتوقف الحاسبة بسبب انقطاع مزوّد الأسعار */
-  const [manualConv, setManualConv] = useState('');
+  // مع زوجه (`conversionKey`) — راجع `manualConvForPair`؛ `manualConv`/`setManualConv` بعد `convKey` أدناه
+  const [manualConvTyped, setManualConvTyped] = useState<{ key: string | null; text: string }>({ key: null, text: '' });
   const gen = useRef(0);
   /** خانة النقاط مملوءة من سعرَي الدخول/الوقف (لا يدوياً) — فتُمسح إن لم يعد السعران صالحين */
   const slFromPrices = useRef(false);
@@ -439,6 +441,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const convInvert = conv?.invert ?? false;
   /** السعر المحفوظ يخصّ الزوج **واتجاهه** — راجع `conversionKey` */
   const convKey = conversionKey(conv);
+  /** سعر التحويل المكتوب يُقرأ لزوجه وحده: كان يبقى إطاراً مع الزوج الجديد حتى يمسحه التأثير — `manualConvForPair` */
+  const manualConv = manualConvForPair(manualConvTyped, convKey);
+  const setManualConv = (text: string) => setManualConvTyped({ key: convKey, text });
   /** جسر الدولار: بديل الزوج المباشر حين لا يعرفه المزوّد (`usdBridge` بـpositionSize.ts). */
   // على العملة لا على كائن `spec`: لاحقة الوسيط («EURJPY» ← «EURJPY.m») تنشئ `spec` جديداً للأداة نفسها، فكان جسرٌ
   // جديد يعيد تأثير التحويل غير صامت ⇒ اللوت يفرغ أثناء إعادة الجلب ويُمسح سعر التحويل المكتوب يدوياً
@@ -481,7 +486,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     if (!silent) {
       setConvQuote(null);
       setConvFailed(false);
-      setManualConv('');
+      setManualConvTyped({ key: null, text: '' });
     }
     if (!convSymbol) {
       setConvLoading(false);

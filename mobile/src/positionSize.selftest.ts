@@ -10,6 +10,7 @@ import {
   formatLots,
   LOT_UNIT,
   manualConvLooksInverted,
+  manualConvForPair,
   lossStreakDrawdownPct,
   lossRiskPct,
   dailyLossRoom,
@@ -4077,3 +4078,21 @@ console.log('positionSize lostTodayOtherCcy selftest OK');
   assert.equal(lossRiskPct(0, null), null);
 }
 console.log('positionSize lossRiskPct selftest OK');
+
+// ---- manualConvForPair: السعر المكتوب لزوجه وحده ----
+{
+  // حساب دولار: EURGBP ⇒ GBPUSD، EURCHF ⇒ USDCHF — مفتاحان مختلفان
+  const kGbp = conversionKey(conversionPair('GBP', 'USD'));
+  const kChf = conversionKey(conversionPair('CHF', 'USD'));
+  assert.ok(kGbp && kChf && kGbp !== kChf);
+  const typed = { key: kGbp, text: '1.27' };
+  assert.equal(manualConvForPair(typed, kGbp), '1.27');
+  // بعد التبديل إلى EURCHF: فارغ من أول إطار (كان 1.27 يُقرأ مقلوباً ⇒ 1/1.27)
+  assert.equal(manualConvForPair(typed, kChf), '');
+  // لا زوج تحويل (الحساب = عملة التسعير) أو لم يُكتب شيء ⇒ فارغ
+  assert.equal(manualConvForPair(typed, null), '');
+  assert.equal(manualConvForPair({ key: null, text: '' }, kGbp), '');
+  // العودة إلى EURGBP قبل أن يُمسح ⇒ المكتوب له يعود
+  assert.equal(manualConvForPair(typed, kGbp), '1.27');
+}
+console.log('positionSize manualConvForPair selftest OK');
