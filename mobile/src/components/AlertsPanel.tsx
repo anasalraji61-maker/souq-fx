@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric } from '../theme';
 import { api, type PriceAlert } from '../api';
@@ -47,6 +48,12 @@ const QUOTE_REFRESH_MS = 60_000;
  * خارج الشاشة. وهو نفسه **الحدّ الأدنى** بالوضع المضمَّن أدناه، فلا تصير القائمة أصغر مما كانت بأي حال.
  */
 const LIST_WINDOW_H = 160;
+
+/**
+ * المتصفّح لا يتلقّى إشعار Push (`pushPriceAlert` يعود فوراً على الويب) — فنصوص «سنُعلمك/سيصلك إشعار»
+ * تُستبدل بنصوص ويب تقول الحقيقة: التنبيه يُوسَم هنا، والإشعار يصل هاتفاً مسجَّلاً بالحساب نفسه.
+ */
+const isWeb = Platform.OS === 'web';
 
 /**
  * مسافات جاهزة بالنقاط حول السعر الحالي. المتداول يضع تنبيهه عند «عشرين نقطة فوق السوق» لا عند رقم
@@ -797,7 +804,7 @@ export function AlertsPanel({
           ) : null}
           {alerts.length === 0 ? (
             <Text style={[styles.empty, { textAlign: align }]}>
-              {listError ? t.alertsLoadError : t.alertsEmpty}
+              {listError ? t.alertsLoadError : isWeb ? t.alertsEmptyWeb : t.alertsEmpty}
             </Text>
           ) : (
             orderedAlerts.map((a) => (
@@ -890,13 +897,13 @@ export function AlertsPanel({
           <View style={frameEmbedHeadTail} />
           <View style={frameEmbedTitleBlock}>
             <Text style={[styles.title, frameEmbedTitle, { textAlign: align }]}>{t.alertsTitle}</Text>
-            <Text style={[styles.sub, frameEmbedSub, { textAlign: align }]}>{t.alertsSub}</Text>
+            <Text style={[styles.sub, frameEmbedSub, { textAlign: align }]}>{isWeb ? t.alertsSubWeb : t.alertsSub}</Text>
           </View>
         </View>
       ) : (
         <>
           <Text style={[styles.title, { textAlign: align }]}>{t.alertsTitle}</Text>
-          <Text style={[styles.sub, { textAlign: align }]}>{t.alertsSub}</Text>
+          <Text style={[styles.sub, { textAlign: align }]}>{isWeb ? t.alertsSubWeb : t.alertsSub}</Text>
         </>
       )}
       {flash ? (
@@ -1142,7 +1149,7 @@ export function AlertsPanel({
       ) : null}
       {showFirstBadge ? (
         <View style={styles.firstAlertBadge}>
-          <Text style={styles.firstAlertBadgeText}>{t.alertsFirstBadge}</Text>
+          <Text style={styles.firstAlertBadgeText}>{isWeb ? t.alertsFirstBadgeWeb : t.alertsFirstBadge}</Text>
         </View>
       ) : null}
 

@@ -434,7 +434,7 @@ export function IndicatorAlertsPanel({
     <>
           {alerts.length === 0 ? (
             <Text style={[styles.empty, { textAlign: align }]}>
-              {listError ? t.indAlertsLoadError : t.indAlertsEmpty}
+              {listError ? t.indAlertsLoadError : Platform.OS === 'web' ? t.indAlertsEmptyWeb : t.indAlertsEmpty}
             </Text>
           ) : (
             alerts.map((a) => (
