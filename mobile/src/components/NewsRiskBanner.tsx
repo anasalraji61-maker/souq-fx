@@ -265,8 +265,9 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, chart, openSymbols, s
       .join(holiday.titles.length ? ` · ${holiday.titles.join(t.listSep)}` : '')}`;
     // يوم العطلة والتقويم متعطّل: كان سطر العطلة وحده يُعرض ويُخفي «تعذّر تحديث التقويم» — فيُقرأ «سيولة ضعيفة» كأنها كل القصة
     const label = down ? `${text}. ${t.newsUnavailable}` : text;
+    // العنبر للبيانات المتعطّلة وحدها (DESIGN-PRO §1): العطلة وحدها خبرٌ عادي بحدّ الشريط العادي — كانت تبدو كفشل التقويم
     return (
-      <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={label}>
+      <View style={[styles.wrap, down && styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={label}>
         <Text style={[styles.hint, styles.unavailable, { textAlign: align }]} numberOfLines={2}>
           {text}
         </Text>
