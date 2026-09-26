@@ -2104,7 +2104,8 @@ def ai_ask(body: AiAsk):
     bars = max(len(series.candles) - 1, 0)
     # None = رمز بلا سعر أصلاً (DXY) ⇒ `live` False أعلاه، ولا اتجاه
     chg = series.change_pct if series.change_pct is not None else 0.0
-    atr_v = signal_hub._atr_last([c.model_dump() for c in series.candles]) if live else None
+    atr_raw = signal_hub._atr_raw([c.model_dump() for c in series.candles]) if live else None
+    atr_v = atr_raw if atr_raw else None
     # صافي الحركة على النافذة أصغر من مدى شمعة واحدة معتاد (ATR14) = ضجيج لا اتجاه: كان أي إشارة غير صفرية
     # (+0.01% على ~45 ساعة بـ15m) ⇒ «صاعد» وسيناريو شراء كامل بدخول ووقف وهدف. الحركة من الإغلاقين
     # الحقيقيين (الأخير − أول السلسلة) لا من `change_pct`: تلك مقرَّبة لخانتين (0.005% ≈ 15% من ATR 15m
@@ -2114,8 +2115,11 @@ def ai_ask(body: AiAsk):
         if series.last is not None and series.candles else 0.0
     )
     # بلا ATR14 (أقلّ من 15 شمعة) لا مقياس للضجيج ⇒ لا اتجاه: كان المرشّح يُتخطّى فيصير +0.01% على 12 شمعة «شراء»
-    few = live and atr_v is None
-    flat = chg == 0 or few or (atr_v is not None and net_move < atr_v)
+    # ATR14 = 0 (180 شمعة متطابقة: زوج مربوط أو تغذية متجمّدة) ليس «شموعاً قليلة»: كان `_atr_last` يعيد None
+    # للحالتين ⇒ «180 شمعة فقط — أقلّ من أن يُقاس…» سبباً كاذباً للمستخدم وللنموذج. الآن سببان منفصلان.
+    still = live and atr_raw == 0
+    few = live and atr_raw is None
+    flat = chg == 0 or few or still or (atr_v is not None and net_move < atr_v)
     bias = "صاعد" if chg > 0 else "هابط"
     direction: str | None = None if flat else ("شراء" if chg > 0 else "بيع")
     entry: float | None = None
@@ -2149,6 +2153,7 @@ def ai_ask(body: AiAsk):
                if series.change_pct is not None else "change_pct=unavailable (single candle), ")
             + f"tf={series.timeframe}"
             + (", bias=none (too few candles for ATR14 — direction cannot be judged)" if few else
+               ", bias=none (no price movement: every candle in the window has zero range)" if still else
                ", bias=none (net move smaller than one ATR14 — no clear direction)" if flat else f", bias={bias}")
         )
         # مستويات الخادم نفسها التي تُرفق ببطاقة `setup`. كان السياق بلا مستويات والتعليمات «اذكر دخولاً
@@ -2188,6 +2193,9 @@ def ai_ask(body: AiAsk):
                 f"Only {bars + 1} candles ({series.timeframe}) — too few to measure a normal candle range "
                 f"(ATR14), so no direction.\n\n"
                 if few else
+                f"No price movement over the last {bars + 1} candles ({series.timeframe}) — every candle has "
+                f"zero range, so no direction.\n\n"
+                if still else
                 f"Over the last {bars} candles ({series.timeframe}) the net move ({series.change_pct:+.2f}%) is "
                 f"smaller than one average candle range (ATR14) — no clear direction.\n\n"
                 if flat else
@@ -2221,6 +2229,9 @@ def ai_ask(body: AiAsk):
                 f"{bars + 1} شمعة فقط ({series.timeframe}) — أقلّ من أن يُقاس مدى الشمعة المعتاد (ATR14)، "
                 f"فلا قراءة اتجاه.\n\n"
                 if few else
+                f"لا حركة سعرية على آخر {bars + 1} شمعة ({series.timeframe}) — مدى كل شمعة صفر، فلا قراءة "
+                f"اتجاه.\n\n"
+                if still else
                 f"على آخر {bars} شمعة ({series.timeframe}) صافي الحركة ({series.change_pct:+.2f}%) أصغر من "
                 f"مدى شمعة واحدة معتاد (ATR14) — لا اتجاه واضح.\n\n"
                 if flat else

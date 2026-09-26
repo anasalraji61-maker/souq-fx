@@ -405,3 +405,22 @@ def test_ai_on_single_candle_says_no_direction_without_crashing(monkeypatch, lan
     assert "0.00%" not in body["answer"]
     if model:
         assert "change_pct=unavailable" in seen["ctx"] and "bias=none" in seen["ctx"]
+
+
+@pytest.mark.parametrize("lang, said, not_said", [
+    ("ar", "لا حركة سعرية على آخر 60 شمعة", "أقلّ من أن يُقاس"),
+    ("en", "No price movement over the last 60 candles", "too few"),
+])
+def test_frozen_series_says_no_movement_not_too_few_candles(monkeypatch, lang, said, not_said):
+    """60 شمعة متطابقة ⇒ ATR14 = 0 ⇒ كان الردّ «60 شمعة فقط — أقلّ من أن يُقاس ATR14» (سبب كاذب)."""
+    monkeypatch.setattr(main, "build_series", _closes_series(1.1, 1.1, 0.0))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "lang": lang}).json()
+    assert out["setup"]["direction"] is None and out["setup"]["entry"] is None
+    assert said in out["answer"] and not_said not in out["answer"]
+
+
+def test_frozen_series_tells_the_model_no_movement(monkeypatch):
+    ctx, setup = _context_for(monkeypatch, _closes_series(1.1, 1.1, 0.0))
+    assert "no price movement" in ctx and "too few" not in ctx
+    assert "computed_levels: none" in ctx and setup["entry"] is None
