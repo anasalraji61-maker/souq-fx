@@ -193,7 +193,7 @@ import {
   signedDistanceText,
   measureReadoutText,
 } from './measureReadout';
-import { fitRayLabel, inLeftLabelLane, LEFT_LABEL_LANE_W, levelLabelKey, thinByGap } from './levelLabels';
+import { fitRayLabel, inLeftLabelLane, LEFT_LABEL_LANE_W, levelLabelKey, levelLabelWidth, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
 import { isCryptoSymbol } from './newsRisk';
@@ -6943,13 +6943,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    * (ومواضع `yOf` تتبدّل بالتكبير والإزاحة والتيك الحيّ)، فالتذكير كان سيعيد الحساب
    * دائماً ويضيف وهم استقرار. والخطوط الأفقية قليلة بطبيعتها.
    */
+  // وسم الشعاع عند بدايته (`hRayLabel`) أو مقلوباً يسارها — لا على الحافّة اليسرى. شعاع يبدأ عند الشمعة الحيّة كان
+  // يُنقّى مع وسوم الحافّة ⇒ خطّ كامل على ارتفاعه (أو مستوى فيبو) يفقد سعره والوسمان بينهما ~300px. تقدير محافظ:
+  // خارج الحارة فقط إن بقي خارجها مقلوباً بأعرض نصّ ممكن («السعر · +1234.5 pip»).
+  const hLevels = visibleDrawings.filter(({ d, aLocal }) => {
+    if (d.tool === 'hline') return true;
+    // شعاع يبدأ يمين اللوح لا يُرسم (راجع الرسم أدناه) ⇒ لا يحجز وسماً.
+    return d.tool === 'hray' && Math.max(0, xOf(aLocal)) < chartPlotW - 2;
+  });
+  const inLeftLane = ({ d, aLocal }: (typeof hLevels)[number]) =>
+    d.tool !== 'hray' ||
+    inLeftLabelLane(Math.max(0, xOf(aLocal)) - levelLabelWidth(`${fmtPrice(d.a.price)} · +1234.5 pip`) - 8);
+  const hLevelThin = (items: typeof hLevels) =>
+    thinByGap(items, ({ d }) => levelLabelKey(yOf(d.a.price)), ({ d }) => -d.a.price, HLINE_LABEL_GAP);
+  const hLaneLabels = hLevelThin(hLevels.filter(inLeftLane));
   const hlinePriceLabels = new Set(
-    thinByGap(
-      visibleDrawings.filter(({ d }) => d.tool === 'hline' || d.tool === 'hray'),
-      ({ d }) => levelLabelKey(yOf(d.a.price)),
-      ({ d }) => -d.a.price,
-      HLINE_LABEL_GAP
-    ).map(({ d }) => d.id)
+    [...hLaneLabels, ...hLevelThin(hLevels.filter((x) => !inLeftLane(x)))].map(({ d }) => d.id)
   );
 
   /**
@@ -6958,9 +6967,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    * الآن بالترتيب: خطّ المتداول أوّلاً (هو ما رسمه ليقرأه)، ثم فيبو بترتيب الرسم، ثم الارتكاز
    * — وكلّ مجموعة تتجنّب مواضع وسوم ما قبلها (`taken`). الخطوط نفسها تُرسم كلّها كما كانت.
    */
-  const takenLabelYs: number[] = visibleDrawings
-    .filter(({ d }) => (d.tool === 'hline' || d.tool === 'hray') && hlinePriceLabels.has(d.id))
-    .map(({ d }) => levelLabelKey(yOf(d.a.price)));
+  const takenLabelYs: number[] = hLaneLabels.map(({ d }) => levelLabelKey(yOf(d.a.price)));
   const fibLabelPlans = new Map<string, FibLabelPlan[]>();
   for (const { d } of visibleDrawings) {
     if (d.tool !== 'fib' || !d.b) continue;
