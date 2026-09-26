@@ -3521,9 +3521,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   const gator = useMemo(() => {
     if (!indicators.includes('gator')) return null;
-    const alli = alligator ?? ind(computeAlligator(indBars));
-    return computeGator(alli.jaw, alli.teeth, alli.lips);
-  }, [indBars, indicators, alligator]);
+    // على السلسلة كاملةً ثم يُقصّ (كـMACD/AO): على خطوط التمساح المقصوصة كان أوّل عمود بلا «سابق» ⇒ أحمر دائماً.
+    const alli = computeAlligator(indBars);
+    return ind(computeGator(alli.jaw, alli.teeth, alli.lips));
+  }, [indBars, indicators]);
   const vwma = useMemo(
     () => (indicators.includes('vwma') ? ind(computeVwma(indBars)) : null),
     [indBars, indicators]
