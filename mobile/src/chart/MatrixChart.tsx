@@ -4376,8 +4376,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }
             : point;
         if (!dragChangesDrawing(cur, end, next)) return list;
+        // دخول مركز سُحب يمين نهاية صندوقه ⇒ النهاية تُعكس يمينه (`positionEndPoint`): كان الصندوق يغطّي شموعاً
+        // قبل الدخول والنتيجة تُحسب حتى آخر شمعة ⇒ «TP ✓ +2R» لهدف لم تلمسه أيّ شمعة داخل الصندوق.
+        const b = cur?.b && end === 'a' && isPositionTool(cur.tool) ? positionEndPoint(next, cur.b) : null;
         return list.map((d) =>
-          d.id !== id ? d : end === 'a' ? { ...d, a: next } : { ...d, b: next }
+          d.id !== id ? d : end === 'a' ? (b ? { ...d, a: next, b } : { ...d, a: next }) : { ...d, b: next }
         );
       });
     },
