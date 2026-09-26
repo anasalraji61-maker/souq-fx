@@ -3373,6 +3373,33 @@ console.log('tradePlan formatSignedPct selftest OK');
   assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.01, tp: 149 }).ok, true);
   assert.equal(analyzePlan({ symbol: 'XAUUSD', side: 'buy', entry: 3500, sl: 3499.95, tp: 3510 }).issue, 'slTooClose');
 }
+// الحدّ يُقرَّب للأعلى: للأسفل كانت الحاسبة تقبل وقفاً (3.6 على USDZAR 18.49، حدّه 3.698) يرفضه الدفتر فلا R للصفقة
+{
+  assert.equal(minStopPips('USDZAR', 18.49), 3.7);
+  assert.equal(minStopPips('USDTRY', 41.09), 8.3);
+  assert.equal(minStopPips('XAUJPY', 350025.46), 70.1);
+  // عند الحدّ تماماً (8.2 pip = 0.00082 = 41 × 0.002%) يبقى مقبولاً — لا يُرفع بضجيج الفاصلة
+  assert.equal(minStopPips('USDTRY', 41), 8.2);
+  assert.equal(stopTooClose({ symbol: 'USDTRY', side: 'buy', entry: 41, sl: 40.99918 }), false);
+  // الحالة المُبلَّغة: وقف 3.6 كان يمرّ بالحاسبة ⇒ الآن تحت الحدّ هناك أيضاً
+  assert.ok(3.6 < minStopPips('USDZAR', 18.49)!);
+  // خاصية: وقفٌ عند `minStopPips` بالضبط يقبله الدفتر دائماً (لا slTooClose، وR محسوب)، وعُشر pip أقرب تحته بالحاسبة
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
+  const syms: [string, number, number][] = [
+    ['USDZAR', 10, 25], ['USDTRY', 20, 60], ['USDMXN', 15, 25], ['XAUJPY', 200000, 700000], ['EURTRY', 30, 60], ['USDJPY', 100, 200],
+  ];
+  for (let i = 0; i < 3000; i++) {
+    const [sym, lo, hi] = syms[i % syms.length];
+    const entry = Number((lo + rnd() * (hi - lo)).toFixed(sym === 'XAUJPY' ? 2 : sym.endsWith('JPY') ? 3 : 5)); // منازل الأداة
+    const side = rnd() < 0.5 ? 'buy' : 'sell';
+    const min = minStopPips(sym, entry)!;
+    const sl = stopAtPips({ symbol: sym, side, entry, pips: min })!;
+    assert.equal(stopTooClose({ symbol: sym, side, entry, sl }), false, `${sym} ${entry} ${side} ${min}`);
+    const exit = stopAtPips({ symbol: sym, side: side === 'buy' ? 'sell' : 'buy', entry, pips: 2 * min })!;
+    assert.ok(realizedR({ symbol: sym, side, entry, sl, exit }) != null, `${sym} ${entry} R`);
+  }
+}
 console.log('tradePlan minStopPips selftest OK');
 {
   // مبهمٌ بالبناء (سبب ضغطة الحفظ الثانية بالدفتر): هدف بيع فضة من 110 عند «85» سعرٌ حقيقي بعد هبوط يناير 2026، والقاعدة تقرأه 85 pip —

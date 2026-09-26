@@ -131,6 +131,7 @@ import {
   type TradeSide,
   QUICK_SYMBOLS,
   minStopPips,
+  stopTooClose,
   atrStopPips,
   ATR_STOP_TF,
   journalSpec,
@@ -784,7 +785,18 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    */
   const slFloorPx = Number.isFinite(priceNum(entryPx)) ? priceNum(entryPx) : priceNum(stopPx);
   const slFloor = spec ? minStopPips(spec.symbol, slFloorPx) ?? 1 : 1;
-  const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && slTyped < slFloor;
+  // النقاط من السعرين مقرَّبة لعُشر pip **للأعلى** ⇒ 3.61 pip حقيقية على USDZAR تُقرأ 3.7 فتمرّ فوق الحدّ 3.698، والدفتر يرفضها
+  // بالسعرين أنفسهما (`stopTooClose`). حين تأتي النقاط من السعرين يُفحص السعران بحدّ الدفتر نفسه.
+  const priceStopTooClose =
+    spec != null &&
+    slFromPrices.current &&
+    stopTooClose({
+      symbol: spec.symbol,
+      side: priceNum(entryPx) > priceNum(stopPx) ? 'buy' : 'sell',
+      entry: priceNum(entryPx),
+      sl: priceNum(stopPx),
+    });
+  const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && (slTyped < slFloor || priceStopTooClose);
   const fetchedConv = convQuote && convQuote.key === convKey ? convQuote : null;
   // التجديد الفاشل يُبقي آخر سعر بصمت — بعد 5 د يُقال للمتداول (مؤقّت التجديد يعيد الرسم كل دقيقة فيتقدّم العدد)
   const convStaleMin = fetchedConv ? convStaleMinutes(fetchedConv.at, Date.now()) : null;

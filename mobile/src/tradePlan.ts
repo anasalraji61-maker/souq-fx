@@ -516,7 +516,7 @@ const R_MIN_RISK_FRACTION = 2e-5;
  * ومع pip معروف: **الأكبر** من 1 pip و0.002% من الدخول. pip المعدن 0.1 بأي عملة تسعير، فعلى XAUJPY (~525,000 ين)
  * كان «1 pip» = 0.1 ين = 0.00002% — وقف 0.5 ين يمرّ فتقول الحاسبة **300 لوت** لـ1% من 10,000$. 0.002% = 10.5 ين هناك
  * (≈ 1 pip الذهب بالدولار). على الأزواج المعتادة 1 pip أكبر أصلاً (EURUSD 0.0000216، USDJPY 0.003، XAUUSD 0.07)؛
- * وعلى الغريبة (USDTRY ~41 ⇒ 8 pip، USDZAR ⇒ 3.6) يبقى دون سبريدها بكثير.
+ * وعلى الغريبة (USDTRY ~41 ⇒ 8.2 pip، USDZAR ~18.5 ⇒ 3.7) يبقى دون سبريدها بكثير.
  */
 function minRiskForR(symbol: string | undefined, entry: number): number {
   const pip = journalPipSize(symbol);
@@ -527,13 +527,15 @@ function minRiskForR(symbol: string | undefined, entry: number): number {
 /**
  * أضيق وقف **بالنقاط** للحاسبة (`slTooClose` بـPositionSizePanel) — حدّ `analyzePlan` نفسه: 1 pip، أو 0.002% من `price`
  * إن كان أكبر (XAUJPY). `price` غير معروف (النقاط وحدها بلا دخول ولا وقف) ⇒ 1 pip. null = رمز بلا pip.
- * القيمة المقارَنة مقرَّبة لعُشر pip (`slPipsFromPrices`)، فالحدّ يُقرَّب لعُشر pip للأسفل كي لا يُرفض وقفٌ عند الحدّ تماماً.
+ * يُقرَّب لعُشر pip **للأعلى** (بعد تنظيف ضجيج الفاصلة كـ`slPipsFromPrices`): للأسفل كان USDZAR 18.49 (الحدّ الحقيقي 3.698 pip)
+ * يقبل وقف 3.6 بالحاسبة ويُحسب له لوت، ثم الدفتر يقول «الوقف قريب جداً» ولا R للصفقة أبداً (USDTRY 8.218⇒8.2، XAUJPY 70.005⇒70).
+ * الوقف عند الحدّ تماماً يبقى مقبولاً: 8.2 pip على USDTRY 41 = 0.00082 = الحدّ نفسه.
  */
 export function minStopPips(symbol: string | null | undefined, price?: number | null): number | null {
   const pip = journalPipSize(symbol);
   if (!pip) return null;
   if (price == null || !Number.isFinite(price) || price <= 0) return 1;
-  return Math.max(1, Math.floor((price * R_MIN_RISK_FRACTION) / pip * 10) / 10);
+  return Math.max(1, Math.ceil(Math.round(((price * R_MIN_RISK_FRACTION) / pip) * 10 * 1e6) / 1e6) / 10);
 }
 
 function exactR(input: {
