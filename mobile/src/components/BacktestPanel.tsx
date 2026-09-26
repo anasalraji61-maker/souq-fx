@@ -113,6 +113,18 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         setError(t.noLiveDataResult);
         return;
       }
+      // backend-r117: تاريخ أقصر من فترة الاستراتيجية ⇒ 200 `{error:"not enough candles", stats:{}}` — `{}` كان
+      // يُعرض لوحة إحصاء «صفقات: undefined». بلا `trade_count` رقماً لا نتيجة تُعرض.
+      if (res.error || typeof res.stats?.trade_count !== 'number') {
+        setStats(null);
+        setTrades([]);
+        setEquity([]);
+        // مفتاح launch `backtestNotEnoughCandles` (مطلوب ui130a)؛ حتى يصل: «لا صفقات لهذه الفترة — جرّب فريماً آخر».
+        setError(
+          (t as unknown as Partial<Record<string, string>>).backtestNotEnoughCandles ?? t.backtestNoTrades,
+        );
+        return;
+      }
       const key = STRATEGIES.find((s) => s.id === strategy)?.labelKey;
       const label = key ? t[key] : strategy;
       setRanFor(`${symbol.trim().toUpperCase()} · ${t.tfLabels[tf]} · ${label}`);
