@@ -143,6 +143,7 @@ import {
   atrStopPips,
   ATR_STOP_TF,
   journalSpec,
+  journalUnknownSuffixPair,
   saveOverrideAccepted,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
@@ -357,6 +358,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const spec = stdSpec ?? small?.spec ?? null;
   /** «EURUSD.mini» ⇒ «EURUSD»: رمز حساب mini (مرفوض عمداً) يُشرح بدل «رمز غير مدعوم» — راجع `miniAccountSymbol` */
   const miniPair = spec ? null : miniAccountSymbol(symbol);
+  // «EURUSDi»: لاحقة ملاصقة لا تُعرف ⇒ شريحة الزوج وحده بجانب «رمز غير مدعوم» (كسطر الدفتر `journalSymbolSuffixUnknown`).
+  // لا لما قد يكون عقداً أصغر («EURUSDC1»، «EURUSDcents») — الزوج العادي يحسب لوتها بمئة ضعف (`journalUnknownSuffixPair`)
+  const suffixPair = useMemo(
+    () => (spec || small || miniPair ? null : journalUnknownSuffixPair(journalSymbol(symbol))),
+    [spec, small, miniPair, symbol],
+  );
   const cent = small?.kind === 'cent';
   /** عملة كل مبلغ باللوحة: USC لحساب السنت (سعر التحويل لحساب دولار × 100)، وإلا عملة الحساب */
   const moneyCcy: string = cent ? 'USC' : account;
@@ -1627,6 +1634,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             ? t.riskCalcMiniSymbol.replace('{symbol}', symbol.trim()).replace('{pair}', miniPair)
             : t.riskCalcBadSymbol}
         </Text>
+      ) : null}
+      {suffixPair ? (
+        <View style={[styles.chips, rtl && styles.chipsRtl]}>
+          {chip(suffixPair, false, () => setSymbol(suffixPair), `${t.riskCalcSymbol}: ${suffixPair}`)}
+        </View>
       ) : null}
       {small ? (
         <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">

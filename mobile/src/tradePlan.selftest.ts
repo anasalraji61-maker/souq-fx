@@ -107,6 +107,7 @@ import {
   pnlInQuoteCcy,
   positionSize,
   slPipsFromPrices,
+  smallContractSpec,
 } from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
@@ -4072,5 +4073,15 @@ console.log('tradePlan cent word selftest OK');
   // معروفة (نقاط تُحسب) أو ليست فوركس أو قد تكون عقداً أصغر (الزوج وحده يحسب مالها ×100) أو تيثر: لا سطر
   for (const raw of ['EURUSD', 'EURUSDm', 'EURUSD.pro', 'EURUSD.x', 'EURUSDc', 'EURUSDmicro', 'EURUSD.mini', 'EURUSD cent', 'EURUSDC1', 'EURUSDcents', 'EURUSDusc', 'EURUSDmic', 'EURUSDmini2', 'EURUSDT', 'BTCUSDT', 'BTCUSDx', 'US30x', 'EURXXXi', ''])
     assert.equal(journalUnknownSuffixPair(journalSymbol(raw)), null, raw);
+}
+// الحاسبة: شريحة الزوج لما يكتبه المتداول كما هو («EURUSDi»، «eur/usd z») — والرمز المقترح تحسبه الحاسبة بعقدٍ عادي،
+// والمكتوب نفسه لا تحسبه (وإلا فلا خطأ ولا شريحة)
+{
+  for (const [raw, pair] of [['EURUSDi', 'EURUSD'], ['eur/usd z', 'EURUSD'], ['xauusdX', 'XAUUSD']] as const) {
+    assert.equal(instrumentSpec(raw), null, raw);
+    assert.equal(smallContractSpec(raw), null, raw);
+    assert.equal(journalUnknownSuffixPair(journalSymbol(raw)), pair, raw);
+    assert.equal(instrumentSpec(pair)!.contractSize, pair === 'XAUUSD' ? 100 : 100_000, raw);
+  }
 }
 console.log('tradePlan journalUnknownSuffixPair selftest OK');
