@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   topRtl: { flexDirection: 'row-reverse' },
-  close: { color: colors.textMuted, fontWeight: '500' },
+  close: { color: colors.textMuted, fontWeight: '500', fontSize: 13 },
   tfRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs },
   tfRowRtl: { flexDirection: 'row-reverse' },
   // DESIGN-PRO §2: 13px للعناصر والعناوين (16 خارج السلّم، وأعلى صوتاً من أسعار الخلايا 12px تحته).
@@ -448,7 +448,8 @@ const styles = StyleSheet.create({
   cellHeadRtl: { flexDirection: 'row-reverse' },
   // DESIGN-PRO §1: كان تأكيداً بكل خلية (أربعة عناصر تأكيد وقت السكون) ⇒ نصّ أساسي؛ التأكيد
   // الوحيد بالشبكة حدّ الخلية القائدة، وبالشريط العلوي الفريم النشط.
-  sym: { color: colors.text, fontWeight: '500' },
+  // §2: 12px كرمز قائمة المتابعة (بلا حجم كان 14 افتراضياً — أعلى من سعر الخلية 12 بجواره).
+  sym: { color: colors.text, fontWeight: '500', fontSize: 12 },
   cellPrice: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600' },
   cellPct: { ...numeric, fontSize: 11, fontWeight: '600' },
   // DESIGN-PRO §2 — وسوم الخلية 11px (كانت 9–10، أصغر من علامات المحور بالخلية نفسها).

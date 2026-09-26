@@ -280,7 +280,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  title: { color: colors.text, fontWeight: '500', textAlign: 'right' },
+  // DESIGN-PRO §2: 13px للعناصر (بلا حجم كانت 14 افتراضي React Native — خارج السلّم).
+  title: { color: colors.text, fontWeight: '500', fontSize: 13, textAlign: 'right' },
   hint: { color: colors.textDim, fontSize: 11, lineHeight: 16 },
   // §1: زرّ «حفظ» هو عنصر التأكيد الوحيد باللوحة؛ الأخضر لاتجاه السعر وحده — التأكيد والوسم نصّ ثانويّ
   // (الوسم كلمة «الحالي» لا لون وحده).
@@ -292,6 +293,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.text,
+    fontSize: 13,
     padding: spacing.sm,
     textAlign: 'right',
   },
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  btnText: { color: colors.onAccent, fontWeight: '500' },
+  btnText: { color: colors.onAccent, fontWeight: '500', fontSize: 13 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -314,10 +316,10 @@ const styles = StyleSheet.create({
   // هدف لمس ≥44 (كان «حذف» نصّاً ~17pt بلا hitSlop بجوار صفّ التطبيق — الضغطة الخاطئة تطبّق التخطيط).
   apply: { flex: 1, minHeight: 44, justifyContent: 'center' },
   delHit: { minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' },
-  rowName: { color: colors.text, fontWeight: '500', textAlign: 'right' },
+  rowName: { color: colors.text, fontWeight: '500', fontSize: 13, textAlign: 'right' },
   rowSub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   // §1: الأحمر لاتجاه السعر وحده — الإجراء نصّ ثانويّ، والتأكيد (`confirmDestructive`) يحمل الخطر.
-  del: { color: colors.textMuted, fontWeight: '500' },
+  del: { color: colors.textMuted, fontWeight: '500', fontSize: 13 },
   // §1: الأحمر لاتجاه السعر وحده — تعذّر الحفظ حالة متدهورة ⇒ `warn`.
   saveError: {
     color: colors.warn,
