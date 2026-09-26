@@ -99,7 +99,6 @@ import {
   journalEditSeen,
   closeTermsChangedElsewhere,
   journalCloseSeen,
-  type JournalCloseSeen,
   journalEditForm,
   journalConflictForm,
   type JournalEditForm,
@@ -210,8 +209,6 @@ type Props = {
 };
 
 /** لقطة اقتباس أداة صفقة مفتوحة — Bid/Ask قد يغيبان (يُستعمل السعر المفرد حينها). */
-/** `api.closeTrade` بمعامل `seen` (tools122a) — ما لم يُضفه ui بعد يُتجاهل وقت التشغيل بلا خطأ */
-type CloseTradeWithSeen = (id: string, exit: number, seen?: JournalCloseSeen) => ReturnType<typeof api.closeTrade>;
 type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
 
 /** خطأ `postJson` لردّ 409 (`trade_already_closed`، backend-r1): الصفقة أُغلقت بجهاز آخر بين الفحص والإغلاق. */
@@ -1457,7 +1454,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             try {
               // الصفّ الذي أكّده المتداول يُرسل (tools122a): الخادم يرفض بـ409 إن عُدّل بعد الجلب أعلاه أو كان خارج الصفحة الأولى.
               // `api.closeTrade` (ui) يرسل `{ exit }` وحده حتى يُضاف له المعامل الثالث — حتى ذلك يبقى الفحص أعلاه وحده، كما كان.
-              await (api.closeTrade as CloseTradeWithSeen)(tr.id, exitPx, journalCloseSeen(tr));
+              await api.closeTrade(tr.id, exitPx, journalCloseSeen(tr));
             } catch (e) {
               // الفحص أعلاه يقرأ صفحة الدفتر الأولى وحدها، وجهازان قد يُغلقان بالثانية نفسها: الخادم يرفض الخروج الثاني
               // (409) ويُبقي الأول ⇒ نفس معاملة «أُغلقت من قبل» لا «فشل الإغلاق، حاول ثانية» (إعادة المحاولة 409 دائماً)

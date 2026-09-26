@@ -1685,6 +1685,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             '0',
             t.riskCalcLostToday
           )}
+          {/* تُفرغ عند 17:00 نيويورك (`lostDayForSave`/`tradingDayKey`) — يقوله للمتداول كي لا يظنّ الخانة فرغت خطأً */}
+          <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcLostTodayResetHint}</Text>
           {lostOtherCcy ? (
             <Text style={[styles.warn, { textAlign: align }]}>
               {t.riskCalcLostTodayOtherCcy.replace('{from}', lostOtherCcy).replace('{to}', moneyCcy)}
