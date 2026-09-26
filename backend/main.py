@@ -1365,7 +1365,8 @@ def check_indicator_alerts(
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
     cache: dict[tuple[str, str], list[dict] | None] = {}
-    for a in db.list_indicator_alerts(uid, owner_key=key):
+    rows = db.list_indicator_alerts(uid, owner_key=key)
+    for a in rows:
         if not a.get("active") or a.get("triggered"):
             continue
         ck = (str(a["symbol"]).upper(), str(a["timeframe"]))
@@ -1401,7 +1402,14 @@ def check_indicator_alerts(
             [alert_worker.indicator_event({**a, "user_id": uid, "owner_key": key}) for a in triggered],
             key,
         )
-    return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid, owner_key=key)}
+    # كشقيقه السعري: فشل القراءة الثانية كان 500 بعد الوسم ⇒ لا إشعار بالتطبيق ولا دفع لبقية الأجهزة
+    try:
+        alerts = db.list_indicator_alerts(uid, owner_key=key)
+    except Exception:
+        alert_worker.log.exception("indicator alerts re-read failed after check; returning pre-check rows")
+        fired = {a["id"] for a in triggered}
+        alerts = [{**a, "triggered": True} if a["id"] in fired else a for a in rows]
+    return {"triggered": triggered, "alerts": alerts}
 
 
 @app.post("/api/screener/run")

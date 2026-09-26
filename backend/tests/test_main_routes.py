@@ -463,6 +463,25 @@ def test_a_fired_indicator_alert_is_returned_once_only(client, series_calls):
     assert second["triggered"] == [], "لا يُعاد تسليمه مرّة ثانية"
 
 
+def test_indicator_check_reread_failure_still_returns_triggered(client, series_calls, monkeypatch):
+    """«database is locked» بالقراءة الثانية بعد الوسم كان 500 ⇒ التنبيه مُطلَق بلا أيّ إشعار."""
+    import sqlite3
+    token = _register(client, "indlocked")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token))
+    real, calls = db.list_indicator_alerts, {"n": 0}
+
+    def flaky(*a, **k):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise sqlite3.OperationalError("database is locked")
+        return real(*a, **k)
+    monkeypatch.setattr(db, "list_indicator_alerts", flaky)
+    res = client.post("/api/indicator-alerts/check", headers=_auth(token))
+    assert res.status_code == 200
+    assert len(res.json()["triggered"]) == 1
+    assert [a["triggered"] for a in res.json()["alerts"]] == [True]
+
+
 def test_rearming_a_fired_indicator_alert_puts_it_back_to_watching(client, series_calls):
     """كان الحلّ الوحيد لإعادة تنبيه أُطلق هو حذفه وإعادة إنشائه بكل حقوله."""
     token = _register(client, "indrearm")
