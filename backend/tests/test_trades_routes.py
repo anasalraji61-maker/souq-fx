@@ -784,3 +784,19 @@ def test_trade_logged_now_with_exit_still_closes_now(client):
 def test_inconsistent_close_time_is_422(client, over):
     r = client.post("/api/trades", json={**_TRADE, **over}, headers=_DEV1)
     assert r.status_code == 422, r.text
+
+
+def test_correcting_exit_of_backdated_trade_keeps_close_time_unknown(client):
+    """run 55: PATCH `exit` (تصحيح خطأ كتابة) كان يملأ `closed_at` = الآن لصفقة إغلاقها غير معروف."""
+    t = _open_trade(client, exit=1.105, opened_at="2026-08-01T10:00:00")
+    r = client.patch(f"/api/trades/{t['id']}", json={"exit": 1.107}, headers=_DEV1)
+    assert r.status_code == 200, r.text
+    row = r.json()["trade"]
+    assert row["exit"] == 1.107 and row["status"] == "closed"
+    assert row["closed_at"] is None
+
+
+def test_closing_open_trade_by_patch_still_stamps_now(client):
+    t = _open_trade(client)
+    row = client.patch(f"/api/trades/{t['id']}", json={"exit": 1.107}, headers=_DEV1).json()["trade"]
+    assert row["status"] == "closed" and row["closed_at"]

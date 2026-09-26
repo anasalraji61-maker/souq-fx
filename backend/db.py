@@ -2157,8 +2157,11 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
             if ex is None:
                 row.update({"pnl": None, "closed_at": None, "status": "open"})
             else:
+                # «الآن» فقط لصفقة كانت مفتوحة فتُغلق بهذا التعديل. تصحيح خروج صفقة مغلقة سُجّلت بأثر رجعي
+                # (`closed_at` null «غير معروف» — add_trade) كان يختلق لها تاريخ إغلاق = اليوم.
+                if seen["exit"] is None:
+                    row["closed_at"] = row.get("closed_at") or time.strftime("%Y-%m-%d %H:%M")
                 row["status"] = "closed"
-                row["closed_at"] = row.get("closed_at") or time.strftime("%Y-%m-%d %H:%M")
         if row.get("exit") is not None:
             row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))
         cur = c.execute(
