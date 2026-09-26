@@ -2429,14 +2429,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('footprint') ? computeFootprint(source.plot) : null),
     [source.plot, indicators]
   );
-  const cvd = useMemo(
-    () => (indicators.includes('cvd') ? computeCvd(source.plot) : null),
-    [source.plot, indicators]
-  );
-
   useEffect(() => {
     if (initialTool) setTool(initialTool);
-  }, [initialTool, series.symbol]);
+    // بلا `series.symbol`: نافذة التركيز لا تُعيد الأداة للأعلى فيبقى `initialTool` «ترند» ⇒ كل تبديل رمز كان يُعيد
+    // تسليحها بعد إنهاء الخطّ، فأول نقرة للمؤشّر تبدأ خطّاً.
+  }, [initialTool]);
 
   // DESIGN-PRO §4 — الشريط المدمج أيقونات فقط؛ اسم الأداة تلميح عابر: مسك مطوّل بالهاتف، وتمرير
   // 400 مللي ث بالويب. كانت تسمية 8px تحت كل أيقونة تضاعف عرض الزرّ وتزاحم الشارت.
@@ -2938,6 +2935,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   const obv = useMemo(
     () => (indicators.includes('obv') ? ind(computeObv(indBars)) : null),
+    [indBars, indicators]
+  );
+  // مجموع جارٍ كـOBV: كان على النافذة وحدها فيبدأ من حافّتها اليسرى ⇒ قيمة آخر شمعة تقفز بالتكبير والسحب.
+  const cvd = useMemo(
+    () => (indicators.includes('cvd') ? ind(computeCvd(indBars)) : null),
     [indBars, indicators]
   );
   /**
