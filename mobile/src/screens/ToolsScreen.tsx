@@ -1086,14 +1086,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     justifyContent: 'center',
   },
+  // DESIGN-PRO §1/5.5: الفريم النشط (`TimeframeBar`) هو تأكيد هذه المنطقة — زرّ الفحص المعبّأ بالتأكيد كان ثانياً فيها. حدّ وحده ونصّ أساسي
   runBtn: {
-    backgroundColor: colors.accent,
     borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
   runBtnDisabled: { opacity: 0.4 },
-  runText: { color: colors.onAccent, fontWeight: '500' },
+  runText: { color: colors.text, fontWeight: '500' },
   scanHint: {
     color: colors.warn,
     fontSize: 12,
