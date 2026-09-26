@@ -201,6 +201,13 @@ const rowR = (tr: Trade): string =>
     })
   ) ?? '';
 
+/**
+ * وقف/هدف/خروج يُعرض بالصفّ: صفوف قديمة تحمل 0 (الخادم يعدّه «لا قيمة»، `_seen_cmp`؛ ونموذج التعديل يفتحه فارغاً) — كان
+ * يُطبع «SL 0.00000 · TP 0.00000» و«→ 0.00000»، مستوى غير موجود بجانب أسعار حقيقية. مغلقة بلا خروج صالح ⇒ «→ —» لا «(مفتوحة)».
+ */
+const shownLevel = (v: number | null | undefined): number | null =>
+  typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null;
+
 type Stats = JournalStats;
 
 /** شريحة وقف التقلّب (`atrStopPips`): اسم المؤشر كما هو بالشارت، بلا ترجمة كسائر أسماء المؤشرات. */
@@ -1751,33 +1758,37 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               return tr.size === null ? ` · ${t.journalSizeUnknown}` : '';
             })()}{' '}
             · {formatPrice(tr.entry, tr.symbol)}
-            {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
+            {shownLevel(tr.exit) != null
+              ? ` → ${formatPrice(tr.exit!, tr.symbol)}`
+              : tr.status === 'closed'
+                ? ' → —'
+                : ` ${t.journalOpenSuffix}`}
           </Text>
           {/* الـR يُعرض ولو بلا SL/TP (مُسحا بعد شدّ الوقف، والعلامة «1R @ …» باقية): «متوسط R» كان يعدّ الصفقة
               ونافذة الإغلاق تقول «+2R» بينما صفّها بلا R — الرقم بالإحصاء بلا مصدر ظاهر */}
-          {tr.sl != null || tr.tp != null || rowR(tr) ? (
+          {shownLevel(tr.sl) != null || shownLevel(tr.tp) != null || rowR(tr) ? (
             <Text style={[styles.tradeMeta, { textAlign: align }]}>
               {/* DESIGN-PRO §1: SL/TP وسمان لا اتجاه سعر — بلون السطر نفسه على كل صفّ، الأحمر/الأخضر للنتيجة وحدها */}
-              {tr.sl != null ? `SL ${formatPrice(tr.sl, tr.symbol)}` : null}
-              {tr.sl != null && tr.tp != null ? ' · ' : ''}
-              {tr.tp != null ? `TP ${formatPrice(tr.tp, tr.symbol)}` : null}
+              {shownLevel(tr.sl) != null ? `SL ${formatPrice(tr.sl!, tr.symbol)}` : null}
+              {shownLevel(tr.sl) != null && shownLevel(tr.tp) != null ? ' · ' : ''}
+              {shownLevel(tr.tp) != null ? `TP ${formatPrice(tr.tp!, tr.symbol)}` : null}
               {(() => {
-                if (tr.sl == null || tr.tp == null) return '';
+                if (shownLevel(tr.sl) == null || shownLevel(tr.tp) == null) return '';
                 const trSide = tr.side === 'sell' ? 'sell' : 'buy';
                 const plan = analyzePlan({
                   symbol: tr.symbol,
                   side: trSide,
                   entry: tr.entry,
                   // الوقف الأصلي «1R @ …» حين حُرِّك الوقف بعد الدخول — النسبة التي خُطِّطت (`planStop`)
-                  sl: planStop({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, note: tr.note }) ?? tr.sl,
-                  tp: tr.tp,
+                  sl: planStop({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, note: tr.note }) ?? tr.sl!,
+                  tp: tr.tp!,
                 });
                 return plan.ok ? ` · R:R ${formatRR(plan.rr)}` : '';
               })()}
               {(() => {
                 const r = rowR(tr);
                 if (!r) return '';
-                const lead = tr.sl != null || tr.tp != null ? ' · ' : '';
+                const lead = shownLevel(tr.sl) != null || shownLevel(tr.tp) != null ? ' · ' : '';
                 return `${lead}${t.journalResultR.replace('{r}', r)}`;
               })()}
             </Text>
