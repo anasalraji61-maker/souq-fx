@@ -148,6 +148,8 @@ import {
   calcMinStopPips,
   stopTooClose,
   atrStopPips,
+  atrStopRefreshDelayMs,
+  atrSeriesIsCurrent,
   ATR_STOP_TF,
   journalSpec,
   journalUnknownSuffixPair,
@@ -777,10 +779,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    */
   const atrKey = spec ? journalSpec(symbol)?.symbol ?? null : null;
   const [atrSeries, setAtrSeries] = useState<{ key: string; candles: Candle[] } | null>(null);
+  /** يزيد عند كل إغلاق ساعة (+ مهلة) واللوحة مفتوحة ⇒ جلبٌ جديد وإعادة حساب (`atrStopRefreshDelayMs`) */
+  const [atrTick, setAtrTick] = useState(0);
+  useEffect(() => {
+    if (!atrKey || !active) return;
+    const id = setTimeout(() => setAtrTick((n) => n + 1), atrStopRefreshDelayMs(serverNowSec()));
+    return () => clearTimeout(id);
+  }, [atrKey, active, atrTick]);
   useEffect(() => {
     if (!atrKey || !active) return;
     const cached = cachedChartSeries(atrKey, ATR_STOP_TF);
-    if (cached && !isSyntheticProvenance(cached.data_source)) {
+    if (cached && !isSyntheticProvenance(cached.data_source) && atrSeriesIsCurrent(cached.candles, serverNowSec())) {
       setAtrSeries({ key: atrKey, candles: cached.candles });
       return;
     }
@@ -798,13 +807,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       alive = false;
       clearTimeout(id);
     };
-  }, [atrKey, active]);
+  }, [atrKey, active, atrTick]);
   const atrPips = useMemo(
     () =>
       atrKey && atrSeries?.key === atrKey
         ? atrStopPips({ symbol: atrKey, candles: atrSeries.candles, nowSec: serverNowSec() })
         : null,
-    [atrKey, atrSeries]
+    // `atrTick`: يعيد فحص عمر الشموع (`serverNowSec`) حتى إن فشل الجلب
+    [atrKey, atrSeries, atrTick]
   );
   const onSlPipsChange = (v: string) => {
     slFromPrices.current = false;

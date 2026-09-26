@@ -87,6 +87,8 @@ import {
   journalSpec,
   quickStopPips,
   atrStopPips,
+  atrStopRefreshDelayMs,
+  atrSeriesIsCurrent,
   ATR_STOP_TF,
   stopAtPips,
   averageR,
@@ -791,11 +793,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    */
   const atrKey = journalSpec(symbol.trim().toUpperCase())?.symbol ?? null;
   const [atrSeries, setAtrSeries] = useState<{ key: string; candles: Candle[] } | null>(null);
+  /** يزيد عند كل إغلاق ساعة (+ مهلة) واللوحة مفتوحة ⇒ جلبٌ جديد وإعادة حساب (`atrStopRefreshDelayMs`) */
+  const [atrTick, setAtrTick] = useState(0);
   const atrWanted = atrKey != null && pnum(entry) != null;
   useEffect(() => {
     if (!atrKey || !atrWanted) return;
+    const id = setTimeout(() => setAtrTick((n) => n + 1), atrStopRefreshDelayMs(serverNowSec()));
+    return () => clearTimeout(id);
+  }, [atrKey, atrWanted, atrTick]);
+  useEffect(() => {
+    if (!atrKey || !atrWanted) return;
     const cached = cachedChartSeries(atrKey, ATR_STOP_TF);
-    if (cached && !isSyntheticProvenance(cached.data_source)) {
+    if (cached && !isSyntheticProvenance(cached.data_source) && atrSeriesIsCurrent(cached.candles, serverNowSec())) {
       setAtrSeries({ key: atrKey, candles: cached.candles });
       return;
     }
@@ -813,13 +822,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       alive = false;
       clearTimeout(id);
     };
-  }, [atrKey, atrWanted]);
+  }, [atrKey, atrWanted, atrTick]);
   const atrPips = useMemo(
     () =>
       atrKey && atrSeries?.key === atrKey
         ? atrStopPips({ symbol: atrKey, candles: atrSeries.candles, nowSec: serverNowSec() })
         : null,
-    [atrKey, atrSeries]
+    // `atrTick`: يعيد فحص عمر الشموع (`serverNowSec`) حتى إن فشل الجلب
+    [atrKey, atrSeries, atrTick]
   );
 
   const slTargets = useMemo(() => {

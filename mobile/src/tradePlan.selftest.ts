@@ -9,6 +9,8 @@ import {
   SAVE_OVERRIDE_MIN_MS,
   atrStopPips,
   ATR_STOP_TF_SEC,
+  atrStopRefreshDelayMs,
+  atrSeriesIsCurrent,
   analyzePlan,
   minStopPips,
   calcMinStopPips,
@@ -3797,6 +3799,41 @@ console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
   assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0), nowSec: afterLast(20) }), null);
   assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0.00002), nowSec: afterLast(20) }), 1);
   console.log('tradePlan atrStopPips selftest OK');
+}
+
+// ── atrStopRefreshDelayMs / atrSeriesIsCurrent: الشريحة تتجدّد كل إغلاق ساعة واللوحة مفتوحة ──
+{
+  const H = ATR_STOP_TF_SEC;
+  const T = 1_790_000_000 - (1_790_000_000 % H); // بداية ساعة
+  // 10:30 ⇒ 11:01:30
+  assert.equal(atrStopRefreshDelayMs(T + 1800), (1800 + 90) * 1000);
+  // لحظة الإغلاق ⇒ بعد 90 ث (لا فوراً: الشمعة لم تكتمل عند المزوّد)
+  assert.equal(atrStopRefreshDelayMs(T), 90_000);
+  // داخل المهلة (11:00:30) ⇒ 11:01:30 نفسها لا الساعة التالية
+  assert.equal(atrStopRefreshDelayMs(T + 30), 60_000);
+  // لحظة المهلة بالضبط ⇒ الساعة التالية (التجديد جرى للتوّ)
+  assert.equal(atrStopRefreshDelayMs(T + 90), H * 1000);
+  // بعد المهلة ⇒ الساعة التالية + المهلة
+  assert.equal(atrStopRefreshDelayMs(T + 91), (H - 1) * 1000);
+  // مدخل فاسد ⇒ ساعة، لا حلقة ضيّقة
+  assert.equal(atrStopRefreshDelayMs(NaN), H * 1000);
+  // لا تتكرّر بأقل من ثانية أبداً، ودائماً ضمن ساعة + مهلة
+  for (let s = 0; s < 2 * H; s += 7) {
+    const d = atrStopRefreshDelayMs(T + s);
+    assert.ok(d >= 1000 && d <= H * 1000, `delay ${d} at +${s}`);
+    const fire = T + s + d / 1000;
+    assert.equal(((fire % H) + H) % H, 90, `fires 90s after a close (+${s})`);
+  }
+  // المخزّنة: جُلبت 10:57 (آخرها شمعة 10:00) ⇒ عند 11:01:30 ليست حالية؛ جُلبت 11:00:20 (فيها 11:00) ⇒ حالية
+  const c = (t: number) => ({ time: t });
+  assert.equal(atrSeriesIsCurrent([c(T - H), c(T)], T + H + 90), false);
+  assert.equal(atrSeriesIsCurrent([c(T), c(T + H)], T + H + 90), true);
+  assert.equal(atrSeriesIsCurrent([c(T)], T + 600), true);
+  // عطلة (لا شمعة جارية) / فارغة / null ⇒ جلب
+  assert.equal(atrSeriesIsCurrent([c(T - 50 * H)], T + 600), false);
+  assert.equal(atrSeriesIsCurrent([], T), false);
+  assert.equal(atrSeriesIsCurrent(null, T), false);
+  console.log('tradePlan atrStopRefreshDelayMs selftest OK');
 }
 
 // ---- journalLossStreaks: أطول خسائر متتالية والجارية، زمنياً بوقت الإغلاق ----

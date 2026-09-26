@@ -1979,6 +1979,37 @@ export function atrStopPips(input: {
   return Math.max(1, Math.ceil(pips - 1e-9));
 }
 
+/** مهلة بعد إغلاق شمعة الساعة قبل إعادة جلب شموع شريحة التقلّب: المزوّد يُتمّ الشمعة المغلقة خلال ثوانٍ لا لحظة الإغلاق. */
+export const ATR_STOP_REFRESH_GRACE_SEC = 90;
+
+/**
+ * متى تُعاد قراءة شريحة وقف التقلّب واللوحة مفتوحة (بالمللي ثانية من `nowSec`): عند إغلاق شمعة الساعة التالية + `ATR_STOP_REFRESH_GRACE_SEC`.
+ *
+ * لماذا: اللوحة كانت تجلب الشموع عند تبديل الرمز/الظهور فقط ⇒ حاسبةٌ مفتوحة منذ الصباح تعرض ATR شموع الصباح عصراً (بعد خبرٍ
+ * ضاعف التقلّب تبقى الشريحة على وقف الصباح الضيّق)، ولا تختفي إلا بعد `ATR_STOP_MAX_AGE_SEC` (4 أيام).
+ */
+export function atrStopRefreshDelayMs(nowSec: number, tfSec: number = ATR_STOP_TF_SEC): number {
+  if (!Number.isFinite(nowSec) || !(tfSec > 0)) return tfSec > 0 ? tfSec * 1000 : 3_600_000;
+  const g = ATR_STOP_REFRESH_GRACE_SEC;
+  let next = Math.floor((nowSec - g) / tfSec) * tfSec + tfSec + g;
+  if (next <= nowSec) next += tfSec;
+  return Math.max(1000, Math.round((next - nowSec) * 1000));
+}
+
+/**
+ * سلسلة الشارت المخزّنة تكفي لشريحة التقلّب فقط إن جُلبت بعد افتتاح شمعة الساعة الجارية (فيها شمعة بـ`time` ≥ بدايتها):
+ * سلسلةٌ جُلبت 10:57 تحمل شمعة 10:00 **ناقصة** (3 دقائق) ⇒ بعد 11:00 تُحسب مغلقة بمدى ناقص. بلا شمعة جارية (عطلة) ⇒ جلب.
+ */
+export function atrSeriesIsCurrent(
+  candles: readonly { time: number }[] | null | undefined,
+  nowSec: number,
+  tfSec: number = ATR_STOP_TF_SEC
+): boolean {
+  if (!Array.isArray(candles) || !Number.isFinite(nowSec) || !(tfSec > 0)) return false;
+  const start = Math.floor(nowSec / tfSec) * tfSec;
+  return candles.some((c) => c != null && Number.isFinite(c.time) && c.time >= start);
+}
+
 /**
  * سعر الوقف على بُعد `pips` من الدخول **بجهة الخسارة**: تحته للشراء، فوقه للبيع — بمنزلة الأداة
  * (`priceAtPipOffset`، نفس منزلة `formatPrice`).
