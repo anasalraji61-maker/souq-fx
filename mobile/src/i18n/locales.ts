@@ -84,6 +84,7 @@ export type Dict = {
   notifStatusGranted: string;
   notifStatusDenied: string;
   notifStatusUndetermined: string;
+  /** الويب (`notifications.ts` ⇒ `unsupported`): الإشعار يصل لأجهزة **الحساب** (`db._push_owner_sql`) ⇒ المخرج دخول الحساب نفسه على الهاتف. */
   notifStatusUnsupported: string;
   notifEnableBtn: string;
   notifOpenSettingsBtn: string;
@@ -1698,7 +1699,7 @@ const ar: Dict = {
   notifStatusGranted: 'مفعّلة',
   notifStatusDenied: 'موقوفة من إعدادات الجهاز',
   notifStatusUndetermined: 'بانتظار إذنك',
-  notifStatusUnsupported: 'غير مدعومة على الويب',
+  notifStatusUnsupported: 'لا تصل إلى المتصفّح — ادخل بالحساب نفسه هنا وعلى هاتفك ليصلك إشعار تنبيهاتك على الهاتف',
   notifEnableBtn: 'تفعيل الإشعارات',
   notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
   onboardStep1Title: 'بدّل الزوج بلمسة',
@@ -2969,7 +2970,7 @@ const enUS: Dict = {
   notifStatusGranted: 'Enabled',
   notifStatusDenied: 'Blocked in device settings',
   notifStatusUndetermined: 'Needs permission',
-  notifStatusUnsupported: 'Not supported on web',
+  notifStatusUnsupported: 'Not available in the browser — log in to the same account here and on your phone to get your alerts there',
   notifEnableBtn: 'Enable notifications',
   notifOpenSettingsBtn: 'Open device settings',
   onboardStep1Title: 'Switch pairs in one tap',
@@ -4189,6 +4190,7 @@ const enGB: Dict = {
   ...enUS,
   regErrUsernameTaken: 'That username is already registered — pick another one, or sign in if it’s yours',
   login: 'Sign in',
+  notifStatusUnsupported: 'Not available in the browser — sign in to the same account here and on your phone to get your alerts there',
   register: 'Register',
   enter: 'Sign in',
   createAccount: 'Create an account',
@@ -4280,7 +4282,7 @@ const ku: Dict = {
   notifStatusGranted: 'چالاکە',
   notifStatusDenied: 'ڕەتکراوەتەوە لە ڕێکخستنی ئامێر',
   notifStatusUndetermined: 'پێویستی بە مۆڵەتە',
-  notifStatusUnsupported: 'پشتگیری ناکرێت لەسەر وێب',
+  notifStatusUnsupported: 'ناگاتە وێبگەڕ — لێرە و لەسەر مۆبایلەکەت بە هەمان هەژمار بچۆ ژوورەوە تا ئاگادارکردنەوەکانت لەسەر مۆبایل بگەن',
   notifEnableBtn: 'چالاککردنی ئاگادارکردنەوەکان',
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
   onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
