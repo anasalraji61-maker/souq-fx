@@ -85,9 +85,11 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
       >
         {pctText}
       </Text>
-      {snap.ma_cross_up ? <Text style={[styles.chip, styles.bull]}>MA ↑</Text> : null}
-      {snap.ma_cross_down ? <Text style={[styles.chip, styles.bear]}>MA ↓</Text> : null}
-      {snap.macd_cross_up ? <Text style={[styles.chip, styles.bull]}>MACD ↑</Text> : null}
+      {/* DESIGN-PRO §1: الأخضر/الأحمر لاتجاه السعر وحده (نسبة التغيّر أعلاه) — التقاطع إشارة مؤشّر،
+          فشريحته محايدة والسهم يحمل الاتجاه (لا لون وحده). */}
+      {snap.ma_cross_up ? <Text style={styles.chip}>MA ↑</Text> : null}
+      {snap.ma_cross_down ? <Text style={styles.chip}>MA ↓</Text> : null}
+      {snap.macd_cross_up ? <Text style={styles.chip}>MACD ↑</Text> : null}
     </View>
   );
 }
@@ -102,13 +104,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radii.sm,
+    // §5.5 فاصل واحد: تعبئة بلا حدّ (كانت حدّاً + تعبئة، والحدّ يصير أخضر/أحمر فوق الشارت).
     backgroundColor: colors.bgPanel,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '500',
   },
-  bull: { color: colors.bull, borderColor: colors.bull },
-  bear: { color: colors.bear, borderColor: colors.bear },
+  bull: { color: colors.bull },
+  bear: { color: colors.bear },
 });
