@@ -239,7 +239,8 @@ export function ScreenerMini() {
                   ) : null}
                 </Text>
                 <Text style={styles.meta}>
-                  RSI {h.rsi} ·{' '}
+                  {/* منزلة واحدة دائماً (الخادم يقرّب لمنزلة): «RSI 30» بجانب «RSI 29.5» كان يغيّر عرض البطاقة. */}
+                  RSI {typeof h.rsi === 'number' && Number.isFinite(h.rsi) ? h.rsi.toFixed(1) : '—'} ·{' '}
                   <Text
                     style={[
                       styles.metaPct,
