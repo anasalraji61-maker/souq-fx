@@ -22,6 +22,36 @@ def _username_key(username: str) -> str:
     return unicodedata.normalize("NFKC", username or "").casefold()
 
 
+# حروف تُرى كحروف لاتينية/عربية أخرى ولا يطويها NFKC ولا casefold: «аlice» (а سيريلية) و«Αlice» (Α يونانية)
+# و«alıce» (ı بلا نقطة) و«علی» (ی فارسية) و«عـلي» (تطويل) و«ali  ce» كانت حسابات مستقلّة تُعرض كالأصل —
+# انتحال (البند 9). الطيّ بالمظهر لا باللفظ؛ الحرف الكبير مقدَّم (Η ⇒ h، Ν ⇒ n) لأن casefold يُسقطه، والطيّ
+# الزائد لا يضرّ إلا برفض اسم شبيه. للفحص وحده (`username_skel`): الدخول والاسم المعروض لا يتغيّران.
+_SKELETON = str.maketrans({
+    # سيريلي
+    "а": "a", "в": "b", "е": "e", "ё": "ë", "і": "i", "ї": "ï", "ј": "j", "к": "k", "м": "m", "н": "h",
+    "о": "o", "р": "p", "с": "c", "т": "t", "у": "y", "х": "x", "ѕ": "s", "ԁ": "d", "ԛ": "q", "ԝ": "w",
+    "ү": "y", "һ": "h", "ӏ": "l", "ь": "b",
+    # يوناني
+    "α": "a", "β": "b", "ε": "e", "ζ": "z", "η": "h", "ι": "i", "κ": "k", "μ": "m", "ν": "n", "ο": "o",
+    "ρ": "p", "τ": "t", "υ": "y", "χ": "x",
+    # لاتيني ممتدّ
+    "ı": "i", "ȷ": "j", "ɑ": "a", "ɡ": "g",
+    # عربي/فارسي/كردي: ي/ی/ى، ك/ک/ڪ، التطويل، الأرقام الهندية
+    "ی": "ي", "ى": "ي", "ک": "ك", "ڪ": "ك", "\u0640": None,
+    **{chr(0x0660 + d): str(d) for d in range(10)}, **{chr(0x06F0 + d): str(d) for d in range(10)},
+})
+_SPACES = re.compile(r"\s+")
+
+
+def _username_skeleton(username: str) -> str:
+    return _SPACES.sub(" ", _username_key(username).translate(_SKELETON))
+
+
+def _fill_username_skel(c: sqlite3.Connection) -> None:
+    for r in c.execute("SELECT id, username FROM users WHERE username_skel IS NULL").fetchall():
+        c.execute("UPDATE users SET username_skel=? WHERE id=?", (_username_skeleton(r[1]), r[0]))
+
+
 def _migrate_username_nocase(c: sqlite3.Connection) -> None:
     """«Ali» و«ali» كانا حسابين (`UNIQUE` حسّاس لحالة الأحرف) ⇒ انتحال اسم متداول معروف بحرف
     كبير، والحظر المحلي بالتطبيق يطبّع الاسم فيُخفي البريء مع المنتحل. عمود `username_key`
@@ -44,13 +74,19 @@ def _migrate_username_nocase(c: sqlite3.Connection) -> None:
         "SELECT 1 FROM users GROUP BY username_key HAVING COUNT(*) > 1 LIMIT 1"
     ).fetchone():
         c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_key ON users(username_key)")
+    if "username_skel" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN username_skel TEXT")
+    _fill_username_skel(c)
+    # غير فريد: قاعدة قائمة قد تحوي شبيهين فعلاً (لا دمج آلياً) — التسجيل الجديد يُمنع بـ`_username_taken`
+    c.execute("CREATE INDEX IF NOT EXISTS idx_users_username_skel ON users(username_skel)")
 
 
 def _username_taken(c: sqlite3.Connection, username: str, exclude_id: int | None = None) -> bool:
+    _fill_username_skel(c)  # صفوف أُدرجت بعد آخر ملء (الإدراجات لا تكتبه)
     return c.execute(
-        # الشطر الثاني لصفّ أُدرج خاماً بلا مفتاح
-        "SELECT 1 FROM users WHERE (username_key=? OR username=? COLLATE NOCASE) AND id<>?",
-        (_username_key(username), username, exclude_id or -1),
+        # الشطر الثاني لصفّ أُدرج خاماً بلا مفتاح؛ الثالث للشبيه بالمظهر (`_username_skeleton`)
+        "SELECT 1 FROM users WHERE (username_key=? OR username=? COLLATE NOCASE OR username_skel=?) AND id<>?",
+        (_username_key(username), username, _username_skeleton(username), exclude_id or -1),
     ).fetchone() is not None
 
 
@@ -1133,7 +1169,7 @@ def delete_user_account(user_id: int) -> None:
                 (old["username"],),
             )
         c.execute(
-            "UPDATE users SET username=?, username_key=?, email=NULL, password_hash=? WHERE id=?",
+            "UPDATE users SET username=?, username_key=?, username_skel=NULL, email=NULL, password_hash=? WHERE id=?",
             (placeholder, _username_key(placeholder), dead_hash, user_id),
         )
         # رمز الإحالة مبنيّ من الاسم (`ALICE0001`) ويظهر بشجرة الراعي والفريق ⇒ كان يُبقي جزءاً من الاسم

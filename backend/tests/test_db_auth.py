@@ -443,3 +443,49 @@ def test_deleting_a_reporters_account_keeps_the_reported_message_hidden(_db):
     db.delete_user_account(reporters[0]["user_id"])
     assert all(m["id"] != "m1" for m in db.group_messages(viewer_id=None))
     assert db.list_reports()[0]["reports"] == db.REPORT_HIDE_THRESHOLD
+
+
+# ── شبيه بالمظهر (run 55) ─────────────────────────────────────────────────────
+@pytest.mark.parametrize("first,twin", [
+    ("alice", "аlice"),        # а سيريلية
+    ("alice", "Αlice"),        # Α يونانية
+    ("alice", "alıce"),        # ı بلا نقطة
+    ("HOME", "НΟΜΕ"),  # كلها سيريلي/يوناني كبير
+    ("علي", "علی"),                 # ی فارسية
+    ("علي", "علـي"),                # تطويل
+    ("علي", "على"),                 # ألف مقصورة
+    ("ali ce", "ali  ce"),          # مسافتان
+    ("trader7", "trader٧"),    # ٧ هندية
+])
+def test_a_look_alike_username_is_taken(_db, first, twin):
+    _register(first, email="a@example.com")
+    with pytest.raises(ValueError, match="taken"):
+        _register(twin, email="b@example.com")
+
+
+def test_look_alike_check_does_not_change_login_or_block_distinct_names(_db):
+    _register("علی", email="a@example.com")  # كردي بـی يدخل باسمه كما كتبه
+    assert db.login_user("علی", "hunter2")["token"]
+    _register("alice", email="b@example.com")
+    _register("alico", email="c@example.com")
+
+
+def test_deleted_accounts_look_alike_name_is_free_again(_db):
+    uid = _register("alice", email="a@example.com")["user_id"]
+    db.delete_user_account(uid)
+    _register("аlice", email="b@example.com")
+
+
+def test_existing_look_alike_pair_does_not_break_startup(tmp_path, monkeypatch):
+    path = tmp_path / "old.db"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "DB_PATH", path)
+    db.init_db()
+    with db._conn() as c:
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('alice','x',0)")
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('аlice','x',0)")
+        c.execute("UPDATE users SET username_skel=NULL")
+    db.init_db()
+    with db._conn() as c:
+        skels = {r[0] for r in c.execute("SELECT username_skel FROM users")}
+    assert skels == {"alice"}
