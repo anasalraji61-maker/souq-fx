@@ -593,14 +593,25 @@ def test_pre_signup_rows_follow_the_account_to_a_second_phone(client):
     assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
 
 
-def test_rows_written_under_an_expired_session_are_claimed_on_the_next_login(client):
+def test_expired_session_is_401_not_an_anonymous_journal(client):
+    """توكن منتهٍ كان يُعامَل مجهولاً: GET يعيد دفتراً فارغاً بـ200 (0 صفقة، إحصاءات فارغة) وPOST يحفظ
+    للجهاز ويردّ بإحصاءات تلك الصفقة وحدها (نسبة فوز 0%) — أرقام خاطئة بلا إشارة لانتهاء الجلسة."""
     alice = _signup(client, "alice")
-    client.get("/api/trades", headers=alice)
-    _open_trade(client, headers={"Authorization": "Bearer expired", **_DEV1})  # يُحفظ مجهولاً
-    r = client.post("/api/auth/login", json={"username": "alice", "password": "pass1234"})
-    again = {"Authorization": f"Bearer {r.json()['token']}", **_DEV2}
-    client.get("/api/trades", headers={**again, **_DEV1})
-    assert len(client.get("/api/trades", headers=again).json()["trades"]) == 1
+    _open_trade(client, headers={**alice, **_DEV1})
+    expired = {"Authorization": "Bearer expired", **_DEV1}
+    assert client.get("/api/trades", headers=expired).status_code == 401
+    assert client.post("/api/trades", json=_TRADE, headers=expired).status_code == 401
+    for path in ("/api/alerts", "/api/indicator-alerts", "/api/watchlist/custom", "/api/layouts"):
+        assert client.get(path, headers=expired).status_code == 401, path
+    # لا صفّ مجهول كُتب، وحساب أليس سليم بصفقته الوحيدة
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+    assert len(client.get("/api/trades", headers={**alice, **_DEV1}).json()["trades"]) == 1
+
+
+def test_expired_session_can_still_log_out_and_anonymous_still_works(client):
+    expired = {"Authorization": "Bearer expired", **_DEV1}
+    assert client.post("/api/auth/logout", headers=expired).status_code == 200
+    assert client.get("/api/trades", headers=_DEV1).status_code == 200
 
 
 # ─── `opened_at` من العميل: بصيغة الدفتر أو 422 ─────────────────────────────

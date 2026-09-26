@@ -32,7 +32,7 @@ import elevenlabs_tts as tts
 import twelve_data as market
 import twelve_data_ws as td_ws
 import db
-from core.auth import _auth_user, _install_key
+from core.auth import _auth_user, _install_key, _owner_key
 import news_feed
 import openrouter_ai
 import alert_worker
@@ -973,7 +973,7 @@ def push_register(
 
 
 @app.get("/api/layouts")
-def layouts_list(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
+def layouts_list(user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)):
     uid = user["user_id"] if user else None
     return {"layouts": db.list_layouts(uid, owner_key=key)}
 
@@ -982,7 +982,7 @@ def layouts_list(user: dict | None = Depends(_auth_user), key: str | None = Depe
 def layouts_save(
     body: LayoutSave,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     uid = user["user_id"] if user else None
     # db.save_layout يتولّى توليد معرّف فريد عند غيابه ويمنع الكتابة فوق تخطيط مالك آخر (مجهول أو مسجّل)
@@ -992,7 +992,7 @@ def layouts_save(
 
 @app.delete("/api/layouts/{layout_id}")
 def layouts_delete(
-    layout_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    layout_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     uid = user["user_id"] if user else None
     # حذف بلا صف مطابق ليس خطأً للعميل (تخطيط محلي لم يصل للخادم قط) — يُعاد عدد المحذوف فقط
@@ -1000,7 +1000,7 @@ def layouts_delete(
 
 
 @app.get("/api/watchlist/custom")
-def custom_watchlist(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
+def custom_watchlist(user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)):
     uid = user["user_id"] if user else None
     syms = db.get_watchlist(uid, owner_key=key)
     return {"symbols": syms}
@@ -1010,7 +1010,7 @@ def custom_watchlist(user: dict | None = Depends(_auth_user), key: str | None = 
 def custom_watchlist_add(
     body: WatchlistAdd,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     uid = user["user_id"] if user else None
     syms = db.add_watchlist_symbol(body.symbol.upper(), uid, owner_key=key)
@@ -1021,7 +1021,7 @@ def custom_watchlist_add(
 def custom_watchlist_remove(
     symbol: str,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     """إزالة رمز من قائمة متابعة المستدعي — **لم يكن للإضافة نقيض**: رمز يُضاف بضغطة ويبقى
     بالقائمة إلى الأبد (الرموز المدعومة ستة عشر، وقائمة مزدحمة برموز لا يتداولها تُفقد
@@ -1156,7 +1156,7 @@ def chart(symbol: str, timeframe: str = "15m", outputsize: int = 180):
 
 
 @app.get("/api/alerts")
-def list_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
+def list_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)):
     uid = user["user_id"] if user else None
     return {"alerts": db.list_alerts(uid, owner_key=key)}
 
@@ -1165,7 +1165,7 @@ def list_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depen
 def create_alert(
     body: AlertCreate,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     alert = {
         "id": _new_id("a"),
@@ -1187,7 +1187,7 @@ def update_alert(
     alert_id: str,
     body: AlertCreate,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     """تعديل ذرّي للتنبيه (بدل إنشاء جديد ثم حذف القديم) — يُعيد تفعيله. 404 إن لم يوجد أو لا يملكه."""
     data = {
@@ -1206,7 +1206,7 @@ def update_alert(
 
 @app.delete("/api/alerts/{alert_id}")
 def delete_alert(
-    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     uid = user["user_id"] if user else None
     return {"ok": db.delete_alert(alert_id, uid, owner_key=key)}
@@ -1216,7 +1216,7 @@ def delete_alert(
 def check_alerts(
     background: BackgroundTasks,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     """يفحص تنبيهات المستدعي فقط ويعيدها (كان يعيد تنبيهات كل المستخدمين فتستبدل قائمة العميل،
     وجهاز مجهول كان يُطلق تنبيهات كل المجهولين — الآن تنبيهات جهازه فقط عبر `X-Install-Id`)."""
@@ -1286,7 +1286,7 @@ def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
 
 @app.get("/api/indicator-alerts")
 def list_indicator_alerts(
-    user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     uid = user["user_id"] if user else None
     return {"alerts": db.list_indicator_alerts(uid, owner_key=key)}
@@ -1296,7 +1296,7 @@ def list_indicator_alerts(
 def create_indicator_alert(
     body: IndicatorAlertCreate,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     alert = {
         "id": _new_id("ia"),
@@ -1319,7 +1319,7 @@ def create_indicator_alert(
 
 @app.delete("/api/indicator-alerts/{alert_id}")
 def delete_indicator_alert(
-    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     uid = user["user_id"] if user else None
     return {"ok": db.delete_indicator_alert(alert_id, uid, owner_key=key)}
@@ -1327,7 +1327,7 @@ def delete_indicator_alert(
 
 @app.post("/api/indicator-alerts/{alert_id}/rearm")
 def rearm_indicator_alert(
-    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     """إعادة تفعيل تنبيه مؤشر أُطلق (التنبيه لمرة واحدة) — كان الحلّ الوحيد حذفه وإعادة إنشائه بكل حقوله."""
     uid = user["user_id"] if user else None
@@ -1341,7 +1341,7 @@ def rearm_indicator_alert(
 def check_indicator_alerts(
     background: BackgroundTasks,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts).
 
@@ -1651,7 +1651,7 @@ def trades_list(
     # بلا حدّ أعلى: 10**20 = OverflowError عند ربط SQLite ⇒ 500
     offset: int = Query(default=0, ge=0, le=10_000_000),
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     """صفحة من الدفتر (المفتوحة أولاً ثم الأحدث) + `total` لكل الصفقات؛ `stats` على كل المغلقة لا الصفحة.
     `open_first` يعلن الترتيب؛ `open_total` عدد المفتوحة كلها ⇒ الصفحة الأولى تحمل كل المفتوحة
@@ -1670,7 +1670,7 @@ def trades_list(
 
 @app.post("/api/trades")
 def trades_create(
-    body: TradeCreate, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    body: TradeCreate, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     uid = user["user_id"] if user else None
     row = db.add_trade(body.model_dump(), uid, owner_key=key)
@@ -1682,7 +1682,7 @@ def trades_close(
     trade_id: str,
     body: TradeClose,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     uid = user["user_id"] if user else None
     try:
@@ -1703,7 +1703,7 @@ def trades_update(
     trade_id: str,
     body: TradeUpdate,
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     uid = user["user_id"] if user else None
     # model_fields_set يميّز «لم يُرسَل» (لا تغيير) عن null صريح (مسح الوقف/الهدف/الخروج)
@@ -1725,7 +1725,7 @@ def trades_update(
 
 @app.delete("/api/trades/{trade_id}")
 def trades_delete(
-    trade_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    trade_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)
 ):
     uid = user["user_id"] if user else None
     ok = db.delete_trade(trade_id, uid, owner_key=key)

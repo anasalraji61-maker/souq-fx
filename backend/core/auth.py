@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from fastapi import Depends, Header
+from fastapi import Depends, Header, HTTPException
 
 import db
 
@@ -55,3 +55,18 @@ def _install_key(
                 _CLAIMED.clear()
             _CLAIMED.add(memo)
     return v
+
+
+def _owner_key(
+    authorization: str | None = Header(default=None),
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+) -> str | None:
+    """`_install_key` لمسارات البيانات الشخصية (دفتر/تنبيهات/قائمة/تخطيطات): توكن مُرسَل غير صالح ⇒ 401.
+
+    كان يُعامَل مجهولاً ⇒ الدفتر يُقرأ فارغاً بـ200 (إحصاءات 0 صفقة)، وصفقة تُحفظ للجهاز وردّها يحمل
+    إحصاءات تلك الصفقة الوحيدة (نسبة فوز 0%) بدل إحصاءات الحساب — أرقام خاطئة بلا أي إشارة إلى أن
+    الجلسة انتهت. التطبيق يعالج 401 منذ ui `aacb194`. `logout` يبقى على `_install_key` (يفكّ Push بالمنتهي)."""
+    if authorization and not user:
+        raise HTTPException(status_code=401, detail="login_required")
+    return key
