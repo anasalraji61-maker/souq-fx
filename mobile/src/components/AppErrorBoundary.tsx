@@ -27,6 +27,15 @@ function errorDetail(error: Error): string {
 class ErrorBoundaryInner extends React.Component<InnerProps, State> {
   state: State = { error: null, repeated: false };
   private retriedAt = 0;
+  private retryRef = React.createRef<View>();
+
+  componentDidUpdate(_: InnerProps, prev: State) {
+    // الويب (قرار ١٦): الشجرة التي كان فيها التركيز فُكّت فيسقط إلى <body>، ويحتاج المتداول Tab قبل Enter أو الفأرة.
+    // التركيز على الزرّ الوحيد هنا ⇒ Enter أو المسافة يعيدان المحاولة مباشرة. الهاتف بلا تغيير.
+    if (Platform.OS === 'web' && this.state.error && !prev.error) {
+      (this.retryRef.current as unknown as { focus?: () => void } | null)?.focus?.();
+    }
+  }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
     return { error };
@@ -65,6 +74,7 @@ class ErrorBoundaryInner extends React.Component<InnerProps, State> {
           </Text>
         ) : null}
         <Pressable
+          ref={this.retryRef}
           accessibilityRole="button"
           accessibilityLabel={this.props.retry}
           onPress={this.reset}
