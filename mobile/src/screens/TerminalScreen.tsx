@@ -1199,7 +1199,8 @@ export function TerminalScreen() {
           {
             id: 'spd',
             mark: 'cruise',
-            tip: `${panSpeed}`,
+            // كان الرقم وحده ⇒ قارئ الشاشة «أداة: 50» والتلميح «50» بلا اسم
+            tip: `${t.panChartSpeedPrefix} ${panSpeed}`,
             run: () => {
               const stepped = clampPanSpeed(panSpeed >= 100 ? 10 : panSpeed + 10);
               void changePanSpeed(stepped);
@@ -1208,7 +1209,7 @@ export function TerminalScreen() {
         ]
       : []),
     // DESIGN-PRO §5.1 (ui45): على الحاسوب المختار الكامل بالشريط العلوي هو مكان الإطارات الوحيد — «▦» للهاتف وحده
-    ...(phone ? [{ id: 'q2', mark: '▦', tip: '2×2', run: () => setQuadOpen(true) }] : []),
+    ...(phone ? [{ id: 'q2', mark: '▦', tip: t.railOpenQuadA11y, run: () => setQuadOpen(true) }] : []),
     { id: 'set', mark: '⚙', tip: t.termKindWord, run: () => setShowKinds((v) => !v) },
   ];
 
@@ -1376,7 +1377,8 @@ export function TerminalScreen() {
               accessibilityLabel={`${t.termToolA11yPrefix}: ${a.tip}`}
             >
               {a.mark === 'cruise' ? (
-                <CruiseSpeedMark size={14} active />
+                // DESIGN-PRO §4: زرّ فعلٍ لا اختيار ⇒ بلا لون التأكيد وقت السكون (كان تأكيداً ثانياً بالشريط)
+                <CruiseSpeedMark size={14} />
               ) : (
                 <Text style={styles.topMark}>{a.mark}</Text>
               )}
@@ -2369,7 +2371,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   topMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  topTip: { color: colors.text, fontSize: 11, fontWeight: '500' },
+  topTip: { color: colors.text, fontSize: 11, fontWeight: '500', ...numeric },
   kindRow: { gap: 4, padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },  kindChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
