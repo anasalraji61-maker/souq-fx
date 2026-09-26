@@ -35,6 +35,7 @@ import { PriceFlash } from './PriceFlash';
 import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
 import { useLastCloses } from '../hooks/useLastCloses';
+import { symbolGroupLabel } from './SymbolPairMenu';
 
 /** مدّة بقاء لون آخر تيك. عشرون ثانية: أطول كثيراً من تردّد تيكات زوجٍ نشط (فلا وميض بالسوق
  * المفتوح)، وأقصر كثيراً من أن يُقرأ لونٌ عمره ساعة على أنه حركةٌ الآن. */
@@ -610,7 +611,9 @@ export function WatchlistPanel({
               {addable.length === 0 ? (
                 <Text style={styles.empty}>{t.wlCatalogAllAdded}</Text>
               ) : (
-                addable.map((w) => (
+                addable.map((w) => {
+                  const group = symbolGroupLabel(t.focusSymbolGroups, w.group);
+                  return (
                   <Pressable
                     accessibilityRole="button"
                     key={w.symbol}
@@ -623,12 +626,13 @@ export function WatchlistPanel({
                       },
                     ]}
                     onPress={() => void onAdd(w.symbol)}
-                    accessibilityLabel={`${t.wlAddBtn} ${w.symbol} · ${w.group}`}
+                    accessibilityLabel={`${t.wlAddBtn} ${w.symbol}${group ? ' · ' + group : ''}`}
                   >
                     <Text style={styles.modalSym}>{w.symbol}</Text>
-                    <Text style={styles.modalGroup}>{w.group}</Text>
+                    {group ? <Text style={styles.modalGroup}>{group}</Text> : null}
                   </Pressable>
-                ))
+                  );
+                })
               )}
             </ScrollView>
             <Pressable

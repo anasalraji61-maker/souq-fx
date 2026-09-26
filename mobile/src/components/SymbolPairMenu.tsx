@@ -8,6 +8,11 @@ import { useI18n } from '../i18n/I18nContext';
 
 type Item = { symbol: string; label: string; group?: string };
 
+/** QA130a: وسم الفئة كان «FX»/«Metals» إنجليزياً لكل اللغات — يُترجم بالمفتاح، وفئة بلا مفتاح لا تُعرض */
+export function symbolGroupLabel(groups: Record<string, string>, group: string | undefined): string {
+  return group && Object.prototype.hasOwnProperty.call(groups, group) ? groups[group] : '';
+}
+
 type Props = {
   value: string;
   onPick: (symbol: string) => void;
@@ -106,6 +111,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
           >
             {items.map((item) => {
               const on = item.symbol === value;
+              const group = symbolGroupLabel(t.focusSymbolGroups, item.group);
               return (
                 <Pressable
                   accessibilityState={{ selected: on }}
@@ -120,11 +126,11 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
                     },
                   ]}
                   onPress={() => pick(item.symbol)}
-                  accessibilityLabel={`${t.focusPickSymbolA11yPrefix}: ${item.symbol}${item.group ? ' · ' + item.group : ''}`}
+                  accessibilityLabel={`${t.focusPickSymbolA11yPrefix}: ${item.symbol}${group ? ' · ' + group : ''}`}
                 >
                   <Text style={[styles.sym, on && styles.symOn]}>{item.symbol}</Text>
-                  {item.group ? (
-                    <Text style={[styles.group, on && styles.groupOn]}>{item.group}</Text>
+                  {group ? (
+                    <Text style={[styles.group, on && styles.groupOn]}>{group}</Text>
                   ) : null}
                 </Pressable>
               );
