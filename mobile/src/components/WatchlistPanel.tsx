@@ -64,21 +64,13 @@ type Props = {
   active?: boolean;
 };
 
-const FALLBACK: Record<string, number> = {
-  DXY: 104.25,
-  EURUSD: 1.0854,
-  GBPUSD: 1.2732,
-  USDJPY: 157.42,
-  XAUUSD: 2348.6,
-  XAGUSD: 28.4,
-  BTCUSD: 67420,
-  ETHUSD: 3450,
-};
+/** بلا `bases` لا سعر مرجعياً — الصفّ يعرض «—» بدل رقم مختلَق (قرار أنس ٢). */
+const NO_BASES: Record<string, number> = {};
 
 export function WatchlistPanel({
   activeSymbol,
   ticks,
-  bases = FALLBACK,
+  bases = NO_BASES,
   demoTicks,
   onPick,
   compact = false,
