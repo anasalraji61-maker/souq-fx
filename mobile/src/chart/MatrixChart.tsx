@@ -1580,6 +1580,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossPinned = useRef(false);
   const hoverRaf = useRef<number | null>(null);
   const hoverPoint = useRef({ x: 0, y: 0 });
+  // الويب: الرسم تحت الفأرة بوضع السحب (يثخن كالمحدَّد). يُمسح بخروج الفأرة أو تبديل الأداة (يختفي سطح السحب).
+  const [hoverDrawingId, setHoverDrawingId] = useState<string | null>(null);
+  const hoverDrawingRef = useRef<string | null>(null);
+  useEffect(() => {
+    hoverDrawingRef.current = null;
+    setHoverDrawingId(null);
+  }, [tool]);
   const keyToken = useRef({});
   const [windowCount, setWindowCount] = useState(80);
   const [offset, setOffset] = useState(0);
@@ -5988,7 +5995,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   if (webChartPointer.current.active) return;
                   const { x, y } = hoverPoint.current;
                   // فوق رسم: يد الإشارة — النقرة تحدّده (`onChartPress`)، فالمؤشّر يقول ذلك قبل النقر.
-                  if (surface?.style) surface.style.cursor = interactive && hitDrawing(x, y) ? 'pointer' : 'grab';
+                  const hit = interactive ? hitDrawing(x, y) : null;
+                  if (surface?.style) surface.style.cursor = hit ? 'pointer' : 'grab';
+                  // والرسم نفسه يثخن بوزن المحدَّد — بين خطّين متقاربين يُرى أيّهما ستحدّده النقرة.
+                  if (hoverDrawingRef.current !== hit) {
+                    hoverDrawingRef.current = hit;
+                    setHoverDrawingId(hit);
+                  }
                   if (crossPinned.current) return;
                   crossAtRef.current(x, y, true);
                 });
@@ -6068,6 +6081,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
             hoverRaf.current = null;
             if (!crossPinned.current && !webChartPointer.current.active) setCross(null);
+            if (hoverDrawingRef.current) {
+              hoverDrawingRef.current = null;
+              setHoverDrawingId(null);
+            }
           },
         } as const)
       : {};
@@ -9512,6 +9529,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* drawings */}
         {visibleDrawings.map(({ d, aLocal, bLocal }) => {
           const sel = d.id === selectedId;
+          const bold = sel || d.id === hoverDrawingId;
           if (d.tool === 'hline' || d.tool === 'hray') {
             // الشعاع الأفقي: مستوى يبدأ من قمّة/قاع بعينه ويمتدّ يميناً فقط — ما يرسمه متداول
             // الفوركس للدعم/المقاومة كي لا يقطع الخطّ تاريخاً سابقاً لم يكن فيه المستوى قائماً.
@@ -9531,7 +9549,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     // وبـ`left:0/right:0` وبلا ارتفاع كان خطّ الدعم يُرسم **شريطاً مجوّفاً**
                     // (حدّ أعلى وحدّ أسفل وطرفان) لا خطّاً واحداً — وحالة التحديد تُسمِك
                     // الشريط بدل الخطّ. بقيّة الرسوم تستعمل الخاصيّة الاتجاهية أصلاً.
-                    borderTopWidth: sel ? 2.5 : 1,
+                    borderTopWidth: bold ? 2.5 : 1,
                   },
                 ]}
               >
@@ -9592,7 +9610,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 key={d.id}
                 style={[
                   styles.vLine,
-                  { left: xOf(aLocal), borderColor: d.color, borderLeftWidth: sel ? 2.5 : 1 },
+                  { left: xOf(aLocal), borderColor: d.color, borderLeftWidth: bold ? 2.5 : 1 },
                 ]}
               />
             );
@@ -9645,7 +9663,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     left: x1,
                     top: y1,
                     width: len,
-                    height: sel ? 3.5 : 2,
+                    height: bold ? 3.5 : 2,
                     backgroundColor: d.color,
                     transform: [{ rotate: `${angle}deg` }],
                     transformOrigin: 'left center',
@@ -9661,7 +9679,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           left: x2,
                           top: y2,
                           width: Math.min(ARROW_HEAD_LEN, len * 0.6),
-                          height: sel ? 3.5 : 2,
+                          height: bold ? 3.5 : 2,
                           borderRadius: 1,
                           backgroundColor: d.color,
                           transform: [{ rotate: `${angle + 180 + spread}deg` }],
@@ -9705,7 +9723,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 />
               );
             };
-            const solid = { height: sel ? 3.5 : 2, backgroundColor: d.color };
+            const solid = { height: bold ? 3.5 : 2, backgroundColor: d.color };
             // متوازية بالبكسل بالمقياس اللوغاريتمي أيضاً (`channelLinePrices`).
             const par = channelLinePrices(d.a, d.b, w, 1, logScale);
             const mid = channelLinePrices(d.a, d.b, w, 0.5, logScale);
@@ -9758,7 +9776,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         : d.tool === 'zone'
                           ? 'rgba(45,212,191,0.12)'
                           : 'rgba(251,191,36,0.1)',
-                    borderWidth: sel ? 2.5 : 1,
+                    borderWidth: bold ? 2.5 : 1,
                     borderColor: d.color,
                   }}
                 />
@@ -9834,7 +9852,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       key={lv}
                       style={[
                         styles.hLine,
-                        { top: yOf(price), borderColor: d.color, borderTopWidth: sel ? 2.5 : 1 },
+                        { top: yOf(price), borderColor: d.color, borderTopWidth: bold ? 2.5 : 1 },
                         ext ? styles.fibExtLine : null,
                       ]}
                     >
