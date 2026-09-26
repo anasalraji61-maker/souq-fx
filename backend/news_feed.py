@@ -76,11 +76,12 @@ def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, i
         return default, None
     try:
         dt = parsedate_to_datetime(raw.strip())
-    except (TypeError, ValueError):
+        # سنة 9999 بإزاحة سالبة تفيض بـ`astimezone`/`timestamp` (OverflowError) — كانت تُسقط الخلاصة كلّها
+        # خلاصة بلا منطقة زمنية: تُقرأ UTC ولا تُخمَّن منطقة
+        at = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        return at.strftime("%Y-%m-%d %H:%M UTC"), int(at.timestamp())
+    except (TypeError, ValueError, OverflowError):
         return raw.strip()[:32] or default, None
-    if dt.tzinfo is None:  # خلاصة بلا منطقة زمنية: تُقرأ UTC ولا تُخمَّن منطقة
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), int(dt.timestamp())
 
 
 def _parse_rss(xml_text: str, source: str) -> list[dict]:

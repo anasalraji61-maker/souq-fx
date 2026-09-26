@@ -266,3 +266,10 @@ def test_one_out_of_range_date_does_not_drop_the_whole_week():
     by = {e["title"]: e for e in out}
     assert by["NFP"]["ts"] is not None
     assert by["Bad"]["ts"] is None and by["Bad"].get("time_tbd") is not True
+
+
+def test_numeric_zero_forecast_is_kept_not_shown_as_missing():
+    """`or ""` كان يُسقط الرقم 0 ⇒ توقّع 0 حقيقي يُعرض «—» (بلا توقّع)."""
+    out = cal._parse_ff_json('[{"title":"Rate","country":"JPY","impact":"High",'
+                             '"date":"2026-09-25T08:30:00-04:00","forecast":0,"previous":0.0,"actual":null}]')
+    assert out[0]["forecast"] == "0"

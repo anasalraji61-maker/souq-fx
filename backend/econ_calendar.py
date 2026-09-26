@@ -195,6 +195,11 @@ def _json_time_unannounced(dt: datetime) -> bool:
     return (dt.hour, dt.minute, dt.second, dt.microsecond) == (0, 0, 0, 0)
 
 
+def _figure_text(v: object) -> str:
+    """رقم الحدث نصّاً كما جاء: `or ""` كان يُسقط الرقم 0 (توقّع 0 حقيقي ⇒ «—» بلا توقّع)."""
+    return "" if v is None or isinstance(v, bool) else str(v).strip()
+
+
 def _parse_ff_json(text: str) -> list[dict[str, Any]]:
     """كل حدث يحمل `ts` (ثوانٍ UTC) ليعرضه التطبيق بتوقيت المستخدم ويحسب "بعد كم ساعة".
 
@@ -236,8 +241,8 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                 # «0001-01-01T00:00+05:00» يفيض بـ`timestamp()`/+12س (OverflowError) — كان يُسقط الأسبوع كلّه
                 ts, time_tbd, when = None, False, "هذا الأسبوع"
         country = str(ev.get("country") or "").strip()
-        fc_raw = str(ev.get("forecast") or "").strip()
-        prev_raw = str(ev.get("previous") or "").strip()
+        fc_raw = _figure_text(ev.get("forecast"))
+        prev_raw = _figure_text(ev.get("previous"))
         forecast = fc_raw or "—"  # لا يسقط للسابق — راجع `_parse_ff`
         out.append(
             {
@@ -247,7 +252,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                 "impact": _impact(str(ev.get("impact") or "")),
                 "when": when[:32],
                 "forecast": forecast[:40],
-                **_figures(fc_raw, prev_raw, str(ev.get("actual") or "").strip()),
+                **_figures(fc_raw, prev_raw, _figure_text(ev.get("actual"))),
                 "ts": ts,
                 "time_tbd": time_tbd,
             }

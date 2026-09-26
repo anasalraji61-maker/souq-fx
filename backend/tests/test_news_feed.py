@@ -246,3 +246,9 @@ def test_failure_backs_off_instead_of_hitting_the_feeds_every_request(feed, monk
     n = len(calls)
     nf.fetch_news()
     assert len(calls) == n
+
+
+def test_overflowing_pubdate_keeps_the_rest_of_the_feed():
+    """سنة 9999 بإزاحة سالبة ⇒ OverflowError كان يُفلت فيُسقط الخلاصة كلّها."""
+    when, ts = nf.when_and_ts("Fri, 31 Dec 9999 23:30:00 -0500")
+    assert ts is None and when
