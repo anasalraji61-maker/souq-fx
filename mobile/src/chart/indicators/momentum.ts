@@ -683,7 +683,15 @@ export function computeFisherTransform(candles: Candle[], period = 9): (number |
     const hh = Math.max(...slice);
     const ll = Math.min(...slice);
     const span = hh - ll;
-    const ratio = span === 0 ? 0.5 : (mp[i] - ll) / span;
+    // نافذة مسطّحة (توقّف التغذية): TV يقسم على صفر ⇒ فجوة، ثم `nz(value[1])` يبدأ الحالة من صفر. كانت 0.5
+    // ترسم ذيلاً يتلاشى من «تشبّع شرائي» وتحمل الحالة القديمة إلى ما بعد الفجوة.
+    if (span === 0) {
+      out.push(null);
+      value1 = 0;
+      fisher = 0;
+      continue;
+    }
+    const ratio = (mp[i] - ll) / span;
     const raw = 0.33 * 2 * (ratio - 0.5) + 0.67 * value1;
     value1 = raw > 0.99 ? 0.999 : raw < -0.99 ? -0.999 : raw;
     fisher = 0.5 * Math.log((1 + value1) / (1 - value1)) + 0.5 * fisher;
