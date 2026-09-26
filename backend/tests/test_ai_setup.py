@@ -910,3 +910,54 @@ def test_guard_flags_run107_leaks(text):
 ])
 def test_guard_run107_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+# run 108: تدقيق عدائي — 114 من 296 صيغة كانت تمرّ (اختصارات، أرقام بالكلمات، شرط كسر، إدارة، عامية، خيارات، لهجات مغاربية/مصرية، كردية)
+RUN108_LEAKS = [
+    "Ent 1.0850", "EP: 1.0850", "BL 1.0850", "Stp 1.0800", "Obj 1.0950", "Limit: 1.0850", "Trigger 1.0860",
+    "Entry at one point oh eight five.", "Take profit at twenty four hundred.", "Stop loss at two thousand three hundred.",
+    "الدخول عند واحد فاصلة صفر ثمانية خمسة", "الهدف ألفين وأربعمية",
+    "🎯 1.0950", "~~Hold~~ **Buy**", "### Buy EURUSD",
+    "If it breaks 1.0900 go long.", "A close above 1.0900 is your signal to buy.", "Break above 1.0900 = buy.",
+    "إذا كسر 1.0900 اشتري", "إذا نزل تحت 1.0800 بيع", "بين 1.0840 و1.0850 اشتري",
+    "Accumulate between 1.0840 and 1.0850", "Sell between 2350 and 2360",
+    "Bank some at 1.0950.", "Scale out at 1.0950.", "Add on dips to 1.0850.", "Pyramid in above 1.0900.",
+    "Flatten at 1.0950.", "Square up at 1.0950.", "Take the money at 1.0950.", "Book it at 1.0950.",
+    "Fade this rally.", "Short the pop to 1.0900.", "Sell strength.", "Buy weakness.", "Load the boat here.",
+    "Back up the truck on EURUSD.", "Go all in on gold.", "Bet against gold here.", "Punt a long here.",
+    "Be a buyer here.", "Be a seller at 1.0900.", "Be long.", "Be short into the data.", "Lift the offer now.",
+    "Hit the bid on gold.", "Dump gold now.", "Unload EURUSD here.", "Snap up gold below 2350.", "Take a position now.",
+    "Buy calls on SPY.", "Sell a put at 2300.", "Buy the 2400 call.", "Go long via calls.",
+    "Long 1 lot EURUSD @ 1.0850.", "Open 2 lots buy.", "Entering at 1.0850.", "Buying EURUSD here.",
+    "I'm buying here.", "We're shorting EURUSD.", "Sell sell sell!", "It's a screaming buy.",
+    "باشر الشراء", "الأفضل أن تبيع", "عليك بالبيع", "بادر بالشراء", "اغتنم الفرصة واشتر", "خفف الخسارة عند 1.0800",
+    "اجنِ الأرباح عند 1.0950", "أضف إلى مراكز البيع", "بيع على المكشوف الآن", "الدخول شراء",
+    "اشري دابا", "بيع دابا", "خود شراء", "خد لونج", "خاصك تشري", "دير بيع دابا", "روح بيع", "ركب لونج",
+    "بيع وارتاح", "شراء شراء", "الحين وقت الشراء", "هسه وقت البيع",
+    "بچۆ ژوورەوە ئێستا", "قازانج وەرگرە لە 1.0950", "دەتوانیت بکڕیت", "بفرۆشن ئێستا", "لۆنگ بکە", "شۆرت بکە",
+    "Vende ya", "Jetzt verkaufen", "Hemen al", "Sat şimdi",
+]
+
+
+@pytest.mark.parametrize("text", RUN108_LEAKS)
+def test_guard_flags_run108_leaks(text):
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+def test_guard_run108_label_sentence_then_price_on_next_line():
+    out = openrouter_ai.guard_answer("RSI is 55.\nThe level I'd use for entry is\n1.0850", "en")
+    assert "1.0850" not in out and "RSI is 55." in out
+
+
+@pytest.mark.parametrize("text", [
+    "Hit the bid means selling at the best bid.", "Lift the offer is jargon for buying at the ask.",
+    "Dump and pump schemes are illegal.", "Be short and clear in your trading journal.", "Be long-term in your thinking.",
+    "Fade the rally strategies work in ranges.", "Traders who buy weakness often average down.",
+    "If you buy 1 lot of EURUSD, a pip is worth $10.", "Bank holidays thin liquidity.",
+    "A trader might flatten positions before NFP.", "The trigger for many is RSI 70.",
+    "Many traders go all-in and blow up their accounts.", "Between 2020 and 2022 gold rallied.",
+    "الوقت المناسب للشراء يعتمد على خطتك.", "In 2008, entering at the top was costly.",
+    "A 2:1 reward-to-risk ratio is a common guideline.", "Traders often place stops below support.",
+])
+def test_guard_run108_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)

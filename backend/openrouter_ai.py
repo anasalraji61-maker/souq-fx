@@ -288,7 +288,7 @@ _AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?<!حجم )(?<!ز�
 _EN_ORDER = (
     r"(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
     r"|load\s+up(?:\s+on)?|accumulate|consider\s+(?:buying|selling|shorting|going\s+(?:long|short)|an?\s+(?:long|short)))"
-    r"(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|above|below|on|if|when|it|this|gold|silver|oil|crude|bitcoin|btc"
+    r"(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|above|below|between|on|if|when|it|this|gold|silver|oil|crude|bitcoin|btc"
     r"|the\s+(?:pair|dip|breakout|retest|rally|euro|dollar|yen|pound))\b|(?-i:(?!(?:EMA|SMA|WMA|RSI|MACD|ATR|ADX|CCI|MFI|OBV|VWAP)\b)[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
 )
 _TRADE_CALL_RE = re.compile(
@@ -310,7 +310,7 @@ _TRADE_CALL_RE = re.compile(
     # فعل صفقة ثم سعر («You could buy near 1.0850»، «Short it at 1.0900»)
     + r"|" + _EN_ACT + r"[^\n\d]{0,30}?" + _PRICE
     # … أو سعر صحيح (ذهب/بيتكوين) بعد حرف جرّ («buy near 2350»)
-    + r"|" + _EN_ACT + r"[^\n\d]{0,30}?(?:\b(?:at|near|around|below|above|from|under|over)|@)\s*\d{3,}(?![\d.,%])"
+    + r"|" + _EN_ACT + r"[^\n\d]{0,30}?(?:\b(?:at|near|around|below|above|from|under|over|between)|@)\s*\d{3,}(?![\d.,%])"
     + r"|\b(?:pending\s+)?(?:buy|sell)\s+(?:limit\s+|stop\s+)?orders?\s+(?:at|near|around|@)\s*\d"
     + r"|" + _EN_ORDER
     # run 83: جواب مباشر «Yes, buy now.»، «Yes — buying here makes sense»، «Buy? Yes.»
@@ -489,7 +489,69 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:^\s*|[.!؟:\-–—•*→]\s*)(?:ال)?(?:شراء|بيع)\s*[.!؟]?\s*$"
     + r"|(?:^\s*|[.!?]\s+|[-*•>→]\s*)(?:buy|sell|long|short)\s+\S+\s+(?:الان|الآن|هنا|فورا)(?!\w)"
     # run 107: الكردية «پێشنیار دەکەم بکڕیت»، «وەرە ژوورەوە بە کڕین»
-    + r"|پێشنیار\w*[^\n]{0,30}?بی?(?:کڕیت|فرۆشیت)|ژوورەوە\s+(?:بە\s+)?(?:کڕین|فرۆشتن)",
+    + r"|پێشنیار\w*[^\n]{0,30}?بی?(?:کڕیت|فرۆشیت)|ژوورەوە\s+(?:بە\s+)?(?:کڕین|فرۆشتن)"
+    # run 108: اختصارات مستوى مع سعر عشري («Ent 1.0850»، «EP: 1.0850»، «Stp 1.0800»، «Obj 1.0950»، «Limit: 1.0850»،
+    # «Trigger 1.0860»، «BL 1.0850») — عشري فقط: «trigger when RSI crosses 70» شرح
+    + r"|\b(?:ent|ep|bl|stp|obj|limit|trigger)\b\s*[:@=\-–—→]?\s*(?:at\s+)?" + _PRICE
+    # run 108: سعر بالكلمات بعد كلمة المستوى («Entry at one point oh eight five»، «Take profit at twenty four hundred»،
+    # «الدخول عند واحد فاصلة صفر ثمانية»، «الهدف ألفين وأربعمية»)
+    + r"|" + _LEVEL_WORD + r"\s*[:\-–—=]?\s*(?:at\s+|around\s+|near\s+|عند\s+|قرب\s+)?"
+    r"(?:(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)"
+    r"(?:[\s-]+(?:one|two|three|four|five|six|seven|eight|nine))?\s+(?:point|hundred|thousand)\b"
+    r"|(?:واحد|اثنين|اثنان|ثلاث\w*|اربع\w*|خمس\w*|ست\w*|سبع\w*|ثمان\w*|تسع\w*|عشر\w*|صفر)\s+فاصل[ةه]|(?:الف|الفين|الفان|الاف)(?!\w))"
+    # run 108: شرط كسر ثم أمر («If it breaks 1.0900 go long.»، «If price breaks 1.0900, buy.»، «Break above 1.0900 = buy»،
+    # «A close above 1.0900 is your signal to buy»، «إذا كسر 1.0900 اشتري»، «بين 1.0840 و1.0850 اشتري»، «… تحت 1.0800 بيع»)
+    + r"|" + _PRICE + r"\s*[,،]?\s*(?:then\s+)?(?:go\s+(?:long|short)|get\s+(?:long|short)|buy|sell|short\s+it)(?![-‑\w])"
+    r"(?!\s+(?:pressure|orders?|stops?|signals?|side|volume|interest|zones?|areas?|limits?|programs?|walls?)\b)"
+    + r"|" + _PRICE + r"\s*=\s*(?:buy|sell|long|short)\b"
+    + r"|" + _PRICE + r"[^\n\d]{0,30}?\b(?:your|the|a|our)\s+(?:signal|cue|trigger)\s+to\s+(?:buy|sell|short|go\s+(?:long|short)|enter)\b"
+    + r"|" + _PRICE + r"\s*[^\n\d\w]{0,3}\s*(?:(?:ثم|ف)\s*)?(?:اشتري|اشتر|بع|ادخل|اشري)(?!\w)|" + _PRICE + r"\s*[,،]?\s*بيع\s*[.!؟]?\s*$"
+    # run 108: أوامر إدارة بسعر («Bank some at 1.0950»، «Scale out at»، «Add on dips to 1.0850»، «Pyramid in above»،
+    # «Flatten at»، «Square up at»، «Take the money at»، «Book it at»، «Entering at 1.0850»)
+    + r"|\b(?:bank\s+(?:some|it|half|part|partials?)|scale\s+out|add\s+on\s+(?:dips|rallies|pullbacks)|pyramid(?:\s+in)?"
+    r"|flatten(?:\s+out)?|square\s+up|take\s+the\s+money|book\s+(?:it|some|half)|entering(?:\s+(?:long|short))?)\b"
+    r"[^\n\d]{0,15}?(?:\bat|\bnear|\baround|\babove|\bbelow|\bto|@)\s*" + _PRICE
+    # run 108: أوامر عامية بأول الجملة («Fade this rally.»، «Sell strength.»، «Buy weakness.»، «Short the pop»، «Load the boat»،
+    # «Back up the truck»، «Go all in on gold»، «Bet against gold»، «Punt a long»، «Be a buyer here»، «Be long.»،
+    # «Lift the offer»، «Hit the bid»، «Dump gold now»، «Unload EURUSD»، «Snap up gold»، «Take a position now»، خيارات
+    # «Buy calls/puts»، «Sell a put at 2300»، «Buy the 2400 call»، «Go long via calls»)
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)(?:fade\s+(?:this|the|that|any)\s+(?:rally|move|pop|spike|bounce|drop|dip|breakout|sell-?off)"
+    r"|(?:buy|sell|short)\s+(?:the\s+)?(?:pop|strength|weakness)|load\s+the\s+boat|back\s+up\s+the\s+truck|go\s+all[- ]in"
+    r"|bet\s+against|punt\s+(?:a|on)|be\s+(?:an?\s+)?(?:buyer|seller|long|short)(?![-‑\w])|lift\s+the\s+offer|hit\s+the\s+bid"
+    r"|(?:dump|unload)\s+(?:\S+\s+)?(?:now|here|today|it|this)\b|snap\s+up|take\s+a\s+position\s+(?:now|here|today)"
+    r"|(?:buy|sell)\s+(?:an?\s+|the\s+\d+\s+|covered\s+)?(?:calls?|puts?)|go\s+(?:long|short)\s+via)\b"
+    r"(?!\s+(?:means?|is|are|refers?\s+to|describes?|and|or|of|scheme|schemes|strateg(?:y|ies)|trading)\b)(?!\s*(?:=|:|—|-)\s*\w)"
+    # run 108: لوتات («Long 1 lot EURUSD @ 1.0850»، «Open 2 lots buy») — «If you buy 1 lot of EURUSD, a pip is $10» شرح
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)(?:long|short|buy|sell|open)\s+\d+(?:[.,]\d+)?\s*lots?\b"
+    r"(?:[^\n]{0,25}?(?:@|\bat\b)\s*\d|\s+(?:buy|sell|long|short|now)\b)"
+    # run 108: متكلّم بالمضارع («I'm buying here»، «We're shorting EURUSD»، «Buying EURUSD here»)، «Sell sell sell!»، «screaming buy»
+    + r"|\b(?:i['’]m|i\s+am|we['’]re|we\s+are)\s+(?:buying|selling|shorting|going\s+(?:long|short)|entering)\b"
+    r"(?:[^\n.]{0,20}?\b(?:here|now|today)\b|\s+(?:gold|silver|oil|crude|bitcoin|btc|it|this|the\s+(?:pair|euro|dollar|yen|pound))\b"
+    r"|\s+(?-i:[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3})|[^\n\d]{0,15}?(?:@|\bat\b)\s*\d)"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)(?:buying|selling|shorting)\s+(?:gold|silver|oil|crude|bitcoin|btc"
+    r"|(?-i:[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))\s*(?:here|now|at|@)"
+    + r"|\b(?P<en_rep>buy|sell)[\s,!]+(?P=en_rep)\b|\bscreaming\s+(?:buy|sell)\b"
+    # run 108: عربي فصيح/لهجات («باشر الشراء»، «بادر بالشراء»، «عليك بالبيع»، «الأفضل أن تبيع»، «اغتنم الفرصة واشتر»،
+    # «خفف الخسارة عند 1.0800»، «اجنِ الأرباح عند 1.0950»، «أضف إلى مراكز البيع»، «بيع على المكشوف الآن»، «الدخول شراء»،
+    # «اشري دابا»، «خاصك تشري»، «دير شراء»، «خود شراء»، «ركب لونج»، «بيع وارتاح»، «شراء شراء»، «الحين وقت الشراء»)
+    + r"|(?<!لا )(?<!\w)(?:باشر|بادر|سارع|عليك|عليكم)\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)(?!\w)"
+    + r"|(?:الافضل|من\s+الافضل|يفضل|خاصك|خصك|لازمك|بدك)\s+(?:ان\s+)?(?:تشتري|تبيع|تدخل|تشري)(?!\w)|(?<!\w)لازم\s+تشري(?!\w)"
+    + r"|اغتنم\s+(?:ال)?فرص[ةه]\s+(?:و|ف)?\s*(?:اشتر|اشتري|بع|ادخل|اشري)(?!\w)"
+    + r"|(?<!\w)(?:خفف|اجن|اجني|احجز|اقفل|اغلق)\s+(?:ال)?(?:خسار[ةه]|خسائر|ارباح|ربح)[^\n\d]{0,10}?(?:عند|قرب|من|فوق|تحت)\s*" + _PRICE
+    + r"|(?<!\w)اضف\s+(?:الى\s+|ل)(?:ال)?مراكز\s+(?:ال)?(?:شراء|بيع)(?!\w)"
+    + r"|(?<!\w)(?:ال)?بيع\s+على\s+(?:ال)?مكشوف\s+(?:الان|فورا|فوراً|هنا|من|عند)"
+    + r"|(?<!\w)ال(?:دخول|صفقة|صفقه)\s*[:\-–—=]?\s*(?:ب)?(?:ال)?(?:شراء|بيع)(?=\s*(?:[.!؟،,]|$))"
+    + r"|(?<!\w)(?:ا?شري|اشتري|بيع|بع)\s+(?:\S+\s+)?(?:دابا|دركا|دروك|توا|هلأ|هلا)(?!\w)|(?<!\w)اشري(?!\w)"
+    + r"|(?<!\w)(?:خود|خد|دير|ركب|روح)\s+(?:ال)?(?:شراء|بيع|لونج|شورت)(?!\w)"
+    + r"|(?<!\w)(?:شراء|بيع|اشتري|بع)\s+و\s*ارتاح(?!\w)|(?<!\w)(?P<ar_rep>شراء|بيع)[\s،,!]+(?P=ar_rep)(?!\w)"
+    + r"|(?<!\w)(?:الحين|هسه|هسا|هلا|هلق|الان|دا|ده|هذا)\s+(?:هو\s+)?(?:ال)?وقت\s+(?:ال)?(?:شراء|بيع|شرا|دخول)(?!\w)"
+    # run 108: الكردية («لۆنگ بکە»، «شۆرت بکە»، «دەتوانیت بکڕیت»، «بفرۆشن ئێستا»، «بچۆ ژوورەوە ئێستا»، «قازانج وەرگرە لە 1.0950»)
+    + r"|(?:لۆنگ|شۆرت)\s+(?:بکە|بکەن|بگرە)(?!\w)|(?<!\w)بی?(?:کڕن|فرۆشن)(?!\w)"
+    + r"|(?:دەتوانیت|دەتوانن)\s+(?:\S+\s+)?بی?(?:کڕیت|فرۆشیت|کڕن|فرۆشن)(?!\w)"
+    + r"|بچۆ\s+ژوورەوە|قازانج\w*\s+(?:وەر\s*)?(?:بگرە|گرە)"
+    # run 108: إسبانية/ألمانية/تركية («Vende ya»، «Jetzt verkaufen»، «Hemen al»، «Sat şimdi»)
+    + r"|\b(?:compra|compre|vende|venda)\b[^\n\d]{0,20}?\bya\b|\bjetzt\s+(?:kaufen|verkaufen)\b"
+    r"|\bhemen\s+(?:al|sat)\b|\b(?:al|sat)\s+şimdi\b",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
@@ -512,6 +574,10 @@ def _guard_norm(text: str) -> str:
     # run 80: أحرف عريضة («Ｅｎｔｒｙ») ⇒ NFKC؛ وسوم HTML ورموز/إيموجي قبل الأمر («🟢 BUY»، «<b>BUY</b>»)
     # وعلامات اقتباس JSON («{"direction":"sell"}») تُزال؛ الفاصلة العربية العشرية «١٫٠٨٥٠» ⇒ نقطة.
     t = unicodedata.normalize("NFKC", _TASHKEEL.sub("", text or ""))
+    # run 108: «🎯 1.0950»/«🛑 1.0800» — الرمز هو الوسم؛ «~~Hold~~ **Buy**» المشطوب ليس جزءاً من الردّ؛ «### Buy EURUSD» عنوان
+    t = t.replace("🎯", " target ").replace("🛑", " stop ")
+    t = re.sub(r"~~[^~\n]*~~", " ", t)
+    t = re.sub(r"(?m)^[ \t]*#{1,6}[ \t]*", "", t)
     t = re.sub(r"</?[A-Za-z][^<>\n]{0,40}>", " ", t)
     t = "".join(" " if unicodedata.category(ch) in ("So", "Sk", "Cs") or ch in "\ufe0f\u200d{}\"" else ch for ch in t)
     t = re.sub(r"(?<=\d)٫(?=\d)", ".", t)
@@ -531,7 +597,10 @@ def has_trade_call(text: str) -> bool:
 _LABEL_END_RE = re.compile(_LEVEL_WORD + r"[\s:：\-–—=→←>|]*$", re.IGNORECASE)
 _STARTS_NUM_RE = re.compile(r"^[\s\-*•>|:=→←]*\d")
 # run 83: «Entry zone (pullback):\n1.0850» — كلام بعد الكلمة ثم سعر عشري بأول السطر التالي
-_LABEL_NOTE_END_RE = re.compile(_LEVEL_WORD + r"[^\n\d]{0,30}[:：\-–—=→]\s*$", re.IGNORECASE)
+# run 108: «The level I'd use for entry is\n1.0850» — الجملة تنتهي بـis/at/would be بلا نقطتين
+_LABEL_NOTE_END_RE = re.compile(
+    _LEVEL_WORD + r"[^\n\d]{0,30}(?:[:：\-–—=→]|\b(?:is|are|at|would\s+be|around|near|عند|هو|هي))\s*$", re.IGNORECASE
+)
 _STARTS_PRICE_RE = re.compile(r"^[\s\-*•>|:=→←]*" + _PRICE)  # «1.5×ATR» مسافة لا سعر
 
 
