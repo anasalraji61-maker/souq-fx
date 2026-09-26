@@ -1749,3 +1749,14 @@
 - **فحص سريع للبنود التسعة:** ما زالت مُصلحة (`0.00008` و`size or 1` بتعليقات فقط، `XBR/USD`، DXY `not_offered_by_provider`، 409 `trade_already_closed`).
 - **المجموع:** 2785 ناجحة.
 - **ما يحتاجه التطبيق (chart + tools):** صفّ backend-r125 — منازل/pip أزواج الين أساساً بالتطبيق ما زالت 5/0.0001.
+
+## 2026-09-26 — التشغيل 126: المساعد لا يعرف «الآن» فيسمّي إغلاق الجمعة «السعر الحالي»
+- **COORDINATION:** لا صفّ موجَّه لـbackend (صفوف backend كلها بانتظار أنس؛ backend-r125 أخذه tools `f520ea4`). الاختبارات عند البدء 2785 ناجحة.
+- **مرآة تعديلات اليوم:** tools جعل pip أزواج الين أساساً 0.000001 (7 منازل) — الخادم لا يحسب pip لها (`typical_spread` None، `_instrument_decimals` من حجم السعر) فلا تعارض.
+- **وكيلا تدقيق للقراءة فقط** (سياق المساعد وحداثة أرقامه؛ الماسح/الإشارات/الكاش مع الأسماء البديلة وفشل المزوّد):
+- **`aa6eaf2`** `/api/ai/ask`: السياق كان «if it is not recent, say so» **بلا وقت الآن** بأيّ من الموجّهين ⇒ السبت 21:45، إغلاق الجمعة 20:55 (عمره ~25 ساعة) يُكتب «EURUSD is currently trading at 1.17179» ويمرّ الحارس (الرقم بالسياق). و«that candle may still be forming» ثابتة حتى لشمعة أُغلقت. الآن: `now=…`، عمر السعر («24 h 50 min old»)، وفوق max(شمعتين، 30د) «this is NOT the current price … never call it the current price»؛ الحديث «latest available price, not a live price»؛ الشمعة المغلقة (وقت السعر ≥ نهايتها بـ`bar_end`) «closed»، وإلا «still forming when this price was fetched». 3 اختبارات (`tests/test_ai_price_age_r126.py`) تفشل بلا الإصلاح.
+- **فُحص نظيفاً:** قالب المساعد (لا سعر، النسبة من الإغلاقات الحقيقية، لا مستويات)، مقاطعة الأكاديمية؛ الماسح بأسماء بديلة (EUR/USD، eurusd، XBR/USD، UKOIL ⇒ رمزان وطلب واحد لكلّ)، كاش بعد 500 من المزوّد (`data_kind: cache` و`as_of` حقيقي، بعد 15د `unavailable`)، مفاتيح الكاش، لا أرقام بديلة.
+- **فُحص وتُرك:** `XBRUSD`/`WTIUSD` بلا شرطة تُمرَّر للمزوّد كما هي (بلا جلسة) — ربطها بـUKOIL/USOIL جُرّب وأُلغي: معناها عند Twelve Data غير متحقَّق والتطبيق يرسل UKOIL/USOIL، و`test_broker_alias_gets_no_spread_of_another_instrument` يثبّت عدم الإسناد. توقّع المؤشرات بلا بوّابة `series_fresh_enough` (كاش 1m حتى 15د) — موسوم `data_kind`/`price_as_of`، يُترك.
+- **فحص سريع للبنود التسعة:** ما زالت مُصلحة (`0.00008` و`size or 1` بتعليقات فقط، `XBR/USD`، DXY `not_offered_by_provider`، 409 `trade_already_closed`).
+- **المجموع:** 2788 ناجحة.
+- **ما يحتاجه التطبيق:** لا شيء (`price_as_of` يُعرض تحت الردّ أصلاً).
