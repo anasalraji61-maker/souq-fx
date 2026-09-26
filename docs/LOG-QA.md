@@ -1329,3 +1329,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (b — نصوص ثابتة):** «MATRIX» ×2 و`placeholder="EURUSD"` ×3 — معروفة. مسبار `parseBalance`: «10k»/«$10k»/«١٠k»/«10 k» ⇒ 10000؛ «10.000k»/«€10k»/«-5k» ⇒ null. **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ tools136a يصير ★ إن بقي؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (5b81db2):** أخضر 0؛ `stcTv.selftest` ناجح. أُغلقت tools136a ← chart `6463618` (`dailyRefStore.ts` مفاتيح الجلسة بـ`serverNowSec(now)`). **لا صفّ مفتوح لوكيل برمجي** عدا QA1. diff الجديد منطق STC وجلسة ⇒ قائمة القبول 0/12.
+
+## 2026-09-26 — الدورة 128
+**البناء:** أخضر 0 (على a2a479d) — لا إصلاح لازم. **Selftests:** 124/124 ناجح (`npx tsx`، كل `*.selftest.ts` بالمستودع).
+**التحقّق بالكود:** مفتوح جديد مُتحقَّق **backend-r104 → ui** (`api.ts:134` `pair_effect: string` باقٍ؛ العرض حُذف `2dbbc8f`). سجلّات chart 106/tools/launch بلا طلب جديد لوكيل.
+**قائمة قبول DESIGN-PRO (الثامن والأربعون):** 0/12 فشل (diff منذ 5b81db2 بـ`mobile`: `drawingAnchors.ts` و`locales.ts` فقط، لا `.tsx`).
+**المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 6 أغلفة `accessible={false}` المعروفة نفسها. **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة backend-r104؛ وإعادة قائمة DESIGN-PRO.
