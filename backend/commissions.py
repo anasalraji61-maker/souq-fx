@@ -2,8 +2,9 @@
 
 Rules:
 - Direct referral: 10%
-- When left == right (balanced): +5% matching bonus
-- If unbalanced: only the 10% direct
+- When left == right at a qualifying level (2, 4, 8…): +5% matching bonus (Anas decision 14 —
+  equality at a non-level count such as 1=1 or 3=3 pays nothing extra)
+- Otherwise: only the 10% direct
 - Trader: 4 balance levels → 2, 4, 8, 16
 - Trainer / Broker / Agent / Company: 8 levels → 2, 4, 8, 16, 32, 64, 128, 256
 """
@@ -42,8 +43,8 @@ def plan_document() -> dict[str, Any]:
         "rules": [
             "كل عضو له طرفان: يمين ويسار (شبكة ثنائية).",
             "عند جلب متداول جديد: عمولة مباشرة 10%.",
-            "إذا تساوى الطرفان (يمين = يسار): عمولة إضافية 5%.",
-            "إذا لم يتساوى الطرفان: تبقى فقط عمولة الجلب 10%.",
+            "إذا تساوى الطرفان (يمين = يسار) عند مستوى مؤهل: عمولة إضافية 5%.",
+            "غير ذلك (عدم تساوٍ، أو تساوٍ خارج المستويات مثل 1=1 و3=3): تبقى فقط عمولة الجلب 10%.",
             "المتداول العادي: 4 مستويات توازن — 2 و 4 و 8 و 16.",
             "المدرب / البروكر / الوكيل / الشركة: 8 مستويات — 2 و 4 و 8 و 16 و 32 و 64 و 128 و 256.",
         ],
@@ -82,7 +83,7 @@ def plan_document() -> dict[str, Any]:
         "example": {
             "direct": "جلب متداول → 10%",
             "balanced": "يمين=يسار عند مستوى مؤهل → 10% + 5%",
-            "unbalanced": "يمين ≠ يسار → 10% فقط",
+            "unbalanced": "يمين ≠ يسار، أو تساوٍ خارج المستويات → 10% فقط",
         },
         "commission_table": [
             {
@@ -93,7 +94,7 @@ def plan_document() -> dict[str, Any]:
             {
                 "type": "مكافأة توازن",
                 "rate_pct": int(BALANCE_BONUS_RATE * 100),
-                "condition": "يمين = يسار",
+                "condition": "يمين = يسار عند مستوى مؤهل",
             },
             {
                 "type": "فعّالة متوازن",
@@ -103,7 +104,7 @@ def plan_document() -> dict[str, Any]:
             {
                 "type": "فعّالة غير متوازن",
                 "rate_pct": int(DIRECT_RATE * 100),
-                "condition": "يمين ≠ يسار",
+                "condition": "يمين ≠ يسار، أو تساوٍ خارج المستويات",
             },
         ],
     }
@@ -117,15 +118,24 @@ def unlocked_balance_levels(left: int, right: int, role: str) -> list[int]:
     return [lv for lv in levels_for_role(role) if balanced >= lv]
 
 
+def pays_balance_bonus(left: int, right: int, role: str) -> bool:
+    """قرار أنس ١٤: مكافأة التوازن عند تساوي الطرفين **على مستوى مؤهل** فقط (2، 4، 8…). كانت تُدفع عند أي
+    تساوٍ (1=1، 3=3) ⇒ أكثر مما تعد به الخطة. العدّادات لا تنقص ⇒ كل مستوى يُدفع مرة واحدة."""
+    return left == right and left in levels_for_role(role)
+
+
 def rate_summary(left: int, right: int, role: str) -> dict[str, Any]:
     balanced = left == right and left > 0
+    pays = pays_balance_bonus(left, right, role)
     unlocked = unlocked_balance_levels(left, right, role)
     return {
         "direct_rate": DIRECT_RATE,
-        "balance_bonus_rate": BALANCE_BONUS_RATE if balanced else 0.0,
+        "balance_bonus_rate": BALANCE_BONUS_RATE if pays else 0.0,
         # مقرَّب: 0.10 + 0.05 كان يُرسَل 0.15000000000000002
-        "effective_rate": round(DIRECT_RATE + (BALANCE_BONUS_RATE if balanced else 0.0), 4),
+        "effective_rate": round(DIRECT_RATE + (BALANCE_BONUS_RATE if pays else 0.0), 4),
         "balanced": balanced,
+        # التساوي الحالي على مستوى مؤهل (يدفع 5%) — «balanced» وحده لا يعني مكافأة
+        "balance_bonus_qualifies": pays,
         "left": left,
         "right": right,
         "unlocked_levels": unlocked,

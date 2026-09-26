@@ -613,6 +613,7 @@ def register_user(
         raise ValueError("side must be left or right")
 
     stored = _encode_password(password)
+    now = time.time()
     with _conn() as c:
         sponsor_id: int | None = None
         if sponsor_code:
@@ -636,7 +637,7 @@ def register_user(
         try:
             c.execute(
                 "INSERT INTO users(username,username_key,password_hash,created_at,email) VALUES(?,?,?,?,?)",
-                (username, _username_key(username), stored, time.time(), email_norm),
+                (username, _username_key(username), stored, now, email_norm),
             )
             uid = int(c.execute("SELECT last_insert_rowid()").fetchone()[0])
         except sqlite3.IntegrityError as exc:
@@ -647,10 +648,12 @@ def register_user(
             """INSERT INTO network_members
                (user_id,role,sponsor_id,side,referral_code,left_count,right_count,created_at)
                VALUES(?,?,?,?,?,0,0,?)""",
-            (uid, role, sponsor_id, side_norm or None, code, time.time()),
+            (uid, role, sponsor_id, side_norm or None, code, now),
         )
         if sponsor_id and side_norm:
             _bump_leg_counts(c, sponsor_id, side_norm)
+            # قرار أنس ١٤: التسجيل برمز إحالة كان يرفع عدّاد الراعي بلا سطر عمولة ⇒ تقريره ينقص عضواً
+            _log_commission_on_place(c, sponsor_id, uid, username, now)
 
     session = create_session(uid, username, email_norm)
     session["referral_code"] = code
@@ -925,7 +928,8 @@ def _log_commission_on_place(
 ) -> None:
     import commissions as commissions_mod
 
-    month_key = time.strftime("%Y-%m", time.localtime(now))
+    # UTC (قرار أنس ١٤): كان بتوقيت الخادم المحلي ⇒ عضو 23:30 UTC آخر الشهر يُحسب بشهر آخر حسب مكان الخادم
+    month_key = time.strftime("%Y-%m", time.gmtime(now))
     direct_pts = COMMISSION_UNIT * commissions_mod.DIRECT_RATE
     c.execute(
         """INSERT INTO commission_ledger
@@ -943,10 +947,13 @@ def _log_commission_on_place(
         ),
     )
     row = c.execute(
-        "SELECT left_count, right_count FROM network_members WHERE user_id=?",
+        "SELECT left_count, right_count, role FROM network_members WHERE user_id=?",
         (earner_id,),
     ).fetchone()
-    if row and int(row["left_count"]) == int(row["right_count"]) and int(row["left_count"]) > 0:
+    # قرار أنس ١٤: عند مستوى مؤهل فقط (2، 4، 8…) — كانت عند أي تساوٍ (1=1، 3=3)
+    if row and commissions_mod.pays_balance_bonus(
+        int(row["left_count"]), int(row["right_count"]), str(row["role"] or "trader")
+    ):
         bonus_pts = COMMISSION_UNIT * commissions_mod.BALANCE_BONUS_RATE
         c.execute(
             """INSERT INTO commission_ledger
@@ -1020,7 +1027,7 @@ def get_commission_report(earner_id: int) -> dict[str, Any]:
             {
                 "type": "مكافأة توازن",
                 "rate_pct": int(commissions_mod.BALANCE_BONUS_RATE * 100),
-                "condition": "يمين = يسار",
+                "condition": "يمين = يسار عند مستوى مؤهل",
                 "points_per_member": round(COMMISSION_UNIT * commissions_mod.BALANCE_BONUS_RATE, 2),
             },
             {
@@ -1036,7 +1043,7 @@ def get_commission_report(earner_id: int) -> dict[str, Any]:
             {
                 "type": "فعّالة غير متوازن",
                 "rate_pct": int(commissions_mod.DIRECT_RATE * 100),
-                "condition": "يمين ≠ يسار",
+                "condition": "يمين ≠ يسار، أو تساوٍ خارج المستويات",
                 "points_per_member": round(COMMISSION_UNIT * commissions_mod.DIRECT_RATE, 2),
             },
         ],
