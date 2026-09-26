@@ -211,10 +211,19 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     })();
     return () => {
       alive = false;
-      void soundRef.current?.unloadAsync();
-      soundRef.current = null;
     };
   }, [schoolId, lectureId, userId]);
+
+  // إيقاف الصوت يتبع المحاضرة لا المستخدم: كان بتنظيف أثر التحميل أعلاه، وهو يُعاد عند اكتمال
+  // الدخول (`userId`) ⇒ يُفرَّغ الصوت ولا يُعاد تشغيله (المقطع نفسه، فأثر التشغيل لا يُعاد)،
+  // والشريط يقول «الصوت يعمل» فوق صمت.
+  useEffect(
+    () => () => {
+      void soundRef.current?.unloadAsync().catch(() => {});
+      soundRef.current = null;
+    },
+    [schoolId, lectureId]
+  );
 
   const segments: ScriptSegment[] = lecture?.script_segments ?? [];
   const current = segments[segIndex];
@@ -230,14 +239,17 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     // يسمعها. لا تقدّم يُحفظ حتى تُحمَّل المحاضرة الحقيقية.
     if (!lecture || !restored || lectureFallback) return;
     const key = `matrix.progress.${schoolId}.${lectureId}`;
-    void AsyncStorage.setItem(key, String(segIndex));
+    // الحفظ تحسين صامت: فشل الشبكة/5xx لا يُرمى رفضاً غير معالَج مع كل «التالي».
+    AsyncStorage.setItem(key, String(segIndex)).catch(() => {});
     if (user) {
-      void api.saveProgress({
-        school_id: schoolId,
-        lecture_id: lectureId,
-        segment_index: segIndex,
-        completed: segIndex >= segments.length - 1,
-      });
+      api
+        .saveProgress({
+          school_id: schoolId,
+          lecture_id: lectureId,
+          segment_index: segIndex,
+          completed: segIndex >= segments.length - 1,
+        })
+        .catch(() => {});
     }
   }, [segIndex, schoolId, lectureId, lecture, restored, lectureFallback, user, segments.length]);
 
