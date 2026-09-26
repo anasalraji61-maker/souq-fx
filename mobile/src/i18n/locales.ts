@@ -391,6 +391,20 @@ export type Dict = {
    * العربية «{n} خسائر» صحيحة لـ3–10 فقط — إن تغيّر n خارجها يُعاد صوغها.
    */
   riskCalcLossStreak: string;
+  /**
+   * حدّ الخسارة اليومي (`dailyLossRoom`، `positionSize.ts`، tools111a): عنوانا خانتين — الحدّ نسبةً، وخسارة اليوم المحقَّقة
+   * بعملة الحساب (موجبة؛ يوم رابح = 0). الحدّ يُحسب من رصيد **بداية اليوم** (الرصيد + خسارة اليوم).
+   */
+  riskCalcDailyLimit: string;
+  riskCalcLostToday: string;
+  /**
+   * `{room}` المتبقّي قبل الحدّ مبلغاً بعملة الحساب كما يُعرض، `{n}` عدد الخسائر الكاملة بمخاطرة هذه الصفقة داخل الحدّ (رقم
+   * صحيح ≥1 — حين 0 يُعرض `riskCalcDailyBreach` بدله)، `{pct}` أقصى مخاطرة للصفقة التالية % بلا «%» (القالب يضعها).
+   * العربية والكردية تضعان `{n}` بعد نقطتين فلا تتعلّق صيغة الجمع بالعدد.
+   */
+  riskCalcDailyRoom: string;
+  /** `breach`: وقف هذه الصفقة وحده يتخطّى الحدّ — `{room}` المتبقّي مبلغاً كما يُعرض */
+  riskCalcDailyBreach: string;
   riskCalcSlPips: string;
   riskCalcFromPrice: string;
   riskCalcSlMismatch: string;
@@ -489,6 +503,12 @@ export type Dict = {
   riskCalcTarget: string;
   riskCalcTargetPlaceholder: string;
   riskCalcPotentialProfit: string;
+  /**
+   * جني ربح جزئي تحت الربح المحتمل (`scaleOutPlan`، tools111b): نصف المركز عند 1R والباقي للهدف أو لوقفٍ بالتعادل.
+   * `{close}`/`{keep}` لوتان كما يُعرضان، `{pct}` النسبة **الفعلية** المغلقة بعد التقريب لخطوة 0.01 (نصف 0.05 = 0.03 ⇒ 60) بلا «%»،
+   * `{worst}`/`{best}` موجبان بلا إشارة ولا «R» — القالب يضع «+» و«R». يُعرض فقط حين `bestR` ليس null (هدف صالح).
+   */
+  riskCalcScaleOut: string;
   riskCalcLogToJournal: string;
   riskCalcSideLabel: string;
   riskCalcSideFromStop: string;
@@ -1844,6 +1864,10 @@ const ar: Dict = {
     'المخاطرة ({risk}) أكبر من رصيد الحساب ({balance}) — ضربة وقف واحدة تمحو الحساب كلّه. راجع الخانتين: ربما كتبتَ مبلغاً مكان النسبة، أو نقص الرصيد صفراً.',
   riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
   riskCalcLossStreak: '{n} خسائر متتالية بهذه المخاطرة = −{pct}% من الحساب',
+  riskCalcDailyLimit: 'حدّ الخسارة اليومي %',
+  riskCalcLostToday: 'خسارتك اليوم حتى الآن',
+  riskCalcDailyRoom: 'يبقى {room} قبل حدّك اليومي · خسائر كاملة بهذه المخاطرة تتّسع لها: {n} · أقصى مخاطرة للصفقة التالية {pct}%',
+  riskCalcDailyBreach: '⚠ وقف هذه الصفقة وحده يتخطّى حدّك اليومي — يبقى لك {room} فقط. صغّر الحجم أو توقّف لليوم.',
   riskCalcSlPips: 'وقف الخسارة (pip)',
   riskCalcFromPrice: 'أو احسبه من السعر: الدخول والوقف كما تراهما على الشارت',
   riskCalcSlMismatch:
@@ -1890,6 +1914,7 @@ const ar: Dict = {
   riskCalcTarget: 'الهدف (اختياري) — لحساب R:R والربح المحتمل',
   riskCalcTargetPlaceholder: 'سعر الهدف',
   riskCalcPotentialProfit: 'الربح المحتمل',
+  riskCalcScaleOut: 'نصف المركز عند 1R: أغلق {close} lot ({pct}%) وأبقِ {keep} ⇒ من +{worst}R (الباقي بالتعادل) إلى +{best}R (الباقي عند الهدف)',
   riskCalcLogToJournal: 'سجّل هذه الخطة بالدفتر',
   riskCalcSideLabel: 'اتجاه الصفقة',
   riskCalcSideFromStop: 'مستنتَج من موضع الوقف',
@@ -3071,6 +3096,10 @@ const enUS: Dict = {
     'Your risk ({risk}) is larger than your account balance ({balance}) — a single stop-loss hit would wipe out the whole account. Check both fields: you may have typed an amount instead of a percent, or left a zero off the balance.',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
   riskCalcLossStreak: '{n} losses in a row at this risk = −{pct}% of the account',
+  riskCalcDailyLimit: 'Daily loss limit %',
+  riskCalcLostToday: 'Lost so far today',
+  riskCalcDailyRoom: '{room} left before your daily limit · full losses at this risk that still fit: {n} · max risk on the next trade {pct}%',
+  riskCalcDailyBreach: '⚠ This trade’s stop alone would break your daily limit — only {room} left. Reduce the size or stop for the day.',
   riskCalcSlPips: 'Stop loss (pips)',
   riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
   riskCalcSlMismatch:
@@ -3117,6 +3146,7 @@ const enUS: Dict = {
   riskCalcTarget: 'Target (optional) — for R:R and potential profit',
   riskCalcTargetPlaceholder: 'Target price',
   riskCalcPotentialProfit: 'Potential profit',
+  riskCalcScaleOut: 'Half off at 1R: close {close} lot ({pct}%), keep {keep} ⇒ +{worst}R (rest out at breakeven) to +{best}R (rest hits the target)',
   riskCalcLogToJournal: 'Log this plan to the journal',
   riskCalcSideLabel: 'Trade direction',
   riskCalcSideFromStop: 'inferred from the stop',
@@ -4338,6 +4368,10 @@ const ku: Dict = {
     'مەترسی ({risk}) لە باڵانسی هەژمار ({balance}) زیاترە — یەک لێدانی وەستان هەموو هەژمارەکە دەسڕێتەوە. هەردوو خانەکە بپشکنە: لەوانەیە بڕی پارەت لە جیاتی ڕێژە نووسیبێت، یان سفرێک لە باڵانسەکە کەم بێت.',
   riskCalcHighRisk: '⚠ زیاتر لە 2% بۆ هەر مامەڵەیەک مەترسی زۆرە',
   riskCalcLossStreak: '{n} زیانی لەسەر یەک بەم مەترسییە = −{pct}%ی هەژمار',
+  riskCalcDailyLimit: 'سنووری زیانی ڕۆژانە %',
+  riskCalcLostToday: 'زیانی ئەمڕۆت تا ئێستا',
+  riskCalcDailyRoom: '{room} ماوە تا سنووری ڕۆژانەت · زیانی تەواو بەم مەترسییە کە جێی دەبێتەوە: {n} · زۆرترین مەترسی بۆ مامەڵەی داهاتوو {pct}%',
+  riskCalcDailyBreach: '⚠ تەنها وەستانی ئەم مامەڵەیە سنووری ڕۆژانەت دەبەزێنێت — تەنها {room} ماوە. قەبارەکە بچووک بکەرەوە یان ئەمڕۆ بوەستە.',
   riskCalcSlPips: 'وەستانی زیان (pip)',
   riskCalcFromPrice: 'یان لە نرخەوە: چوونەژوورەوە و وەستان وەک لە چارتەکەدا دەیانبینیت',
   riskCalcSlMismatch:
@@ -4387,6 +4421,7 @@ const ku: Dict = {
   riskCalcTarget: 'ئامانج (ئیختیاری) — بۆ R:R و قازانجی چاوەڕوانکراو',
   riskCalcTargetPlaceholder: 'نرخی ئامانج',
   riskCalcPotentialProfit: 'قازانجی چاوەڕوانکراو',
+  riskCalcScaleOut: 'نیوەی پۆزیشن لە 1R: {close} lot دابخە ({pct}%) و {keep} بهێڵەرەوە ⇒ لە +{worst}R (ئەوەی ماوە لە چوونەژوورەوە، بێ قازانج و زیان) تا +{best}R (ئەوەی ماوە دەگاتە ئامانج)',
   riskCalcLogToJournal: 'ئەم پلانە لە دەفتەر تۆمار بکە',
   riskCalcSideLabel: 'ئاراستەی مامەڵە',
   riskCalcSideFromStop: 'لە شوێنی وەستان دەرهێنراوە',
