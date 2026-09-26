@@ -17,7 +17,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radii, buttons, numeric } from '../theme';
 import { api, type ChartSeries } from '../api';
-import { MOCK_BASES } from '../chart/mockBases';
 import { isNotOfferedSymbol } from '../providerSymbols';
 import { ChartFrame } from '../components/ChartFrame';
 import {
@@ -108,6 +107,12 @@ const DXY_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
  * نسخة مطابقة: `DEFAULT_HERO_SYMBOL` في `ToolsScreen.tsx`.
  */
 const DEFAULT_HERO_SYMBOL = 'USDJPY';
+/**
+ * قائمة المتابعة بلا سعر احتياطي: كانت `MOCK_BASES` (أسعار 2024 — EURUSD 1.0854 والسوق ~1.17، و«DXY 104.25») تُعرض
+ * بكل صفّ قبل أوّل تيك، موسومةً «افتراضي» بخطّ صغير. قرار أنس ٢: لا رقم مختلَق بموضع سعر، ولا DXY برقم تجريبي. الصفّ
+ * بلا تيك يعرض «—» (`WatchlistPanel`). ثابتٌ بالوحدة لا `{}` بالعرض كي لا يتغيّر مرجعه كل إطار.
+ */
+const NO_PRICE_BASES: Record<string, number> = {};
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
 const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
@@ -2039,7 +2044,7 @@ export function TerminalScreen() {
             <WatchlistPanel
               activeSymbol={symbol}
               ticks={tickPrices}
-              bases={MOCK_BASES}
+              bases={NO_PRICE_BASES}
               demoTicks={demoTickSymbols}
               onPick={(s) => pickSymbol(s)}
               compact={narrowWatch}
@@ -2139,7 +2144,7 @@ export function TerminalScreen() {
           <WatchlistPanel
             activeSymbol={symbol}
             ticks={tickPrices}
-            bases={MOCK_BASES}
+            bases={NO_PRICE_BASES}
             demoTicks={demoTickSymbols}
             onPick={(next) => {
               pickSymbol(next);
