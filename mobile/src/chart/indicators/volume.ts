@@ -625,7 +625,9 @@ export function computeTwiggsMoneyFlow(
  */
 export function computeVzo(candles: (Candle & { volume?: number })[], period = 14): (number | null)[] {
   const n = candles.length;
-  const vp: number[] = new Array(n).fill(0);
+  // الشمعة 0 بلا تغيّر (na بـ`ta.change`) ⇒ null لا 0 مختلَق: كان الصفر يدخل بذرة EMA فتظهر أوّل قيمة شمعةً مبكراً
+  // وبقيمة خاطئة (−12.3 مكان −2.9 على TV) — كإصلاح Force Index (`07f5b3a`).
+  const vp: (number | null)[] = new Array(n).fill(null);
   const vols = candles.map((c) => c.volume ?? 0);
   for (let i = 1; i < n; i++) {
     const d = candles[i].close - candles[i - 1].close;
