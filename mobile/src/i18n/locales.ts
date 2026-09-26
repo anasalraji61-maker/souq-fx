@@ -615,6 +615,10 @@ export type Dict = {
   journalStatLossStreak: string;
   /** `journalMaxDrawdownR`: `{r}` أقصى هبوط قمّة⇒قاع بمجموع R، `{now}` البعد الحالي عن آخر قمّة، `{n}` الصفقات ذات R — `{r}`/`{now}` موجبان */
   journalStatMaxDrawdownR: string;
+  /** `journalPayoffR` (tradePlan.ts) — tools110a: `{win}`/`{loss}` متوسط الرابحة/الخاسرة بالـR (موجبان، الإشارة بالنص)،
+   *  `{need}` نسبة النجاح اللازمة للتعادل بهذا العائد المحقَّق، `{actual}` الفعلية على **الصفقات نفسها** (بوقف، بلا تعادل)
+   *  — قد تخالف سطر «نسبة نجاح» العام لذا يُسمّى نطاقها صراحةً */
+  journalStatPayoff: string;
   journalSideA11yPrefix: string;
   journalSymbolPlaceholder: string;
   journalSymbolA11y: string;
@@ -1991,6 +1995,7 @@ const ar: Dict = {
   journalStatAvgR: 'متوسط النتيجة: {r} لكل صفقة ({n} بوقف مسجَّل)',
   journalStatLossStreak: 'أطول سلسلة خسائر: {max} · الجارية: {now}',
   journalStatMaxDrawdownR: 'أقصى تراجع: {r}R · الحالي: {now}R ({n} بوقف مسجَّل)',
+  journalStatPayoff: 'متوسط الرابحة +{win}R · الخاسرة −{loss}R ⇒ التعادل يحتاج نجاح {need}% (الفعلية على هذه الصفقات {actual}%)',
   journalSideA11yPrefix: 'اتجاه الصفقة',
   journalSymbolPlaceholder: 'الرمز',
   journalSymbolA11y: 'رمز الصفقة',
@@ -3217,6 +3222,7 @@ const enUS: Dict = {
   journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
   journalStatLossStreak: 'Longest losing streak: {max} · current: {now}',
   journalStatMaxDrawdownR: 'Max drawdown: {r}R · current: {now}R ({n} with a stop)',
+  journalStatPayoff: 'Avg win +{win}R · avg loss −{loss}R ⇒ break-even needs {need}% wins (actual on these trades {actual}%)',
   journalSideA11yPrefix: 'Trade direction',
   journalSymbolPlaceholder: 'Symbol',
   journalSymbolA11y: 'Trade symbol',
@@ -4491,6 +4497,7 @@ const ku: Dict = {
   journalStatAvgR: 'ناوەندی ئەنجام: {r} بۆ هەر مامەڵەیەک ({n} بە وەستان)',
   journalStatLossStreak: 'درێژترین زنجیرەی زیان: {max} · ئێستا: {now}',
   journalStatMaxDrawdownR: 'زۆرترین دابەزین: {r}R · ئێستا: {now}R ({n} بە وەستان)',
+  journalStatPayoff: 'ناوەندی بردنەوە +{win}R · زیان −{loss}R ⇒ بۆ یەکسانبوون {need}% بردنەوە پێویستە (ئەم مامەڵانە: {actual}%)',
   journalSideA11yPrefix: 'ئاراستەی مامەڵە',
   journalSymbolPlaceholder: 'هێما',
   journalSymbolA11y: 'هێمای مامەڵە',
