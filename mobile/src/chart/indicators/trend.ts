@@ -2037,6 +2037,18 @@ export function computeDma(closes: number[], period = 20, displacement = 10): (n
 }
 
 /**
+ * بقيّة خطّ DMA يمين آخر شمعة: `lead[k]` عند الخانة ‎n+k‎ = SMA عند ‎n−displacement+k‎ (كـ`computeAlligator().lead`).
+ * TradingView وMT5 يرسمان الخطّ المُزاح حتى ‎displacement‎ شمعة في المستقبل — بدونها ينتهي قبل الشمعة الحيّة بعشر.
+ */
+export function computeDmaLead(closes: number[], period = 20, displacement = 10): (number | null)[] {
+  const base = sma(closes, period);
+  const n = closes.length;
+  const out: (number | null)[] = [];
+  for (let k = 0; k < displacement; k++) out.push(n - displacement + k >= 0 ? base[n - displacement + k] ?? null : null);
+  return out;
+}
+
+/**
  * Rainbow Oscillator (ميل وايدنر، مرافق «Rainbow Moving Averages» — Achelis/MetaStock): عشر مراحل تنعيم
  * متتالية (stage[1]=SMA(إغلاق,2)، stage[k]=SMA(stage[k−1],2))، والمذبذب
  * `100 × (الإغلاق − متوسّط المراحل العشر) / (أعلى إغلاق − أدنى إغلاق خلال 10 شموع)` — **بإشارة**: موجب والسعر فوق

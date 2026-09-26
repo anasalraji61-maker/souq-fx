@@ -278,6 +278,7 @@ import {
   computeDemarkPivots,
   computeDisparityIndex,
   computeDma,
+  computeDmaLead,
   computeDmi,
   computeDonchian,
   computeDonchianWidth,
@@ -3876,6 +3877,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('dma') ? ind(computeDma(closes)) : null),
     [closes, indicators]
   );
+  const dmaLead = useMemo(
+    () => (indicators.includes('dma') ? computeDmaLead(closes) : null),
+    [closes, indicators]
+  );
   const rainbowOsc = useMemo(
     () => (indicators.includes('rainbowOsc') ? ind(computeRainbowOscillator(closes)) : null),
     [closes, indicators]
@@ -4350,6 +4355,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         lips: [...alligator.lips, ...alligator.lead.lips.slice(0, futureSlots)],
       }
     : null;
+  // DMA كذلك: مُزاح 10 للأمام فكان ينتهي قبل الشمعة الحيّة بعشر خانات.
+  const dmaLine = dma && dmaLead ? [...dma, ...dmaLead.slice(0, futureSlots)] : null;
 
   const viewPriceScale =
     syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
@@ -7555,6 +7562,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         });
         continue;
       }
+      // DMA المرسوم في منطقة المستقبل (`dmaLine`): وسمه حيث يلتقي الخطّ بالمحور — كالتمساح أعلاه.
+      if (id === 'dma' && dmaLine) {
+        const axisSlot = Math.round(((chartPlotW - viewXPan) / Math.max(1, chartPlotW)) * Math.max(1, source.slots) - 0.5);
+        const v = legendValueAt(dmaLine, Math.min(dmaLine.length - 1, Math.max(at, axisSlot)));
+        if (v != null) items.push({ key: id, price: v, color: resolveColorExpr(spec.swatch[0]!, legendTokens) });
+        continue;
+      }
       if (multi) {
         const vs = legendMultiAt(multi.lines, at);
         vs?.forEach((v, k) => items.push({ key: `${id}-${k}`, price: v, color: multi.colors[k]! }));
@@ -8778,7 +8792,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       </Text>
                     ));
                   }
-                  const v = legendValueText(chip.id, at);
+                  // DMA بمنطقة المستقبل: قيمة الخطّ عند الخانة نفسها (مُزاح 10) لا قيمة الشمعة الحيّة.
+                  const dmaAhead =
+                    chip.id === 'dma' && dmaLine && crossIndex != null && crossAhead > 0
+                      ? legendValueAt(dmaLine, at + crossAhead)
+                      : undefined;
+                  const v =
+                    dmaAhead !== undefined
+                      ? dmaAhead == null ? null : fmtPrice(dmaAhead)
+                      : legendValueText(chip.id, at);
                   if (!v) return null;
                   // Supertrend بلونين: القيمة بلون جانب الترند عند الشمعة (أخضر تحت السعر، أحمر فوقه).
                   const color =
@@ -9471,8 +9493,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
         {indicators.includes('dma') &&
-          dma &&
-          planLineSegments(dma, xOf, yOf).map((sg) => (
+          dmaLine &&
+          planLineSegments(dmaLine, xOf, yOf).map((sg) => (
             <View
               key={`dma${sg.at}`}
               style={{

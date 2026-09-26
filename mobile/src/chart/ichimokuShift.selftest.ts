@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { computeAlligator, computeIchimoku } from './indicators/trend';
+import { computeAlligator, computeDma, computeDmaLead, computeIchimoku } from './indicators/trend';
 
 // شمعة i: أعلى=أدنى=إغلاق=i ⇒ Tenkan/Kijun/SpanB الخام = منتصف نافذة منتهية عند i
 const candles: Candle[] = [];
@@ -48,5 +48,14 @@ const alFull = computeAlligator([...candles, ...Array.from({ length: 8 }, (_, k)
 // الخانات 120..127 بسلسلة أطول تعتمد على خام ≤119 فقط ⇒ تطابق الإسقاط
 for (let k = 0; k < 8; k++) assert.equal(al.lead.jaw[k], alFull.jaw[120 + k]);
 for (let k = 0; k < 3; k++) assert.equal(al.lead.lips[k], alFull.lips[120 + k]);
+
+// DMA (SMA20 +10): الإسقاط = ما تعطيه سلسلة أطول بعشر شموع عند الخانات 120..129، وقصير ⇒ null
+const cl = candles.map((c) => c.close);
+const dmaLead = computeDmaLead(cl);
+assert.equal(dmaLead.length, 10);
+const dmaFull = computeDma([...cl, ...Array.from({ length: 10 }, () => 999)]);
+for (let k = 0; k < 10; k++) assert.equal(dmaLead[k], dmaFull[120 + k]);
+assert.equal(dmaLead[9], 109.5);
+assert.equal(computeDmaLead(cl.slice(0, 25))[0], null);
 
 console.log('ichimokuShift selftest PASS');
