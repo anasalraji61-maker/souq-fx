@@ -961,3 +961,48 @@ def test_guard_run108_label_sentence_then_price_on_next_line():
 ])
 def test_guard_run108_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+# run 109: تدقيق عدائي — 70 من 212 صيغة كانت تمرّ (ميل لطيف، مجهول، CSV، رموز بجوار أسعار، أحرف مخفيّة/كيريلية/مفرّقة،
+# لهجات، عربيزي، كرمانجي لاتيني، تعابير «nibble/double down/ride it»)
+RUN109_LEAKS = [
+    "My bias is to accumulate EURUSD on dips toward 1.0850.", "I'd lean long here, ideally from 1.0850.",
+    "Longs are favoured above 1.0850.", "Shorts make sense below 1.0800.",
+    "I'd suggest you enter long at the current price.", "You could open a buy position now.",
+    "Longs are to be initiated at 1.0850.", "Profits should be taken at 1.0950.", "Gold should be sold at 2400.",
+    "EURUSD is to be bought on a dip to 1.0850.", "The position is best entered at 1.0850.",
+    "A sell order is recommended at 1.0900.",
+    "Trade plan — Long | 1.0850 | 1.0800 | 1.0950", "BUY,EURUSD,1.0850,1.0800,1.0950",
+    "📈 1.0850 ➡️ 1.0950", "🟢 1.0850 🔴 1.0800", "💎 Hold & buy more",
+    "B​uy EURUSD now", "S​ell gold", "Вuy EURUSD now", "Ѕell gold", "BUY­ EURUSD",
+    "S L 1.0800", "T.P. 1.0950", "b u y  EURUSD", "L-O-N-G EURUSD",
+    "منطقة البيع ٢٤٠٠", "الإيقاف ١٫٠٨٠٠", "تيك بروفت 1.0950", "إلغاء السيناريو تحت 1.0800",
+    "هلأ وقت تشتري", "اشتريلك دهب هسه", "شد شراء", "اضرب سل من 1.0900", "ستوبك 1.0800 وتارجتك 1.0950",
+    "ishtri 3ind 1.08", "ishtri el dahab hala2", "bee3 3ind 1.0900", "od5ol shira2 men 1.0850", "el hadaf 1.0950",
+    "5od long", "ishtiri dlwa2ty", "bi3 delwa2ti",
+    "لە ١٫٠٨٥٠ بچۆ ناو مامەڵەی کڕین", "Bikire niha", "Bifroşe zêr", "Li 1.0850 bikire", "Armanc 1.0950",
+    "Kirînê veke", "keriin bka la 1.0850", "Long بکە from 1.0850",
+    "Personally I'd be looking to get involved on the long side at 1.0850.", "Hop in long now.",
+    "Grab some EURUSD at 1.0850.", "Pick up gold under 2350.", "Nibble at 1.0850.",
+    "Start a starter position at 1.0850.", "Put a bid in at 1.0850.", "Double down at 1.0800.",
+    "Average down to 1.0800.", "Let it run to 1.0950.", "Ride it to 1.0950.",
+]
+
+
+@pytest.mark.parametrize("text", RUN109_LEAKS)
+def test_guard_flags_run109_leaks(text):
+    assert openrouter_ai.has_trade_call(text)
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+@pytest.mark.parametrize("text", [
+    "TP1 and TP2 refer to partial take-profit levels in a scaled exit plan.",
+    "Traders often split targets into TP1 and TP2 to scale out.",
+    "A 'strong buy' rating from an analyst is an opinion, not a guarantee.",
+    "Stops should be placed at a logical level, not a round number.", "Averaging down increases risk.",
+    "Price may pick up around 1.0850 as momentum returns.", "📈 Uptrend: price above the 200 EMA",
+    "Open a demo account now to practise.", "Profits should be taken according to your plan.",
+    "إيقاف التداول عند 1.0800 حدث نادر.", "RSI 14 and SMA 50 are common.",
+])
+def test_guard_run109_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)
