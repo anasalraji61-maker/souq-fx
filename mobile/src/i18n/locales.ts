@@ -711,6 +711,11 @@ export type Dict = {
   journalCloseTimeInvalid: string;
   journalCloseTimeBeforeOpen: string;
   journalCloseTimeFuture: string;
+  journalOpenTimeLabel: string;
+  journalOpenTimeHint: string;
+  journalOpenTimeInvalid: string;
+  journalOpenTimeFuture: string;
+  journalCloseTimeNeedsOpen: string;
   journalSizePlaceholder: string;
   journalSizeA11y: string;
   journalSizeUnitsFix: string;
@@ -2214,6 +2219,11 @@ const ar: Dict = {
   journalCloseTimeInvalid: 'اكتب الوقت بهذه الصيغة: {example}',
   journalCloseTimeBeforeOpen: 'وقت الإغلاق يسبق وقت فتح الصفقة ({opened}) — راجعه',
   journalCloseTimeFuture: 'وقت الإغلاق بعد الآن — هل نسخته بتوقيت الوسيط؟ اكتبه بتوقيت جهازك',
+  journalOpenTimeLabel: 'وقت الفتح',
+  journalOpenTimeHint: 'اتركه فارغاً إن كنت تسجّل الصفقة الآن · بتوقيت جهازك لا بتوقيت خادم الوسيط في MT5 · مثل {example}',
+  journalOpenTimeInvalid: 'اكتب الوقت بهذه الصيغة: {example}',
+  journalOpenTimeFuture: 'وقت الفتح بعد الآن — هل نسخته بتوقيت الوسيط؟ اكتبه بتوقيت جهازك',
+  journalCloseTimeNeedsOpen: 'اكتب وقت الفتح أيضاً — لا يُحفظ وقت إغلاق بلا وقت فتح',
   journalSizePlaceholder: 'الحجم لوت (اختياري)',
   journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
   journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
@@ -3502,6 +3512,11 @@ const enUS: Dict = {
   journalCloseTimeInvalid: 'Type the time like this: {example}',
   journalCloseTimeBeforeOpen: 'The close time is before the trade was opened ({opened}) — check it',
   journalCloseTimeFuture: 'The close time is later than now — did you copy your broker’s server time? Type it in your device’s time',
+  journalOpenTimeLabel: 'Open time',
+  journalOpenTimeHint: 'Leave empty if you’re logging the trade as you open it · your device’s time, not your broker’s MT5 server time · e.g. {example}',
+  journalOpenTimeInvalid: 'Type the time like this: {example}',
+  journalOpenTimeFuture: 'The open time is later than now — did you copy your broker’s server time? Type it in your device’s time',
+  journalCloseTimeNeedsOpen: 'Add the open time too — a close time can’t be saved without one',
   journalSizePlaceholder: 'Size in lots (optional)',
   journalSizeA11y: 'Trade size in lots (optional)',
   journalSizeUnitsFix: '⚠ {n} looks like units, not lots — select it to convert to {lots} lot',
@@ -4850,6 +4865,11 @@ const ku: Dict = {
   journalCloseTimeInvalid: 'کاتەکە بەم شێوەیە بنووسە: {example}',
   journalCloseTimeBeforeOpen: 'کاتی داخستن پێش کاتی کردنەوەی مامەڵەکەیە ({opened}) — پشکنینی بکە',
   journalCloseTimeFuture: 'کاتی داخستن دوای ئێستایە — کاتی بڕۆکەرت کۆپی کردووە؟ بە کاتی ئامێرەکەت بینووسە',
+  journalOpenTimeLabel: 'کاتی کردنەوە',
+  journalOpenTimeHint: 'ئەگەر ئێستا مامەڵەکە تۆمار دەکەیت بەتاڵی بهێڵەوە · بە کاتی ئامێرەکەت نەک کاتی سێرڤەری بڕۆکەر لە MT5 · وەک {example}',
+  journalOpenTimeInvalid: 'کاتەکە بەم شێوەیە بنووسە: {example}',
+  journalOpenTimeFuture: 'کاتی کردنەوە دوای ئێستایە — کاتی بڕۆکەرت کۆپی کردووە؟ بە کاتی ئامێرەکەت بینووسە',
+  journalCloseTimeNeedsOpen: 'کاتی کردنەوەش بنووسە — کاتی داخستن بێ کاتی کردنەوە پاشەکەوت ناکرێت',
   journalSizePlaceholder: 'قەبارە بە لۆت (ئیختیاری)',
   journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
   journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
