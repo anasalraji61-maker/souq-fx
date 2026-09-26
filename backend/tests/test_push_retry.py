@@ -99,3 +99,22 @@ def test_one_owners_db_error_does_not_drop_the_others(worker):
     worker.setattr(alert_worker.expo_push, "send_push", _ok(sent))
     alert_worker._check_once()
     assert calls == [1, 2] and len(sent) == 1
+
+
+def test_push_appended_during_retry_is_not_cleared(worker, monkeypatch):
+    """run 55: `dispatch` يُلحق من خيط آخر بين نسخ القائمة وتفريغها ⇒ `clear()` كان يمحوه بلا إرسال."""
+    import time as _t
+    late = (["ExponentPushToken[b]"], "t", "late", _t.time())
+
+    class Racy(list):
+        def __getitem__(self, k):
+            out = super().__getitem__(k)
+            if isinstance(k, slice) and late not in self:
+                self.append(late)  # يصل مباشرةً بعد النسخ
+            return out
+
+    q = Racy([(["ExponentPushToken[a]"], "t", "old", _t.time())])
+    monkeypatch.setattr(alert_worker, "_pending_pushes", q)
+    monkeypatch.setattr(db, "existing_push_tokens", lambda tokens: [])
+    alert_worker._retry_pending_pushes()
+    assert list(q) == [late]

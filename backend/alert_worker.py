@@ -423,8 +423,11 @@ def _retry_pending_pushes() -> None:
     if not _pending_pushes:
         return
     now = time.time()
-    due = _pending_pushes[-_PUSH_RETRY_MAX_PENDING:]
-    _pending_pushes.clear()
+    # `dispatch` يُلحق من خيط آخر (BackgroundTask لـ/check): `clear()` بعد النسخ كان يمحو ما أُلحق بينهما
+    # فيضيع دفع تنبيه عُلِّم مُطلَقاً. تُحذف العناصر المنسوخة وحدها (الإلحاق وحده يجري بالتوازي).
+    n = len(_pending_pushes)
+    due = _pending_pushes[:n][-_PUSH_RETRY_MAX_PENDING:]
+    del _pending_pushes[:n]
     for tokens, title, body, first_at in due:
         if now - first_at > _PUSH_RETRY_MAX_AGE:
             log.warning("dropping push after %.0fs of failed retries: %s", now - first_at, body)
