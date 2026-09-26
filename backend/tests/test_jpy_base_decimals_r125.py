@@ -8,8 +8,10 @@ import signal_hub as s
 
 
 @pytest.mark.parametrize("sym", ["JPYUSD", "JPYEUR", "JPYGBP", "JPY/USD"])
-def test_jpy_base_decimals_follow_price_size(sym):
-    assert s.price_decimals(0.0067, sym) == s.price_decimals(0.0067) == 8
+def test_jpy_base_decimals_match_the_app(sym):
+    # QA148a: 7 كالتطبيق (pip 0.000001) لا 8 من حجم السعر — مستوى 0.00665931 كان يُطبع 0.0066593
+    assert s.price_decimals(0.0067, sym) == 7
+    assert s.price_decimals(0.0057, sym) == 7
 
 
 def test_other_pairs_keep_fixed_decimals():
