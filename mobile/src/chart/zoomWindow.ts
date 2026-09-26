@@ -21,6 +21,16 @@ export type ZoomWindow = { count: number; offset: number };
  * (الشارت يقسم اللوح على المعروض)، فكان «+» يحسب من 80 ⇒ 64 وتصير 64 شمعة ظاهرة — التكبير يُصغّر
  * الشموع (10 ⇒ 64)، والقرص كذلك (10 ⇒ 40). الآن من المعروض: 10 ⇒ 8 كـTradingView.
  */
+/**
+ * الإزاحة كما يرسمها الشارت: `min(offset, len − 10)` (`MatrixChart` نافذة الشموع). المخزَّنة قد تزيد — Line Break
+ * من 3 خطوط (68) إلى 5 (50) مسحوباً لأقدمه يُبقي 58 ⇒ `len − off` سالب فكان «+» يقفز من 10 شموع إلى 2، و«−» يكبّر إلى 3.
+ */
+const PAN_KEEP_BARS = 10;
+function drawnOffset(allLen: number, offset: number): number {
+  const off = Math.max(0, Math.round(offset));
+  return allLen > 0 ? Math.min(off, Math.max(0, allLen - PAN_KEEP_BARS)) : off;
+}
+
 function shownCount(allLen: number, count: number, off: number, min: number, max: number): number {
   const stored = Math.max(min, Math.min(max, Math.round(count)));
   return off > 0 && allLen > 0 ? Math.max(min, Math.min(stored, allLen - off)) : stored;
@@ -36,7 +46,7 @@ export function zoomWindow(
   focus = 0.5
 ): ZoomWindow {
   if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
-  const off = Math.max(0, Math.round(offset));
+  const off = drawnOffset(allLen, offset);
   const cur = shownCount(allLen, count, off, min, max);
   if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return { count: cur, offset: off };
   let next = Math.round(cur * factor);
@@ -81,7 +91,7 @@ export function pinchWindow(
   max = 1000
 ): ZoomWindow {
   if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
-  const off = Math.max(0, Math.round(startOffset));
+  const off = drawnOffset(allLen, startOffset);
   const cur = shownCount(allLen, startCount, off, min, max);
   if (!(startSpread > 0) || !(spread > 0)) return { count: cur, offset: off };
   const next = Math.max(min, Math.min(max, Math.round((cur * startSpread) / spread)));

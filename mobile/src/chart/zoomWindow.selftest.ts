@@ -63,7 +63,6 @@ assert.equal(pinchSpread(10, 12), 24);
 assert.equal(pinchSpread(200, 100), 100);
 assert.equal(pinchSpread(NaN, 1), 24);
 
-console.log('zoomWindow.selftest: PASS');
 
 // عجلة الفأرة حول المؤشّر: النافذة [300,400)، المؤشّر عند الربع (الشمعة 325) ⇒ بعد ×0.64 تبقى 325 عند الربع
 {
@@ -80,3 +79,14 @@ console.log('zoomWindow.selftest: PASS');
   const edge = zoomWindow(500, 100, 100, 0.64, undefined, undefined, 5);
   assert.equal(500 - edge.offset, 400, `focus clamps to the right edge: ${JSON.stringify(edge)}`);
 }
+
+// إزاحة مخزَّنة أكبر من المرسومة (Line Break 3 ⇒ 5، مسحوباً لأقدمه): الشارت يرسم 10 شموع (إزاحة 40)
+{
+  const zin = zoomWindow(50, 80, 58, 0.8);
+  assert.equal(zin.count, 8, `zoom in from the 10 drawn bars: ${JSON.stringify(zin)}`);
+  const zout = zoomWindow(50, 80, 58, 1.25);
+  assert.ok(zout.count > 10, `zoom out widens: ${JSON.stringify(zout)}`);
+  const p = pinchWindow(50, 80, 58, 100, 100, 0.5);
+  assert.equal(p.count, 10, `pinch at rest keeps the drawn window: ${JSON.stringify(p)}`);
+}
+console.log('zoomWindow.selftest: PASS');
