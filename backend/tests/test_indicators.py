@@ -204,3 +204,17 @@ def test_macd_noise_is_measured_against_price_not_macd():
     # MACD قرب الصفر: فرق 1e-15 نسبيّ لقيمته كبير، لكنه ضجيج بالنسبة لسعر 3.75
     assert ind.cross_up([1e-6, 1e-6 + 1e-15], [1e-6 + 1e-15, 1e-6], scale=3.75) is False
     assert ind.cross_up([1e-6, 2e-6], [1.5e-6, 1.5e-6], scale=3.75) is True
+
+
+def test_snapshot_crosses_null_when_not_computable():
+    # run 102: 20 شمعة ⇒ SMA21 وخطّ إشارة MACD غير محسوبين ⇒ التقاطعات None لا `false` («لا تقاطع» لم يُحسب)
+    import indicators as _ind
+    candles = [{"time": i * 60, "open": 1 + i / 1000, "high": 1.01 + i / 1000, "low": 0.99 + i / 1000,
+                "close": 1 + i / 1000, "volume": None} for i in range(20)]
+    snap = _ind.snapshot(candles)
+    assert snap["sma_slow"] is None
+    for k in ("ma_cross_up", "ma_cross_down", "macd_cross_up", "macd_cross_down"):
+        assert snap[k] is None
+    long = [{**c, "time": i * 60} for i, c in enumerate(candles * 3)]
+    snap = _ind.snapshot(long)
+    assert all(snap[k] in (True, False) for k in ("ma_cross_up", "ma_cross_down", "macd_cross_up", "macd_cross_down"))

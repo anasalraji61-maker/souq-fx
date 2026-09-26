@@ -150,6 +150,8 @@ def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> di
     m_line, m_sig = macd(closes)
     last = closes[-1]
     first = closes[0]
+    ma_known = _last_two(f, s) is not None
+    macd_known = _last_two(m_line, m_sig) is not None
     return {
         "last": last,
         # التغيّر على **كامل** السلسلة المُمرَّرة (180 شمعة: ~45 ساعة على 15m، ~6 أشهر على D) لا يومياً —
@@ -166,8 +168,9 @@ def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> di
         "sma_slow": s[-1],
         "macd": m_line[-1],
         "macd_signal": m_sig[-1],
-        "ma_cross_up": cross_up(f, s, last),
-        "ma_cross_down": cross_down(f, s, last),
-        "macd_cross_up": cross_up(m_line, m_sig, last),
-        "macd_cross_down": cross_down(m_line, m_sig, last),
+        # سلسلة أقصر من المتوسّطين/خطّ الإشارة ⇒ None لا `false`: «لا تقاطع» ادّعاء عن تقاطع لم يُحسب أصلاً
+        "ma_cross_up": cross_up(f, s, last) if ma_known else None,
+        "ma_cross_down": cross_down(f, s, last) if ma_known else None,
+        "macd_cross_up": cross_up(m_line, m_sig, last) if macd_known else None,
+        "macd_cross_down": cross_down(m_line, m_sig, last) if macd_known else None,
     }
