@@ -581,6 +581,19 @@ def test_pre_signup_trades_leave_with_the_deleted_account_not_to_the_next_one(cl
     assert body["trades"] == [] and body["stats"]["trade_count"] == 0
 
 
+def test_device_row_written_after_the_first_claim_is_deleted_with_the_account(client):
+    """run 84: النقل مرّة لكل توكن ⇒ كتابة مجهولة من الجهاز بعد أوّل طلب مسجّل بقيت `user_id=NULL`:
+    تظهر بدفتر الحساب ولا يمحوها الحذف، فيتبنّاها الحساب التالي على الهاتف."""
+    alice = _signup(client, "alice")
+    client.get("/api/trades", headers=alice)  # أوّل نقل لهذا التوكن
+    _open_trade(client, exit=1.0900)  # طلب مجهول متأخّر من الجهاز نفسه
+    assert client.get("/api/trades", headers=alice).json()["stats"]["trade_count"] == 1
+    assert client.delete("/api/auth/account", headers=alice).status_code == 200
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+    bob = _signup(client, "bob")
+    assert client.get("/api/trades", headers=bob).json()["trades"] == []
+
+
 def test_pre_signup_rows_follow_the_account_to_a_second_phone(client):
     _open_trade(client)
     alice = _signup(client, "alice")

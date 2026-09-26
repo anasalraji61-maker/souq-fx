@@ -925,11 +925,19 @@ def auth_me(user: dict | None = Depends(_auth_user)):
 
 
 @app.delete("/api/auth/account")
-def auth_delete_account(user: dict | None = Depends(_auth_user)):
+def auth_delete_account(
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     """حذف الحساب من داخل التطبيق — شرط إلزامي لأبل (App Store Review Guideline
     5.1.1(v)). راجع db.delete_user_account للتفصيل الكامل لآلية المحو."""
     if not user:
         raise HTTPException(status_code=401, detail="not authenticated")
+    if key:
+        # نقل صفوف الجهاز المجهولة يجري مرّة لكل توكن (`_CLAIMED`) ⇒ صفقة/تنبيه مجهول كُتب من الجهاز بعد
+        # أوّل نقل (أثناء إكمال الدخول) يبقى `user_id=NULL`: يراه الحساب بدفتره، والحذف (`WHERE user_id`)
+        # يُبقيه، والحساب التالي على الهاتف يتبنّاه. يُنقل هنا دائماً ثم يُحذف مع الحساب.
+        db.claim_device_rows(int(user["user_id"]), key)
     db.delete_user_account(user["user_id"])
     return {"ok": True}
 
