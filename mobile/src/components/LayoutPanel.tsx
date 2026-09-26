@@ -282,8 +282,10 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontWeight: '500', textAlign: 'right' },
   hint: { color: colors.textDim, fontSize: 11, lineHeight: 16 },
-  saved: { color: colors.bull, fontSize: 11, fontWeight: '500' },
-  currentTag: { color: colors.accent, fontWeight: '500', fontSize: 11 },
+  // §1: زرّ «حفظ» هو عنصر التأكيد الوحيد باللوحة؛ الأخضر لاتجاه السعر وحده — التأكيد والوسم نصّ ثانويّ
+  // (الوسم كلمة «الحالي» لا لون وحده).
+  saved: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  currentTag: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
