@@ -211,6 +211,10 @@ class VoteCreate(BaseModel):
             raise ValueError("buy idea needs sl < entry < tp")
         if self.direction == "sell" and not (self.tp < self.entry < self.sl):
             raise ValueError("sell idea needs tp < entry < sl")
+        # وقف 5e-324 وهدف 1.7e308 كانا يُنشران: R:R عند العميل Infinity. لا أداة يتحرّك سعرها ×10 لفكرة
+        # صفقة واحدة ⇒ المستويان ضمن عُشر الدخول وعشرة أضعافه (يكفي تقلّب العملات الرقمية نفسها).
+        if not all(self.entry / 10 <= v <= self.entry * 10 for v in (self.sl, self.tp)):
+            raise ValueError("sl/tp must be within 10x of entry")
         return self
 
 
@@ -244,7 +248,8 @@ def _has_link(text: str) -> bool:
 
 
 class VoteBallot(BaseModel):
-    vote_id: str
+    # كالبلاغ (`ContentReport.target_id`): كان بلا حدّ ⇒ 5MB معرّف يُقبل ويُبحث عنه
+    vote_id: str = Field(min_length=1, max_length=64)
     choice: Literal["agree", "disagree"]
 
 
