@@ -6929,6 +6929,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }, [canPan, chartW, chartPlotW, schedulePublishSync, zoomAroundCenter, zoomPrice, panByButton]);
 
   const toggleInd = (id: IndicatorId) => {
+    // مؤشّر أضافته العدسة (زخم ⇒ RSI/MACD…) لا يُطفأ من `extraInd` وحده — كان الزرّ لا يفعل شيئاً، ويبقى المؤشّر
+    // بعد العودة إلى «نظيف». إطفاؤه يحوّل العدسة إلى اختيار يدوي: بقيّة ما كانت تعرضه تبقى ظاهرة، وهو وحده يُطفأ.
+    if (LENS_PRESETS[lens].includes(id)) {
+      setExtraInd(selectedInd.filter((x) => x !== id));
+      setLens('clean');
+      return;
+    }
     setExtraInd((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
