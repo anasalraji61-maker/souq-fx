@@ -27,6 +27,9 @@ import { markOnboardingSeen } from '../onboarding';
 import { api } from '../api';
 import { confirmDestructive } from '../chart/confirmDestructive';
 
+/** قرار أنس ٧ (`docs/DECISIONS-ANAS.md`): طول فقط، بلا شروط تعقيد. */
+const PASSWORD_MIN_LENGTH = 8;
+
 type SideId = 'left' | 'right';
 
 export function AccountScreen() {
@@ -140,6 +143,11 @@ export function AccountScreen() {
         await login(ident, password);
       } else {
         if (!username.trim() || !email.trim()) throw new Error('missing fields');
+        // قرار أنس ٧: ٨ أحرف حدّاً أدنى للحساب الجديد وللكلمة الجديدة؛ الدخول لا يُفحص (حسابات قديمة بـ٤).
+        if (password.length < PASSWORD_MIN_LENGTH) {
+          setErr(t.regErrPasswordLength);
+          return;
+        }
         await register(username.trim(), password, {
           email: email.trim(),
           // الخادم يقبل `trader` وحده بالتسجيل الذاتي (backend `06ea3ab`)؛ الأدوار الأخرى يمنحها الراعي بالشبكة.
@@ -159,8 +167,8 @@ export function AccountScreen() {
 
   const submitPasswordChange = async () => {
     setPwMsg(null);
-    // حدّ الخادم نفسه (`db.change_password` <4 ⇒ 400) — لا طلب يُعرف رفضه مسبقاً.
-    if (pwNew.length < 4) {
+    // قرار أنس ٧ (الخادم ما زال <4 ⇒ 400 حتى يرفعه backend) — لا طلب يُعرف رفضه مسبقاً.
+    if (pwNew.length < PASSWORD_MIN_LENGTH) {
       setPwMsg({ ok: false, text: t.regErrPasswordLength });
       return;
     }
