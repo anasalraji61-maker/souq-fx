@@ -1981,6 +1981,28 @@ export function scaleOutPlan(input: {
   };
 }
 
+/**
+ * سطر الحاسبة لجني الربح الجزئي (`riskCalcScaleOut`): **نصف** المركز عند **1R** والباقي للهدف (`rr` = R:R بالمال المعروضة).
+ * يُعرض فقط حين الهدف أبعد من 1R — بـ1:1 أو أقل يُبلغ الهدف قبل الجني الأول (أو معه) فلا معنى للقسمة. `worst`/`best` نصّان
+ * بمنزلتين **للأسفل** بلا أصفار زائدة (0.6 لا 0.60): ربحٌ لا يُعرض أكبر ممّا هو. `null` = لا سطر.
+ */
+export function scaleOutHalfAtOneR(
+  lots: number | null,
+  rr: number | null
+): { close: string; keep: string; pct: string; worst: string; best: string } | null {
+  if (lots == null || rr == null || !Number.isFinite(rr) || rr <= 1) return null;
+  const p = scaleOutPlan({ lots, closePct: 50, r1: 1, r2: rr });
+  if (!p || p.bestR == null) return null;
+  const down = (v: number) => String(Math.floor(Math.round(v * 100 * 1e6) / 1e6) / 100);
+  return {
+    close: p.close.toFixed(2),
+    keep: p.keep.toFixed(2),
+    pct: String(p.closedPct),
+    worst: down(p.worstR),
+    best: down(p.bestR),
+  };
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 /**

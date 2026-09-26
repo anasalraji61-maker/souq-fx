@@ -81,6 +81,7 @@ import {
   riskIsHigh,
   breakevenRR,
   lossStreakDrawdownPct,
+  scaleOutHalfAtOneR,
   spreadTooWide,
   spreadMaybePrice,
   stopInsideSpread,
@@ -1141,6 +1142,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const lowWarn = plan?.ok ? lowRewardWarning(planRR, netAfterCosts) : null;
   // الصافية حين تُكتب التكاليف: التعادل الحقيقي بعد السبريد والعمولة — راجع `breakevenRR`
   const breakevenPct = breakevenWinRatePct(breakevenRR(planRR, netAfterCosts));
+  /** نصف المركز عند 1R والباقي للهدف — على خطوة اللوت الفعلية (0.05 ⇒ 0.03/0.02). راجع `scaleOutHalfAtOneR` */
+  const scaleOut = potentialProfit != null ? scaleOutHalfAtOneR(lots, planRR) : null;
 
   /**
    * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
@@ -1817,6 +1820,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             {breakevenPct != null ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>
                 {t.planBreakevenWinRate.replace('{pct}', String(breakevenPct))}
+              </Text>
+            ) : null}
+            {scaleOut ? (
+              <Text style={[styles.resultMeta, { textAlign: align }]}>
+                {t.riskCalcScaleOut
+                  .replace('{close}', scaleOut.close)
+                  .replace('{pct}', scaleOut.pct)
+                  .replace('{keep}', scaleOut.keep)
+                  .replace('{worst}', scaleOut.worst)
+                  .replace('{best}', scaleOut.best)}
               </Text>
             ) : null}
             {netAfterCosts ? (

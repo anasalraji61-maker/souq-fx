@@ -11,6 +11,7 @@ import {
   lossStreakDrawdownPct,
   dailyLossRoom,
   scaleOutPlan,
+  scaleOutHalfAtOneR,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3777,3 +3778,33 @@ console.log('positionSize dailyLossRoom selftest OK');
   assert.equal(scaleOutPlan({ lots: 1, closePct: 50, r1: 1, r2: -1 })!.bestR, null);
 }
 console.log('positionSize scaleOutPlan selftest OK');
+
+// ---- scaleOutHalfAtOneR: سطر الحاسبة — نصف عند 1R والباقي للهدف ----
+{
+  // 0.10 لوت، 1:2 ⇒ 0.05/0.05، +0.5R بالتعادل، +1.5R عند الهدف
+  assert.deepEqual(scaleOutHalfAtOneR(0.1, 2), { close: '0.05', keep: '0.05', pct: '50', worst: '0.5', best: '1.5' });
+  // 0.05 لوت ⇒ 0.03/0.02 (60%): +0.6R، والأفضل 0.6 + 0.4 × 2.96 = 1.784 ⇒ «1.78» (للأسفل)
+  assert.deepEqual(scaleOutHalfAtOneR(0.05, 2.96), { close: '0.03', keep: '0.02', pct: '60', worst: '0.6', best: '1.78' });
+  // للأسفل لا لأقرب: 0.5 + 0.5 × 2.999 = 1.9995 ⇒ «1.99» لا «2»
+  assert.equal(scaleOutHalfAtOneR(0.1, 2.999)!.best, '1.99');
+  // الفاصلة العائمة لا تُنزل منزلة: 0.5 + 0.5 × 2.3 = 1.65 بالضبط
+  assert.equal(scaleOutHalfAtOneR(0.1, 2.3)!.best, '1.65');
+  // الهدف عند 1R أو أقرب ⇒ لا سطر؛ 0.01 لا يُقسم؛ بلا لوت/R:R
+  assert.equal(scaleOutHalfAtOneR(0.1, 1), null);
+  assert.equal(scaleOutHalfAtOneR(0.1, 0.8), null);
+  assert.equal(scaleOutHalfAtOneR(0.01, 3), null);
+  assert.equal(scaleOutHalfAtOneR(null, 3), null);
+  assert.equal(scaleOutHalfAtOneR(0.1, null), null);
+  assert.equal(scaleOutHalfAtOneR(0.1, NaN), null);
+  // خاصية: المعروض ≤ الحقيقي وبفارق < 0.01، والأسوأ < الأفضل
+  for (let i = 0; i < 2000; i++) {
+    const lots = (2 + Math.floor(Math.random() * 3000)) / 100;
+    const rr = 1.01 + Math.random() * 9;
+    const r = scaleOutHalfAtOneR(lots, rr)!;
+    const exact = scaleOutPlan({ lots, closePct: 50, r1: 1, r2: rr })!;
+    assert.ok(Number(r.best) <= exact.bestR! + 1e-9 && exact.bestR! - Number(r.best) < 0.01 + 1e-9);
+    assert.ok(Number(r.worst) <= exact.worstR + 1e-9 && exact.worstR - Number(r.worst) < 0.01 + 1e-9);
+    assert.ok(Number(r.worst) < Number(r.best));
+  }
+}
+console.log('positionSize scaleOutHalfAtOneR selftest OK');
