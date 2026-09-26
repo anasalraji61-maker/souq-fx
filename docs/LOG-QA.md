@@ -1367,3 +1367,4 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (الثاني والخمسون):** 0/12 فشل (diff منذ d7392e2: `AppErrorBoundary` نصّ ويب، `CalendarPanel` منطق، `locales.ts`).
 **المراجعة (b — نصوص ثابتة):** «MATRIX» ×2، «Log»/«TPO»، `placeholder="EURUSD"` ×3 — معروفة؛ `appCrashRepeatBodyWeb` بثلاث لغات. **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (406ef0f):** أخضر 0؛ `notifications.selftest` ناجح. diff ui 120: شريحة «MACD ↓» محايدة بسهم (الخادم يرسل `macd_cross_down` — `indicators.py:175`)، نصّ الإعداد الرابع للويب بثلاث لغات، `؟` للاختصارات — لا أنماط جديدة ⇒ قائمة القبول 0/12.
