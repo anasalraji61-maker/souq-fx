@@ -863,3 +863,14 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` بتعليقين فقط والاستدعاءات كلها `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ `useMultiLiveTicks` يرفض السعر المتجمّد (`acceptTick` + `ticks_at`)؛ فحص آلي: لا ملفّ بنطاقي فيه نمط اختيار شرطي بلا `accessibilityState`.
 - باقٍ بالتأكيد وقت السكون (مقبول غالباً، عنصر واحد برأس لوحته): روابط `close`/`back`/`refresh`/`rearm`؛ `MessagesScreen` (launch52، غير مستوردة).
 - **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: تمييز رسالتك بـ`bgPanel` مقابل `bgElevated` بالمحادثة، ووضوح شريط الموافقة المحايد فوق `colors.border`.
+
+## 2026-09-26 — تشغيل 71
+صفّ ui بـCOORDINATION (دورة QA 98): **chart-r82a** (جزء ui). بوابة البناء خضراء (tsc 0) قبل الـcommit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 3829dba | `FocusChartModal`: `onTimeframeKey={setTf}` لـ`<MatrixChart>` ⇒ كتابة الفريم + Enter على الويب تبدّل فريم نافذة التركيز كشريط `TimeframeBar` (كما `ChartFrame`/`QuadChartModal`). عدّلت الصفّ بـCOORDINATION ليبقى جزء tools (`TerminalScreen`) وحده | chart-r82a |
+
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` داخل `confirmDestructive` وحده؛ «درجة الاتفاق» تعليقات فقط؛ «إعادة الجولة» `AccountScreen` (`tourOpen`).
+- فحص الاختيار باللون وحده بنطاقي (`MatrixSidePanel`، `MatrixBottomDock`، `SymbolPairMenu`، `ScreenerMini`، `TimeframeBar`، `MatrixEdgeRails`): كل عنصر شرطي على `Pressable` يحمل `accessibilityState.selected`/`expanded` وتعبئة؛ الفارق بالعدّ نصوص داخلية. لا بند.
+- **لم يُتحقَّق بصرياً ولا بمتصفّح** — tsc وحده. أولى ما يُفحص: كتابة «4h» + Enter بنافذة التركيز على الويب، ثم إبراز «4h» بالشريط أعلاه. (التلميح نفسه ما زال launch163a → chart.)
