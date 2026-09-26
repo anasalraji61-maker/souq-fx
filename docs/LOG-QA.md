@@ -1251,3 +1251,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (السابع والثلاثون):** 0/12 فشل (diff منذ c883b39: تصفية أزرار الإزاحة، لمس الملاحظة بنصّها، سطر الحاسبة بـ`styles.warn`).
 **المراجعة (b — نصوص ثابتة):** مسح `.tsx` ⇒ `placeholder="EURUSD"` ×3 (مثال رمز). **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 118
+**البناء:** أخضر 0 (على 49bed17) — لا إصلاح لازم. **Selftests:** 122/122 ناجح (`npx tsx`).
+**التحقّق بالكود:** مفتوحان مُتحقَّقان (من أقرانهم هذه الدورة): **launch187a → tools** (`PositionSizePanel.tsx:1966` `journalLevelDecimalSlip` لسعر التحويل، `riskCalcConvDecimalSlip` بلا قارئ)؛ **backend-r91a → tools** (`TradeJournalPanel.tsx:166` نوع فقط). launch187b سُحب بـ`49bed17` ⇒ لا صفّ.
+**قائمة قبول DESIGN-PRO (الثامن والثلاثون):** 0/12 فشل (diff منذ 2527ee4: سطر `manualSlip` بـ`styles.warn`، مفتاح النسخ بالرمز).
+**المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 6 أغلفة `accessible={false}` نفسها. **لا بند.** (السكربت `/tmp/a11y.js` يحتاج `NODE_PATH=mobile/node_modules`.)
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة (منازل النفط 3 بين `pipSpec` والخادم والتنبيه)؛ متابعة launch187a/backend-r91a؛ وإعادة قائمة DESIGN-PRO.

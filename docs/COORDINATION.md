@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 117، على 2527ee4) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 118، على 49bed17) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -23,7 +23,7 @@
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
 | backend | tools | **backend-r91a** `PATCH /api/trades/{id}` يقبل الآن `closed_at` (`bf6d37a`): ISO كالإنشاء، null = «غير معروف»، 422 `invalid_closed_at` إن بقيت الصفقة مفتوحة أو سبق `opened_at`. مسح الخروج بنموذج التعديل ثم إعادة كتابته كان يختم «الآن» فتُعدّ صفقة أغسطس من هذا الأسبوع بالتقرير الأسبوعي وسلسلة الخسائر. المطلوب بنموذج تعديل `TradeJournalPanel`: حقل وقت الإغلاق للصفقة المغلقة (يُرسَل مع `exit`)، وإن بقي فارغاً عند إعادة إغلاق صفقة كانت مغلقة فأرسلوا `closed_at` المحفوظ قبل المسح | backend-r91 |
 
-**تحقّق الدورة 117 (بالكود، على 8227339 ثم 2527ee4 بعد السحب):** البناء أخضر 0، selftests 122/122 ناجح.
-**أُغلق (منجز بالكود — ينتظر نظرة أنس):** launch186a ← tools `8227339` (`PositionSizePanel.tsx:1636–1638` يعرض `riskCalcSuffixSymbol` حين `suffixPair`، و`replace` بدالّة فلا يُفسَّر `$` بالرمز).
-**قائمة قبول DESIGN-PRO (السابع والثلاثون): 0 من 12 فشل** — diff منذ c883b39: أزرار الإزاحة تُصفّى حسب الأداة (الأزرار نفسها المسمّاة)، لمس الملاحظة بنصّها، سطر الحاسبة بنمط `styles.warn` القائم.
-**المراجعة (b — نصوص ثابتة):** مسح `.tsx` (نصّ عربي بين وسوم، `accessibilityLabel`/`placeholder`/`title` حرفية) ⇒ `placeholder="EURUSD"` ×3 مثال رمز فقط. **لا بند.** لا صفّ مفتوح لوكيل برمجي عدا QA1 (جهاز).
+**تحقّق الدورة 118 (بالكود، على 49bed17):** البناء أخضر 0، selftests 122/122 ناجح.
+**مفتوح مُتحقَّق:** launch187a → tools (`PositionSizePanel.tsx:1966` ما زال `journalLevelDecimalSlip` و`riskCalcConvDecimalSlip` بلا قارئ)؛ backend-r91a → tools (`TradeJournalPanel.tsx:166` نوع `closed_at` فقط — لا حقل ولا إرسال بنموذج التعديل). launch187b سُحب (`49bed17`) فلا صفّ له.
+**قائمة قبول DESIGN-PRO (الثامن والثلاثون): 0 من 12 فشل** — diff منذ 2527ee4: سطر `manualSlip` بنمط `styles.warn` القائم، ومفتاح Ctrl+V بالرمز وحده (منطق). لا عنصر تفاعلي جديد.
+**المراجعة (c — `accessibilityLabel`):** مسح AST (TypeScript API) لكل `Pressable`/`Touchable*`/`Switch`/`TextInput` ⇒ 6 أغلفة `accessible={false}` نفسها (حاوية/تحويم، الداخلي مسمّى). **لا بند.**
