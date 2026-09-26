@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-27 (دورة QA 149، على 3c1ee7a) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-27 (دورة QA 150، على 7d8e2d2) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -22,7 +22,8 @@
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
 | backend | ui | **backend-r127** `/api/backtest` صار يرسل `as_of` (وقت جلب الشموع؛ مع `data_kind: cache` قد يكون حتى 15د) — `72c8725`. `BacktestPanel` يعرض النتيجة بلا وقت بياناتها: اعرضوه كما تعرض اللقطة/التوقّع `price_as_of` («بيانات حتى HH:MM»)، و`data_kind: cache` ⇒ «من الكاش» | backend-r127 |
 | ui | launch | **ui143a** (لـbackend-r127): `BacktestPanel` يحتاج مفتاحاً ×3 لغات `backtestDataAsOf` بـ`{time}` (من `formatLocalStamp`) — مثلاً «النتيجة على شموع جُلبت {time} بتوقيتك»؛ و`{cache}` اختياري أو مفتاح ثانٍ `backtestDataCached` حين `data_kind: 'cache'` («من الكاش — قد تتأخّر حتى 15 دقيقة»). `screenerPriceAsOf` («إغلاق {time}») لا يصلح: `as_of` وقت جلب لا إغلاق شمعة. النوع جاهز (`api.ts` `as_of`، `c1feec8`)؛ أربطه فور وصوله | ui143 |
+| QA | ui | **QA150a** `BacktestPanel.tsx:382-385` صفقة `pnl_pct` = 0 (الخادم يقرّب لـ3 منازل ويعدّها تعادلاً `breakeven_count`، كالدفتر) تُرسم «+0%» **بالأخضر** ⇒ القائمة تسمّيها ربحاً والإحصاء فوقها تعادلاً. اجعلوا 0 بلون `colors.textDim` بلا «+» كصفّ الدفتر (`TradeJournalPanel.tsx:1954`) | QA150 |
 
-**تحقّق الدورة 149 (بالكود، على 3c1ee7a):** البناء أخضر 0، selftests 125/125 ناجح. أُغلقت **chart-r121a** ← tools `0d3097c` (`TerminalScreen.tsx:1834/2005` `onIndicatorsChange`، حفظ `INDICATORS_KEY` `:126/275`)، و**tools154a** ← chart `1b184bc` (`MatrixChart.tsx` `setLens('clean')` حين تعيد الأمّ القائمة)، و**QA148a** ← backend `b5c6151` (`signal_hub.py:241` الين أساساً 7)، و**ui141a** ← launch `eb17b82` + ui `5f46166` (`WeeklyReportPanel.tsx:143`). **لا صفّ مفتوح لوكيل برمجي** عدا QA1. DESIGN-PRO وDECISIONS-ANAS بلا تغيير منذ defa994.
-**قائمة قبول DESIGN-PRO (التاسع والستّون): 0 من 12 فشل** — diff `.tsx` منذ f520ea4 (مع tools `4c297ba` حفظ نوع الشارت والعدسة): `hiLoElbow` بـ`colors.textMuted` داخل الشارت (محتوى شارت)؛ الباقي منطق — لا نمط ولا زرّ جديد.
-**المراجعة (d — أرقام متناقضة):** منازل السعر بالخادم (`_instrument_decimals`) والتطبيق (`symbolPriceDecimals`) متطابقة لـ33 رمزاً بتشغيل فعلي (فوركس، ين أساساً/مقابلاً، فورنت، معادن، نفط، غاز، كريبتو). **لا بند.**
+**تحقّق الدورة 150 (بالكود، على 7d8e2d2):** البناء أخضر 0 (قبل السحب وبعده)، selftests 125/125. أُغلقت **launch224a** ← ui `c1feec8` (`BacktestPanel.tsx:280` `backtestRuined`، `:361` `backtestTradesTruncated`؛ المفتاحان ×3 لغات) — حذفها ui وتحقّقتُ. **backend-r127** مفتوحة (دورتها الأولى): `BacktestPanel` لا يقرأ `as_of` بعد، معلَّقة على **ui143a → launch** (لا `backtestDataAsOf` بـ`locales.ts`). DESIGN-PRO وDECISIONS-ANAS بلا تغيير منذ defa994.
+**قائمة قبول DESIGN-PRO (السبعون): 0 من 12 فشل** — diff `.tsx` منذ 852fafc: سطرا الاختبار الخلفي بأنماط قائمة (`sampleWarn`/`ranFor`)، لون أسطورة DMA محتوى شارت، الباقي منطق — لا نمط ولا زرّ جديد.
+**المراجعة (e — ما يُحرج أمام متداول):** نصوص الاختبار الخلفي الجديدة سليمة بالقواميس الثلاثة؛ بند واحد ⇒ **QA150a → ui**.
