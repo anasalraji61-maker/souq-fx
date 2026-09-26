@@ -308,14 +308,15 @@ def indicator_forecast(
         lo = min(float(c["low"]) for c in recent)
         # مدى صفري (14 شمعة بلا حركة) ⇒ لا %K: كان `or 1e-9` يعطي %K=0 ⇒ «تشبّع بيعي» وصوت شراء +0.6 من لا حركة
         if hi > lo:
-            k = (last - lo) / (hi - lo) * 100
+            # التصنيف على %K المعروض (كـRSI): 79.6 كان «%K≈80» بصوت −0.37 و80 «%K≈80» بصوت −0.6
+            k = round((last - lo) / (hi - lo) * 100)
             if k >= 80:
                 score = -0.6
             elif k <= 20:
                 score = 0.6
             else:
                 score = (50 - k) / 80
-            add("stoch", "stoch", score, "stoch_k", k=round(k))
+            add("stoch", "stoch", score, "stoch_k", k=k)
 
     # Multi-bar trend
     # «آخر 10 شموع» = من إغلاق ما قبلها إلى الأخير (10 حركات) — كان `closes[-10]` أي 9 حركات فقط

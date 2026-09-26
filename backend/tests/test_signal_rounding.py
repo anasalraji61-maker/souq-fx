@@ -109,3 +109,15 @@ def test_rsi_still_votes_on_moving_series():
           "close": 1.1 + i * 1e-4} for i in range(60)]
     out = signal_hub.indicator_forecast("EURUSD", c, enabled=["rsi"])
     assert [v["id"] for v in out["votes"]] == ["rsi"]
+
+
+def test_stochastic_vote_matches_the_displayed_k():
+    """run 55: %K 79.6 يُعرض «≈80» فيُصوّت كـ80 (تشبّع −0.6) لا −0.37."""
+    def series(last):
+        c = [{"open": 1.1, "high": 1.2, "low": 1.0, "close": 1.1} for _ in range(20)]
+        c[-1] = {"open": 1.1, "high": 1.2, "low": 1.0, "close": last}
+        return c
+    a = signal_hub.indicator_forecast("EURUSD", series(1.0 + 0.2 * 0.796), enabled=["stoch"])["votes"][0]
+    b = signal_hub.indicator_forecast("EURUSD", series(1.0 + 0.2 * 0.80), enabled=["stoch"])["votes"][0]
+    assert a["detail_values"]["k"] == b["detail_values"]["k"] == 80
+    assert a["score"] == b["score"] == -0.6

@@ -2278,8 +2278,8 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
         # رابح 33 نقطة على اليورو مجموعها −5.5e-17 ⇒ `-0.0` ⇒ «صافي −0.00%» خسارة لم تحدث. وأفضل/أسوأ كذلك.
         "total_pnl_pct": round(sum(pnls), 2) + 0.0,
         # بلا رابحة لا متوسّط ربح (None لا 0): «متوسّط الربح 0%» يُقرأ «ربحت صفقات بلا شيء» — كـ`backtest._stats`
-        "avg_win": round(sum(wins) / len(wins), 2) if wins else None,
-        "avg_loss": round(sum(losses) / len(losses), 2) if losses else None,
+        "avg_win": round(sum(wins) / len(wins), 2) + 0.0 if wins else None,
+        "avg_loss": round(sum(losses) / len(losses), 2) + 0.0 if losses else None,  # لا «-0.0»
         "best": round(max(pnls), 2) + 0.0,
         "worst": round(min(pnls), 2) + 0.0,
         "win_count": len(wins),

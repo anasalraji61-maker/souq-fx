@@ -800,3 +800,12 @@ def test_closing_open_trade_by_patch_still_stamps_now(client):
     t = _open_trade(client)
     row = client.patch(f"/api/trades/{t['id']}", json={"exit": 1.107}, headers=_DEV1).json()["trade"]
     assert row["status"] == "closed" and row["closed_at"]
+
+
+def test_journal_averages_are_never_negative_zero(client):
+    """run 55: خسارة 0.3 نقطة ⇒ avg_loss «-0.0» (best/worst كانا مصحَّحين، المتوسّطان لا)."""
+    _open_trade(client, entry=1.08, exit=1.07997)
+    _open_trade(client, entry=1.08, exit=1.08004)
+    st = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert st["win_count"] == 1 and st["loss_count"] == 1
+    assert repr(st["avg_loss"]) == "0.0" and repr(st["avg_win"]) == "0.0"
