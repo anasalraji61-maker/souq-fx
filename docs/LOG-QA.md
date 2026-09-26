@@ -1439,3 +1439,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (الحادي والستّون):** 0/12 فشل (`formNotice` بـ`textMuted`/`spacing.xs`؛ الباقي وسوم داخل الشارت ومنطق).
 **المراجعة (a — ميت/تصديرات):** 0 `export` قيمةً بلا أي استعمال. **لا بند.**
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 142
+**البناء:** أخضر 0 (على 628b9be ثم بعد السحب dfab4b9؛ `tradePlan.selftest` ناجح) — لا إصلاح لازم. **Selftests:** 125/125 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت backend-r118 ← `cdd9ec9` (`TradeJournalPanel.tsx:1457-1460` أساس `seen_*` من ردّ `updateTrade`)، وui131a ← backend `b5f2f0a` (`main.py:2416/2441`)، وlaunch214a ← ui `e5d3f9f` (`expo ~57.0.25`)، وtools147a ← backend `38ac0c1`. بعد السحب (dfab4b9) أُغلقت launch215a ← ui `728d014` (`AiPanel.tsx:119`) وchart-r116a ← ui `122dd67` (`DomLitePanel.tsx:75/118`). **لا صفّ مفتوح لوكيل برمجي** عدا QA1. STATUS: أُزيل «`npx expo install --fix` قبل أول بناء» من «ينتظر أنس» (نُفّذ).
+**قائمة قبول DESIGN-PRO (الثاني والستّون):** 0/12 فشل (diff منذ 825ecf8: ألوان رؤوس لوحات المؤشّر محتوى شارت؛ الباقي منطق — لا نمط ولا زرّ جديد).
+**المراجعة (b — نصوص ثابتة):** «Log»/«TPO»/«MACD ↑↓»/`placeholder="EURUSD"`/«MATRIX» رموز معروفة؛ موجّهات `WeeklyReportPanel` للنموذج لا للواجهة. **لا بند.**
+**الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
