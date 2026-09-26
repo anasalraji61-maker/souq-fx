@@ -298,9 +298,15 @@ export function QuadChartModal({
                 <Text style={[styles.tabSym, on && styles.tabSymOn]} numberOfLines={1}>
                   {tabSym}
                 </Text>
-                <Text style={styles.tabPrice} numberOfLines={1}>
-                  {priceText ?? '—'}
-                </Text>
+                {d.noReal ? (
+                  <Text style={styles.demoTag} numberOfLines={1}>
+                    {t.dsKindUnavailable}
+                  </Text>
+                ) : (
+                  <Text style={styles.tabPrice} numberOfLines={1}>
+                    {priceText ?? '—'}
+                  </Text>
+                )}
                 <Text style={[styles.tabPct, { color: d.pct == null ? colors.textDim : d.pctColor }]} numberOfLines={1}>
                   {pctText ?? ' '}
                 </Text>
