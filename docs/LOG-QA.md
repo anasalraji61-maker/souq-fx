@@ -1297,3 +1297,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (c — `accessibilityLabel`):** مسح AST (`/tmp/a11y.js` من `mobile/`) ⇒ 6 أغلفة `accessible={false}` المعروفة نفسها. **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة (`newsClockMs`/`serverNowSec` مقابل مؤقّتات أخرى ما زالت بـ`Date.now()`)؛ متابعة chart103a؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (fb42cf7):** أخضر 0؛ selftests المتغيّرة (`zoomWindow`/`tradePlan`) ناجحة. أُغلقت chart103a ← ui `ecfafb6` (`FocusChartModal.tsx:286/336/383` بمرجع `last`). diff الجديد منطق (تكبير، أونصات الدفتر، علامة المحور) بلا أنماط جديدة ⇒ قائمة القبول 0/12. **لا صفّ مفتوح لوكيل برمجي** عدا QA1.
+
+## 2026-09-26 — الدورة 124
+**البناء:** أخضر 0 (على 6a28cf7) — لا إصلاح لازم. **Selftests:** 123/123 ناجح (`npx tsx`).
+**التحقّق بالكود:** مفتوح جديد مُتحقَّق **launch194a → tools** (`TradeJournalPanel.tsx:1312` ما زال `t.invalidNumberHint`، المفتاح `journalSizeInvalidHint` موجود بـ`locales.ts`). سجلّات ui 108 وbackend 98 وchart 104 بلا طلب جديد.
+**قائمة قبول DESIGN-PRO (الرابع والأربعون):** 0/12 فشل (diff منذ fb42cf7: Bid/Ask بـ`colors.text` في `DomLitePanel.tsx:135–136` مع `numeric`؛ الباقي منطق).
+**المراجعة (d — أرقام متناقضة):** **QA124a → ui**: `CalendarPanel.tsx:134/142/343` يعدّ بـ`Date.now()` والشارت بـ`newsClockMs` (ساعة الخادم) ⇒ الخبر نفسه برقمين على جهاز منحرف الساعة؛ وتقريب `round` مقابل `floor`. سليم: قاعدة سعر الوقف بخانة النقاط للين/الذهب (بـ`npx tsx`)، TDI بمنازل السعر (مؤشّر بوحدة السعر).
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ متابعة launch194a/QA124a؛ وإعادة قائمة DESIGN-PRO.

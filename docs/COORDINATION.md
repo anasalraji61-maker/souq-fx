@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 123، على 4e69258) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 124، على 6a28cf7) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -21,8 +21,9 @@
 | QA | أنس | **QA107a** (بلا قرار سابق — القرار ٤ خاصّ بالمساعد): «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض «مستويات محسوبة: دخول · وقف · هدف» بأسعار (ATR من `/api/signals/indicators/forecast`، backend أبقاه عمداً). المنطق نفسه (`app.json` «لا يقدّم نصيحة استثمارية») ينطبق؟ إخفاء المستويات وإبقاء التصويت، أم كما هي؟ | QA107 |
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
 | launch | tools | **launch194a** مفتاح `journalSizeInvalidHint` (ar/en/ku، بلا متغيّرات): «حجم غير مفهوم — اكتبه رقماً باللوت، مثل 0.10 أو 1.5». الربط: `TradeJournalPanel.tsx:1312` الفرع `unreadable(size)` يعرض الآن `t.invalidNumberHint` («…مثل 10000 أو 1.0850» — مثالا سعر، و10000 لوت مستحيلة) ⇒ يُستبدل بالمفتاح الجديد لخانة الحجم وحدها (سعر غير مفهوم يبقى على `pxErrorText`). مثال: XAUUSD «55.5 oz» (خارج خطوة اللوت، `50a7647`) | launch194 |
+| QA | ui | **QA124a** (أرقام متناقضة): التقويم الاقتصادي يعدّ بساعة **الجهاز** (`CalendarPanel.tsx:134/142` `Date.now()`، `:343` `relLabel`) بينما لافتة الأخبار على الشارت صارت بساعة **الخادم** (`newsClockMs` بـ`chart/newsRisk.ts:735`، tools 134). جهاز متأخّر 4 دقائق ⇒ الخبر نفسه «بعد 1د» على الشارت و«بعد 5د» بالتقويم، و«قريب» (`:302/:376`) يتأخّر. المطلوب: `now` من `newsClockMs()` (أو `serverNowSec()*1000`). ثانوي: التقويم يقرّب الدقائق `Math.round` واللافتة `Math.floor` ⇒ فرق دقيقة حتى بساعة سليمة | QA124 |
 
-**تحقّق الدورة 123 (بالكود، على 4e69258):** البناء أخضر 0، selftests 123/123 ناجح.
-**أُغلق:** launch193a ← tools `33b2b0f` (`TradeJournalPanel.tsx:2342/2345` `journalSizeMetalOuncesFix` بالتسمية والنصّ). **بعد السحب (fb42cf7):** أخضر 0؛ أُغلقت chart103a ← ui `ecfafb6` (`FocusChartModal.tsx:383` `headSeries.last`، `:286` `series.last`، `:336` `headSeries?.last`). **لا صفّ مفتوح لوكيل برمجي** عدا QA1 (جهاز).
-**قائمة قبول DESIGN-PRO (الثالث والأربعون): 0 من 12 فشل** — diff منذ 286c28f بلا تغيير أنماط: نصّ شريحة «الكل» (`CalendarPanel.tsx:475`)، إرجاع التصويت، مؤشّر البحث، `newsClockMs` — منطق ونصوص.
-**المراجعة (c — `accessibilityLabel`):** مسح AST لكل `Pressable`/`Touchable*` ⇒ 6 أغلفة `accessible={false}` المعروفة نفسها. **لا بند.**
+**تحقّق الدورة 124 (بالكود، على 6a28cf7):** البناء أخضر 0، selftests 123/123 ناجح.
+**مفتوح مُتحقَّق:** launch194a → tools (`TradeJournalPanel.tsx:1312` ما زال `t.invalidNumberHint`؛ المفتاح موجود ×4 بـ`locales.ts`) — دورته الأولى.
+**قائمة قبول DESIGN-PRO (الرابع والأربعون): 0 من 12 فشل** — diff منذ fb42cf7: `DomLitePanel.tsx:135–136` Bid/Ask بـ`colors.text` (يُصلح §1، `numeric` باقٍ `:133`)؛ الباقي منطق (رؤوس لوحات، مؤشّر مرتبط D/W، سقف 10% للتيك).
+**المراجعة (d — أرقام متناقضة):** QA124a أعلاه. سليم: `pipsLookLikeTwoDecimalPrice` (بـ`npx tsx`: XAUUSD «3750.55» سعر، «1500.25» نقاط؛ USDJPY «147.85» سعر، «35.25» نقاط)؛ TDI بالرأس بمنازل السعر صحيح (Trend Detection Index بوحدة السعر لا 0–100).
