@@ -343,7 +343,7 @@ export type Dict = {
   alertsInvalidInput: string;
   alertsUnknownSymbolWarn: string;
   alertsEditOldRemains: string;
-  /** PATCH ⇒ 409 alert_changed (backend-r114b): جهاز آخر عدّل التنبيه أو أُطلق منذ عُرضت القائمة. */
+  /** PATCH ⇒ 409 alert_changed (backend-r114b): جهاز آخر عدّل التنبيه أو أُطلق منذ عُرضت القائمة. `{desc}` = حاله المخزَّنة الآن (ui128a). */
   alertsChangedElsewhere: string;
   alertsRearmBtn: string;
   alertsRearmA11yPrefix: string;
@@ -1963,7 +1963,7 @@ const ar: Dict = {
   alertsInvalidInput: 'أدخل رمزاً وسعراً صحيحاً أكبر من صفر',
   alertsUnknownSymbolWarn: 'مزوّد الأسعار لا يعرف هذا الرمز — راجع كتابته، وإلا لن يُطلق التنبيه',
   alertsEditOldRemains: 'حُفظ التنبيه الجديد لكن تعذّر حذف القديم — احذفه يدوياً من القائمة',
-  alertsChangedElsewhere: 'تغيّر هذا التنبيه من جهاز آخر أو أُطلق منذ فتحتَ القائمة — حدّثناه أمامك، راجعه ثم احفظ من جديد',
+  alertsChangedElsewhere: 'تغيّر هذا التنبيه من جهاز آخر أو أُطلق منذ فتحتَ القائمة — هو الآن: {desc}. لم يُحفظ شيء؛ كرّر الحفظ أو إعادة التفعيل إن أردتَ استبداله',
   alertsRearmBtn: 'إعادة التفعيل',
   alertsRearmA11yPrefix: 'إعادة تفعيل التنبيه',
   alertsRearmedMsg: 'مُفعَّل من جديد: {desc} — إن كان السعر ما زال متجاوزاً المستوى يُطلق بالفحص التالي',
@@ -3248,7 +3248,7 @@ const enUS: Dict = {
   alertsInvalidInput: 'Enter a symbol and a valid price above zero',
   alertsUnknownSymbolWarn: 'The price provider does not know this symbol — check the spelling, or this alert will never fire',
   alertsEditOldRemains: 'New alert saved, but the old one couldn’t be removed — delete it from the list',
-  alertsChangedElsewhere: 'This alert was changed on another device or has triggered since you opened the list — we’ve refreshed it; check it and save again',
+  alertsChangedElsewhere: 'This alert was changed on another device or has triggered since you opened the list — it’s now {desc}. Nothing was saved; save or re-arm again to replace it',
   alertsRearmBtn: 'Re-arm',
   alertsRearmA11yPrefix: 'Re-arm alert',
   alertsRearmedMsg: 'Armed again: {desc} — if price is still past the level it fires on the next check',
@@ -4582,7 +4582,7 @@ const ku: Dict = {
   alertsInvalidInput: 'هێمایەک و نرخێکی دروست لە سەرووی سفر بنووسە',
   alertsUnknownSymbolWarn: 'دابینکەری نرخ ئەم هێمایە ناناسێت — ڕێنووسەکەی بپشکنە، ئەگەرنا ئەم ئاگادارکردنەوەیە هەرگیز ناچالاک نابێت',
   alertsEditOldRemains: 'ئاگادارکردنەوەی نوێ پاشەکەوت کرا بەڵام کۆنەکە نەسڕایەوە — لە لیستەکە بیسڕەوە',
-  alertsChangedElsewhere: 'ئەم ئاگادارکردنەوەیە لە ئامێرێکی ترەوە گۆڕدرا یان کارا بوو لەوەتەی لیستەکەت کردەوە — نوێمان کردەوە، بیپشکنە و دووبارە پاشەکەوتی بکە',
+  alertsChangedElsewhere: 'ئەم ئاگادارکردنەوەیە لە ئامێرێکی ترەوە گۆڕدرا یان کارا بوو لەوەتەی لیستەکەت کردەوە — ئێستا: {desc}. هیچ پاشەکەوت نەکرا؛ ئەگەر دەتەوێت بیگۆڕیت دووبارە پاشەکەوت یان چالاکی بکەرەوە',
   alertsRearmBtn: 'دووبارە چالاککردن',
   alertsRearmA11yPrefix: 'دووبارە چالاککردنی ئاگادارکردنەوە',
   alertsRearmedMsg: 'دووبارە چالاکە: {desc} — ئەگەر نرخ هێشتا لەو ئاستە تێپەڕیوە لە پشکنینی داهاتوودا دەتەقێتەوە',
