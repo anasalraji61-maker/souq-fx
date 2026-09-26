@@ -1755,7 +1755,7 @@ def market_quote(symbol: str):
     return book
 
 
-def _journal_iso(v) -> str | None:
+def _journal_iso(v, fold: int = 0) -> str | None:
     """وقت دفتر (`YYYY-MM-DD HH:MM` بتوقيت الخادم بلا منطقة) ⇒ ISO بإزاحة الخادم **لذلك التاريخ** (tools130a).
     العميل لا يعرف منطقة الخادم: متداول ببغداد كان يقرأ/يكتب الوقت مزاحاً بفرق الساعات فتنتقل صفقة الأحد 23:30
     لأسبوع آخر بالتقرير. الإزاحة لكل صفّ لا واحدة عامّة: صفقة يناير وصفقة يوليو يفصلهما التوقيت الصيفي.
@@ -1767,7 +1767,7 @@ def _journal_iso(v) -> str | None:
     except ValueError:
         return None
     try:
-        return dt.astimezone().isoformat()  # ساعة مكرَّرة بنهاية الصيفي ⇒ أولاهما (fold=0)
+        return dt.replace(fold=fold).astimezone().isoformat()  # ساعة مكرَّرة بنهاية الصيفي ⇒ أولاهما (fold=0)
     except (OverflowError, OSError):
         return None
 
@@ -1775,7 +1775,15 @@ def _journal_iso(v) -> str | None:
 def _trade_out(row: dict | None) -> dict | None:
     if not row:
         return row
-    return {**row, "opened_at_iso": _journal_iso(row.get("opened_at")), "closed_at_iso": _journal_iso(row.get("closed_at"))}
+    opened, closed = row.get("opened_at"), row.get("closed_at")
+    # run 113: فتح 02:40 وإغلاق 02:10 كلاهما بالساعة المكرَّرة (مقبول منذ `2a76547`) = القراءة الوحيدة المتّسقة:
+    # الفتح بالمرّة الأولى (صيفي) والإغلاق بالثانية (شتوي). كان كلاهما fold=0 ⇒ `closed_at_iso` قبل `opened_at_iso`
+    # بنصف ساعة وإغلاقٌ مختوم قبل وقته الحقيقي بساعة.
+    later = int(
+        isinstance(opened, str) and isinstance(closed, str) and closed < opened
+        and db._in_dst_fold(opened) and db._in_dst_fold(closed)
+    )
+    return {**row, "opened_at_iso": _journal_iso(opened), "closed_at_iso": _journal_iso(closed, later)}
 
 
 def _server_utc_offset_min() -> int:

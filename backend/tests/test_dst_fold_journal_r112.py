@@ -58,3 +58,15 @@ def test_outside_fold_order_still_enforced(client, berlin):
         "opened_at": "2025-10-26T03:00:00Z", "closed_at": "2025-10-26T02:00:00Z"})
     assert r.status_code == 422
 
+
+
+def test_iso_times_across_fold_keep_the_real_order(client, berlin):
+    # run 113: كان closed_at_iso = 02:10+02:00 (00:10Z) — قبل الفتح وساعة قبل ما أرسله العميل (01:10Z)
+    t = _open(client, exit=60600, closed_at="2025-10-26T01:10:00Z")
+    assert t["opened_at_iso"] == "2025-10-26T02:40:00+02:00"
+    assert t["closed_at_iso"] == "2025-10-26T02:10:00+01:00"
+
+
+def test_iso_single_fold_time_keeps_first_pass(client, berlin):
+    t = _open(client, exit=60600, closed_at="2025-10-26T00:50:00Z")
+    assert (t["opened_at_iso"], t["closed_at_iso"]) == ("2025-10-26T02:40:00+02:00", "2025-10-26T02:50:00+02:00")
