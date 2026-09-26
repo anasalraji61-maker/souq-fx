@@ -1635,6 +1635,8 @@ export function TerminalScreen() {
                   onCreateAlert={alertFromChart}
                   key="shadow-overlay"
                   onToolChange={setTool}
+                  // chart-r82a: كتابة «4h»+Enter على الشارت الرئيسي (الويب) تبدّل الفريم كشريط الفريمات تحته.
+                  onTimeframeKey={setTf}
                   series={series}
                   shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
@@ -1803,6 +1805,7 @@ export function TerminalScreen() {
                   // chart-r56: ولا الرمز/الفريم بالمفتاح — `MatrixChart` يعالج تبديلهما بنفسه (الإزاحة، رسومات المفتاح، السجلّ).
                   key="single"
                   onToolChange={setTool}
+                  onTimeframeKey={setTf}
                   series={series}
                   height={desktopChartHeight}
                   interactive
