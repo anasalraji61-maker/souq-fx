@@ -479,6 +479,29 @@ export function editExitValue(startedClosed: boolean, exit: number | null): numb
 }
 
 /**
+ * `closed_at` المُرسل بحفظ التعديل (backend-r91a، `PATCH /api/trades/{id}` يقبله منذ `bf6d37a`). مسح الخروج يعيد الصفقة مفتوحة
+ * ويمسح الخادم وقت إغلاقها؛ إعادة كتابة الخروج بتعديلٍ لاحق كانت تختم «الآن» ⇒ صفقة أغسطس تُعدّ من هذا الأسبوع بالتقرير
+ * الأسبوعي وسلسلة الخسائر. `remembered` = وقت إغلاقها المخزَّن **قبل** أن يعيد هذا الجهاز فتحها (بنص الخادم حرفياً، فلا
+ * منطقة زمنية تُخمَّن).
+ *
+ * - الخروج لا يُرسل رقماً (مسح أو بلا تغيير) ⇒ `undefined`: المسح يمسح الوقت بالخادم نفسه.
+ * - بدأ التعديل على صفقة **مغلقة** ⇒ `undefined`: الخادم يُبقي وقت إغلاقها كما هو (تصحيح سعر الخروج لا يغيّر متى أُغلقت).
+ * - بدأ على صفقة مفتوحة بلا وقت محفوظ ⇒ `undefined`: إغلاقٌ حقيقي الآن، الخادم يختم «الآن».
+ * - بدأ على صفقة مفتوحة أعاد هذا الجهاز فتحها ⇒ الوقت المحفوظ، ما لم يكن بغير صيغة الخادم أو يسبق `opened_at` (422 يمنع الحفظ).
+ */
+export function editClosedAtValue(
+  before: { status?: string | null; opened_at?: string | null },
+  exitSent: number | null | undefined,
+  remembered: string | null | undefined
+): string | undefined {
+  if (typeof exitSent !== 'number' || before.status !== 'open') return undefined;
+  if (typeof remembered !== 'string' || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(remembered)) return undefined;
+  const opened = before.opened_at;
+  if (typeof opened === 'string' && opened.length === remembered.length && remembered < opened) return undefined;
+  return remembered;
+}
+
+/**
  * قيمة `size` المُرسلة بحفظ التعديل: حجمٌ مكتوب يُرسل كما هو. خانةٌ فارغة ⇒ `null` («حجم غير معروف»، الخادم يمسح القيمة
  * منذ backend-r17 (b)) **فقط** إن كان الحجم معروفاً قبل التعديل (`knownLots` — الخانة فُتحت مملوءة فمسحها المتداول).
  * كان مجهولاً (1 افتراض الخادم بلا علامة) ⇒ `undefined` (بلا تغيير): الخانة فُتحت فارغة، فلا قصد يُرسل.

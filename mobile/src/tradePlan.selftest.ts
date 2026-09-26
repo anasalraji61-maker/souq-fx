@@ -1621,6 +1621,31 @@ console.log('tradePlan stopTooClose selftest OK');
 }
 console.log('tradePlan editExitValue selftest OK');
 
+// ——— editClosedAtValue: وقت الإغلاق بعد فتحٍ ثم إغلاقٍ بالتعديل (backend-r91a) ———
+{
+  const { editClosedAtValue, editExitValue } = require('./tradePlan') as typeof import('./tradePlan');
+  const opened = { status: 'open', opened_at: '2026-08-10 09:15' };
+  // صفقة أغسطس أُعيد فتحها هنا ثم كُتب خروجها ⇒ وقتها المحفوظ لا «الآن»
+  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-12 14:30'), '2026-08-12 14:30');
+  // مفتوحة بلا وقت محفوظ ⇒ لا يُرسل (إغلاق حقيقي الآن يختمه الخادم)
+  assert.equal(editClosedAtValue(opened, 1.0875, null), undefined);
+  assert.equal(editClosedAtValue(opened, 1.0875, undefined), undefined);
+  // بدأ مغلقاً: الخادم يُبقي وقته، لا يُرسل شيء
+  assert.equal(editClosedAtValue({ status: 'closed', opened_at: opened.opened_at }, 1.09, '2026-08-12 14:30'), undefined);
+  // المسح وبلا تغيير (بمخرجات editExitValue الفعلية) ⇒ لا يُرسل
+  assert.equal(editClosedAtValue(opened, editExitValue(false, null), '2026-08-12 14:30'), undefined);
+  assert.equal(editClosedAtValue({ status: 'closed' }, editExitValue(true, null), '2026-08-12 14:30'), undefined);
+  // يسبق الفتح (422 invalid_closed_at يمنع الحفظ) أو بغير صيغة الخادم ⇒ لا يُرسل
+  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-09 23:59'), undefined);
+  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-12T14:30:00Z'), undefined);
+  assert.equal(editClosedAtValue(opened, 1.0875, ''), undefined);
+  // يساوي الفتح: مقبول بالخادم (`closed_at < opened_at` وحده يُرفض)
+  assert.equal(editClosedAtValue(opened, 1.0875, '2026-08-10 09:15'), '2026-08-10 09:15');
+  // صفّ بلا opened_at (نسخة قديمة) ⇒ يُرسل الوقت المحفوظ
+  assert.equal(editClosedAtValue({ status: 'open' }, 1.0875, '2026-08-12 14:30'), '2026-08-12 14:30');
+}
+console.log('tradePlan editClosedAtValue selftest OK');
+
 // ——— editSizeValue: خانة حجم مُسحت بالتعديل ———
 {
   const { editSizeValue } = require('./tradePlan') as typeof import('./tradePlan');

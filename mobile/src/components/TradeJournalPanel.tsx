@@ -97,6 +97,7 @@ import {
   type PlanIssue,
   type TradePlan,
   editExitValue,
+  editClosedAtValue,
   editSizeValue,
   journalEditSeen,
   closeTermsChangedElsewhere,
@@ -287,6 +288,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   useEffect(() => setStopTypoFix(false), [editing?.id]);
   const editingRef = useRef(editing);
   editingRef.current = editing;
+  /** backend-r91a: وقت إغلاق صفقة أعاد هذا الجهاز فتحها بالتعديل (مسح الخروج يمسحه بالخادم) ⇒ يعود مع الخروج بتعديلٍ لاحق
+   * بدل «الآن» المختلَق (`editClosedAtValue`). بالجلسة وحدها، بمعرّف الصفقة. */
+  const reopenedClosedAtRef = useRef(new Map<string, string>());
   /** عدسة المراجعة: الأداة المختارة بشرائح الفلتر — `null` = الكل. */
   const [filterSym, setFilterSym] = useState<string | null>(null);
 
@@ -1276,6 +1280,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setFormError(null);
     const submittedKey = formKeyRef.current;
     if (editing) {
+      const exitSent = editExitValue(editing.status !== 'open', pnum(exit));
+      const restoredClosedAt = editClosedAtValue(editing, exitSent, reopenedClosedAtRef.current.get(editing.id));
       try {
         // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد صفقةً بدأ تعديلها مغلقة مفتوحةً) — لا «بلا تغيير» صامت.
         // بدأ مفتوحاً: الخروج الفارغ لا يُرسل، فإغلاقٌ بالسوق أثناء التعديل لا يُلغى بالحفظ (`editExitValue`)
@@ -1283,7 +1289,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           symbol: sym,
           side,
           entry: e,
-          exit: editExitValue(editing.status !== 'open', pnum(exit)),
+          exit: exitSent,
           sl: s,
           tp: p,
           // خانة حجم معروف مُسحت = null «غير معروف» (backend-r17 (b)) كما يُمسح الوقف والهدف؛ فُتحت فارغة ⇒ بلا تغيير (`editSizeValue`)
@@ -1292,8 +1298,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           // backend-r78b/r80a: الصفّ كما فُتح عليه النموذج (الحالة والخروج وكل حقل يُعاد إرساله) ⇒ 409 إن أُغلق/عُدّل بجهاز آخر،
           // بدل أن يكتب الخروج أو الدخول القديم فوقه. متغيّرٌ لا كائنٌ حرفي: نوع `updateTrade` (api.ts، ملك ui) بلا حقول `seen_*`
           ...journalEditSeen(editing),
+          // صفقة أُعيد فتحها هنا ثم كُتب خروجها: وقت إغلاقها الأصلي لا «الآن» (backend-r91a). متغيّر كـ`seen_*`: `updateTrade` بلا الحقل
+          ...(restoredClosedAt ? { closed_at: restoredClosedAt } : null),
         };
         await api.updateTrade(editing.id, body);
+        if (restoredClosedAt) reopenedClosedAtRef.current.delete(editing.id);
+        else if (exitSent === null && editing.closed_at) reopenedClosedAtRef.current.set(editing.id, editing.closed_at);
         if (!mountedRef.current) return;
         playSoftClick();
         setEditing(null);
@@ -1326,6 +1336,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             if (merged.size !== size || merged.symbol !== symbol) setSizeFor(fresh.symbol);
           }
         } else {
+          // 422 `invalid_closed_at` (الوقت المحفوظ لم يعد يصلح): يُنسى كي لا يمنع الحفظ للأبد — المحاولة التالية بلا وقت
+          if (restoredClosedAt && (err as { status?: number } | null)?.status === 422) reopenedClosedAtRef.current.delete(editing.id);
           setFormError(t.journalEditError);
         }
       } finally {
@@ -1506,6 +1518,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setBusy(true);
     try {
       await api.deleteTrade(id);
+      reopenedClosedAtRef.current.delete(id);
       playSoftClick();
       if (editing?.id === id) cancelEdit();
       await refresh();
