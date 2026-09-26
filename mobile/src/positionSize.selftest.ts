@@ -4706,3 +4706,19 @@ console.log('positionSize min-lot risk with costs selftest OK');
   assert.ok(r.actualRisk <= 100 + 1e-9);
   console.log('positionSize JPY-base pip selftest OK');
 }
+
+// ——— حساب AUD على USDCAD والجلب فاشل: AUDCAD مكتوب مقلوباً («1.11» بدل 0.90) كان يُقبل ⇒ لوت أكبر ~22% ———
+{
+  const { manualConvLooksInverted, instrumentSpec, pipValuePerLot, positionSize } = require('./positionSize') as typeof import('./positionSize');
+  const back = manualConvLooksInverted('AUDCAD', 1.11)!;
+  assert.ok(back != null && Math.abs(back - 1 / 1.11) < 1e-12);
+  // الحقيقي بمداه منذ 2000 (0.78–1.08) لا يُرفض
+  for (const r of [0.78, 0.9, 0.95, 1.0, 1.05, 1.08, 1.1]) assert.equal(manualConvLooksInverted('AUDCAD', r), null, `AUDCAD ${r}`);
+  // المال: USDCAD بحساب AUD، 1% من 10,000 AUD، وقف 20 pip. CAD ⇒ AUD = 1 ÷ AUDCAD (0.90 ⇒ 1.111)
+  const spec = instrumentSpec('USDCAD')!;
+  const lots = (audcad: number) =>
+    positionSize({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(spec, 1 / audcad), contractSize: spec.contractSize })!.lots;
+  assert.equal(lots(0.9), 0.45);
+  assert.equal(lots(1.11), 0.55); // ما كان يُحسب من المقلوب — يُمنع الآن بـ`manualConvLooksInverted`
+  console.log('positionSize AUDCAD inverted manual conversion selftest OK');
+}

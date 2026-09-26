@@ -459,7 +459,7 @@ const INVERTED_BEYOND: Record<string, { over?: number; under?: number }> = {
   USDCAD: { under: 0.85 },
   // أزواج تحويل حسابات NZD/AUD/CAD على أزواجٍ تسعيرها CHF/CAD (كلّها `invert: true` ⇒ المقلوب يضخّم اللوت). أعلاها منذ 2000:
   // NZDCHF ~0.98 وNZDCAD ~0.96 (2007/2014)، AUDCHF ~1.1 (2007)، CADCHF ~1.25 (2007). «2.08» لـNZDCHF (CHF ⇒ NZD مقلوباً)
-  // كان يُقبل ⇒ USDCHF بحساب NZD وقف 20: **1.04 لوت بدل 0.24** (خسارة 433 NZD بمخاطرة 100). AUDCAD/EURCHF/USDCHF عَبَرت 1 ⇒ لا حدّ.
+  // كان يُقبل ⇒ USDCHF بحساب NZD وقف 20: **1.04 لوت بدل 0.24** (خسارة 433 NZD بمخاطرة 100). EURCHF/USDCHF عَبَرت 1 بعيداً ⇒ لا حدّ (AUDCAD أدناه).
   NZDCHF: { over: 1.2 },
   NZDCAD: { over: 1.2 },
   AUDCHF: { over: 1.3 },
@@ -467,6 +467,10 @@ const INVERTED_BEYOND: Record<string, { over?: number; under?: number }> = {
   // حساب NZD على أزواج AUD (EURAUD، GBPAUD…): AUDNZD مباشر (غير معكوس) ⇒ المقلوب يضخّم اللوت. أدناه منذ التعويم ~1.0 (2015)،
   // فـ«0.917» (NZD ⇒ AUD مقلوباً) كان يُقبل ⇒ EURAUD بحساب NZD وقف 30: **0.36 لوت بدل 0.30** (خسارة 118 NZD بمخاطرة 100).
   AUDNZD: { under: 0.95 },
+  // حساب AUD على أزواج CAD (USDCAD، EURCAD…): AUDCAD معكوس ⇒ المقلوب يضخّم اللوت. أعلاه منذ 2000 ~1.08 (2012) ⇒ «1.11» (CAD ⇒ AUD
+  // مقلوباً، الحقيقي ~0.90) كان يُقبل ⇒ USDCAD بحساب AUD وقف 20: **0.55 لوت بدل 0.45** (خسارة ~122 AUD بمخاطرة 100). 1.10 فوق أعلاه
+  // التاريخي؛ المقلوب يُرصد متى كان الحقيقي دون 0.91 (مداه الحالي) — فوقها لا تخمين
+  AUDCAD: { over: 1.1 },
 };
 
 /**
