@@ -70,6 +70,10 @@ assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 15, 0)), 86400, 3), s(at(
 assert.equal(projectBarTimeSec('BTCUSD', s(at(2026, 0, 16, 20)), H, 2), s(at(2026, 0, 16, 22)));
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 12, 0)), 7 * 86400, 1), s(at(2026, 0, 19, 0)));
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 16, 20)), H, 0), s(at(2026, 0, 16, 20)));
+// كسر الشمعة داخل الشمعة المُسقَطة (لا يُقصّ): 1.5 من الجمعة 20:00 = 21:30، 2.5 = الأحد 22:30، 0.5 = 20:30
+assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 16, 20)), H, 1.5), s(at(2026, 0, 16, 21, 30)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 16, 20)), H, 2.5), s(at(2026, 0, 18, 22, 30)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 16, 20)), H, 0.5), s(at(2026, 0, 16, 20, 30)));
 
 // كسر ICE بمنطقة المستقبل: DXY صيفاً 21:00–00:00 UTC، برنت 22:00–00:00 UTC — لا خانات شموع فيه
 assert.equal(projectBarTimeSec('DXY', s(at(2026, 6, 15, 20)), H, 1), s(at(2026, 6, 16, 0)));

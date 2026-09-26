@@ -333,8 +333,10 @@ function forexDailyClosed(sec: number): boolean {
  */
 export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: number, ahead: number): number {
   const n = Math.max(0, Math.floor(ahead));
-  if (!(stepSec > 0) || !Number.isFinite(lastSec) || n === 0) return lastSec + n * (stepSec || 0);
-  if (isCryptoSymbol(symbol) || stepSec > DAY_SEC) return lastSec + n * stepSec;
+  // كسر الشمعة (نقطة رُسمت بالمستقبل على فريم آخر) داخل الشمعة المُسقَطة الأخيرة — كان يُقصّ ⇒ القياس أقصر
+  const frac = ahead > n && Number.isFinite(ahead) ? (ahead - n) * (stepSec > 0 ? stepSec : 0) : 0;
+  if (!(stepSec > 0) || !Number.isFinite(lastSec) || n === 0) return lastSec + n * (stepSec || 0) + frac;
+  if (isCryptoSymbol(symbol) || stepSec > DAY_SEC) return lastSec + n * stepSec + frac;
   let t = lastSec;
   for (let i = 0; i < n; i++) {
     t += stepSec;
@@ -348,7 +350,7 @@ export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: numb
     const bar = Math.floor(open / stepSec) * stepSec;
     t = bar > t - stepSec ? bar : open;
   }
-  return t;
+  return t + frac;
 }
 
 /**
