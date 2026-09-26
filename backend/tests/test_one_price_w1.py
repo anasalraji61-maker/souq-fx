@@ -80,3 +80,40 @@ def test_without_the_weekend_drop_the_numbers_disagree(provider, monkeypatch):  
     monkeypatch.setattr(market, "WEEKEND_CLOSE_FILTER", False)
     lasts = {tf: _series(provider, tf).last for tf in ROWS}
     assert len(set(lasts.values())) > 1
+
+
+def _ts(s: str) -> float:
+    from datetime import datetime, timezone
+    return datetime.fromisoformat(s).replace(tzinfo=timezone.utc).timestamp()
+
+
+@pytest.mark.parametrize("sym,fetched,until", [
+    ("EURUSD", "2026-09-26 09:00", "2026-09-27 21:00"),   # السبت ⇒ حتى افتتاح الأحد 17:00 نيويورك
+    ("EURUSD", "2026-09-25 21:06", "2026-09-27 21:00"),   # بعد مهلة الإغلاق
+    ("EURUSD", "2026-09-25 21:02", None),                 # داخل مهلة الإغلاق
+    ("EURUSD", "2026-09-25 20:00", None),                 # قبل الإغلاق
+    ("EURUSD", "2026-09-27 21:00", None),                 # بعد الافتتاح
+    ("EURUSD", "2026-11-28 09:00", "2026-11-29 22:00"),   # شتاءً
+    ("XAUUSD", "2026-09-26 09:00", "2026-09-27 21:00"),
+    ("BTCUSD", "2026-09-26 09:00", None),                 # يتداول بالعطلة
+    ("AAPL", "2026-09-26 09:00", None),                   # جلسة مجهولة
+])
+def test_closed_until(sym, fetched, until):
+    got = market._closed_until(sym, _ts(fetched))
+    assert got == (_ts(until) if until else None)
+
+
+def test_weekend_fetch_is_served_from_cache_until_reopen(provider, monkeypatch):  # noqa: F811
+    """جلبٌ السبت يخدم طوال العطلة بلا طلب جديد (وبوقت الجلب الحقيقي)، ويُجلب من جديد بعد الافتتاح."""
+    clock = {"t": _ts("2026-09-26 09:00")}
+    monkeypatch.setattr(market.time, "time", lambda: clock["t"])
+    _series(provider, "D")
+    provider["sink"].clear()
+    clock["t"] = _ts("2026-09-27 20:59")
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "D", 50)
+    assert provider["sink"] == {}, "لا طلب للمزوّد والسوق مغلق"
+    assert meta == {"kind": "cache", "as_of": _ts("2026-09-26 09:00"), "channel": "twelvedata"}
+    assert candles[-1]["close"] == pytest.approx(FRIDAY_CLOSE)
+    clock["t"] = _ts("2026-09-27 21:01")
+    _, meta = market.fetch_time_series_with_meta("EURUSD", "D", 50)
+    assert meta["kind"] == "provider"

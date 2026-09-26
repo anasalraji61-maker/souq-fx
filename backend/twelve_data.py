@@ -149,6 +149,26 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
     return close <= open_ts and open_ts + step <= reopen
 
 
+# مهلة بعد إغلاق الجمعة قبل أن تُعدّ شموع الجلب نهائية (آخر دقائق الجمعة قد تصل من المزوّد متأخرة).
+_CLOSE_SETTLE = 300
+
+
+def _closed_until(matrix_symbol: str, fetched_at: float) -> float | None:
+    """افتتاح الأحد إن جُلبت الشموع والسوق مغلق (بعد إغلاق الجمعة + `_CLOSE_SETTLE`)، وإلا None.
+
+    شموع رمز بجلسة أسبوعية جُلبت بعد إغلاق الجمعة لا تتغيّر حتى الافتتاح (شموع العطلة تُسقَط) ⇒ تبقى
+    صالحة حتى الافتتاح بدل TTL الفريم. W1: قائمة المتابعة تطلب شمعة D لكل رمز (16) — كل 10 دقائق طوال
+    العطلة من حدّ الروبوت المشترك، وأيّ 429 بعد 15 دقيقة من الجلب كان يعيد الصفّ «—». `as_of` يبقى وقت
+    الجلب الحقيقي."""
+    if not WEEKEND_CLOSE_FILTER or not _has_weekly_session(canonical_symbol(matrix_symbol)):
+        return None
+    d = datetime.fromtimestamp(float(fetched_at), tz=timezone.utc)
+    friday = (d - timedelta(days=(d.weekday() - 4) % 7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    close = _weekly_close_utc(friday)
+    reopen = _weekly_open_utc(friday + timedelta(days=2))
+    return float(reopen) if close + _CLOSE_SETTLE <= fetched_at < reopen else None
+
+
 TF_SECONDS: dict[str, int] = {
     "1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1H": 3600, "4H": 14400, "D": 86400, "W": 604800,
 }
@@ -380,7 +400,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
     ttl = CACHE_TTL.get(tf, 90)
     now = time.time()
     hit = _cache.get(cache_key)
-    if hit and now - hit[0] < ttl:
+    if hit and (now - hit[0] < ttl or now < (_closed_until(sym, hit[0]) or 0)):
         _stats["cache_hits"] = int(_stats["cache_hits"] or 0) + 1
         return hit[1], {"kind": "cache", "as_of": hit[0], "channel": "twelvedata"}
 
