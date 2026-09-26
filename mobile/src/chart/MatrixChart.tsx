@@ -5296,6 +5296,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }
             });
           },
+          // الزرّ الأيمن والأداة مسلَّحة (المستجيب لا يبدأ إلا بالأيسر، فكانت قائمة المتصفّح تظهر فوق خطّ نصف مرسوم):
+          // وسط رسم ⇒ يُلغى الطرف الأوّل كـEsc والأداة باقية؛ بلا طرف ⇒ تُنزع الأداة (خطوة Esc التالية) وتُفتح قائمة
+          // الشارت (القائمة العامّة لوضع السحب وحده، وعلى رسمٍ يُحدَّد كالنقرة).
+          onContextMenu: (event: PointerEventLike) => {
+            if (!pending && !drawAnchorRef.current) {
+              setTool('none');
+              openChartMenu(event);
+              return;
+            }
+            event.preventDefault?.();
+            webKeyChart = keyToken.current;
+            drawAnchorRef.current = null;
+            drawGestureHadPending.current = false;
+            drawRawXY.current = null;
+            setPending(null);
+            setDragEnd(null);
+          },
           // خروج الفأرة والأداة مسلَّحة: لوح السحب (بمسح التقاطع عند الخروج) غير مرسوم، فكان التقاطع ووسومه
           // يتجمّدون عند آخر نقطة خارج اللوح. `crossHover` يُصفَّر معه وإلا أعاد Ctrl/⌘ التقاطع (أثر المغناطيس أدناه).
           onPointerLeave: () => {
