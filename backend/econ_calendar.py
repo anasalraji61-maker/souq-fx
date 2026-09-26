@@ -128,7 +128,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
         if not title:
             continue
         country = _text(ev.find("country"))
-        date = _text(ev.find("date"))
+        date = _iso_date(_text(ev.find("date")))
         tm = _text(ev.find("time"))
         when = f"{date} {tm}".strip() or "هذا الأسبوع"
         fc_raw = _text(ev.find("forecast"))
@@ -184,6 +184,22 @@ def _figures(forecast: str, previous: str, actual: str) -> dict[str, str]:
 
 
 # `<time>` بفرع XML لحدثٍ بلا ساعة: «All Day» (عطلة، قمّة) و«Tentative» (قرار بنك اليابان عادةً) — وفارغ.
+_FF_DATE_RE = re.compile(r"(\d{1,2})-(\d{1,2})-(\d{4})")
+
+
+def _iso_date(date: str) -> str:
+    """تاريخ XML الأسبوعي «09-10-2026» شهرٌ أولاً (أمريكي): يُقرأ بالعربية والأوروبية 9 أكتوبر وهو 10 سبتمبر.
+    يُحوَّل إلى «2026-09-10» (لا لبس)؛ تاريخ بصيغة أخرى أو غير صالح يبقى كما ورد."""
+    m = _FF_DATE_RE.fullmatch(date.strip())
+    if not m:
+        return date
+    month, day, year = (int(g) for g in m.groups())
+    try:
+        return datetime(year, month, day).strftime("%Y-%m-%d")
+    except ValueError:
+        return date
+
+
 _UNANNOUNCED_TIMES = frozenset({"", "all day", "tentative", "day 1", "day 2", "day 3"})
 
 

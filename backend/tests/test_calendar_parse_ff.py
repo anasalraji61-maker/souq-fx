@@ -113,7 +113,16 @@ def test_event_branch_declares_its_timezone_is_unknown():
     out = cal._parse_ff(_events(_event("Retail Sales")))
     assert out[0]["tz_unknown"] is True
     assert out[0]["ts"] is None, "لا يُخمَّن وقت لمنطقة مجهولة"
-    assert out[0]["when"] == "09-25-2026 8:30am", "النصّ كما ورد من المصدر بلا تحوير"
+    assert out[0]["when"] == "2026-09-25 8:30am", "الساعة كما وردت، والتاريخ ISO لا شهراً أولاً"
+
+
+def test_event_branch_date_is_iso_not_month_first():
+    """«09-10-2026» بالمصدر = 10 سبتمبر؛ خاماً يُقرأ 9 أكتوبر بالعربية والأوروبية."""
+    out = cal._parse_ff(_events(_event("CPI", date="09-10-2026")))
+    assert out[0]["when"].startswith("2026-09-10 ")
+    # صيغة غير متوقَّعة أو تاريخ مستحيل ⇒ كما ورد، لا تخمين
+    assert cal._iso_date("13-40-2026") == "13-40-2026"
+    assert cal._iso_date("Sep 10") == "Sep 10"
 
 
 def test_rss_branch_is_not_marked_unknown_because_its_zone_is_real():
