@@ -6520,3 +6520,39 @@ moderation/newsRisk/dailyChange تمرّ (exit 0). **لم يُشغَّل الت�
 1. الدفتر: رمز «USDJPY cent» ⇒ نقاط وسعر سوق كـ«USDJPY-cent».
 2. الهاتف: الرصيف على USDCAD وصفقة USDCAD مفتوحة وخبر CAD قريب ⇒ سطر الصفقات المفتوحة يظهر بالدفتر.
 3. tools127a عند chart؛ tools102b عند قرار أنس.
+
+## 2026-09-26 (مئة وثمانية وعشرون) — التشغيل: QA115a وlaunch184a مُنجزان، كلمات الحساب بمسافة، شريحة الزوج لرمزٍ بلاحقة مجهولة
+
+### بداية التشغيل
+- `git pull` نظيف. قُرئت DESIGN-PRO ثم DECISIONS-ANAS ثم COORDINATION. **صفّان موجَّهان لـtools: QA115a وlaunch184a** — أُنجزا أولاً.
+
+### أُنجز
+1. `0d46016` **QA115a — مُنجز للتحقّق**: الحاسبة تقبل «EURUSD cent»/«EURUSD c»/«EURUSD micro» **بمسافة** كما يقبلها الدفتر (`centAccountSymbol`،
+   `smallContractPair`، `miniAccountSymbol`، `smallContractSuffix` بـ`positionSize.ts`: المسافة فاصل). كانت null ⇒ «رمز غير مدعوم». الرمز المحفوظ
+   بالدفتر **لم يتغيّر** («EURUSDCENT»، `journalSymbol` يحذف المسافة قبل اللاحقة). selftest positionSize (نوع العقد والزوج واللوت 4.00 سنت
+   للكتابتين، «EURUSD cents»/«BTCUSD cent» مرفوضة) — يفشل بلا الإصلاح؛ وtradePlan (الرموز المحفوظة كما كانت).
+2. `be46bf0` **launch184a — مُنجز للتحقّق**: `t.journalSymbolSuffixUnknown` موصول تحت خانة الرمز بالدفتر (`TradeJournalPanel`) عبر
+   `journalUnknownSuffixPair` (`tradePlan.ts`): «EURUSDi» ⇒ «لا يعرف EURUSDI … اكتب الزوج وحده: EURUSD». لا سطر لـBTCUSD/US30، ولا لـ«EURUSDT»
+   (تيثر)، ولا للاحقة قد تكون **عقداً أصغر** («C1»، «CENTS»، «USC»، «MIC»، «MINI2») — اقتراح الزوج العادي لها يحسب مالها ×100. نصّ مكتوم
+   (`planLine`) لا عنبر (§1). selftest tradePlan (يتحقّق أن الرمز فعلاً بلا نقاط وأن المقترح يُحسب).
+   **لـlaunch**: تعليق المفتاح بـ`locales.ts:1500` ما زال «غير موصول بعد» — صار موصولاً (تعديل تعليق فقط، ملفّكم).
+3. `a09c9b4` **كلمات نوع الحساب بمسافة بالحاسبة** («EURUSD pro»، «EURUSD m»، «GOLD pro»): الدفتر يعرفها (يحذف المسافة ⇒ «EURUSDPRO») والحاسبة
+   كانت ترفضها — التناقض نفسه كـQA115a. المسافة **لهذه الكلمات وحدها** (M/PRO/ECN/RAW/STD/STP/VIP): «EURUSD i» يحفظها الدفتر «EURUSDI» (مجهولة)
+   فقبولها بالحاسبة يعكس التناقض؛ وحرّاس العقد الأصغر (`SMALL_CONTRACT_SUFFIX`/`MINI_SUFFIX`/`AMBIGUOUS_SMALL_SUFFIX`) صارت تعرف المسافة كي لا
+   تصير «EURUSD cents» عقداً عادياً. selftest positionSize + tradePlan (الرموز المحفوظة كما كانت؛ سطر قديم كان يوثّق سقوط فحص «10000» على
+   «EURUSD m» الخام حُدِّث: الفحص صار يعمل على الخام أيضاً).
+4. `f2c0ea7` **الحاسبة: شريحة الزوج لرمزٍ بلاحقة مجهولة** («EURUSDi» ⇒ شريحة «EURUSD» تحت «رمز غير مدعوم»، نقرة واحدة)، بالقاعدة نفسها
+   (`journalUnknownSuffixPair`) — لا لما قد يكون عقداً أصغر. بلا نصّ جديد. selftest tradePlan.
+
+### ما فُحص ولم يُغيَّر
+- `chartPipSpec` (chart) لا يعرف «EURUSD pro» بمسافة — رموز الشارت من المزوّد لا تُكتب يدوياً، فلا أثر ظاهر؛ لم أرفعه طلباً.
+- «GOLDEURX» يقترح «GOLD» (لا «GOLDEUR») — حالة نادرة، السطر يقول «إن كانت لاحقة» فقط.
+
+### التحقّق
+`bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام (رمز الخروج نفسه، بلا أنبوب؛ مرّة واحدة RED بمعرّف مكرّر بالاستيراد — أُصلح قبل الالتزام).
+كل selftests `src/*.selftest.ts` و`src/chart/*.selftest.ts` تمرّ (exit 0). **لم يُشغَّل التطبيق** (لا متصفّح هنا).
+
+### ما يبدأ منه التشغيل القادم
+1. الحاسبة: «EURUSD cent» ⇒ وضع السنت (رصيد USC)؛ «EURUSD pro» ⇒ EURUSD عادي؛ «EURUSDi» ⇒ شريحة «EURUSD».
+2. الدفتر: «EURUSDi» ⇒ السطر تحت خانة الرمز؛ «EURUSDc1» ⇒ لا سطر.
+3. tools102b عند قرار أنس.
