@@ -682,6 +682,45 @@ export function createTimesSend(a: { openText: string; closeText: string; exitSe
   return { send };
 }
 
+export type EditOpenedAt =
+  | { send: { opened_at: string; seen_opened_at?: string } | null; openedIso: string | null | undefined }
+  | { error: 'openInvalid' | 'openFuture' }
+  | { error: 'beforeOpen'; opened: string };
+
+/**
+ * `opened_at` بحفظ التعديل (tools150c، `PATCH /api/trades` يقبله بقواعد الإنشاء) من حقل «وقت الفتح». صفقة سُجّلت بوقت «الآن» خطأً
+ * كان فتحها لا يُصحَّح أبداً، وإغلاقها الحقيقي يسبقه فيُرفض (`beforeOpen`) — خسارة أمس تبقى بأسبوع التسجيل.
+ *
+ * - الحقل كما مُلئ (`initial`، من `opened_at_iso`) ⇒ `send: null` (لا يُرسل شيء — لا فحص ولا كتابة)، و`openedIso` = المحفوظ.
+ * - مُسح ⇒ `openInvalid`: العمود إلزامي بالخادم (null يُتجاهل بصمت فيبقى القديم) — «غير معروف» غير ممكن للفتح.
+ * - مكتوب ⇒ ISO بإزاحة الجهاز + `seen_opened_at` = المخزَّن حرفياً (`raw`، الخادم يقارن النصّ ⇒ 409 إن عدّله جهاز آخر؛ بلا نصّ صالح
+ *   ⇒ بلا فحص). غير مقروء / بالمستقبل (> الآن + 5 د بساعة الخادم) ⇒ خطأ.
+ * - `closeText` = نصّ «وقت الإغلاق» الظاهر (الإغلاق بعد الحفظ: المحفوظ أو المكتوب أو «الآن» المملوء؛ فارغ/مخفيّ ⇒ لا إغلاق) — يسبق
+ *   الفتح الجديد بالدقيقة ⇒ `beforeOpen` (الخادم يرفض 422 عامّاً)؛ الدقيقة نفسها مقبولة.
+ * `openedIso` يمرَّر لـ`editClosedAtSend` ليقارن الإغلاق المكتوب بالفتح **الجديد**.
+ */
+export function editOpenedAtSend(a: {
+  text: string;
+  initial: string;
+  initialIso: string | null | undefined;
+  raw: string | null | undefined;
+  closeText: string;
+  nowMs: number;
+}): EditOpenedAt {
+  const text = a.text.trim();
+  if (text === a.initial.trim()) return { send: null, openedIso: a.initialIso };
+  if (!text) return { error: 'openInvalid' };
+  const parsed = journalLocalFieldToIso(text);
+  if (!parsed) return { error: 'openInvalid' };
+  if (parsed.ms > a.nowMs + CLOSE_TIME_FUTURE_SLACK_MS) return { error: 'openFuture' };
+  const close = a.closeText.trim() ? journalLocalFieldToIso(a.closeText) : null;
+  // الفتح بقراءته الأولى (الساعة المكرَّرة بعودة الشتاء)، والإغلاق بأبعد قراءاته — لا يُمنع حفظٌ قد يكون صحيحاً؛ الخادم يحكم بالإزاحة
+  const closeMin = close ? Math.floor((close.later ?? close).ms / 60_000) : null;
+  if (closeMin != null && Math.floor(parsed.ms / 60_000) > closeMin) return { error: 'beforeOpen', opened: text };
+  const raw = typeof a.raw === 'string' && a.raw.trim() && a.raw.length <= 40 ? a.raw : undefined;
+  return { send: { opened_at: parsed.iso, ...(raw ? { seen_opened_at: raw } : null) }, openedIso: parsed.iso };
+}
+
 /**
  * `closed_at` لإغلاق صفقة من خانة الخروج (`POST /api/trades/{id}/close`، backend-r93 (2)): صفقة أعاد هذا الجهاز فتحها بالتعديل
  * ⇒ وقت إغلاقها المحفوظ (`remembered`، ISO من `closed_at_iso`) لا «الآن». الإغلاق **بالسعر الحالي** يبقى «الآن» (سعر الآن =

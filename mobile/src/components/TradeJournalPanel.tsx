@@ -103,12 +103,14 @@ import {
   type TradePlan,
   editExitValue,
   editClosedAtSend,
+  editOpenedAtSend,
   createTimesSend,
   type CreateTimes,
   reopenedCloseAt,
   journalRowWhen,
   journalIsoToLocalField,
   journalLocalFieldAt,
+  journalLocalFieldToIso,
   editSizeValue,
   journalEditSeen,
   closeTermsChangedElsewhere,
@@ -291,8 +293,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const [sl, setSl] = useState('');
   const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
-  /** tools150: «وقت الفتح» بنموذج الإضافة (بتوقيت الجهاز) — صفقة تُسجَّل بعد حدوثها؛ فارغ = «الآن» بالخادم (`createTimesSend`) */
+  /** tools150: «وقت الفتح» (بتوقيت الجهاز). بالإضافة: صفقة تُسجَّل بعد حدوثها، فارغ = «الآن» بالخادم (`createTimesSend`). بالتعديل
+   * (tools150c): يُملأ من `opened_at_iso` و`init` = ما مُلئ به — يُرسل فقط إن تغيّر (`editOpenedAtSend`) */
   const [openTime, setOpenTime] = useState('');
+  const [openTimeInit, setOpenTimeInit] = useState<{ text: string; iso: string | null }>({ text: '', iso: null });
+  /** لمسه المتداول بالتعديل ⇒ لا يُعاد ملؤه من الصفّ المحفوظ فوق ما كتبه (كـ`closeTimeTouchedRef`) */
+  const openTimeTouchedRef = useRef(false);
   /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
    * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
   const [editing, setEditing] = useState<Trade | null>(null);
@@ -640,6 +646,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           : closeTimeErrorText(
               e.error === 'beforeOpen' ? e : e.error === 'closeFuture' ? { error: 'future' } : { error: 'invalid' }
             );
+  /** وقت الفتح الذي يُقارن به «وقت الإغلاق» بالتعديل: المكتوب إن كان مقروءاً، وإلا المحفوظ (خطؤه يُقال بسطره) */
+  const editOpenedAtIso = (): string | null | undefined =>
+    openTime.trim() !== openTimeInit.text.trim() ? journalLocalFieldToIso(openTime)?.iso ?? editing?.opened_at_iso : editing?.opened_at_iso;
   /** وقتا الإضافة كما سيُرسلان — «المستقبل» بساعة الخادم (هو من يرفض بعد 5 د)، كوقت الإغلاق بالتعديل */
   const addTimes = (): CreateTimes =>
     createTimesSend({ openText: openTime, closeText: closeTime, exitSent: pnum(exit), nowMs: serverNowSec() * 1000 });
@@ -1325,8 +1334,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       };
     }
     setEditing(tr);
-    // وقت فتح مسوّدة الإضافة لا يُعرض فوق صفقة أخرى — محفوظ بالمسوّدة ويعود بالإلغاء/الحفظ
-    setOpenTime('');
+    // وقت فتح مسوّدة الإضافة محفوظ بالمسوّدة ويعود بالإلغاء/الحفظ؛ الخانة تُملأ بوقت فتح الصفقة المعدَّلة
+    initOpenTime(tr);
     initCloseTime(tr);
     liveFillRef.current = null;
     // الأسعار كما سُجّلت بلا تقريب ولا صيغة أُسّية، والحجم 1 الافتراضي فارغ — راجع `journalEditForm`
@@ -1346,6 +1355,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     closeTimeTouchedRef.current = false;
     setCloseTime(text);
     setCloseTimeInit({ text, iso: text && remembered ? remembered : null });
+  };
+
+  /** «وقت الفتح» كما يُفتح عليه التعديل: `opened_at_iso` بتوقيت الجهاز (بلا إزاحة صريحة ⇒ فارغ، ويبقى بلا تغيير ما لم يُكتب) */
+  const initOpenTime = (tr: Trade) => {
+    const iso = tr.opened_at_iso ?? null;
+    const text = journalIsoToLocalField(iso) ?? '';
+    openTimeTouchedRef.current = false;
+    setOpenTime(text);
+    setOpenTimeInit({ text, iso: text ? iso : null });
   };
 
   const cancelEdit = () => {
@@ -1456,13 +1474,28 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const submittedKey = formKeyRef.current;
     if (editing) {
       const exitSent = editExitValue(editing.status !== 'open', pnum(exit));
+      // tools150c: فتحٌ مختوم «الآن» خطأً يُصحَّح — يُفحص قبل الإغلاق، والإغلاق المكتوب يُقارن بالفتح **الجديد**
+      const openedAt = editOpenedAtSend({
+        text: openTime,
+        initial: openTimeInit.text,
+        initialIso: openTimeInit.iso ?? editing.opened_at_iso,
+        raw: editing.opened_at,
+        closeText: typeof exitSent === 'number' ? closeTime : '',
+        nowMs: serverNowSec() * 1000,
+      });
+      if ('error' in openedAt) {
+        addInFlightRef.current = false;
+        setBusy(false);
+        setFormError(createTimesErrorText(openedAt));
+        return;
+      }
       const closedAt = editClosedAtSend({
         exitSent,
         startedClosed: editing.status !== 'open',
         text: closeTime,
         initial: closeTimeInit.text,
         initialIso: closeTimeInit.iso,
-        openedIso: editing.opened_at_iso,
+        openedIso: openedAt.openedIso,
         // «المستقبل» بساعة الخادم (هو من يرفض بعد 5 د): جهاز متأخّر 10 د كان يمنع وقت إغلاق حقيقياً، ومتقدّم يمرّره فيلقى 422 عامّاً
         nowMs: serverNowSec() * 1000,
       });
@@ -1491,6 +1524,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           ...journalEditSeen(editing),
           // صفقة أُعيد فتحها هنا ثم كُتب خروجها: وقت إغلاقها الأصلي لا «الآن» (backend-r91a). متغيّر كـ`seen_*`: `updateTrade` بلا الحقل
           ...(restoredClosedAt !== undefined ? { closed_at: restoredClosedAt } : null),
+          // tools150c: وقت الفتح إن تغيّر، مع `seen_opened_at` (409 إن صحّحه جهاز آخر). متغيّر كـ`seen_*`: `updateTrade` بلا الحقل
+          ...openedAt.send,
         };
         const res = await api.updateTrade(editing.id, body);
         // backend-r118: الصفّ كما كتبه الخادم — أساس `seen_*` إن بقي التعديل مفتوحاً (لا `refresh()`: تعديلٌ من جهاز آخر بينهما
@@ -1508,6 +1543,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             // علامة «1R @» التي ألحقها هذا الحفظ تنتقل للخانة — وإلا يمحوها الحفظ التالي (الأساس الآن الوقف الجديد)
             if (typeof saved.note === 'string') setNote((cur) => journalNoteAfterSave(cur, note, saved.note));
             if (!closeTimeTouchedRef.current) initCloseTime(saved);
+            if (!openTimeTouchedRef.current) initOpenTime(saved);
             setFormNotice(t.journalEditSavedTypedAfter);
             await refresh();
             return;
@@ -1519,6 +1555,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           if (fresh && editingRef.current?.id === fresh.id) {
             setEditing(fresh);
             if (!closeTimeTouchedRef.current) initCloseTime(fresh);
+            if (!openTimeTouchedRef.current) initOpenTime(fresh);
             setFormNotice(t.journalEditSavedTypedAfter);
           }
           return;
@@ -1547,6 +1584,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             );
             setEditing(fresh);
             if (!closeTimeTouchedRef.current) initCloseTime(fresh);
+            if (!openTimeTouchedRef.current) initOpenTime(fresh);
             keepErrorForRef.current = [merged.symbol, merged.side, merged.entry, merged.exit, merged.size, merged.sl, merged.tp, merged.note].join(
               '\u0001'
             );
@@ -2320,24 +2358,42 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           accessibilityLabel={t.journalSizeA11y}
         />
       </View>
-      {/* tools150: وقتا صفقة تُسجَّل بعد حدوثها — بالإضافة وحدها. «وقت الفتح» فارغ = الآن؛ «وقت الإغلاق» متى كُتب خروج */}
+      {/* tools150: «وقت الفتح» — بالإضافة لصفقة تُسجَّل بعد حدوثها (فارغ = الآن)، وبالتعديل لتصحيح فتحٍ مختوم «الآن» خطأً (tools150c) */}
+      <TextInput
+        style={[styles.input, { textAlign: align }]}
+        value={openTime}
+        onChangeText={(v) => {
+          openTimeTouchedRef.current = true;
+          setOpenTime(v);
+          if (editing) setFormError(null);
+        }}
+        placeholder={t.journalOpenTimeLabel}
+        keyboardType="numbers-and-punctuation"
+        maxLength={20}
+        placeholderTextColor={colors.textDim}
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
+        accessibilityLabel={t.journalOpenTimeLabel}
+        accessibilityHint={t.journalOpenTimeHint.replace('{example}', closeTimeExample)}
+      />
+      {editing
+        ? (() => {
+            // التعديل: سطرٌ فقط إن رُفض الوقت المكتوب (يبقى كما مُلئ ⇒ لا سطر — الخانة المملوءة مثال صيغتها)
+            const chk = editOpenedAtSend({
+              text: openTime,
+              initial: openTimeInit.text,
+              initialIso: openTimeInit.iso ?? editing.opened_at_iso,
+              raw: editing.opened_at,
+              closeText: pnum(exit) != null ? closeTime : '',
+              nowMs: serverNowSec() * 1000,
+            });
+            return 'error' in chk ? <Text style={[styles.planWarn, { textAlign: align }]}>{createTimesErrorText(chk)}</Text> : null;
+          })()
+        : null}
       {!editing ? (
         <>
-          <TextInput
-            style={[styles.input, { textAlign: align }]}
-            value={openTime}
-            onChangeText={setOpenTime}
-            placeholder={t.journalOpenTimeLabel}
-            keyboardType="numbers-and-punctuation"
-            maxLength={20}
-            placeholderTextColor={colors.textDim}
-            underlineColorAndroid="transparent"
-            clearButtonMode="while-editing"
-            keyboardAppearance="dark"
-            selectionColor={colors.accent}
-            accessibilityLabel={t.journalOpenTimeLabel}
-            accessibilityHint={t.journalOpenTimeHint.replace('{example}', closeTimeExample)}
-          />
           {pnum(exit) != null ? (
             <TextInput
               style={[styles.input, { textAlign: align }]}
@@ -2397,7 +2453,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               text: closeTime,
               initial: closeTimeInit.text,
               initialIso: closeTimeInit.iso,
-              openedIso: editing.opened_at_iso,
+              openedIso: editOpenedAtIso(),
               nowMs: serverNowSec() * 1000,
             });
             return 'error' in chk ? (

@@ -4567,3 +4567,72 @@ console.log('tradePlan journalSizeOunces selftest OK');
   }
   console.log('tradePlan createTimesSend selftest OK');
 }
+
+// ——— تصحيح وقت فتح صفقة سُجّلت «الآن» خطأً: `opened_at` بالتعديل (tools150c) ———
+{
+  const { editOpenedAtSend, editClosedAtSend } = require('./tradePlan') as typeof import('./tradePlan');
+  const prevTz = process.env.TZ;
+  try {
+    process.env.TZ = 'Asia/Baghdad';
+    const now = Date.parse('2026-09-26T19:00:00Z'); // 22:00 ببغداد
+    const stampedIso = '2026-09-26T22:00:00+03:00';
+    const base = { initial: '2026-09-26 22:00', initialIso: stampedIso, raw: '2026-09-26 21:00', nowMs: now };
+    // كما مُلئ ⇒ لا يُرسل شيء، والإغلاق يُقارن بالمحفوظ
+    assert.deepEqual(editOpenedAtSend({ ...base, text: ' 2026-09-26 22:00 ', closeText: '' }), { send: null, openedIso: stampedIso });
+    // القديم: إغلاق أمس الحقيقي يُرفض لأن الفتح المختوم «الآن» بعده
+    assert.deepEqual(
+      editClosedAtSend({ exitSent: 1.08, startedClosed: true, text: '2026-09-25 16:40', initial: '2026-09-26 22:00', initialIso: null, openedIso: stampedIso, nowMs: now }),
+      { error: 'beforeOpen', opened: '2026-09-26 22:00' }
+    );
+    // الجديد: الفتح يُصحَّح (مع `seen_opened_at` المخزَّن حرفياً) ثم يقبل الإغلاق الحقيقي بمقارنته بالفتح الجديد
+    const fixed = editOpenedAtSend({ ...base, text: '2026-09-25 14:05', closeText: '2026-09-25 16:40' });
+    assert.deepEqual(fixed, {
+      send: { opened_at: '2026-09-25T14:05:00+03:00', seen_opened_at: '2026-09-26 21:00' },
+      openedIso: '2026-09-25T14:05:00+03:00',
+    });
+    assert.ok(!('error' in fixed));
+    assert.deepEqual(
+      editClosedAtSend({
+        exitSent: 1.08,
+        startedClosed: true,
+        text: '2026-09-25 16:40',
+        initial: '2026-09-26 22:00',
+        initialIso: null,
+        openedIso: 'error' in fixed ? null : fixed.openedIso,
+        nowMs: now,
+      }),
+      { send: '2026-09-25T16:40:00+03:00' }
+    );
+    // الفتح الجديد بعد الإغلاق الظاهر ⇒ خطأ محدّد بدل 422 عامّ؛ الدقيقة نفسها مقبولة
+    assert.deepEqual(editOpenedAtSend({ ...base, text: '2026-09-25 16:41', closeText: '2026-09-25 16:40' }), {
+      error: 'beforeOpen',
+      opened: '2026-09-25 16:41',
+    });
+    assert.ok(!('error' in editOpenedAtSend({ ...base, text: '2026-09-25 16:40', closeText: '2026-09-25 16:40' })));
+    // إغلاق فارغ (غير معروف) أو غير مقروء ⇒ لا مقارنة هنا (وقت الإغلاق له فحصه)
+    assert.ok(!('error' in editOpenedAtSend({ ...base, text: '2026-09-25 16:41', closeText: '' })));
+    assert.ok(!('error' in editOpenedAtSend({ ...base, text: '2026-09-25 16:41', closeText: 'junk' })));
+    // مُسح ⇒ العمود إلزامي فلا «غير معروف»؛ غير مقروء؛ بالمستقبل بسماح 5 د
+    assert.deepEqual(editOpenedAtSend({ ...base, text: '', closeText: '' }), { error: 'openInvalid' });
+    assert.deepEqual(editOpenedAtSend({ ...base, text: '26-09-2026 10:00', closeText: '' }), { error: 'openInvalid' });
+    assert.ok(!('error' in editOpenedAtSend({ ...base, text: '2026-09-26 22:05', closeText: '' })));
+    assert.deepEqual(editOpenedAtSend({ ...base, text: '2026-09-26 22:06', closeText: '' }), { error: 'openFuture' });
+    // صفّ قديم بلا نصّ مخزَّن صالح (أو أطول من حدّ الخادم) ⇒ بلا `seen_opened_at` (لا 422 دائم)
+    const noRaw = editOpenedAtSend({ ...base, raw: 'x'.repeat(41), text: '2026-09-25 14:05', closeText: '' });
+    assert.deepEqual(noRaw, { send: { opened_at: '2026-09-25T14:05:00+03:00' }, openedIso: '2026-09-25T14:05:00+03:00' });
+    // حقل بدأ فارغاً (صفّ بلا `opened_at_iso`) وبقي فارغاً ⇒ بلا تغيير، لا خطأ
+    assert.deepEqual(editOpenedAtSend({ ...base, initial: '', initialIso: null, text: '', closeText: '' }), { send: null, openedIso: null });
+    // الساعة المكرَّرة (برلين 25-10-2026): إغلاق 02:10 قد يكون الشتوي (بعد فتح 02:40 الصيفي) ⇒ لا يُمنع
+    process.env.TZ = 'Europe/Berlin';
+    const later = Date.parse('2026-10-26T12:00:00Z');
+    assert.ok(!('error' in editOpenedAtSend({ ...base, nowMs: later, text: '2026-10-25 02:40', closeText: '2026-10-25 02:10' })));
+    assert.deepEqual(editOpenedAtSend({ ...base, nowMs: later, text: '2026-10-25 03:40', closeText: '2026-10-25 02:10' }), {
+      error: 'beforeOpen',
+      opened: '2026-10-25 03:40',
+    });
+  } finally {
+    if (prevTz === undefined) delete process.env.TZ;
+    else process.env.TZ = prevTz;
+  }
+  console.log('tradePlan editOpenedAtSend selftest OK');
+}
