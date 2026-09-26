@@ -2412,3 +2412,17 @@ export function openQuotesRefreshDue(lastAt: number | null, now: number): boolea
   const age = now - lastAt;
   return age < 0 || age >= OPEN_QUOTES_REFRESH_AFTER_MS;
 }
+
+/** أقلّ مهلة بين ضغطة المنع والضغطة التي تقول «السعر كما كتبته» — دون ذلك نقرٌ مزدوج لم يُقرأ فيه التحذير */
+export const SAVE_OVERRIDE_MIN_MS = 600;
+
+/**
+ * هل تُقبل ضغطة الحفظ هذه تأكيداً لـ«نقاط بخانة سعر»؟ نعم إن سبقتها ضغطةٌ مُنعت على **النموذج نفسه** (`key`) قبل
+ * `SAVE_OVERRIDE_MIN_MS` على الأقل. كان يكفي أيّ ضغطة ثانية: نقرٌ مزدوج على «أضف» بهدف «50» على EURUSD يحفظ هدفاً عند
+ * 50.00 قبل أن يظهر سطر التحذير. ساعة رجعت للخلف ⇒ لا تأكيد (يُعاد التسليح).
+ */
+export function saveOverrideAccepted(armed: { key: string; at: number } | null, key: string, now: number): boolean {
+  if (armed == null || armed.key !== key) return false;
+  const age = now - armed.at;
+  return Number.isFinite(age) && age >= SAVE_OVERRIDE_MIN_MS;
+}

@@ -5,6 +5,8 @@
 import assert from 'node:assert/strict';
 import { parseDecimal } from './parseDecimal';
 import {
+  saveOverrideAccepted,
+  SAVE_OVERRIDE_MIN_MS,
   atrStopPips,
   ATR_STOP_TF_SEC,
   analyzePlan,
@@ -3762,3 +3764,18 @@ console.log('tradePlan breakeven win-rate selftest OK');
   assert.equal(journalPayoffR([]), null);
 }
 console.log('tradePlan payoff-R selftest OK');
+
+// ---- saveOverrideAccepted: «السعر كما كتبته» لا يُقبل من نقرٍ مزدوج ----
+{
+  const k = 'EURUSD\u0001buy\u00011.0850';
+  assert.equal(saveOverrideAccepted(null, k, 1_000), false);
+  // نقرٌ مزدوج (200ms) — كان يحفظ هدف «50» سعراً 50.00
+  assert.equal(saveOverrideAccepted({ key: k, at: 1_000 }, k, 1_200), false);
+  assert.equal(saveOverrideAccepted({ key: k, at: 1_000 }, k, 1_000 + SAVE_OVERRIDE_MIN_MS - 1), false);
+  assert.equal(saveOverrideAccepted({ key: k, at: 1_000 }, k, 1_000 + SAVE_OVERRIDE_MIN_MS), true);
+  assert.equal(saveOverrideAccepted({ key: k, at: 1_000 }, k, 60_000), true);
+  // عُدِّل النموذج بعد التحذير ⇒ تحذيرٌ جديد
+  assert.equal(saveOverrideAccepted({ key: k, at: 1_000 }, k + 'x', 60_000), false);
+  // ساعة رجعت
+  assert.equal(saveOverrideAccepted({ key: k, at: 5_000 }, k, 1_000), false);
+}

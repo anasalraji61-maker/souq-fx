@@ -109,6 +109,7 @@ import {
   openQuotesRefreshDue,
   computedPriceText,
   journalDraftTyped,
+  saveOverrideAccepted,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -241,8 +242,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   /** النموذج **الآن** — صفقةٌ بدأت كتابتها أثناء طلب الإضافة لا يمسحها `resetForm` حين يصل الردّ */
   const formKeyRef = useRef('');
   formKeyRef.current = [symbol, side, entry, exit, size, sl, tp, note].join('\u0001');
-  /** مفتاح النموذج الذي عُرض عليه «نقاطٌ بخانة سعر» عند الحفظ — ضغطة ثانية بلا تعديل تحفظ السعر كما كُتب. */
-  const pipsOverrideRef = useRef<string | null>(null);
+  /** مفتاح النموذج الذي عُرض عليه «نقاطٌ بخانة سعر» عند الحفظ ووقته — ضغطة ثانية بلا تعديل (لا نقرٌ مزدوج) تحفظ السعر كما كُتب. */
+  const pipsOverrideRef = useRef<{ key: string; at: number } | null>(null);
   /** جلب «السعر الحالي» لخانة الدخول جارٍ */
   const [quoteBusy, setQuoteBusy] = useState(false);
   /** وضوح الحالة: يميّز "لا صفقات بعد" فعلياً عن فشل تحميل السجل */
@@ -1202,8 +1203,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       return;
     }
     const pipsKey = pipsLevel ? `${pipsLevel.kind}\u0001${formKeyRef.current}` : null;
-    if (pipsLevel && pipsOverrideRef.current !== pipsKey) {
-      pipsOverrideRef.current = pipsKey;
+    const armed = pipsOverrideRef.current;
+    const now = Date.now();
+    if (pipsLevel && pipsKey != null && !saveOverrideAccepted(armed, pipsKey, now)) {
+      // نقرٌ مزدوج لا يُعيد التسليح: المهلة تُعدّ من أول ضغطة مُنعت على هذا النموذج (ساعة رجعت ⇒ تسليحٌ جديد)
+      if (armed?.key !== pipsKey || now < armed.at) pipsOverrideRef.current = { key: pipsKey, at: now };
       // launch123: السطر القابل للنقر أعلاه يحمل الاقتراح، فهنا «لم تُحفظ» + المخرج فقط (كانت الجملة نفسها تتكرّر تحت الزرّ
       // بلا نقرة). الزرّ باسمه الظاهر.
       const button = editing ? t.journalSaveEditBtn : t.journalAddBtn;
