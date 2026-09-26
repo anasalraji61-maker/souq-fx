@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   rowCenter: { alignItems: 'center' },
   rowLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   hint: { color: colors.textDim, fontSize: 11, lineHeight: 15 },
-  armed: { color: colors.bull, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
+  armed: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   notifRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
   notifWarn: { color: colors.warn, fontSize: 11, fontWeight: '500', flex: 1 },
   notifBtn: {

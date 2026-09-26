@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   compareTag: { color: COMPARE_COLOR, fontSize: 11, marginTop: 4 },
   compareNote: { color: COMPARE_COLOR, fontSize: 11 },
   compareNoteWarn: { color: colors.warn, fontWeight: '500' },
-  armed: { color: colors.bull, fontSize: 12, fontWeight: '500' },
+  armed: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
   main: { flex: 1 },
   pill: {
     paddingHorizontal: 12,

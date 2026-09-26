@@ -1266,7 +1266,7 @@ const styles = StyleSheet.create({
   editingText: { color: colors.accent, fontSize: 11, fontWeight: '500', flex: 1, marginTop: spacing.xs },
   cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   firesNow: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
-  armed: { color: colors.bull, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
+  armed: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   rearm: { color: colors.accent, fontWeight: '500', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '500', fontSize: 12 },
 });
