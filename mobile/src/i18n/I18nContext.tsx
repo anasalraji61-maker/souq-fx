@@ -56,6 +56,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // الويب (قرار ١٦): `<html lang>` كان «en» ثابتاً من قالب Expo ⇒ قارئ الشاشة بالمتصفّح (NVDA، VoiceOver)
+  // ينطق الواجهة العربية والكردية بصوت إنجليزي — حروف متقطّعة لا كلمات. يتبع اللغة المعروضة الآن؛
+  // الكردية «ckb» (السورانية) لا «ku» (الكرمانجية بالحرف اللاتيني). `dir` لا يُمسّ عمداً: الانعكاس يدويّ
+  // بكل الواجهة (أعلاه)، و`dir="rtl"` على الجذر كان سيقلب صفوف react-native-web مرّة ثانية.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    document.documentElement.lang = lang === 'ku' ? 'ckb' : lang;
+  }, [lang]);
+
   // تبديل اللغة فوريّ على كل الشاشات (الانعكاس يقرأ `rtl` من السياق) — لا إعادة تشغيل ولا نافذة.
   const setLang = useCallback(async (id: LangId) => {
     setLangState(id);
