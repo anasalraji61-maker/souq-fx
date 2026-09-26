@@ -111,6 +111,7 @@ import {
   spreadBeyondLiveEntry,
   MAX_SPREAD_PIPS,
   MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC,
+  MAX_SPREAD_PIPS_JPY_METAL,
   maxSpreadPipsFor,
   type InstrumentSpec,
   spreadTooWide,
@@ -3501,7 +3502,7 @@ console.log('positionSize exotic pairs (JPY conv inverted, carry-over, two-decim
     ['USDZAR', '1500'], ['USDTRY', '1500'], ['USDMXN', '1500'], ['EURZAR', '1500'],
     ['USDSEK', '500'], ['USDNOK', '500'], ['USDPLN', '500'], ['USDCNH', '500'],
     ['USDHKD', '20'], ['USDSAR', '20'], ['USDAED', '20'],
-    ['XAUUSD', '150'], ['XAUEUR', '150'], ['XAGUSD', '30'], ['XAUJPY', ''], ['XAGTRY', ''],
+    ['XAUUSD', '150'], ['XAUEUR', '150'], ['XAGUSD', '30'], ['XAUJPY', '20000'], ['XAGJPY', '5000'], ['XAGTRY', ''],
   ];
   for (const [sym, want] of cases) assert.equal(typicalSlPipsExample(S(sym)), want, sym);
   assert.equal(typicalSlPipsExample(null), '20');
@@ -3524,7 +3525,7 @@ console.log('positionSize typicalSlPipsExample selftest OK');
   const cases: [string, string][] = [
     ['EURUSD', '1.5'], ['USDJPY', '1.5'], ['USDSGD', '1.5'], ['USDHKD', '5'], ['USDAED', '5'],
     ['USDSEK', '30'], ['USDPLN', '30'], ['USDZAR', '100'], ['USDTRY', '100'], ['USDMXN', '100'],
-    ['XAUUSD', '3'], ['XAGUSD', '3'], ['XAUJPY', ''],
+    ['XAUUSD', '3'], ['XAGUSD', '3'], ['XAUJPY', '450'], ['XAGJPY', '450'], ['XAGTRY', ''],
     // تقاطعات السبريد الأوسع (2.5–5 pip) ⇒ 3؛ EURGBP/EURJPY/EURAUD/AUDJPY تبقى 1.5
     ['GBPNZD', '3'], ['EURNZD', '3'], ['AUDNZD', '3'], ['NZDJPY', '3'], ['GBPAUD', '3'], ['GBPCAD', '3'], ['GBPJPY', '3'],
     ['EURGBP', '1.5'], ['EURJPY', '1.5'], ['EURAUD', '1.5'], ['AUDJPY', '1.5'], ['NZDUSD', '1.5'], ['GBPUSD', '1.5'],
@@ -3544,8 +3545,8 @@ console.log('positionSize typicalSlPipsExample selftest OK');
 console.log('positionSize typicalSpreadPipsExample selftest OK');
 
 {
-  // launch129: بلا مثال (XAUJPY) يُحذف «(مثل …)» كلّه بكل لغة، لا «مثل 1.5» العام ولا «مثل )» فارغاً
-  const xaujpy = typicalSpreadPipsExample(instrumentSpec('XAUJPY')!);
+  // launch129: بلا مثال (XAGTRY) يُحذف «(مثل …)» كلّه بكل لغة، لا «مثل 1.5» العام ولا «مثل )» فارغاً
+  const xaujpy = typicalSpreadPipsExample(instrumentSpec('XAGTRY')!);
   assert.equal(xaujpy, '');
   for (const L of Object.values(DICTS)) {
     const tpl = L.riskCalcSpreadTooWide.replace('{n}', '900');
@@ -3598,6 +3599,23 @@ console.log('positionSize quoteBookValid selftest OK');
   assert.equal(parseSpreadPips(String(MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC), S('USDZAR')), MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC);
   assert.equal(spreadTooWide('3001', S('USDZAR')), 3001);
   assert.equal(parseSpreadPips('3001', S('USDZAR')), null);
+  // المعدن بالين: سبريد XAUJPY «600» (~0.41$) كان يُرفض «لا يبدو سبريداً» ويُحسب صفراً ⇒ وقف 300 pip داخل السبريد بلا تحذير
+  assert.equal(maxSpreadPipsFor(S('XAUJPY')), MAX_SPREAD_PIPS_JPY_METAL);
+  assert.equal(maxSpreadPipsFor(S('XAGJPY')), MAX_SPREAD_PIPS_JPY_METAL);
+  assert.equal(parseSpreadPips('600', S('XAUJPY')), 600);
+  assert.equal(parseSpreadPips('550', S('XAGJPY')), 550);
+  assert.equal(spreadTooWide('600', S('XAUJPY')), null);
+  assert.equal(stopInsideSpread(300, parseSpreadPips('600', S('XAUJPY'))!), true);
+  // سعر المعدن بالين بخانة السبريد يبقى مرفوضاً ومسمّى (فضة ~6,500 ين، ذهب ~547,600)
+  assert.equal(parseSpreadPips('6512', S('XAGJPY')), null);
+  assert.equal(parseSpreadPips('547600', S('XAUJPY')), null);
+  // وبلا سبريد مكتوب: المعتاد 450 ⇒ وقف 300 pip (0.20$) داخل السبريد المعتاد؛ 3000 (2$) لا
+  assert.equal(typicalSpreadPipsExample(S('XAUJPY')), '450');
+  assert.equal(stopInsideTypicalSpread(300, S('XAUJPY'), ''), 450);
+  assert.equal(stopInsideTypicalSpread(3000, S('XAUJPY'), ''), null);
+  // الذهب بالدولار كما هو
+  assert.equal(maxSpreadPipsFor(S('XAUUSD')), MAX_SPREAD_PIPS);
+  assert.equal(parseSpreadPips('600', S('XAUUSD')), null);
   // سعرٌ كامل بلا فاصلة («182500» لـ18.2500) ما زال يُلتقط على الغريبة
   assert.equal(spreadTooWide('182500', S('USDZAR')), 182500);
   // الاتّساق: ما يقبله `parseSpreadPips` لا يسمّيه `spreadTooWide` لكل أداة
@@ -3630,7 +3648,7 @@ console.log('positionSize maxSpreadPipsFor selftest OK');
   assert.equal(stopInsideTypicalSpread(50, S('USDZAR'), '0'), null);
   // بلا أداة، أداة بلا مثال، وقف غير صالح
   assert.equal(stopInsideTypicalSpread(50, null, ''), null);
-  assert.equal(stopInsideTypicalSpread(1, S('XAUJPY'), ''), null);
+  assert.equal(stopInsideTypicalSpread(1, S('XAGTRY'), ''), null);
   for (const bad of [0, -5, NaN, Infinity]) assert.equal(stopInsideTypicalSpread(bad, S('USDZAR'), ''), null, String(bad));
   // مثال الوقف لكل أداة لا يُطلق التحذير (المثالان متّسقان)
   for (const sym of ['EURUSD', 'USDJPY', 'USDSGD', 'USDHKD', 'USDSEK', 'USDZAR', 'USDTRY', 'USDMXN', 'XAUUSD', 'XAGUSD']) {

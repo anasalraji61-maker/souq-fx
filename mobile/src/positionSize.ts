@@ -745,6 +745,8 @@ const EXOTIC_PIP_QUOTES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MX
 export function typicalSlPipsExample(spec: InstrumentSpec | null | undefined): string {
   if (!spec) return '20';
   // pip المعدن 0.1/0.01 **بأيّ عملة تسعير**: «150» على XAUJPY = 15 ين (~0.10$). خارج العملات المقاربة للدولار لا مثال أصدق من لا شيء.
+  // بالين (pip 0.1/0.01 ين): 15$ ذهباً ≈ 2,200 ين = 20000، و0.30$ فضةً ≈ 44 ين = 5000 — ليتّسق مع مثال السبريد 450
+  if (METALS[spec.base] && spec.quote === 'JPY') return spec.base === 'XAU' ? '20000' : '5000';
   if (METALS[spec.base]) return METAL_CARRY_QUOTES.has(spec.quote) ? (spec.base === 'XAU' ? '150' : '30') : '';
   if (PEGGED_QUOTES.has(spec.quote)) return '20';
   if (HIGH_VOL_EXOTIC_QUOTES.has(spec.quote)) return '1500';
@@ -759,7 +761,9 @@ const PEGGED_QUOTES = new Set(['HKD', 'SAR', 'AED']);
  */
 export function typicalSpreadPipsExample(spec: InstrumentSpec | null | undefined): string {
   if (!spec) return '1.5';
-  if (METALS[spec.base]) return METAL_CARRY_QUOTES.has(spec.quote) ? '3' : '';
+  // المعدن بالين: ~0.30$ ذهباً و~0.03$ فضةً ≈ 44 ين / 4.4 ين = ~450 pip (`MAX_SPREAD_PIPS_JPY_METAL`) — بلا مثال لم يكن تحذير
+  // «الوقف داخل السبريد المعتاد» يُطلق لوقف 300 pip (0.20$) على XAUJPY
+  if (METALS[spec.base]) return METAL_CARRY_QUOTES.has(spec.quote) ? '3' : spec.quote === 'JPY' ? '450' : '';
   if (PEGGED_QUOTES.has(spec.quote)) return '5';
   if (HIGH_VOL_EXOTIC_QUOTES.has(spec.quote)) return '100';
   if (EXOTIC_PIP_QUOTES.has(spec.quote)) return '30';
@@ -1703,8 +1707,15 @@ export const MAX_SPREAD_PIPS = 500;
  * صحيحاً. خطأ «سعرٌ بخانة السبريد» على هذه الأزواج («18.25»، «4210») يقع تحت الحدّين كليهما، فالرفع لا يُفلت ما كان يُلتقط.
  */
 export const MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC = 3000;
-/** أوسع سبريد مقبول للأداة (بالنقاط) — `MAX_SPREAD_PIPS` لكل ما عدا TRY/ZAR/MXN؛ بلا أداة = الحدّ العام. */
+/**
+ * حدّ السبريد للمعدن **بالين** (XAUJPY pip 0.1 ين، XAGJPY 0.01 ين): سبريد الذهب المعتاد ~0.30$ = ~44 ين = **~440 pip**، والفضة
+ * ~0.03$ = ~4.4 ين = ~440 pip، وعند الأخبار ×3 — حدّ 500 كان يرفض سبريداً حقيقياً (600) «لا يبدو سبريداً» ويحسبه صفراً ⇒ وقف 300 pip
+ * داخل السبريد بلا تحذير و4.93 لوت خسارتها الفعلية 3% لا 1%. سعر المعدن بالين (~6,500 للفضة، ~550,000 للذهب) فوق الحدّ فيبقى مُلتقطاً.
+ */
+export const MAX_SPREAD_PIPS_JPY_METAL = 2000;
+/** أوسع سبريد مقبول للأداة (بالنقاط) — `MAX_SPREAD_PIPS` لكل ما عدا TRY/ZAR/MXN والمعدن بالين؛ بلا أداة = الحدّ العام. */
 export function maxSpreadPipsFor(spec: InstrumentSpec | null | undefined): number {
+  if (spec && METALS[spec.base] && spec.quote === 'JPY') return MAX_SPREAD_PIPS_JPY_METAL;
   return spec && !METALS[spec.base] && HIGH_VOL_EXOTIC_QUOTES.has(spec.quote) ? MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC : MAX_SPREAD_PIPS;
 }
 
@@ -1791,7 +1802,7 @@ export function stopInsideSpread(slPips: number, spreadPips: number | null): boo
  * **الوقف داخل السبريد المعتاد للأداة** وخانة السبريد فارغة — `stopInsideSpread` لا يُطلق بلا سبريد مكتوب، وخانته اختيارية.
  * «50» على USDZAR (سبريد ~100 pip) أو «80» على USDTRY وقفٌ يُضرب لحظة الفتح، واللوت منه أكبر ×20–30 من وقفٍ معتاد (1,500) بمخاطرة
  * «1%» صحيحة الحساب. يُرجع السبريد المعتاد (`typicalSpreadPipsExample`) لتقوله الرسالة، أو `null`: خانة مكتوبة (لها `stopInsideSpread`)،
- * أداة بلا مثال (XAUJPY)، وقف غير صالح، أو أوسع من المعتاد. على الرئيسيات (1.5) لا يُطلق عملياً إلا لوقفٍ 1–1.5 pip.
+ * أداة بلا مثال (XAUTRY)، وقف غير صالح، أو أوسع من المعتاد. على الرئيسيات (1.5) لا يُطلق عملياً إلا لوقفٍ 1–1.5 pip.
  */
 export function stopInsideTypicalSpread(
   slPips: number,
