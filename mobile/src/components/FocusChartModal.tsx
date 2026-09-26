@@ -143,6 +143,9 @@ export function FocusChartModal({
           setSeries(s);
           setSeriesSym(sym);
           setSeriesTf(tf);
+          // chart-r119a: الشموع الرئيسية وصلت ⇒ ينتهي التحميل هنا. جلب المقارنة بعدها كان يُبقي الشارت
+          // معتماً ومحجوب اللمس حتى يصل (أو تنتهي مهلته)؛ يكمل الآن وحده بشرط `alive`.
+          setLoading(false);
         }
         if (compareSym && alive) {
           // كان الفشل يرسم `mockSeries` كخط مقارنة بنفسجي فوق الشارت الحقيقي — علاقة/تباعد مختلَق بين
