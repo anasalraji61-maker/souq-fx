@@ -249,7 +249,7 @@ export function FocusChartModal({
     };
   }, [visible, sym, series?.last]);
   const quote = quoteState?.forSymbol === sym ? quoteState : null;
-  const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
+  const hasSpreadRaw = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
 
   const pick = (next: string) => {
     // chart-r117a: الرمز المقارَن صار رئيسياً ⇒ تسقط المقارنة (كان «GBPUSD vs GBPUSD» ولا تُزال).
@@ -316,6 +316,16 @@ export function FocusChartModal({
   const headPx = headSeries ? livePriceForHeader(headSeries, liveTick) : null;
   // `last: null` (backend-r19) بلا تيك ⇒ لا سعر يُطبع.
   const headPrice = headPx ?? headSeries?.last ?? null;
+  // العرض/الطلب يُجلبان مع `series.last` (كل ~90ث، ولا يتجدّدان أبداً إن فشل التحديث) والسعر بجانبهما تيك كل
+  // ثانية: بخبر قويّ كان «1.08760 · B 1.08540/A 1.08550». كـ`ChartFrame` `quoteStale`: سعر حيّ خارج
+  // [bid − 3×spread، ask + 3×spread] ⇒ يُخفى السعران.
+  const hasSpread =
+    hasSpreadRaw &&
+    !(
+      headPx != null &&
+      (headPx < quote!.bid! - 3 * (quote!.ask! - quote!.bid!) ||
+        headPx > quote!.ask! + 3 * (quote!.ask! - quote!.bid!))
+    );
   // منازل الرأس بمرجع الشارت نفسه (`useStickyPriceRef`، كـ`ChartFrame`) — لرمز بلا مواصفة (LTCUSD حول 100)
   // كان الرأس يقفز 3↔2 منازل مع كل شمعة بينما الشارت تحته ثابت.
   const priceRef = useStickyPriceRef(sym, headSeries?.last);
