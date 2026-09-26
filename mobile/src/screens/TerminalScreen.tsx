@@ -83,10 +83,12 @@ import {
 import { PanSpeedSlider, CruiseSpeedMark } from '../components/PanSpeedSlider';
 import { SymbolPairMenu } from '../components/SymbolPairMenu';
 import {
+  CHART_KINDS,
   type ChartKind,
   type DrawTool,
   type IndicatorId,
 } from '../chart/types';
+import { loadTemplates } from '../chart/chartTemplateStore';
 import {
   DEFAULT_FRAME_TIMEFRAMES,
   TIMEFRAMES,
@@ -124,6 +126,11 @@ const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
 /** chart-r121a: مؤشّرات الطرفية (ما يعرضه الشارت فعلاً) — كانت تضيع بكل إعادة فتح */
 const INDICATORS_KEY = 'matrix.home.indicators.v1';
+/** نوع الشارت والعدسة: الطرفية تمرّرهما دائماً (`'candles'`/`'clean'`) فكان قالب الشارت لا يطبّقهما (`!initialKind`)، وهيكن
+ *  المختار بالشريط يعود شموعاً بكل إعادة فتح */
+const KIND_KEY = 'matrix.home.chartKind.v1';
+const LENS_KEY = 'matrix.home.lens.v1';
+const LENS_IDS: readonly MatrixLensId[] = ['clean', 'structure', 'momentum', 'liquidity'];
 /** سرعة السحب يحفظها `savePanSpeed` بمفتاحه — هذا وسمٌ لحارس القراءة فقط. */
 const PAN_SPEED_TOUCH = 'panSpeed';
 const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
@@ -276,21 +283,53 @@ export function TerminalScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `touchPref` يكتب مرجعاً ثابتاً
   }, []);
   const onChartIndicators = useCallback((ids: IndicatorId[]) => applyIndicators(ids, false), [applyIndicators]);
+  const pickKind = useCallback((next: ChartKind) => {
+    touchPref(KIND_KEY);
+    setKind(next);
+    AsyncStorage.setItem(KIND_KEY, next).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `touchPref` يكتب مرجعاً ثابتاً
+  }, []);
+  const pickLens = useCallback((next: MatrixLensId) => {
+    touchPref(LENS_KEY);
+    setLens(next);
+    AsyncStorage.setItem(LENS_KEY, next).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `touchPref` يكتب مرجعاً ثابتاً
+  }, []);
   useEffect(() => {
     let alive = true;
-    AsyncStorage.getItem(INDICATORS_KEY)
-      .then((raw) => {
-        if (!alive || prefsTouchedRef.current.has(INDICATORS_KEY) || !raw) return;
-        const saved: unknown = JSON.parse(raw);
-        // المحفوظ (ولو فارغاً — أطفأها المتداول كلّها) يتقدّم على قالب بُلّغ قبل القراءة
-        if (Array.isArray(saved) && saved.every((x) => typeof x === 'string' && x !== '')) {
-          setIndicators(saved as IndicatorId[]);
+    const read = (key: string) => AsyncStorage.getItem(key).catch(() => null);
+    (async () => {
+      try {
+        const [rawInd, rawKind, rawLens, templates] = await Promise.all([
+          read(INDICATORS_KEY),
+          read(KIND_KEY),
+          read(LENS_KEY),
+          loadTemplates(),
+        ]);
+        if (!alive) return;
+        const touched = prefsTouchedRef.current;
+        if (rawInd && !touched.has(INDICATORS_KEY)) {
+          let saved: unknown = null;
+          try {
+            saved = JSON.parse(rawInd);
+          } catch {
+            /* تالف ⇒ القالب */
+          }
+          // المحفوظ (ولو فارغاً — أطفأها المتداول كلّها) يتقدّم على قالب بُلّغ قبل القراءة
+          if (Array.isArray(saved) && saved.every((x) => typeof x === 'string' && x !== '')) {
+            setIndicators(saved as IndicatorId[]);
+          }
         }
-      })
-      .catch(() => {})
-      .finally(() => {
+        // لا محفوظ ⇒ القالب الافتراضي (الأوّل) كما يطبّقه الشارت حين لا تمرّر الأمّ شيئاً؛ لا يُكتب — ليس اختيار المتداول هنا
+        const tpl = templates[0];
+        const kindRaw = rawKind ?? tpl?.kind ?? null;
+        if (!touched.has(KIND_KEY) && CHART_KINDS.some((k) => k.id === kindRaw)) setKind(kindRaw as ChartKind);
+        const lensRaw = rawLens ?? tpl?.lens ?? null;
+        if (!touched.has(LENS_KEY) && LENS_IDS.includes(lensRaw as MatrixLensId)) setLens(lensRaw as MatrixLensId);
+      } finally {
         if (alive) indicatorsReadRef.current = true;
-      });
+      }
+    })();
     return () => {
       alive = false;
     };
@@ -1531,7 +1570,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={() => {
-                setKind(k.id);
+                pickKind(k.id);
                 setShowKinds(false);
               }}
               accessibilityLabel={`${t.termChartKindA11yPrefix}: ${k.label}`}
@@ -1620,7 +1659,7 @@ export function TerminalScreen() {
             <LeftDrawRail
               activeLens={lens}
               activeTool={tool}
-              onLens={setLens}
+              onLens={pickLens}
               onTool={(nextTool) => {
                 setTool(nextTool);
               }}
@@ -2209,7 +2248,7 @@ export function TerminalScreen() {
             }
           }}
           activeLens={lens}
-          onLens={setLens}
+          onLens={pickLens}
         />
       </View>
 
@@ -2231,7 +2270,7 @@ export function TerminalScreen() {
           );
         }}
         onPickKind={(k) => {
-          setKind(k);
+          pickKind(k);
           setEdgePanel(null);
         }}
       />
