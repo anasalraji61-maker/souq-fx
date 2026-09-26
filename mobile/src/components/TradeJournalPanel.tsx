@@ -96,6 +96,9 @@ import {
   editExitValue,
   editSizeValue,
   journalEditSeen,
+  journalEditForm,
+  journalConflictForm,
+  type JournalEditForm,
   netLineIsWhole,
   noteWithTypedSize,
   formatSignedPct,
@@ -1142,6 +1145,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     liveFillRef.current = d.liveFill;
   };
 
+  const fillEditForm = (f: JournalEditForm) => {
+    setSymbol(f.symbol);
+    setSide(f.side);
+    setEntry(f.entry);
+    setExit(f.exit);
+    setSize(f.size);
+    setSl(f.sl);
+    setTp(f.tp);
+    setNote(f.note);
+  };
+
   const startEdit = (tr: Trade) => {
     // تعديلٌ فوق تعديل: يبقى ما قبل الأوّل
     if (!editing) {
@@ -1153,21 +1167,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       };
     }
     setEditing(tr);
-    setSymbol(tr.symbol);
-    setSide(tr.side === 'sell' ? 'sell' : 'buy');
     liveFillRef.current = null;
-    // String لا formatPrice: لا تقريب يغيّر السعر المسجَّل بمجرد فتح التعديل — وبلا صيغة أُسّية (`plainStopText`):
-    // `String(1.2e-9)` = «1.2e-9» لا يقرؤه `parseDecimal` ⇒ صفقة PEPE/BABYDOGE لا يُحفظ تعديلها أبداً («دخول غير صالح»)
-    setEntry(plainStopText(tr.entry));
-    setExit(tr.exit != null ? plainStopText(tr.exit) : '');
-    // 1 هو افتراضُ الباك-إند لصفقة سُجِّلت بلا حجم — لا يُملأ بالخانة كأنه رقم كتبه المتداول
-    // (إلا 1.00 مسجَّلة من الحاسبة — ملاحظتها تشهد بها، راجع `knownLots`)
-    const kl = knownLots(tr.size, tr.note);
-    setSize(kl != null ? String(kl) : '');
+    // الأسعار كما سُجّلت بلا تقريب ولا صيغة أُسّية، والحجم 1 الافتراضي فارغ — راجع `journalEditForm`
+    fillEditForm(journalEditForm(tr));
     setSizeFor(tr.symbol);
-    setSl(tr.sl != null ? plainStopText(tr.sl) : '');
-    setTp(tr.tp != null ? plainStopText(tr.tp) : '');
-    setNote(tr.note || '');
     setFormError(null);
     playSoftClick();
   };
@@ -1286,12 +1289,19 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         if (isAlreadyClosedError(err)) {
           setFormError(t.journalEditConflict);
           await refresh();
-          // «راجع حالتها ثم احفظ من جديد»: النموذج يُبنى على الصفّ المحدَّث (حالته وخروجه) — وإلا يعيد كل حفظٍ 409 بـ`seen_*` القديمة،
-          // والخروج بالخانة يصير خروج الجهاز الآخر فلا يُمسح/يُستبدل بصمت. بقيّة ما كتبه المتداول تبقى
+          // «راجع حالتها ثم احفظ من جديد»: النموذج يُبنى على الصفّ المحدَّث — وإلا يعيد كل حفظٍ 409 بـ`seen_*` القديمة. كل خانة غيّرها
+          // الجهاز الآخر تُعرض بقيمته الجديدة (كان الخروج وحده ⇒ دخولٌ صُحّح هناك يُكتب فوقه بالحفظ الثاني)، وما لم يغيّره يبقى كما
+          // كتبه المتداول — راجع `journalConflictForm`
           const fresh = tradesRef.current.find((tr) => tr.id === editing.id);
           if (fresh && mountedRef.current && editingRef.current?.id === fresh.id) {
+            const merged = journalConflictForm(
+              journalEditForm(editing),
+              { symbol, side, entry, exit, size, sl, tp, note },
+              journalEditForm(fresh)
+            );
             setEditing(fresh);
-            setExit(fresh.exit != null ? plainStopText(fresh.exit) : '');
+            fillEditForm(merged);
+            if (merged.size !== size || merged.symbol !== symbol) setSizeFor(fresh.symbol);
           }
         } else {
           setFormError(t.journalEditError);

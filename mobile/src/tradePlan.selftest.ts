@@ -3914,3 +3914,41 @@ console.log('tradePlan newestRecordedFirst selftest OK');
   assert.equal('seen_entry' in journalEditSeen({ status: 'open' })!, false);
 }
 console.log('tradePlan journalEditSeen selftest OK');
+
+// ——— journalEditForm / journalConflictForm: بعد 409 النموذج يُبنى على الصفّ المحدَّث خانةً خانة (backend-r80a) ———
+{
+  const { journalEditForm, journalConflictForm } = require('./tradePlan') as typeof import('./tradePlan');
+  const row = { symbol: 'EURUSD', side: 'buy', entry: 1.0842, exit: null, size: 0.3, sl: 1.08, tp: 1.09, note: 'breakout' };
+  const base = journalEditForm(row);
+  assert.deepEqual(base, { symbol: 'EURUSD', side: 'buy', entry: '1.0842', exit: '', size: '0.3', sl: '1.08', tp: '1.09', note: 'breakout' });
+  // كما يملؤها «تعديل»: بلا صيغة أُسّية، و1 الافتراضي فارغ (إلا بشهادة الملاحظة)، والغائب ''
+  assert.equal(journalEditForm({ ...row, entry: 1.2e-9 }).entry, '0.0000000012');
+  assert.equal(journalEditForm({ ...row, size: 1, note: '' }).size, '');
+  assert.equal(journalEditForm({ ...row, size: 1, note: '1.00 lot · risk 100 USD' }).size, '1');
+  assert.equal(journalEditForm({ ...row, side: 'SELL', sl: undefined, note: null }).side, 'buy');
+  assert.equal(journalEditForm({ ...row, sl: undefined }).sl, '');
+  assert.equal(journalEditForm({ ...row, note: null }).note, '');
+  // الجهاز الآخر صحّح الدخول، والمتداول هنا كتب ملاحظة ⇒ الدخول الجديد + ملاحظته (كان الدخول القديم يُكتب فوق التصحيح)
+  const fresh = journalEditForm({ ...row, entry: 1.0845 });
+  const mine = { ...base, note: 'breakout, moved SL later' };
+  assert.deepEqual(journalConflictForm(base, mine, fresh), { ...base, entry: '1.0845', note: 'breakout, moved SL later' });
+  // أُغلقت بجهاز آخر ⇒ خروجها يظهر (كما قبل) وبقيّة كتابته تبقى
+  const closed = journalEditForm({ ...row, exit: 1.0901 });
+  assert.equal(journalConflictForm(base, { ...base, sl: '1.081' }, closed).exit, '1.0901');
+  assert.equal(journalConflictForm(base, { ...base, sl: '1.081' }, closed).sl, '1.081');
+  // أُعيد فتحها هناك ⇒ الخروج يُفرغ (لا يُعاد إغلاقها بالخروج القديم)
+  const baseClosed = journalEditForm({ ...row, exit: 1.0901 });
+  assert.equal(journalConflictForm(baseClosed, baseClosed, base).exit, '');
+  // خانة غيّرها الاثنان ⇒ قيمة الجهاز الآخر: لا يُكتب فوق ما لم يُرَ؛ والاتجاه والرمز كذلك
+  assert.equal(journalConflictForm(base, { ...base, entry: '1.0850' }, fresh).entry, '1.0845');
+  const flipped = journalEditForm({ ...row, side: 'sell', symbol: 'GBPUSD' });
+  const m2 = journalConflictForm(base, base, flipped);
+  assert.equal(m2.side, 'sell');
+  assert.equal(m2.symbol, 'GBPUSD');
+  // لا شيء تغيّر هناك (409 لسببٍ آخر) ⇒ كتابة المتداول كما هي
+  const typed = { ...base, entry: '1.0850', size: '0.5', tp: '' };
+  assert.deepEqual(journalConflictForm(base, typed, base), typed);
+  // مسح الوقف بجهاز آخر ⇒ فارغ هنا (والمتداول يراه قبل أن يحفظ من جديد)
+  assert.equal(journalConflictForm(base, base, journalEditForm({ ...row, sl: null })).sl, '');
+}
+console.log('tradePlan journalConflictForm selftest OK');

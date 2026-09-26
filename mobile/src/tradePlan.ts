@@ -545,6 +545,67 @@ export function journalEditSeen(row: {
   return out;
 }
 
+/** خانات نموذج تعديل الدفتر كنصوص — كما يملؤها «تعديل» (`journalEditForm`) */
+export type JournalEditForm = {
+  symbol: string;
+  side: 'buy' | 'sell';
+  entry: string;
+  exit: string;
+  size: string;
+  sl: string;
+  tp: string;
+  note: string;
+};
+
+/**
+ * نموذج التعديل من صفّ الدفتر: الأسعار كما سُجّلت بلا تقريب ولا صيغة أُسّية (`plainStopText` — «1.2e-9» لا يقرؤه `parseDecimal`
+ * فلا يُحفظ تعديل PEPE أبداً)، والحجم 1 الذي افترضه الخادم لصفقة بلا حجم فارغٌ (`knownLots`)، والغائب ''.
+ */
+export function journalEditForm(tr: {
+  symbol: string;
+  side: string;
+  entry: number;
+  exit?: number | null;
+  size?: number | null;
+  sl?: number | null;
+  tp?: number | null;
+  note?: string | null;
+}): JournalEditForm {
+  const px = (v: number | null | undefined) => (typeof v === 'number' && Number.isFinite(v) ? plainStopText(v) : '');
+  const kl = knownLots(tr.size, tr.note);
+  return {
+    symbol: tr.symbol,
+    side: tr.side === 'sell' ? 'sell' : 'buy',
+    entry: px(tr.entry),
+    exit: px(tr.exit),
+    size: kl != null ? String(kl) : '',
+    sl: px(tr.sl),
+    tp: px(tr.tp),
+    note: tr.note || '',
+  };
+}
+
+/**
+ * بعد 409 (`trade_changed_concurrently`، backend-r78b/r80a): النموذج يُبنى على الصفّ المحدَّث **خانةً خانة** — ما غيّره الجهاز
+ * الآخر (`fresh` ≠ `base` = الصفّ الذي فُتح عليه النموذج) يُعرض بقيمته الجديدة، وما لم يغيّره يبقى كما كتبه المتداول (`mine`).
+ * كان الخروج وحده يُحدَّث ⇒ دخولٌ صُحّح بجهاز آخر يبقى بالخانة بقيمته القديمة، والحفظ الثاني (بـ`seen_*` المحدَّثة، فلا 409) يكتبه
+ * فوق التصحيح بصمت — ما وُضع الفحص لمنعه. خانةٌ غيّرها الاثنان ⇒ قيمة الجهاز الآخر (كالخروج من قبل): لا يُكتب فوق ما لم يُرَ؛
+ * الرسالة تطلب المراجعة ثم الحفظ.
+ */
+export function journalConflictForm(base: JournalEditForm, mine: JournalEditForm, fresh: JournalEditForm): JournalEditForm {
+  const pick = <K extends keyof JournalEditForm>(k: K): JournalEditForm[K] => (fresh[k] !== base[k] ? fresh[k] : mine[k]);
+  return {
+    symbol: pick('symbol'),
+    side: pick('side'),
+    entry: pick('entry'),
+    exit: pick('exit'),
+    size: pick('size'),
+    sl: pick('sl'),
+    tp: pick('tp'),
+    note: pick('note'),
+  };
+}
+
 /**
  * النتيجة بوحدات المخاطرة (R): +2 = ربحت ضعف ما خاطرت به، −1 = ضُرب الوقف كاملاً.
  * يحتاج وقفاً صالحاً بالجهة الصحيحة؛ وإلا null. تقريب لمنزلة عشرية واحدة.
