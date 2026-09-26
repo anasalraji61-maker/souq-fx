@@ -947,6 +947,21 @@ export const api = {
       sl?: number | null;
       tp?: number | null;
       note?: string;
+      /** وقت الإغلاق ISO — `null` = «غير معروف»؛ يشترط صفقة مغلقة بعد التعديل ولا يسبق الفتح (وإلا 422 `invalid_closed_at`). */
+      closed_at?: string | null;
+      /** وقت الفتح ISO (tools150c، backend `46dcc3c`) — `null` يُتجاهل؛ مستقبل/قبل الإغلاق ⇒ 422 `invalid_opened_at`. */
+      opened_at?: string | null;
+      /** الصفّ كما عُرض (backend-r78b/r80a) — مختلف عن المخزَّن ⇒ 409. `seen_opened_at` حرفياً كما أرسله الخادم. */
+      seen_status?: 'open' | 'closed' | null;
+      seen_exit?: number | null;
+      seen_symbol?: string | null;
+      seen_side?: 'buy' | 'sell' | null;
+      seen_entry?: number | null;
+      seen_size?: number | null;
+      seen_sl?: number | null;
+      seen_tp?: number | null;
+      seen_note?: string | null;
+      seen_opened_at?: string | null;
     }
   ) =>
     patchJson<{ ok: boolean; trade: Record<string, unknown>; stats: Record<string, number> }>(
