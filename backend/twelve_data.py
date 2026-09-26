@@ -341,6 +341,30 @@ def _cached(key: str) -> tuple[float, list[dict]] | None:
                 _base_at[key] = hit[1]
         return _cache.get(key)
 
+
+def _load_symbol_from_disk(sym: str) -> None:
+    """كل فريمات الرمز المحفوظة على القرص إلى الذاكرة (مرة واحدة بعد الإقلاع) — `_with_newest_close` يقارن
+    الذاكرة وحدها، و`_cached` يحمّل المدخل عند طلبه هو فقط ⇒ بعد إعادة التشغيل كانت D (القائمة) تُخدم بإغلاق
+    أقدم بدقائق من 15m المحفوظ (الشارت) حتى يُطلب الـ15m مصادفةً — رقمان للرمز نفسه."""
+    marker = f"{sym}|*"
+    with _cache_lock:
+        if marker in _disk_checked:
+            return
+        _disk_checked.add(marker)
+    try:
+        con = _disk_conn()
+        if con is None:
+            return
+        prefix = f"{sym}|"
+        keys = [r[0] for r in con.execute(
+            f"SELECT key FROM {_DISK_TABLE} WHERE substr(key, 1, ?) = ?", (len(prefix), prefix)
+        )]
+        con.close()
+    except (sqlite3.Error, OSError):
+        return
+    for key in keys:
+        _cached(key)
+
 # طول السلسلة الموحَّد للشارت (build_series) والماسح وتنبيهات المؤشر بالـworker. مفتاح الكاش يشمل الطول،
 # فكان الماسح (80) والـworker (80) والشارت/فحص التنبيهات من التطبيق (180) يجلبون نفس (رمز، فريم) كلٌّ
 # بطلب منفصل — والمزوّد يحسب طلباً لكل رمز مهما كان الطول. طول واحد = طلب واحد يخدم الجميع ضمن الـTTL،
@@ -568,6 +592,7 @@ def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tu
     step = TF_SECONDS.get(tf, 900)
     end = bar_end(sym, last["time"], step)
     newest: tuple[float, float] | None = None
+    _load_symbol_from_disk(sym)
     with _cache_lock:
         for key, (at, rows) in _cache.items():
             o_sym, o_tf, _size = key.rsplit("|", 2)
