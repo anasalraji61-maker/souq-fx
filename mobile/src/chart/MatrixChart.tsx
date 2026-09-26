@@ -6583,6 +6583,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if (event.key === 'Escape') {
+        // Esc بخانة كتابة (إلغاء تعديل صفقة بالدفتر) أو استهلكته نافذة: لها لا للتقاطع المثبَّت — كان يُفكّ معها.
+        const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+        if (event.defaultPrevented || target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? ''))
+          return;
         // ترتيب المستمعَين على `document` يتبدّل مع إعادة تسجيل التأثيرات، فكانت الضغطة الواحدة تُسقط الرسم **و**التقاطع
         // المثبَّت معاً. طبقة الرسم أولاً؛ التقاطع بالضغطة التالية.
         if (drawEscPendingRef.current) return;
