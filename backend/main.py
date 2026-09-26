@@ -1008,11 +1008,13 @@ def push_register(
     body: PushRegister,
     authorization: str | None = Header(default=None),
     user: dict | None = Depends(_auth_user),
-    key: str | None = Depends(_install_key),
+    key: str | None = Depends(_owner_key),
 ):
     # توكن مُرسَل غير صالح (جلسة انتهت بعد 30 يوماً والعميل ما زال يحمله) كان يُعامَل مجهولاً ⇒
     # `INSERT OR REPLACE` بـuser_id=NULL يفكّ الهاتف من الحساب بصمت، فكل تنبيه بعدها لا يصل أحداً.
     # 401 يُبقي الربط القائم كما هو.
+    # `_owner_key`: مجهول بلا معرّف تثبيت ⇒ 400. كان يُحفظ (user_id=NULL, owner_key=NULL) ⇒ يدخل دلو
+    # التنبيهات المجهولة القديمة (`_push_owner_sql`) فيتلقّى أيّ أحد يسجّل رمزه يدوياً تنبيهات الآخرين.
     if authorization and not user:
         raise HTTPException(status_code=401, detail="not authenticated")
     uid = user["user_id"] if user else None

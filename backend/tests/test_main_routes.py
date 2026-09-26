@@ -843,7 +843,7 @@ def test_alerts_on_a_symbol_the_provider_does_not_offer_are_refused(client, sym)
 
 
 def test_push_token_has_an_upper_bound(client):
-    r = client.post("/api/push/register", json={"token": "ExponentPushToken[" + "x" * 2_000_000 + "]"})
+    r = client.post("/api/push/register", json={"token": "ExponentPushToken[" + "x" * 2_000_000 + "]"}, headers=_DEV1)
     assert r.status_code == 422
 
 
@@ -978,3 +978,10 @@ def test_a_real_sized_layout_still_saves(client):
                "drawings": drawings}
     r = client.post("/api/layouts", json={"name": "x", "payload": payload}, headers=_DEV1)
     assert r.status_code == 200, r.text
+
+
+def test_anonymous_push_register_without_install_id_is_refused(client):
+    """كان يُحفظ بلا مالك (NULL/NULL) ⇒ يدخل دلو التنبيهات المجهولة القديمة فيتلقّى تنبيهات الآخرين."""
+    r = client.post("/api/push/register", json={"token": "ExponentPushToken[snoop1]"})
+    assert r.status_code == 400
+    assert "ExponentPushToken[snoop1]" not in db.push_tokens_for(None, None)
