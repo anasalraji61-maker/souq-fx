@@ -804,6 +804,8 @@ export type Dict = {
   journalCancelEdit: string;
   journalEditError: string;
   journalEditConflict: string;
+  /** 422 `invalid_opened_at`/`invalid_closed_at` من حفظ التعديل (launch220a) — الوقت مرفوض، لا عطل اتصال */
+  journalEditTimeRejected: string;
   /** الدفتر: حُفظ التعديل لكن المتداول كتب في النموذج أثناء الحفظ (tools `e86579d`) — يبقى التعديل مفتوحاً بما كُتب؛
    * كان صامتاً فيبدو الحفظ فاشلاً. نصّ عادي لا خطأ (DESIGN-PRO §1: الأحمر للسعر وحده) */
   journalEditSavedTypedAfter: string;
@@ -2279,6 +2281,7 @@ const ar: Dict = {
   journalCancelEdit: 'إلغاء التعديل',
   journalEditError: 'تعذّر حفظ التعديل — تحقّق من الاتصال وحاول مرة أخرى',
   journalEditConflict: 'لم يُحفظ التعديل: أُغلقت هذه الصفقة أو أُعيد فتحها أو عُدِّلت من جهاز آخر أثناء تعديلك. القائمة محدَّثة الآن — راجع حالتها ثم احفظ من جديد إن لزم.',
+  journalEditTimeRejected: 'لم يُحفظ التعديل: وقت الفتح أو الإغلاق غير مقبول — الفتح قبل الإغلاق، ولا وقت بعد الآن. راجعهما ثم احفظ من جديد.',
   journalEditSavedTypedAfter: 'حُفظ التعديل. ما كتبتَه بعد الضغط على «حفظ التعديل» ما زال في النموذج ولم يُحفظ بعد — احفظ مرّة أخرى لإضافته.',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
@@ -3573,6 +3576,7 @@ const enUS: Dict = {
   journalCancelEdit: 'Cancel edit',
   journalEditError: 'Couldn’t save the changes — check your connection and try again',
   journalEditConflict: 'Changes not saved: this trade was closed, reopened or edited on another device while you were editing. The list is up to date now — check its status, then save again if needed.',
+  journalEditTimeRejected: 'Changes not saved: the open or close time wasn’t accepted — the open must come before the close, and neither can be later than now. Check both, then save again.',
   journalEditSavedTypedAfter: 'Changes saved. What you typed after tapping “Save changes” is still in the form and not saved yet — save again to keep it.',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
@@ -4927,6 +4931,7 @@ const ku: Dict = {
   journalCancelEdit: 'هەڵوەشاندنەوەی دەستکاری',
   journalEditError: 'نەکرا گۆڕانکارییەکان پاشەکەوت بکرێن — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   journalEditConflict: 'گۆڕانکارییەکان پاشەکەوت نەکران: لە کاتی دەستکارییەکەتدا ئەم مامەڵەیە لە ئامێرێکی ترەوە داخرا، دووبارە کرایەوە یان دەستکاری کرا. لیستەکە ئێستا نوێکراوەتەوە — دۆخەکەی بپشکنە و ئەگەر پێویست بوو دووبارە پاشەکەوت بکە.',
+  journalEditTimeRejected: 'گۆڕانکارییەکان پاشەکەوت نەکران: کاتی کردنەوە یان داخستن وەرنەگیرا — کردنەوە دەبێت پێش داخستن بێت، و هیچیان دوای ئێستا نەبێت. هەردووکیان بپشکنە و دووبارە پاشەکەوت بکە.',
   journalEditSavedTypedAfter: 'گۆڕانکارییەکان پاشەکەوت کران. ئەوەی دوای لێدانی «پاشەکەوتکردنی گۆڕانکاری» نووسیت هێشتا لە فۆڕمەکەدایە و پاشەکەوت نەکراوە — بۆ زیادکردنی دووبارە پاشەکەوت بکە.',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
