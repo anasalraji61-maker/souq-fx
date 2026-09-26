@@ -334,6 +334,8 @@ export type Dict = {
   alertsFirstBadgeWeb: string;
   alertsLoadError: string;
   alertsEmpty: string;
+  /** الويب (launch204a): بديل `alertsEmpty` بلا «سيصلك إشعار» — المتصفّح لا يستقبل (`pushPriceAlert`)؛ يُوسَم «انطلق ✓» والهاتف عبر الحساب. */
+  alertsEmptyWeb: string;
   alertsDeleteConfirmTitle: string;
   alertsDeleteFailedTitle: string;
   alertsDeleteFailedBody: string;
@@ -846,6 +848,8 @@ export type Dict = {
   indAlertsAddError: string;
   indAlertsLoadError: string;
   indAlertsEmpty: string;
+  /** الويب (launch204a): بديل `indAlertsEmpty` بلا «ليصلك إشعار» — يُوسَم `indAlertsFiredTag` باللوح، والهاتف عبر الحساب. */
+  indAlertsEmptyWeb: string;
   indAlertsDeleteConfirmTitle: string;
   indAlertsDeleteFailedTitle: string;
   indAlertsDeleteFailedBody: string;
@@ -1933,6 +1937,8 @@ const ar: Dict = {
   alertsLoadError: 'تعذّر تحميل التنبيهات — تحقّق من الاتصال. تنبيهاتك المحفوظة لم تُحذف.',
   alertsEmpty:
     'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه. أو من الشارت: المس المستوى ثم زرّ التنبيه الذي يظهر بسعره.',
+  alertsEmptyWeb:
+    'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وحين يصل السعر إليه يُوسَم هنا «انطلق ✓» (المتصفّح لا يستقبل إشعارات — ادخل بالحساب نفسه على هاتفك ليصلك هناك). أو من الشارت: انقر المستوى ثم زرّ التنبيه الذي يظهر بسعره، أو انقر بالزرّ الأيمن عند السعر.',
   alertsDeleteConfirmTitle: 'حذف التنبيه؟',
   alertsDeleteFailedTitle: 'تعذّر الحذف',
   alertsDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقي التنبيه بالقائمة فاحذفه مرة أخرى.',
@@ -2288,6 +2294,8 @@ const ar: Dict = {
   indAlertsLoadError: 'تعذّر تحميل تنبيهات المؤشرات — تحقّق من الاتصال. تنبيهاتك المحفوظة لم تُحذف.',
   indAlertsEmpty:
     'لا تنبيهات مؤشرات بعد — اختر مؤشراً وشرطاً بالأعلى (RSI تحت 30 مثلاً) ليصلك إشعار دون مراقبة الشارت.',
+  indAlertsEmptyWeb:
+    'لا تنبيهات مؤشرات بعد — اختر مؤشراً وشرطاً بالأعلى (RSI تحت 30 مثلاً)، وحين يتحقّق يُوسَم هنا «أُطلق». المتصفّح لا يستقبل إشعارات — ادخل بالحساب نفسه على هاتفك ليصلك الإشعار هناك دون مراقبة الشارت.',
   indAlertsDeleteConfirmTitle: 'حذف تنبيه المؤشر؟',
   indAlertsDeleteFailedTitle: 'تعذّر الحذف',
   indAlertsDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقي تنبيه المؤشر بالقائمة فاحذفه مرة أخرى.',
@@ -3207,6 +3215,8 @@ const enUS: Dict = {
   alertsLoadError: 'Couldn’t load your alerts — check your connection. Your saved alerts haven’t been deleted.',
   alertsEmpty:
     'No alerts yet — enter a price above (or select “Use it” for the current price), pick above/below, and you’ll be notified when price gets there. Or from the chart: pick a level, then the alert button showing its price.',
+  alertsEmptyWeb:
+    'No alerts yet — enter a price above (or select “Use it” for the current price) and pick above/below; when price gets there it’s marked “Triggered ✓” here (the browser can’t receive notifications — log in to the same account on your phone to get them there). Or from the chart: click a level, then the alert button showing its price, or right-click at that price.',
   alertsDeleteConfirmTitle: 'Delete the alert?',
   alertsDeleteFailedTitle: 'Couldn’t delete',
   alertsDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the alert is still in the list, delete it again.',
@@ -3561,6 +3571,8 @@ const enUS: Dict = {
   indAlertsLoadError: 'Couldn’t load your indicator alerts — check your connection. Your saved alerts haven’t been deleted.',
   indAlertsEmpty:
     'No indicator alerts yet — pick an indicator and a condition above (RSI below 30, say) and get notified without watching the chart.',
+  indAlertsEmptyWeb:
+    'No indicator alerts yet — pick an indicator and a condition above (RSI below 30, say); when it happens it’s tagged “fired” here. The browser can’t receive notifications — log in to the same account on your phone to be notified there without watching the chart.',
   indAlertsDeleteConfirmTitle: 'Delete the indicator alert?',
   indAlertsDeleteFailedTitle: 'Couldn’t delete',
   indAlertsDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the indicator alert is still in the list, delete it again.',
@@ -4212,6 +4224,10 @@ const enGB: Dict = {
   login: 'Sign in',
   notifStatusUnsupported: 'Not available in the browser — sign in to the same account here and on your phone to get your alerts there',
   alertsFirstBadgeWeb: '✓ First alert set — when the price reaches your level it shows “Triggered ✓” here (checked about once a minute). To get it as a notification on your phone, sign in to the same account here and on the phone',
+  alertsEmptyWeb:
+    'No alerts yet — enter a price above (or select “Use it” for the current price) and pick above/below; when price gets there it’s marked “Triggered ✓” here (the browser can’t receive notifications — sign in to the same account on your phone to get them there). Or from the chart: click a level, then the alert button showing its price, or right-click at that price.',
+  indAlertsEmptyWeb:
+    'No indicator alerts yet — pick an indicator and a condition above (RSI below 30, say); when it happens it’s tagged “fired” here. The browser can’t receive notifications — sign in to the same account on your phone to be notified there without watching the chart.',
   onboardStep4BodyWeb:
     'Tap a level on the chart, then the alert button showing its price — no typing — or right-click at that price. Price is checked about once a minute, and the browser can’t receive notifications: an alert that fires shows “Triggered ✓” in the alerts panel, and to get it as a notification on your phone, sign in to the same account here and on the phone. To move it, drag its label at the edge of the chart. Indicator alerts are in the alerts panel.',
   register: 'Register',
@@ -4526,6 +4542,8 @@ const ku: Dict = {
   alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن — پەیوەندییەکەت بپشکنە. ئاگادارکردنەوە پاشەکەوتکراوەکانت نەسڕاونەتەوە.',
   alertsEmpty:
     'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە (یان «بەکاری بهێنە» بۆ نرخی ئێستا دابگرە) و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە. یان لە چارتەوە: دەست لە ئاستەکە بدە پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات.',
+  alertsEmptyWeb:
+    'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە (یان «بەکاری بهێنە» بۆ نرخی ئێستا دابگرە) و سەرەوە/خوارەوە هەڵبژێرە؛ کاتێک نرخ گەیشتە ئەوێ لێرە «دەرچوو ✓» دەنووسرێت (وێبگەڕ ئاگاداری وەرناگرێت — لەسەر مۆبایلەکەت بە هەمان هەژمار بچۆ ژوورەوە تا لەوێ بگات). یان لە چارتەوە: کلیک لە ئاستەکە بکە پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات، یان لەو نرخەدا کلیکی ڕاست بکە.',
   alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   alertsDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر ئاگادارکردنەوەکە هێشتا لە لیستەکەدایە، دووبارە بیسڕەوە.',
@@ -4891,6 +4909,8 @@ const ku: Dict = {
   indAlertsLoadError: 'نەکرا ئاگادارکردنەوەکانی پێوەر باربکرێن — پەیوەندییەکەت بپشکنە. ئاگادارکردنەوە پاشەکەوتکراوەکانت نەسڕاونەتەوە.',
   indAlertsEmpty:
     'هێشتا هیچ ئاگادارکردنەوەیەکی پێوەر نییە — پێوەرێک و مەرجێک لە سەرەوە هەڵبژێرە (بۆ نموونە RSI خوار ٣٠) تا ئاگادار بکرێیتەوە بەبێ چاودێری چارتەکە.',
+  indAlertsEmptyWeb:
+    'هێشتا هیچ ئاگادارکردنەوەیەکی پێوەر نییە — پێوەرێک و مەرجێک لە سەرەوە هەڵبژێرە (بۆ نموونە RSI خوار ٣٠)؛ کاتێک هاتەدی لێرە «کارا بوو» دەنووسرێت. وێبگەڕ ئاگاداری وەرناگرێت — لەسەر مۆبایلەکەت بە هەمان هەژمار بچۆ ژوورەوە تا لەوێ ئاگادار بکرێیتەوە بەبێ چاودێری چارتەکە.',
   indAlertsDeleteConfirmTitle: 'ئاگادارکردنەوەی پێوەرەکە بسڕدرێتەوە؟',
   indAlertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   indAlertsDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر ئاگادارکردنەوەی پێوەرەکە هێشتا لە لیستەکەدایە، دووبارە بیسڕەوە.',
