@@ -5285,6 +5285,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // 1.08500 المحدَّد يقفز إلى 1.09120 تحت سحبةٍ بعيدة (أو لمسةٍ مرتجفة موجَّهة لرسمٍ آخر) ويُحفظ هناك.
           // الآن يُسحب من جسمه فقط، كبقية الرسومات.
           return;
+        } else if (d.tool === 'hray' || d.tool === 'note') {
+          // الشعاع الأفقي والملاحظة: السحب من الجسم يُزيح بمقدار حركة الإصبع — كانت المرساة تُنقل **إلى** الإصبع فيفقد
+          // الشعاع بدايته عند القمّة (سحبة قرب الشمعة الحيّة تنقل بدايته إليها) وتقفز الملاحظة ليبدأ صندوقها تحته.
+          grabBody();
+          return;
         }
         selDragEnd.current = end;
         selDragAt.current = drawingEnd(d, end);
