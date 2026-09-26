@@ -1046,7 +1046,8 @@ export function computeYangZhangVolatility(
   const pMinus1 = Math.max(1, period - 1);
   const k = 0.34 / (1.34 + (period + 1) / pMinus1);
   for (let i = 0; i < n; i++) {
-    if (i < period - 1) {
+    // الشمعة 0 بلا إغلاق سابق (عائدها الليلي 0 مصطنع) ⇒ أول نافذة كاملة تبدأ من 1، أي القيمة الأولى عند `period`.
+    if (i < period) {
       out.push(null);
       continue;
     }

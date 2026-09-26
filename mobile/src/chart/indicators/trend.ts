@@ -57,12 +57,13 @@ function diOf(s: number, sT: number): number {
  * smoothed = smoothed − smoothed/period + جديد — نفس أسلوب computeRsi الحالي لكن مطبَّق على
  * ثلاث سلاسل بدل سلسلتين). DX = |+DI−−DI|/(+DI+−DI)×100 لكل نقطة، وADX = متوسط Wilder لـDX
  * (بداية = متوسط بسيط لأول period قيمة DX صالحة، أول ظهور فعلي عند المؤشر period×2−1 لأن DX نفسها
- * تبدأ من period). يعيد مصفوفة null حتى تتوفر بيانات كافية (n > period×2).
+ * تبدأ من period). يعيد مصفوفة null حتى تتوفر بيانات كافية (n ≥ period×2).
  */
 export function computeAdx(candles: Candle[], period = 14): (number | null)[] {
   const n = candles.length;
   const out: (number | null)[] = new Array(n).fill(null);
-  if (n <= period * 2) return out;
+  // القيمة الأولى عند period×2−1 تحتاج الشموع 0..period×2−1 فقط ⇒ n = period×2 يكفي.
+  if (n < period * 2) return out;
 
   const plusDM: number[] = new Array(n).fill(0);
   const minusDM: number[] = new Array(n).fill(0);
