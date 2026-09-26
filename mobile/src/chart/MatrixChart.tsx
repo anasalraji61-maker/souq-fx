@@ -5414,9 +5414,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // 1.08500 المحدَّد يقفز إلى 1.09120 تحت سحبةٍ بعيدة (أو لمسةٍ مرتجفة موجَّهة لرسمٍ آخر) ويُحفظ هناك.
           // الآن يُسحب من جسمه فقط، كبقية الرسومات.
           return;
-        } else if (d.tool === 'hray' || d.tool === 'note') {
+        } else if (d.tool === 'hray' || d.tool === 'note' || d.tool === 'hline' || d.tool === 'vline') {
           // الشعاع الأفقي والملاحظة: السحب من الجسم يُزيح بمقدار حركة الإصبع — كانت المرساة تُنقل **إلى** الإصبع فيفقد
           // الشعاع بدايته عند القمّة (سحبة قرب الشمعة الحيّة تنقل بدايته إليها) وتقفز الملاحظة ليبدأ صندوقها تحته.
+          // والأفقي/العمودي كذلك: لمسة 10px تحت خطّ 1.08500 المحدَّد (داخل حدّ الإصابة) كانت تنقله إلى سعر الإصبع
+          // (أو قمّة شمعة بالمغناطيس) مع أوّل ارتجافة ⇒ يُحفظ هناك وتُستهلك خطوة تراجع؛ والعمودي يقفز شمعتين.
           grabBody();
           return;
         }
@@ -5446,10 +5448,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // على شبكة سعر الزوج (كالأسهم والاستنساخ): سحب صفقة الشراء كان يترك الوقف 1.0827371 ⇒ «SL 1.08274» مكتوباً
           // وشمعة قاعها 1.08274 بالضبط لا تُعدّ ضرباً للوقف (فتُقرأ «TP ✓»). أداة بلا منازل معروفة بمنازل وسمها.
           const onGrid = onShownGrid;
+          // الأفقي لا يتحرّك بالزمن والعمودي لا يتحرّك بالسعر: ارتجافة على المحور الآخر كانت ستُحفظ تعديلاً لا يُرى.
           const next = translateDrawing(
             fromNow!,
-            drawIndex(locationX) - drawIndex(from.x),
-            (price) => onGrid(fromScale(toScale(price) + dScaled)),
+            from.d.tool === 'hline' ? 0 : drawIndex(locationX) - drawIndex(from.x),
+            (price) => (from.d.tool === 'vline' ? price : onGrid(fromScale(toScale(price) + dScaled))),
             (index) =>
               stampAtIndex(
                 sourceRef.current.all as { time: number }[],
