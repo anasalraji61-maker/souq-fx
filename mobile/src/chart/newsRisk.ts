@@ -610,10 +610,13 @@ export function bankHolidayToday(
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts)) continue;
     if (isClockChange(e.title)) continue;
     const c = String(e.currency).toUpperCase();
-    if (!currencies.includes(c) || byCcy.has(c)) continue;
+    // عنوانٌ محدَّد يحلّ محلّ العامّ لعملته («Bank Holiday» ثم «Culture Day» ⇒ الثاني)
+    if (!currencies.includes(c) || byCcy.get(c)) continue;
     const start = holidayDayStartMs(c, e.ts);
     if (nowMs < start || nowMs >= holidayDayEndMs(c, e.ts)) continue;
-    byCcy.set(c, String(e.title ?? '').trim());
+    // «Bank Holiday» (عنوان الخلاصة لأغلب العطل) يكرّر السطر نفسه بالإنجليزية: «عطلة بنوك اليوم · JPY · Bank Holiday»
+    const title = String(e.title ?? '').trim();
+    byCcy.set(c, /^bank\s+holidays?$/i.test(title) ? '' : title);
   }
   const ccys = currencies.filter((c) => byCcy.has(c));
   if (!ccys.length) return null;

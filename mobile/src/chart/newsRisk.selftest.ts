@@ -912,9 +912,15 @@ console.log('newsRisk cryptoPairOf selftest OK');
     assert.equal(bankHolidayToday([ev({ title: 'DST Shift', currency: 'NZD', ts: dstTs })], ['NZD'], nzNoon), null);
     assert.deepEqual(bankHolidayToday([dst, ev({ title: 'Bank Holiday', currency: 'NZD', ts: dstTs })], ['NZD'], nzNoon), {
       currencies: ['NZD'],
-      titles: ['Bank Holiday'],
+      titles: [],
     });
   }
+  // «Bank Holiday» العامّ لا يُكرَّر بعد «عطلة بنوك اليوم»؛ والمحدَّد يغلبه أيّاً كان ترتيبهما
+  assert.deepEqual(bankHolidayToday([ev({ title: 'Bank Holiday' })], ['USD'], at(2)), { currencies: ['USD'], titles: [] });
+  assert.deepEqual(bankHolidayToday([ev({ title: 'bank holidays' }), ev({ title: 'Thanksgiving' })], ['USD'], at(2)), {
+    currencies: ['USD'],
+    titles: ['Thanksgiving'],
+  });
   assert.equal(bankHolidayToday([ev({ impact: 'low' })], ['USD'], at(3)), null);
   assert.equal(bankHolidayToday([ev({ impact: 'high' })], ['USD'], at(3)), null);
   assert.ok(bankHolidayToday([ev({ impact: 'Holiday', currency: 'usd' })], ['USD'], at(3)));
