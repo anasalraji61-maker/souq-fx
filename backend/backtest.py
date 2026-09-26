@@ -297,7 +297,14 @@ def run_backtest(
             t["mae_pct"] = _round(t["_mae"] - cost, 3)
             t["_path"] = [(a - cost, c - cost) for a, c in t["_path"]]
 
+    # الحساب يُصفّى عند الصفر (خسارة صفقة ≥ 100%: بيع على أصل تضاعف) ⇒ لا صفقة بعده. كانت المحاكاة تستمرّ
+    # فتدخل صفقات «على رصيد 0$» نسبة الفوز ومتوسّط الخسارة وعدد الصفقات، ومركز مفتوح بعدها `open_pnl_pct`.
+    ruined_at = next((j for j, t in enumerate(trades) if not t.get("open") and t["pnl_pct"] <= -100), None)
+    if ruined_at is not None:
+        trades = trades[: ruined_at + 1]
     stats, curve = _stats(trades)
+    if stats:
+        stats["ruined_at_trade"] = ruined_at + 1 if ruined_at is not None else None
     for t in trades:
         t.pop("_path", None)
         t.pop("_pnl", None)
@@ -305,6 +312,8 @@ def run_backtest(
     return {
         "strategy": strategy,
         "trades": trades[-40:],
+        # القائمة آخر 40 صفقة فقط و`trade_count` على كلّها ⇒ يُقال صراحةً
+        "trades_truncated": len(trades) > 40,
         "stats": stats,
         "equity_curve": curve,
     }

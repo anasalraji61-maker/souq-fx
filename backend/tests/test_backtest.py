@@ -368,3 +368,42 @@ def test_spread_is_taken_from_the_unrounded_pnl_r118():
             raw = sgn * (t["exit"] - t["entry"]) / t["entry"] * 100
             assert t["pnl_pct"] == backtest._round(raw - spread / t["entry"] * 100, 3), (spread, t)
             assert "_pnl" not in t and "_mae" not in t
+
+
+def _ruin_candles():
+    """بيع بعد صعود (RSI > 70)، ثم السعر يتضاعف ثلاثاً، ثم هبوط يُغلق البيع بخسارة > 100%، ثم تذبذب بصفقات."""
+    import random
+
+    rnd = random.Random(1)
+    p, closes = 100.0, []
+    for _ in range(40):
+        p *= 1 + rnd.gauss(0, 0.01); closes.append(p)
+    for _ in range(6):
+        p *= 1.03; closes.append(p)
+    for _ in range(60):
+        p *= 1.02 + rnd.gauss(0, 0.002); closes.append(p)
+    for _ in range(15):
+        p *= 0.93; closes.append(p)
+    for _ in range(200):
+        p *= 1 + rnd.gauss(0, 0.02); closes.append(p)
+    return [dict(time=1_700_000_000 + 86400 * i, open=x, high=x * 1.001, low=x * 0.999, close=x)
+            for i, x in enumerate(closes)]
+
+
+def test_no_trades_after_the_account_is_wiped_out_r127():
+    """خسارة ≥ 100% تُصفّي الحساب ⇒ الصفقات بعدها (على رصيد 0$) كانت تدخل العدد ونسبة الفوز ومتوسّط الخسارة."""
+    r = backtest.run_backtest(_ruin_candles(), "rsi_reversal")
+    s, trades = r["stats"], r["trades"]
+    assert s["final_equity"] == 0
+    assert trades[-1]["pnl_pct"] <= -100 and not trades[-1].get("open")
+    assert all(t["pnl_pct"] > -100 for t in trades[:-1])
+    assert s["trade_count"] == len(trades) == s["ruined_at_trade"]
+    assert s["open_pnl_pct"] is None
+    assert r["trades_truncated"] is False
+
+
+def test_ruined_at_trade_is_none_normally_and_truncation_is_flagged_r127():
+    r = backtest.run_backtest(_candles(2000), "ma_cross")
+    assert r["stats"]["ruined_at_trade"] is None
+    assert r["stats"]["trade_count"] > 40
+    assert len(r["trades"]) == 40 and r["trades_truncated"] is True
