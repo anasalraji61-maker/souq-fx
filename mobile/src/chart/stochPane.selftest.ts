@@ -28,7 +28,7 @@ const INNER = PANE_H - 16; // 44
 {
   const g = stochPaneGeom(PANE_H);
   const guides = placeGuides('stoch', INNER);
-  assert.equal(guides.length, 2, 'stoch has 20/80');
+  assert.equal(guides.length, 3, 'stoch has 20/50/80');
   for (const gd of guides) {
     assert.equal(g.y(gd.v), gd.top, `v=${gd.v} line=${g.y(gd.v)} guide=${gd.top}`);
   }
