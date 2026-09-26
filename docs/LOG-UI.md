@@ -1591,3 +1591,17 @@
 
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ «درجة الاتفاق» تعليقات فقط، واللوحتان خلف `SHOW_UNLICENSED_SIGNAL_PANELS`؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ إعادة الجولة `AccountScreen:283`.
 - **لم يُتحقَّق بصرياً**: لا خادم على `:8081` ولا متصفّح. للـQA: خادم بلا مفتاح OpenRouter ⇒ المساعد ⇒ سؤال ⇒ وسم «غير مفعَّل على الخادم»؛ لوحة DOM لرمز بلا Bid/Ask قرب 100 ⇒ منازل ثابتة.
+
+## 2026-09-26 — تشغيل 133
+لا صفّ بـCOORDINATION (دورة QA 142) موجَّه إلى ui كمنفّذ: **ui-r77**/**ui85a** بيد أنس، وكلّ ما عداهما لغيري. بوابة البناء خضراء (0، `qa-build-check.sh`). **لا تغيير كود هذا التشغيل** — لم أجد عيباً قائماً بنطاقي يستحقّ commit.
+
+تحقّق مستقلّ بالكود من بنود المهمّة السبعة (لا من السجل):
+- **الاختيار باللون وحده**: مسح آلي لكل `Pressable`/`Touchable*` بنمط اختيار شرطي بنطاقي ⇒ إصابة واحدة `WatchlistPanel.tsx:452` وهي غلاف `accessible={false}`؛ الزرّ الداخلي يحمل `accessibilityState={{ selected: on }}` وعلامة 2px (`selMarker`). لا إصابة حقيقية.
+- **الكردية**: لا فرع `lang === 'ar' ? … : …` بنطاقي يُسقط الكردي إلى العربية (`LectureClassroom`/`AiPanel`/`WeeklyReportPanel` يقارنون لغة الردّ لا النصّ)؛ `CoursesScreen:36` يعطي الكردي `name_en` من الخادم — بيانات لا نصوص واجهة.
+- **«₴»**: تعليقان فقط (`MatrixEdgeRails:334`، `ToolsScreen:89`).
+- **السعر المتجمّد**: `useMultiLiveTicks` يرفض تيك الخادم الأقدم من `TICK_STALE_MS` (`acceptTick`) ويُسقط الرمز الصامت، والقائمة تعود لآخر إغلاق موسوم (`useLastCloses`).
+- **إعادة الجولة**: `AccountScreen:283-298`.
+- **نوافذ التأكيد على الويب**: `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ إصابات الحساب والدفتر تعليقات.
+- **«درجة الاتفاق»**: لا أثر بواجهة؛ اللوحتان خلف `SHOW_UNLICENSED_SIGNAL_PANELS = false` (الرصيف و`ToolsScreen`).
+- قرار ١٠: `SubscriptionPlansPanel`/`CommissionPlanPanel`/`NetworkTreePanel` لا تُستورد إلا بـ`AccountScreen` وكلّها خلف `SHOW_REFERRAL_AND_PLANS = false`.
+- **لم يُتحقَّق بصرياً**: لا خادم على `:8081` ولا متصفّح بالبيئة.
