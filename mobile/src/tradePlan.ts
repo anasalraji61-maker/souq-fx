@@ -990,6 +990,22 @@ export function noteWithInitialStop(input: {
 }
 
 /**
+ * خانة الملاحظة بعد حفظ تعديلٍ **يبقى مفتوحاً** (كُتب بالنموذج أثناء الطلب): الحفظ ألحق «1R @ <الوقف القديم>» بالمحفوظ لا بالخانة،
+ * والصفّ المحفوظ صار أساس الحفظ التالي (وقفه = الوقف الجديد) ⇒ `noteWithInitialStop` لا يرى تحريكاً فلا يعيد العلامة، والخانة بلا
+ * علامة تُكتب فوق ملاحظة الخادم ⇒ الـR من الوقف المشدود (+8R بدل +2R) بلا 409 (`seen_note` من الصفّ نفسه).
+ * الخانة لم تُمسّ أثناء الطلب ⇒ ملاحظة الخادم كما يفتحها «تعديل». مُسّت ⇒ ما كتبه + علامة المحفوظ إن لم يكتب علامةً ووسعها الحدّ.
+ */
+export function journalNoteAfterSave(current: string, submitted: string, saved: string, max: number = JOURNAL_NOTE_MAX): string {
+  if (current === submitted) return saved;
+  const m = INITIAL_STOP_RE.exec(saved);
+  if (!m || INITIAL_STOP_RE.test(current) || INITIAL_STOP_RE.test(submitted)) return current;
+  const n = current.trim();
+  const mark = `1R @ ${m[1]}`;
+  const out = n ? `${n} · ${mark}` : mark;
+  return out.length > max ? current : out;
+}
+
+/**
  * السعر كما يُكتب بعلامة «1R @» بلا صيغة أُسّية: `String(8e-7)` = «8e-7» (جافاسكربت تكتب ما دون 0.000001 أُسّياً) فكانت
  * العلامة لا تُقرأ (`INITIAL_STOP_RE`) لعملات رقمية دون 0.000001 (PEPE/BABYDOGE…) ⇒ الـR من الوقف المشدود (+10R بدل +1R).
  * الأرقام المعنوية نفسها التي تكتبها `String` — لا ضجيج فاصلة عائمة من `toFixed(20)`.

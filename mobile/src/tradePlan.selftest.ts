@@ -4464,3 +4464,31 @@ console.log('tradePlan journalSizeOunces selftest OK');
   assert.equal(journalSavedRow<Row>({ ok: true, trade: { ...written, status: 'closed' } }, 't1')?.status, 'closed');
   console.log('tradePlan journalSavedRow selftest OK');
 }
+
+// ——— journalNoteAfterSave: علامة «1R @» لا تُمحى بحفظٍ ثانٍ لتعديلٍ بقي مفتوحاً ———
+{
+  const { journalNoteAfterSave, noteWithInitialStop, realizedR } = require('./tradePlan') as typeof import('./tradePlan');
+  // شراء EURUSD 1.0850 وقف 1.0830، «breakout»؛ التعديل يشدّ الوقف إلى 1.0845 ويُكتب في النموذج أثناء الطلب
+  const before = { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' };
+  const first = noteWithInitialStop({ symbol: 'EURUSD', note: 'breakout', before, after: { side: 'buy', entry: 1.085, sl: 1.0845 } });
+  assert.equal(first, 'breakout · 1R @ 1.083');
+  const savedRow = { ...before, sl: 1.0845 };
+  // الخانة لم تُمسّ ⇒ ملاحظة الخادم؛ الحفظ الثاني (الأساس الصفّ المحفوظ) يُبقيها ⇒ +2R لا +8R
+  const field = journalNoteAfterSave('breakout', 'breakout', first);
+  assert.equal(field, first);
+  const second = noteWithInitialStop({ symbol: 'EURUSD', note: field, before: savedRow, after: { side: 'buy', entry: 1.085, sl: 1.0845 } });
+  assert.equal(second, first);
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note: second }), 2);
+  // القديم: الخانة «breakout» تُحفظ كما هي ⇒ +8R
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note: 'breakout' }), 8);
+  // كُتب بالملاحظة أثناء الطلب ⇒ ما كتبه + العلامة
+  assert.equal(journalNoteAfterSave('breakout, news', 'breakout', first), 'breakout, news · 1R @ 1.083');
+  assert.equal(journalNoteAfterSave('', 'breakout', first), '1R @ 1.083');
+  // كتب علامةً بنفسه، أو كانت بالمُرسَل ⇒ ما كتبه كما هو
+  assert.equal(journalNoteAfterSave('x 1R @ 1.082', 'breakout', first), 'x 1R @ 1.082');
+  assert.equal(journalNoteAfterSave('edited', 'a · 1R @ 1.083', 'a · 1R @ 1.083'), 'edited');
+  // المحفوظ بلا علامة ⇒ ما كتبه؛ لا يتّسع الحدّ ⇒ ما كتبه
+  assert.equal(journalNoteAfterSave('b', 'a', 'a'), 'b');
+  assert.equal(journalNoteAfterSave('y'.repeat(495), 'a', first), 'y'.repeat(495));
+  console.log('tradePlan journalNoteAfterSave selftest OK');
+}

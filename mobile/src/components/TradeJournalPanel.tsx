@@ -114,6 +114,7 @@ import {
   journalEditForm,
   journalConflictForm,
   journalSavedRow,
+  journalNoteAfterSave,
   type JournalEditForm,
   netLineIsWhole,
   noteWithTypedSize,
@@ -1467,6 +1468,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         if (formKeyRef.current !== submittedKey) {
           if (saved && editingRef.current?.id === saved.id) {
             setEditing(saved);
+            // علامة «1R @» التي ألحقها هذا الحفظ تنتقل للخانة — وإلا يمحوها الحفظ التالي (الأساس الآن الوقف الجديد)
+            if (typeof saved.note === 'string') setNote((cur) => journalNoteAfterSave(cur, note, saved.note));
             if (!closeTimeTouchedRef.current) initCloseTime(saved);
             setFormNotice(t.journalEditSavedTypedAfter);
             await refresh();
