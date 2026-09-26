@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headRtl: { flexDirection: 'row-reverse' },
-  title: { color: colors.text, fontWeight: '500', fontSize: 14 },
+  title: { color: colors.text, fontWeight: '500', fontSize: 13 },
   sub: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: 4 },
   refresh: {
     flexShrink: 0,
@@ -350,9 +350,10 @@ const styles = StyleSheet.create({
   refreshText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipsRtl: { flexDirection: 'row-reverse' },
-  // كانت ~28pt بفجوة 6 ⇒ تبديل الجار بالخطأ؛ 40pt + فجوة 8 (لا hitSlop: يتراكب بين الشرائح).
+  // كانت ~28pt بفجوة 6 ⇒ تبديل الجار بالخطأ؛ 44pt (حدّ اللمس بالهاتف، DESIGN-PRO §3) + فجوة 8
+  // (لا hitSlop: يتراكب بين الشرائح).
   chip: {
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
