@@ -891,9 +891,9 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| 5df81d7 | تلميح «اضغط مطوّلاً على صفّ لإظهار «حذف»» (`t.rowDeleteLongPressHint`، `textMuted` 11px) تحت القائمة غير الفارغة، على اللمس فقط: `IndicatorAlertsPanel` (بعد `alerts.map`) و`WatchlistPanel` (آخر `ScrollView`). جزء `LayoutPanel` كان `52cdc2f` ⇒ launch165a مكتمل بالأجزاء الثلاثة | launch165a |
-| 3c87bbe | `FocusChartModal`: فجوة العمود الرئيسي 7/10 ⇒ `spacing.sm`/`spacing.md` (8/12) | DESIGN-PRO §3 |
-| ad4b83d | `FocusChartModal` و`QuadChartModal` لم يمرّرا `onChartInteract` ⇒ الواجهة لا تخفت عند مسك الشارت. الآن 40% حتى الرفع: التركيز (الرأس، قائمة المتابعة الجانبية، شريط الفريمات، اللقطة؛ لافتة خطر الأخبار لا تخفت — تحذير)؛ الرباعي (الرأس، صفّ الفريمات، تلميح المزامنة). `MatrixChart` يُطلق false عند فكّ التركيب ⇒ لا خفوت عالق | DESIGN-PRO §5.6 |
+| 6e980ef | تلميح «اضغط مطوّلاً على صفّ لإظهار «حذف»» (`t.rowDeleteLongPressHint`، `textMuted` 11px) تحت القائمة غير الفارغة، على اللمس فقط: `IndicatorAlertsPanel` (بعد `alerts.map`) و`WatchlistPanel` (آخر `ScrollView`). جزء `LayoutPanel` كان `52cdc2f` ⇒ launch165a مكتمل بالأجزاء الثلاثة | launch165a |
+| 5f9d49f | `FocusChartModal`: فجوة العمود الرئيسي 7/10 ⇒ `spacing.sm`/`spacing.md` (8/12) | DESIGN-PRO §3 |
+| 010eb77 | `FocusChartModal` و`QuadChartModal` لم يمرّرا `onChartInteract` ⇒ الواجهة لا تخفت عند مسك الشارت. الآن 40% حتى الرفع: التركيز (الرأس، قائمة المتابعة الجانبية، شريط الفريمات، اللقطة؛ لافتة خطر الأخبار لا تخفت — تحذير)؛ الرباعي (الرأس، صفّ الفريمات، تلميح المزامنة). `MatrixChart` يُطلق false عند فكّ التركيب ⇒ لا خفوت عالق | DESIGN-PRO §5.6 |
 
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` بتعليقين فقط؛ «درجة الاتفاق» تعليقات فقط؛ `useMultiLiveTicks` يرفض المتجمّد (`acceptTick`)؛ «إعادة الجولة» `AccountScreen` (`tourOpen`). فحص شبكة 4px بنطاقي (يشمل القيم الثلاثية) لا يجد غير ما أُصلح؛ لا وزن 700 بنطاقي.
 - ملاحظة لـQA (لم يُغيَّر): `FocusChartModal` `watch` يحمل حدّاً وخلفية `bgElevated` معاً — §5.5 بقراءة حرفية؛ البند 7 من القائمة يشترط الثلاثة.
