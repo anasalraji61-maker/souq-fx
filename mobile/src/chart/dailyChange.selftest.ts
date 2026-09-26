@@ -75,8 +75,32 @@ assert.equal(prevClose([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
   assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H, 'XAUUSD'), 1.09);
   assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H, 'EURUSD'), 1.1);
   assert.equal(prevClose([thuW, friW], D('2026-11-15') + 23.5 * H, 'XAUUSD'), 1.1);
-  // كسر CME اليومي أيام الأسبوع لا يغيّر الجلسة (الأربعاء 21:30Z)
-  assert.equal(prevClose([wed, thu, fri, sun, mon, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'XAUUSD'), 1.12);
+  // قرار أنس ٨: الأربعاء 21:30Z (بعد 17:00 نيويورك) يوم الخميس بدأ ⇒ المرجع إغلاق الأربعاء الذي أُغلق للتوّ
+  // (كان 1.12: إغلاق ما قبل الأمس، شمعة الأربعاء تُحسب داخل «اليوم» حتى منتصف ليل UTC).
+  assert.equal(prevClose([wed, thu, fri, sun, mon, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'XAUUSD'), 1.13);
+}
+// قرار أنس ٨ — «أمس» = 17:00 نيويورك: الثلاثاء 22 سبتمبر (صيفاً 21:00Z، شتاءً 22:00Z)
+{
+  const tue = { time: D('2026-09-22'), close: 1.125 };
+  const bars = [fri, sun, mon, tue];
+  // قبل 17:00 نيويورك: الثلاثاء جارٍ ⇒ مرجعه إغلاق الإثنين
+  assert.equal(prevClose(bars, D('2026-09-22') + 20.5 * H, 'EURUSD'), 1.12);
+  // بعد 17:00 وقبل منتصف ليل UTC: الأربعاء بدأ ⇒ إغلاق الثلاثاء (كان الإثنين حتى 24:00Z)
+  assert.equal(prevClose(bars, D('2026-09-22') + 21.5 * H, 'EURUSD'), 1.125);
+  assert.equal(prevClose(bars, D('2026-09-22') + 23.9 * H, 'EURUSD'), 1.125);
+  assert.equal(sessionKeyAt(D('2026-09-22') + 21.5 * H, true, 'EURUSD'), sessionKeyAt(D('2026-09-23') + 9 * H, true, 'EURUSD'));
+  // المفتاح يتغيّر عند 17:00 نيويورك لا منتصف الليل (مخزن المرجع يعيد الجلب حينها)
+  assert.notEqual(sessionKeyAt(D('2026-09-22') + 20.9 * H, true), sessionKeyAt(D('2026-09-22') + 21.1 * H, true));
+  // شتاءً الحدّ 22:00Z
+  const tueW = { time: D('2026-11-17'), close: 1.2 };
+  const monW2 = { time: D('2026-11-16'), close: 1.19 };
+  assert.equal(prevClose([monW2, tueW], D('2026-11-17') + 21.5 * H, 'EURUSD'), 1.19);
+  assert.equal(prevClose([monW2, tueW], D('2026-11-17') + 22.5 * H, 'EURUSD'), 1.2);
+  // الجمعة بعد الإغلاق: تبقى جلسة الجمعة (حركتها مقابل الخميس) حتى افتتاح الأحد
+  assert.equal(prevClose([wed, thu, fri], D('2026-09-18') + 22 * H, 'EURUSD'), 1.09);
+  // الكريبتو يوم UTC كما هو: الثلاثاء 22:00Z ما زال الثلاثاء
+  const cr = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => ({ time: D('2026-09-15') + k * 86400, close: 100 + k }));
+  assert.equal(prevClose(cr.slice(0, 8), D('2026-09-22') + 22 * H, 'BTCUSD'), 106);
 }
 // افتتاح ICE المتأخر: مؤشر الدولار 20:00 نيويورك (00:00Z الإثنين صيفاً، 01:00Z شتاءً)، برنت 23:00 لندن (22:00Z/23:00Z)
 {
@@ -101,10 +125,11 @@ assert.equal(prevClose([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
   // UKOIL شتاءً: حتى 23:00Z
   assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H, 'BRENT'), 1.09);
   assert.equal(prevClose([thuW, friW], D('2026-11-15') + 23.5 * H, 'BRENT'), 1.1);
-  // كسر ICE اليومي أيام الأسبوع لا يغيّر الجلسة (DXY الأربعاء 21:30Z، برنت الثلاثاء 22:30Z)
+  // قرار أنس ٨: بعد 17:00 نيويورك أيام الأسبوع اليوم التالي بدأ — لـICE كذلك (DXY الأربعاء 21:30Z، برنت الثلاثاء 22:30Z)
+  // ⇒ المرجع إغلاق اليوم الذي انتهى للتوّ (كان إغلاق ما قبله حتى منتصف ليل UTC).
   const tue = { time: D('2026-09-22'), close: 1.125 };
-  assert.equal(prevClose([wed, thu, fri, sun, mon, tue, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'DXY'), 1.125);
-  assert.equal(prevClose([fri, sun, mon, tue], D('2026-09-22') + 22.5 * H, 'UKOIL'), 1.12);
+  assert.equal(prevClose([wed, thu, fri, sun, mon, tue, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'DXY'), 1.13);
+  assert.equal(prevClose([fri, sun, mon, tue], D('2026-09-22') + 22.5 * H, 'UKOIL'), 1.125);
 }
 // أداة تتداول بالعطلة (شمعة سبت بالسلسلة): أيام UTC عادية — الأحد مقابل السبت
 const sat = { time: D('2026-09-19'), close: 64000 };
@@ -188,9 +213,12 @@ assert.equal(tickDirection(2, 1), 'down');
 assert.equal(tickDirection(1, 1), 'flat');
 assert.equal(tickDirection(null, 1), 'flat');
 
-// مفتاح الجلسة لمخزن المرجع: يتبدّل عند منتصف ليل UTC، والعطلة تُدمج حتى افتتاح الأحد
-assert.equal(sessionKeyAt(D('2026-09-16') + 23 * H, true), sessionKeyAt(D('2026-09-16') + 1, true));
-assert.notEqual(sessionKeyAt(D('2026-09-17') + 60, true), sessionKeyAt(D('2026-09-16') + 23.9 * H, true));
+// مفتاح الجلسة لمخزن المرجع: يتبدّل عند 17:00 نيويورك (قرار أنس ٨؛ كان منتصف ليل UTC)، والعطلة تُدمج حتى افتتاح الأحد
+assert.equal(sessionKeyAt(D('2026-09-16') + 20.9 * H, true), sessionKeyAt(D('2026-09-16') + 1, true));
+assert.equal(sessionKeyAt(D('2026-09-16') + 23 * H, true), sessionKeyAt(D('2026-09-17') + 60, true));
+assert.notEqual(sessionKeyAt(D('2026-09-16') + 21.1 * H, true), sessionKeyAt(D('2026-09-16') + 20.9 * H, true));
+// الكريبتو (بلا دمج العطلة) يبقى يوم UTC
+assert.equal(sessionKeyAt(D('2026-09-16') + 23 * H, false), sessionKeyAt(D('2026-09-16') + 1, false));
 // الجمعة → السبت → صباح الأحد: جلسة واحدة (لا جلب بلا داعٍ)؛ مساء الأحد بعد الافتتاح = الإثنين
 assert.equal(sessionKeyAt(D('2026-09-19') + 12 * H, true), sessionKeyAt(D('2026-09-18') + 12 * H, true));
 assert.equal(sessionKeyAt(D('2026-09-20') + 10 * H, true), sessionKeyAt(D('2026-09-18') + 12 * H, true));

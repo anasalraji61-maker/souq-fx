@@ -11,7 +11,7 @@
  * وأداة تتداول بالعطلة (شمعة سبت بالسلسلة — عملات رقمية) تبقى على أيام UTC العادية.
  */
 import type { Candle } from '../api';
-import { DAY_SEC, forexSundayOpenSec, isForexMarketOpen, isLateOpenSymbol } from './marketHours';
+import { DAY_SEC, forexSundayOpenSec, isForexMarketOpen, isLateOpenSymbol, nyFivePmUtcSec } from './marketHours';
 import { isFreshTick, serverNowSec } from './dataSource';
 
 export type Direction = 'up' | 'down' | 'flat';
@@ -31,7 +31,7 @@ const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;
  * `lateOpen`: رمز CME (ذهب/مؤشرات/نفط) يفتح بعد العملات بساعة.
  */
 function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false, symbol?: string | null): number {
-  let s = weekSessionOf(tSec, weekendMerge, isNow, lateOpen, symbol);
+  let s = weekSessionOf(isNow && weekendMerge ? tradingNowSec(tSec) : tSec, weekendMerge, isNow, lateOpen, symbol);
   if (!weekendMerge) return s;
   // الرمز نفسه مسباراً لا EURUSD: الذهب/المؤشرات (CME) تفتح 18:00 نيويورك يوم العطلة ومؤشر الدولار (ICE) 20:00 — ساعاتها
   // المغلقة بعد افتتاح العملات كانت جلسة جديدة مرجعها إغلاق ما قبل العطلة = السعر نفسه ⇒ «0.00%». بلا رمز ⇒ EURUSD كما كان.
@@ -64,6 +64,19 @@ function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen
     s -= weekdayOf(s) === 1 ? 3 : 1;
   }
   return s;
+}
+
+/**
+ * قرار أنس ٨: «أمس» = إغلاق 17:00 نيويورك في كل مكان (كـMT4/MT5 وشمعة D من الخادم، backend-r79b). شمعة D المختومة X
+ * تغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك، فجلسة الشمعة = ختمها أصلاً؛ لكن «الآن» كان يوم UTC ⇒ من 17:00 نيويورك حتى
+ * منتصف ليل UTC (3–4 ساعات كل مساء) بقيت الجلسة الجارية «اليوم» فمرجع نسبة المتابعة ورأس الشارت إغلاق **ما قبل**
+ * الأمس: الشمعة التي أُغلقت للتوّ تُحسب داخل «اليوم». الاثنين–الخميس بعد 17:00 نيويورك ⇒ اليوم التالي. الجمعة بعد
+ * الإغلاق والعطلة والأحد تبقى لمنطقها أدناه (الأحد بعد الافتتاح ⇒ الإثنين أصلاً). الكريبتو (`!weekendMerge`) يوم UTC.
+ */
+function tradingNowSec(tSec: number): number {
+  const dayStart = Math.floor(tSec / DAY_SEC) * DAY_SEC;
+  const wd = weekdayOf(dayStart / DAY_SEC);
+  return wd >= 1 && wd <= 4 && tSec >= nyFivePmUtcSec(dayStart) ? dayStart + DAY_SEC : tSec;
 }
 
 /** يوم UTC هو 25 ديسمبر أو 1 يناير (أيام `isForexHolidaySession`). */

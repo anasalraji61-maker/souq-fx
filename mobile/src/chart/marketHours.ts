@@ -35,7 +35,7 @@ export function nyDst(sec: number): boolean {
 }
 
 /** ساعة UTC لـ17:00 نيويورك بيوم `dayStartSec` (منتصف ليل UTC): 21 صيفاً، 22 شتاءً. */
-function nyFivePmUtcSec(dayStartSec: number): number {
+export function nyFivePmUtcSec(dayStartSec: number): number {
   const at = dayStartSec + 21 * 3600;
   return at + (nyDst(at) ? 0 : 3600);
 }
