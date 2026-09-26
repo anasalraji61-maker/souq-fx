@@ -462,6 +462,9 @@ export function ToolsScreen() {
     return () => clearInterval(id);
   }, [ticksLive]);
 
+  /** launch206a: فريم الفحص بنصوص الماسح بتسمية التطبيق («15 د» لا «15m»)، وبتسمية قارئ الشاشة («15 دقيقة» لا «15 متراً») */
+  const scanTfLabel = (tf: string, a11y = false) =>
+    isTimeframe(tf) ? (a11y ? t.tfLabelsA11y[tf] : t.tfLabels[tf]) : tf;
   /**
    * وسم «السعر حتى …» ببطاقات الماسح يُحسب عند التصيير وحده، ولا شيء يُعيد تصيير تبويب الماسح (النبضة أعلاه للتيكات) ⇒ فحص 15m
    * طازج 10:00 يبقى بلا وسم 10:45 وسعره وRSI يُقرآن حاليين. مؤقّتٌ واحد لأقرب لحظة يتخطّى فيها سعرُ بطاقةٍ شمعتين.
@@ -842,7 +845,7 @@ export function ToolsScreen() {
           ) : null}
           {!loading && scanDone && providerConfigured === true && shortSyms.length > 0 ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>
-              {t.screenerInsufficientData.replace('{tf}', scanInfo.tf).replace(
+              {t.screenerInsufficientData.replace('{tf}', scanTfLabel(scanInfo.tf)).replace(
                 '{list}',
                 shortSyms
                   .map((s) =>
@@ -864,7 +867,7 @@ export function ToolsScreen() {
               {scanInfo.scanned != null
                 ? t.screenerNoMatchOf
                     .replace('{k}', String(scanInfo.scanned))
-                    .replace('{tf}', scanInfo.tf)
+                    .replace('{tf}', scanTfLabel(scanInfo.tf))
                 : t.screenerNoResults}
             </Text>
           ) : null}
@@ -915,7 +918,7 @@ export function ToolsScreen() {
               // التسمية تحلّ محلّ نصوص البطاقة كلها: كانت «افتح الشارت: EURUSD 15m» — بلا السعر وRSI والنسبة والمرشّحات
               // التي وُجدت البطاقة لأجلها
               const cardA11y = [
-                `${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`,
+                `${t.screenerOpenChartA11y}: ${r.symbol} ${scanTfLabel(scanInfo.tf, true)}`,
                 asOf,
                 formatPrice(r.last, r.symbol),
                 `RSI ${r.rsi}`,
