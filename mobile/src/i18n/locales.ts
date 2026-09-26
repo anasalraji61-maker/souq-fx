@@ -1305,6 +1305,11 @@ export type Dict = {
   cppColBalance: string;
   cppColTotal: string;
   cppNoEarnings: string;
+  /**
+   * ui58a: خطة العمولات حُمّلت وتقرير الأرباح فشل (مهلة/5xx، لا 401 الزائر) — كان الجدول يقول «لا أرباح مسجّلة بعد» لمن له أرباح.
+   * يذكر زرّ `refreshBtn` بتسميته في كل لغة.
+   */
+  cppEarningsLoadError: string;
   cppBasisNote: string;
   cppTypeDirect: string;
   cppTypeBalance: string;
@@ -2598,6 +2603,7 @@ const ar: Dict = {
   cppColBalance: 'توازن',
   cppColTotal: 'الإجمالي',
   cppNoEarnings: 'لا أرباح مسجّلة بعد — تظهر هنا حين تضيف أعضاء من الشجرة',
+  cppEarningsLoadError: 'تعذّر تحميل أرباحك — تحقّق من الاتصال واضغط «تحديث»',
   cppBasisNote: 'أساس الحساب: {unit} نقطة لكل عضو × نسبة العمولة',
   cppTypeDirect: 'جلب مباشر',
   cppTypeBalance: 'مكافأة توازن',
@@ -3814,6 +3820,7 @@ const enUS: Dict = {
   cppColBalance: 'Balance',
   cppColTotal: 'Total',
   cppNoEarnings: 'No earnings recorded yet — they appear here once you add members from the tree',
+  cppEarningsLoadError: 'Couldn’t load your earnings — check your connection and tap “Refresh”',
   cppBasisNote: 'Basis: {unit} points per member × commission rate',
   cppTypeDirect: 'Direct referral',
   cppTypeBalance: 'Balance bonus',
@@ -5068,6 +5075,8 @@ const ku: Dict = {
   cppColBalance: 'هاوسەنگی',
   cppColTotal: 'کۆی گشتی',
   cppNoEarnings: 'هێشتا هیچ قازانجێک تۆمار نەکراوە — کاتێک ئەندام لە دارەکەوە زیاد دەکەیت لێرە دەردەکەوێت',
+  // بحاجة مراجعة ناطق كردي
+  cppEarningsLoadError: 'قازانجەکانت بار نەبوون — پەیوەندییەکەت بپشکنە و «نوێکردنەوە» دابگرە',
   cppBasisNote: 'بنەمای ژماردن: {unit} خاڵ بۆ هەر ئەندامێک × ڕێژەی کۆمیسیۆن',
   cppTypeDirect: 'هێنانی ڕاستەوخۆ',
   cppTypeBalance: 'پاداشتی هاوسەنگی',
