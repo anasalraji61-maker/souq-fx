@@ -120,6 +120,8 @@ export type Dict = {
   belowWord: string;
   addBtn: string;
   deleteWord: string;
+  /** تلميح اللمس للصفوف التي يختفي «حذف» منها وقت السكون (DESIGN-PRO 5.2: قائمة المتابعة، تنبيهات المؤشرات، التخطيطات — `b1bec76`) — يظهر تحت القائمة على الهاتف فقط */
+  rowDeleteLongPressHint: string;
   priceWord: string;
   impactHigh: string;
   impactMedium: string;
@@ -1626,6 +1628,7 @@ const ar: Dict = {
   belowWord: 'تحت',
   addBtn: 'إضافة',
   deleteWord: 'حذف',
+  rowDeleteLongPressHint: 'اضغط مطوّلاً على صفّ لإظهار «حذف»',
   priceWord: 'السعر',
   impactHigh: 'عالي',
   impactMedium: 'متوسط',
@@ -2859,6 +2862,7 @@ const enUS: Dict = {
   belowWord: 'Below',
   addBtn: 'Add',
   deleteWord: 'Delete',
+  rowDeleteLongPressHint: 'Press and hold a row to show Delete',
   priceWord: 'Price',
   impactHigh: 'High',
   impactMedium: 'Medium',
@@ -4130,6 +4134,7 @@ const ku: Dict = {
   belowWord: 'خوارەوە',
   addBtn: 'زیادکردن',
   deleteWord: 'سڕینەوە',
+  rowDeleteLongPressHint: 'لەسەر ڕیزێک درێژ دابگرە بۆ دەرخستنی «سڕینەوە»',
   priceWord: 'نرخ',
   impactHigh: 'بەرز',
   impactMedium: 'مامناوەند',
