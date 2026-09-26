@@ -169,6 +169,6 @@ Questions or requests about your data: [privacy email].
 | Sentry وما يصله | `mobile/src/crashReporting.ts` (`e522621`): بلا `EXPO_PUBLIC_SENTRY_DSN` لا تهيئة؛ `sendDefaultPii: false`، `attachScreenshot`/`attachViewHierarchy: false`، `tracesSampleRate: 0`؛ `beforeSend` يحذف `user`/`request`/`extra`/`server_name` ويقصّ النصّ إلى 200 حرف؛ `beforeBreadcrumb` يُسقط console/touch/ui.input/ui.click ويُبقي من الشبكة الطريقة والمسار (بلا نطاق ولا استعلام) والحالة؛ `AppErrorBoundary` يبلّغ أخطاء العرض؛ `mobile/index.ts:7` |
 | لا SDK تحليلات/إعلانات، لا ميكروفون | `mobile/package.json`؛ `mobile/app.json` (`microphonePermission: false`، `RECORD_AUDIO` محظور) |
 | لا حذف تلقائي بمدّة | لا `DELETE` زمني بـ`backend/db.py` |
-| https | شرط النشر بـ`docs/DEPLOYMENT.md` — **اليوم `apiUrl` http محلي**؛ لا تُنشر السياسة قبل تحقّقه |
+| https | شرط النشر بـ`docs/DEPLOYMENT.md` — **اليوم لا خادم عام؛ عنوان التطوير http محلي**؛ لا تُنشر السياسة قبل تحقّقه |
 
 > **أُعيد التحقّق 2026-09-25 (launch 129)**: الجداول الستّة عشر بـ`db.py` كما بالجدول (أعمدة `ALTER TABLE` المضافة: owner_key، user_id، created_at، lang، email، sl/tp — كلّها مغطّاة بنصّ القسم 1)، و`delete_user_account` يحذف/يُجهّل ما يقوله القسم 5 بالحرف، وزرّ «حذف الحساب» بـ`AccountScreen.tsx:168`. لا تغيير بالنصّ المنشور.

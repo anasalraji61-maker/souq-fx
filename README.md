@@ -55,13 +55,16 @@ npm install --legacy-peer-deps
 npx expo start --lan
 ```
 - `w` للويب، `a` لأندرويد، `i` لآيفون (محاكي أو Expo Go).
-- على جهاز حقيقي: `extra.apiUrl` في `mobile/app.json` يجب أن يشير إلى IP جهاز الخادم على نفس
-  الشبكة (اليوم `http://192.168.8.104:8110`). تفاصيل IP الثابت في [`HOW-TO-RUN.md`](HOW-TO-RUN.md).
+- عنوان الخادم **يُكتشف تلقائياً** (`mobile/src/apiHost.ts`): الويب يأخذ مضيف الصفحة نفسها + `:8110`، والهاتف
+  في Expo Go يأخذ مضيف Metro (عنوان اللابتوب على الشبكة) + `:8110` — فلا يلزم تعديل شيء حين يتغيّر عنوان
+  اللابتوب. لإجبار عنوان آخر: `EXPO_PUBLIC_API_URL=http://<العنوان>:8110 npx expo start`. التفاصيل في
+  [`docs/RELEASE-MOBILE.md`](docs/RELEASE-MOBILE.md) §0 «عنوان الخادم».
 
 ## قبل أي بناء للمتجر
 
-`extra.apiUrl` عنوان شبكة منزلية بـ`http` — **أي بناء EAS اليوم لا يصل إلى الخادم** من خارج تلك
-الشبكة، ونُسخ الإصدار تمنع `http` أصلاً. الخطوات والقرار المطلوب في
+البناء المستقلّ (EAS) لا يملك مضيف Metro، فلا يعرف عنوان الخادم إلا من `EXPO_PUBLIC_API_URL` في بيئة EAS —
+وبدونه يحاول `http://127.0.0.1:8110` ولا يصل. **لا خادم عام بـ`https` بعد**، فأي بناء اليوم لا يصل إلى الخادم
+من هاتف مستخدم. الخطوات والقرار المطلوب في
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)، ونصوص المتجر في
 [`docs/STORE-LISTING.md`](docs/STORE-LISTING.md) و[`docs/STORE-PRIVACY.md`](docs/STORE-PRIVACY.md).
 
