@@ -1155,9 +1155,15 @@ export type Dict = {
   mcClearWord: string;
   mcHintDraw: string;
   mcHintNavigate: string;
-  /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. واختصارات Alt (`WEB_TOOL_HOTKEYS` و`KeyR`
-   * بـ`MatrixChart.tsx`) — لا تلميح غيره يذكرها، فبلا هذا السطر لا يعرف بها أحد. أسماء الأدوات = `ctlToolTrend/Hline/Vline/Fib`. */
+  /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. واختصارات Alt (`DRAW_TOOL_SHORTCUTS` بـ`drawEdit.ts`،
+   * و`KeyR` لإعادة العرض بـ`MatrixChart.tsx`؛ المستطيل Alt+B لا R — `5786c8f`) — لا تلميح غيره يذكرها، فبلا هذا السطر لا يعرف
+   * بها أحد. أسماء الأدوات = `ctlToolTrend/Hline/Vline/Fib`. */
   mcHintNavigateWeb: string;
+  /**
+   * الويب: يُلحق بـ`mcHintNavigateWeb` حين يبدّل المضيف الفريم بالكتابة (`onTimeframeKey`، `tfTyping.ts` — `fcb9d16`).
+   * يبدأ بفاصل « · » لأنه ذيل. أمثلة المكتوب بحروف لاتينية كما تُضغط («15»، «4h»)؛ Enter اسم المفتاح.
+   */
+  mcHintTypeTfWeb: string;
   /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
   mcHintDrawWeb: string;
   /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`). */
@@ -2499,6 +2505,7 @@ const ar: Dict = {
   mcHintDraw: 'اسحب لرسم، أو المس نقطتين · يُحفظ تلقائياً',
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
   mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · Alt+R لإعادة العرض · Alt+T ترند، H أفقي، V عمودي، F فيبو',
+  mcHintTypeTfWeb: ' · اكتب 15 أو 4h ثم Enter لتبديل الفريم',
   mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
   mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
@@ -3731,6 +3738,7 @@ const enUS: Dict = {
   mcHintDraw: 'Drag to draw, or tap two points · saved automatically',
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
   mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · Alt+R resets the view · Alt+T trend, H H-line, V V-line, F Fib',
+  mcHintTypeTfWeb: ' · type 15 or 4h then Enter to switch timeframe',
   mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
   mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
@@ -5010,6 +5018,7 @@ const ku: Dict = {
   mcHintDraw: 'ڕایبکێشە بۆ کێشان، یان دوو خاڵ دابگرە · خۆکار پاشەکەوت دەبێت',
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
   mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T ترێند، H ئاسۆیی، V ستوونی، F فیبۆ',
+  mcHintTypeTfWeb: ' · 15 یان 4h بنووسە و Enter دابگرە بۆ گۆڕینی تایم‌فرەیم',
   mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
   mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
