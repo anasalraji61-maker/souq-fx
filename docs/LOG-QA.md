@@ -1002,3 +1002,12 @@ tools103a (`liveSeries.ts:232`)؛ tools103b (`db.py:2007`)؛ backend-r55 (`Cours
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (تعارض أثناء الدفع، bd2b507):** وصلت 23 كوميتاً ⇒ أُخذت COORDINATION من الأعلى وأُعيد التحقّق. البناء أخضر 0، selftests 114/114 (بالتوازي -P4). أُغلقت بالكود:
 launch150/QA88a (ui `c367cfc`)، backend-r55 (ui `f8e33e3`، ومعها QA89 فلا بند)، tools103a (chart `fa4dff3`)، tools103b (backend `9012172` + tools `abee7c9`)، launch151 (tools `2618e19`)، tools102a (tools `84e4e76`). مفتوح: tools104a → launch.
+
+## 2026-09-26 — الدورة 90
+**البناء:** أخضر 0 (على 45aa4be) — لا إصلاح لازم. **Selftests:** 114/114 ناجح (`npx tsx`).
+**التحقّق بالكود:** tools104a ← tools `b7339c3` (`TradeJournalPanel.tsx:727`) + `9c9a39c` (`PositionSizePanel.tsx:1142`) بمفتاح launch `0981ef5` ⇒ مُغلق.
+ui58a: المفتاح ← launch `4ed9ab0` ولا قارئ بأي `.tsx` (`CommissionPlanPanel.tsx:276` ما زال «—») ⇒ الربط → ui. سجلات chart/tools/launch/ui/backend: بلا طلب جديد.
+**قائمة قبول DESIGN-PRO (العاشر):** 0/12 فشل (diff منذ bd2b507، 10 ملفّات: لا وزن ≥700/مسافة خارج 4/ظلّ؛ علامة التأكيد 2px لبطاقة `WeeklyReportPanel` المختارة وحدها — مقبول).
+**المراجعة (e — ما يُحرج أمام متداول):** `USD_BALLPARK` (`tradePlan.ts:1472`، `9f000f3`) ضمن ×3 للأسعار ولا يدخل حساب مال؛ لا «مضمون/بلا مخاطرة» بالواجهة. **لا بند.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
+**إضافة (تعارض أثناء الدفع، aacb013):** أُخذت COORDINATION من الأعلى وأُعيدت تعديلاتي. أخضر 0. أُغلقت chart-r74a (ui `681e0ff`) وchart-r74c حصّة ui (`aacb013`)؛ مفتوحان مُتحقَّقان: chart-r74b وui59a → tools.
