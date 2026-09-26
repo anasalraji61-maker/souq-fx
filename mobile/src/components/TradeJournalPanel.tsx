@@ -2058,7 +2058,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           onSubmitEditing={() => tpInRef.current?.focus()}
           underlineColorAndroid="transparent"
           keyboardAppearance="dark"
-          selectionColor={colors.bear}
+          selectionColor={colors.accent}
           accessibilityLabel={t.riskCalcStop}
           accessibilityHint={t.journalSlPlaceholder}
         />
@@ -2079,7 +2079,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           onSubmitEditing={() => noteInRef.current?.focus()}
           underlineColorAndroid="transparent"
           keyboardAppearance="dark"
-          selectionColor={colors.bull}
+          selectionColor={colors.accent}
           accessibilityLabel={t.riskCalcTargetPlaceholder}
           accessibilityHint={t.journalTpPlaceholder}
         />
