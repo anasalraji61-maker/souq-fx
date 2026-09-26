@@ -596,8 +596,6 @@ export type Dict = {
   newsUnavailable: string;
   /** موعد خبرٍ قويّ اليوم **بلا ساعة معلنة** بسطر شريط الأخبار مكان «بعد 2س» (`NewsRiskBanner`، tools75a). */
   newsTimeTbd: string;
-  /** مثل `newsTimeTbd` لكن يومُ الخبر **غداً** بتقويم الجهاز (`unannouncedHighImpactToday().tomorrow`، launch113/tools76a). */
-  newsTimeTbdTomorrow: string;
   /** سطر الخبر بلا ساعة حين **لا نعرف يومه بتقويم الجهاز** (tools116a): ForexFactory يؤرّخ قرار بنك اليابان بتاريخ طوكيو والقرار ~03:00 UTC ⇒ بنيويورك مساءً «غداً» خطأ (القرار بعد دقائق)، وبطوكيو ظهراً «اليوم» عن قرار الأمس. بلا يوم ولا وعد بساعة. */
   newsTimeTbdNeutral: string;
   calToday: string;
@@ -928,7 +926,6 @@ export type Dict = {
   termIndicatorsWord: string;
   termAlertWord: string;
   termKindWord: string;
-  termFrameWord: string;
   termSquareWord: string;
   termRectWord: string;
   termLayoutSquareA11yPrefix: string;
@@ -2023,7 +2020,6 @@ const ar: Dict = {
   listSep: '، ',
   newsUnavailable: 'تعذّر تحديث تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
   newsTimeTbd: 'اليوم، الساعة غير معلنة',
-  newsTimeTbdTomorrow: 'غداً، الساعة غير معلنة',
   newsTimeTbdNeutral: 'الموعد غير معلن',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
@@ -2309,7 +2305,6 @@ const ar: Dict = {
   termIndicatorsWord: 'مؤشرات',
   termAlertWord: 'تنبيه',
   termKindWord: 'نوع',
-  termFrameWord: 'فريم',
   termSquareWord: 'مربع',
   termRectWord: 'مستطيل',
   termLayoutSquareA11yPrefix: 'تخطيط مربع',
@@ -3266,7 +3261,6 @@ const enUS: Dict = {
   listSep: ', ',
   newsUnavailable: 'Couldn’t update the news calendar — we can’t tell if a big release is close; check before you enter',
   newsTimeTbd: 'today, time not announced',
-  newsTimeTbdTomorrow: 'tomorrow, time not announced',
   newsTimeTbdNeutral: 'timing not announced',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
@@ -3555,7 +3549,6 @@ const enUS: Dict = {
   termIndicatorsWord: 'Indicators',
   termAlertWord: 'Alert',
   termKindWord: 'Type',
-  termFrameWord: 'Frame',
   termSquareWord: 'Square',
   termRectWord: 'Rectangle',
   termLayoutSquareA11yPrefix: 'Square layout',
@@ -4555,7 +4548,6 @@ const ku: Dict = {
   // بحاجة مراجعة ناطق
   newsTimeTbd: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
   // بحاجة مراجعة ناطق
-  newsTimeTbdTomorrow: 'سبەینێ، کاتەکەی ڕانەگەیەندراوە',
   // بحاجة مراجعة ناطق
   newsTimeTbdNeutral: 'کاتەکەی ڕانەگەیەندراوە',
   calToday: 'ئەمڕۆ',
@@ -4848,7 +4840,6 @@ const ku: Dict = {
   termIndicatorsWord: 'ئاماژەکان',
   termAlertWord: 'ئاگاداری',
   termKindWord: 'جۆر',
-  termFrameWord: 'چوارچێوە',
   termSquareWord: 'چوارگۆشە',
   termRectWord: 'لاکێشراو',
   termLayoutSquareA11yPrefix: 'نەخشەی چوارگۆشە',
