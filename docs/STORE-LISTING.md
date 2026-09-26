@@ -55,7 +55,7 @@
 | 1 | EURUSD على H1 بالشموع، EMA وبولنجر، وسم السعر الحيّ مع العدّاد | شارت واضح، بلا ضجيج | Clean, fast charts |
 | 2 | شمعة ملموسة وقراءة O H L C والمدى بالـpip | اقرأ كل شمعة بلمسة | Every candle, one tap |
 | 3 | «خطة شراء» مرسومة: دخول ووقف وهدف ونسبة العائد للمخاطرة | خطّط صفقتك على الشارت | Plan the trade on the chart |
-| 4 | تنبيه 🔔 على مستوى بالشارت | تنبيه عند مستواك | Alerts at your level |
+| 4 | خطّ تنبيه مسلَّح على مستوى بالشارت (وسمه «⚑ ▲ السعر · pip») | تنبيه عند مستواك | Alerts at your level |
 | 5 | الحاسبة: رصيد 10,000، مخاطرة 1%، وقف 25 pip ⇒ اللوت | اعرف حجم اللوت قبل الدخول | Know your lot size first |
 | 6 | الرباعي 2×2 (EURUSD، GBPUSD، XAUUSD، USDJPY) | أربعة شارتات بشاشة واحدة | Four charts, one screen |
 | 7 | محاضرة من الأكاديمية | تعلّم التحليل الفني بالعربية | Learn chart reading (Arabic audio) |
@@ -87,7 +87,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • 12 نوعاً للشارت: شموع يابانية ومجوّفة، أعمدة، هايكن آشي، خط، مساحة، خط أساس، رينكو، كاجي، نقطة ورقم، نطاق (Range)، وكسر الخطوط.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة.
 • قارن زوجين على شارت واحد: بالشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول، كل شمعة مقابل نظيرتها زمنياً.
-• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip وتغيّرها عن إغلاق السابقة، وكم pip يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
+• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip وتغيّرها عن إغلاق السابقة، وكم pip يبعد المستوى عن السعر الحالي، ثم المس زرّ التنبيه الذي يظهر بسعره لتضع تنبيهاً عنده.
 • كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف لتدرس نموذجاً قديماً، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة.
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل أيام التداول على الفريمات الصغيرة.
@@ -148,7 +148,7 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 CHARTS
 • 12 chart types: solid/hollow candles, bars, Heikin-Ashi, line, area, baseline, Renko, Kagi, Point & Figure, Range, Line Break.
 • Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned in time.
-• Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then 🔔 sets an alert there.
+• Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then a tap sets an alert there.
 • Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back; one tap returns to the live candle, zoom intact.
 • A countdown under the live price to the candle's close.
 • The on-screen high and low show their price as you scroll; a faint line marks each trading day on intraday charts.
@@ -269,3 +269,7 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 
 > **2026-09-26 (launch 165، QA99a)**: سطر أنواع الشارت «11» ⇒ **12** — `CHART_KINDS` (`chart/types.ts:263`) فيها `lineBreak` منذ `d78a6c2`، واسمه بالتطبيق
 > من القاموس (`typeLabels.ts:37` ⇒ `ctlKindLineBreak`: «كسر الخطوط» / «Line break») فالمتجر بالاسم نفسه. العدّ بسكربت: **ar 3972 / en 3993** من 4000.
+
+> **2026-09-26 (launch 169)**: chart بدّل رمز التنبيه بالشارت من «🔔» الملوّن إلى «⚑» (`fef7559`، ui75a) فكان الوصف يطلب لمس رمز لم يعد يظهر.
+> السطر صار مستقلاً عن الرمز: ar «ثم المس زرّ التنبيه الذي يظهر بسعره» (كنصّ الترحيب، `3440a74`)، en «then a tap sets an alert there» (لا مكان لأطول).
+> ووصف لقطة الشاشة 4 يذكر الوسم الجديد. العدّ بسكربت: **ar 3996 / en 3997** من 4000.
