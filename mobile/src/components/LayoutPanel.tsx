@@ -46,6 +46,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
   const [savedLayout, setSavedLayout] = useState<TerminalLayout | null>(null);
   /** ما حذفه المتداول بهذه اللوحة — تحميلٌ قُرئ قبل الحذف لا يُعيده للقائمة. */
   const deletedRef = useRef(new Set<string>());
+  /** DESIGN-PRO §5.2: «حذف» مخفيّ وقت السكون — يظهر بالمرور (ويب) أو بالضغط الطويل على الصفّ (لمس)؛
+   *  ولقارئ الشاشة إجراء «حذف» على الصفّ نفسه بلا حاجة لإظهاره (كقائمة المتابعة). */
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [revealId, setRevealId] = useState<string | null>(null);
   /** حفظ جارٍ — نقرتان سريعتان كانتا تحفظان نسختين بالاسم نفسه (القائمة لم تتحدّث بعد فلا «existing»). */
   const savingRef = useRef(false);
 
@@ -143,6 +147,15 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
     setSavedLayout(layout);
   };
 
+  const askRemove = (l: TerminalLayout) =>
+    confirmDestructive({
+      title: t.layoutDeleteConfirmTitle,
+      body: `${l.name} — ${describe(l)}`,
+      cancelText: t.cancel,
+      confirmText: t.deleteWord,
+      onConfirm: () => void removeLayout(l),
+    });
+
   const removeLayout = async (l: TerminalLayout) => {
     deletedRef.current.add(l.id);
     await deleteLayout(l.id);
@@ -201,7 +214,13 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
         </Text>
       ) : null}
       {layouts.map((l) => (
-        <View key={l.id} style={[styles.row, rtl && styles.rowRtl]}>
+        <Pressable
+          key={l.id}
+          accessible={false}
+          onHoverIn={() => setHoverId(l.id)}
+          onHoverOut={() => setHoverId((h) => (h === l.id ? null : h))}
+          style={[styles.row, rtl && styles.rowRtl]}
+        >
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -212,8 +231,14 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
               },
             ]}
             onPress={() => {
+              setRevealId(null);
               playSoftClick();
               onApply(l);
+            }}
+            onLongPress={l.id !== 'default' ? () => setRevealId((r) => (r === l.id ? null : l.id)) : undefined}
+            accessibilityActions={l.id !== 'default' ? [{ name: 'delete', label: t.deleteWord }] : undefined}
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === 'delete') askRemove(l);
             }}
             accessibilityState={{ selected: isCurrent(l) }}
             accessibilityLabel={`${t.layoutApplyA11yPrefix}: ${displayName(l)} — ${describe(l, true)}`}
@@ -224,18 +249,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
             </Text>
             <Text style={[styles.rowSub, { textAlign: align }]}>{describe(l)}</Text>
           </Pressable>
-          {l.id !== 'default' ? (
+          {l.id !== 'default' && (hoverId === l.id || revealId === l.id) ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                confirmDestructive({
-                  title: t.layoutDeleteConfirmTitle,
-                  body: `${l.name} — ${describe(l)}`,
-                  cancelText: t.cancel,
-                  confirmText: t.deleteWord,
-                  onConfirm: () => void removeLayout(l),
-                });
-              }}
+              onPress={() => askRemove(l)}
               style={({ pressed }) => [
                 styles.delHit,
                 pressed && {
@@ -248,7 +265,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
               <Text style={styles.del}>{t.deleteWord}</Text>
             </Pressable>
           ) : null}
-        </View>
+        </Pressable>
       ))}
     </View>
   );
@@ -297,7 +314,8 @@ const styles = StyleSheet.create({
   delHit: { minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' },
   rowName: { color: colors.text, fontWeight: '500', textAlign: 'right' },
   rowSub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
-  del: { color: colors.bear, fontWeight: '500' },
+  // §1: الأحمر لاتجاه السعر وحده — الإجراء نصّ ثانويّ، والتأكيد (`confirmDestructive`) يحمل الخطر.
+  del: { color: colors.textMuted, fontWeight: '500' },
   saveError: {
     color: colors.bear,
     fontSize: 11,
