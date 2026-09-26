@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 120، على ed8c6f7) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 121، على 62f494f) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -20,12 +20,12 @@
 | ui | أنس | **ui-r77** DESIGN-PRO §1 يقصر الأحمر على اتجاه السعر، لكن `colors.bear` هو أيضاً نصّ الأخطاء و«حذف» وزرّ حذف الحساب (`AccountScreen`/`AlertsPanel`/`IndicatorAlertsPanel`/`SocialConsensusPanel`/`NetworkTreePanel`/`SymbolSearchBar`)، واللوحة بلا لون خطأ و`warn` محجوز للبيانات المتأخّرة. لون خطأ مستقلّ، أم نصّ عادي بعلامة، أم استثناء؟ | ui77 |
 | QA | أنس | **QA107a** (بلا قرار سابق — القرار ٤ خاصّ بالمساعد): «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض «مستويات محسوبة: دخول · وقف · هدف» بأسعار (ATR من `/api/signals/indicators/forecast`، backend أبقاه عمداً). المنطق نفسه (`app.json` «لا يقدّم نصيحة استثمارية») ينطبق؟ إخفاء المستويات وإبقاء التصويت، أم كما هي؟ | QA107 |
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
-| tools+launch | tools | **tools131a (المفتاح وصل ← launch `f47b9a7`، ×3 لغات)**: الربط باقٍ — `closeTimeErrorText` (`TradeJournalPanel.tsx:572–575`) ما زال يعرض `journalCloseTimeHint` لخطأ `future` ولا قارئ لـ`journalCloseTimeFuture` بـ`.tsx`. وتعليقان صارا كاذبين: `:571` («بلا مفتاح بعد») و`:1574` («`api.closeTrade` يرسل `{ exit }` وحده» — `api.ts:881` يمرّر `seen` و`closed_at` يُرسل بالسطر التالي) | tools131 |
 | QA | tools | **QA120a** (منخفض، مراجعة e): حقل «وقت الإغلاق» يرفض الثواني ⇒ سجلّ MT5 ينسخ «2026.09.26 14:05:30» فيظهر «اكتب الوقت بهذه الصيغة» (`journalLocalFieldToIso` بـ`tradePlan.ts:511` ينتهي بـ`(\d{2})$`؛ بـ`npx tsx`: «2026-09-26 14:05:30» = null، «2026.09.26 14:05» مقبول). قبول `:SS` اختيارية وإسقاطها (الخادم بالدقيقة) | QA120 |
 
-**تحقّق الدورة 120 (بالكود، على f47b9a7 ثم ed8c6f7):** البناء أخضر 0، selftests 123/123 ناجح.
-**أُغلق:** backend-r93 ← tools `2a22050` (`TradeJournalPanel.tsx:173/1236` `closed_at_iso`، `:1575` `closed_at` مع `/close`)؛ chart102a ← ui `b837f74` (`chartSeriesCache.ts` لا يخزّن دون 120 شمعة)؛ chart102b ← ui `6b3a0fa` (`FocusChartModal.tsx` `liveMatches` = رمز **وفريم**). tools131a: المفتاح منجز، الصفّ نُقل إلى tools للربط.
-**قائمة قبول DESIGN-PRO (الأربعون): 0 من 12 فشل** — diff منذ 11b5086: حقل «وقت الإغلاق» (`styles.input` بـ`numeric`، `accessibilityLabel`، `planWarn`/`planLine`)، منطق شارت/أخبار/ذاكرة.
-**المراجعة (e — ما يُحرج أمام متداول):** QA120a أعلاه. الباقي سليم: مقبض الهدف (سقف 100R)، البادئة «OANDA:»، الأرقام العربية الهندية بالحقل.
-| tools | ui | **tools132a** `AiPanel.tsx:39-60` لا يحفظ رمز السؤال ولا يُعلِّم به الجواب، ولا يتغيّر شيء عند تبديل `symbol` ⇒ بالمركز (`ToolsScreen.tsx:702`) سؤال على EURUSD ثم نقر شريحة GBPUSD قبل الردّ ⇒ جواب EURUSD يصل بلا وسم والشريط يقول GBPUSD. الحلّ: `symbol` يُحفظ مع كل دورة (سؤال وجواب) ويُعرض وسماً صغيراً على الجواب («EURUSD ·»)، أو ردٌّ لرمزٍ لم يعد المعروض يُوسَم. (تبويب «المساعد» صار يمرّر الرمز المختار ويعرض الشريط — tools `b7fdb59`) | tools132 |
 | launch | tools | **launch191a** (`7359274`، `journalRowWhen` بـ`tradePlan.ts:505`): الصفّ يُسقط السنة ⇒ «مغلقة 09-10 14:30». بلا سنة تصير «09-10» شهراً-يوماً، والقارئ العربي والكردي يقرأ اليوم أولاً ⇒ 9 أكتوبر بدل 10 سبتمبر (كل تاريخ يومه ≤ 12 ملتبس). المقترح الأبسط: **أبقِ السنة دائماً** («2026-09-10 14:30» — صيغة الحقل نفسها، ISO لا تُقرأ بترتيبين، بلا ترجمة). بديل إن ضاق السطر: launch يضيف مفاتيح أسماء الشهور المختصرة (ar/en/ku) ⇒ «10 سبتمبر 14:30» — اطلبها هنا | launch191 |
+
+**تحقّق الدورة 121 (بالكود، على 62f494f):** البناء أخضر 0، selftests 123/123 ناجح.
+**أُغلق:** tools131a ← tools `a3f3134` (`TradeJournalPanel.tsx:576–577` `journalCloseTimeFuture`، والتعليق `:574` صُحّح)؛ tools132a ← ui `33d8f91` (`AiPanel.tsx:45–56` `askedSymbol` مع السؤال والجواب، الوسم `:103–104`).
+**مفتوحان مُتحقَّقان:** QA120a (`tradePlan.ts:525` ما زال ينتهي بـ`(\d{2})$`)؛ launch191a (`tradePlan.ts:511` `field.slice(5)` يُسقط السنة).
+**قائمة قبول DESIGN-PRO (الحادي والأربعون): 0 من 12 فشل** — diff منذ ed8c6f7: وسم الرمز بالمساعد `textMuted` 11/500 `marginBottom: 4`؛ وقت الصفّ بـ`tradeMeta` (`numeric`)؛ الباقي منطق.
+**المراجعة (a — ميت/تصديرات):** مسح كل `export` بـ`src/`: لا تصدير بلا مستعمل (`initCrashReporting`/`CoursesScreen` يستوردهما `index.ts`/`App.tsx` خارج `src`)؛ `seriesTf` مقروء (`FocusChartModal.tsx:306`). **لا بند.**

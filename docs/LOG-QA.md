@@ -1274,3 +1274,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (الأربعون):** 0/12 فشل (diff منذ 11b5086: حقل «وقت الإغلاق» `styles.input`+`accessibilityLabel`+`planWarn`؛ الباقي منطق).
 **المراجعة (e — ما يُحرج أمام متداول):** **QA120a → tools** (منخفض): `journalLocalFieldToIso` يرفض الثواني ⇒ وقت منسوخ من سجلّ MT5 «2026.09.26 14:05:30» = null (بـ`npx tsx`، TZ=Asia/Baghdad). سليم: «2026.09.26 14:05»، الأرقام العربية الهندية، `T`، 24:00 مرفوض، سقف 100R، بادئة «OANDA:».
 **الدورة القادمة:** المراجعة (a) — ميت/تصديرات (`seriesTf`، `editClosedAtValue` المحذوف)؛ متابعة tools131a/QA120a؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 121
+**البناء:** أخضر 0 (على 62f494f) — لا إصلاح لازم. **Selftests:** 123/123 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت tools131a ← tools `a3f3134` (`TradeJournalPanel.tsx:576–577`، التعليق `:574` صُحّح) وtools132a ← ui `33d8f91` (`AiPanel.tsx:45–56/103–104`). مفتوحان مُتحقَّقان → tools: QA120a (`tradePlan.ts:525`) وlaunch191a (`tradePlan.ts:511` يُسقط السنة). سجلّات chart/backend بلا طلب جديد.
+**قائمة قبول DESIGN-PRO (الحادي والأربعون):** 0/12 فشل (diff منذ ed8c6f7: `symbolTag` خافت 11/500 `marginBottom: 4`؛ وقت الصفّ بـ`tradeMeta` `numeric`).
+**المراجعة (a — ميت/تصديرات):** مسح كل `export` بـ`src/` ⇒ مرشّحان فقط (`initCrashReporting`/`CoursesScreen`) إيجابيتان كاذبتان (`index.ts`/`App.tsx`)؛ ~128 تصديراً مستعملاً داخل ملفه فقط (ضجيج مقبول سابقاً). **لا بند.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ متابعة QA120a/launch191a؛ وإعادة قائمة DESIGN-PRO.
