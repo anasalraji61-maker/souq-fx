@@ -4300,3 +4300,27 @@ console.log('positionSize priceDecimalSlip selftest OK');
   assert.equal(fetchedConvPriceLooksWrong('GBPEUR', 0.87), false);
 }
 console.log('positionSize fetchedConvPriceLooksWrong selftest OK');
+// سعر الوقف بخانة النقاط على الين الرئيسي والذهب: كان يُقرأ نقاطاً فيُصغّر اللوت بصمت (USDJPY «150.25» ⇒ 0.10 لوت بدل 0.60)
+{
+  const { parseSlPips: p, slPipsLooksLikePrice: looks, instrumentSpec: spec } = require('./positionSize') as typeof import('./positionSize');
+  const jpy = spec('USDJPY')!;
+  const gj = spec('GBPJPY')!;
+  const xau = spec('XAUUSD')!;
+  assert.equal(p('150.25', jpy), null);
+  assert.equal(looks('150.25', jpy), true);
+  assert.equal(p('150.20', jpy), null); // منزلتان مكتوبتان
+  assert.equal(p('191.37', gj), null);
+  assert.equal(p('2400.55', xau), null);
+  assert.equal(looks('3650.25', xau), true);
+  // مسافات حقيقية تبقى
+  assert.equal(p('25', jpy), 25);
+  assert.equal(p('150', jpy), 150);
+  assert.equal(p('150.5', jpy), 150.5);
+  assert.equal(p('25.5', jpy), 25.5);
+  assert.equal(p('45.25', jpy), 45.25); // بعيدٌ عن سعر الأداة
+  assert.equal(p('2400.5', xau), 2400.5);
+  assert.equal(p('150', xau), 150);
+  assert.equal(p('1500', xau), 1500);
+  assert.equal(looks('25', jpy), false);
+}
+console.log('positionSize JPY/gold stop price in pips field selftest OK');
