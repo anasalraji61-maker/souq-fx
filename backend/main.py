@@ -2113,7 +2113,9 @@ def course_detail(course_id: str):
 
 @app.post("/api/ai/ask")
 def ai_ask(body: AiAsk):
-    """سؤال المساعد. لا «احتمال نجاح» بأي مسار: كان `55 + hash(السؤال) % 28` (رقم عشوائي بمظهر
+    """سؤال المساعد التعليمي. قرار أنس ٤: لا دخول ولا وقف ولا هدف ولا توصية شراء/بيع بأي مسار — كانت بطاقة
+    `setup` تحمل اتجاهاً ودخولاً ووقف 1×ATR وهدف 2×ATR، والقالب «سيناريو مقترح». `setup` يبقى بالشكل (كل
+    حقوله null) توافقاً مع العملاء القدامى، وردّ النموذج يمرّ بـ`openrouter_ai.guard_answer`. لا «احتمال نجاح» بأي مسار: كان `55 + hash(السؤال) % 28` (رقم عشوائي بمظهر
     إحصائي) ومسار OpenRouter يعيد 58 ثابتاً — نسبة نجاح مختلَقة يعرضها التطبيق لمتداول فردي كتقدير.
     `win_probability` يبقى بالشكل (null) توافقاً مع العملاء القدامى. وعند سلسلة demo البذرية (المزوّد
     متعذّر) لا دخول/وقف/هدف ولا اتجاه: كانت تُشتق من شموع مختلَقة وتُعرض كسيناريو على سعر حقيقي."""
@@ -2146,23 +2148,8 @@ def ai_ask(body: AiAsk):
     # الإشارة والصفر من الحركة الحقيقية لا `chg` المقرَّب: زوج مربوط (USDHKD، ATR 15m ≈ 0.00025) يتحرّك +0.0003
     # = +0.0038% ⇒ `chg` 0.00 ⇒ كان «صافي الحركة أصغر من ATR14» — جملة كاذبة عن حركة أكبر منه.
     flat = move == 0 or few or still or (atr_v is not None and net_move < atr_v)
+    # وصف الحركة (صاعدة/هابطة) مسموح — وصف ما على الشارت ليس توصية
     bias = "صاعد" if move > 0 else "هابط"
-    direction: str | None = None if flat else ("شراء" if move > 0 else "بيع")
-    entry: float | None = None
-    sl: float | None = None
-    tp: float | None = None
-    if live and direction is not None:
-        # وقف 1×ATR14 وهدف 2×ATR14 على فريم السلسلة (العائد/المخاطرة 1:2 كما يقول النص). كان 0.4%/0.8%
-        # ثابتين لكل فريم، ومقرَّبين لخانتين حين السعر ≥50 ⇒ USDJPY تفقد خانة.
-        if atr_v is not None:
-            sgn = 1 if direction == "شراء" else -1
-            entry = series.last
-            sl = signal_hub.level_round(entry - sgn * atr_v, entry, sym)
-            tp = signal_hub.level_round(entry + sgn * 2 * atr_v, entry, sym)
-            # ATR أوسع من نصف السعر ⇒ هدف/وقف ≤ 0 (سعر مستحيل) ⇒ لا مستويات، كـ`signal_hub._trade_levels`
-            # والمدى دون نصف تسعيرة ⇒ الوقف/الهدف يُقرَّب على الدخول (صفقة بلا مخاطرة) ⇒ لا مستويات كذلك
-            if not (sl > 0 and tp > 0) or signal_hub.level_round(entry, entry, sym) in (sl, tp):
-                entry = sl = tp = None
 
     # «close» كان يصف شمعة 15m لم تُغلق بعد (`at` = وقت الجلب) بأنها إغلاق ⇒ «latest price» الآن.
     # وقت `last` ومصدره: كان السياق `last=` وحده ⇒ النموذج يقول «السعر الحالي» عن سلسلة مخزَّنة (حتى 15د
@@ -2184,29 +2171,13 @@ def ai_ask(body: AiAsk):
                ", bias=none (no price movement: every candle in the window has zero range)" if still else
                ", bias=none (net move smaller than one ATR14 — no clear direction)" if flat else f", bias={bias}")
         )
-        # مستويات الخادم نفسها التي تُرفق ببطاقة `setup`. كان السياق بلا مستويات والتعليمات «اذكر دخولاً
-        # ووقفاً وهدفاً» ⇒ النموذج يخترع وقفه وهدفه من `last` وحده، والبطاقة تحمل وقف ATR ⇒ رقمان
-        # متناقضان لنفس الصفقة بنفس الشاشة، ورقم النصّ لا أصل له.
-        if entry is not None:
-            side_en = "buy" if direction == "شراء" else "sell"
-            context += (
-                f"\ncomputed_levels (the only price levels you may quote; stop 1×ATR14, target 2×ATR14 "
-                f"on tf={series.timeframe}): direction={side_en}, entry={entry}, stop={sl}, target={tp}"
-            )
-        else:
-            context += "\ncomputed_levels: none — do not quote any entry, stop or target price"
     else:
-        context = "no live price available (data provider unreachable) — do not quote price levels"
+        context = "no live price available (data provider unreachable) — do not quote any price"
+    # قرار أنس ٤: البطاقة بلا اتجاه ولا مستويات دائماً (الشكل باقٍ للعملاء القدامى)
+    setup = {"direction": None, "entry": None, "sl": None, "tp": None, "win_probability": None}
     if openrouter_ai.configured():
         try:
-            answer = openrouter_ai.trading_answer(q, sym, context, lang)
-            setup = openrouter_ai.parse_setup_hint(answer)
-            # المستويات مبنيّة على اتجاه الخادم (إشارة التغيّر)؛ تُرفق فقط إن طابقه اتجاه الردّ —
-            # كانت تُرفق دائماً فيظهر «بيع» بوقف تحت الدخول (مستويات شراء).
-            if entry is not None and setup["direction"] == ("buy" if direction == "شراء" else "sell"):
-                setup.update(entry=entry, sl=sl, tp=tp)
-            if not live:
-                setup["direction"] = None
+            answer = openrouter_ai.guard_answer(openrouter_ai.trading_answer(q, sym, context, lang), lang)
             return {"answer": answer, "symbol": sym, "setup": setup, "live_price": live, "price_as_of": price_at}
         except Exception:
             pass
@@ -2216,7 +2187,6 @@ def ai_ask(body: AiAsk):
         # قوالب داخلية عربية). الكردية تبقى على القالب العربي (نفس الأبجدية) لغياب مراجعة لغوية.
         if live:
             bias_en = "bullish" if move > 0 else "bearish"
-            dir_en = "Buy" if direction == "شراء" else "Sell"
             read = (
                 f"Only {bars + 1} candles ({series.timeframe}) — too few to measure a normal candle range "
                 f"(ATR14), so no direction.\n\n"
@@ -2230,26 +2200,17 @@ def ai_ask(body: AiAsk):
                 f"Over the last {bars} candles ({series.timeframe}) the move looks **{bias_en}** "
                 f"(change {series.change_pct:+.2f}%).\n\n"
             )
-            scenario = (
-                f"**Suggested scenario (educational, not financial advice):**\n"
-                f"- Direction: {dir_en}\n"
-                f"- Entry: {entry}\n"
-                f"- Stop: {sl}\n"
-                f"- Target: {tp}\n"
-                f"- Risk/reward: 1:2\n\n"
-            ) if entry is not None else ""
         else:
-            read = "No live price is available right now, so no trend read or price levels.\n\n"
-            scenario = ""
+            read = "No live price is available right now, so no trend read.\n\n"
         answer = (
             f"**Quick read on {sym}**\n\n"
             f"{read}"
             # لا «DXY»: المزوّد لا يقدّمه وخانته بالتطبيق بذرة مولَّدة (launch118)
-            f"- Check the dollar on more than one pair (EURUSD and USDJPY) before entering.\n"
-            f"- Wait for a confirmed break or rejection at the nearest liquidity zone.\n"
-            f"- Risk management: never risk more than 1% of your capital per trade.\n\n"
-            f"{scenario}"
-            f"_Local MVP model — connect OpenRouter for deeper analysis._"
+            f"- The dollar's strength shows best across more than one pair (EURUSD and USDJPY), not one chart.\n"
+            f"- A break of a level is usually treated as confirmed only after a candle closes beyond it.\n"
+            f"- Risk management: many traders cap the risk on any one trade at about 1% of capital.\n\n"
+            f"_Educational read only — not a trade recommendation. Local MVP model — connect OpenRouter for "
+            f"deeper analysis._"
         )
     else:
         if live:
@@ -2266,39 +2227,23 @@ def ai_ask(body: AiAsk):
                 f"على آخر {bars} شمعة ({series.timeframe}) الحركة تبدو **{bias}** "
                 f"(تغيّر {series.change_pct:+.2f}%).\n\n"
             )
-            scenario = (
-                f"**سيناريو مقترح (تعليمي وليس نصيحة مالية):**\n"
-                f"- الاتجاه: {direction}\n"
-                f"- دخول: {entry}\n"
-                f"- وقف: {sl}\n"
-                f"- هدف: {tp}\n"
-                f"- العائد/المخاطرة: 1:2\n\n"
-            ) if entry is not None else ""
         else:
-            read = "لا يتوفر سعر حي الآن، لذلك لا قراءة اتجاه ولا مستويات سعرية.\n\n"
-            scenario = ""
+            read = "لا يتوفر سعر حي الآن، لذلك لا قراءة اتجاه.\n\n"
         answer = (
             f"**تحليل سريع لـ {sym}**\n\n"
             f"{read}"
             f"بالنسبة لسؤالك: «{q}»\n"
-            f"- راقب الدولار على أكثر من زوج (EURUSD وUSDJPY) قبل الدخول.\n"
-            f"- انتظر تأكيد كسر/رفض عند أقرب منطقة سيولة.\n"
-            f"- إدارة المخاطر: لا تتجاوز 1% من رأس المال للصفقة.\n\n"
-            f"{scenario}"
-            f"_هذا النموذج MVP محلي — اربطه بـ OpenRouter لاحقاً لتحليل أعمق._"
+            f"- قوة الدولار تظهر على أكثر من زوج (EURUSD وUSDJPY) لا على شارت واحد.\n"
+            f"- كسر المستوى يُعدّ مؤكَّداً عادةً بعد إغلاق شمعة خلفه لا بمجرّد لمسه.\n"
+            f"- إدارة المخاطر: كثير من المتداولين لا يخاطرون بأكثر من نحو 1% من رأس المال في الصفقة الواحدة.\n\n"
+            f"_قراءة تعليمية فقط — ليست توصية تداول. هذا النموذج MVP محلي — اربطه بـ OpenRouter لاحقاً لتحليل أعمق._"
         )
     return {
         "answer": answer,
         "symbol": sym,
-        "setup": {
-            "direction": ("buy" if direction == "شراء" else "sell") if live and direction else None,
-            "entry": entry,
-            "sl": sl,
-            "tp": tp,
-            "win_probability": None,
-        },
+        "setup": setup,
         "live_price": live,
-        # وقت سعر الدخول (إغلاق آخر شمعة، ثوانٍ UTC) — null بلا سعر حقيقي
+        # وقت السعر الذي بُني عليه الجواب (إغلاق آخر شمعة، ثوانٍ UTC) — null بلا سعر حقيقي
         "price_as_of": price_at,
     }
 

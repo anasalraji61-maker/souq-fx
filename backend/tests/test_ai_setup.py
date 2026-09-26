@@ -91,26 +91,10 @@ def _ask(monkeypatch, reply):
     return TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟"}).json()["setup"]
 
 
-def test_levels_attached_when_the_answer_agrees(monkeypatch):
-    s = _ask(monkeypatch, "سيناريو شراء")
-    assert s["direction"] == "buy" and s["entry"] == pytest.approx(1.1)
-    assert s["sl"] < s["entry"] < s["tp"]
-
-
-def test_no_buy_levels_under_a_sell_answer(monkeypatch):
-    s = _ask(monkeypatch, "سيناريو بيع")
-    assert s["direction"] == "sell"
-    assert s["entry"] is None and s["sl"] is None and s["tp"] is None
-
-
-def test_no_buy_card_under_an_answer_that_says_do_not_buy(monkeypatch):
-    s = _ask(monkeypatch, "Avoid buying here; wait for confirmation.")
-    assert s["direction"] is None and s["entry"] is None and s["sl"] is None and s["tp"] is None
-
-
-def test_answer_without_a_side_gets_no_direction_or_levels(monkeypatch):
-    s = _ask(monkeypatch, "انتظر حتى يتضح السوق")
-    assert s["direction"] is None and s["entry"] is None
+@pytest.mark.parametrize("reply", ["سيناريو شراء", "سيناريو بيع", "Avoid buying here; wait.", "انتظر حتى يتضح السوق"])
+def test_setup_card_is_always_empty(monkeypatch, reply):
+    """قرار أنس ٤: لا اتجاه ولا دخول/وقف/هدف بالبطاقة أبداً — كانت تُرفق مستويات ATR حين يطابق اتجاه الردّ."""
+    assert _ask(monkeypatch, reply) == {"direction": None, "entry": None, "sl": None, "tp": None, "win_probability": None}
 
 
 # ─── تغيّر صفريّ لا اتجاه له، والنصّ يسمّي نافذته ─────────────────────────────
@@ -148,7 +132,7 @@ def test_local_answer_names_the_candle_window_not_an_instant_trend(monkeypatch, 
     body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()
     assert word in body["answer"]
     assert "اللحظي" not in body["answer"] and "short-term" not in body["answer"]
-    assert body["setup"]["direction"] == "buy" and body["setup"]["entry"] is not None
+    assert body["setup"]["direction"] is None and body["setup"]["entry"] is None
 
 
 # ─── وقت السعر بالسياق والردّ ─────────────────────────────────────────────────
@@ -198,26 +182,77 @@ def _context_for(monkeypatch, build):
     return seen["ctx"], body["setup"]
 
 
-def test_model_context_carries_the_card_levels(monkeypatch):
-    """كان السياق بلا مستويات والتعليمات «اذكر دخولاً ووقفاً وهدفاً» ⇒ وقف النصّ ≠ وقف البطاقة."""
-    ctx, s = _context_for(monkeypatch, _provider_series(0.0030))
-    assert s["sl"] is not None
-    assert f"entry={s['entry']}, stop={s['sl']}, target={s['tp']}" in ctx
-    assert "direction=buy" in ctx
+@pytest.mark.parametrize("change", [0.3, 0.0])
+def test_model_context_carries_no_trade_levels(monkeypatch, change):
+    """قرار أنس ٤: كان السياق يحمل computed_levels (دخول/وقف/هدف) ليقتبسها النموذج."""
+    ctx, s = _context_for(monkeypatch, _flat_series(change))
+    assert s["sl"] is None and s["direction"] is None
+    assert "computed_levels" not in ctx and "entry=" not in ctx and "stop=" not in ctx
 
 
-def test_model_context_forbids_levels_when_the_server_has_none(monkeypatch):
-    ctx, s = _context_for(monkeypatch, _flat_series(0.0))
-    assert s["sl"] is None
-    assert "computed_levels: none" in ctx
-
-
-def test_system_prompt_no_longer_asks_the_model_for_its_own_levels(monkeypatch):
+def test_system_prompt_is_an_educational_assistant_that_refuses_trade_calls(monkeypatch):
     seen: dict = {}
     monkeypatch.setattr(openrouter_ai, "chat", lambda system, user, **k: seen.setdefault("sys", system))
     openrouter_ai.trading_answer("q", "EURUSD", "ctx")
-    assert "دخولاً تقريبياً" not in seen["sys"]
-    assert "computed_levels" in seen["sys"]
+    assert "خبير" not in seen["sys"] and "مساعد تحليل تعليمي" in seen["sys"]
+    assert "اذكر اتجاهاً" not in seen["sys"] and "computed_levels" not in seen["sys"]
+    for w in ("نقطة دخول", "وقف خسارة", "هدف ربح", "شراء/بيع", "ولو طلب"):
+        assert w in seen["sys"]
+    seen.clear()
+    openrouter_ai.interrupt_answer("q", "t", "x")
+    assert "وقف خسارة" in seen["sys"] and "ولو طلب" in seen["sys"]
+
+
+@pytest.mark.parametrize("text", [
+    "Entry: 1.0843", "Stop 1.0812", "Target 1.0950", "1.0950 as the target", "take profit at 1.10",
+    "وقف الخسارة عند 1.0812", "الهدف 1.10", "نقطة الدخول 1.0843",
+    "Buy EURUSD now", "Sell here", "Go long above 1.09", "I recommend buying", "I'd suggest you sell",
+    "Direction: buy", "أنصحك بالشراء", "توصية: بيع", "الاتجاه: شراء", "اشترِ الآن",
+])
+def test_guard_flags_trade_calls(text):
+    assert openrouter_ai.has_trade_call(text)
+
+
+@pytest.mark.parametrize("text", [
+    "The trend over the window is bullish.", "الاتجاه صاعد على آخر 59 شمعة", "RSI is at 72 — overbought.",
+    "Place a stop-loss 1.5×ATR away from entry.", "Risk/reward 1:2", "a stop loss of 20 pips",
+    "Keep risk to 1% per trade.", "The 50 SMA is above the 200 SMA.", "توقف السعر عند 1.08",
+    "The recent sell-off looks exhausted.", "Traders often buy when RSI leaves oversold.", "لا أنصح بالشراء",
+])
+def test_guard_leaves_education_alone(text):
+    assert not openrouter_ai.has_trade_call(text)
+
+
+def test_guard_drops_trade_lines_and_says_so(monkeypatch):
+    reply = "RSI is 72 — overbought.\nEntry 1.0843\nStop 1.0812\nRisk 1% per trade."
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: reply)
+    ans = TestClient(main.app).post("/api/ai/ask", json={"question": "entry?", "lang": "en"}).json()["answer"]
+    assert "1.0843" not in ans and "1.0812" not in ans
+    assert "RSI is 72" in ans and "Risk 1% per trade." in ans and "was removed" in ans
+
+
+@pytest.mark.parametrize("lang, want", [("ar", "مساعد MATRIX تعليمي"), ("en", "educational"), ("ku", "مساعد MATRIX")])
+def test_guard_all_trade_lines_gives_the_refusal(lang, want):
+    out = openrouter_ai.guard_answer("Buy EURUSD now\nStop 1.0812", lang)
+    assert want in out and "1.0812" not in out
+
+
+def test_guard_keeps_a_clean_answer_verbatim():
+    text = "RSI measures momentum.\n\nAbove 70 is often called overbought."
+    assert openrouter_ai.guard_answer(text, "en") == text
+
+
+@pytest.mark.parametrize("lang", ["ar", "en"])
+@pytest.mark.parametrize("change", [0.3, -0.3])
+def test_template_reply_has_no_trade_call(monkeypatch, lang, change):
+    monkeypatch.setattr(main, "build_series", _flat_series(change))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    ans = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()["answer"]
+    assert not openrouter_ai.has_trade_call(ans)
+    for w in ("Entry", "Stop:", "Target", "دخول:", "وقف:", "هدف:", "سيناريو", "scenario", "before entering"):
+        assert w not in ans
 
 
 @pytest.mark.parametrize("lang", ["ar", "en"])
@@ -256,16 +291,16 @@ def test_move_smaller_than_one_atr_tells_the_model_no_bias(monkeypatch):
         lambda q, sym, context, lang="ar": seen.setdefault("ctx", context) and "سيناريو شراء",
     )
     s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
-    assert "bias=none" in seen["ctx"] and "computed_levels: none" in seen["ctx"]
+    assert "bias=none" in seen["ctx"]
     assert s["entry"] is None
 
 
-def test_move_larger_than_one_atr_keeps_its_direction(monkeypatch):
-    # 0.3% على 1.1 ≈ 0.0033 > ATR 0.0030 ⇒ اتجاه وسيناريو كما كان
+def test_move_larger_than_one_atr_keeps_its_description(monkeypatch):
+    # 0.3% على 1.1 ≈ 0.0033 > ATR 0.0030 ⇒ الحركة توصف «صاعدة» (وصف الشارت) بلا توصية ولا مستويات
     monkeypatch.setattr(main, "build_series", _flat_series(0.3))
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
-    s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
-    assert s["direction"] == "buy" and s["entry"] is not None
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()
+    assert "**صاعد**" in body["answer"] and body["setup"]["entry"] is None
 
 
 def test_no_sell_card_with_a_negative_target(monkeypatch):
@@ -322,8 +357,8 @@ def test_noise_filter_uses_the_real_closes_not_the_rounded_percent(monkeypatch, 
     assert (move > atr) == (want is not None)
     monkeypatch.setattr(main, "build_series", build)
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
-    s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
-    assert s["direction"] == want
+    ans = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["answer"]
+    assert ("**صاعد**" in ans) == (want is not None)
 
 
 class _NullReply:
@@ -358,22 +393,6 @@ def test_empty_model_reply_is_an_error_not_the_answer_none(monkeypatch, content)
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
     out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟"}).json()
     assert out["answer"] and out["answer"] not in ("None", "")
-
-
-def test_no_card_levels_when_atr_rounds_onto_the_entry(monkeypatch):
-    """run 55: صعود 1e-5 على 60 شمعة مداها 2e-6 (حركة > ATR) لكن ATR دون نصف تسعيرة (5e-6) ⇒ الوقف
-    3.75001 − 2e-6 يُقرَّب على الدخول 3.75001 ⇒ لا مستويات."""
-    closes = [3.75 + 1e-5 * i / 59 for i in range(60)]
-    cs = [main.Candle(time=1_700_000_000 + i * 900, open=c, high=c + 1e-6, low=c - 1e-6, close=c, volume=0)
-          for i, c in enumerate(closes)]
-    series = main.ChartSeries(symbol="USDSAR", timeframe="15m", candles=cs, change_pct=0.0003, last=closes[-1],
-                              data_source=main.DataProvenance(kind="provider", as_of=1.0, channel="twelvedata"))
-    monkeypatch.setattr(main, "build_series", lambda *a, **k: series)
-    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
-    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "سيناريو شراء")
-    s = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "USDSAR"}).json()["setup"]
-    assert s["direction"] == "buy"
-    assert s["entry"] is None and s["sl"] is None and s["tp"] is None
 
 
 def test_ai_symbol_is_bounded():
@@ -426,7 +445,7 @@ def test_frozen_series_says_no_movement_not_too_few_candles(monkeypatch, lang, s
 def test_frozen_series_tells_the_model_no_movement(monkeypatch):
     ctx, setup = _context_for(monkeypatch, _closes_series(1.1, 1.1, 0.0))
     assert "no price movement" in ctx and "too few" not in ctx
-    assert "computed_levels: none" in ctx and setup["entry"] is None
+    assert setup["entry"] is None
 
 
 class _Reply(_NullReply):
@@ -477,5 +496,5 @@ def test_move_larger_than_atr_is_not_called_flat_when_its_percent_rounds_to_zero
     atr = main.signal_hub._atr_raw([c.model_dump() for c in s.candles])
     assert move > atr > 0
     body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "symbol": "USDHKD", "lang": lang}).json()
-    assert body["setup"]["direction"] == "buy"
+    assert "**صاعد**" in body["answer"] or "**bullish**" in body["answer"]
     assert "ATR14 —" not in body["answer"] and "أصغر من" not in body["answer"]

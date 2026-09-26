@@ -1,4 +1,4 @@
-"""OpenRouter LLM — trading assistant + academy interrupt."""
+"""OpenRouter LLM — educational analysis assistant + academy interrupt."""
 from __future__ import annotations
 
 import os
@@ -80,20 +80,27 @@ def normalize_lang(value: str | None) -> str:
     return "ar"
 
 
+# قرار أنس ٤ (`docs/DECISIONS-ANAS.md`): «مساعد تحليل تعليمي» لا «خبير تداول». لا نقطة دخول ولا وقف ولا هدف
+# ولا توصية شراء/بيع بأي صياغة ولو طلبها المستخدم صراحةً — وصف التطبيق بالمتجر «لا يقدّم نصيحة استثمارية».
+# مسموح: شرح المؤشرات، وصف ما يظهر على الشارت، تعليم المفاهيم، شرح إدارة المخاطر. `guard_answer` يحرس الردّ.
+_NO_TRADE_CALLS = (
+    "ممنوع منعاً باتاً، ولو طلب المستخدم ذلك صراحةً وبأي صياغة: نقطة دخول، وقف خسارة، هدف ربح، "
+    "أو توصية شراء/بيع (ولا «long/short» ولا «سيناريو» ولا «لو كنتُ مكانك»). إن طُلب شيء من ذلك فاعتذر بجملة "
+    "واحدة بأنك مساعد تعليمي لا يقدّم توصيات تداول، ثم اشرح المفهوم المتعلّق تعليمياً. "
+)
+
+
 def trading_answer(question: str, symbol: str, context: str, lang: str = "ar") -> str:
     system = (
-        "أنت خبير تداول فوركس في منصة MATRIX. أجب باختصار وعملية. "
-        "اذكر اتجاهاً محتملاً. "
-        # لا رقم سعر من النموذج: كان يُطلب «دخولاً تقريبياً، وقفاً، هدفاً» بلا مستويات بالسياق ⇒ يخترعها،
-        # وبطاقة `setup` تحمل مستويات ATR من الخادم ⇒ وقفان مختلفان لنفس الصفقة. (الصياغة «خبير» قرار أنس.)
-        "لا تكتب أي رقم سعر (دخول/وقف/هدف/دعم/مقاومة) غير موجود حرفياً في السياق. "
-        "إن حمل السياق computed_levels ووافقتَ على اتجاهها فاذكرها كما هي مع العائد إلى المخاطرة 1:2؛ "
-        "وإن خالفتَ اتجاهها أو لم توجد فلا تذكر مستويات سعرية. "
-        "لا تذكر نسبة نجاح أو احتمال ربح (لا بيانات تسندها). لا تعد بأرباح مضمونة. "
-        "إن قال السياق إن السعر الحي غير متاح فلا تذكر أي مستويات سعرية.\n"
+        "أنت مساعد تحليل تعليمي في منصة MATRIX. أجب باختصار ووضوح. "
+        "مهمتك: شرح المؤشرات، ووصف ما يظهر على الشارت من السياق المعطى، وتعليم المفاهيم، وشرح إدارة المخاطر. "
+        + _NO_TRADE_CALLS
+        + "لا تكتب أي رقم سعر غير موجود حرفياً في السياق. "
+        "لا تذكر نسبة نجاح أو احتمال ربح (لا بيانات تسندها). لا تعد بأرباح. "
+        "إن قال السياق إن السعر الحي غير متاح فقل ذلك ولا تذكر أي أسعار.\n"
         + _REPLY_LANGUAGE.get(lang, _REPLY_LANGUAGE["ar"])
     )
-    user = f"الرمز: {symbol}\nسياق السوق:\n{context}\n\nسؤال المتداول:\n{question}"
+    user = f"الرمز: {symbol}\nسياق السوق:\n{context}\n\nسؤال المستخدم:\n{question}"
     return chat(system, user)
 
 
@@ -104,7 +111,9 @@ def interrupt_answer(
     # (نفس قاعدة trading_answer)، فيشرح المدرّس المقطع بلغة المتعلّم.
     system = (
         "أنت مدرّس أكاديمية MATRIX. المتعلّم أوقف الشرح الصوتي ليسأل. "
-        "أجب بشكل مختصر وعملي ثم اذكر أن الشرح سيكمل.\n"
+        "أجب بشكل مختصر وعملي ثم اذكر أن الشرح سيكمل. "
+        + _NO_TRADE_CALLS
+        + "\n"
         + _REPLY_LANGUAGE.get(lang, _REPLY_LANGUAGE["ar"])
     )
     user = (
@@ -213,3 +222,60 @@ def parse_setup_hint(text: str) -> dict[str, Any]:
         # كان 58 ثابتاً — نسبة نجاح مختلَقة؛ لا مصدر لها.
         "win_probability": None,
     }
+
+
+# ─── حارس الردّ (قرار أنس ٤) ──────────────────────────────────────────────────
+# التعليمات وحدها لا تضمن امتثال النموذج ⇒ يُسقط الخادم كل سطر فيه مستوى صفقة (كلمة دخول/وقف/هدف بجوار رقم
+# سعر) أو توصية شراء/بيع صريحة، ويقول ذلك للمستخدم. الرقم الملاصق لـ×/pips/نقطة/%/ATR أو «1:2» ليس سعراً
+# (شرح إدارة المخاطر مسموح: «ضع الوقف على بعد 1.5×ATR»). الكلمات الوصفية («صاعد»، «bullish») مسموحة: وصف
+# الشارت ليس توصية.
+_NUM = r"\d+(?:[.,]\d+)?(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|[.,]?\d))"
+_LEVEL_WORD = (
+    r"(?:\b(?:entry|entries|enter|stop[- ]?loss|stop|sl|take[- ]?profit|tp|targets?|profit target)\b"
+    r"|" + _AR_PRE + r"(?:دخول|ادخل|وقف|هدف|أهداف|اهداف|جني الربح|جني الأرباح)" + _AR_SUF + r")"
+)
+_TRADE_CALL_RE = re.compile(
+    # كلمة المستوى ثم رقم سعر بالسطر نفسه («entry 1.0843»، «وقف الخسارة عند 1.0812»)
+    _LEVEL_WORD + r"[^\n\d]{0,30}?" + _NUM
+    # رقم ثم كلمة المستوى («1.0950 as the target»)
+    + r"|\d+[.,]\d+\s*(?:as\s+(?:an?|the|your)\s+)?" + _LEVEL_WORD
+    # توصية صريحة
+    + r"|\b(?:i|we)(?:\s+would|['’]d)?\s+(?:recommend|suggest|advise)\s+(?:you\s+)?(?:to\s+)?"
+    r"(?:buy|sell|buying|selling|go(?:ing)?\s+(?:long|short)|a\s+(?:long|short|buy|sell))\b"
+    + r"|\b(?:recommendation|signal|call|direction|action|trade)\s*[:\-–]\s*(?:buy|sell|long|short)\b"
+    + r"|(?:^|[.!?]\s+|[-*•]\s*)(?:buy|sell|go\s+long|go\s+short)\s+(?:now|here|at|above|below|on|if|when|it|"
+    r"this|the\s+(?:pair|dip|breakout|retest|rally)|[A-Z]{3,6}\b)"
+    + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|يُنصح|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
+    + r"|توصية\s*[:\-–]?\s*(?:ب|ب?ال)?(?:شراء|بيع)"
+    + r"|(?:الاتجاه|القرار|الصفقة)\s*[:\-–]\s*(?:شراء|بيع)"
+    + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشترِ|اشتر|بِع|ادخل)(?!\w)",
+    re.IGNORECASE | re.MULTILINE,
+)
+# الكردية على النصّ العربي (نفس الأبجدية) كقالب `ai_ask` الاحتياطي — لا مراجعة لغوية كردية.
+_GUARD_NOTE = {
+    "ar": "_حُذف من الردّ ما يشبه توصية تداول (دخول/وقف/هدف أو شراء/بيع): مساعد MATRIX تعليمي ولا يقدّم توصيات._",
+    "en": "_Part of this reply looked like a trade recommendation (entry/stop/target or buy/sell) and was removed: "
+          "MATRIX's assistant is educational and does not give trade calls._",
+}
+_GUARD_REFUSAL = {
+    "ar": "مساعد MATRIX تعليمي: لا يقدّم نقاط دخول ولا وقف خسارة ولا أهداف ولا توصيات شراء/بيع. "
+          "يمكنني شرح المؤشرات، أو وصف ما يظهر على الشارت، أو شرح إدارة المخاطر.",
+    "en": "MATRIX's assistant is educational: it does not give entries, stop-losses, targets or buy/sell calls. "
+          "I can explain indicators, describe what the chart shows, or explain risk management.",
+}
+
+
+def has_trade_call(text: str) -> bool:
+    return bool(_TRADE_CALL_RE.search(text or ""))
+
+
+def guard_answer(text: str, lang: str = "ar") -> str:
+    """يُسقط أسطر التوصيات من ردّ النموذج (قرار أنس ٤). لا سطر نظيف باقٍ ⇒ ردّ الاعتذار التعليمي."""
+    lines = (text or "").split("\n")
+    kept = [ln for ln in lines if not has_trade_call(ln)]
+    if len(kept) == len(lines):
+        return text
+    if not any(re.search(r"\w", ln) for ln in kept):
+        return _GUARD_REFUSAL["en" if lang == "en" else "ar"]
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+    return f"{body}\n\n{_GUARD_NOTE["en" if lang == "en" else "ar"]}"

@@ -111,18 +111,13 @@ def test_real_series_levels_use_its_atr(client, monkeypatch):
         assert abs(out["levels"]["entry"] - out["levels"]["sl"]) == pytest.approx(1.4 * 0.0030)
 
 
-def test_ai_scenario_stop_is_one_atr_and_keeps_jpy_precision(client, monkeypatch):
-    build = _provider_series(0.137, "USDJPY", 157.25)
-    monkeypatch.setattr(main, "build_series", build)
+def test_ai_template_gives_no_scenario_levels(client, monkeypatch):
+    """قرار أنس ٤: كان القالب «سيناريو مقترح» بدخول ووقف 1×ATR وهدف 2×ATR."""
+    monkeypatch.setattr(main, "build_series", _provider_series(0.137, "USDJPY", 157.25))
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
-    setup = client.post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "USDJPY"}).json()["setup"]
-    # ATR14 للسلسلة (≈0.137؛ فجوة أول شمعة ترفعه قليلاً)
-    atr = signal_hub._atr_last([c.model_dump() for c in build("USDJPY").candles])
-    assert atr == pytest.approx(0.137, rel=0.02)
-    assert setup["entry"] == pytest.approx(157.25)
-    assert setup["sl"] == pytest.approx(157.25 - atr, abs=1e-3)
-    assert setup["tp"] == pytest.approx(157.25 + 2 * atr, abs=1e-3)
-    assert round(setup["sl"], 2) != setup["sl"], "خانة الين الثالثة باقية"
+    body = client.post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "USDJPY"}).json()
+    assert body["setup"] == {"direction": None, "entry": None, "sl": None, "tp": None, "win_probability": None}
+    assert not main.openrouter_ai.has_trade_call(body["answer"])
 
 
 def test_indicator_snapshot_route_says_timeframe_and_window(client, monkeypatch):
