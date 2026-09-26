@@ -2030,6 +2030,24 @@ export function lostTodayInCcy(lostToday: string, lostCcy: string | null, moneyC
 }
 
 /**
+ * العملة التي كُتبت بها خسارة اليوم حين **ليست** عملة المال الآن ⇒ اللوحة تقول «أعد كتابتها بـ{to}» تحت الخانة التي أفرغها
+ * `lostTodayInCcy` (كانت تُفرَغ بصمت فيُحسب المتّسع كأن الخسارة 0). `null` = لا سطر: العملة نفسها، أو مجهولة (حفظٌ أقدم، أو
+ * خانة أفرغها المستخدم بيده — اللوحة تُعيد `lostCcy` إلى null حينها فلا يُطلب منه إعادة ما لم يكتبه).
+ */
+export function lostTodayOtherCcy(lostCcy: string | null, moneyCcy: string): string | null {
+  return lostCcy != null && lostCcy !== moneyCcy ? lostCcy : null;
+}
+
+/**
+ * عملة «خسارة اليوم» المحفوظة تُستعاد مع يومها فقط (كما `restoredLostToday`): عملة الأمس بعد أن أُفرغت خانتها بتبديل العملة
+ * كانت ستُبقي «أعد كتابتها» صباح اليوم التالي عن خسارةٍ لم تعد تُحسب. غير نصّ أو يومٌ آخر ⇒ null.
+ */
+export function restoredLostCcy(saved: { lostCcy?: unknown; lostDay?: unknown }, now: Date): string | null {
+  if (typeof saved.lostCcy !== 'string' || saved.lostDay !== localDayKey(now)) return null;
+  return saved.lostCcy;
+}
+
+/**
  * **جني ربح جزئي**: إغلاق `closePct`% من المركز عند الهدف الأول (`r1` بالـR) والباقي إلى الهدف الثاني (`r2`) أو إلى وقفٍ
  * نُقل للتعادل. اللوت يُقسم على خطوة 0.01 (`LOT_STEP`) لا بالنسبة الاسمية: «نصف» 0.05 لوت ليس 0.025 (لا يُنفَّذ) بل 0.03 و0.02،
  * فالنتيجة بالـR تُحسب من **القسمة الفعلية** (0.03 ÷ 0.05 = 60%) — «نصف عند 1R ثم التعادل = +0.5R» كانت ستعِد بما لن يحدث

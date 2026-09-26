@@ -18,6 +18,8 @@ import {
   dailyRoomMaxLots,
   restoredLostToday,
   lostTodayInCcy,
+  lostTodayOtherCcy,
+  restoredLostCcy,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3957,3 +3959,22 @@ console.log('positionSize silver price-in-pips selftest OK');
   // حفظٌ أقدم بلا عملة ⇒ كما هو
   assert.equal(lostTodayInCcy('300', null, 'EUR'), '300');
 }
+
+// ---- lostTodayOtherCcy / restoredLostCcy: «أعد كتابتها بـ{to}» بدل إفراغٍ صامت (launch169a) ----
+{
+  // USD ⇒ JPY: الخانة فارغة ⇒ السطر يذكر USD
+  assert.equal(lostTodayOtherCcy('USD', 'JPY'), 'USD');
+  assert.equal(lostTodayOtherCcy('USC', 'USD'), 'USC');
+  // العملة نفسها أو مجهولة ⇒ لا سطر
+  assert.equal(lostTodayOtherCcy('USD', 'USD'), null);
+  assert.equal(lostTodayOtherCcy(null, 'JPY'), null);
+  const now = new Date(2026, 8, 26, 10, 0);
+  const today = localDayKey(now);
+  const yesterday = localDayKey(new Date(2026, 8, 25, 10, 0));
+  assert.equal(restoredLostCcy({ lostCcy: 'USD', lostDay: today }, now), 'USD');
+  // الأمس ⇒ لا «أعد كتابتها» اليوم
+  assert.equal(restoredLostCcy({ lostCcy: 'USD', lostDay: yesterday }, now), null);
+  assert.equal(restoredLostCcy({ lostCcy: 'USD' }, now), null);
+  assert.equal(restoredLostCcy({ lostCcy: 5, lostDay: today }, now), null);
+}
+console.log('positionSize lostTodayOtherCcy selftest OK');

@@ -87,6 +87,8 @@ import {
   localDayKey,
   restoredLostToday,
   lostTodayInCcy,
+  lostTodayOtherCcy,
+  restoredLostCcy,
   spreadTooWide,
   spreadMaybePrice,
   stopInsideSpread,
@@ -273,7 +275,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           }
           // خسارة الأمس لا تُقرأ اليوم — راجع `restoredLostToday`
           setLostToday(restoredLostToday(p, new Date()));
-          setLostCcy(typeof p.lostCcy === 'string' ? p.lostCcy : null);
+          setLostCcy(restoredLostCcy(p, new Date()));
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
@@ -1044,6 +1046,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     if (lostCcy == null) setLostCcy(moneyCcy);
     else if (lostTodayNow !== lostToday) setLostToday(lostTodayNow);
   }, [lostToday, lostCcy, moneyCcy, lostTodayNow]);
+  /** أُفرغت لأنها بعملةٍ أخرى ⇒ سطر «أعد كتابتها» بدل خانة فارغة بلا سبب (launch169a) */
+  const lostOtherCcy = lostTodayOtherCcy(lostCcy, moneyCcy);
   const lostTodayNum = lostTodayNow.trim() === '' ? 0 : parseDecimal(lostTodayNow, { amount: true });
   const dailyLimitNum = parseDecimal(dailyLimit, { percent: true });
   const dailyRoom =
@@ -1642,11 +1646,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             lostTodayNow,
             (v: string) => {
               setLostToday(v);
-              setLostCcy(moneyCcy);
+              // أفرغها بيده ⇒ لا عملة (لا «أعد كتابتها» عن خانة تركها فارغة ثم بدّل العملة)
+              setLostCcy(v.trim() === '' ? null : moneyCcy);
             },
             '0',
             t.riskCalcLostToday
           )}
+          {lostOtherCcy ? (
+            <Text style={[styles.warn, { textAlign: align }]}>
+              {t.riskCalcLostTodayOtherCcy.replace('{from}', lostOtherCcy).replace('{to}', moneyCcy)}
+            </Text>
+          ) : null}
         </>
       ) : null}
 
