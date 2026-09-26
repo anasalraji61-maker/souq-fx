@@ -494,6 +494,28 @@ export function manualConvLooksInverted(pair: string | null | undefined, rate: n
   return 1 / rate;
 }
 /**
+ * سعر تحويل **مكتوب باليد بلا فاصلة عشرية**: «1500» لـUSDJPY بدل «150.0» (حساب دولار على EURJPY، الجلب فاشل) — كان يُقبل: الزوج
+ * معكوس ⇒ قيمة الـpip أصغر ×10 ⇒ **7.50 لوت بدل 0.75** لـ1% من 10,000 بوقف 20 (خسارة 1,000 USD = 10% عند الوقف)، بلا أي تحذير
+ * (تحت حدّ 50 لوت). و«127» لـGBPUSD (حساب دولار على EURGBP) لوتٌ أصغر ×100. `manualConvLooksInverted` لا يراه (1500 > 1 ليس مقلوباً).
+ * المكتوب أبعد من √10 عن سعر الزوج التقريبي (`pairBallpark`، بمعامل 2) **وأكبر منه**، والمكتوب ÷ 10^k (k من 1 إلى 6) داخلها ⇒
+ * يعيد ذلك السعر المرجَّح (للسطر «هل تقصد 150؟»)؛ وإلا null. الأصغر («15») لا يُفحص هنا: ليس «بلا فاصلة»، ويُصغّر اللوت على الأزواج
+ * المعكوسة. زوجٌ لا تعرفه الحاسبة ⇒ null (لا مرجع).
+ */
+export function manualConvDecimalSlip(pair: string | null | undefined, rate: number | null | undefined): number | null {
+  if (typeof pair !== 'string' || typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return null;
+  const spec = instrumentSpec(pair);
+  if (!spec) return null;
+  const ball = pairBallpark(spec);
+  const off = (px: number) => Math.abs(Math.log(px / ball));
+  if (rate <= ball || off(rate) <= TYPED_EXIT_MAX_LOG_OFF) return null;
+  for (let k = 1; k <= 6; k++) {
+    const px = Number((rate / 10 ** k).toPrecision(12));
+    if (off(px) <= TYPED_EXIT_MAX_LOG_OFF) return px;
+  }
+  return null;
+}
+
+/**
  * عملات ناشئة/إسكندنافية **فوق 1 ين دائماً** (أدناها TRYJPY ~3.5 بعد انهيار الليرة، MXNJPY ~4.5، ZARJPY ~5.5، والبقية أعلى بكثير).
  * حساب ين على USDZAR/USDSGD/… يحوّل عبر ZARJPY/SGDJPY (`conversionPair`)، وأساسها ليس رئيسية فلم يُفحص: «0.1215» (JPY ⇒ ZAR
  * مقلوباً) بدل 8.23 كان يُقبل ⇒ **41 لوت بدل 0.60** (×68)، وSGDJPY «0.00893» بدل 112 ⇒ 560 لوت بدل 0.04. HUF خارجها (HUFJPY ~0.4).

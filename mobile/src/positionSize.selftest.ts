@@ -11,6 +11,7 @@ import {
   formatLots,
   LOT_UNIT,
   manualConvLooksInverted,
+  manualConvDecimalSlip,
   manualConvForPair,
   lossStreakDrawdownPct,
   lossRiskPct,
@@ -4215,3 +4216,38 @@ console.log('positionSize parseLostToday selftest OK');
   assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: quoteAsOfMsM((now - 14 * 60_000) / 1000, now), closed: false }, now), false);
   console.log('positionSize marginQuoteUsable selftest OK');
 }
+
+// سعر تحويل يدوي بلا فاصلة عشرية: «1500» لـUSDJPY (EURJPY بحساب دولار) كان 7.50 لوت بدل 0.75 ⇒ يُرصد (ولا لوت منه)
+{
+  const ej = instrumentSpec('EURJPY')!;
+  const conv = conversionPair('JPY', 'USD')!;
+  assert.deepEqual(conv, { symbol: 'USDJPY', invert: true });
+  const lotsAt = (m: number) =>
+    positionSize({ balance: 10000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(ej, quoteToAccountRate(conv, m)!), contractSize: ej.contractSize })!.lots;
+  assert.equal(lotsAt(150), 0.75);
+  assert.equal(lotsAt(1500), 7.5); // لهذا يُرصد
+  assert.equal(manualConvLooksInverted('USDJPY', 1500), null); // الحارس القديم لا يراه
+  assert.equal(manualConvDecimalSlip('USDJPY', 1500), 150);
+  assert.equal(manualConvDecimalSlip('USDJPY', 15000), 150);
+  assert.equal(manualConvDecimalSlip('USDJPY', 14985), 149.85);
+  assert.equal(manualConvDecimalSlip('GBPUSD', 127), 1.27);
+  assert.equal(manualConvDecimalSlip('GBPUSD', 12700), 1.27);
+  assert.equal(manualConvDecimalSlip('USDZAR', 18500), 18.5);
+  assert.equal(manualConvDecimalSlip('USDTRY', 410), 41);
+  assert.equal(manualConvDecimalSlip('ZARJPY', 86), 8.6);
+  // أسعار حقيقية بعيدة عن المرجع تبقى مقبولة
+  for (const [pair, px] of [
+    ['USDJPY', 161], ['USDJPY', 140], ['USDTRY', 41], ['USDZAR', 19.2], ['USDMXN', 20.5], ['GBPUSD', 1.21], ['EURUSD', 1.02],
+    ['USDCHF', 0.79], ['USDCAD', 1.44], ['AUDUSD', 0.6], ['NZDUSD', 0.55], ['ZARJPY', 8.6], ['TRYJPY', 3.7], ['EURGBP', 0.84],
+    ['USDSEK', 11], ['USDHKD', 7.8], ['CHFJPY', 185], ['GBPJPY', 208],
+  ] as const) {
+    assert.equal(manualConvDecimalSlip(pair, px), null, `${pair} ${px}`);
+  }
+  // الأصغر ليس «بلا فاصلة» (لا يُفحص هنا)، ومدخل غير صالح أو زوج مجهول ⇒ null
+  assert.equal(manualConvDecimalSlip('USDJPY', 15), null);
+  assert.equal(manualConvDecimalSlip('USDJPY', NaN), null);
+  assert.equal(manualConvDecimalSlip('USDJPY', 0), null);
+  assert.equal(manualConvDecimalSlip(null, 1500), null);
+  assert.equal(manualConvDecimalSlip('BTCUSD', 650000), null);
+}
+console.log('positionSize manualConvDecimalSlip selftest OK');
