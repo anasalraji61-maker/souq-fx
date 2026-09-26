@@ -1209,3 +1209,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (b — نصوص ثابتة):** `MATRIX`/`Log`/`TPO`/`EURUSD` فقط (علامة/مصطلحات/مثال). **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ متابعة launch179a وchart-r95a/b؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (b1169c4):** أخضر 0؛ chart-r95a/b → launch (تلميحا Ctrl+C/V وAlt+A) أُدرجا مُتحقَّقين؛ قائمة القبول 0/12.
+
+## 2026-09-26 — الدورة 113
+**البناء:** أخضر 0 (على ee1fe5f ثم a9e271c بعد السحب) — لا إصلاح لازم. **Selftests:** 120/120 ناجح (`npx tsx`)؛ `positionSize` بعد السحب ناجح.
+**التحقّق بالكود:** أُغلقت launch179a ← ui `fbccf65` (`KeyboardShortcutsSheet.tsx:71–72`)؛ chart-r95a/b ← launch `889bfa4` (`locales.ts:2572/2578` ×3 لغات). مفتوحة مُتحقَّقة: backend-r84 → launch (`PRIVACY-POLICY.md:102` «Questions you ask the AI assistant» مخزَّنة). ملاحظة backend الاختيارية (`dailyRefStore.ts:77`/`alertFromChart.ts:21` `demo` فقط) بلا أثر — لا بند. backend-r35 += حدّ التنبيهات ⇒ STATUS ⛔ ١٠.
+**قائمة قبول DESIGN-PRO (الثالث والثلاثون):** 0/12 فشل (diff منذ b1169c4: تثخين الرسم تحت الفأرة بسماكة التحديد، سطر «التقويم غير متاح» بأنماط قائمة، `?`، منطق الحاسبة).
+**المراجعة (c — `accessibilityLabel`):** مسح AST (TypeScript API) لكل عنصر تفاعلي بـ`.tsx` ⇒ 6 أغلفة `accessible={false}` (تحويم/حاوية، الداخلي مسمّى). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة (حدّ التنبيهات، 2% والسلسلة بين الحاسبة والدفتر بعد `9c4ddf8`)؛ متابعة backend-r84؛ وإعادة قائمة DESIGN-PRO.
