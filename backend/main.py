@@ -330,7 +330,9 @@ class WatchlistAdd(BaseModel):
     @field_validator("symbol")
     @classmethod
     def _strip(cls, v: str) -> str:
-        v = v.strip().upper()
+        # «EUR/USD» كان يُحفظ كما هو: لا يُفتح شارته (`/api/charts/EUR/USD` 404) ولا يُحذف (الشرطة تكسر
+        # مسار الحذف)، و«EURUSD» بعده صفّ ثانٍ للأداة نفسها ⇒ اسم MATRIX كالتنبيهات والماسح
+        v = market.canonical_symbol(v)
         if len(v) < 3:
             raise ValueError("symbol too short")
         return v
@@ -920,7 +922,7 @@ def custom_watchlist_add(
     return {"ok": True, "symbols": syms}
 
 
-@app.delete("/api/watchlist/custom/{symbol}")
+@app.delete("/api/watchlist/custom/{symbol:path}")
 def custom_watchlist_remove(
     symbol: str,
     user: dict | None = Depends(_auth_user),
@@ -933,7 +935,12 @@ def custom_watchlist_remove(
     حذف رمز ليس بالقائمة ليس خطأ للعميل (زرّ ضُغط مرّتين، أو قائمة محلية سبقت الخادم) —
     يُعاد `removed: 0` وقائمة المستدعي كما هي، كما بحذف التخطيط."""
     uid = user["user_id"] if user else None
+    # `:path` + الاسمان: صفّ «EUR/USD» محفوظ قبل التطبيع يُحذف بأيّ الصيغتين
     removed, syms = db.remove_watchlist_symbol(symbol, uid, owner_key=key)
+    canon = market.canonical_symbol(symbol)
+    if canon != symbol.strip().upper():
+        more, syms = db.remove_watchlist_symbol(canon, uid, owner_key=key)
+        removed += more
     return {"ok": True, "removed": removed, "symbols": syms}
 
 

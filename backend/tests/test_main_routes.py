@@ -744,6 +744,22 @@ def test_a_symbol_can_be_removed_from_the_custom_watchlist(client):
     assert client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"] == ["XAUUSD"]
 
 
+def test_slash_symbol_is_saved_under_its_matrix_name(client):
+    """«EUR/USD» كان يُحفظ كما هو: لا يُحذف (404/`removed: 0`) و«EURUSD» بعده صفّ ثانٍ للأداة نفسها."""
+    client.post("/api/watchlist/custom", json={"symbol": "EUR/USD"}, headers=_DEV1)
+    client.post("/api/watchlist/custom", json={"symbol": "eurusd"}, headers=_DEV1)
+    client.post("/api/watchlist/custom", json={"symbol": "XBR/USD"}, headers=_DEV1)
+    assert client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"] == ["EURUSD", "UKOIL"]
+    assert client.delete("/api/watchlist/custom/EUR%2FUSD", headers=_DEV1).json()["removed"] == 1
+    assert client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"] == ["UKOIL"]
+
+
+def test_legacy_slash_row_can_be_removed(client):
+    db.add_watchlist_symbol("EUR/USD", None, owner_key=_DEV1["X-Install-Id"])  # صفّ قبل التطبيع
+    r = client.delete("/api/watchlist/custom/EUR/USD", headers=_DEV1)
+    assert r.status_code == 200 and r.json()["removed"] == 1 and r.json()["symbols"] == []
+
+
 def test_removing_a_symbol_that_is_not_there_is_not_an_error(client):
     """زرّ ضُغط مرّتين أو قائمة محلية سبقت الخادم — كحذف التخطيط تماماً."""
     r = client.delete("/api/watchlist/custom/GBPUSD", headers=_DEV1)
