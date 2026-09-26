@@ -5878,6 +5878,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (webKeyChart !== keyToken.current) return;
       // رسم محدَّد: الأسهم له (معالج الرسم أعلاه)، لا للعرض ولا للتقاطع.
       if (selectedIdRef.current && event.key.startsWith('Arrow')) return;
+      // Home/End: أقدم شمعة محمَّلة / عودة للحيّ بلا لمس التكبير (Alt+R يعيد التكبير كذلك). كانت العودة من مراجعة
+      // شهر مضى عشرات ضغطات Shift+→. بالإعادة End = شمعة الإعادة (`panByButton` يسقف بـ`replayMinOffsetNow`).
+      if ((event.key === 'Home' || event.key === 'End') && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+        if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
+        event.preventDefault();
+        // تقاطع مثبَّت كان سيبقى على شمعة خرجت من اللوح.
+        if (crossPinned.current) {
+          crossPinned.current = false;
+          setCross(null);
+        }
+        // Home: أقدم شمعة على الحافّة اليسرى (لا الإزاحة القصوى n−10 التي تترك اللوح فارغاً إلا عشر شموع).
+        const n = sourceRef.current.all.length;
+        const goal = event.key === 'Home' ? Math.max(0, n - Math.round(windowCountRef.current)) : 0;
+        panByButton(goal - offsetRef.current);
+        return;
+      }
       if (!crossPinned.current) {
         if (event.altKey || event.ctrlKey || event.metaKey) return;
         const k = event.key;
