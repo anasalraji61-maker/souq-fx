@@ -107,6 +107,20 @@ export function AccountScreen() {
     void loadNetwork();
   }, [loadNetwork]);
 
+  /**
+   * الشاشة تبقى مركّبة عبر الخروج والدخول: بلا هذا كان خطأ «تعذّر حذف الحساب» يظهر تحت نموذج
+   * الدخول بعد الخروج، وقسم «تغيير كلمة المرور» يبقى مفتوحاً بكلمة المستخدم السابق للمستخدم التالي.
+   */
+  const userId = user?.user_id ?? null;
+  useEffect(() => {
+    setErr(null);
+    setPassword('');
+    setPwOpen(false);
+    setPwCurrent('');
+    setPwNew('');
+    setPwMsg(null);
+  }, [userId]);
+
   useEffect(() => {
     if (!user) return;
     let alive = true;
