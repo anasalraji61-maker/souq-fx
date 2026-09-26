@@ -2268,13 +2268,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
+    // DESIGN-PRO §5.5: فاصلٌ واحد — حدٌّ بلا تعبئة وقت السكون، والمختار تعبئة بلا حدّ
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
   },
-  // DESIGN-PRO §1 (QA81 DP2): التأكيد بالشريط العلوي لرمز `SymbolPairMenu` وحده — المختار هنا تعبئة محايدة + حدّ ونصّ أساسيان
+  // DESIGN-PRO §1 (QA81 DP2): التأكيد بالشريط العلوي لرمز `SymbolPairMenu` وحده — المختار هنا تعبئة محايدة ونصّ أساسي
   timeSyncBtnOn: {
-    borderColor: colors.textMuted,
+    borderColor: 'transparent',
     backgroundColor: colors.selectedFill,
   },
   timeSyncText: {
@@ -2480,15 +2480,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 5,
     borderWidth: StyleSheet.hairlineWidth,
+    // DESIGN-PRO §5.5: حدٌّ وحده وقت السكون (كانت تعبئة 12% فوقه)، والمفعَّل تعبئة بلا حدّ
     borderColor: 'rgba(148,163,184,0.4)',
-    backgroundColor: 'rgba(148,163,184,0.12)',
     marginLeft: 0,
     marginRight: 4,
   },
   // DESIGN-PRO §1: بلا أزرق سماوي (لون ثالث لميزة واحدة) ولا تيل — المفعَّل تعبئة محايدة + حدّ ونصّ أساسيان؛
   // التأكيد الوحيد بهذا الشريط هو الإطار الزمني الأساسي النشط (`rangeTextOn`)
   shadowToggleOn: {
-    borderColor: colors.textMuted,
+    borderColor: 'transparent',
     backgroundColor: colors.selectedFill,
   },
   shadowToggleText: {
@@ -2593,12 +2593,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
+    // DESIGN-PRO §5.5: فاصلٌ واحد — حدٌّ بلا تعبئة وقت السكون (كانت `bgPanel` فوقه)
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
   },
-  // الرمز المختار هو التأكيد الوحيد بصفّ الرموز: نصّه تيل فوق تعبئة محايدة (لا حدّ تيل — §1)
-  pillOn: { borderColor: colors.textMuted, backgroundColor: colors.selectedFill },
+  // الرمز المختار هو التأكيد الوحيد بصفّ الرموز: نصّه تيل فوق تعبئة محايدة بلا حدّ (لا حدّ تيل — §1، ولا حدّ+تعبئة — §5.5)
+  pillOn: { borderColor: 'transparent', backgroundColor: colors.selectedFill },
   pillText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   pillTextOn: { color: colors.accent },
   pillRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
   chip: {
     borderRadius: radii.sm,
     borderWidth: 1,
+    // DESIGN-PRO §5.5: حدٌّ وحده بلا تعبئة `controlBg` فوقه
     borderColor: colors.border,
-    backgroundColor: colors.controlBg,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
   },
