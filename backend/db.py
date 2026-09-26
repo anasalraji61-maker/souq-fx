@@ -1756,18 +1756,6 @@ def push_targets_for(
     return [(r["token"], r["lang"]) for r in rows]
 
 
-def existing_push_tokens(tokens: list[str]) -> list[str]:
-    """الرموز التي ما تزال مسجّلة (بنفس الترتيب) — إعادة إشعار فاشل لا تُرسل لجهاز خرج أو حُذف حسابه."""
-    if not tokens:
-        return []
-    with _conn() as c:
-        rows = c.execute(
-            f"SELECT token FROM push_tokens WHERE token IN ({','.join('?' * len(tokens))})", tokens
-        ).fetchall()
-    live = {r["token"] for r in rows}
-    return [t for t in tokens if t in live]
-
-
 def delete_push_token(token: str) -> None:
     with _conn() as c:
         c.execute("DELETE FROM push_tokens WHERE token = ?", (token,))

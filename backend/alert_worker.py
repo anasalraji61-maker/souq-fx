@@ -413,7 +413,7 @@ def _dispatch_one(owner: int | None, owner_key: str | None, ev: dict, exclude_ke
             title, body = _compose(ev, lang)
             retry = _deliver(tokens, title, body)
             if retry:
-                _pending_pushes.append((retry, title, body, first_at))
+                _pending_pushes.append((retry, title, body, first_at, (owner, owner_key, exclude_key)))
     except Exception:
         log.exception("push dispatch failed for owner=%s event=%s", owner, ev)
 
@@ -425,7 +425,8 @@ def _dispatch_one(owner: int | None, owner_key: str | None, ev: dict, exclude_ke
 # نفسه ظاهر «مُطلَق» بالتطبيق). بالذاكرة فقط: إعادة تشغيل الخادم تُسقطها (أفضل من لا شيء قبلها).
 _PUSH_RETRY_MAX_AGE = 15 * 60
 _PUSH_RETRY_MAX_PENDING = 1000
-_pending_pushes: list[tuple[list[str], str, str, float]] = []
+# العنصر الأخير = (owner, owner_key, exclude_key) صاحب الإشعار — الإعادة تُرسل فقط لرموز ما زالت أجهزته.
+_pending_pushes: list[tuple[list[str], str, str, float, tuple[int | None, str | None, str | None]]] = []
 # أحداث لم تُعرف أجهزة مالكها بعد (فشلت قراءة الرموز) — (مالك، مفتاح، حدث، الجهاز المستثنى، أول محاولة)
 _pending_events: list[tuple[int | None, str | None, dict, str | None, float]] = []
 
@@ -474,16 +475,20 @@ def _retry_pending_pushes() -> None:
         _dispatch_one(owner, owner_key, ev, exclude_key, first_at)
     # `dispatch` يُلحق من خيط آخر (BackgroundTask لـ/check): `clear()` بعد النسخ كان يمحو ما أُلحق بينهما
     # فيضيع دفع تنبيه عُلِّم مُطلَقاً. تُحذف العناصر المنسوخة وحدها (الإلحاق وحده يجري بالتوازي).
-    for tokens, title, body, first_at in due:
+    for tokens, title, body, first_at, target in due:
         if now - first_at > _PUSH_RETRY_MAX_AGE:
             log.warning("dropping push after %.0fs of failed retries: %s", now - first_at, body)
             continue
-        # رمز حُذف أثناء الانتظار (خروج/حذف حساب/DeviceNotRegistered) لا يُرسل إليه
+        # يُرسل فقط لرمز ما زال جهازاً لصاحب الإشعار. كان الفحص «الرمز موجود» وحده، والخروج وتغيير كلمة
+        # المرور يُبقيان صفّ الرمز (user_id=NULL) ⇒ المالك A يخرج من الهاتف ويدخل B عليه خلال الانتظار
+        # فيصل تنبيه A لـB. رمز حُذف (حذف حساب/DeviceNotRegistered) لا يُرسل إليه كذلك.
+        owner, owner_key, exclude_key = target
         try:
-            live = db.existing_push_tokens(tokens)
+            mine = {t for t, _ in db.push_targets_for(owner, owner_key, exclude_key=exclude_key)}
+            live = [t for t in tokens if t in mine]
             retry = _deliver(live, title, body) if live else []
             if retry:
-                _pending_pushes.append((retry, title, body, first_at))
+                _pending_pushes.append((retry, title, body, first_at, target))
         except Exception:
             log.exception("push retry failed: %s", body)
-            _pending_pushes.append((tokens, title, body, first_at))
+            _pending_pushes.append((tokens, title, body, first_at, target))

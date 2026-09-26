@@ -35,8 +35,11 @@ def _ok(sent: list):
     return lambda tokens, title, body, data: sent.append((tokens, body)) or {"invalid_tokens": []}
 
 
-def _queue(tokens=("ExponentPushToken[aaa]",), at=None):
-    alert_worker._pending_pushes.append((list(tokens), "t", "EURUSD above", at or alert_worker.time.time()))
+_DEVICE = (None, "install-retry-device-1", None)
+
+
+def _queue(tokens=("ExponentPushToken[aaa]",), at=None, target=_DEVICE):
+    alert_worker._pending_pushes.append((list(tokens), "t", "EURUSD above", at or alert_worker.time.time(), target))
 
 
 @pytest.mark.parametrize("status", [None, 500, 503, 429])
@@ -62,7 +65,7 @@ def test_still_failing_push_stays_queued_until_it_is_too_old(worker):
     alert_worker._check_once()
     assert len(alert_worker._pending_pushes) == 1
     alert_worker._pending_pushes[:] = [
-        (tk, ti, b, at - alert_worker._PUSH_RETRY_MAX_AGE - 1) for tk, ti, b, at in alert_worker._pending_pushes
+        (tk, ti, b, at - alert_worker._PUSH_RETRY_MAX_AGE - 1, tg) for tk, ti, b, at, tg in alert_worker._pending_pushes
     ]
     alert_worker._check_once()
     assert alert_worker._pending_pushes == []
@@ -76,6 +79,40 @@ def test_retry_skips_a_token_removed_while_waiting(worker):
     db.delete_push_token("ExponentPushToken[aaa]")
     alert_worker._check_once()
     assert sent == [] and alert_worker._pending_pushes == []
+
+
+def _account(name: str) -> int:
+    return db.register_user(name, "password-123", email=f"{name}@example.com")["user_id"]
+
+
+@pytest.mark.parametrize("next_owner", ["other_account", "anonymous"])
+def test_retry_does_not_reach_whoever_uses_the_phone_next(worker, next_owner):
+    """الخروج يُبقي صفّ الرمز (user_id=NULL): إعادة إشعار A الفاشل كانت تفحص وجود الرمز وحده ⇒
+    A يخرج ويدخل B على الهاتف نفسه خلال ربع الساعة ⇒ «EURUSD ▲» الخاص بـA يصل لـB."""
+    a = _account("alice_r84")
+    tok = "ExponentPushToken[shared]"
+    db.save_push_token(tok, "ios", user_id=a, owner_key="install-shared-phone-1")
+    worker.setattr(alert_worker.expo_push, "send_push", _fail(503))
+    alert_worker.dispatch([(a, None, {"kind": "price", "symbol": "EURUSD", "condition": "above", "price": 1.1})])
+    assert len(alert_worker._pending_pushes) == 1
+    db.logout_session("no-such-session", a, owner_key="install-shared-phone-1")
+    if next_owner == "other_account":
+        db.save_push_token(tok, "ios", user_id=_account("bob_r84"), owner_key="install-shared-phone-1")
+    sent: list = []
+    worker.setattr(alert_worker.expo_push, "send_push", _ok(sent))
+    alert_worker._retry_pending_pushes()
+    assert sent == [] and alert_worker._pending_pushes == []
+
+
+def test_retry_still_reaches_the_owner(worker):
+    a = _account("carol_r84")
+    db.save_push_token("ExponentPushToken[mine]", "ios", user_id=a, owner_key="install-carol-phone-1")
+    worker.setattr(alert_worker.expo_push, "send_push", _fail(None))
+    alert_worker.dispatch([(a, None, {"kind": "price", "symbol": "EURUSD", "condition": "above", "price": 1.1})])
+    sent: list = []
+    worker.setattr(alert_worker.expo_push, "send_push", _ok(sent))
+    alert_worker._retry_pending_pushes()
+    assert [tk for tk, _ in sent] == [["ExponentPushToken[mine]"]] and alert_worker._pending_pushes == []
 
 
 def test_one_owners_db_error_does_not_drop_the_others(worker):
@@ -105,7 +142,7 @@ def test_one_owners_db_error_does_not_drop_the_others(worker):
 def test_push_appended_during_retry_is_not_cleared(worker, monkeypatch):
     """run 55: `dispatch` يُلحق من خيط آخر بين نسخ القائمة وتفريغها ⇒ `clear()` كان يمحوه بلا إرسال."""
     import time as _t
-    late = (["ExponentPushToken[b]"], "t", "late", _t.time())
+    late = (["ExponentPushToken[b]"], "t", "late", _t.time(), _DEVICE)
 
     class Racy(list):
         def __getitem__(self, k):
@@ -114,9 +151,9 @@ def test_push_appended_during_retry_is_not_cleared(worker, monkeypatch):
                 self.append(late)  # يصل مباشرةً بعد النسخ
             return out
 
-    q = Racy([(["ExponentPushToken[a]"], "t", "old", _t.time())])
+    q = Racy([(["ExponentPushToken[a]"], "t", "old", _t.time(), _DEVICE)])
     monkeypatch.setattr(alert_worker, "_pending_pushes", q)
-    monkeypatch.setattr(db, "existing_push_tokens", lambda tokens: [])
+    monkeypatch.setattr(db, "push_targets_for", lambda *a, **k: [])
     alert_worker._retry_pending_pushes()
     assert list(q) == [late]
 
