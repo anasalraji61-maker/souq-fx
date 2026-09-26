@@ -143,6 +143,12 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
         holiday = _holiday_session(end - 1)
         if holiday and open_ts < holiday[0] < end:
             end = float(holiday[0])
+        # شمعة تنتهي داخل الكسر اليومي (أو عند نهايته) تُغلق فعلياً ببدايته — كالتطبيق `iceBreakStartForCloseSec`:
+        # 4H برنت 20:00 UTC الثلاثاء شتاءً كانت «جارية» حتى 00:00 والسوق مغلق من 23:00 لندن ⇒ ساعة (ساعتان صيفاً)
+        # يُسلَّح فيها تنبيه على شمعة منتهية، ويعدّها الاختبار الخلفي والماسح غير مغلقة.
+        brk = _daily_break(sym, end - 1)
+        if brk and open_ts < brk[0] < end:
+            end = float(brk[0])
     friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
     close = _week_close(friday)
     if close <= open_ts:  # فُتحت بعد إغلاق هذه الجمعة (نادر) ⇒ إغلاق الجمعة التالية

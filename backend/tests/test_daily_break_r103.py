@@ -102,3 +102,22 @@ def test_allowance_covers_break():
     # 1m × 120 للذهب يمتدّ عبر كسر ساعة ⇒ 60 شمعة إضافية على الأقل فوق عطلة الأسبوع
     assert market._weekend_allowance("XAUUSD", "1m", 120) >= market._weekend_allowance("EURUSD", "1m", 120) + 60
     assert market._weekend_allowance("EURUSD", "D", 50) == market._weekend_allowance("XAUUSD", "D", 50)
+
+
+def _iso(t: float) -> str:
+    return datetime.fromtimestamp(t, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
+
+
+@pytest.mark.parametrize("sym,opened,step,end", [
+    # run 106: شمعة تنتهي داخل كسر برنت أو عند نهايته تُغلق ببدايته — كالتطبيق `iceBreakStartForCloseSec`
+    ("UKOIL", "2026-12-01 20:00", 14400, "2026-12-01 23:00"),  # شتاءً: الكسر 23:00–01:00 UTC
+    ("UKOIL", "2026-12-01 21:00", 14400, "2026-12-01 23:00"),  # تنتهي عند نهاية الكسر
+    ("UKOIL", "2026-09-29 20:00", 14400, "2026-09-29 22:00"),  # صيفاً: 22:00–00:00 UTC
+    ("UKOIL", "2026-09-29 21:00", 3600, "2026-09-29 22:00"),   # تنتهي عند بدايته — كما هي
+    ("UKOIL", "2026-09-29 23:00", 14400, "2026-09-30 03:00"),  # تبدأ داخله وتتجاوزه — كما هي
+    ("UKOIL", "2026-09-30 00:00", 14400, "2026-09-30 04:00"),
+    ("XAUUSD", "2026-09-29 20:00", 14400, "2026-09-30 00:00"),  # تعبر كسر المعادن ولا تنتهي فيه
+    ("EURUSD", "2026-12-01 20:00", 14400, "2026-12-02 00:00"),
+])
+def test_bar_ending_in_daily_break_closes_at_break_start(sym, opened, step, end):
+    assert _iso(market.bar_end(sym, _ts(opened), step)) == end
