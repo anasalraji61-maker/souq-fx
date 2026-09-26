@@ -1,21 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { resolveApiHost } from './apiHost';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };
 
-/** على المتصفح المحلي نفضّل 127.0.0.1 حتى لا نعلق بـ IP شبكة قديم في app.json */
+/**
+ * يُكتشف تلقائياً (launch210a، `apiHost.ts`): `EXPO_PUBLIC_API_URL` ⇒ مضيف صفحة الويب ⇒ مضيف Metro ⇒ `extra.apiUrl`.
+ * كان `extra.apiUrl` المكتوب يدوياً لكل ما عدا الويب المحلي، فكل تغيّر لعنوان اللابتوب = شارتات «لا اتصال».
+ */
 function resolveApiUrl(): string {
-  const configured = extra.apiUrl || 'http://127.0.0.1:8110';
-  // على React Native (Expo Go / Hermes) قد يكون window معرّفاً كـ polyfill
-  // لكن window.location غير موجود إطلاقاً — لهذا نتحقق من location أيضاً
-  // قبل قراءة hostname، وإلا يرمي التطبيق: "Cannot read property 'hostname' of undefined".
-  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-    const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1') {
-      return 'http://127.0.0.1:8110';
-    }
-  }
-  return configured;
+  // على React Native (Expo Go / Hermes) قد يكون window معرّفاً كـ polyfill لكن window.location غير موجود —
+  // لهذا نتحقق من location قبل قراءة hostname، وإلا يرمي: "Cannot read property 'hostname' of undefined".
+  const webHostname =
+    typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : null;
+  return resolveApiHost({
+    // يُقرأ حرفياً (لا `process.env[name]`) ليُضمَّن وقت البناء
+    envUrl: process.env.EXPO_PUBLIC_API_URL,
+    webHostname,
+    hostUri: Constants.expoConfig?.hostUri,
+    extraApiUrl: extra.apiUrl,
+  });
 }
 
 export const API_URL = resolveApiUrl();

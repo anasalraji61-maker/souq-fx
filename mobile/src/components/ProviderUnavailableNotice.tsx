@@ -1,8 +1,8 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import type { ChartSeries } from '../api';
+import { API_URL, type ChartSeries } from '../api';
 import { normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
 import { useI18n } from '../i18n/I18nContext';
-import { colors, spacing } from '../theme';
+import { colors, numeric, spacing } from '../theme';
 import { isTimeframe } from '../timeframes';
 
 /**
@@ -103,11 +103,14 @@ export function ProviderUnavailableNotice({ symbol, timeframe, height, showSwitc
       : showSwitchHint
         ? t.chartNotOfferedBody
         : null;
-  const label = body ? `${title}. ${body}` : title;
+  // بالتطوير فقط: العنوان الذي جُرِّب (launch210a) — يُشخَّص عنوان خاطئ في ثانية بدل «لا اتصال» صامتة.
+  const tried = offline && __DEV__ ? t.chartServerUnreachableTried.replace('{url}', API_URL) : null;
+  const label = [title, body, tried].filter(Boolean).join('. ');
   return (
     <View style={[styles.box, height != null && { height }]} accessible accessibilityRole="text" accessibilityLabel={label}>
       <Text style={styles.title}>{title}</Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}
+      {tried ? <Text style={[styles.body, styles.tried]}>{tried}</Text> : null}
     </View>
   );
 }
@@ -130,4 +133,5 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   loading: { marginTop: spacing.sm },
+  tried: { ...numeric, marginTop: spacing.sm },
 });
