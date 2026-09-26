@@ -98,6 +98,8 @@ const LAYOUT_COUNT_KEY = 'matrix.home.layoutCount.v1';
 const LAYOUT_SHAPE_KEY = 'matrix.home.layoutShape.v1';
 const TIME_SYNC_KEY = 'matrix.home.timeSync.v1';
 const DXY_TF_KEY = 'matrix.home.dxyTf.v1';
+/** خانة ظلّ جُلبت قبل أقلّ من هذا ⇒ تُعاد كما هي حين يُعاد تشغيل التأثير لسبب لا يخصّها (الاستطلاع كل 90ث يجلبها). */
+const SHADOW_REUSE_MS = 60_000;
 const DXY_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
@@ -256,6 +258,9 @@ export function TerminalScreen() {
   const shadowSeriesRef = useRef<ChartSeries[]>([]);
   shadowSeriesRef.current = shadowSeries;
   const shadowLoadGen = useRef(0);
+  // متى جُلبت كل خانة ظلّ ولأيّ (رمز، فريم) وكم شمعة — تبديل خانة واحدة أو فريمها، أو وصول شموع الشارت الأساسي، يعيد
+  // تشغيل التأثير أدناه: كان يجلب الخانات الثلاث من جديد (3 طلبات من حدّ المزوّد) بينما اثنتان جُلبتا قبل ثوانٍ.
+  const shadowFetchedRef = useRef<({ key: string; need: number; at: number } | null)[]>([null, null, null]);
   // حارس سباق شبكة إضافي (نفس فئة `loadChart::isStale` أدناه): ضغطتان متتاليتان سريعتان على نفس
   // عنصر تحكم إطار/رمز رئيسي أثناء رحلة شبكة واحدة قد تُطبِّقان النتيجتين بترتيب معكوس — عدّاد
   // توليد لكل هدف كتابة (نفس نمط `shadowLoadGen` أعلاه) يضمن تطبيق الرد الأحدث فقط. **لا يغطّي**
@@ -822,9 +827,17 @@ export function TerminalScreen() {
           }
 
           const need = shadowBarsNeeded(tf, secTf, primaryBars);
+          const key = `${symbol}|${secTf}`;
+          const last = shadowFetchedRef.current[i];
+          if (cacheHit && last && last.key === key && last.need >= need && Date.now() - last.at < SHADOW_REUSE_MS) {
+            return cacheHit;
+          }
           try {
             const loaded = await api.chart(symbol, secTf, need);
-            if ((loaded.candles?.length ?? 0) > 0) return loaded;
+            if ((loaded.candles?.length ?? 0) > 0) {
+              shadowFetchedRef.current[i] = { key, need, at: Date.now() };
+              return loaded;
+            }
             return cacheHit ?? emptySlot(secTf);
           } catch {
             // launch122: كانت `mockSeries` ⇒ ظلّ وهمي حول 1.0854 (2024) **فوق شارت حقيقي** حول 1.17. الفارغ يُسقَط من العرض.
@@ -856,6 +869,7 @@ export function TerminalScreen() {
   useEffect(() => {
     if (layoutShape === 'shadow') return;
     shadowLoadGen.current += 1;
+    shadowFetchedRef.current = [null, null, null];
     setShadowSeries([]);
   }, [layoutShape]);
 
