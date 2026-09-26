@@ -413,6 +413,11 @@ export type Dict = {
    */
   riskCalcLostTodayOtherCcy: string;
   /**
+   * تحت خانة خسارة اليوم دائماً (tools122b، قرار ٨): الخانة تُفرَغ مع يوم التداول عند 17:00 نيويورك (`tradingDayKey`، tools `32c9119`)
+   * لا منتصف الليل المحلّي — بدونه يرى متداول آسيا خانته تُفرَغ بعد الظهر بلا سبب.
+   */
+  riskCalcLostTodayResetHint: string;
+  /**
    * `{room}` المتبقّي قبل الحدّ مبلغاً بعملة الحساب كما يُعرض، `{n}` عدد الخسائر الكاملة بمخاطرة هذه الصفقة داخل الحدّ (رقم
    * صحيح ≥1 — حين 0 يُعرض `riskCalcDailyBreach` بدله)، `{pct}` أقصى مخاطرة للصفقة التالية % بلا «%» (القالب يضعها).
    * العربية والكردية تضعان `{n}` بعد نقطتين فلا تتعلّق صيغة الجمع بالعدد.
@@ -1205,6 +1210,12 @@ export type Dict = {
    * يبدأ بفاصل « · ». المثال بصيغة YYYY-MM-DD اللاتينية كما تُكتب؛ Home/End أسماء المفاتيح.
    */
   mcHintTypeDateWeb: string;
+  /**
+   * chart-r93a (W4): الفأرة على الويب — ذيل يبدأ بـ« · » كـ`mcHintTypeDateWeb` لتُلحقه قائمة `?` (`KeyboardShortcutsSheet`) وتقسمه عند « · ».
+   * الزرّ الأيمن على الشارت ⇒ تنبيه/خطّ أفقي عند السعر/إعادة العرض (`50f6d5b`)، وعلى رسم ⇒ نسخة/قفل/حذف (`586727a`)؛ نقرة على رسم تحدّده
+   * بلا أداة «تحديد» (`6175bb6`). الأسماء كبنود القائمة (`mcCloneDrawing`، `mcLockDrawing`، `deleteWord`).
+   */
+  shortcutsMouseWeb: string;
   /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
   mcHintDrawWeb: string;
   /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`). */
@@ -1914,6 +1925,7 @@ const ar: Dict = {
   riskCalcDailyLimit: 'حدّ الخسارة اليومي %',
   riskCalcLostToday: 'خسارتك اليوم حتى الآن',
   riskCalcLostTodayOtherCcy: 'كتبتَ خسارة اليوم بـ{from} — أعد كتابتها بـ{to}. حتى ذلك يُحسب المتبقّي من حدّك اليومي كأنك لم تخسر شيئاً اليوم.',
+  riskCalcLostTodayResetHint: 'تُصفَّر مع بداية يوم التداول الجديد عند 17:00 بتوقيت نيويورك.',
   riskCalcDailyRoom: 'يبقى {room} قبل حدّك اليومي · خسائر كاملة بهذه المخاطرة تتّسع لها: {n} · أقصى مخاطرة للصفقة التالية {pct}%',
   riskCalcDailyBreach: '⚠ وقف هذه الصفقة وحده يتخطّى حدّك اليومي — يبقى لك {room} فقط. صغّر الحجم أو توقّف لليوم.',
   riskCalcSlPips: 'وقف الخسارة (pip)',
@@ -2559,6 +2571,7 @@ const ar: Dict = {
   mcHintTypeTfWeb: ' · 1–8 للفريم بترتيبه (1 = 1m … 8 = W) · أو اكتب 15 أو 4h ثم Enter',
   shortcutsSheetTitle: 'اختصارات لوحة المفاتيح',
   mcHintTypeDateWeb: ' · Home/End لأقدم شمعة وللحيّ · اكتب 2026-09-01 ثم Enter للانتقال إلى ذلك اليوم',
+  shortcutsMouseWeb: ' · الزرّ الأيمن على الشارت: تنبيه أو خطّ أفقي عند ذلك السعر، أو إعادة العرض · الزرّ الأيمن على رسم: نسخه أو قفله أو حذفه · انقر رسماً لتحديده وتحريكه',
   mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
   mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
@@ -3156,6 +3169,7 @@ const enUS: Dict = {
   riskCalcDailyLimit: 'Daily loss limit %',
   riskCalcLostToday: 'Lost so far today',
   riskCalcLostTodayOtherCcy: 'You entered today’s loss in {from} — enter it again in {to}. Until then, the room left in your daily limit assumes you have lost nothing today.',
+  riskCalcLostTodayResetHint: 'Resets when the trading day rolls over at 17:00 New York time.',
   riskCalcDailyRoom: '{room} left before your daily limit · full losses at this risk that still fit: {n} · max risk on the next trade {pct}%',
   riskCalcDailyBreach: '⚠ This trade’s stop alone would break your daily limit — only {room} left. Reduce the size or stop for the day.',
   riskCalcSlPips: 'Stop loss (pips)',
@@ -3803,6 +3817,7 @@ const enUS: Dict = {
   mcHintTypeTfWeb: ' · 1–8 picks a timeframe in order (1 = 1m … 8 = W) · or type 15 or 4h then Enter',
   shortcutsSheetTitle: 'Keyboard shortcuts',
   mcHintTypeDateWeb: ' · Home/End for oldest bar / live · type 2026-09-01 then Enter to jump to that day',
+  shortcutsMouseWeb: ' · Right-click the chart: alert or horizontal line at that price, or reset the view · Right-click a drawing: clone, lock or delete it · Click a drawing to select and move it',
   mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
   mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
@@ -4438,6 +4453,7 @@ const ku: Dict = {
   riskCalcDailyLimit: 'سنووری زیانی ڕۆژانە %',
   riskCalcLostToday: 'زیانی ئەمڕۆت تا ئێستا',
   riskCalcLostTodayOtherCcy: 'زیانی ئەمڕۆت بە {from} نووسی — دووبارە بە {to} بینووسەوە. تا ئەو کاتە، ئەوەی لە سنووری ڕۆژانەت ماوە وا دەژمێردرێت کە ئەمڕۆ هیچ زیانێکت نەکردووە.',
+  riskCalcLostTodayResetHint: 'لەگەڵ دەستپێکی ڕۆژی بازرگانیی نوێ لە کاتژمێر 17:00ی نیویۆرک سفر دەبێتەوە.',
   riskCalcDailyRoom: '{room} ماوە تا سنووری ڕۆژانەت · زیانی تەواو بەم مەترسییە کە جێی دەبێتەوە: {n} · زۆرترین مەترسی بۆ مامەڵەی داهاتوو {pct}%',
   riskCalcDailyBreach: '⚠ تەنها وەستانی ئەم مامەڵەیە سنووری ڕۆژانەت دەبەزێنێت — تەنها {room} ماوە. قەبارەکە بچووک بکەرەوە یان ئەمڕۆ بوەستە.',
   riskCalcSlPips: 'وەستانی زیان (pip)',
@@ -5095,6 +5111,7 @@ const ku: Dict = {
   mcHintTypeTfWeb: ' · 1–8 بۆ تایم‌فرەیم بە ڕیز (1 = 1m … 8 = W) · یان 15 یان 4h بنووسە و Enter دابگرە',
   shortcutsSheetTitle: 'کورتبڕەکانی کیبۆرد',
   mcHintTypeDateWeb: ' · Home/End بۆ کۆنترین مۆم و ڕاستەوخۆ · 2026-09-01 بنووسە و Enter دابگرە بۆ چوون بۆ ئەو ڕۆژە',
+  shortcutsMouseWeb: ' · کلیکی ڕاست لەسەر چارت: ئاگادارکردنەوە یان هێڵی ئاسۆیی لەو نرخەدا، یان ڕێکخستنەوەی پیشاندان · کلیکی ڕاست لەسەر وێنەکێشانێک: کۆپی، قوفڵ یان سڕینەوەی · کلیک لە وێنەکێشانێک بکە بۆ دیاریکردن و جوولاندنی',
   mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
   mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
