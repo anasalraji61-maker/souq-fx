@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import time
 import pytest
 from fastapi.testclient import TestClient
 
@@ -132,7 +133,7 @@ def test_worker_quote_older_than_three_minutes_is_not_the_price(monkeypatch):
 
 def test_worker_old_quote_falls_back_to_a_recent_ws_tick(monkeypatch):
     monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, 3600))
-    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
+    monkeypatch.setattr(alert_worker.td_ws, "tick", lambda sym, max_age=180: (1.0950, time.time() - 5))
     assert alert_worker._price("EURUSD") == pytest.approx(1.0950)
 
 
@@ -224,8 +225,7 @@ def test_fallback_quote_carries_its_provider_time_so_a_pre_arming_quote_does_not
 
 def test_fallback_ws_tick_carries_its_receive_time(monkeypatch):
     monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: None)
-    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
-    monkeypatch.setattr(alert_worker.td_ws, "received_at", lambda syms: {"EURUSD": 1234.0})
+    monkeypatch.setattr(alert_worker.td_ws, "tick", lambda sym, max_age=180: (1.0950, 1234.0))
     assert alert_worker._price_at("EURUSD") == (pytest.approx(1.0950), 1234.0)
 
 

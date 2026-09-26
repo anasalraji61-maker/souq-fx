@@ -55,11 +55,12 @@ def _price_at(symbol: str) -> tuple[float | None, float | None]:
         log.warning("price quote fetch failed for %s", symbol, exc_info=True)
     # سعر الـWS فقط إن وصل خلال 3 دقائق (نفس حدّ حداثة شموع 1m) — سعر مجمَّد من انقطاع قديم كان يُطلق
     # تنبيهاً سُلِّح بعده على سعر لم يعد قائماً.
-    snap = td_ws.snapshot(max_age=180)
-    p = snap.get(symbol.upper())
-    if p is None:
+    # السعر ووقته من إسناد واحد (run 123): قراءتان منفصلتان (`snapshot` ثم `received_at`) كانتا تأخذان
+    # سعر 1.1003 قبل التسليح بوقت تيك 1.0995 وصل بينهما بعده ⇒ «فوق 1.1000» يُطلق على سعر قبل تسليحه.
+    t = td_ws.tick(symbol.upper(), max_age=180)
+    if t is None:
         return None, None
-    at = td_ws.received_at([symbol.upper()]).get(symbol.upper())
+    p, at = t
     if market.in_weekend_close(symbol, at if at is not None else market._session_now(), 0):
         return None, None  # تيك العطلة بعد إغلاق الجمعة — لا يُنفَّذ عليه ولا يُطلق تنبيهاً
     return float(p), at

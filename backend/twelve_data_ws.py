@@ -205,6 +205,24 @@ def recent_snapshot(window: float = 120.0) -> tuple[dict[str, float], float | No
     return {s: p for s, p in dict(LATEST).items() if LATEST_AT.get(s, 0.0) >= newest - window}, newest
 
 
+def tick(symbol: str, max_age: float) -> tuple[float, float] | None:
+    """(السعر، وقت استلامه) لرمز واحد، متّسقان؛ أقدم من `max_age` ⇒ None.
+
+    يُستدعى من خيط الـworker بينما حلقة الـWS تكتب `LATEST` ثم `LATEST_AT` (run 123): قراءتهما منفصلتين كانت
+    تأخذ السعر القديم بوقت التيك الجديد ⇒ سعر قبل تسليح التنبيه يُعدّ بعده. الوقت يُقرأ قبل السعر وبعده؛
+    اختلافهما = تيك وصل بينهما ⇒ إعادة. تطابقهما قد يعني سعراً أحدث بوقت أقدم — الاتجاه الآمن (لا يُطلق مبكراً)."""
+    for _ in range(5):
+        at = LATEST_AT.get(symbol)
+        p = LATEST.get(symbol)
+        if LATEST_AT.get(symbol) == at:
+            break
+    else:
+        return None
+    if p is None or at is None or at < time.time() - max_age:
+        return None
+    return p, at
+
+
 def received_at(symbols: list[str] | dict[str, float]) -> dict[str, float | None]:
     """وقت استلام كل رمز على حدة — `as_of` الدفعة وقت **أحدثها**، فسعرٌ أقدم منه بدقيقتين كان يحمل وقت غيره."""
     return {s: LATEST_AT.get(s) for s in symbols}

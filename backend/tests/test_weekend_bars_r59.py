@@ -119,8 +119,7 @@ def test_untimed_price_on_weekend_is_no_price(routes, monkeypatch, when, served)
 @pytest.mark.parametrize("when,served", [(SAT, False), (WED, True)])
 def test_weekend_ws_tick_does_not_feed_alerts(monkeypatch, when, served):
     monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: None)
-    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
-    monkeypatch.setattr(alert_worker.td_ws, "received_at", lambda syms: {"EURUSD": _ts(when)})
+    monkeypatch.setattr(alert_worker.td_ws, "tick", lambda sym, max_age=180: (1.0950, _ts(when)))
     assert (alert_worker._price_at("EURUSD")[0] is not None) is served
 
 
