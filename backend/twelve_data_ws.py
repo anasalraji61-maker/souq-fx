@@ -86,7 +86,12 @@ def _provider_ts(msg: dict[str, Any]) -> float | None:
         return None
     if not math.isfinite(ts) or ts <= 0:
         return None
-    return ts / 1000.0 if ts > 1e12 else ts  # ميلي ثانية
+    if ts > 1e14:  # ميكروثانية
+        return ts / 1e6
+    return ts / 1000.0 if ts > 1e11 else ts  # ميلي ثانية
+
+
+_MAX_AHEAD_S = 3600.0
 
 
 def _store(msg: dict[str, Any]) -> None:
@@ -96,6 +101,11 @@ def _store(msg: dict[str, Any]) -> None:
         received = time.time()
         at = _quoted_at(msg, received)
         ts = _provider_ts(msg)
+        # وقت بعد الوصول بأكثر من ساعة ليس فرق ساعتين بل وقتٌ لم يُقرأ (وحدة خاطئة، سنة معطوبة): كان يُحفظ
+        # مرجعاً للترتيب ⇒ كل تيك لاحق «أقدم» منه فيُسقَط حتى إعادة تشغيل الخادم، والسعر يتجمّد ثم يتقادم.
+        # يُعامَل كتيك بلا `timestamp`: يُقبل بوقت وصوله ولا يدخل الترتيب.
+        if ts is not None and ts > received + _MAX_AHEAD_S:
+            ts = None
         # تيك متأخّر الوصول (وقته عند المزوّد أقدم من المخزَّن) كان يمحو سعراً أحدث ويُقرأ للتنبيهات حتى يتقادم.
         # الترتيب بوقت المزوّد **الخام** (run 91): المقارنة كانت بالوقت المسقوف بوقت الوصول ⇒ ساعة خادم متأخّرة
         # عن المزوّد تسقف كل التيكات فيحكم ترتيب الوصول (1.1000 الأقدم يمحو 1.1010)، وتيك بلا `timestamp`

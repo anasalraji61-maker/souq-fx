@@ -34,3 +34,22 @@ def test_late_older_tick_still_dropped(monkeypatch):
         (1011.0, {"symbol": "EUR/USD", "price": 1.1000, "timestamp": 1002}),
     ])
     assert td_ws.LATEST["EURUSD"] == 1.1010
+
+
+def test_far_future_timestamp_does_not_freeze_symbol(monkeypatch):
+    # run 102: one tick with a garbage far-future time (unit error) was kept as the ordering reference ⇒
+    # every later real tick looked older and was dropped until restart
+    monkeypatch.setattr(td_ws, "_PROVIDER_TS", {})
+    _feed(monkeypatch, [
+        (3000.0, {"symbol": "USD/JPY", "price": 150.10, "timestamp": 3000}),
+        (3001.0, {"symbol": "USD/JPY", "price": 150.12, "timestamp": 9_000_000_000}),
+        (3002.0, {"symbol": "USD/JPY", "price": 150.15, "timestamp": 3002}),
+    ])
+    assert td_ws.LATEST["USDJPY"] == 150.15
+    assert td_ws.LATEST_AT["USDJPY"] == 3002.0
+
+
+def test_microsecond_timestamp_read_as_seconds():
+    assert td_ws._provider_ts({"timestamp": 1_790_000_000_123_456}) == 1_790_000_000.123456
+    assert td_ws._provider_ts({"timestamp": 1_790_000_000_123}) == 1_790_000_000.123
+    assert td_ws._provider_ts({"timestamp": 1_790_000_000}) == 1_790_000_000
