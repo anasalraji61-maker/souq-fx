@@ -3119,9 +3119,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const ind = <R,>(r: R): R => trimIndicator(r, indBars.length, indBase.cut);
   // الناظرة للأمام (Chikou/Fractals/Pivots HL/ZigZag) على السلسلة كلّها ثم تُقصّ من الطرفين — التمرير للخلف كان
   // يُفرغ حافّتها اليمنى رغم تحميل الشموع اللاحقة (`indicatorRangeBase`). بالإعادة حتى شمعتها فقط.
+  // بالإعادة حتى الشمعة المقطوعة («الآن» المُعاد) لا آخر النافذة: بعد السحب للخلف تنتهي النافذة قبلها والشموع بينهما
+  // مكشوفة ⇒ كان Chikou يقف قبل الحافّة بـ25 خانة ويغيب آخر فراكتلين وعشرٌ من Pivots HL حتى يعود المتداول للقطع.
   const aheadBase = useMemo(
-    () => indicatorRangeBase(source.all, source.start, source.plot, !replayOn),
-    [source.all, source.start, source.plot, replayOn]
+    () =>
+      replayOn
+        ? indicatorRangeBase(source.all.slice(0, Math.max(0, source.cut + 1)), source.start, source.plot, true)
+        : indicatorRangeBase(source.all, source.start, source.plot, true),
+    [source.all, source.start, source.plot, source.cut, replayOn]
   );
   const aheadBars = aheadBase.bars;
   const indAhead = <R,>(r: R): R => trimIndicatorRange(r, aheadBars.length, aheadBase.from, aheadBase.to);
