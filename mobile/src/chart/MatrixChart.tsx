@@ -662,7 +662,8 @@ function considerHit(id: string, dist: number, max: number, cur: DrawingHit): Dr
  */
 function drawingOnScreen(tool: DrawTool, aLocal: number, bLocal: number, lastLocal: number): boolean {
   if (tool === 'hline' || tool === 'hray' || tool === 'fib') return true;
-  if (aLocal > lastLocal + 2 && bLocal > lastLocal + 2) return false;
+  // شعاع متّجه يساراً وطرفاه يمين النافذة يعبر الشموع الظاهرة كذلك (مرآة الحالة أدناه، `raySegment`).
+  if (aLocal > lastLocal + 2 && bLocal > lastLocal + 2) return tool === 'ray' && bLocal < aLocal;
   return (tool === 'ray' && bLocal > aLocal) || aLocal >= -2 || bLocal >= -2;
 }
 

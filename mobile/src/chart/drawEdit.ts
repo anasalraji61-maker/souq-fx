@@ -89,7 +89,8 @@ export function clipSegmentToBars(
 }
 
 /**
- * قطعة **الشعاع** المرسومة: كـ`clipSegmentToBars`، إلا حين يقع طرفاه كلاهما يسار النافذة والشعاع متّجه يميناً.
+ * قطعة **الشعاع** المرسومة: كـ`clipSegmentToBars`، إلا حين يقع طرفاه كلاهما يسار النافذة والشعاع متّجه يميناً
+ * (أو يمينها والشعاع متّجه يساراً — المرآة).
  * هناك يقصّ القصُّ الطرفين لخانة 0 فتصير القطعة صفرية ويختفي الشعاع — بينما امتداده ما زال يعبر الشموع
  * الظاهرة (خطّ ترند من قمّتين قبل 300 شمعة هو ما يريد المتداول رؤية أين يلتقي بالسعر الآن، كـTradingView).
  * فتُؤخذ قطعة شمعة واحدة على الخطّ نفسه من الخانة 0، ويمدّها `rayReach` حتى حافّة اللوح. `extended` ⇒
@@ -105,6 +106,11 @@ export function raySegment(
   if (bIdx > aIdx && bIdx < 0 && lastIdx >= 1) {
     const yAt = (i: number) => aY + ((bY - aY) * (i - aIdx)) / (bIdx - aIdx);
     return { ai: 0, ay: yAt(0), bi: 1, by: yAt(1), extended: true };
+  }
+  // المرآة: شعاع متّجه **يساراً** وطرفاه يمين النافذة (شارت مُمرَّر للخلف) — كان يُقصّ لنقطة صفرية على الحافّة اليمنى.
+  if (bIdx < aIdx && bIdx > lastIdx && lastIdx >= 1) {
+    const yAt = (i: number) => aY + ((bY - aY) * (i - aIdx)) / (bIdx - aIdx);
+    return { ai: lastIdx, ay: yAt(lastIdx), bi: lastIdx - 1, by: yAt(lastIdx - 1), extended: true };
   }
   return { ...clipSegmentToBars(aIdx, aY, bIdx, bY, lastIdx), extended: false };
 }
