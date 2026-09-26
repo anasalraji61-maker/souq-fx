@@ -363,7 +363,10 @@ export function TerminalScreen() {
       const get = async (key: string): Promise<string | null> => {
         if (prefsTouchedRef.current.has(key)) return null;
         try {
-          return await AsyncStorage.getItem(key);
+          const raw = await AsyncStorage.getItem(key);
+          // ومرّة ثانية بعد القراءة (كسرعة السحب أدناه): نقرةٌ أثناء انتظارها — والقراءة الأولى أبطؤها ببدء بارد — كانت تُدهَس
+          // بالمحفوظ على الشاشة بينما التخزين يحمل ما نُقر
+          return prefsTouchedRef.current.has(key) ? null : raw;
         } catch {
           return null;
         }
