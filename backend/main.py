@@ -2197,6 +2197,7 @@ def academy_interrupt(body: TeacherInterrupt):
                 "clarification": clarification,
                 "clarification_lang": openrouter_ai.reply_lang(clarification, lang),
                 "resume_segment_index": resume_from,
+                "source": "model",
             }
         except Exception:
             pass
@@ -2218,6 +2219,8 @@ def academy_interrupt(body: TeacherInterrupt):
             "clarification": clarification,
             "clarification_lang": "en",
             "resume_segment_index": resume_from,
+            # launch216a: القالب ليس جواب المدرّس — التطبيق يسمه «غير متاح الآن»
+            "source": "template",
         }
 
     # السؤال يُقتبس في الردّ ⇒ «اشترِ عند 1.0850» كان يظهر بصوت المدرّس (قرار ٤) — لا يُقتبس حينها
@@ -2240,6 +2243,7 @@ def academy_interrupt(body: TeacherInterrupt):
         # قرار أنس ١٢: القالب عربي حتى للكردي (لا نصّ كردي مراجَع) ⇒ التطبيق يقول للمستخدم إن الردّ بالعربية
         "clarification_lang": "ar",
         "resume_segment_index": resume_from,
+        "source": "template",
     }
 
 

@@ -240,3 +240,34 @@ def test_interrupt_template_reports_its_language(client, monkeypatch, lang, want
     r = client.post("/api/academy/interrupt", json={
         "school_id": "basics", "lecture_id": "basics-l1-01", "question": "why?", "lang": lang})
     assert r.status_code == 200 and r.json()["clarification_lang"] == want
+
+
+@pytest.mark.parametrize("lang", ["ar", "en", "ku"])
+def test_interrupt_template_is_labelled_template_not_a_tutor_answer(client, monkeypatch, lang):
+    """launch216a: القالب الثابت كان يُعرض كجواب المدرّس — `source` يميّزه كما في `/api/ai/ask`."""
+    import main
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    r = client.post("/api/academy/interrupt", json={
+        "school_id": "basics", "lecture_id": "basics-l1-01", "question": "why?", "lang": lang})
+    assert r.json()["source"] == "template"
+
+
+def test_interrupt_model_failure_falls_back_to_labelled_template(client, monkeypatch):
+    import main
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+
+    def boom(*a, **k):
+        raise RuntimeError("upstream down")
+    monkeypatch.setattr(main.openrouter_ai, "interrupt_answer", boom)
+    r = client.post("/api/academy/interrupt", json={
+        "school_id": "basics", "lecture_id": "basics-l1-01", "question": "why?", "lang": "en"})
+    assert r.json()["source"] == "template"
+
+
+def test_interrupt_model_reply_is_labelled_model(client, monkeypatch):
+    import main
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "interrupt_answer", lambda *a, **k: "RSI measures momentum.")
+    r = client.post("/api/academy/interrupt", json={
+        "school_id": "basics", "lecture_id": "basics-l1-01", "question": "why?", "lang": "en"})
+    assert r.json()["source"] == "model"
