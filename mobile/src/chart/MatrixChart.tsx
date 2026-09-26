@@ -534,6 +534,7 @@ type PointerEventLike = {
     button?: number;
     buttons?: number;
     shiftKey?: boolean;
+    ctrlKey?: boolean;
   };
   currentTarget?: {
     setPointerCapture?: (pointerId: number) => void;
@@ -630,6 +631,19 @@ const HILO_CHAR_W = monoCharW(11);
 const DENSE_OHLC_LINE_H = 14;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
 const COUNTDOWN_LINE_H = 13;
+
+/** ماك: Ctrl+نقرة بالفأرة = النقر الأيمن (يُطلق `contextmenu` بعد `pointerdown` بالزرّ 0). */
+const WEB_MAC =
+  Platform.OS === 'web' &&
+  typeof navigator !== 'undefined' &&
+  /Mac/.test(navigator.platform || navigator.userAgent || '');
+
+/** زرّ القائمة لا نقرة: الأيمن، أو Ctrl+الأيسر بفأرة/لوح لمس ماك (آيباد يُعرِّف نفسه «MacIntel» لكن بلمس). */
+function isContextClick(event: PointerEventLike): boolean {
+  const ne = event.nativeEvent;
+  if (ne?.button === 2) return true;
+  return WEB_MAC && ne?.button === 0 && !!ne.ctrlKey && ne.pointerType !== 'touch' && ne.pointerType !== 'pen';
+}
 
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
@@ -6228,7 +6242,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ? ({
           onPointerDown: (event: PointerEventLike) => {
             // الزرّ الأيمن لقائمة `onContextMenu` أدناه — كان يبدأ سحباً يلتصق بالمؤشّر حتى نقرة أخرى.
-            if (event.nativeEvent?.button === 2) return;
+            // وCtrl+نقرة بماك كذلك: كانت تثبّت التقاطع (أو تضع نقطة رسم) ثم تفتح القائمة فوقه.
+            if (isContextClick(event)) return;
             setCtxMenu(null);
             event.preventDefault?.();
             const point = pointerXY(event);
@@ -6541,8 +6556,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           onPointerDown: (event: PointerEventLike) => {
             event.preventDefault?.();
             event.stopPropagation?.();
-            // الزرّ الأيمن للقائمة أدناه لا للسحب — ولا يُعدّ نقرة أولى من «نقرتين تعيدان المقياس».
-            if (event.nativeEvent?.button === 2) return;
+            // الزرّ الأيمن (وCtrl+نقرة بماك) للقائمة أدناه لا للسحب — ولا يُعدّ نقرة أولى من «نقرتين تعيدان المقياس».
+            if (isContextClick(event)) return;
             const point = pointerXY(event);
             webPricePointer.current = {
               active: true,
