@@ -734,3 +734,27 @@ def test_guard_flags_run90_leaks(text):
 ])
 def test_guard_run90_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+# run 94: صيغ عربية فصيحة للوقف/الهدف/الخروج، وعنوان «شراء:»، و«Buy @ 2350» بسعر صحيح (ذهب/مؤشرات)
+RUN94_LEAKS = [
+    "إيقاف الخسارة: 1.0800", "ايقاف الخسارة عند 1.0800", "ضع إيقاف الخسارة عند 1.0800", "حد الخسارة: 1.0800",
+    "جني ربح: 1.0950", "جني الأرباح 1.0950", "الخروج: 1.0950", "نقطة الخروج: 1.0950", "خروج 1.0950",
+    "- شراء: 1.0850", "- بيع: 2350.5", "منطقة الشراء: 1.0850", "شراء: 2350",
+    "Buy @ 2350", "Sell @ 38950", "SELL @ 2350",
+]
+
+
+@pytest.mark.parametrize("text", RUN94_LEAKS)
+def test_guard_flags_run94_leaks(text):
+    assert openrouter_ai.has_trade_call(text)
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+@pytest.mark.parametrize("text", [
+    "الخروج من السوق عند الأخبار", "حد الخسارة اليومي 2%", "خروج السعر فوق 1.0900 يعني كسراً",
+    "حجم البيع: 1200", "ضغط البيع - 1.0850", "إيقاف الخسارة أداة لإدارة المخاطر", "بعد الخروج من النطاق 1.0800",
+    "Buy @ 20%", "Traders tend to buy @ 2350",
+])
+def test_guard_run94_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)

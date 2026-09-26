@@ -254,8 +254,10 @@ _LEVEL_WORD = (
     # run 90: «Targeting 1.0950»، «Aiming 1.0950»، «Take the trade at 1.0850»، «Jump in at 1.0850»
     r"|\btargeting\b|\baim(?:ing|s)?\b|\b(?:take|enter)\s+(?:the|this)\s+(?:trade|position)\b|\bjump\s+in\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
     r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
-    r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
+    r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني\s+(?:ال)?(?:ربح|أرباح)|(?:إيقاف|حد)\s+(?:ال)?خسار[ةه])(?:نا|ك|كم|ه|ها)?" + _AR_SUF
     + r"(?!\s+من\s+(?:هذ|ال|درس))"
+    # run 94: «الخروج: 1.0950»، «نقطة الخروج 1.0950»، «خروج 1.0950» — «خروج السعر فوق 1.09» وصف كسر لا مستوى
+    r"|(?<!\w)(?:(?:نقطة|نقطه|سعر|مستوى)\s+)?(?:ال)?خروج(?=\s*(?:[:\-–—=]|\d))"
     r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان|زیان\s*وەستاندن"
     # run 80: التعريب الصوتي «ستوب لوس 1.0800»، «تيك بروفيت 1.0950»
     r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)تيك\s*بروفيت(?!\w)"
@@ -308,7 +310,7 @@ _TRADE_CALL_RE = re.compile(
     # فعل صفقة ثم سعر («You could buy near 1.0850»، «Short it at 1.0900»)
     + r"|" + _EN_ACT + r"[^\n\d]{0,30}?" + _PRICE
     # … أو سعر صحيح (ذهب/بيتكوين) بعد حرف جرّ («buy near 2350»)
-    + r"|" + _EN_ACT + r"[^\n\d]{0,30}?\b(?:at|near|around|below|above|from|under|over|@)\s*\d{3,}(?![\d.,%])"
+    + r"|" + _EN_ACT + r"[^\n\d]{0,30}?(?:\b(?:at|near|around|below|above|from|under|over)|@)\s*\d{3,}(?![\d.,%])"
     + r"|\b(?:pending\s+)?(?:buy|sell)\s+(?:limit\s+|stop\s+)?orders?\s+(?:at|near|around|@)\s*\d"
     + r"|" + _EN_ORDER
     # run 83: جواب مباشر «Yes, buy now.»، «Yes — buying here makes sense»، «Buy? Yes.»
@@ -354,6 +356,8 @@ _TRADE_CALL_RE = re.compile(
     r"(?!\s+(?:signal|zone|side|order|stop|limit)s?\b)"
     + r"|\bstrong\s+(?:buy|sell)\b(?![-‑])(?!\s+signals?\b)"
     + r"|\b(?:long|short)\s+(?:opportunit(?:y|ies)|setup|entry|trade\s+idea)\b"
+    # run 94: عنوان «- شراء: 1.0850»، «منطقة البيع: 2350» — «حجم البيع: 1200» مستثنى بـ_AR_ACT
+    + r"|" + _AR_ACT + r"\s*[:\-–—=]\s*(?:\d+[.,]\d+|\d{3,})"
     + r"|" + _AR_ACT + r"\s+(?:من|عند|قرب|فوق|تحت|حول|الآن|الان|فورا|فوراً)(?!\w)"
     + r"|(?:يفضل|الأفضل|الافضل|من الأفضل|فرصة|فرصه)\s+(?:ل|ال|لل)?(?:شراء|بيع|دخول)(?!\w)"
     + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
