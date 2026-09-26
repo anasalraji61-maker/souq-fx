@@ -43,6 +43,24 @@ export function parseTypedTimeframe(typed: string): Timeframe | null {
 }
 
 /**
+ * اختصار الرقم المنفرد (W4، قرار أنس ١٦): «1»…«8» = الفريم بموضعه بشريط الفريمات (1m 5m 15m 30m 1H 4H D W)
+ * — يُطبَّق بعد توقّف قصير (`TF_SLOT_IDLE_MS`) بلا Enter، أو فوراً بـEnter. كان «5» ثم Enter = 5m، و«1» وحدها
+ * لا شيء حتى Enter. ما زاد على رقم («15»، «4h»، «240»، تاريخ) يبقى بالكتابة كما كان.
+ */
+export const TF_SLOT_IDLE_MS = 600;
+
+export function slotTimeframe(typed: string): Timeframe | null {
+  const m = /^([1-9])$/.exec(typed.trim());
+  if (!m) return null;
+  return TIMEFRAMES[Number(m[1]) - 1] ?? null;
+}
+
+/** الفريم الذي سيُفتح بالمكتوب: الرقم المنفرد بموضعه، وإلا كتابة الفريم (`parseTypedTimeframe`). */
+export function resolveTypedTimeframe(typed: string): Timeframe | null {
+  return /^\d$/.test(typed.trim()) ? slotTimeframe(typed) : parseTypedTimeframe(typed);
+}
+
+/**
  * الانتقال إلى تاريخ بالكتابة نفسها: «2026-09-01» ثم Enter يضع شمعة ذلك اليوم وسط اللوح ويثبّت التقاطع عليها —
  * مراجعة إعداد سابق (قرار الفائدة، NFP الماضي) كانت سحباً طويلاً بالفأرة. ISO وحده (سنة-شهر-يوم): «09/01» يوم أم شهر؟
  * يختلف بين المتداولين، والتخمين الخاطئ يفتح شهراً آخر بصمت.

@@ -1,5 +1,14 @@
 /** فحص ذاتي لـ`tfTyping.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { dateJump, parseTypedDate, parseTypedTimeframe, tfTypingChar, tfTypingStarts, typedDatePending } from './tfTyping';
+import {
+  dateJump,
+  parseTypedDate,
+  parseTypedTimeframe,
+  resolveTypedTimeframe,
+  slotTimeframe,
+  tfTypingChar,
+  tfTypingStarts,
+  typedDatePending,
+} from './tfTyping';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -80,6 +89,18 @@ const weeks = [0, 7, 14].map((k) => k * 86400);
 const wk = dateJump(weeks, 9 * 86400, 10 * 86400, 1e12, 80);
 ok('أسبوعي ⇒ شمعة أسبوعه', !!wk && wk.index === 1);
 ok('حدّ الإعادة الأدنى', (dateJump(hours, 9 * 86400, 10 * 86400, 1e12, 80, 30)?.offset ?? -1) === 30);
+
+// W4: الرقم المنفرد = موضع الفريم بالشريط.
+ok('«1» موضع ⇒ 1m', slotTimeframe('1') === '1m');
+ok('«5» موضع ⇒ 1H', slotTimeframe('5') === '1H');
+ok('«7» موضع ⇒ D', slotTimeframe('7') === 'D');
+ok('«8» موضع ⇒ W', slotTimeframe('8') === 'W');
+ok('«9» لا موضع', slotTimeframe('9') === null);
+ok('«15» ليس موضعاً', slotTimeframe('15') === null);
+ok('المكتوب: «5» ⇒ 1H (الموضع)', resolveTypedTimeframe('5') === '1H');
+ok('المكتوب: «15» ⇒ 15m كما كان', resolveTypedTimeframe('15') === '15m');
+ok('المكتوب: «4h» ⇒ 4H', resolveTypedTimeframe('4h') === '4H');
+ok('المكتوب: «d» ⇒ D', resolveTypedTimeframe('d') === 'D');
 
 if (failures) {
   console.error(`tfTyping.selftest: ${failures} FAIL`);

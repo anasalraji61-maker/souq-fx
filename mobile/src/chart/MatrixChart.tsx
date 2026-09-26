@@ -27,7 +27,9 @@ import { isTimeframe, type Timeframe } from '../timeframes';
 import {
   dateJump,
   parseTypedDate,
-  parseTypedTimeframe,
+  resolveTypedTimeframe,
+  slotTimeframe,
+  TF_SLOT_IDLE_MS,
   TF_TYPING_MAX,
   tfTypingChar,
   tfTypingStarts,
@@ -5446,7 +5448,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       tfTypedRef.current = next;
       setTfTyped(next);
       if (timer) clearTimeout(timer);
-      timer = next ? setTimeout(() => put(''), 3000) : null;
+      // W4: رقم منفرد 1–8 = الفريم بموضعه بعد توقّف قصير بلا Enter (`slotTimeframe`)؛ ما سواه يُلغى بعد 3 ثوانٍ.
+      const slot = onTimeframeKeyRef.current ? slotTimeframe(next) : null;
+      timer = next
+        ? setTimeout(() => {
+            put('');
+            if (slot) onTimeframeKeyRef.current?.(slot);
+          }, slot ? TF_SLOT_IDLE_MS : 3000)
+        : null;
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
@@ -5461,7 +5470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (event.key === 'Enter') {
           event.preventDefault();
           event.stopPropagation();
-          const tf = parseTypedTimeframe(typed);
+          const tf = resolveTypedTimeframe(typed);
           put('');
           if (parseTypedDate(typed)) goToTypedDateRef.current(typed);
           else if (tf) onTimeframeKeyRef.current?.(tf);
@@ -5489,7 +5498,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       tfTypedRef.current = '';
     };
   }, [tfTypingOn]);
-  const tfTypedTarget = tfTyped && hasTfKey ? parseTypedTimeframe(tfTyped) : null;
+  const tfTypedTarget = tfTyped && hasTfKey ? resolveTypedTimeframe(tfTyped) : null;
   // الوسم للتاريخ: يوم الشمعة التي سيفتحها بأسماء أشهر المحور، و«…» ما دام التاريخ ناقصاً، و«✕» خارج المحمَّل.
   const tfTypedDate = (() => {
     if (!tfTyped || !parseTypedDate(tfTyped)) return null;
@@ -5882,6 +5891,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (webKeyChart !== keyToken.current) return;
       // رسم محدَّد: الأسهم له (معالج الرسم أعلاه)، لا للعرض ولا للتقاطع.
       if (selectedIdRef.current && event.key.startsWith('Arrow')) return;
+      // W4 (قرار أنس ١٦): «+»/«−» تكبير/تصغير كزرّي اللوح، وF ملء الشاشة بالمتصفّح. بالموضع (`event.code`) كذلك:
+      // لوحة عربية تُخرج حرفاً آخر للمفتاح نفسه. «-» أثناء كتابة تاريخ لمستمع الكتابة (`defaultPrevented`).
+      if (!event.altKey && !event.ctrlKey && !event.metaKey && !event.defaultPrevented) {
+        const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+        const typing = target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '');
+        const k = event.key;
+        const c = event.code;
+        const zoomIn = k === '+' || k === '=' || c === 'NumpadAdd' || c === 'Equal';
+        const zoomOut = (k === '-' || c === 'NumpadSubtract' || c === 'Minus') && !event.shiftKey;
+        if (!typing && (zoomIn || zoomOut)) {
+          event.preventDefault();
+          zoomAroundCenter(zoomIn ? 0.8 : 1.25);
+          return;
+        }
+        if (!typing && !event.shiftKey && (c === 'KeyF' || k === 'f' || k === 'F')) {
+          const doc = document as Document & { fullscreenElement?: Element | null };
+          event.preventDefault();
+          const done = doc.fullscreenElement
+            ? doc.exitFullscreen?.()
+            : doc.documentElement.requestFullscreen?.();
+          // المتصفّح يرفض (إطار مضمَّن بلا إذن) ⇒ لا شيء، بلا خطأ غير ملتقط.
+          done?.catch?.(() => undefined);
+          return;
+        }
+      }
       // Home/End: أقدم شمعة محمَّلة / عودة للحيّ بلا لمس التكبير (Alt+R يعيد التكبير كذلك). كانت العودة من مراجعة
       // شهر مضى عشرات ضغطات Shift+→. بالإعادة End = شمعة الإعادة (`panByButton` يسقف بـ`replayMinOffsetNow`).
       if ((event.key === 'Home' || event.key === 'End') && !event.altKey && !event.ctrlKey && !event.metaKey) {
