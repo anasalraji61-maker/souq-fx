@@ -1224,6 +1224,8 @@ export type Dict = {
    */
   cfDayChangeA11y: string;
   cfDayChangeNoneA11y: string;
+  /** قارئ الشاشة على «—» بصفّ سعر الإطار أثناء تبديل الرمز (`b490a04`) — `{symbol}` الرمز الجديد. كان `mcSwitchingA11y` مكرّراً بعد وسم التبديل ويقول «المعروض بيانات سابقة» على شَرطة */
+  cfPriceLoadingA11y: string;
   cfMarketClosedA11y: string;
   /** «⏪» بجانب سعر الرأس بالإعادة — `mcReplayModeA11y` («وضع الإعادة») لا يقول إن السعر المقروء ليس الحيّ */
   cfReplayPriceA11y: string;
@@ -2660,6 +2662,7 @@ const ar: Dict = {
   cfChangeSymbolA11y: 'تغيير الرمز',
   cfDayChangeA11y: 'تغيّر اليوم {pct}',
   cfDayChangeNoneA11y: 'تغيّر اليوم غير متاح لهذا السعر',
+  cfPriceLoadingA11y: 'سعر {symbol} قيد التحميل',
   cfMarketClosedA11y: 'السوق مغلق حالياً',
   cfReplayPriceA11y: 'إعادة الشموع — السعر إغلاق شمعة الإعادة لا السعر الحيّ',
   cfMarketClosedTag: 'مغلق',
@@ -3957,6 +3960,7 @@ const enUS: Dict = {
   cfChangeSymbolA11y: 'Change symbol',
   cfDayChangeA11y: 'Today’s change {pct}',
   cfDayChangeNoneA11y: 'Today’s change not available for this price',
+  cfPriceLoadingA11y: '{symbol} price loading',
   cfMarketClosedA11y: 'Market currently closed',
   cfReplayPriceA11y: 'Candle replay — this is the replay candle’s close, not the live price',
   cfMarketClosedTag: 'Closed',
@@ -5313,6 +5317,7 @@ const ku: Dict = {
   // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
   cfDayChangeA11y: 'گۆڕانی ئەمڕۆ {pct}',
   cfDayChangeNoneA11y: 'گۆڕانی ئەمڕۆ بۆ ئەم نرخە بەردەست نییە',
+  cfPriceLoadingA11y: 'نرخی {symbol} بار دەکرێت',
   cfMarketClosedA11y: 'بازاڕ ئێستا داخراوە',
   cfReplayPriceA11y: 'دووبارەکردنەوەی مۆم — ئەم نرخە داخستنی مۆمی دووبارەکردنەوەیە، نەک نرخی زیندوو',
   cfMarketClosedTag: 'داخراو',
