@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 146، على 9f46c31) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 147، على b0c1f9b) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -23,6 +23,6 @@
 | launch | tools | **launch220a** (launch219a منجز: `521daf9`/`af8e480` tools + `c981777` ui — لـQA حذف صفّه). بقي بنموذج «تعديل» الدفتر: (1) ردّ 422 `invalid_opened_at`/`invalid_closed_at` من `PATCH` يسقط إلى `journalEditError` «تحقّق من الاتصال» (`TradeJournalPanel.tsx` فرع `catch` بعد `isAlreadyClosedError`) — الاتصال سليم والوقت هو المرفوض ⇒ اعرض `journalEditTimeRejected` (جاهز ar/en/ku، هذه التشغيلة) لكل 422 من الحفظ، مع إبقاء مسح `invalid_closed_at` الحالي؛ (2) اختياري: فتحٌ غيّره المتداول بعد إغلاق محفوظ لم يلمسه يقول الآن «وقت **الإغلاق** يسبق وقت الفتح» فيوجّهه للخانة الخطأ — `journalOpenTimeAfterClose` (`{closed}`، جاهز منذ 219) لهذه الحالة وحدها، أو احذفوا طلبه وأحذف المفتاح | launch220 |
 | launch | ui | **launch221a** `ChartFrame.tsx:485` (`b490a04`): «—» بصفّ السعر أثناء تبديل الرمز يحمل `accessibilityLabel={t.mcSwitchingA11y}` — **الجملة نفسها** يقرؤها قارئ الشاشة قبلها من وسم التبديل (`:441`)، وتقول «المعروض الآن بيانات سابقة» على شَرطة لا سعر فيها. استعملوا `t.cfPriceLoadingA11y.replace('{symbol}', frameSymbol)` («سعر EURUSD قيد التحميل»، جاهز ar/en/ku، هذه التشغيلة) | launch221 |
 
-**تحقّق الدورة 146 (بالكود، على 6f84137):** البناء أخضر 0، selftests 125/125 ناجح. أُغلقت **launch219a** (ui `c981777` `api.ts:953/964`، tools `521daf9`/`af8e480`)؛ باقيها بصفّ **launch220a** (مُتحقَّق: `journalOpenTimeAfterClose` غير مستعمل بأي ملف، والحالة تُظهر `journalCloseTimeBeforeOpen` `TradeJournalPanel.tsx:2408`؛ و`journalEditTimeRejected` جديد غير مربوط بعد) — دورته الأولى. أُغلقت **chart-r119a** ← ui `6636944` (`FocusChartModal.tsx:148` `setLoading(false)` بعد `setSeries(s)` قبل جلب المقارنة). DESIGN-PRO وDECISIONS-ANAS بلا تغيير منذ defa994.
-**قائمة قبول DESIGN-PRO (السادس والستّون): 0 من 12 فشل** — diff `.tsx` منذ e2a257f: خانة تعديل «وقت الفتح» بـ`styles.input`/`planWarn` القائمة و`accessibilityLabel`؛ `MatrixChart.tsx` منطق — لا نمط ولا زرّ جديد.
-**المراجعة (a — ميت/تصديرات):** لا `export` قيمةً بلا استعمال؛ مفتاح i18n جديد غير مستعمل واحد `journalOpenTimeAfterClose` ⇒ launch220a (2).
+**تحقّق الدورة 147 (بالكود، على b0c1f9b):** البناء أخضر 0، selftests 125/125 ناجح. **launch220a** مفتوحة — دورتها الثانية (مُتحقَّق: `journalEditTimeRejected` و`journalOpenTimeAfterClose` غير مستعملين خارج `locales.ts`). سجلّات chart 120/ui 139/backend 124 بلا طلب تنسيق جديد. DESIGN-PRO وDECISIONS-ANAS بلا تغيير منذ defa994.
+**قائمة قبول DESIGN-PRO (السابع والستّون): 0 من 12 فشل** — diff `.tsx` منذ 0fe5867: `ChartFrame.tsx` إعادة ترتيب ونصّ «—» بـ`styles.price` القائم و`mcSwitchingA11y` (×3 لغات)؛ `MatrixChart.tsx` منطق — لا نمط ولا زرّ جديد.
+**المراجعة (b — نصوص ثابتة):** لا نصّ ظاهر جديد خارج `locales.ts` بالـdiff. **لا بند.**
