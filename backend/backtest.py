@@ -4,15 +4,14 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import indicators as ind
-from twelve_data import bar_end
+from twelve_data import bar_end, canonical_symbol
 
 StrategyId = Literal["ma_cross", "rsi_reversal", "macd_cross", "bb_bounce"]
 
 _MAJORS = {"EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY"}
 _TIGHTEST = {"EURUSD", "USDJPY"}
 _MAJOR_USD = {"GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF"}
-_ALIASES = {"GOLD": "XAUUSD", "SILVER": "XAGUSD"}
-_OIL = {"USOIL", "UKOIL", "WTI", "BRENT", "XTIUSD", "XBRUSD", "WTIUSD"}
+_OIL = {"USOIL", "UKOIL"}
 
 
 def _round(x: float, n: int) -> float:
@@ -27,9 +26,11 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
     تقدير محافظ لا سعر وسيط بعينه — الغرض ألا يُعرض عائد استراتيجية تنقلب كل بضع شموع بلا أي تكلفة،
     فتبدو رابحة على 15m وهي خاسرة فعلياً بعد السبريد.
     """
-    s = "".join(ch for ch in symbol.upper() if ch.isalpha())
-    # أسماء الوسطاء للمعادن والنفط (كانت None ⇒ الاختبار الخلفي بلا أي تكلفة على الذهب والنفط).
-    s = _ALIASES.get(s, s)
+    # بالاسم القانوني نفسه الذي تُجلب به الشموع (`build_series` ⇒ `td_symbol`): كانت أسماء الوسطاء «GOLD»/«WTI»/
+    # «BRENT»/«XTIUSD» تأخذ سبريد الذهب/النفط بينما تُطلب شموعها من المزوّد بالاسم العاري — «WTI» سهم W&T
+    # Offshore (~2$) و«GOLD» سهم Gold.com ⇒ 4 سنتات «تكلفة نفط» (~2% للصفقة) موسومة «مشمولة» على سهم.
+    # «XBR/USD»/«WTI/USD» ⇒ UKOIL/USOIL بـ`canonical_symbol` فتبقى لها تكلفتها.
+    s = canonical_symbol(symbol)
     if s in _OIL:
         return (4.0, 0.01)  # ~4 سنت للبرميل بحساب تجزئة عادي
     if len(s) != 6:

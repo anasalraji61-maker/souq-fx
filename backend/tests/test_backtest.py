@@ -36,12 +36,18 @@ def test_spread_reduces_every_trade():
     assert cost["stats"]["total_return_pct"] < free["stats"]["total_return_pct"]
 
 
-def test_broker_aliases_and_oil_get_a_spread_estimate():
-    # كانت None ⇒ الاختبار الخلفي على الذهب/النفط بلا أي تكلفة (QA30)
-    assert backtest.typical_spread("GOLD") == backtest.typical_spread("XAUUSD")
-    assert backtest.typical_spread("silver") == backtest.typical_spread("XAGUSD")
-    for s in ("USOIL", "UKOIL", "XTIUSD", "XBR/USD"):
+def test_oil_gets_a_spread_estimate():
+    # كانت None ⇒ الاختبار الخلفي على النفط بلا أي تكلفة (QA30)
+    for s in ("USOIL", "UKOIL", "XBR/USD", "WTI/USD", " ukoil "):
         assert backtest.typical_spread(s) == (4.0, 0.01), s
+
+
+@pytest.mark.parametrize("sym", ["GOLD", "silver", "WTI", "BRENT", "XTIUSD", "WTIUSD", "XBRUSD"])
+def test_broker_alias_gets_no_spread_of_another_instrument(sym):
+    """الشموع تُطلب بالاسم العاري («WTI» = سهم W&T Offshore) ⇒ سبريد النفط/الذهب عليها تكلفة مختلَقة."""
+    from twelve_data import td_symbol
+    assert td_symbol(sym) == sym.upper()  # فعلاً غير مُسنَد لسلسلة معدن/نفط
+    assert backtest.typical_spread(sym) is None
 
 
 def _t(pnl: float) -> dict:

@@ -261,7 +261,7 @@ def test_indicator_alert_period_rule_unchanged(client):
     assert "fast_period" in r.text
 
 
-@pytest.mark.parametrize("symbol,included", [("EURUSD", True), ("GOLD", True), ("USOIL", True), ("BTCUSD", False), ("USDTRY", False)])
+@pytest.mark.parametrize("symbol,included", [("EURUSD", True), ("XAUUSD", True), ("GOLD", False), ("WTI", False), ("USOIL", True), ("BTCUSD", False), ("USDTRY", False)])
 def test_backtest_says_whether_costs_are_included(client, monkeypatch, symbol, included):
     monkeypatch.setattr(market, "configured", lambda: True)
     monkeypatch.setattr(
