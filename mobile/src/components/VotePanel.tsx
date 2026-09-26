@@ -190,7 +190,11 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
         load();
       }
     } catch {
-      if (mountedRef.current) setNotice(t.voteCastError);
+      // الطلب فشل (شبكة/5xx): العدّاد رُفع قبل الطلب ⇒ كان يبقى بصوت لم يُسجَّل و«✓» على الزرّ.
+      // يُرجَع كما كان (كفرع login_required) — لا `load()` لأنه يمسح الرسالة ويفشل بالشبكة نفسها.
+      if (!mountedRef.current) return;
+      if (before) setVotes((prev) => prev.map((v) => (v.id === id ? before : v)));
+      setNotice(t.voteCastError);
     } finally {
       if (mountedRef.current) {
         setCastingIds((prev) => {
