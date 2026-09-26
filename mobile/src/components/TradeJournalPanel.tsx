@@ -46,6 +46,7 @@ import {
   journalLossStreaks,
   journalMaxDrawdownR,
   formatRR,
+  breakevenWinRatePct,
   journalSymbol,
   quoteSymbol,
   levelSideIssue,
@@ -2261,6 +2262,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       ) : draft?.plan?.ok ? (
         <>
           <Text style={[styles.planLine, { textAlign: align }]}>{planSummary(draft.plan)}</Text>
+          {/* بـR:R بالمسافة نفسها التي يعرضها سطر الخطة أعلاه — راجع `breakevenWinRatePct` */}
+          {breakevenWinRatePct(draft.plan.rr) != null ? (
+            <Text style={[styles.planLine, { textAlign: align }]}>
+              {t.planBreakevenWinRate.replace('{pct}', String(breakevenWinRatePct(draft.plan.rr)))}
+            </Text>
+          ) : null}
           {draft.plan.rr != null && draft.plan.rr < 1 ? (
             <Text style={[styles.planWarn, { textAlign: align }]}>{t.planLowRR}</Text>
           ) : null}
