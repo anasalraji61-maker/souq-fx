@@ -2328,6 +2328,10 @@ def _seen_cmp(col: str, v):
     return v
 
 
+class TradeCloseTimeInvalid(ValueError):
+    """`closed_at` بتعديل صفقة تبقى مفتوحة، أو يسبق وقت فتحها."""
+
+
 class TradeUpdateConflict(Exception):
     """الصفقة تتغيّر (إغلاق/خروج) باستمرار بين القراءة والكتابة — لا نكتب فوق ما لم نقرأه."""
 
@@ -2366,9 +2370,19 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
             else:
                 # «الآن» فقط لصفقة كانت مفتوحة فتُغلق بهذا التعديل. تصحيح خروج صفقة مغلقة سُجّلت بأثر رجعي
                 # (`closed_at` null «غير معروف» — add_trade) كان يختلق لها تاريخ إغلاق = اليوم.
-                if seen["exit"] is None:
+                if seen["exit"] is None and "closed_at" not in fields:
                     row["closed_at"] = row.get("closed_at") or _close_stamp(row.get("opened_at"))
                 row["status"] = "closed"
+        if "closed_at" in fields:
+            # run 91: وقت الإغلاق الحقيقي من العميل (null = غير معروف) — «الآن» لإعادة إغلاق صفقة أُعيد فتحها
+            # بالتعديل كان تاريخاً مختلَقاً
+            ca = fields["closed_at"]
+            if ca is not None:
+                if row.get("exit") is None:
+                    raise TradeCloseTimeInvalid("closed_at needs exit")
+                if row.get("opened_at") and ca < str(row["opened_at"]):
+                    raise TradeCloseTimeInvalid("closed_at is before opened_at")
+            row["closed_at"] = ca if row.get("exit") is not None else None
         if row.get("exit") is not None:
             row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))
         cur = c.execute(

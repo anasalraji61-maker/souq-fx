@@ -637,33 +637,7 @@ class TradeCreate(BaseModel):
     @field_validator("opened_at", "closed_at")
     @classmethod
     def _opened_at_as_journal_time(cls, v: str | None) -> str | None:
-        """بصيغة الخادم نفسها (`YYYY-MM-DD HH:MM` بتوقيته، كـ`db.add_trade` حين يغيب). كان نصّاً حرّاً يُحفظ
-        كما هو والدفتر يُرتَّب به نصّياً (`ORDER BY opened_at`): «2026-09-25T08:00:00Z» تُرتَّب أحدث من
-        «2026-09-25 10:00» (`T` بعد المسافة) فتنقلب الصفحات، و«أمس» يُقبل وقتاً. غير المقروء ⇒ 422."""
-        if v is None or not v.strip():
-            return None
-        try:
-            dt = datetime.fromisoformat(v.strip())
-        except ValueError:
-            raise ValueError("must be an ISO date/time") from None
-        # «0999-01-01» كان يُحفظ «999-01-01 00:00» (`%Y` بلا أصفار) فيُرتَّب نصّياً أحدث صفقة بالدفتر؛
-        # وسنة 1 بإزاحة موجبة تفيض بـ`astimezone` (OverflowError ⇒ 500)
-        if dt.year < 1970:
-            raise ValueError("is before 1970")
-        if dt.tzinfo is not None:
-            try:
-                dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
-            except OverflowError:  # «9999-12-31T23:59-12:00» يفيض بعد سنة 9999 ⇒ كان 500
-                raise ValueError("is in the future") from None
-            if dt.year < 1970:  # «1970-01-01T00:00+14:00» ⇒ 1969 بتوقيت الخادم
-                raise ValueError("is before 1970")
-        # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
-        # الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية حتى يحين ذلك التاريخ. سماح 5 دقائق لفرق ساعة الجهاز.
-        # المقارنة بلحظة مطلقة: ساعتان محلّيتان بلا منطقة كانتا تُرفضان في الساعة المكرَّرة عند نهاية التوقيت
-        # الصيفي (02:50+02:00 قبل الرجوع = ماضٍ، لكنّ «الآن» 02:30 بالساعة الشتوية)
-        if dt.astimezone(timezone.utc) > datetime.now(timezone.utc) + timedelta(minutes=5):
-            raise ValueError("is in the future")
-        return dt.strftime("%Y-%m-%d %H:%M")
+        return _journal_time(v)
 
     @model_validator(mode="after")
     def _closed_after_opened(self):
@@ -675,6 +649,36 @@ class TradeCreate(BaseModel):
             if self.closed_at < self.opened_at:
                 raise ValueError("closed_at is before opened_at")
         return self
+
+
+def _journal_time(v: str | None) -> str | None:
+    """بصيغة الخادم نفسها (`YYYY-MM-DD HH:MM` بتوقيته، كـ`db.add_trade` حين يغيب). كان نصّاً حرّاً يُحفظ
+    كما هو والدفتر يُرتَّب به نصّياً (`ORDER BY opened_at`): «2026-09-25T08:00:00Z» تُرتَّب أحدث من
+    «2026-09-25 10:00» (`T` بعد المسافة) فتنقلب الصفحات، و«أمس» يُقبل وقتاً. غير المقروء ⇒ 422."""
+    if v is None or not v.strip():
+        return None
+    try:
+        dt = datetime.fromisoformat(v.strip())
+    except ValueError:
+        raise ValueError("must be an ISO date/time") from None
+    # «0999-01-01» كان يُحفظ «999-01-01 00:00» (`%Y` بلا أصفار) فيُرتَّب نصّياً أحدث صفقة بالدفتر؛
+    # وسنة 1 بإزاحة موجبة تفيض بـ`astimezone` (OverflowError ⇒ 500)
+    if dt.year < 1970:
+        raise ValueError("is before 1970")
+    if dt.tzinfo is not None:
+        try:
+            dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
+        except OverflowError:  # «9999-12-31T23:59-12:00» يفيض بعد سنة 9999 ⇒ كان 500
+            raise ValueError("is in the future") from None
+        if dt.year < 1970:  # «1970-01-01T00:00+14:00» ⇒ 1969 بتوقيت الخادم
+            raise ValueError("is before 1970")
+    # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
+    # الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية حتى يحين ذلك التاريخ. سماح 5 دقائق لفرق ساعة الجهاز.
+    # المقارنة بلحظة مطلقة: ساعتان محلّيتان بلا منطقة كانتا تُرفضان في الساعة المكرَّرة عند نهاية التوقيت
+    # الصيفي (02:50+02:00 قبل الرجوع = ماضٍ، لكنّ «الآن» 02:30 بالساعة الشتوية)
+    if dt.astimezone(timezone.utc) > datetime.now(timezone.utc) + timedelta(minutes=5):
+        raise ValueError("is in the future")
+    return dt.strftime("%Y-%m-%d %H:%M")
 
 
 class TradeClose(BaseModel):
@@ -727,8 +731,17 @@ class TradeUpdate(BaseModel):
     seen_sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_note: str | None = Field(default=None, max_length=500)
+    # run 91: وقت الإغلاق الحقيقي. مسح الخروج (إعادة الصفقة مفتوحة) يمسح `closed_at`، وإعادة كتابته كانت تختم
+    # «الآن» ⇒ صفقة أغسطس تُعدّ من هذا الأسبوع بالتقرير وسلسلة الخسائر، بلا حقل يعيد تاريخها. null صريح =
+    # «غير معروف» (كإنشاء صفقة بأثر رجعي). يشترط صفقة مغلقة بعد التعديل وألّا يسبق `opened_at` (وإلا 422).
+    closed_at: str | None = Field(default=None, max_length=40)
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
+
+    @field_validator("closed_at")
+    @classmethod
+    def _closed_as_journal_time(cls, v: str | None) -> str | None:
+        return _journal_time(v)
 
 
 def _new_id(prefix: str) -> str:
@@ -1799,6 +1812,8 @@ def trades_update(
     # بصفوف ما قبل الإصلاح لا يُمحى أبداً ويبقى حجماً لم يكتبه المتداول.
     try:
         row = db.update_trade(trade_id, fields, uid, owner_key=key, expect=expect)
+    except db.TradeCloseTimeInvalid as e:
+        raise HTTPException(422, {"error": "invalid_closed_at", "reason": str(e)})
     except db.TradeUpdateConflict:
         # لا نكتب فوق خروج لم نقرأه؛ العميل يعيد التحميل ويرى الصفّ كما هو
         raise HTTPException(409, {"error": "trade_changed_concurrently"})
