@@ -34,3 +34,13 @@ def _no_weekend_close_filter(monkeypatch):
     import twelve_data
 
     monkeypatch.setattr(twelve_data, "WEEKEND_CLOSE_FILTER", False)
+
+
+@pytest.fixture(autouse=True)
+def _no_candle_disk(monkeypatch):
+    """نسخة القرص من كاش الشموع معطّلة بالاختبارات — كانت ستحمّل شموع تشغيل سابق (أو الخادم المحلي) لاختبار
+    يتوقّع كاشاً فارغاً. `tests/test_candle_disk_cache.py` يفعّلها بمسار مؤقّت."""
+    import twelve_data
+
+    monkeypatch.setattr(twelve_data, "CANDLE_DISK", None)
+    monkeypatch.setattr(twelve_data, "_disk_checked", set())

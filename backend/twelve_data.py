@@ -1,13 +1,18 @@
 """Twelve Data market feed for MATRIX charts (Grow / shared with robot)."""
 from __future__ import annotations
 
+import json
 import math
 import os
 import re
+import sqlite3
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import httpx
+
+from core import db_conn
 
 API_BASE = "https://api.twelvedata.com"
 
@@ -224,6 +229,77 @@ STALE_MAX_SEC = int(os.getenv("TWELVE_DATA_STALE_MAX", "900"))
 
 _cache: dict[str, tuple[float, list[dict]]] = {}
 
+# نسخة على القرص من `_cache` (كتابة مع كل تخزين، وقراءة كسولة لكل مفتاح بعد الإقلاع). كان الكاش بالذاكرة
+# وحدها ⇒ كل إعادة تشغيل للخادم تمحوه، فتطلب قائمة المتابعة 16 شمعة D دفعة واحدة من الحدّ المشترك مع الروبوت
+# (8/دقيقة بالخطة المجانية) ⇒ نصف الصفوف 429 بلا كاش ⇒ «—»/«غير متاح» بجانب إغلاق الجمعة الحقيقي. يوم السبت
+# كانت كل إعادة نشر تفرغ القائمة. قواعد الخدمة لم تتغيّر: المدخل المحمَّل يُخدم بقواعد الذاكرة نفسها (TTL،
+# `_closed_until`، 15 دقيقة عند 429) و`as_of` = وقت جلبه الحقيقي — لا يُقدَّم قديمٌ أقدم مما كانت الذاكرة تقدّمه.
+# `None` = معطّل (الاختبارات، `tests/conftest.py`). بجانب `matrix.db` ⇒ على القرص الدائم نفسه بالنشر.
+_ENV_CANDLE_DISK = (os.getenv("MATRIX_CANDLE_CACHE_PATH") or "").strip()
+CANDLE_DISK: Path | None = (
+    Path(_ENV_CANDLE_DISK).expanduser() if _ENV_CANDLE_DISK else db_conn.DB_PATH.with_name("candle_cache.db")
+)
+_disk_checked: set[str] = set()
+
+
+def _disk_conn() -> sqlite3.Connection | None:
+    if CANDLE_DISK is None:
+        return None
+    CANDLE_DISK.parent.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(str(CANDLE_DISK), timeout=5)
+    con.execute("CREATE TABLE IF NOT EXISTS candles (key TEXT PRIMARY KEY, fetched_at REAL NOT NULL, body TEXT NOT NULL)")
+    return con
+
+
+def _disk_write(key: str, entry: tuple[float, list[dict]] | None) -> None:
+    """عطل القرص لا يُسقط الجلب: الذاكرة تبقى المصدر، والقرص احتياط لما بعد الإقلاع فقط."""
+    try:
+        con = _disk_conn()
+        if con is None:
+            return
+        with con:
+            if entry is None:
+                con.execute("DELETE FROM candles WHERE key = ?", (key,))
+            else:
+                con.execute(
+                    "INSERT OR REPLACE INTO candles (key, fetched_at, body) VALUES (?, ?, ?)",
+                    (key, entry[0], json.dumps(entry[1], separators=(",", ":"))),
+                )
+        con.close()
+    except (sqlite3.Error, OSError, TypeError, ValueError):
+        pass
+
+
+def _disk_read(key: str) -> tuple[float, list[dict]] | None:
+    try:
+        con = _disk_conn()
+        if con is None:
+            return None
+        row = con.execute("SELECT fetched_at, body FROM candles WHERE key = ?", (key,)).fetchone()
+        con.close()
+        if not row:
+            return None
+        at, candles = float(row[0]), json.loads(row[1])
+    except (sqlite3.Error, OSError, TypeError, ValueError):
+        return None
+    # صفّ تالف أو وقت جلب بالمستقبل (ساعة خاطئة) كان سيُخدم «طازجاً» بلا نهاية — يُهمَل ويُجلب من المزوّد
+    if not math.isfinite(at) or at > time.time() + 60 or not isinstance(candles, list) or not candles:
+        return None
+    fields = ("time", "open", "high", "low", "close")
+    if not all(isinstance(c, dict) and all(isinstance(c.get(f), (int, float)) for f in fields) for c in candles):
+        return None
+    return at, candles
+
+
+def _cached(key: str) -> tuple[float, list[dict]] | None:
+    """مدخل الكاش بالذاكرة، أو من القرص أوّل مرة يُسأل عنه بعد الإقلاع."""
+    if key not in _cache and key not in _disk_checked:
+        _disk_checked.add(key)
+        hit = _disk_read(key)
+        if hit and key not in _cache:
+            _cache[key] = hit
+    return _cache.get(key)
+
 # طول السلسلة الموحَّد للشارت (build_series) والماسح وتنبيهات المؤشر بالـworker. مفتاح الكاش يشمل الطول،
 # فكان الماسح (80) والـworker (80) والشارت/فحص التنبيهات من التطبيق (180) يجلبون نفس (رمز، فريم) كلٌّ
 # بطلب منفصل — والمزوّد يحسب طلباً لكل رمز مهما كان الطول. طول واحد = طلب واحد يخدم الجميع ضمن الـTTL،
@@ -380,7 +456,7 @@ def _bucket_hit(cache_key: str) -> tuple[float, list[dict]] | None:
     sym, tf, size = cache_key.rsplit("|", 2)
     best = None
     for b in _SIZE_BUCKETS:
-        hit = _cache.get(f"{sym}|{tf}|{b}") if b >= int(size) else None
+        hit = _cached(f"{sym}|{tf}|{b}") if b >= int(size) else None
         if hit and (best is None or hit[0] > best[0]):
             best = hit
     return best
@@ -390,19 +466,22 @@ def _store(cache_key: str, now: float, candles: list[dict]) -> None:
     sym, tf, size = cache_key.rsplit("|", 2)
     for b in _SIZE_BUCKETS:
         key = f"{sym}|{tf}|{b}"
-        old = _cache.get(key)
+        old = _cached(key)
         if b <= int(size) or not old or not candles:
             if b == int(size) or old:
                 _cache[key] = (now, candles)
+                _disk_write(key, _cache[key])
             continue
         first = candles[0]["time"]
         # بلا تداخل (المدخل الأكبر جُلب قبل أن تبدأ الشموع الجديدة: D/180 قبل أسابيع ثم D/50 الآن) كان الدمج
         # يلصق القديم بالجديد بفجوة أسابيع وبوقت جلب «الآن» ⇒ الشارت يرسم ثغرة ويُحسب RSI/MACD عبرها. يُحذف.
         if old[1][-1]["time"] < first:
             del _cache[key]
+            _disk_write(key, None)
             continue
         merged = [c for c in old[1] if c["time"] < first] + candles
         _cache[key] = (now, merged[-max(len(old[1]), len(candles)):])
+        _disk_write(key, _cache[key])
 
 
 # أحجام الطلب من المزوّد. كان الكاش بمفتاح `outputsize` كما طُلب (50–5000) بلا إخلاء ⇒ `?outputsize=51`،
