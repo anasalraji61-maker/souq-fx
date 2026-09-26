@@ -382,7 +382,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     maxHeight: '88%',
   },
-  modalSchool: { color: colors.accent, fontWeight: '500', fontSize: 18 },
+  // §1: عنوان المدرسة كان بالتأكيد بجانب رابط الإغلاق — عنوان لا إجراء ⇒ نصّ أساسي.
+  modalSchool: { color: colors.text, fontWeight: '500', fontSize: 18 },
   modalDesc: {
     color: colors.textMuted,
     marginTop: spacing.sm,
