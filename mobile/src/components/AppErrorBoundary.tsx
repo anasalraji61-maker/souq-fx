@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { buttons, colors, radii } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
+import { reportError } from '../crashReporting';
 
 type Props = { children: React.ReactNode };
 type InnerProps = Props & { title: string; body: string; repeatBody: string; retry: string; detailLabel: string };
@@ -34,6 +35,7 @@ class ErrorBoundaryInner extends React.Component<InnerProps, State> {
   componentDidCatch(error: Error) {
     // eslint-disable-next-line no-console
     console.warn('[MATRIX] render error caught by AppErrorBoundary:', error?.message);
+    reportError(error);
     // خطأ حتميّ (يقع عند كل تركيب) كان يعيد الشاشة نفسها بعد كل «إعادة المحاولة» بلا أي تغيير —
     // يضغط المتداول مرّةً بعد مرّة ولا يعرف أنّ المخرج إغلاق التطبيق كلياً. الآن يتبدّل النصّ.
     this.setState({ repeated: Date.now() - this.retriedAt < REPEAT_WINDOW_MS });
