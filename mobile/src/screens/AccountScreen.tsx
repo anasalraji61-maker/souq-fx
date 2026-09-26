@@ -47,6 +47,12 @@ export function AccountScreen() {
   const [notifState, setNotifState] = useState<NotificationPermissionState>('undetermined');
   const [notifBusy, setNotifBusy] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  /** «تغيير كلمة المرور» (backend-r58): مطوي حتى يُطلب — العضو الذي وضعه راعيه يعرف الراعي كلمته. */
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState('');
+  const [pwNew, setPwNew] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [net, setNet] = useState<{
     referral_code: string;
     role: string;
@@ -148,6 +154,35 @@ export function AccountScreen() {
       setErr(mode === 'login' ? loginErrorText(t, e) : registerErrorText(t, e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const submitPasswordChange = async () => {
+    setPwMsg(null);
+    // حدّ الخادم نفسه (`db.change_password` <4 ⇒ 400) — لا طلب يُعرف رفضه مسبقاً.
+    if (pwNew.length < 4) {
+      setPwMsg({ ok: false, text: t.regErrPasswordLength });
+      return;
+    }
+    setPwBusy(true);
+    try {
+      await api.changePassword(pwCurrent, pwNew);
+      setPwCurrent('');
+      setPwNew('');
+      setPwMsg({ ok: true, text: t.accPasswordChanged });
+    } catch (e) {
+      const { status, detail } = (e ?? {}) as { status?: unknown; detail?: unknown };
+      setPwMsg({
+        ok: false,
+        text:
+          status === 400 && detail === 'invalid current password'
+            ? t.accPasswordWrongCurrent
+            : (status === 400 && detail === 'password too short') || status === 422
+              ? t.regErrPasswordLength
+              : t.accPasswordChangeError,
+      });
+    } finally {
+      setPwBusy(false);
     }
   };
 
@@ -303,6 +338,88 @@ export function AccountScreen() {
               </Pressable>
             ) : null}
           </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.accChangePassword}
+            accessibilityState={{ expanded: pwOpen }}
+            style={({ pressed }) => [
+              styles.notifBtn,
+              rtl && styles.tourBtnRtl,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => {
+              setPwOpen((o) => !o);
+              setPwMsg(null);
+            }}
+          >
+            <Text style={styles.notifBtnText}>{t.accChangePassword}</Text>
+          </Pressable>
+          {pwOpen ? (
+            <View style={styles.netBox}>
+              <Text style={[styles.label, { textAlign: align }]}>{t.accCurrentPassword}</Text>
+              <TextInput
+                style={[styles.inputInBox, { textAlign: align }]}
+                value={pwCurrent}
+                onChangeText={setPwCurrent}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                underlineColorAndroid="transparent"
+                keyboardAppearance="dark"
+                textContentType="password"
+                autoComplete="current-password"
+                selectionColor={colors.accent}
+                accessibilityLabel={t.accCurrentPassword}
+              />
+              <Text style={[styles.label, { textAlign: align }]}>{t.accNewPassword}</Text>
+              <TextInput
+                style={[styles.inputInBox, { textAlign: align }]}
+                value={pwNew}
+                onChangeText={setPwNew}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+                underlineColorAndroid="transparent"
+                keyboardAppearance="dark"
+                textContentType="newPassword"
+                autoComplete="new-password"
+                selectionColor={colors.accent}
+                accessibilityLabel={t.accNewPassword}
+                onSubmitEditing={() => void submitPasswordChange()}
+              />
+              {pwMsg ? (
+                <Text
+                  style={[pwMsg.ok ? styles.netLine : styles.err, { textAlign: align }]}
+                  accessibilityLiveRegion="polite"
+                >
+                  {pwMsg.text}
+                </Text>
+              ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={pwBusy ? t.a11yBusy : t.accChangePassword}
+                style={({ pressed }) => [
+                  styles.btn,
+                  (pwBusy || !pwCurrent) && styles.btnDisabled,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => void submitPasswordChange()}
+                disabled={pwBusy || !pwCurrent}
+                accessibilityState={{ disabled: pwBusy || !pwCurrent, busy: pwBusy }}
+              >
+                <Text style={styles.btnText}>{pwBusy ? '...' : t.accChangePassword}</Text>
+              </Pressable>
+            </View>
+          ) : null}
 
           <Pressable
             accessibilityRole="button"
@@ -632,6 +749,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
+  btnDisabled: { opacity: 0.4 },
   btnText: { color: colors.onAccent, fontWeight: '500' },
   dangerBtn: {
     borderRadius: radii.sm,
