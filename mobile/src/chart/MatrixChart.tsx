@@ -7031,7 +7031,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ? tr.mcHintDrawWeb
                     : tr.mcHintDraw
                   : Platform.OS === 'web'
-                    ? tr.mcHintNavigateWeb
+                    ? // تبديل الفريم بالكتابة يُذكر فقط حين يستقبله المضيف (`onTimeframeKey`) — لا وعد بما لا يعمل.
+                      tr.mcHintNavigateWeb + (hasTfKey ? tr.mcHintTypeTfWeb : '')
                     : tr.mcHintNavigate}
           </Text>
         )}
