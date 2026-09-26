@@ -87,6 +87,7 @@ type RailButtonProps = {
   mark: string;
   tip: string;
   a11yLabel: string;
+  a11yHint?: string;
   on?: boolean;
   /** زرّ يفتح قائمة (العدسة، مجموعة رسم) ⇒ قارئ الشاشة يسمع «موسَّع/مطويّ». */
   expanded?: boolean;
@@ -96,7 +97,7 @@ type RailButtonProps = {
   railTip: ReturnType<typeof useRailTip>;
 };
 
-function RailButton({ mark, tip, a11yLabel, on, expanded, neutralMarker, onPress, railTip }: RailButtonProps) {
+function RailButton({ mark, tip, a11yLabel, a11yHint, on, expanded, neutralMarker, onPress, railTip }: RailButtonProps) {
   const ref = useRef<View>(null);
   return (
     <Pressable
@@ -108,6 +109,7 @@ function RailButton({ mark, tip, a11yLabel, on, expanded, neutralMarker, onPress
       }
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
+      accessibilityHint={a11yHint}
       style={({ pressed }) => [
         styles.railBtn,
         on && styles.railBtnOn,
@@ -190,6 +192,12 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
   const lenses = localizedLenses(t);
   const currentLens = lenses.find((l) => l.id === activeLens) ?? lenses[0];
   const toolLabel = new Map(localizedDrawTools(t).map((x) => [x.id, x.label]));
+  const groupName: Record<string, string> = {
+    lines: t.railDrawGroupLines,
+    shapes: t.railDrawGroupShapes,
+    annotate: t.railDrawGroupAnnotate,
+    position: t.railDrawGroupPosition,
+  };
   // قائمة واحدة مفتوحة على الأكثر: «lens» أو معرّف مجموعة رسم؛ `top` بإحداثيات الشريط.
   const [menu, setMenu] = useState<{ id: string; top: number } | null>(null);
   const btnRefs = useRef<Record<string, View | null>>({});
@@ -272,13 +280,16 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
           // الزرّ يحمل رمز الأداة الفعّالة من مجموعته إن وُجدت؛ الاختيار تعبئة + علامة كبقية الشريط (§4).
           const activeInGroup = g.tools.includes(activeTool) ? activeTool : null;
           const shown = activeInGroup ?? g.tools[0];
-          const groupLabel = labels.join(' / ');
+          // اسم قصير للمجموعة (launch171a) بدل وصل أسماء أدواتها كلها؛ الأداة الفعّالة تُذكر بعده.
+          const groupLabel = groupName[g.id] ?? labels.join(' / ');
+          const activeLabel = activeInGroup ? (toolLabel.get(activeInGroup) ?? activeInGroup) : null;
           return (
             <View key={g.id} ref={(r) => { btnRefs.current[g.id] = r; }}>
               <RailButton
                 mark={DRAW_MARK[shown]}
-                tip={activeInGroup ? (toolLabel.get(activeInGroup) ?? groupLabel) : groupLabel}
-                a11yLabel={`${t.drawToolA11yPrefix}${groupLabel}`}
+                tip={activeLabel ?? groupLabel}
+                a11yLabel={`${t.drawToolA11yPrefix}${groupLabel}${activeLabel ? ` — ${activeLabel}` : ''}`}
+                a11yHint={t.railDrawGroupMenuHint}
                 on={activeInGroup !== null}
                 expanded={menu?.id === g.id}
                 onPress={() => toggleMenu(g.id)}
