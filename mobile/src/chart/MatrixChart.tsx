@@ -1657,11 +1657,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // كان يُحفظ تحت EURUSD فيظهر لاحقاً على الشارت الحقيقي عند مستوى لم يتداوله السوق.
   const drawingsPersisted = persistDrawings && interactive && !isSyntheticProvenance(series.data_source);
   const loadedDrawingsKey = useRef<string | null>(null);
-  const drawings =
-    !drawingsPersisted ||
-    loadedDrawingsKey.current === drawingsKey(series.symbol, series.timeframe)
-      ? loadedDrawings
-      : NO_DRAWINGS;
+  const drawingsLoading = () =>
+    drawingsPersisted && loadedDrawingsKey.current !== drawingsKey(series.symbol, series.timeframe);
+  const drawings = drawingsLoading() ? NO_DRAWINGS : loadedDrawings;
   // الحالة الخام (ولو محجوبة): ما رُسم **أثناء** انتظار التحميل يعيش هنا فقط — يُدمج عند وصول القائمة بدل أن تستبدله.
   const loadedRawRef = useRef(loadedDrawings);
   loadedRawRef.current = loadedDrawings;
@@ -7802,10 +7800,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   cancelText: tr.cancel,
                   confirmText: tr.mcClearWord,
                   onConfirm: () => {
-                    pushDrawHistory();
-                    setDrawings([]);
                     setPending(null);
                     setSelectedId(null);
+                    // قبل وصول رسومات الرمز (القائمة محجوبة، والزرّ مفعّل بالنقطة المعلّقة وحدها): تُلغى النقطة فقط —
+                    // كان يكتب «[]» فوق رسوم محفوظة لم تُعرض بعد، ثم تعود على الشاشة بوصول القراءة وقد مُسحت من التخزين.
+                    // يُقرأ عند التأكيد لا عند الضغط: إن وصلت وظهرت والحوار مفتوح فالمسح يشملها كما يقول.
+                    if (drawingsLoading()) {
+                      // وما رُسم أثناء الانتظار (يُدمج عند الوصول) يُسقط معها — لا يمسّ المحفوظ.
+                      setDrawings(NO_DRAWINGS);
+                      return;
+                    }
+                    pushDrawHistory();
+                    setDrawings([]);
                     // سلسلة تجريبية/شارت بلا حفظ: المسح محلّي فقط — وإلا مسح «تدريب» على شموع وهمية قائمة الرمز الحقيقية المحفوظة.
                     if (drawingsPersisted) void clearDrawings(series.symbol, drawingsOwner);
                   },
@@ -14377,10 +14383,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   cancelText: tr.cancel,
                   confirmText: tr.mcClearWord,
                   onConfirm: () => {
-                    pushDrawHistory();
-                    setDrawings([]);
                     setPending(null);
                     setSelectedId(null);
+                    // قبل وصول رسومات الرمز (القائمة محجوبة، والزرّ مفعّل بالنقطة المعلّقة وحدها): تُلغى النقطة فقط —
+                    // كان يكتب «[]» فوق رسوم محفوظة لم تُعرض بعد، ثم تعود على الشاشة بوصول القراءة وقد مُسحت من التخزين.
+                    // يُقرأ عند التأكيد لا عند الضغط: إن وصلت وظهرت والحوار مفتوح فالمسح يشملها كما يقول.
+                    if (drawingsLoading()) {
+                      // وما رُسم أثناء الانتظار (يُدمج عند الوصول) يُسقط معها — لا يمسّ المحفوظ.
+                      setDrawings(NO_DRAWINGS);
+                      return;
+                    }
+                    pushDrawHistory();
+                    setDrawings([]);
                     // سلسلة تجريبية/شارت بلا حفظ: المسح محلّي فقط — وإلا مسح «تدريب» على شموع وهمية قائمة الرمز الحقيقية المحفوظة.
                     if (drawingsPersisted) void clearDrawings(series.symbol, drawingsOwner);
                   },
