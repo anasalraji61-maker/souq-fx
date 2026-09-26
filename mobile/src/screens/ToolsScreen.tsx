@@ -289,13 +289,16 @@ export function ToolsScreen() {
     };
   }, []);
 
-  // الرمز المختار يبقى بين الجلسات: فتح «الأدوات» كان يعود لـEURUSD مهما كان زوج المتداول
+  // الرمز المختار يبقى بين الجلسات: فتح «الأدوات» كان يعود لـEURUSD مهما كان زوج المتداول.
+  // `symbolTouchedRef` كحارس التبويب أدناه: شريحة نُقرت قبل عودة القراءة (بدء بارد على أندرويد) كان المحفوظ
+  // (XAUUSD) يدهسها ثم يُحفظ فوقها ⇒ نقر GBPUSD وأرقام التبويبات لـXAUUSD
+  const symbolTouchedRef = useRef(false);
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const raw = await AsyncStorage.getItem(TOOLS_SYMBOL_KEY);
-        if (alive && raw && /^[A-Z0-9._-]{3,15}$/.test(raw)) setSignalSym(raw);
+        if (alive && !symbolTouchedRef.current && raw && /^[A-Z0-9._-]{3,15}$/.test(raw)) setSignalSym(raw);
       } catch {
         /* ignore */
       } finally {
@@ -630,7 +633,10 @@ export function ToolsScreen() {
                     transform: [{ scale: buttons.pressedScale }],
                   },
                 ]}
-                onPress={() => setSignalSym(s)}
+                onPress={() => {
+                  symbolTouchedRef.current = true;
+                  setSignalSym(s);
+                }}
                 accessibilityLabel={`${t.a11ySignalSymbolPrefix}: ${s}${
                   onChart ? ` — ${t.toolsSymOnChart}` : ''
                 }`}
