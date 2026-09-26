@@ -86,7 +86,7 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     تقاطع الأسبوع الماضي كأنه للتوّ، وإغلاق الجمعة يُرسَل `price_as_of` «الآن» (حتى 45 ساعة خطأ). ونفسه
     لشمعة D/4H الجمعة بعد 21:00. العملات الرقمية تتداول بالعطلة فلا قصّ لها."""
     end = float(open_ts) + step
-    sym = (matrix_symbol or "").upper()
+    sym = canonical_symbol(matrix_symbol)
     # زوج ISO من البحث (USDMXN، EURSEK، XAUEUR) يُطلب زوجَ فوركس (`td_symbol`) ويُغلق الجمعة كالرئيسية:
     # كان «مجهول الجلسة» فشمعة W تبقى «جارية» طوال العطلة ⇒ تنبيه تقاطع يُسلَّح السبت يُطلق على تقاطع
     # الأسبوع الماضي، و`price_as_of` لإغلاق الجمعة يُرسَل حتى ~51 ساعة لاحقاً.
@@ -178,8 +178,25 @@ def _is_iso_pair(sym: str) -> bool:
     return len(sym) == 6 and sym[:3] in _ISO_CURRENCIES and sym[3:] in _ISO_CURRENCIES and sym[:3] != sym[3:]
 
 
+def canonical_symbol(symbol: str) -> str:
+    """اسم MATRIX للرمز: مقصوص ومكبَّر، و«EUR/USD» ⇒ «EURUSD»، واسم المزوّد «XBR/USD» ⇒ «UKOIL».
+
+    كان «EUR/USD» يُمرَّر كما هو فيجلب شموع اليورو الحقيقية، لكن `bar_end` لا يعرفه (لا بالخريطة ولا
+    زوج ISO) فلا يقصّ عند إغلاق الجمعة: شمعة W/D «جارية» طوال العطلة ⇒ تنبيه تقاطع يُسلَّح السبت يُطلق
+    على تقاطع الأسبوع الماضي، و`price_as_of` بالماسح والتوقّع = وقت الجلب لا إغلاق الجمعة. رموز أخرى
+    بشرطة (أسهم «BRK/A») تبقى كما هي."""
+    sym = (symbol or "").strip().upper()
+    if sym in _TD_TO_MATRIX:
+        return _TD_TO_MATRIX[sym]
+    if sym.count("/") == 1:
+        joined = sym.replace("/", "")
+        if joined in SYMBOL_MAP or _is_iso_pair(joined):
+            return joined
+    return sym
+
+
 def td_symbol(matrix_symbol: str) -> str:
-    sym = matrix_symbol.upper()
+    sym = canonical_symbol(matrix_symbol)
     if sym in SYMBOL_MAP:
         return SYMBOL_MAP[sym]
     # زوج عملتين خارج الخريطة ⇒ صيغة المزوّد القانونية (كما يعيدها بحثه نفسه)

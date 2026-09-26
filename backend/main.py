@@ -254,7 +254,7 @@ def _alertable_symbol(v: str) -> str:
     """DXY لا يقدّمه المزوّد: تنبيه عليه يُحفظ «يراقب» ولا يُطلق أبداً (الـworker يسجّل «لا سعر» كل دقيقة).
     ويُقصّ ويُكبَّر أولاً: «EURUSD » كان يُحفظ بمسافته فلا يعرفه المزوّد ويبقى «يراقب» إلى الأبد، و« dxy»
     كان يتخطّى فحص DXY."""
-    v = v.strip().upper()
+    v = market.canonical_symbol(v)  # «EUR/USD» ⇒ «EURUSD»: وإلا لا قصّ جمعة ولا سعر WS المخزّن باسم MATRIX
     if len(v) < 3:
         raise ValueError("symbol too short")
     if market.unavailable_reason(v):
@@ -404,8 +404,10 @@ class ScreenerRun(BaseModel):
         # ومحصورةً بفلتري التقاطع وحدهما: فلاتر RSI/الزخم لا تستعمل الفترتين أصلاً.
         if self.fast == self.slow and {"ma_cross_up", "ma_cross_down"} & set(self.filters):
             raise ValueError("fast and slow periods must differ")
+        # « EURUSD» كان يُرسَل للمزوّد بمسافته فيفشل، و«EUR/USD» بلا قصّ الجمعة (`canonical_symbol`)
+        self.symbols = [market.canonical_symbol(s) for s in self.symbols] if self.symbols else self.symbols
         for sym in self.symbols or []:
-            if not (3 <= len(sym.strip()) <= 12):
+            if not (3 <= len(sym) <= 12):
                 raise ValueError("symbol must be 3-12 characters")
         return self
 
@@ -481,6 +483,9 @@ class IndicatorForecastBody(BaseModel):
     @model_validator(mode="after")
     def _bounded(self) -> "IndicatorForecastBody":
         _check_timeframe(self.timeframe)
+        self.symbol = market.canonical_symbol(self.symbol)
+        if len(self.symbol) < 3:
+            raise ValueError("symbol too short")
         unknown = sorted({i for i in (self.indicators or []) if i not in signal_hub.FORECAST_INDICATOR_IDS})
         if unknown:
             raise ValueError(f"unknown indicator: {', '.join(unknown)}")
