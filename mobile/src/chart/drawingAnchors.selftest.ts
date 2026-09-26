@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/drawingAnchors.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { anchorDrawings, drawSlotAt, indexAtTime, stampAtIndex, timeAtIndex } from './drawingAnchors';
+import { anchorDrawings, anchorPoint, drawSlotAt, indexAtTime, stampAtIndex, timeAtIndex } from './drawingAnchors';
 import type { Drawing } from './types';
 
 const H = 3600;
@@ -300,6 +300,21 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
     return d.a.price + ((d.b!.price - d.a.price) * (bs.length - 1 - d.a.index)) / (d.b!.index - d.a.index);
   };
   assert.ok(Math.abs(at(m15, M15) - at(h1, H)) < 1e-9, `${at(m15, M15)} ≠ ${at(h1, H)}`);
+}
+
+// Renko: نقطة بمنطقة المستقبل بعد شمعة حيّة صنعت ثلاث لبنات تبقى بخانتها (كانت تقفز لأولى لبنات الشمعة).
+{
+  const T0 = 1_790_000_000;
+  const bricks = [0, 1, 2, 3, 3, 3].map((h, i) => ({ time: T0 + 60 * i, srcTime: T0 + h * 3600 }));
+  const endTime = T0 + 3 * 3600;
+  for (const idx of [6, 8]) {
+    const s = stampAtIndex(bricks, idx, 3600, endTime, true)!;
+    const p = anchorPoint({ index: idx, price: 1.1, ...s } as never, bricks, 3600, true, endTime, true);
+    assert.equal(p.index, idx);
+  }
+  // لبنة داخل الشمعة (sub) لا تتأثّر.
+  const s4 = stampAtIndex(bricks, 4, 3600, endTime, true)!;
+  assert.equal(anchorPoint({ index: -1, price: 1.1, ...s4 } as never, bricks, 3600, true, endTime, true).index, 4);
 }
 
 console.log('drawingAnchors.selftest: PASS');

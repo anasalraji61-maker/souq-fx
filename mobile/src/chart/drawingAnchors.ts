@@ -261,7 +261,16 @@ export function anchorPoint(
   const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
   const aheadStep =
     p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
-  const inBar = base == null ? 0 : synthetic ? brickOffset(bars, base, p) : withinBar(bars, base, p.time, stepSec);
+  // نقطة بمنطقة المستقبل مختومة بزمن **آخر** لبنة (`stampAtIndex`) لا بلبنة بعينها: `brickOffset` كان يعيدها لأولى لبنات
+  // الشمعة الحيّة ⇒ على Renko/Kagi/P&F/Range نقطة رُسمت بعد الحيّة بخانة تقفز للخلف فوق اللبنات بأوّل تيك.
+  const inBar =
+    base == null
+      ? 0
+      : synthetic
+        ? ahead > 0
+          ? 0
+          : brickOffset(bars, base, p)
+        : withinBar(bars, base, p.time, stepSec);
   const index = base == null ? null : base + inBar + (ahead * aheadStep) / stepSec;
   return index == null || index === p.index ? p : { ...p, index };
 }
