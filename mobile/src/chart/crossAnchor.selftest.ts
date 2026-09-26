@@ -129,6 +129,11 @@ const bar = (time: number) => ({ time });
   assert.equal(stepCrossBar(all, 2, 4, 2, 1), null); // الزمن خارج النافذة
   assert.equal(stepCrossBar([0, 1, 2].map(bar), 0, 80, 0, -1), null); // سلسلة أقصر من النافذة
   assert.deepEqual(stepCrossBar([0, 1, 2].map(bar), 0, 80, 0, 1), { time: 1, offset: 0 });
+  // السلسلة قصرت والإزاحة باقية (Line Break 3 ⇒ 5 بعد السحب للخلف): الشارت يرسم بالإزاحة المسقوفة ⇒ الأسهم كذلك
+  const short = Array.from({ length: 12 }, (_, k) => bar(k)); // سقف الشارت 12 − 10 = 2 ⇒ النافذة 6..9 بنافذة 4
+  assert.equal(stepCrossBar(short, 190, 4, 7, 1), null); // بلا سقف: لا شيء يُوجد (الخلل)
+  assert.deepEqual(stepCrossBar(short, 190, 4, 7, 1, 2), { time: 8, offset: 2 });
+  assert.deepEqual(stepCrossBar(short, 190, 4, 6, -1, 2), { time: 5, offset: 3 });
 }
 
 // أداة بلا منازل: من مرجع وسوم الشارت (سعرها الجاري) لا من الرقم الملموس — ما يُرسل = ما يُقرأ.

@@ -126,14 +126,20 @@ export function indexAtOrBeforeTime(
  *
  * `all` السلسلة كاملة (بنوع الشموع المرسوم)، والنافذة `[all.length − offset − windowCount,
  * all.length − offset)`. `null` ⇒ لا حركة: الزمن ليس بالنافذة، أو لا شمعة بعد طرف السلسلة.
+ *
+ * `maxOffset` سقف الإزاحة كما يرسمها الشارت (`source`: `plot.length − 10`). السلسلة قد تقصر والإزاحة باقية (عدد
+ * خطوط Line Break 3 ⇒ 5، أو حجم لبنة Renko أكبر، بعد السحب للخلف) فالشارت يرسم بالإزاحة المسقوفة، وكانت الأسهم
+ * تبحث بالإزاحة الخام (`end` = 0) فلا تجد الشمعة ولا يتحرّك التقاطع المثبَّت.
  */
 export function stepCrossBar(
   all: readonly TimedBar[],
   offset: number,
   windowCount: number,
   time: number,
-  step: 1 | -1
+  step: 1 | -1,
+  maxOffset: number = Infinity
 ): { time: number; offset: number } | null {
+  offset = Math.max(0, Math.min(offset, maxOffset));
   const end = Math.max(0, all.length - offset);
   const start = Math.max(0, end - windowCount);
   let i = -1;

@@ -5874,7 +5874,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           offsetRef.current,
           windowCountRef.current,
           time,
-          step
+          step,
+          // سقف `source` نفسه: النافذة المرسومة لا الإزاحة الخام بعد أن قصرت السلسلة.
+          Math.max(0, sourceRef.current.all.length - 10)
         );
         if (!moved) return;
         if (moved.offset !== offsetRef.current) {
