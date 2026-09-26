@@ -1138,6 +1138,7 @@ function PaneValueHead({
   at = null,
   tone = 'sign',
   center = 0,
+  invert = false,
   signal,
   compact = false,
   hint,
@@ -1169,6 +1170,11 @@ function PaneValueHead({
   tone?: 'sign' | 'trend' | 'cross' | 'none';
   /** مركز `'sign'`: الجانب نسبةً إليه لا إلى الصفر (RVI (Vol) حول 50). */
   center?: number;
+  /**
+   * فوق المركز = هبوطي (أحمر): Fractal Chaos Osc ‎+1‎ قمّة كسورية مؤكَّدة وعمودها أحمر — كان الرأس
+   * يطبع «1» أخضر فوق عمود أحمر.
+   */
+  invert?: boolean;
   /** خطّ الإشارة بلونه — راجع `PaneSignalValue`. */
   signal?: PaneSignalSpec;
   /** لوحة لا تتّسع لسطر ثالث: الإشارة بجانب القيمة إن اتّسعتا، وإلا القيمة وحدها. */
@@ -1193,9 +1199,13 @@ function PaneValueHead({
           ? colors.bull
           : colors.bear
       : (shown != null && shown > center) || trend === 'up'
-        ? colors.bull
-        : (shown != null && shown < center) || trend === 'down'
+        ? invert
           ? colors.bear
+          : colors.bull
+        : (shown != null && shown < center) || trend === 'down'
+          ? invert
+            ? colors.bull
+            : colors.bear
           : null;
   const inline = compact && signal && txt && stxt && paneInlineFits(txt, stxt);
   return (
@@ -12325,7 +12335,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {fractalChaosOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Fractal Chaos Osc" values={fractalChaosOsc} at={crossIndex} />
+          <PaneValueHead name="Fractal Chaos Osc" values={fractalChaosOsc} at={crossIndex} invert />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
