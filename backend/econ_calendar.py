@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -273,37 +274,55 @@ def _wanted(raw: str | None) -> set[str]:
     return vals
 
 
+_REFRESH_LOCK = threading.Lock()
+
+
+def _needs_refresh(now: float) -> bool:
+    fresh = bool(_CACHE) and now - _CACHE_TS < TTL
+    # فشلٌ يُعاد فحصه بعد دقيقتين لا نصف ساعة، ولا بكل طلب (كي لا يُقصف المصدر وهو معطّل)
+    backing_off = _FAIL_TS > 0 and now - _FAIL_TS < FAILURE_TTL
+    return not fresh and not backing_off
+
+
+def _refresh(now: float) -> None:
+    global _CACHE, _CACHE_TS, _FAIL_TS
+    merged: list[dict] = []
+    try:
+        with httpx.Client(timeout=14.0, follow_redirects=True) as client:
+            # كلّ مصدر بمحاولته: كانا بـ`try` واحد ⇒ مهلة/انقطاع JSON يقفز إلى `except` ولا يُجرَّب XML
+            # الاحتياطي أصلاً (كان يُجرَّب فقط لردّ غير 200 أو غير قابل للتحليل)
+            for url, parse in ((FF_JSON_URL, _parse_ff_json), (FF_URL, _parse_ff)):
+                try:
+                    r = client.get(url, headers={"User-Agent": "MATRIX/1.0"})
+                    if r.status_code == 200 and r.text.strip():
+                        merged = parse(r.text)
+                except Exception:
+                    merged = []
+                if merged:
+                    break
+    except Exception:
+        merged = []
+    if merged:
+        _CACHE, _CACHE_TS, _FAIL_TS = merged, now, 0.0
+    else:
+        # لا أحداث مخترَعة عند التعذّر، ولا مسح لأسبوع حقيقي محفوظ (يُخدَم حتى `STALE_MAX`)
+        _FAIL_TS = now
+
+
 def fetch_calendar(
     currency: str | None = None,
     impact: str | None = None,
 ) -> list[dict]:
-    global _CACHE, _CACHE_TS, _FAIL_TS
+    global _CACHE
     now = time.time()
-    fresh = bool(_CACHE) and now - _CACHE_TS < TTL
-    # فشلٌ يُعاد فحصه بعد دقيقتين لا نصف ساعة، ولا بكل طلب (كي لا يُقصف المصدر وهو معطّل)
-    backing_off = _FAIL_TS > 0 and now - _FAIL_TS < FAILURE_TTL
-    if not fresh and not backing_off:
-        merged: list[dict] = []
-        try:
-            with httpx.Client(timeout=14.0, follow_redirects=True) as client:
-                # كلّ مصدر بمحاولته: كانا بـ`try` واحد ⇒ مهلة/انقطاع JSON يقفز إلى `except` ولا يُجرَّب XML
-                # الاحتياطي أصلاً (كان يُجرَّب فقط لردّ غير 200 أو غير قابل للتحليل)
-                for url, parse in ((FF_JSON_URL, _parse_ff_json), (FF_URL, _parse_ff)):
-                    try:
-                        r = client.get(url, headers={"User-Agent": "MATRIX/1.0"})
-                        if r.status_code == 200 and r.text.strip():
-                            merged = parse(r.text)
-                    except Exception:
-                        merged = []
-                    if merged:
-                        break
-        except Exception:
-            merged = []
-        if merged:
-            _CACHE, _CACHE_TS, _FAIL_TS = merged, now, 0.0
-        else:
-            # لا أحداث مخترَعة عند التعذّر، ولا مسح لأسبوع حقيقي محفوظ (يُخدَم حتى `STALE_MAX`)
-            _FAIL_TS = now
+    if _needs_refresh(now):
+        # الطريق متزامن ⇒ خيوط متوازية: عند انتهاء الكاش كان كل طلب يصل أثناء الجلب (حتى 2×14ث) يجلب
+        # المصدر بنفسه (20 طلباً متزامناً = 20 GET) ⇒ 429 من المصدر المحدود ⇒ «قديم/غير متاح» أبكر.
+        # جلب واحد تحت القفل، والمنتظرون يعيدون الفحص فيخدمهم ما جلبه.
+        with _REFRESH_LOCK:
+            now = time.time()
+            if _needs_refresh(now):
+                _refresh(now)
     if _CACHE and now - _CACHE_TS > STALE_MAX:
         _CACHE = []
 

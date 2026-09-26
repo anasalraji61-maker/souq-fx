@@ -237,3 +237,43 @@ def test_a_timed_out_primary_source_still_tries_the_backup(monkeypatch):
     assert [e["title"] for e in cal.fetch_calendar()] == ["ECB"]
     assert asked == [cal.FF_JSON_URL, cal.FF_URL]
     assert cal.calendar_status()["stale"] is False
+
+
+def test_concurrent_requests_at_expiry_fetch_the_source_once(monkeypatch):
+    """20 طلباً متزامناً عند انتهاء الكاش كانت 20 GET للمصدر المحدود (429) — الآن جلب واحد."""
+    import threading
+
+    _expired_week(monkeypatch, cal.TTL + 60)
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
+    monkeypatch.setattr(cal, "_parse_ff_json", lambda text: [dict(_EVENTS[0])])
+    gets: list[str] = []
+
+    class _Resp:
+        status_code = 200
+        text = "[]"
+
+    class _Slow:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def get(self, url, *a, **k):
+            gets.append(url)
+            time.sleep(0.2)
+            return _Resp()
+
+    monkeypatch.setattr(cal.httpx, "Client", _Slow)
+    out: list[list[str]] = []
+    ts = [threading.Thread(target=lambda: out.append([e["title"] for e in cal.fetch_calendar()]))
+          for _ in range(20)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert gets == [cal.FF_JSON_URL]
+    assert out == [["NFP"]] * 20
