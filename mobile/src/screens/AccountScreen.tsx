@@ -684,9 +684,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
-  langChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  // DESIGN-PRO §1/§5.5: المختار بالتعبئة وحدها (مع `accessibilityState.selected`)، لا حدّ ولا نصّ بالتأكيد.
+  langChipOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   langText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  langTextOn: { color: colors.accent },
+  langTextOn: { color: colors.text },
   tourBtn: { alignSelf: 'flex-start' },
   tourBtnRtl: { alignSelf: 'flex-end' },
   card: {
@@ -698,7 +699,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
-  user: { color: colors.accent, fontWeight: '500', fontSize: 18 },
+  user: { color: colors.text, fontWeight: '500', fontSize: 18 },
   emailLine: { color: colors.textMuted, fontSize: 12, marginTop: -4 },
   tabs: { flexDirection: 'row', gap: spacing.sm },
   tabsRtl: { flexDirection: 'row-reverse' },
@@ -710,9 +711,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
   },
-  tabOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  tabOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
   tabText: { color: colors.textMuted, fontWeight: '500' },
-  tabTextOn: { color: colors.accent },
+  tabTextOn: { color: colors.text },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
@@ -730,7 +731,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    color: colors.accent,
+    // تسمية حقل = نصّ ثانوي؛ التأكيد الوحيد بالبطاقة زرّ الإرسال.
+    color: colors.textMuted,
     fontWeight: '500',
     fontSize: 12,
   },
@@ -794,5 +796,5 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   legTitle: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
-  legNum: { ...numeric, color: colors.accent, fontSize: 22, fontWeight: '500' },
+  legNum: { ...numeric, color: colors.text, fontSize: 22, fontWeight: '500' },
 });
