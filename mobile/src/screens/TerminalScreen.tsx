@@ -563,6 +563,31 @@ export function TerminalScreen() {
     },
     [changeLayout]
   );
+  /**
+   * قرار ١٦ (Esc للإلغاء): القائمة كانت تُغلق باختيار تخطيط أو بالزرّ نفسه فقط — تبقى مفتوحة فوق الشارت بعد نقرة خارجها.
+   * Esc يغلقها وحدها (التقاط، كـ`KeyboardShortcutsSheet`: لا يلغي رسماً جارياً تحتها)، والنقر خارجها يغلقها ويصل لهدفه كما هو.
+   */
+  const layoutMenuRef = useRef<View>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !layoutMenuOpen || typeof document === 'undefined') return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setLayoutMenuOpen(false);
+    };
+    const onDown = (event: PointerEvent) => {
+      const node = layoutMenuRef.current as unknown as { contains?: (n: unknown) => boolean } | null;
+      if (node?.contains?.(event.target)) return;
+      setLayoutMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('pointerdown', onDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('pointerdown', onDown, true);
+    };
+  }, [layoutMenuOpen]);
   const layoutA11y = (count: FrameLayoutCount, shape: FrameLayoutShape) =>
     shape === 'shadow'
       ? t.termShadowFrameA11y
@@ -1206,7 +1231,7 @@ export function TerminalScreen() {
 
         {!phone ? (
           // Anas W2 / DESIGN-PRO §7: كانت تسعة أزرار (مربّع 1–4، مستطيل 2–4، الظل) للوظيفة نفسها ⇒ زرّ واحد يعرض التخطيط الحالي وقائمة منسدلة.
-          <View style={styles.layoutMenuWrap}>
+          <View ref={layoutMenuRef} style={styles.layoutMenuWrap}>
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded: layoutMenuOpen }}
