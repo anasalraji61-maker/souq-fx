@@ -4113,8 +4113,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const price = formatPrice(p.close, compareSeries.symbol, compareSeries.last);
     return p.pct != null ? `${price} ${formatPct(p.pct)}` : price;
   };
+  // يُحجز بآخر شمعة **لها** إغلاق مقارنة: الزوج المقارَن قد لا يملك الشمعة الحيّة بعد (تأخّر التغذية،
+  // الذهب بعد إغلاقه) ⇒ كان يُحجز بعرض «—» فتتّسع الشريحة عند التقاطع وتقصّ شرائح المؤشرات يمينها.
+  let compareSizeIdx = legendLastIdx;
+  if (compareOv) {
+    while (compareSizeIdx > 0 && compareOv.closes[compareSizeIdx] == null) compareSizeIdx--;
+  }
   const compareChipW = compareOv && compareSeries
-    ? legendChipWidth({ label: compareSeries.symbol, swatch: ['x'] }, compareLegendText(legendLastIdx)?.length ?? 0)
+    ? legendChipWidth({ label: compareSeries.symbol, swatch: ['x'] }, compareLegendText(compareSizeIdx)?.length ?? 0)
     : 0;
   const priceLegend = useMemo(
     () => planPriceLegendForWidth(indicators, chartPlotW - 12 - compareChipW, legendValueChars),
