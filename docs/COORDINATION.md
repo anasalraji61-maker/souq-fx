@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 94، على ffb80e4 ثم 6ebb13c) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 95، على 63ba9b0) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -25,9 +25,8 @@
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
 | backend | أنس | **backend-r56** مفتاح Twelve Data (المشترك مع الروبوت) كان يُعاد بنصّ 502 من `/api/symbols/search` (بلا دخول) عند أيّ خطأ من المزوّد (429 مثلاً) — أُصلح `80e268a`. لا يمكن معرفة إن قرأه أحد من قبل ⇒ **دوّروا المفتاح** إن كان الخادم منشوراً للعموم | backend-r56 |
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
-| tools | launch | **tools110a** مفتاح جديد ×4 لغات (المنطق وselftest جاهزان): `journalStatPayoff` بـ`{win}` و`{loss}` و`{need}` و`{actual}` لـ`journalPayoffR` (`tradePlan.ts`: متوسط الرابحة والخاسرة بالـR، ونسبة النجاح اللازمة للتعادل **بهذا العائد المحقَّق** مقابل الفعلية على الصفقات نفسها) — ar «متوسط الرابحة +{win}R · الخاسرة −{loss}R ⇒ التعادل يحتاج {need}% (الفعلية {actual}%)»، en «Avg win +{win}R · avg loss −{loss}R ⇒ break-even needs {need}% wins (actual {actual}%)». tools يوصله بـ`TradeJournalPanel` تحت «أقصى تراجع» حين يصل | tools110 |
-**تحقّق الدورة 94 (بالكود، على ffb80e4):** البناء أخضر 0، selftests 114/114. أُغلق: **tools108a** ← tools `36136cf` (`TradeJournalPanel.tsx:1737-1750` يقرأ `journalStatLossStreak`/`journalStatMaxDrawdownR`).
-**tools109a** ← tools `b49ec7b` (`PositionSizePanel.tsx:1549,1817`، `TradeJournalPanel.tsx:2268`، أنماط `...numeric`). سجلات chart/ui/backend: لا طلب جديد (backend: `change_pct` قد يكون null لشمعة واحدة — الواجهة تحرسه بـ`Number.isFinite`).
-**قائمة قبول DESIGN-PRO (الرابع عشر): 0 من 12 فشل** (diff منذ 988559f: عنوان `QuadChartModal` 13px على السلّم؛ سطرا الدفتر بـ`styles.stat` = `...numeric`).
-**المراجعة (d — أرقام متناقضة):** حدّ خانة السعر 20 بالدفتر مقابل 12 بالتنبيهات والتصويت ⇒ **QA94a → ui**. نصوص الخادم (`main.py` 1000/500/2000) = `maxLength` بالواجهة.
-**بعد السحب (6ebb13c):** أخضر 0؛ ui `3425fe8`/`41f444e` يحيّدان أزرار التصويت وشرائح التقاطع (تعبئة فقط، الاختيار بـ✓ + `selected`) ⇒ 0/12 باقٍ. جديد مُتحقَّق: **tools110a → launch** (`journalPayoffR` بـ`tradePlan.ts`، لا `journalStatPayoff` بـ`locales.ts`).
+| tools | tools | **tools110a** المفتاح `journalStatPayoff` ×4 ← launch `540d7df` (`locales.ts:1998,3225,4500`)؛ `journalPayoffR` جاهز (`tradePlan.ts:1040`) ولا قارئ للمفتاح بأي `.tsx` ⇒ الربط بـ`TradeJournalPanel` تحت «أقصى تراجع» | tools110 |
+**تحقّق الدورة 95 (بالكود، على 63ba9b0):** البناء أخضر 0، selftests 114/114. أُغلق: **QA94a** ← ui `f62561e` (`AlertsPanel.tsx:363` `plainStopText`، `maxLength={PRICE_MAX_LEN}` 20 :900؛ `VotePanel` خانات السعر 20).
+سجلات chart/tools/launch/ui/backend: لا طلب جديد (tools109a بسجلّ tools مُغلق منذ الدورة 94).
+**قائمة قبول DESIGN-PRO (الخامس عشر): 0 من 12 فشل** (diff منذ 6ebb13c، 6 ملفات واجهة: `...numeric` لعدّاد الإعادة/مدى الجلسة/الشرائح، `fontSize` 13/12 صريحة؛ لا وزن ≥700/مسافة/ظلّ جديد).
+**المراجعة (e — ما يُحرج أمام متداول):** تعادل الحاسبة بعد التكاليف (`breakevenRR`، `positionSize.ts:1779`) يخفي السطر حين الصافي ≤0 ويعرض `riskCalcNetNegative` بدلاً منه؛ قصّ ردّ الذكاء الاصطناعي عند آخر سطر كامل. **لا بند.**

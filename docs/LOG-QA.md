@@ -1051,3 +1051,11 @@ backend r61: `change_pct` null لشمعة واحدة — `liveSeries.ts:201`، `
 **المراجعة (d — أرقام متناقضة):** حدود النصوص `main.py` (1000/500/2000/32) = `maxLength` بالواجهة. **QA94a → ui**: `AlertsPanel.tsx:356` `String(a.price)` ⇒ «1.23456e-8» يرفضه `parseDecimal` (مُتحقَّق بـtsx)، و`maxLength={12}` (:892) مقابل `PRICE_MAX_LEN = 20` بالدفتر.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (بعد السحب، 6ebb13c):** أخضر 0؛ selftests `panClamp`/`positionSize`/`tradePlan` ناجحة. أُغلقت **tools109a** ← tools `b49ec7b` (أنماط `...numeric`). ui `3425fe8`/`41f444e` تحييد ألوان التصويت والشرائح ⇒ 0/12 باقٍ. جديد: tools110a → launch (مُتحقَّق).
+
+## 2026-09-26 — الدورة 95
+**البناء:** أخضر 0 (على 63ba9b0) — لا إصلاح لازم. **Selftests:** 114/114 ناجح (`npx tsx`، -P4).
+**التحقّق بالكود:** QA94a ← ui `f62561e` (`AlertsPanel.tsx:363` `plainStopText`، حدّ 20 :900، `VotePanel` خانات السعر 20) ⇒ مُغلق. tools110a: المفتاح ← launch `540d7df` ولا قارئ بأي `.tsx` ⇒ الربط → tools.
+سجلات chart/tools/launch/ui/backend: لا طلب جديد.
+**قائمة قبول DESIGN-PRO (الخامس عشر):** 0/12 فشل (diff منذ 6ebb13c: `...numeric` بـ`MatrixChart` (3 مواضع)، `fontSize` 13/12 صريحة بـ`LayoutPanel`/`QuadChartModal`).
+**المراجعة (e — ما يُحرج أمام متداول):** `breakevenRR` بالصافي، وعند صافٍ ≤0 يظهر `riskCalcNetNegative` لا نسبة تعادل؛ ردّ الذكاء المقطوع يُسقط سطره الناقص. **لا بند.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
