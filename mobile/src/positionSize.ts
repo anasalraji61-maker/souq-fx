@@ -2005,19 +2005,68 @@ export function dailyRoomMaxLots(input: {
   return steps >= 1 ? Math.round(steps * LOT_STEP * 100) / 100 : null;
 }
 
-/** مفتاح اليوم **المحلّي** «YYYY-MM-DD» — خانة «خسارة اليوم» تُحفظ به (`restoredLostToday`) */
+/** مفتاح اليوم **المحلّي** «YYYY-MM-DD» — كان مفتاح «خسارة اليوم» حتى قرار ٨؛ يبقى لقراءة الحفظ القديم (`restoredLostToday`) */
 export function localDayKey(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
 /**
- * «خسارة اليوم» المحفوظة تُستعاد **في اليوم نفسه فقط**: خسارة الأمس تُقرأ اليوم فتُصغّر المتّسع قبل الحدّ (أو تقول «توقّف
- * لليوم») بلا سبب. يومٌ آخر أو حفظٌ قديم بلا يوم أو قيمة ليست نصّاً ⇒ «» (الخانة فارغة = 0). الحدّ نفسه نسبةٌ تبقى بلا يوم.
+ * التوقيت الصيفي بنيويورك (الأحد الثاني من آذار 07:00Z ⇒ الأحد الأول من تشرين الثاني 06:00Z). نسخة من `chart/marketHours.nyDst`:
+ * الاستيراد منها حلقة (`chart/marketHours` ⇒ `chart/newsRisk` ⇒ هذا الملف). selftest يقارن الاثنين على سنوات.
  */
-export function restoredLostToday(saved: { lostToday?: unknown; lostDay?: unknown }, now: Date): string {
-  if (typeof saved.lostToday !== 'string' || typeof saved.lostDay !== 'string') return '';
-  return saved.lostDay === localDayKey(now) ? saved.lostToday : '';
+function nyDstAt(ms: number): boolean {
+  const y = new Date(ms).getUTCFullYear();
+  const sunday = (month: number, nth: number) => {
+    const first = Date.UTC(y, month, 1);
+    return first + (((7 - new Date(first).getUTCDay()) % 7) + (nth - 1) * 7) * 86400000;
+  };
+  return ms >= sunday(2, 2) + 7 * 3600000 && ms < sunday(10, 1) + 6 * 3600000;
+}
+
+/**
+ * مفتاح **يوم التداول** «YYYY-MM-DD» (قرار أنس ٨: اليوم يبدأ عند إغلاق نيويورك 17:00، كـMT4/MT5 وشمعة D من الخادم المختومة
+ * بتاريخ إغلاقها): من 17:00 نيويورك (21:00Z صيفاً، 22:00Z شتاءً) هو تاريخ UTC للغد. «خسارة اليوم» تُحفظ به — كانت منتصف الليل
+ * **المحلّي** فتعريفٌ ثانٍ لـ«اليوم»: متداول بتوقيت UTC+8 خسر 04:00 محلياً (20:00Z) تبقى خسارته حتى منتصف ليله بعد أن بدأ يوم
+ * الوسيط الجديد بسبع ساعات، ومتداول UTC−5 يفقدها منتصف ليله وسط يوم الوسيط. الجمعة بعد الإغلاق ⇒ السبت (لا تداول حتى الأحد).
+ */
+export function tradingDayKey(d: Date): string {
+  const ms = d.getTime();
+  const dayStart = Math.floor(ms / 86400000) * 86400000;
+  const closeAt = dayStart + 21 * 3600000;
+  const close = closeAt + (nyDstAt(closeAt) ? 0 : 3600000);
+  return new Date(ms >= close ? dayStart + 86400000 : dayStart).toISOString().slice(0, 10);
+}
+
+/** ما يُحفظ مع «خسارة اليوم»: `lostTradingDay` (مفتاح `tradingDayKey`، قرار ٨) أو `lostDay` (مفتاح `localDayKey`، حفظٌ أقدم) */
+export type SavedLostDay = { lostTradingDay?: unknown; lostDay?: unknown };
+
+/**
+ * يوم «خسارة اليوم» المحفوظ ما زال يوم التداول الجاري؟ حفظٌ من نسخة قبل قرار ٨ (`lostDay` محلّي، بلا `lostTradingDay`) يُقبل
+ * ليومه المحلّي كما كان — وإلا ضاعت خسارةٌ كُتبت قبل دقائق من التحديث؛ الحفظ التالي يكتب المفتاح الجديد.
+ */
+export function lostDayIsCurrent(saved: SavedLostDay, now: Date): boolean {
+  if (typeof saved.lostTradingDay === 'string') return saved.lostTradingDay === tradingDayKey(now);
+  return typeof saved.lostDay === 'string' && saved.lostDay === localDayKey(now);
+}
+
+/**
+ * «خسارة اليوم» المحفوظة تُستعاد **في يوم التداول نفسه فقط** (`lostDayIsCurrent`): خسارة الأمس تُقرأ اليوم فتُصغّر المتّسع قبل
+ * الحدّ (أو تقول «توقّف لليوم») بلا سبب. يومٌ آخر أو حفظٌ قديم بلا يوم أو قيمة ليست نصّاً ⇒ «» (الخانة فارغة = 0). الحدّ نفسه نسبةٌ
+ * تبقى بلا يوم.
+ */
+export function restoredLostToday(saved: { lostToday?: unknown } & SavedLostDay, now: Date): string {
+  if (typeof saved.lostToday !== 'string') return '';
+  return lostDayIsCurrent(saved, now) ? saved.lostToday : '';
+}
+
+/**
+ * يوم «خسارة اليوم» الذي يُحفظ معها: **يوم كتابتها** لا يوم الحفظ. كان كل حفظ (أيّ خانة تتغيّر) يختم `lostDay` بيوم الحفظ ⇒
+ * لوحة بقيت مفتوحة عبر الإغلاق وخسارة الأمس 300 فيها، ثم غُيّرت نسبة المخاطرة صباحاً ⇒ تُحفظ 300 بمفتاح اليوم فتُستعاد «خسارة
+ * اليوم» كل مرّة بقيّة اليوم. خانة فارغة ⇒ يوم التداول الجاري (لا شيء يُحمل).
+ */
+export function lostDayForSave(lostToday: string, enteredDay: string | null, now: Date): string {
+  return lostToday.trim() !== '' && enteredDay != null ? enteredDay : tradingDayKey(now);
 }
 
 /**
@@ -2044,8 +2093,8 @@ export function lostTodayOtherCcy(lostCcy: string | null, moneyCcy: string): str
  * عملة «خسارة اليوم» المحفوظة تُستعاد مع يومها فقط (كما `restoredLostToday`): عملة الأمس بعد أن أُفرغت خانتها بتبديل العملة
  * كانت ستُبقي «أعد كتابتها» صباح اليوم التالي عن خسارةٍ لم تعد تُحسب. غير نصّ أو يومٌ آخر ⇒ null.
  */
-export function restoredLostCcy(saved: { lostCcy?: unknown; lostDay?: unknown }, now: Date): string | null {
-  if (typeof saved.lostCcy !== 'string' || saved.lostDay !== localDayKey(now)) return null;
+export function restoredLostCcy(saved: { lostCcy?: unknown } & SavedLostDay, now: Date): string | null {
+  if (typeof saved.lostCcy !== 'string' || !lostDayIsCurrent(saved, now)) return null;
   return saved.lostCcy;
 }
 

@@ -3895,6 +3895,58 @@ console.log('positionSize scaleOutHalfAtOneR selftest OK');
 }
 console.log('positionSize restoredLostToday selftest OK');
 
+// ---- tradingDayKey (قرار أنس ٨): خسارة اليوم تتبع يوم التداول — يبدأ 17:00 نيويورك لا منتصف الليل المحلّي ----
+{
+  const { tradingDayKey, lostDayForSave, lostDayIsCurrent } = require('./positionSize') as typeof import('./positionSize');
+  const { nyDst } = require('./chart/marketHours') as typeof import('./chart/marketHours');
+  const Z = (iso: string) => new Date(iso);
+  // صيفاً (EDT) الحدّ 21:00Z: الثلاثاء 20:59Z = الثلاثاء، 21:00Z = الأربعاء، منتصف ليل UTC لا يغيّر شيئاً
+  assert.equal(tradingDayKey(Z('2026-09-22T20:59:59Z')), '2026-09-22');
+  assert.equal(tradingDayKey(Z('2026-09-22T21:00:00Z')), '2026-09-23');
+  assert.equal(tradingDayKey(Z('2026-09-22T23:59:00Z')), '2026-09-23');
+  assert.equal(tradingDayKey(Z('2026-09-23T00:01:00Z')), '2026-09-23');
+  // شتاءً (EST) الحدّ 22:00Z
+  assert.equal(tradingDayKey(Z('2026-11-17T21:30:00Z')), '2026-11-17');
+  assert.equal(tradingDayKey(Z('2026-11-17T22:00:00Z')), '2026-11-18');
+  // أيام تبدّل التوقيت: الأحد 8 آذار 2026 (يبدأ الصيفي 07:00Z) ⇒ 21:00Z؛ الأحد 1 تشرين الثاني (ينتهي 06:00Z) ⇒ 22:00Z
+  assert.equal(tradingDayKey(Z('2026-03-08T21:00:00Z')), '2026-03-09');
+  assert.equal(tradingDayKey(Z('2026-11-01T21:30:00Z')), '2026-11-01');
+  assert.equal(tradingDayKey(Z('2026-11-01T22:00:00Z')), '2026-11-02');
+  // نهاية السنة: 31 كانون الأول بعد الإغلاق ⇒ 1 كانون الثاني
+  assert.equal(tradingDayKey(Z('2026-12-31T22:30:00Z')), '2027-01-01');
+  // النسخة المحلّية للتوقيت الصيفي تطابق `chart/marketHours.nyDst` كل ساعة 2024–2032 (حدّ 17:00 نيويورك واحد بالتطبيق)
+  for (let sec = Date.UTC(2024, 0, 1) / 1000; sec < Date.UTC(2033, 0, 1) / 1000; sec += 3600) {
+    const dayStart = Math.floor(sec / 86400) * 86400;
+    const closeAt = dayStart + 21 * 3600;
+    const close = closeAt + (nyDst(closeAt) ? 0 : 3600);
+    const expect = new Date((sec >= close ? dayStart + 86400 : dayStart) * 1000).toISOString().slice(0, 10);
+    assert.equal(tradingDayKey(new Date(sec * 1000)), expect, String(sec));
+  }
+  // الحفظ يختم يوم الكتابة لا يوم الحفظ: خسارة الثلاثاء واللوحة مفتوحة حتى الأربعاء ⇒ تبقى «الثلاثاء» فلا تُستعاد
+  const tue = '2026-09-22';
+  const wedMorning = Z('2026-09-23T08:00:00Z');
+  assert.equal(lostDayForSave('300', tue, wedMorning), tue);
+  assert.equal(restoredLostToday({ lostToday: '300', lostTradingDay: lostDayForSave('300', tue, wedMorning) }, wedMorning), '');
+  // خانة فارغة أو بلا يوم كتابة ⇒ اليوم الجاري
+  assert.equal(lostDayForSave('', tue, wedMorning), '2026-09-23');
+  assert.equal(lostDayForSave('  ', tue, wedMorning), '2026-09-23');
+  assert.equal(lostDayForSave('300', null, wedMorning), '2026-09-23');
+  // الاستعادة بيوم التداول: كُتبت الثلاثاء 20:00Z، تُقرأ 20:59Z ⇒ تبقى؛ 21:00Z ⇒ يوم جديد
+  const saved = { lostToday: '300', lostCcy: 'USD', lostTradingDay: tradingDayKey(Z('2026-09-22T20:00:00Z')) };
+  assert.equal(restoredLostToday(saved, Z('2026-09-22T20:59:00Z')), '300');
+  assert.equal(restoredLostToday(saved, Z('2026-09-22T21:00:00Z')), '');
+  assert.equal(restoredLostCcy(saved, Z('2026-09-22T20:59:00Z')), 'USD');
+  assert.equal(restoredLostCcy(saved, Z('2026-09-22T21:00:00Z')), null);
+  // المفتاح الجديد يسبق القديم: `lostDay` المحلّي لليوم لا يُبقي خسارةً يوم تداولها انتهى
+  const now = new Date(2026, 8, 22, 12, 0);
+  assert.equal(lostDayIsCurrent({ lostTradingDay: '2026-01-01', lostDay: localDayKey(now) }, now), false);
+  // حفظٌ من نسخة أقدم (`lostDay` وحده) يُقرأ بيومه المحلّي كما كان
+  assert.equal(lostDayIsCurrent({ lostDay: localDayKey(now) }, now), true);
+  assert.equal(lostDayIsCurrent({ lostTradingDay: 5 as unknown, lostDay: localDayKey(now) }, now), true);
+  assert.equal(lostDayIsCurrent({}, now), false);
+}
+console.log('positionSize tradingDayKey selftest OK');
+
 // ---- dailyRoomMaxLots: أكبر لوت يتّسع لما بقي قبل الحدّ اليومي ----
 {
   // يبقى 100، وقف 20 pip، 10 USD/pip/lot ⇒ 200 للّوت ⇒ 0.50 (الحدّ بالضبط، لا 0.49 من الفاصلة العائمة)

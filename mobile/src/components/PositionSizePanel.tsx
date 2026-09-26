@@ -84,7 +84,8 @@ import {
   scaleOutHalfAtOneR,
   dailyLossRoom,
   dailyRoomMaxLots,
-  localDayKey,
+  lostDayForSave,
+  tradingDayKey,
   restoredLostToday,
   lostTodayInCcy,
   lostTodayOtherCcy,
@@ -196,6 +197,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const [lostToday, setLostToday] = useState('');
   /** عملة المال التي كُتبت بها خسارة اليوم — راجع `lostTodayInCcy` (null = حفظٌ أقدم بلا عملة) */
   const [lostCcy, setLostCcy] = useState<string | null>(null);
+  /** يوم التداول الذي كُتبت فيه خسارة اليوم (`tradingDayKey`) — يُحفظ معها بدل يوم الحفظ، وتغيّره يفرغها (`lostDayForSave`) */
+  const lostEnteredDayRef = useRef<string | null>(null);
+  /** يتغيّر كل دقيقة ما دامت خسارة اليوم مكتوبة ⇒ إغلاق نيويورك 17:00 يفرغها واللوحة مفتوحة */
+  const [dayTick, setDayTick] = useState(0);
   const [dailyOpen, setDailyOpen] = useState(false);
   const [slPips, setSlPips] = useState('');
   /** سبريد الأداة بالنقاط (اختياري) — يخصّ الأداة لا الحساب، فلا يُحفظ ويُمسح بتبديلها */
@@ -275,8 +280,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             setDailyOpen(true);
           }
           // خسارة الأمس لا تُقرأ اليوم — راجع `restoredLostToday`
-          setLostToday(restoredLostToday(p, new Date()));
+          const restoredLost = restoredLostToday(p, new Date());
+          setLostToday(restoredLost);
           setLostCcy(restoredLostCcy(p, new Date()));
+          lostEnteredDayRef.current = restoredLost.trim() !== '' ? tradingDayKey(new Date()) : null;
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
@@ -390,7 +397,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         dailyLimit,
         lostToday,
         lostCcy,
-        lostDay: localDayKey(new Date()),
+        // يوم كتابتها لا يوم الحفظ: لوحة بقيت مفتوحة عبر إغلاق نيويورك كانت تختم خسارة الأمس بمفتاح اليوم (`lostDayForSave`)
+        lostTradingDay: lostDayForSave(lostToday, lostEnteredDayRef.current, new Date()),
       })
     ).catch(() => {
       /* ignore */
@@ -1039,8 +1047,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * حدّ الخسارة اليومي: المتّسع من رصيد بداية اليوم، بمخاطرة هذه الصفقة **شاملة التكاليف** حين تُكتب (ما يخسره الوقف فعلاً).
    * خانة خسارة اليوم الفارغة = 0؛ رقم مرفوض فيها أو بالحدّ ⇒ لا سطر. راجع `dailyLossRoom`.
    */
-  /** بعملةٍ غير عملة المال الآن ⇒ فارغة (0) حتى من قبل أن يُفرغها المؤثّر أدناه */
-  const lostTodayNow = lostTodayInCcy(lostToday, lostCcy, moneyCcy);
+  /** بدأ يوم تداول جديد منذ كُتبت (17:00 نيويورك، قرار ٨) ⇒ 0 من هذه اللحظة، قبل أن يُفرغها المؤثّر أدناه */
+  const lostExpired = lostEnteredDayRef.current != null && lostEnteredDayRef.current !== tradingDayKey(new Date());
+  /** وبعملةٍ غير عملة المال الآن ⇒ فارغة (0) كذلك حتى من قبل أن يُفرغها المؤثّر أدناه */
+  const lostTodayNow = lostExpired ? '' : lostTodayInCcy(lostToday, lostCcy, moneyCcy);
+  useEffect(() => {
+    if (lostToday.trim() === '') return;
+    const id = setInterval(() => setDayTick((n) => n + 1), 60000);
+    return () => clearInterval(id);
+  }, [lostToday]);
+  useEffect(() => {
+    if (!lostExpired) return;
+    lostEnteredDayRef.current = null;
+    setLostToday('');
+    setLostCcy(null);
+  }, [lostExpired, dayTick]);
   useEffect(() => {
     if (lostToday === '') return;
     // حفظٌ أقدم بلا عملة: تُنسب لعملة المال التي فتحت عليها اللوحة
@@ -1657,6 +1678,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             lostTodayNow,
             (v: string) => {
               setLostToday(v);
+              lostEnteredDayRef.current = v.trim() === '' ? null : tradingDayKey(new Date());
               // أفرغها بيده ⇒ لا عملة (لا «أعد كتابتها» عن خانة تركها فارغة ثم بدّل العملة)
               setLostCcy(v.trim() === '' ? null : moneyCcy);
             },
