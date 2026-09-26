@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { dema, ema, hma, sma, tema, wma } from './indicators/moving-averages';
 import { computeMacd } from './indicators/momentum';
-import { computeT3, computeTrix } from './indicators/trend';
+import { computeT3, computeTrix, computeZlema } from './indicators/trend';
 
 const near = (a: number | null, b: number, eps = 1e-9, msg = '') =>
   assert.ok(a != null && Math.abs(a - b) < eps, `${msg} got=${a} want=${b}`);
@@ -77,6 +77,14 @@ const near = (a: number | null, b: number, eps = 1e-9, msg = '') =>
     if (want[i] == null) assert.equal(got[i], null, `hma9 ${i}`);
     else assert.ok(Math.abs((got[i] as number) - (want[i] as number)) < 1e-12, `hma9 ${i}`);
   }
+}
+
+// ZLEMA كـPine ‎ta.ema(src + (src − src[lag]), len)‎: لا مدخل قبل lag ⇒ أول نقطة عند lag+len−1، والبذرة SMA حقيقية
+{
+  const c = Array.from({ length: 80 }, (_, i) => 1.1 + i * 0.0001);
+  const z = computeZlema(c, 20);
+  assert.equal(z.findIndex((v) => v != null), 28, 'ZLEMA first value at lag+period-1');
+  near(z[28]!, 1.10275, 1e-9, 'ZLEMA seed');
 }
 
 console.log('movingAverages.selftest: OK');
