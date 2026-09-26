@@ -873,10 +873,12 @@ export const api = {
     '/api/trades',
     body
   ),
-  closeTrade: (id: string, exit: number) =>
+  /** `seen` (tools123a، backend-r82): حقول `seen_*` للصفّ الذي بُنيت عليه نافذة التأكيد — الخادم يعيد 409
+   * `trade_changed_concurrently` إن اختلف أحدها. غائب = بلا فحص؛ `exit` يُكتب بعدها فلا تغطّيه. */
+  closeTrade: (id: string, exit: number, seen?: Record<string, unknown>) =>
     postJson<{ ok: boolean; trade: Record<string, unknown>; stats: Record<string, number> }>(
       `/api/trades/${encodeURIComponent(id)}/close`,
-      { exit }
+      { ...seen, exit }
     ),
   /** تعديل صفقة بالدفتر — الحقول الغائبة لا تتغيّر، و`null` لـexit/size/sl/tp يمسحها (مسح الخروج يعيدها مفتوحة).
    * باك-إند قديم بلا المسار → خطأ بـ`status` 405. */
