@@ -13272,7 +13272,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     borderRadius: radii.sm,
   },
-  compactToolsRow: { flexDirection: 'row-reverse', padding: 4, gap: 3 },
+  compactToolsRow: { flexDirection: 'row-reverse', padding: 4, gap: 4 },
   compactTool: {
     minWidth: 44,
     height: 44,
@@ -13865,7 +13865,7 @@ const styles = StyleSheet.create({
   // الأعمدة (`zIndex`) لأن الأعمدة تُزاح مع السحب الأفقي كالشموع (`paneShift`) فلا تمرّ تحت الرقم.
   paneHead: {
     width: PRICE_AXIS_WIDTH - 2,
-    paddingTop: 5,
+    paddingTop: 4,
     paddingHorizontal: 2,
     alignItems: 'center',
     zIndex: 1,
@@ -13919,7 +13919,7 @@ const styles = StyleSheet.create({
   priceLegendChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 6,
+    marginRight: 8,
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,
