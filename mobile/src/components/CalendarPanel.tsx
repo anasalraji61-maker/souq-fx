@@ -71,12 +71,14 @@ function sameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+/** DESIGN-PRO §1: الأحمر/الأخضر لاتجاه السعر وحده، والبرتقالي (`warn`) لبيانات متأخّرة وحدها ⇒ الأهمية
+ * درجات سطوع محايدة (الأعلى أسطع)، والكلمة بجانبها تحمل المعنى. */
 const IMPACT_COLOR: Record<string, string> = {
-  high: colors.bear,
-  medium: colors.warn,
+  high: colors.text,
+  medium: colors.textMuted,
   low: colors.textDim,
   /** عطلة بنوك (backend-r3) — سيولة رقيقة: تنبيه لا خطر؛ `none`/`unknown` بلا لون ولا كلمة */
-  holiday: colors.warn,
+  holiday: colors.textMuted,
 };
 
 const CURRENCIES = ['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'NZD', 'CHF'];
@@ -381,8 +383,8 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
               />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.evTitle, { textAlign: align }]}>{e.title}</Text>
-                {/* الأهمية كلمة ملوّنة لا نقطة لون فقط — نقطة حمراء/برتقالية وحدها لا تُقرأ لمن لديه عمى
-                    ألوان ولا لقارئ الشاشة */}
+                {/* الأهمية كلمة لا نقطة فقط — درجة سطوع النقطة وحدها لا تُقرأ لمن لديه عمى ألوان ولا
+                    لقارئ الشاشة */}
                 <Text style={[styles.meta, { textAlign: align }]}>
                   {e.currency.trim().toUpperCase() === 'ALL' ? t.newsAllCurrencies : e.currency}
                   {impactWord(e.impact) ? (
