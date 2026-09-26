@@ -136,6 +136,13 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
         # افتتاح 1H ‏23-09 21:00 UTC، وإغلاقها = إغلاق 1H ‏24-09 20:00) — فتحاً + يوماً كان X+1 00:00 UTC ⇒
         # الشمعة «جارية» 3 ساعات (2 شتاءً) بعد إغلاقها الحقيقي.
         end = min(end, _weekly_close_utc(opened))
+    else:
+        # شمعة تعبر بداية جلسة عطلة وسط الأسبوع (4H ‏20:00 UTC يوم 24 ديسمبر، والعطلة من 22:00) تنتهي عندها — كإغلاق
+        # الجمعة وكالتطبيق `forexNextCloseSec`. كانت «جارية» حتى 00:00 ⇒ إغلاقها تيك عطلة، ويُنسخ لـW/D
+        # (`_with_newest_close`) بوقت الجلب داخل العطلة.
+        holiday = _holiday_session(end - 1)
+        if holiday and open_ts < holiday[0] < end:
+            end = float(holiday[0])
     friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
     close = _week_close(friday)
     if close <= open_ts:  # فُتحت بعد إغلاق هذه الجمعة (نادر) ⇒ إغلاق الجمعة التالية
@@ -146,6 +153,14 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
 def _week_close(friday: datetime) -> int:
     """إغلاق أسبوع الجمعة هذه: الخميس 17:00 نيويورك إن كانت الجمعة عطلة (25 ديسمبر/1 يناير)."""
     return _weekly_close_utc(friday - timedelta(days=1) if _is_holiday(friday) else friday)
+
+
+def _week_reopen(friday: datetime, sym: str) -> int:
+    """افتتاح ما بعد عطلة أسبوع الجمعة هذه: الأحد (`_weekly_open_utc`)، أو الاثنين 17:00 نيويورك إن كان الاثنين
+    عطلة (25 ديسمبر/1 يناير 2028) — كانت شموع الأحد قبل جلسة العطلة تُعدّ مفتوحة، والكاش يُجلب من جديد الأحد."""
+    reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
+    monday = friday + timedelta(days=3)
+    return max(reopen, _weekly_close_utc(monday)) if _is_holiday(monday) else reopen
 
 # المعادن وWTI تفتح الأحد 18:00 نيويورك (CME Globex) وبرنت 23:00 لندن (ICE) — لا 17:00 كالفوركس (كالتطبيق:
 # `marketHours.ts` `nextForexOpenSec`). كانت كلها تُعدّ مفتوحة من 17:00 ⇒ شموع ملء العطلة من المزوّد لتلك
@@ -200,7 +215,7 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
         return True
     friday = opened - timedelta(days=(opened.weekday() - 4) % 7)
     close = _week_close(friday)
-    reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
+    reopen = _week_reopen(friday, sym)
     return close <= open_ts and open_ts + step <= reopen
 
 
@@ -225,10 +240,10 @@ def _closed_until(matrix_symbol: str, fetched_at: float) -> float | None:
         if ends.weekday() != 4:  # عطلة وسط الأسبوع (أو الاثنين) ⇒ السوق يعود بنهاية الجلسة
             return float(holiday[1])
         # جمعة عطلة ⇒ مغلق حتى افتتاح الأحد
-        return float(_weekly_open_utc(ends.replace(hour=0, minute=0, second=0) + timedelta(days=2), sym))
+        return float(_week_reopen(ends.replace(hour=0, minute=0, second=0), sym))
     friday = (d - timedelta(days=(d.weekday() - 4) % 7)).replace(hour=0, minute=0, second=0, microsecond=0)
     close = _week_close(friday)
-    reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
+    reopen = _week_reopen(friday, sym)
     return float(reopen) if close + _CLOSE_SETTLE <= fetched_at < reopen else None
 
 
