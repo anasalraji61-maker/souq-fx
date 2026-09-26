@@ -114,6 +114,8 @@ import {
   journalSymbol,
   levelLooksLikePips,
   levelLooksLikePipsText,
+  entryLooksLikeDecimalSlip,
+  entryDecimalSlipText,
   type TradeSide,
   QUICK_SYMBOLS,
   minStopPips,
@@ -1104,9 +1106,28 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * (لوت 0.00 بلا سبب مفهوم)؛ والهدف يعطي «R:R 1:1960» و«سجّل الخطة» تحفظ هدفاً عند 50.00. نقرة السطر: رقم الوقف ينتقل
    * لخانة النقاط (رقمُ نقاطٍ لا يقول الاتجاه)، والهدف يُكتب سعراً على تلك المسافة بجهة الربح. التسجيل يُمنع حتى يُصحَّح.
    */
-  const pipsInPx = ((): { msg: string; apply: () => void; field: string; value: string } | null => {
+  const pipsInPx = ((): { msg: string; apply: () => void; field: string; value: string; hard?: boolean } | null => {
     if (!spec) return null;
     const e = priceNum(entryPx);
+    /**
+     * **الدخول بلا فاصلة** يسبق (tools102a، `entryLooksLikeDecimalSlip`): دخول «10850» لـEURUSD ووقف 1.0820 كان يُقرأ «الوقف 1.082 pip؟»
+     * ونقرته تنقل 1.082 لخانة النقاط ⇒ وقف 1.08 pip ولوت أكبر ×20 من المقصود (1,000$ بـ1% ووقف 25 ⇒ 9.24 لوت بدل 0.40). النقرة هنا
+     * تكتب الدخول المقصود، والتسجيل يُمنع بلا ضغطة ثانية (`hard`).
+     */
+    const slip = entryLooksLikeDecimalSlip({ symbol: spec.symbol, entry: e, levels: [priceNum(stopPx), priceNum(targetPx)] });
+    if (slip) {
+      const text = formatPrice(slip.price, spec.symbol);
+      return {
+        msg: entryDecimalSlipText(t.journalEntryDecimalSlip, entryPx, text),
+        field: shortLabel(t.riskCalcEntry),
+        value: entryPx.trim(),
+        hard: true,
+        apply: () => {
+          playSoftClick();
+          setEntryPx(text);
+        },
+      };
+    }
     const stopAt = (side: TradeSide) =>
       levelLooksLikePips({ symbol: spec.symbol, side, entry: e, level: priceNum(stopPx), kind: 'sl' });
     const asStop = stopAt('buy') ?? stopAt('sell');
@@ -1157,6 +1178,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const sPx = priceNum(stopPx);
     const tPx = priceNum(targetPx);
     if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok || logBlocked) return;
+    if (pipsInPx?.hard) {
+      setLogMsg({ ok: false, text: pipsInPx.msg });
+      return;
+    }
     if (pipsInPx && pipsOverrideRef.current !== pipsKey) {
       pipsOverrideRef.current = pipsKey;
       setLogMsg({

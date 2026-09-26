@@ -3447,6 +3447,9 @@ console.log('tradePlan points-vs-pips wording selftest OK');
   assert.deepEqual(slip('XAUUSD', 265000, [2640]), { price: 2650, k: 2 });
   assert.deepEqual(slip('USDZAR', 182000, [18.0, 18.5]), { price: 18.2, k: 4 });
   assert.deepEqual(slip('EURUSD.m', 10850, [1.082]), { price: 1.085, k: 4 });
+  // الحاسبة تمرّر NaN لخانة فارغة (`priceNum`): وقفٌ فارغ وهدف 1.0900 ⇒ الهدف وحده يكفي
+  assert.deepEqual(slip('EURUSD', 10850, [NaN, 1.09]), { price: 1.085, k: 4 });
+  assert.equal(slip('EURUSD', NaN, [1.082]), null);
   // ذهب 2650 بوقف «260» نقاطاً: 26.50 ضمن 15% رقمياً لكنه ليس سعر ذهب ⇒ لا شيء (حارس النقاط يتولّاه)
   assert.equal(slip('XAUUSD', 2650, [260]), null);
   // دخولٌ صحيح، ومستوى نقاطٍ بين المستويات، وبلا مستويات، ومؤشر بلا pip ⇒ لا شيء
