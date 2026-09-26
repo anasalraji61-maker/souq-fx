@@ -123,7 +123,8 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
                 # التأثير **تقديرٌ من كلمات العنوان** لا تصنيف مصدر (كتأثير التقويم) — يُقال صراحةً
                 "impact_basis": "headline_keywords",
                 "title": title,
-                "pair_effect": "Forex",
+                # لا `pair_effect`: كان «Forex» ثابتاً لكل عنوان — وسمٌ لا يسمّي زوجاً ولا يُستخرج من الخبر
+                # (إنجليزي تحت الواجهة العربية/الكردية). ui أسقط عرضه (`2dbbc8f`)؛ لا نرسل ما لا نعرفه.
                 "when": when,
                 "ts": ts,
                 "source": source,

@@ -270,3 +270,16 @@ def test_overflowing_pubdate_keeps_the_rest_of_the_feed():
     """سنة 9999 بإزاحة سالبة ⇒ OverflowError كان يُفلت فيُسقط الخلاصة كلّها."""
     when, ts = nf.when_and_ts("Fri, 31 Dec 9999 23:30:00 -0500")
     assert ts is None and when
+
+
+def test_headline_carries_no_constant_pair_label():
+    """كان كل خبر يحمل `pair_effect: "Forex"` ثابتاً — وسمٌ لا يُستخرج من العنوان ولا يسمّي زوجاً."""
+    rss = (
+        "<rss><channel>"
+        "<item><title>BoJ intervenes to prop up yen</title><pubDate>Tue, 23 Sep 2026 14:30:00 +0000</pubDate></item>"
+        "<item><title>Gold slips as dollar firms</title></item>"
+        "</channel></rss>"
+    )
+    items = nf._parse_rss(rss, "example.com")
+    assert len(items) == 2
+    assert all("pair_effect" not in n for n in items)
