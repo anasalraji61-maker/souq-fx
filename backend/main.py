@@ -1163,6 +1163,7 @@ def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
         rsi_v = snap.get("rsi")
         if rsi_v is None or alert.get("value") is None:
             return False
+        rsi_v = round(rsi_v, 1) + 0.0  # كـ`alert_worker`: على RSI المعروض لا الخام
         if cond == "above":
             return rsi_v >= float(alert["value"])
         if cond == "below":

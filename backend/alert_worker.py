@@ -247,6 +247,8 @@ def _check_indicator(a: dict, cache: dict | None = None) -> bool:
         rv = snap.get("rsi")
         if rv is None or a.get("value") is None:
             return False
+        # على RSI المعروض (منزلة واحدة كالماسح والتوقّع): 69.963 يُعرض «70.0 تشبّع» وتنبيه «فوق 70» صامت
+        rv = round(rv, 1) + 0.0
         return rv >= float(a["value"]) if cond == "above" else rv <= float(a["value"])
     if at == "ma_cross":
         return bool(snap.get("ma_cross_up" if cond == "cross_up" else "ma_cross_down"))

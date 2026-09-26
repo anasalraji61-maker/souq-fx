@@ -144,3 +144,20 @@ def test_direction_is_classified_on_the_score_that_is_sent(seed):
         assert v["direction"] == signal_hub._direction(v["score"]), v
     assert out["direction"] == signal_hub._direction(out["avg_score"])
     assert out["avg_score"] == round(sum(v["score"] for v in out["votes"]) / len(out["votes"]), 3)
+
+
+@pytest.mark.parametrize("rsi,cond,value,fires", [
+    (69.963, "above", 70, True), (30.04, "below", 30, True), (69.94, "above", 70, False),
+])
+def test_rsi_alert_fires_on_the_displayed_rsi(monkeypatch, rsi, cond, value, fires):
+    """RSI 69.963: الماسح والتوقّع يعرضانه «70.0 تشبّع شرائي» وتنبيه «فوق 70» كان صامتاً (خام)."""
+    import alert_worker
+    import main
+
+    a = {"symbol": "EURUSD", "alert_type": "rsi", "condition": cond, "value": value}
+    monkeypatch.setattr(alert_worker, "_indicator_series", lambda a, cache=None: _wave())
+    monkeypatch.setattr(alert_worker, "cross_is_stale", lambda a, raw: False)
+    monkeypatch.setattr(alert_worker.ind_engine, "snapshot", lambda *a, **k: {"rsi": rsi})
+    monkeypatch.setattr(main.ind_engine, "snapshot", lambda *a, **k: {"rsi": rsi})
+    assert alert_worker._check_indicator(a) is fires
+    assert main._check_indicator_alert(a, _wave()) is fires
