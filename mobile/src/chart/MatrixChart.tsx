@@ -2780,8 +2780,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (initialKind) setKind(initialKind);
   }, [initialKind]);
 
+  // أمٌّ تتتبّع ما يُرسم (`onIndicatorsChange`) تعيد **المجموعة الكاملة** ⇒ تُعتمد كاختيار يدوي والعدسة تصير «نظيف»
+  // (كزرّ المؤشّر بالشارت): عدسة «زخم» ثم إطفاء RSI من لوحة الطرفية كان يُبقيه مرسوماً — العدسة ما زالت تضيفه —
+  // واللوحة تقول «مطفأ» (tools154a). صدى ما أبلغناه نفسه لا يغيّر شيئاً، والتركيب لا يُسقط العدسة.
+  const prevInitialIndRef = useRef(initialIndicators);
   useEffect(() => {
-    if (initialIndicators) setExtraInd(initialIndicators);
+    const first = prevInitialIndRef.current === initialIndicators;
+    prevInitialIndRef.current = initialIndicators;
+    if (!initialIndicators) return;
+    if (!first && onIndicatorsChangeRef.current) {
+      if (initialIndicators.join(',') === reportedIndKey.current) return;
+      setLens('clean');
+    }
+    setExtraInd(initialIndicators);
   }, [initialIndicators]);
 
   useEffect(() => {
