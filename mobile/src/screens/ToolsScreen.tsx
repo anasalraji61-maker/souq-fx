@@ -29,6 +29,7 @@ import { IndicatorForecastPanel } from '../components/IndicatorForecastPanel';
 import { AlertsPanel } from '../components/AlertsPanel';
 import { PositionSizePanel } from '../components/PositionSizePanel';
 import { NewsPanel } from '../components/NewsPanel';
+import { SHOW_NEWS_FEED, SHOW_UNLICENSED_SIGNAL_PANELS } from '../featureFlags';
 import { GroupChatPanel } from '../components/GroupChatPanel';
 import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
@@ -111,7 +112,8 @@ type HubSection = 'community' | 'analysis';
 
 function buildHubSections(t: Dict): { id: HubSection; label: string; mark: string }[] {
   return [
-    { id: 'community', label: t.toolsHubCommunity, mark: '◆' },
+    // قرار أنس ٦: بلا الأخبار النصية يصير القسم «مجتمع» فقط — «مجتمع وأخبار» يَعِد بلوحة غير موجودة.
+    { id: 'community', label: SHOW_NEWS_FEED ? t.toolsHubCommunity : t.dockCommunityTab, mark: '◆' },
     { id: 'analysis', label: t.toolsHubAnalysis, mark: '◈' },
   ];
 }
@@ -195,6 +197,17 @@ const TICK_WS_SYMBOLS = FALLBACK_SYMBOLS;
 
 const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
 const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
+
+/**
+ * قرارا أنس ٥ و٦ (`featureFlags.ts`، الراية نفسها التي يقرؤها الرصيف والشريط الجانبي): لوحات بلا مصدر
+ * مرخَّص لا تُركَّب بنسخة المتجر — لا يُخفى إطارها فقط، فلا طلب شبكة منها أصلاً. `FrameSizedGrid`
+ * يُسقط من الترتيب المحفوظ كل معرّف غائب عن `items` ⇒ ترتيب قديم يضمّ «news» لا يترك خانة فارغة.
+ */
+function hubPanelVisible(id: string): boolean {
+  if (id === 'news') return SHOW_NEWS_FEED;
+  if (id === 'social' || id === 'analysts') return SHOW_UNLICENSED_SIGNAL_PANELS;
+  return true;
+}
 
 
 /**
@@ -552,7 +565,8 @@ export function ToolsScreen() {
 
       <View style={styles.head}>
         <Text style={[styles.title, { textAlign: align }]}>{t.toolsTitle}</Text>
-        <Text style={[styles.sub, { textAlign: align }]}>{t.toolsSub}</Text>
+        {/* «مجتمع وأخبار · تحليل وتنبيهات» — بلا الأخبار (قرار ٦) يَعِد بما لا يوجد؛ مفتاحا القسمين تحته يسمّيانهما أصلاً */}
+        {SHOW_NEWS_FEED ? <Text style={[styles.sub, { textAlign: align }]}>{t.toolsSub}</Text> : null}
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
@@ -671,7 +685,7 @@ export function ToolsScreen() {
                 },
                 { id: 'chat', node: <GroupChatPanel embedded /> },
                 { id: 'votes', node: <VotePanel embedded /> },
-              ]}
+              ].filter((it) => hubPanelVisible(it.id))}
             />
           ) : (
             <FrameSizedGrid
@@ -693,7 +707,7 @@ export function ToolsScreen() {
                   id: 'alerts',
                   node: <AlertsPanel embedded defaultSymbol={signalSym} active={screenFocused} />,
                 },
-              ]}
+              ].filter((it) => hubPanelVisible(it.id))}
             />
           )}
         </ScrollView>
