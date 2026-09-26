@@ -58,6 +58,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
   const [clarification, setClarification] = useState<string | null>(null);
+  /** قرار ١٢ (backend-r78a): التوضيح جاء بالعربية (`clarification_lang: "ar"`) ولغة الواجهة غيرها. */
+  const [clarificationArabic, setClarificationArabic] = useState(false);
   const [loading, setLoading] = useState(true);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل المحاضرة الفعلية وأن ما يراه محتوى تجريبي عام
    * بدلاً منها (لا ادّعاء فشل قبل حدوثه). */
@@ -319,8 +321,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         lang,
       });
       setClarification(res.clarification);
+      setClarificationArabic(res.clarification_lang === 'ar' && lang !== 'ar');
       setQuestion('');
     } catch {
+      setClarificationArabic(false);
       setClarification(
         `${t.lectureClarifyPausedLine}\n\n${t.lectureClarifyQuestionLabel} ${q}\n\n${t.lectureClarifyFocusLine}`
       );
@@ -480,7 +484,18 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       {clarification ? (
         <View style={styles.clarifyBox}>
           <Text style={[styles.clarifyTitle, { textAlign: align }]}>{t.lectureClarifyTitle}</Text>
-          <Text style={[styles.clarifyText, { textAlign: align }]}>{clarification}</Text>
+          {clarificationArabic ? (
+            <Text style={[styles.clarifyLangNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text>
+          ) : null}
+          <Text
+            style={[
+              styles.clarifyText,
+              { textAlign: clarificationArabic ? 'right' : align },
+              clarificationArabic && styles.clarifyTextRtl,
+            ]}
+          >
+            {clarification}
+          </Text>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -733,6 +748,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   clarifyTitle: { color: colors.text, fontWeight: '500' },
+  clarifyLangNote: { color: colors.textMuted, fontSize: 11, marginTop: spacing.sm },
+  clarifyTextRtl: { writingDirection: 'rtl' },
   clarifyText: {
     color: colors.text,
     marginTop: spacing.sm,

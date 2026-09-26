@@ -16,7 +16,7 @@ import { formatLocalStamp } from '../localStamp';
 /** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير.
  * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
  * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي). */
-type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string };
+type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string; arabicReply?: boolean };
 
 /** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
  * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت — يُعرض تحت الجواب بـ`t.aiPriceAsOf`. */
@@ -54,6 +54,8 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             typeof res.price_as_of === 'number' && Number.isFinite(res.price_as_of)
               ? formatPriceAt(res.price_as_of, lang)
               : undefined,
+          // قرار ١٢ (backend-r78a): الخادم بلا قالب كردي بعد ⇒ `answer_lang: "ar"` لمستخدم غير عربي.
+          arabicReply: res.answer_lang === 'ar' && lang !== 'ar',
         },
       ]);
     } catch {
@@ -94,7 +96,18 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
               turn.offline && styles.aiOffline,
             ]}
           >
-            <Text style={[styles.text, turn.offline && styles.textOffline, { textAlign: align }]}>
+            {turn.arabicReply ? (
+              <Text style={[styles.langNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text>
+            ) : null}
+            <Text
+              style={[
+                styles.text,
+                turn.offline && styles.textOffline,
+                // النصّ العربي يُحاذى يميناً ولو كانت الواجهة إنجليزية.
+                { textAlign: turn.arabicReply ? 'right' : align },
+                turn.arabicReply && styles.textRtl,
+              ]}
+            >
               {turn.text}
             </Text>
             {turn.priceAt ? (
@@ -187,6 +200,8 @@ const styles = StyleSheet.create({
   },
   textOffline: { color: colors.textMuted },
   priceAt: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: 4 },
+  langNote: { color: colors.textMuted, fontSize: 11, marginBottom: 4 },
+  textRtl: { writingDirection: 'rtl' },
   text: {
     color: colors.text,
     fontSize: 12,

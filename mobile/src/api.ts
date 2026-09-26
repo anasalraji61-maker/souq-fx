@@ -934,6 +934,8 @@ export const api = {
       clarification: string;
       teacher: string;
       resume_segment_index: number;
+      /** لغة التوضيح الفعلية (backend-r78a) — كـ`answer_lang`. */
+      clarification_lang?: string;
     }>('/api/academy/interrupt', payload),
   academyVoiceStatus: () =>
     getJson<{
@@ -958,5 +960,7 @@ export const api = {
       /** ثوانٍ UTC: إغلاق آخر شمعة التي بُني عليها الجواب (backend-r12) — قد يسبق «الآن» بـ15د عند حدّ
        * المزوّد أو بأيام بعطلة الأسبوع؛ null بلا سعر حقيقي؛ غيابه = خادم أقدم. */
       price_as_of?: number | null;
+      /** لغة الجواب الفعلية (backend-r78a): "ar" لمستخدم كردي بلا قالب كردي أو باعتذار الحارس؛ غيابه = خادم أقدم. */
+      answer_lang?: string;
     }>('/api/ai/ask', { question, symbol, lang }),
 };
