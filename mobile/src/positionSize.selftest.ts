@@ -20,6 +20,7 @@ import {
   dailyRoomMaxLots,
   restoredLostToday,
   lostTodayInCcy,
+  parseLostToday,
   lostTodayOtherCcy,
   restoredLostCcy,
   convStaleMinutes,
@@ -4096,3 +4097,36 @@ console.log('positionSize lossRiskPct selftest OK');
   assert.equal(manualConvForPair(typed, kGbp), '1.27');
 }
 console.log('positionSize manualConvForPair selftest OK');
+
+// ---- parseLostToday: خسارة اليوم بالسالب كما في سجلّ المنصّة، وبعلامة عملة الحساب ----
+{
+  assert.equal(parseLostToday('', 'USD'), 0);
+  assert.equal(parseLostToday('300', 'USD'), 300);
+  // سجلّ MT4/MT5 يعرض الخسارة سالبة — كانت تُرفض بصمت فيختفي سطر الحدّ اليومي
+  assert.equal(parseLostToday('-300', 'USD'), 300);
+  assert.equal(parseLostToday('−300', 'USD'), 300);
+  assert.equal(parseLostToday('‏-300', 'USD'), 300);
+  assert.equal(parseLostToday('-٣٠٠', 'USD'), 300);
+  assert.equal(parseLostToday('-150.5', 'EUR'), 150.5);
+  // بعلامة/كود/اسم عملة الحساب، والسالب قبل العلامة أو بعدها
+  assert.equal(parseLostToday('$300', 'USD'), 300);
+  assert.equal(parseLostToday('-$300', 'USD'), 300);
+  assert.equal(parseLostToday('$-300', 'USD'), 300);
+  assert.equal(parseLostToday('-300 USD', 'USD'), 300);
+  assert.equal(parseLostToday('300 دولار', 'USD'), 300);
+  assert.equal(parseLostToday('¥-5000', 'JPY'), 5000);
+  // عملةٌ أخرى مرفوضة (300 يورو ليست 300 دولار)، وتقولها `moneyInOtherCurrency`
+  assert.equal(parseLostToday('€300', 'USD'), null);
+  assert.equal(moneyInOtherCurrency('€300', 'USD'), true);
+  // «+200» يومٌ رابح — كانت تُعدّ خسارة 200؛ «--300»، «1.000» المبهمة، نصّ ⇒ مرفوضة
+  assert.equal(parseLostToday('+200', 'USD'), null);
+  assert.equal(parseLostToday('--300', 'USD'), null);
+  assert.equal(parseLostToday('1.000', 'USD'), null);
+  assert.equal(parseLostToday('-', 'USD'), null);
+  assert.equal(parseLostToday('abc', 'USD'), null);
+  // تصل إلى الحدّ: رصيد 9,700 بعد خسارة 300، حدّ 5% ⇒ متّسع 200 كما بـ«300» — والصفقة بمخاطرة 250 تتخطّاه
+  const room = dailyLossRoom({ balance: 9700, limitPct: 5, lostToday: parseLostToday('-300', 'USD')!, riskAmount: 250, riskNoCosts: 250 })!;
+  assert.equal(room.room, 200);
+  assert.equal(room.breach, true);
+}
+console.log('positionSize parseLostToday selftest OK');

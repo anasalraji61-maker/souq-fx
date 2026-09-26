@@ -82,6 +82,7 @@ import {
   breakevenRR,
   lossStreakDrawdownPct,
   lossRiskPct,
+  parseLostToday,
   scaleOutHalfAtOneR,
   dailyLossRoom,
   dailyRoomMaxLots,
@@ -1051,7 +1052,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const costsAdvice = costsLotsAdvice(lots, withSpread);
   /**
    * حدّ الخسارة اليومي: المتّسع من رصيد بداية اليوم، بمخاطرة هذه الصفقة **شاملة التكاليف** حين تُكتب (ما يخسره الوقف فعلاً).
-   * خانة خسارة اليوم الفارغة = 0؛ رقم مرفوض فيها أو بالحدّ ⇒ لا سطر. راجع `dailyLossRoom`.
+   * خانة خسارة اليوم الفارغة = 0؛ رقم مرفوض فيها أو بالحدّ ⇒ لا سطر، وخطؤه تحت خانته (`dailyFieldErr`). راجع `dailyLossRoom`.
    */
   /** بدأ يوم تداول جديد منذ كُتبت (17:00 نيويورك، قرار ٨) ⇒ 0 من هذه اللحظة، قبل أن يُفرغها المؤثّر أدناه */
   const lostExpired = lostEnteredDayRef.current != null && lostEnteredDayRef.current !== tradingDayKey(new Date());
@@ -1076,8 +1077,27 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   }, [lostToday, lostCcy, moneyCcy, lostTodayNow]);
   /** أُفرغت لأنها بعملةٍ أخرى ⇒ سطر «أعد كتابتها» بدل خانة فارغة بلا سبب (launch169a) */
   const lostOtherCcy = lostTodayOtherCcy(lostCcy, moneyCcy);
-  const lostTodayNum = lostTodayNow.trim() === '' ? 0 : parseDecimal(lostTodayNow, { amount: true });
+  // «-300» كما في سجلّ المنصّة و«$300» بعلامة عملة الحساب مقبولتان — راجع `parseLostToday`
+  const lostTodayNum = parseLostToday(lostTodayNow, moneyCcy);
   const dailyLimitNum = parseDecimal(dailyLimit, { percent: true });
+  /**
+   * رقمٌ مرفوض بخانتَي الحدّ اليومي كان يُخفي السطر كلّه **بصمت** — ومعه «هذه الصفقة وحدها تتخطّى حدّك» — وكل خانة أخرى
+   * تقول خطأها تحتها. الآن كذلك: عملةٌ أخرى ⇒ عملة الحساب، «٬» ⇒ أيّهما للكسر، وإلا «رقم غير مفهوم» باسم الخانة.
+   */
+  const dailyFieldErr = (label: string, raw: string, bad: boolean, money: boolean) =>
+    !bad || raw.trim() === ''
+      ? null
+      : money && moneyInOtherCurrency(raw, moneyCcy)
+        ? t.riskCalcOtherCcyHint
+            .replace('{field}', () => shortLabel(label))
+            .replace('{value}', () => raw.trim())
+            .split('{ccy}')
+            .join(moneyCcy)
+        : misplacedArabicThousandsSign(raw, money ? { amount: true } : { percent: true })
+          ? `${t.riskCalcBadFieldValue.replace('{field}', () => shortLabel(label)).replace('{value}', () => raw.trim())}: ${t.arabicThousandsSignHint}`
+          : `${t.riskCalcBadFieldValue.replace('{field}', () => shortLabel(label)).replace('{value}', () => raw.trim())}: ${t.invalidNumberHint}`;
+  const dailyLimitErr = dailyFieldErr(t.riskCalcDailyLimit, dailyLimit, dailyLimitNum == null, false);
+  const lostTodayErr = dailyFieldErr(t.riskCalcLostToday, lostTodayNow, lostTodayNum == null, true);
   const dailyRoom =
     result && lots != null && dailyLimitNum != null && lostTodayNum != null
       ? dailyLossRoom({
@@ -1681,6 +1701,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       {dailyOpen ? (
         <>
           {input(dailyLimit, setDailyLimit, '5', t.riskCalcDailyLimit)}
+          {dailyLimitErr ? (
+            <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+              {dailyLimitErr}
+            </Text>
+          ) : null}
           <Text style={[styles.label, { textAlign: align }]}>{`${t.riskCalcLostToday} (${moneyCcy})`}</Text>
           {input(
             lostTodayNow,
@@ -1693,6 +1718,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             '0',
             t.riskCalcLostToday
           )}
+          {lostTodayErr ? (
+            <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+              {lostTodayErr}
+            </Text>
+          ) : null}
           {/* تُفرغ عند 17:00 نيويورك (`lostDayForSave`/`tradingDayKey`) — يقوله للمتداول كي لا يظنّ الخانة فرغت خطأً */}
           <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcLostTodayResetHint}</Text>
           {lostOtherCcy ? (
