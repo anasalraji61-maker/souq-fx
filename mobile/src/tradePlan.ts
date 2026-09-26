@@ -2098,9 +2098,16 @@ export function levelLooksLikePips(input: {
    * بمنزلتين أو ثلاث. المعادن تبقى على الرقم الصحيح (الفضة هبطت ~30% بيوم — هدف «85.5» من 110 سعرٌ ممكن).
    */
   const countLike = (v: number) => (metal ? Number.isInteger(v) : Math.abs(v * 10 - Math.round(v * 10)) < 1e-9);
+  /**
+   * **والوقف (والخروج بخسارة) على الفوركس: العُشر لا الخُمس.** أعداد النقاط الشائعة على الين تقع بين العُشر والخُمس: شراء EURJPY
+   * على 172.30 بوقف «150» كان يُحفظ وقفاً عند 150.00 (مخاطرة 2,230 pip، R:R 0.045)، وخروج USDJPY «125» من 147.50 خسارةً
+   * بـ2,250 pip دائمة بالإحصاءات. وقفٌ أبعد من 10% لا يوضع بزوج ين؛ والهدف يبقى على الخُمس (USDJPY صعد 30% في 2022).
+   * للين وحده: أزواج السعر ~1 تقع أعداد نقاطها بعيداً أصلاً، و«1.2» بمنزلة واحدة على EURUSD قد تكون سعراً مكتوباً مختصراً.
+   */
+  const band = kind === 'sl' && spec.quote === 'JPY' ? 0.1 : 0.2;
   const looksPips = (v: number) =>
     far(v) ||
-    (countLike(v) && Math.abs(v - entry) > entry * 0.2 && (v < entry || !upOk));
+    (countLike(v) && Math.abs(v - entry) > entry * band && (v < entry || !upOk));
   if (!looksPips(level)) return null;
   const down = (side === 'buy') === (kind === 'sl');
   const price = priceAtPipOffset(spec, entry, down ? -level : level);

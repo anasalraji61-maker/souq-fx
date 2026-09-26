@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { parseDecimal } from './parseDecimal';
 import {
   saveOverrideAccepted,
+  exitLooksLikePips,
   SAVE_OVERRIDE_MIN_MS,
   atrStopPips,
   ATR_STOP_TF_SEC,
@@ -3299,6 +3300,32 @@ console.log('tradePlan levelLooksLikePips JPY/silver selftest OK');
   assert.ok((analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157.1, tp: 200 }).rr ?? 0) > 100);
 }
 console.log('tradePlan levelLooksLikePips JPY above entry selftest OK');
+
+// الوقف/الخروج بخسارة على الفوركس: العُشر لا الخُمس — EURJPY 172.30 بوقف «150» كان يُحفظ 150.00 (2,230 pip)
+{
+  const L = levelLooksLikePips;
+  const near = (a: { pips: number; price: number } | null, pips: number, price: number) => {
+    assert.ok(a, `${pips}`);
+    assert.equal(a!.pips, pips);
+    assert.ok(Math.abs(a!.price - price) < 1e-9, `${a!.price} vs ${price}`);
+  };
+  near(L({ symbol: 'EURJPY', side: 'buy', entry: 172.3, level: 150, kind: 'sl' }), 150, 170.8);
+  near(L({ symbol: 'USDJPY', side: 'buy', entry: 147.5, level: 130, kind: 'sl' }), 130, 146.2);
+  near(L({ symbol: 'GBPJPY', side: 'sell', entry: 198.4, level: 170, kind: 'sl' }), 170, 200.1);
+  // الخروج «125» لشراء USDJPY على 147.50: قراءة الخسارة 146.25 (كانت تُحفظ −2,250 pip)
+  const ex = exitLooksLikePips({ symbol: 'USDJPY', side: 'buy', entry: 147.5, exit: 125 });
+  assert.ok(ex && ex.loss != null && Math.abs(ex.loss - 146.25) < 1e-9, JSON.stringify(ex));
+  // حقيقية: وقف مستدير ضمن العُشر (USDJPY 147.50 ⇒ 145، 140)، وكسور، والهدف ما زال على الخُمس، والمعادن والليرة
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 147.5, level: 145, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 147.5, level: 140, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 147.5, level: 130.25, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 147.5, level: 130, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAGUSD', side: 'buy', entry: 45, level: 38, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'USDTRY', side: 'sell', entry: 34, level: 38, kind: 'sl' }), null);
+  // خارج الين بلا تغيير: «1.2» وقفاً لـEURUSD على 1.0850 (10.6%) كما كانت
+  assert.equal(L({ symbol: 'EURUSD', side: 'sell', entry: 1.085, level: 1.2, kind: 'sl' }), null);
+}
+console.log('tradePlan levelLooksLikePips forex stop band selftest OK');
 
 // ---- openQuotesRefreshDue: لقطة أسعار الصفقات المفتوحة تتجدّد بعد العودة من الخلفية ----
 {
