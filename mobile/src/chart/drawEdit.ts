@@ -253,6 +253,13 @@ export function withDrawingArrow(d: Drawing, arrow: boolean): Drawing {
   return rest;
 }
 
+/** عكس فيبو (0% ↔ 100%) — على فيبو فقط؛ الإلغاء يحذف المفتاح كالسهم والقفل. */
+export function withDrawingFibReverse(d: Drawing, reversed: boolean): Drawing {
+  if (reversed && d.tool === 'fib') return { ...d, reversed: true };
+  const { reversed: _drop, ...rest } = d;
+  return rest;
+}
+
 /** إزاحة النسخة عن أصلها بالبكسل: تكفي ليُرى أنّ رسماً ثانياً ظهر، ولا تبعده عن منطقته. */
 export const CLONE_SHIFT_PX = 24;
 

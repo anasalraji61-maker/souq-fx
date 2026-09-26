@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`fibLabels.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { FIB_EXTENSIONS, fibRatioText, fibLevelPrice, isFibExtension, planFibLabels } from './fibLabels';
+import { FIB_EXTENSIONS, fibIsDown, fibRatioText, fibLevelPrice, isFibExtension, planFibLabels } from './fibLabels';
 
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
 
@@ -22,6 +22,16 @@ ok('0.786 ⇒ 78.6%', fibRatioText(0.786) === '78.6%');
 ok('NaN ⇒ فارغ', fibRatioText(NaN) === '');
 // النسب القياسية كلّها بلا صفر زائد ولا خانة ثانية.
 ok('كل النسب القياسية مختصرة', FIB_LEVELS.every((l) => !fibRatioText(l).includes('.0%')));
+
+// ── اتجاه المستويات وزرّ «عكس» ─────────────────────────────────────────────
+const up = { a: { price: 1.0 }, b: { price: 1.1 } };
+const dn = { a: { price: 1.1 }, b: { price: 1.0 } };
+ok('صاعدة (A قاع) ⇒ ليست هابطة', fibIsDown(up) === false);
+ok('هابطة (A قمّة) ⇒ هابطة', fibIsDown(dn) === true);
+ok('صاعدة معكوسة ⇒ 0% عند A (القاع)', fibLevelPrice(1.1, 1.0, 0, fibIsDown({ ...up, reversed: true })) === 1.0);
+ok('هابطة معكوسة ⇒ 0% عند A (القمّة)', fibLevelPrice(1.1, 1.0, 0, fibIsDown({ ...dn, reversed: true })) === 1.1);
+ok('عكس مرّتين = الأصل', fibIsDown({ ...dn, reversed: false }) === fibIsDown(dn));
+ok('بلا B ⇒ ليست هابطة', fibIsDown({ a: { price: 1 } }) === false);
 
 // ── سعر المستوى ────────────────────────────────────────────────────────────
 ok('0% = القمّة', fibLevelPrice(1.1, 1.0, 0) === 1.1);

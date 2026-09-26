@@ -256,6 +256,8 @@ export type Drawing = {
   locked?: boolean;
   /** خطّ `trend` برأس سهم عند طرفه الثاني (`b`) — اتجاه الحركة المتوقّعة. غيابه ⇒ خطّ عادي. */
   arrow?: boolean;
+  /** فيبو معكوس: 0% و100% يتبادلان طرفي التأرجح (A↔B) والرسم في مكانه — راجع `fibIsDown`. غيابه ⇒ 0% عند B. */
+  reversed?: boolean;
 };
 
 export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';

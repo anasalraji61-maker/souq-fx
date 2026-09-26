@@ -142,6 +142,7 @@ import {
   translateDrawing,
   cloneShift,
   withDrawingArrow,
+  withDrawingFibReverse,
   withDrawingLock,
 } from './drawEdit';
 import {
@@ -163,7 +164,7 @@ import { anchorDrawings, anchorPoint, barTime, drawSlotAt, stampAtIndex, type Ti
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
 import { priceSpan } from './priceSpan';
-import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
+import { FIB_EXTENSIONS, fibIsDown, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
   barChangeRef,
   candleRangePipsText,
@@ -4299,6 +4300,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
     setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
   };
+  // عكس فيبو المحدَّد: 0% و100% يتبادلان طرفي التأرجح بلا إعادة رسم الأداة (كـ«Reverse» بـTradingView) — قابل للتراجع ويُحفظ.
+  const toggleSelectedFibReverse = () => {
+    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+    if (!d || d.tool !== 'fib') return;
+    pushDrawHistory();
+    const next = withDrawingFibReverse(d, !d.reversed);
+    drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
+    setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+  };
   // «الرسم مقفول — فكّ القفل لتحريكه» فوق اللوح لحظةَ محاولة سحبه، ثم يختفي.
   const [lockedHint, setLockedHint] = useState(false);
   const lockedHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -4314,6 +4324,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedTrend = selectedId ? drawings.find((x) => x.id === selectedId && x.tool === 'trend') : undefined;
   const selectedArrow = !!selectedTrend?.arrow;
   const arrowA11y = tr.mcArrowHeadA11y;
+  const selectedFib = selectedId ? drawings.find((x) => x.id === selectedId && x.tool === 'fib') : undefined;
+  const selectedFibReversed = !!selectedFib?.reversed;
 
   /**
    * إزاحة الرسم المحدَّد `bars` شمعة و`steps` خطوة سعر (pip للأزواج والمعادن، وإلا بكسل رأسي واحد) — لأسهم
@@ -4789,7 +4801,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const hi = Math.max(d.a.price, d.b.price);
           const lo = Math.min(d.a.price, d.b.price);
           for (const lv of FIB_DRAW_LEVELS) {
-            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(fibLevelPrice(hi, lo, lv, d.a.price > d.b.price))));
+            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(fibLevelPrice(hi, lo, lv, fibIsDown(d)))));
           }
         }
         const dist = Math.min(endDist, bodyDist);
@@ -6682,7 +6694,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       levels: FIB_DRAW_LEVELS,
       hi: Math.max(d.a.price, d.b.price),
       lo: Math.min(d.a.price, d.b.price),
-      down: d.a.price > d.b.price,
+      down: fibIsDown(d),
       yOf,
       format: fmtPrice,
       minGapPx: FIB_LABEL_GAP,
@@ -7236,6 +7248,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 <Text style={[styles.compactToolIcon, selectedArrow && styles.compactToolTextOn]}>➚</Text>
                 {selectedArrow ? <SelMark /> : null}
+              </Pressable>
+            ) : null}
+            {selectedFib ? (
+              <Pressable
+                accessibilityRole="switch"
+                accessibilityLabel={tr.mcFibReverseA11y}
+                {...railHintProps(tr.mcFibReverseA11y)}
+                accessibilityState={{ checked: selectedFibReversed }}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  selectedFibReversed && styles.compactToolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={toggleSelectedFibReverse}
+              >
+                <Text style={[styles.compactToolIcon, selectedFibReversed && styles.compactToolTextOn]}>⇅</Text>
+                {selectedFibReversed ? <SelMark /> : null}
               </Pressable>
             ) : null}
             {selectedId ? (
@@ -9947,7 +9976,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           if (d.tool === 'fib' && d.b) {
             const hi = Math.max(d.a.price, d.b.price);
             const lo = Math.min(d.a.price, d.b.price);
-            const fromHigh = d.a.price > d.b.price;
+            const fromHigh = fibIsDown(d);
             // الخطوط كلّها تُرسم (هي الأداة)، والوسوم وحدها تُنقّى — راجع `fibLabels.ts`
             // و`fibLabelPlans` أعلاه (تتجنّب وسوم الخطوط الأفقية وفيبو المرسوم قبله).
             const labelled = new Map((fibLabelPlans.get(d.id) ?? []).map((l) => [l.level, l.text]));
@@ -13863,6 +13892,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   >
                     <Text style={selectedArrow ? styles.toolTextOn : styles.toolText}>➚</Text>
                     {selectedArrow ? <SelMark /> : null}
+                  </Pressable>
+                ) : null}
+                {selectedFib ? (
+                  <Pressable
+                    accessibilityRole="switch"
+                    accessibilityLabel={tr.mcFibReverseA11y}
+                    accessibilityState={{ checked: selectedFibReversed }}
+                    style={({ pressed }) => [
+                      styles.tool,
+                      selectedFibReversed && styles.toolOn,
+                      pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                    ]}
+                    onPress={toggleSelectedFibReverse}
+                  >
+                    <Text style={selectedFibReversed ? styles.toolTextOn : styles.toolText}>⇅ {tr.mcFibReverse}</Text>
+                    {selectedFibReversed ? <SelMark /> : null}
                   </Pressable>
                 ) : null}
                 <Pressable
