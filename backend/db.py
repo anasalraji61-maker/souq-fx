@@ -46,13 +46,15 @@ _SPACES = re.compile(r"\s+")
 def _username_skeleton(username: str) -> str:
     # علامات التركيب (Mn/Me) لا تغيّر مظهر الاسم بما يكفي: «ali̇ce» (نقطة فوق i) كان حساباً مستقلاً يُعرض
     # كـ«alice». تُسقط بعد NFD (فتتصادم «josé»/«jose» والاسم المشكول وغيره — طيّ زائد مقبول كما أعلاه).
-    folded = unicodedata.normalize("NFD", _username_key(username).translate(_SKELETON))
+    # العلامات تُسقط **قبل** جدول الشبيه: «άlice» (ά يونانية مشدّدة، ليست بالجدول) كانت تصير «αlice» بعد
+    # الإسقاط فلا تُطوى إلى «alice» — حساب مستقلّ يُعرض كالأصل. كذلك «bόβ» و«йak».
+    folded = unicodedata.normalize("NFD", _username_key(username))
     folded = "".join(ch for ch in folded if unicodedata.category(ch) not in ("Mn", "Me"))
-    return _SPACES.sub(" ", unicodedata.normalize("NFC", folded))
+    return _SPACES.sub(" ", unicodedata.normalize("NFC", folded.translate(_SKELETON)))
 
 
 # نسخة قاعدة الهيكل: تُرفع حين تتغيّر `_username_skeleton` فيُعاد حساب العمود لكل الصفوف مرة واحدة.
-_SKEL_VERSION = 2
+_SKEL_VERSION = 3
 
 
 def _fill_username_skel(c: sqlite3.Connection) -> None:

@@ -512,6 +512,15 @@ def test_combining_mark_twin_is_taken(_db):
         _register("ali̇ce", email="b@example.com")  # نقطة فوق i تُعرض «alice»
 
 
+@pytest.mark.parametrize("twin,orig", [("άlice", "alice"), ("bόβ", "bob"), ("йak", "иak")])
+def test_accented_greek_cyrillic_twin_is_taken(_db, twin, orig):
+    # العلامة تُسقط قبل جدول الشبيه: «ά» ⇒ «α» ⇒ «a» (كانت تبقى «α» فتمرّ)
+    assert db._username_skeleton(twin) == db._username_skeleton(orig)
+    _register(orig, email="a@example.com")
+    with pytest.raises(ValueError, match="taken"):
+        _register(twin, email="b@example.com")
+
+
 def test_arabic_diacritics_do_not_block_ordinary_names(_db):
     _register("كاوە", email="a@example.com")  # كردي: ە ليست علامة تركيب
     assert db.login_user("كاوە", "hunter2")["token"]
