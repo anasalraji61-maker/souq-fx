@@ -459,3 +459,18 @@ console.log('paneGuides.selftest: PASS');
   assert.equal(paneShownValue(null), null);
   assert.equal(paneShownValue('50'), 50);
 }
+
+// لوحة بوحدة السعر: منازل الزوج حدّ أدنى — Momentum اليورو بمدى ‎0.0105‎ كان «0.0005»
+{
+  const momEur = [0.0105, -0.0081, 0.00047];
+  assert.equal(formatPaneValueScaled(momEur, 0.00047), '0.0005', 'بلا منازل الزوج: ثلاث خانات معنوية من المقياس');
+  assert.equal(formatPaneValueScaled(momEur, 0.00047, 5), '0.00047');
+  assert.equal(formatPaneValueScaled([1.52, -1.1], 0.472, 3), '0.472', 'الين بثلاث منازل');
+  // الحدّ لا يُنقص خانات المقياس (ميل الين ‎0.0234‎ يبقى بأربع لا ثلاث)
+  assert.equal(formatPaneValueScaled([0.0234, -0.01], 0.0234, 3), '0.0234');
+  // لا يتجاوز عرض العمود: BTC ATR ‎12345‎ بمنزلتين ⇒ تُخفَّض حتى تتّسع
+  const t = formatPaneValueScaled([12345, -12345], 12345.67, 2)!;
+  assert.ok(t.length <= 8, t);
+  // لوحة K/M لا تتأثّر
+  assert.ok(formatPaneValueScaled([5e5, -5e5], 250000, 5)!.endsWith('K'));
+}

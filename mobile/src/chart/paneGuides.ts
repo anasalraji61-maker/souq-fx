@@ -413,7 +413,13 @@ export function paneShownValue(txt: string | null | undefined): number | null {
  */
 export function formatPaneValueScaled(
   values: readonly (number | null | undefined)[],
-  v: number | null | undefined
+  v: number | null | undefined,
+  /**
+   * منازل الزوج للّوحات **بوحدة السعر** (MACD/AO/ATR/Momentum…): حدّ أدنى للكسر — بثلاث خانات
+   * معنوية وحدها كان Momentum اليورو بمدى ‎0.0105‎ يطبع «0.0005» لا «0.00047»، والين «0.47» لا «0.472».
+   * لا يُمرَّر للمذبذبات (نسب/نقاط بلا وحدة سعر).
+   */
+  priceDecimals?: number | null
 ): string | null {
   if (v == null || !Number.isFinite(v)) return null;
   if (v === 0) return '0';
@@ -433,6 +439,9 @@ export function formatPaneValueScaled(
   // القيم لا كلّها، والقيمة الوسطى قد تكون أطول من القصوى (‎-0.0001‎ أقصر من ‎-0.000033‎).
   const worstLen = (d: number) => (-base).toFixed(d).length + suffix.length;
   let d = paneValueDecimals(base);
+  if (scale === 1 && priceDecimals != null && Number.isInteger(priceDecimals)) {
+    d = Math.max(d, Math.min(8, priceDecimals));
+  }
   while (d > 0 && worstLen(d) > PANE_VALUE_MAX_CHARS) d--;
   // لا يتّسع حتى بلا كسور، أو المقياس نفسه يُدوَّر إلى صفر ⇐ أسّي للّوحة كلّها
   if (worstLen(d) > PANE_VALUE_MAX_CHARS || Number(base.toFixed(d)) === 0) {

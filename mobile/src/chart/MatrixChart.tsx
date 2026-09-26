@@ -1090,9 +1090,12 @@ function PaneValueHead({
   signal,
   compact = false,
   hint,
+  priceDec,
 }: {
   name: string;
   values: readonly (number | null | undefined)[];
+  /** منازل الزوج — فقط للوحة بوحدة السعر (راجع `formatPaneValueScaled`). */
+  priceDec?: number | null;
   /** شرح لقارئ الشاشة — الرأس يصير عنصراً واحداً (الاسم + القيمة) يحمله (حجم تقديري). */
   hint?: string;
   /** شمعة التقاطع (فهرس داخل نافذة الرسم)، أو null فآخر شمعة. */
@@ -1118,12 +1121,12 @@ function PaneValueHead({
   const v = paneValueAt(values, at);
   // المقياس من السلسلة كاملةً لا من الشمعة المقروءة — فلا يتبدّل شكل الرقم
   // بتحرّك التقاطع، وهو نفس سبب اشتقاق الصياغة من مقياس اللوحة أصلاً.
-  const txt = formatPaneValueScaled(values, v);
+  const txt = formatPaneValueScaled(values, v, priceDec);
   // الاتّجاه محدود بشمعة التقاطع كالقيمة نفسها — فاللون والرقم يصفان شمعة واحدة.
   const trend = tone === 'trend' ? paneValueTrend(values, at) : null;
   // مقياس السلسلة الأولى نفسه ⇒ الرقمان بالخانات واللاحقة ذاتها فيُقارَنان بنظرة.
   const sv = signal ? paneValueAt(signal.values, at) : null;
-  const stxt = signal ? formatPaneValueScaled(values, sv) : null;
+  const stxt = signal ? formatPaneValueScaled(values, sv, priceDec) : null;
   // الجانب من الرقم المطبوع لا الخام: «0» (أو «50» بمركز 50) بلا لون.
   const shown = tone === 'sign' ? paneShownValue(txt) : null;
   const toneColor =
@@ -6655,6 +6658,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // يتبع الشمعة عبر التيكات الحيّة وزرّي التكبير والتصغير، ويسقط من نفسه إن خرجت
   // الشمعة من النافذة أو بدّل المتداول الفريم/الرمز. رؤوس اللوحات تقرأ عنده.
   const crossIndex = cross ? indexOfBarTime(source.plot, cross.time) : null;
+  // منازل الزوج لرؤوس اللوحات بوحدة السعر (MACD/AO/ATR…) — «0.00047» لا «0.0005» على اليورو.
+  const paneDec = symbolPriceDecimals(series.symbol);
   const crossCandle = crossIndex != null ? source.plot[crossIndex] ?? null : null;
   // Recomputed every render so the crosshair and its axis tags stay glued to the
   // candle after zoom buttons / live ticks.
@@ -11098,7 +11103,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {squeeze ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Squeeze" values={squeeze.momentum} at={crossIndex} />
+          <PaneValueHead name="Squeeze" priceDec={paneDec} values={squeeze.momentum} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -11949,7 +11954,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {dpo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="DPO" values={dpo} at={crossIndex} />
+          <PaneValueHead name="DPO" priceDec={paneDec} values={dpo} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries vis={paneVis} values={dpo} paneH={paneH} />
@@ -11959,7 +11964,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ao ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="AO" values={ao.v} at={crossIndex} />
+          <PaneValueHead name="AO" priceDec={paneDec} values={ao.v} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -11994,7 +11999,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ac ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="AC" values={ac.v} at={crossIndex} />
+          <PaneValueHead name="AC" priceDec={paneDec} values={ac.v} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12083,7 +12088,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bullPower ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Bull Power" values={bullPower} at={crossIndex} />
+          <PaneValueHead name="Bull Power" priceDec={paneDec} values={bullPower} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12117,7 +12122,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bearPower ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Bear Power" values={bearPower} at={crossIndex} />
+          <PaneValueHead name="Bear Power" priceDec={paneDec} values={bearPower} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12334,7 +12339,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {qstick ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Qstick" values={qstick} at={crossIndex} />
+          <PaneValueHead name="Qstick" priceDec={paneDec} values={qstick} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12441,7 +12446,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {apo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="APO" values={apo} at={crossIndex} />
+          <PaneValueHead name="APO" priceDec={paneDec} values={apo} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12781,7 +12786,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {linRegSlope ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="LR Slope" values={linRegSlope} at={crossIndex} />
+          <PaneValueHead name="LR Slope" priceDec={paneDec} values={linRegSlope} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -12885,7 +12890,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {momentum ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Momentum" values={momentum} at={crossIndex} />
+          <PaneValueHead name="Momentum" priceDec={paneDec} values={momentum} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries vis={paneVis} values={momentum} paneH={paneH} />
@@ -13380,7 +13385,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {trueRange ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="True Range" values={trueRange} at={crossIndex} tone="trend" />
+          <PaneValueHead name="True Range" priceDec={paneDec} values={trueRange} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -13408,7 +13413,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stdError ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Std Error" values={stdError} at={crossIndex} tone="trend" />
+          <PaneValueHead name="Std Error" priceDec={paneDec} values={stdError} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -13613,6 +13618,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="MACD"
+            priceDec={paneDec}
             values={macd.macdLine}
             at={crossIndex}
             signal={{ values: macd.signal, color: colors.warn }}
@@ -13707,7 +13713,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {atr ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="ATR" values={atr} at={crossIndex} tone="trend" />
+          <PaneValueHead name="ATR" priceDec={paneDec} values={atr} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -13766,7 +13772,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stddev ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="STDEV" values={stddev} at={crossIndex} tone="trend" />
+          <PaneValueHead name="STDEV" priceDec={paneDec} values={stddev} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
