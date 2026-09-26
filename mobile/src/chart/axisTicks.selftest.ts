@@ -217,6 +217,8 @@ console.log('axisTicks.selftest: PASS');
   // علامة واحدة: القرار من المدى كما كان.
   assert.equal(axisShowsHours([0], 30 * H, false), true);
   assert.equal(axisShowsHours([0], 72 * H, false), false);
+  // منتصفا ليل حول تقديم الساعة (23 ساعة بينهما): تواريخ فقط كبقية الأيام.
+  assert.equal(axisShowsHours([0, 23 * H, 47 * H], 47 * H, false), false);
   console.log('axisShowsHours PASS');
 
 // nicePriceTicks: خطوات مستديرة ثابتة مع التيك، بحدّ العدد وأصغر منزلة

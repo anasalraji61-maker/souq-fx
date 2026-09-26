@@ -263,7 +263,9 @@ export function axisShowsHours(
   if (times.length < 2) return spanSeconds <= 2 * 86400;
   let minGap = Number.POSITIVE_INFINITY;
   for (let i = 1; i < times.length; i++) minGap = Math.min(minGap, Math.abs(times[i] - times[i - 1]));
-  return minGap < 86400;
+  // يوم تقديم الساعة (DST) 23 ساعة: علامتا منتصف ليل متتاليتان كانتا تُقرآن «أقلّ من يوم» فتُطبع الساعة على
+  // كل تواريخ المحور ذلك الأسبوع. فاصل علامات دون اليوم ≤ 12 ساعة، فحدّ 23 ساعة لا يُسقط ساعة لازمة.
+  return minGap < 86400 - 3600;
 }
 
 /** فواصل علامات محور الزمن المستديرة (ثوانٍ) دون الشهر؛ الشهر فما فوق بالتقويم (`MONTH_STEPS`). */
