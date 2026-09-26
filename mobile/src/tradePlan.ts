@@ -1491,6 +1491,20 @@ export type JournalRowTerms = {
   note?: string | null;
 };
 
+/** `seen_*` لـ`POST /api/trades/{id}/close` (tools122a، backend `a7cb64c`) — `journalCloseSeen` */
+export type JournalCloseSeen = Omit<JournalEditSeen, 'seen_status' | 'seen_exit' | 'seen_tp'>;
+
+/**
+ * الصفّ الذي بُنيت عليه نافذة «إغلاق» يُرسل مع الإغلاق: الخادم يرفض (409 `trade_changed_concurrently`) إن خالف المخزَّن — يسدّ ما
+ * لا يراه `closeTermsChangedElsewhere` (صفقةٌ خارج الصفحة الأولى، وتعديلٌ بين الجلب والإغلاق). الحقول نفسها التي يفحصها ذاك
+ * (الرمز، الاتجاه، الدخول، الحجم، الوقف، الملاحظة) وبقواعد `journalEditSeen` نفسها. **بلا الهدف**: لا يدخل النتيجة المؤكَّدة (نقاط/
+ * مال/R)، وإرساله يرفض إغلاقاً صحيحاً لأن الهدف حُرّك بجهاز آخر. الحالة والخروج كذلك (الخادم يفحص «مفتوحة» بنفسه ⇒ 409 آخر).
+ */
+export function journalCloseSeen(row: JournalRowTerms): JournalCloseSeen {
+  const { seen_status: _s, seen_exit: _x, seen_tp: _t, ...seen } = journalEditSeen({ ...row, status: 'open' })!;
+  return seen;
+}
+
 /** صفحة الدفتر الافتراضية بالخادم (`db.TRADES_PAGE`) وسقف `limit` (`db.TRADES_PAGE_MAX`) — أكبر منه يُرفض 422. */
 export const JOURNAL_PAGE = 200;
 export const JOURNAL_PAGE_MAX = 500;

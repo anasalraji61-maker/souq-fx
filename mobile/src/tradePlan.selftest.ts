@@ -3976,3 +3976,30 @@ console.log('tradePlan journalConflictForm selftest OK');
   assert.equal(closeTermsChangedElsewhere([], shown), false);
 }
 console.log('tradePlan closeTermsChangedElsewhere selftest OK');
+
+// ——— journalCloseSeen: «إغلاق» يُرسل الصفّ الذي أكّده المتداول (tools122a) ———
+{
+  const { journalCloseSeen } = require('./tradePlan') as typeof import('./tradePlan');
+  const tr = { id: 'a', symbol: 'EURUSD', side: 'buy', entry: 1.0842, size: 0.3, sl: 1.08, tp: 1.09, note: '1R @ 1.08', status: 'open', exit: null };
+  // الحقول التي تدخل النتيجة المؤكَّدة فقط — لا حالة ولا خروج ولا هدف (تحريك الهدف بجهاز آخر لا يمنع الإغلاق)
+  assert.deepEqual(journalCloseSeen(tr), {
+    seen_symbol: 'EURUSD', seen_side: 'buy', seen_entry: 1.0842, seen_size: 0.3, seen_sl: 1.08, seen_note: '1R @ 1.08',
+  });
+  // بلا وقف/حجم ⇒ null صريح («رأيته فارغاً»، الخادم يطابق 0 القديم)، والملاحظة الغائبة ''
+  const bare = journalCloseSeen({ ...tr, size: null, sl: 0, note: null });
+  assert.equal(bare.seen_size, null);
+  assert.equal(bare.seen_sl, null);
+  assert.equal(bare.seen_note, '');
+  // ما يرفضه الخادم بـ422 (فيمنع الإغلاق للأبد) لا يُرسل أو يُرسل null: رمز > 12، ملاحظة > 500، اتجاه/دخول غير صالح
+  const odd = journalCloseSeen({ ...tr, symbol: 'X'.repeat(13), side: 'long', entry: 0, note: 'n'.repeat(501) });
+  assert.equal(odd.seen_symbol, null);
+  assert.equal(odd.seen_side, null);
+  assert.equal(odd.seen_entry, null);
+  assert.equal('seen_note' in odd, false);
+  // صفّ مغلق حُمّل كذلك (الخادم يرفضه بـtrade_already_closed أصلاً) ⇒ الحقول نفسها لا null
+  assert.equal(journalCloseSeen({ ...tr, status: 'closed' } as typeof tr).seen_entry, 1.0842);
+  // JSON يطابق نموذج TradeClose: لا مفاتيح غير معروفة
+  for (const k of Object.keys(journalCloseSeen(tr)))
+    assert.ok(['seen_symbol', 'seen_side', 'seen_entry', 'seen_size', 'seen_sl', 'seen_note'].includes(k), k);
+}
+console.log('tradePlan journalCloseSeen selftest OK');
