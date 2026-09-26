@@ -178,8 +178,9 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.ok(Math.abs(headerChangePct(s, 1.1817, 1.17) - 1) < 1e-9);
   // بلا تيك ⇒ آخر إغلاق مقابل مرجع الأمس
   assert.ok(Math.abs(headerChangePct(s, null, 1.17) - ((1.1702 - 1.17) / 1.17) * 100) < 1e-9);
-  // لا مرجع ⇒ من أول شمعة (السلوك السابق)
-  assert.ok(Math.abs(headerChangePct(s, 1.1716, undefined) - 1) < 1e-9);
+  // لا مرجع (تحميل/429) ⇒ «—»، لا نسبة أول شمعة تحت اسم اليوم (tools127a)
+  assert.ok(Number.isNaN(headerChangePct(s, 1.1716, undefined)), 'no ref ⇒ NaN');
+  assert.ok(Number.isNaN(headerChangePct(s, 1.1716, null)), 'null ref ⇒ NaN');
   // مرجع لا يعقل (>25%) ⇒ لا نسبة («—»)، لا نسبة أول شمعة بتعريف آخر (tools103a)
   assert.ok(Number.isNaN(headerChangePct(s, 1.1716, 150)));
   const pumped = { ...s, candles: s.candles.map((c, i) => (i === 0 ? { ...c, close: 0.5 } : c)) };
@@ -188,9 +189,9 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   const pepe = { ...s, symbol: 'PEPEUSD' };
   assert.ok(Math.abs(headerChangePct(pepe, 0.0000132, 0.00001) - 32) < 1e-6, 'crypto +32% shown');
   assert.ok(Number.isNaN(headerChangePct(pepe, 3000, 60000)), 'crypto wrong-instrument ref rejected');
-  // شموع تجريبية ⇒ السلوك السابق
+  // شموع تجريبية ⇒ «—» (مرجع حقيقي مقابل سعر مُولَّد، ولا نسبة مُولَّدة تحت اسم اليوم)
   const demo = { ...s, data_source: { kind: 'demo' as const, as_of: now, channel: null } };
-  assert.ok(Math.abs(headerChangePct(demo, 1.1716, 1.17) - 1) < 1e-9);
+  assert.ok(Number.isNaN(headerChangePct(demo, 1.1716, 1.17)), 'demo ⇒ NaN');
 }
 
 // رأس TerminalScreen العريض: سلسلة 4H صاعدة أسبوعاً (change_pct +3.33%) واليوم هابط ⇒ السالب لا نسبة السلسلة
