@@ -881,6 +881,20 @@ function resolveWebNode(ref: React.RefObject<View | null>): HTMLElement | null {
   return nested && typeof nested.addEventListener === 'function' ? nested : null;
 }
 
+/**
+ * نافذة (Modal) مفتوحة فوق هذا الشارت على الويب — قائمة «?» للاختصارات، إعدادات مؤشّر، لوح تنبيهات.
+ * react-native-web يسم النافذة العليا وحدها `role="dialog"`؛ إن لم تحوِ لوح هذا الشارت فهي تغطّيه، ومفاتيحه
+ * لها لا له. كانت Delete تحذف الرسم المحدَّد خلف قائمة «?»، و«5» يبدّل الفريم، وF يملأ الشاشة، وCtrl+Z يتراجع.
+ * الشارت داخل نافذة التركيز/الرباعي تحويه نافذته فلا يُحجب.
+ */
+function webDialogCovers(ref: React.RefObject<View | null>): boolean {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return false;
+  const dialog = document.querySelector('[role="dialog"][aria-modal="true"]');
+  if (!dialog) return false;
+  const me = resolveWebNode(ref);
+  return !!me && !dialog.contains(me);
+}
+
 const webAxisLockStyle =
   Platform.OS === 'web'
     ? ({
@@ -5438,7 +5452,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => {
     if (Platform.OS !== 'web' || !interactive) return;
     const onKey = (event: KeyboardEvent) => {
-      if (webKeyChart !== keyToken.current) return;
+      if (webKeyChart !== keyToken.current || webDialogCovers(plotRef)) return;
       const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
       if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
       const key = event.key;
@@ -5796,7 +5810,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (Platform.OS !== 'web' || (!interactive && !canPan)) return;
     const onKey = (event: KeyboardEvent) => {
       if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-      if (webKeyChart !== keyToken.current) return;
+      if (webKeyChart !== keyToken.current || webDialogCovers(plotRef)) return;
       const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
       if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
       if (event.code === 'KeyR') {
@@ -5874,7 +5888,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
-      if (webKeyChart !== keyToken.current) {
+      if (webKeyChart !== keyToken.current || webDialogCovers(plotRef)) {
         if (tfTypedRef.current) put('');
         return;
       }
@@ -6371,7 +6385,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => {
     if (Platform.OS !== 'web' || !canPan) return;
     const onKey = (event: KeyboardEvent) => {
-      if (webKeyChart !== keyToken.current) return;
+      if (webKeyChart !== keyToken.current || webDialogCovers(plotRef)) return;
       // رسم محدَّد: الأسهم له (معالج الرسم أعلاه)، لا للعرض ولا للتقاطع.
       if (selectedIdRef.current && event.key.startsWith('Arrow')) return;
       // W4 (قرار أنس ١٦): «+»/«−» تكبير/تصغير كزرّي اللوح، وF ملء الشاشة بالمتصفّح. بالموضع (`event.code`) كذلك:
