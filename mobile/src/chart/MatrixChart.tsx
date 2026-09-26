@@ -4183,8 +4183,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   // زرّ «نسخة» (chart12): نسخة مستقلّة من الرسم المحدَّد بجانبه (`cloneShift`) تصير هي المحدَّدة، فيسحبها
   // المتداول ويعدّلها وحده — كنسخ مستوى دعم لقمّة أخرى أو مركز شراء بنفس المسافة. قابلة للتراجع.
-  const cloneSelectedDrawing = () => {
-    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+  const cloneSelectedDrawing = (source?: Drawing) => {
+    const d = source ?? (selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null);
     if (!d) return;
     const shift = cloneShift(d.tool, yOf(d.a.price) > chartPlotH / 2);
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
@@ -4204,7 +4204,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     pushDrawHistory();
     setDrawings((list) => [...list, next]);
     setSelectedId(next.id);
+    return next;
   };
+  const cloneDrawingRef = useRef(cloneSelectedDrawing);
+  cloneDrawingRef.current = cloneSelectedDrawing;
+  // الويب: Ctrl/⌘+C ينسخ الرسم المحدَّد وCtrl/⌘+V يلصق نسخة بجانبه (كزرّ «نسخة») — ولصقات متتالية تتدرّج كلٌّ
+  // بجانب السابقة لا فوقها. النسخ لنفس الرمز والفريم فقط: مستوى 1.08500 من EURUSD لا معنى له على USDJPY.
+  const copiedDrawing = useRef<{ d: Drawing; key: string } | null>(null);
 
   // قفل الرسم المحدَّد (كقفل TradingView): المقفول لا يُسحب ولا تتحرّك مقابضه بلمسة عابرة — مستوى وقف مدروس
   // لا يزحف لأنّ الإصبع مرّ عليه أثناء التمرير. التحديد والحذف واللون والتنبيه تبقى. قابل للتراجع كأيّ تعديل.
@@ -5233,6 +5239,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         } else if (tool !== 'none') {
           setTool('none');
         }
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && (letter === 'c' || letter === 'v')) {
+        const chartKey = `${series.symbol}|${series.timeframe}`;
+        if (letter === 'c') {
+          // نصّ محدَّد بالصفحة يُنسخ كالعادة — لا نسرق Ctrl+C إلا لرسم.
+          if (!selectedId || (typeof window !== 'undefined' && String(window.getSelection?.() ?? ''))) return;
+          const d = drawingsRef.current.find((x) => x.id === selectedId);
+          if (!d) return;
+          copiedDrawing.current = { d, key: chartKey };
+          event.preventDefault();
+          return;
+        }
+        const copied = copiedDrawing.current;
+        if (!copied || copied.key !== chartKey || pending) return;
+        event.preventDefault();
+        const pasted = cloneDrawingRef.current(copied.d);
+        if (pasted) copiedDrawing.current = { d: pasted, key: chartKey };
         return;
       }
       if ((key === 'Delete' || key === 'Backspace') && selectedId) {
@@ -7051,7 +7075,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   styles.compactTool,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                 ]}
-                onPress={cloneSelectedDrawing}
+                onPress={() => cloneSelectedDrawing()}
               >
                 <Text style={styles.compactToolIcon}>❐</Text>
               </Pressable>
@@ -10105,7 +10129,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const at = ctxMenu.point.price;
               if (ctxMenu.drawingId) {
                 const drawingId = ctxMenu.drawingId;
-                items.push({ key: 'clone', label: `❐ ${tr.mcCloneDrawing}`, run: cloneSelectedDrawing });
+                items.push({ key: 'clone', label: `❐ ${tr.mcCloneDrawing}`, run: () => cloneSelectedDrawing() });
                 items.push({
                   key: 'lock',
                   label: selectedLocked ? `🔒 ${tr.mcUnlockDrawing}` : `🔓 ${tr.mcLockDrawing}`,
@@ -13657,7 +13681,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     styles.tool,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
-                  onPress={cloneSelectedDrawing}
+                  onPress={() => cloneSelectedDrawing()}
                 >
                   <Text style={styles.toolText}>❐ {tr.mcCloneDrawing}</Text>
                 </Pressable>
