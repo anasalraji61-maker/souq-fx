@@ -33,6 +33,7 @@ assert.ok(md.includes('0.00000012') && md.includes('-0.00003') && !/e-/.test(md)
 // التنبيه
 assert.equal(forecastDisclaimer('indicator_consensus', 'عربي', ku), ku.forecastDisclaimerConsensus);
 assert.equal(forecastDisclaimer('not_enough_data', 'عربي', en), en.forecastDisclaimerNoData);
+assert.equal(forecastDisclaimer('no_movement', 'عربي', ku), ku.forecastDisclaimerNoMovement);
 assert.equal(forecastDisclaimer(undefined, 'server', en), 'server');
 assert.equal(forecastDisclaimer('other', null, en), '');
 

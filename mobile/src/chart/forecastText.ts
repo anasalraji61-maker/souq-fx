@@ -50,9 +50,11 @@ export function forecastVoteDetail(v: VoteLike, t: Pick<Dict, 'forecastDetail'>)
 export function forecastDisclaimer(
   code: string | null | undefined,
   serverText: string | null | undefined,
-  t: Pick<Dict, 'forecastDisclaimerConsensus' | 'forecastDisclaimerNoData'>
+  t: Pick<Dict, 'forecastDisclaimerConsensus' | 'forecastDisclaimerNoData' | 'forecastDisclaimerNoMovement'>
 ): string {
   if (code === 'indicator_consensus') return t.forecastDisclaimerConsensus;
   if (code === 'not_enough_data') return t.forecastDisclaimerNoData;
+  // backend-r54: سلسلة كاملة بلا حركة (سوق مجمّد/مغلق) — ليست «شموعاً قليلة».
+  if (code === 'no_movement') return t.forecastDisclaimerNoMovement;
   return serverText ?? '';
 }
