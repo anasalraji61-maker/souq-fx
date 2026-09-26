@@ -54,7 +54,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const [note, setNote] = useState('');
   // تنبيه الخادم برمزه (backend-r3) — يُترجم عند العرض فيتبع تبديل اللغة دون طلب جديد.
   const [disclaimer, setDisclaimer] = useState<{ code: string | null; text: string } | null>(null);
-  // منازل الخادم (`price_decimals`) لأداة لا نعرف منازلها (الرموز المعروفة تبقى بمواصفتها).
+  // منازل الخادم (`price_decimals`): لأداة لا نعرف منازلها، أو حين تزيد على مواصفتنا (أزواج أساسها الين، backend-r125).
   const [serverDecimals, setServerDecimals] = useState<number | null>(null);
   const [priceAsOf, setPriceAsOf] = useState<number | null>(null);
 
@@ -180,14 +180,19 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const levelsWhy = levelsUnavailableText({ unavailable: levelsGap }, t);
   // الوقف والهدف كانا سعرَين فقط، والمتداول يزن الصفقة بالـpip (حجم لوته من مسافة وقفه).
   // `pipsBetween` نفسها التي تبني عليها الحاسبة؛ أداة بلا مواصفة pip تبقى بالأسعار وحدها.
-  const levelSpec = levels ? chartPipSpec(symbol) : null;
+  // backend-r125: أزواج **أساسها الين** (JPYUSD ≈ 0.0067) — مواصفتنا تعاملها زوجاً بـ5 منازل وpip ‏0.0001 (1.5% من
+  // السعر)، والخادم يرسل منازلها من حجم السعر (8). منازل الخادم الأدقّ تغلب، ولا pip حين لا تطابق المواصفة الأداة:
+  // كان الدخول والوقف والهدف كلها «0.00666» والمسافة «0.1 pips».
+  const specDecimals = symbolPriceDecimals(symbol);
+  const useServerDecimals = serverDecimals != null && (specDecimals == null || serverDecimals > specDecimals);
+  const levelSpec = levels && !(useServerDecimals && specDecimals != null) ? chartPipSpec(symbol) : null;
   const pipsTag = (a: number, b: number) => {
     const p = levelSpec ? pipsBetween(levelSpec, a, b) : null;
     // «pips» بالإنجليزية كسطر السبريد والقياس بالشارت (كانت «12.0 pip» ثابتة)، وبلا عُشر من 1000.
     return p != null ? ` (${pipsNumber(p)} ${pipUnit(lang)})` : '';
   };
   const px = (n: number, ref: number) =>
-    serverDecimals != null && symbolPriceDecimals(symbol) == null ? n.toFixed(serverDecimals) : formatPrice(n, symbol, ref);
+    useServerDecimals ? n.toFixed(serverDecimals!) : formatPrice(n, symbol, ref);
   const noteText = disclaimer ? forecastDisclaimer(disclaimer.code, disclaimer.text, t) : note;
   const rr =
     levels && direction !== 'neutral' && Math.abs(levels.entry - levels.sl) > 0
