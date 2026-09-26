@@ -210,3 +210,12 @@ def test_courses_do_not_advertise_features_that_do_not_exist(monkeypatch):
     assert all(x["ai_tutor"] is False for x in c.get("/api/courses").json()["courses"])
     d = c.get("/api/courses/basics").json()
     assert d["ai_tutor"] is False and all(m["ai_quiz"] is False for m in d["modules"])
+
+
+def test_progress_get_with_expired_token_is_401_not_empty(client):
+    """منتهٍ/ملغى ⇒ 401 كالـPOST و`_owner_key` — كان `{"progress": []}` بـ200: كل محاضرة «غير مبدوءة»."""
+    headers = _register(client, "student9")
+    assert client.post("/api/auth/logout", headers=headers).status_code == 200
+    r = client.get("/api/academy/progress", headers=headers)
+    assert r.status_code == 401, r.text
+    assert client.get("/api/academy/progress").json() == {"progress": []}  # الزائر بلا توكن كما هو

@@ -1040,7 +1040,12 @@ def custom_watchlist_remove(
 
 
 @app.get("/api/academy/progress")
-def academy_progress_get(user: dict | None = Depends(_auth_user)):
+def academy_progress_get(
+    user: dict | None = Depends(_auth_user), authorization: str | None = Header(default=None)
+):
+    # توكن مُرسَل منتهٍ/ملغى ⇒ 401 (كشقيقه POST و`_owner_key`)، لا «لا تقدّم» بـ200 يبدو كل محاضرة غير مبدوءة
+    if authorization and not user:
+        raise HTTPException(status_code=401, detail="login_required")
     if not user:
         return {"progress": []}
     return {"progress": db.get_progress(user["user_id"])}
