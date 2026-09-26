@@ -1214,6 +1214,10 @@ export type Dict = {
   cfSpreadBidAskA11y: string;
   /** `{pips}` بالصيغة المعروضة (`toFixed(1)`) — يُلحق بـ`cfSpreadBidAskA11y` بفاصلة، أو وحده (الهاتف/السعر القديم) */
   cfSpreadPipsA11y: string;
+  /** سابقة قصيرة قبل سعري العرض/الطلب برأس الإطار (`ChartFrame`) ورأس ⛶ (`FocusChartModal`) — كانت «B»/«A» لاتينيتين لكل اللغات
+   *  والقارئ العربي ينطقهما «بي/إيه» (QA135a). كلمة واحدة بلا نقطتين؛ الرقم يليها بمسافة */
+  quoteBidShort: string;
+  quoteAskShort: string;
   // Shared chart/dataSource.ts + chart/marketHours.ts labels (ChartFrame/TerminalScreen/FocusChartModal) — 2026-09-18
   dsKindProvider: string;
   dsKindDemo: string;
@@ -2625,6 +2629,8 @@ const ar: Dict = {
   cfMarketClosedTag: 'مغلق',
   cfSpreadBidAskA11y: 'Bid (بيع) {bid}، Ask (شراء) {ask}',
   cfSpreadPipsA11y: 'السبريد {pips} pip',
+  quoteBidShort: 'بيع',
+  quoteAskShort: 'شراء',
   dsKindProvider: 'مزوّد',
   dsKindDemo: 'تجريبي',
   dsKindCache: 'محفوظ',
@@ -3907,6 +3913,8 @@ const enUS: Dict = {
   cfMarketClosedTag: 'Closed',
   cfSpreadBidAskA11y: 'Bid {bid}, ask {ask}',
   cfSpreadPipsA11y: 'Spread {pips} pips',
+  quoteBidShort: 'Bid',
+  quoteAskShort: 'Ask',
   dsKindProvider: 'Provider',
   dsKindDemo: 'Demo',
   dsKindCache: 'Cached',
@@ -5248,6 +5256,8 @@ const ku: Dict = {
   cfMarketClosedTag: 'داخراو',
   cfSpreadBidAskA11y: 'Bid (فرۆشتن) {bid}، Ask (کڕین) {ask}',
   cfSpreadPipsA11y: 'سپرێد {pips} pip',
+  quoteBidShort: 'فرۆشتن',
+  quoteAskShort: 'کڕین',
   dsKindProvider: 'دابینکەر',
   dsKindDemo: 'نموونەیی',
   dsKindCache: 'خەزنکراو',
