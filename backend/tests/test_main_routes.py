@@ -792,7 +792,8 @@ def test_removing_clears_every_duplicate_row_of_the_symbol(client):
     db.add_watchlist_symbol("EURUSD", _me(client, token), owner_key=None)
     headers = {**_auth(token), **_DEV1}
     assert client.get("/api/watchlist/custom", headers=headers).json()["symbols"] == ["EURUSD"]
-    assert client.delete("/api/watchlist/custom/EURUSD", headers=headers).json()["removed"] == 2
+    # منذ run 65 نقل صفوف الجهاز للحساب (أول طلب مسجّل) يحذف الصفّ المجهول المكرَّر ⇒ صفّ واحد يبقى
+    assert client.delete("/api/watchlist/custom/EURUSD", headers=headers).json()["removed"] == 1
     assert client.get("/api/watchlist/custom", headers=headers).json()["symbols"] == []
 
 

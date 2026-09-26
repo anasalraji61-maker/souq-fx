@@ -321,10 +321,23 @@ def claim_device_rows(user_id: int, owner_key: str) -> int:
     كان «التبنّي» توسيع قراءة فقط (`_owner_clause`: `user_id IS NULL AND owner_key=K`) والصفوف تبقى
     بلا مالك ⇒ (1) حذف الحساب (`WHERE user_id=?`) يُبقي صفقاته وتنبيهاته قبل التسجيل، (2) حساب آخر
     يدخل على الهاتف نفسه يراها ويعدّلها وتدخل في نسبة فوزه، (3) صاحبها لا يراها على هاتفه الثاني.
-    قائمة المتابعة: رمز موجود بالحساب يبقى صفّه المجهول (المفتاح `(user_id, symbol)`) — القراءة تزيل التكرار.
+    قائمة المتابعة: رمز موجود بالحساب **يُحذف** صفّه المجهول المكرَّر. كان يبقى (المفتاح `(user_id, symbol)`
+    ⇒ `UPDATE OR IGNORE` يتخطّاه) فحذف الرمز من هاتف آخر يمسّ صفّ الحساب وحده ⇒ الرمز يعود على هذا
+    الهاتف، ثم يبقى بقائمة المجهول/الحساب التالي عليه بعد الخروج.
+    تحت قفل كتابة ومع جلسة حيّة (`_lock_owner`): حذف الحساب بين المصادقة والنقل كان ينقل يومية الجهاز
+    إلى `user_id` محذوف ⇒ تختفي من الجهاز ولا يمحوها أحد. الحساب ذهب ⇒ لا نقل (0).
     """
     n = 0
     with _conn() as c:
+        try:
+            _lock_owner(c, user_id)
+        except PermissionError:
+            return 0
+        c.execute(
+            """DELETE FROM watchlist WHERE user_id IS NULL AND owner_key=?
+               AND symbol IN (SELECT symbol FROM watchlist WHERE user_id=?)""",
+            (owner_key, user_id),
+        )
         for table in ("alerts", "indicator_alerts", "trades", "layouts", "watchlist"):
             n += c.execute(
                 f"UPDATE OR IGNORE {table} SET user_id=? WHERE user_id IS NULL AND owner_key=?",
@@ -1588,6 +1601,8 @@ def ballot(vote_id: str, choice: str, user_id: int) -> dict | None:
     new_col = "agree" if choice == "agree" else "disagree"
     old_col = "disagree" if new_col == "agree" else "agree"
     with _conn() as c:
+        # حساب حُذف بين المصادقة وهنا لا يترك صفّ صوت باسم `user_id` محذوف ولا يُحتسب صوته
+        _lock_owner(c, user_id)
         if not c.execute("SELECT 1 FROM votes WHERE id=?", (vote_id,)).fetchone():
             return None
         if vote_id in _hidden_ids(c, "vote", user_id):
