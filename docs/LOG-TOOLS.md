@@ -7121,6 +7121,6 @@ selftests: tradePlan/positionSize/parseDecimal/notifications/moderation/newsRisk
 `bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام (رمز الخروج، بلا أنبوب). selftests السبعة تمرّ (0). **لم يُشغَّل التطبيق على جهاز.**
 
 ### ما يبدأ منه التشغيل القادم
-1. tools144a: حين يغيّر launch النصّ لا ربط مطلوب (المفتاح نفسه).
+1. tools144a لم يعد مطلوباً: launch غيّر النصّ بنفسه (`f6fc9be`، «ناقصة أو في غير مكانها») قبل وصول الطلب — حُذف الصفّ.
 2. جهاز: EURUSD بحساب ين والجلب فاشل ⇒ «15.0» سطر «قصدتَ 150» ولا لوت؛ USDHKD وقف «20.50» ⇒ لوت.
 3. tools102b عند قرار أنس.
