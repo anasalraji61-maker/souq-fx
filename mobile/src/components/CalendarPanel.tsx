@@ -472,7 +472,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
                   (currency === c || (c === 'ALL' && currency === PAIR && !pairActive)) && styles.chipTextOn,
                 ]}
               >
-                {c}
+                {c === 'ALL' ? t.calendarAllShort : c}
               </Text>
             </Pressable>
           ))}
