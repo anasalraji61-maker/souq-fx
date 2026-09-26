@@ -2287,17 +2287,20 @@ def _try_close_trade(trade_id: str, exit_price: float, owner_sql: str, owner_arg
 
 
 def update_trade(
-    trade_id: str, fields: dict, user_id: int | None = None, owner_key: str | None = None
+    trade_id: str, fields: dict, user_id: int | None = None, owner_key: str | None = None,
+    expect: dict | None = None,
 ) -> dict | None:
     """تعديل صفقة يملكها المستدعي. `fields` يحوي ما أُرسل فقط؛ exit/sl/tp/size = None تعني مسحاً.
     النتيجة (`pnl`) والحالة تُعاد حسابهما من الدخول/الخروج/الاتجاه بعد التعديل: خطأ كتابة بسعر الدخول
-    كان يُفسد نسبة النجاح وصافي النقاط للأبد (الحلّ الوحيد كان الحذف وإعادة الكتابة)."""
+    كان يُفسد نسبة النجاح وصافي النقاط للأبد (الحلّ الوحيد كان الحذف وإعادة الكتابة).
+    `expect` ({"status"/"exit": ما رآه العميل}): الصفّ المخزَّن مختلف ⇒ `TradeUpdateConflict` بلا إعادة محاولة —
+    الإعادة أدناه تحمي نافذة القراءة-الكتابة بالخادم فقط، لا نموذجاً فُتح قبل دقائق على جهاز آخر."""
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
     # قراءة-تعديل-كتابة للصفّ كلّه: إغلاقٌ من جهاز آخر بين القراءة والكتابة كانت الكتابة تمحوه
     # (تعيد exit/status القديمين من الصفّ المقروء) — نفس ضرر إغلاق الصفقة مرّتين. الكتابة الآن
     # مشروطة بأن الخروج والحالة لم يتغيّرا منذ القراءة؛ وإلا تُعاد القراءة ويُطبَّق التعديل على الجديد.
     for _ in range(_UPDATE_TRADE_ATTEMPTS):
-        row = _try_update_trade(trade_id, fields, owner_sql, owner_args)
+        row = _try_update_trade(trade_id, fields, owner_sql, owner_args, expect or {})
         if row is not _STALE:
             return row
     raise TradeUpdateConflict(trade_id)
@@ -2315,7 +2318,7 @@ class TradeUpdateConflict(Exception):
     """الصفقة تتغيّر (إغلاق/خروج) باستمرار بين القراءة والكتابة — لا نكتب فوق ما لم نقرأه."""
 
 
-def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: tuple):
+def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: tuple, expect: dict):
     with _conn() as c:
         r = c.execute(
             f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
@@ -2325,6 +2328,8 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
         row = dict(r)
         row.pop("owner_key", None)
         seen = {k: row.get(k) for k in _TRADE_WRITE_COLS}
+        if any(seen[k] != v for k, v in expect.items()):
+            raise TradeUpdateConflict(trade_id)
         if "symbol" in fields:
             row["symbol"] = str(fields["symbol"]).strip().upper()
         if "side" in fields and fields["side"] in ("buy", "sell"):

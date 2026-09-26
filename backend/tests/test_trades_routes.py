@@ -907,3 +907,38 @@ def test_anonymous_client_without_a_valid_install_id_is_refused(client, hdr):
     assert client.post(f"/api/trades/{legacy['id']}/close", json={"exit": 1.2}, headers=hdr).status_code == 400
     assert client.delete(f"/api/trades/{legacy['id']}", headers=hdr).status_code == 400
     assert db.list_trades(None)[0]["status"] == "open"
+
+
+# ─── run 78: نموذج تعديل فُتح قبل إغلاق/إعادة فتح من جهاز آخر ─────────────────
+
+def test_stale_edit_form_cannot_overwrite_a_close_from_another_device(client):
+    trade = _open_trade(client, sl=None, tp=None)
+    assert client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.2}, headers=_DEV1).status_code == 200
+    # الجهاز A فتح النموذج والصفقة مفتوحة، ثم حفظ بخروج 1.05
+    r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.05, "seen_status": "open", "seen_exit": None},
+                     headers=_DEV1)
+    assert r.status_code == 409 and r.json()["detail"]["error"] == "trade_changed_concurrently"
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["exit"] == pytest.approx(1.2), "إغلاق الجهاز B باقٍ"
+
+
+def test_stale_edit_form_cannot_undo_a_reopen(client):
+    trade = _open_trade(client, sl=None, tp=None)
+    client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.2}, headers=_DEV1)
+    assert client.patch(f"/api/trades/{trade['id']}", json={"exit": None}, headers=_DEV1).status_code == 200
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "x", "exit": 1.2, "seen_status": "closed",
+                                                         "seen_exit": 1.2}, headers=_DEV1)
+    assert r.status_code == 409
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"][0]["status"] == "open"
+
+
+def test_edit_with_matching_seen_state_is_applied(client):
+    trade = _open_trade(client, sl=None, tp=None)
+    client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.2}, headers=_DEV1)
+    r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.25, "seen_status": "closed", "seen_exit": 1.2},
+                     headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["exit"] == pytest.approx(1.25)
+    # بلا seen_* (عميل قديم): السلوك القديم كما هو
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "ok"}, headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["note"] == "ok"
+    assert "seen_status" not in r.json()["trade"]

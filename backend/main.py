@@ -694,6 +694,10 @@ class TradeUpdate(BaseModel):
     note: str | None = Field(default=None, max_length=500)
     sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    # run 78: حالة الصفّ كما رآها النموذج عند فتحه. إغلاق من جهاز آخر بعد فتح نموذج التعديل كان يُمحى بحفظه
+    # (يُعاد تطبيق الخروج القديم على الصفّ الجديد: ربح +9% يصير خسارة) — مختلف ⇒ 409. غائبان = بلا فحص (عملاء قدامى).
+    seen_status: Literal["open", "closed"] | None = None
+    seen_exit: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
@@ -1731,13 +1735,17 @@ def trades_update(
     uid = user["user_id"] if user else None
     # model_fields_set يميّز «لم يُرسَل» (لا تغيير) عن null صريح (مسح الوقف/الهدف/الخروج)
     fields = {k: getattr(body, k) for k in body.model_fields_set}
+    # `seen_exit: null` صريح = «رأيتها مفتوحة بلا خروج» ⇒ يُفحص كذلك
+    expect = {k.removeprefix("seen_"): fields.pop(k) for k in ("seen_status", "seen_exit") if k in fields}
+    if expect.get("status", "") is None:
+        expect.pop("status")
     for k in ("symbol", "side", "entry", "note"):
         if k in fields and fields[k] is None:
             fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف
     # `size` ليس منها: null = «غير معروف» كالإنشاء (a078946). كان يُتجاهل ⇒ «1 لوت» الافتراضي القديم
     # بصفوف ما قبل الإصلاح لا يُمحى أبداً ويبقى حجماً لم يكتبه المتداول.
     try:
-        row = db.update_trade(trade_id, fields, uid, owner_key=key)
+        row = db.update_trade(trade_id, fields, uid, owner_key=key, expect=expect)
     except db.TradeUpdateConflict:
         # لا نكتب فوق خروج لم نقرأه؛ العميل يعيد التحميل ويرى الصفّ كما هو
         raise HTTPException(409, {"error": "trade_changed_concurrently"})
