@@ -8,7 +8,7 @@ const PREFIX = 'matrix.drawings.v1';
 /** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
  *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
  *  Dict بـi18n/locales.ts. */
-export type DrawingsSaveErrorCode = 'drawingsSaveFailed' | 'drawingsDeleteFailed';
+export type DrawingsSaveErrorCode = 'drawingsSaveFailed' | 'drawingsDeleteFailed' | 'drawingsReadFailed';
 
 const saveError = createSaveErrorSignal<DrawingsSaveErrorCode>();
 const setSaveError = saveError.set;
@@ -163,9 +163,12 @@ export async function loadDrawings(symbol: string, timeframe: string): Promise<D
     raw = await AsyncStorage.getItem(keyV2(symbol));
   } catch {
     unread.add(symbol);
+    // launch172a: كانت صامتة — شارت بلا رسوماته يبدو كأنها مُحيت.
+    setSaveError('drawingsReadFailed');
     return cache.get(symbol) ?? [];
   }
   unread.delete(symbol);
+  if (saveError.get() === 'drawingsReadFailed' && !unread.size) setSaveError(null);
   let list = parseList(raw);
   if (!list && raw) {
     // JSON تالف: نسخة احتياطية قبل أن تكتب أوّل كتابة فوقه.
@@ -199,7 +202,8 @@ export async function saveDrawings(
       }
     }
     await AsyncStorage.setItem(keyV2(symbol), JSON.stringify(drawings));
-    setSaveError(null);
+    // رمز آخر ما زالت رسوماته غير مقروءة ⇒ يبقى تنبيهه.
+    setSaveError(unread.size ? 'drawingsReadFailed' : null);
   } catch {
     setSaveError('drawingsSaveFailed');
   }
@@ -211,7 +215,7 @@ export async function clearDrawings(symbol: string, owner?: unknown): Promise<vo
   unread.delete(symbol);
   try {
     await AsyncStorage.setItem(keyV2(symbol), '[]');
-    setSaveError(null);
+    setSaveError(unread.size ? 'drawingsReadFailed' : null);
   } catch {
     setSaveError('drawingsDeleteFailed');
   }

@@ -22,7 +22,7 @@ export const MAX_LAYOUTS = 60;
 /** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
  *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
  *  Dict بـi18n/locales.ts. */
-export type LayoutsSaveErrorCode = 'layoutSaveFailed' | 'layoutDeleteFailed';
+export type LayoutsSaveErrorCode = 'layoutSaveFailed' | 'layoutDeleteFailed' | 'layoutReadFailed';
 
 const saveError = createSaveErrorSignal<LayoutsSaveErrorCode>();
 const setSaveError = saveError.set;
@@ -85,10 +85,14 @@ export function clearLayoutTombstone(id: string): Promise<void> {
   return serial(() => editTombstones((ids) => ids.filter((x) => x !== id)));
 }
 
+/** launch172a: قراءة فاشلة كانت صامتة — قائمة فارغة تبدو «لا تخطيطات محفوظة» فيظنّها المتداول مُحيت. */
 export async function loadLayouts(): Promise<TerminalLayout[]> {
   try {
-    return await loadLayoutsStrict();
+    const all = await loadLayoutsStrict();
+    if (saveError.get() === 'layoutReadFailed') setSaveError(null);
+    return all;
   } catch {
+    setSaveError('layoutReadFailed');
     return [];
   }
 }
@@ -114,8 +118,14 @@ export function saveLayout(layout: TerminalLayout): Promise<void> {
 }
 
 async function saveLayoutNow(layout: TerminalLayout): Promise<void> {
+  let all: TerminalLayout[];
   try {
-    const all = await loadLayoutsStrict();
+    all = await loadLayoutsStrict();
+  } catch {
+    setSaveError('layoutReadFailed'); // الحفظ متوقّف لأن القراءة فشلت، لا لأن الكتابة فشلت
+    return;
+  }
+  try {
     const idx = all.findIndex((l) => l.id === layout.id);
     if (idx >= 0) all[idx] = layout;
     else all.unshift(layout);
@@ -135,8 +145,14 @@ export function deleteLayout(id: string): Promise<void> {
 }
 
 async function deleteLayoutNow(id: string): Promise<void> {
+  let all: TerminalLayout[];
   try {
-    const all = (await loadLayoutsStrict()).filter((l) => l.id !== id);
+    all = (await loadLayoutsStrict()).filter((l) => l.id !== id);
+  } catch {
+    setSaveError('layoutReadFailed');
+    return;
+  }
+  try {
     await AsyncStorage.setItem(KEY, JSON.stringify(all));
     setSaveError(null);
   } catch {
@@ -185,6 +201,7 @@ async function mergeServerLayoutsNow(payloads: unknown[]): Promise<TerminalLayou
   try {
     local = await loadLayoutsStrict();
   } catch {
+    setSaveError('layoutReadFailed');
     return []; // لا دمج فوق قائمة لم تُقرأ
   }
   const tombstones = new Set(await loadTombstones());
