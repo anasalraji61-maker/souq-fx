@@ -25,8 +25,11 @@ assert.equal(barCloseCountdown(open, 900, at(900)), null);
 assert.equal(barCloseCountdown(open, 900, at(3 * 86400)), null);
 // ساعة الجهاز متأخّرة عن الخادم ⇒ رقم مستحيل لا يُعرض
 assert.equal(barCloseCountdown(open, 900, at(-60)), null);
-// الأسبوعي ⇒ لا عدّاد
-assert.equal(barCloseCountdown(open, 604800, at(10)), null);
+// الأسبوعي بلا رمز: 7 أيام من الافتتاح، أيام وساعات:دقائق فوق اليوم
+assert.equal(barCloseCountdown(open, 604800, at(10)), '6d 23:59');
+assert.equal(barCloseCountdown(open, 604800, at(604800 - 3600)), '1:00:00');
+// أطول من أسبوع ⇒ لا عدّاد
+assert.equal(barCloseCountdown(open, 2592000, at(10)), null);
 // مدخلات غير صالحة
 assert.equal(barCloseCountdown(NaN, 900, at(10)), null);
 assert.equal(barCloseCountdown(open, 0, at(10)), null);
@@ -75,4 +78,14 @@ assert.equal(barCloseCountdown(jul15 + 20 * 3600, 14400, Date.UTC(2026, 6, 15, 2
 assert.equal(barCloseCountdown(jul15 + 16 * 3600, 14400, Date.UTC(2026, 6, 15, 18), 'DXY'), '2:00:00');
 assert.equal(barCloseCountdown(jul15 + 20 * 3600, 14400, Date.UTC(2026, 6, 15, 20, 30), 'EURUSD'), '3:30:00');
 
+
+// الأسبوعي مع الرمز: شمعة الاثنين 2026-09-21 تُغلق الجمعة 25 ‏17:00 نيويورك (21:00 UTC صيفاً)
+const monW = Date.UTC(2026, 8, 21) / 1000;
+assert.equal(barCloseCountdown(monW, 604800, utc(22, 10, 30), 'EURUSD'), '3d 10:30');
+assert.equal(barCloseCountdown(monW, 604800, utc(25, 20), 'EURUSD'), '1:00:00');
+// بعد إغلاق الجمعة (والأحد قبل وصول شمعة الأسبوع الجديد) ⇒ لا عدّاد
+assert.equal(barCloseCountdown(monW, 604800, utc(25, 21, 30), 'EURUSD'), null);
+assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'EURUSD'), null);
+// الكريبتو: 7 أيام من ختم الاثنين
+assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'BTCUSD'), '2:00:00');
 console.log('barCountdown.selftest: PASS');

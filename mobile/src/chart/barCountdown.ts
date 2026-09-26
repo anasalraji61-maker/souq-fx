@@ -1,4 +1,12 @@
-import { dailyBarCloseSec, forexNextCloseSec, iceBreakStartForCloseSec, isForexMarketOpen } from './marketHours';
+import {
+  dailyBarCloseSec,
+  forexNextCloseSec,
+  forexWeekCloseSec,
+  iceBreakStartForCloseSec,
+  isForexMarketOpen,
+} from './marketHours';
+
+const WEEK_SEC = 604800;
 
 /**
  * العدّ التنازلي لإغلاق الشمعة الجارية — يُكتب تحت سعر وسم السعر الحيّ.
@@ -9,7 +17,11 @@ import { dailyBarCloseSec, forexNextCloseSec, iceBreakStartForCloseSec, isForexM
  * 17:00 نيويورك من يوم ختمها (`dailyBarCloseSec`) — كانت تعدّ لمنتصف ليل UTC: 3 ساعات زائدة صيفاً (2 شتاءً)،
  * وتختفي كل مساء حين يصل ختم الغد.
  *
- * `null` = لا يُعرض: خطوة أطول من يوم (الأسبوعي — العدّ بالأيام لا يفيد بوسم ضيّق)، أو
+ * الأسبوعي: يُغلق مع إغلاق أسبوع شمعته (الجمعة 17:00 نيويورك، `forexWeekCloseSec`) لا بعد 7 أيام من ختم الاثنين،
+ * والكريبتو بعد 7 أيام. فوق اليوم يُكتب «4d 06:12» (أيام وساعات:دقائق) — بعرض «23:59:59» نفسه على الوسم.
+ * عطلة 25/12 داخل الأسبوع لا تُغلق الأسبوعية؛ السوق مغلق فيها فلا عدّاد أصلاً.
+ *
+ * `null` = لا يُعرض: خطوة أطول من أسبوع، أو
  * الشمعة أُغلقت ولم تصل تاليتها (السوق مغلق/عطلة/انقطاع — عدّاد عالق عند 0:00 يوهم بحياة)،
  * أو المتبقّي أكبر من الخطوة (ساعة الجهاز متأخّرة عن الخادم: رقم مستحيل لا يُعرض).
  *
@@ -24,10 +36,14 @@ export function barCloseCountdown(
   symbol?: string
 ): string | null {
   if (!Number.isFinite(lastBarTime) || !Number.isFinite(nowMs)) return null;
-  if (!(stepSec > 0) || stepSec > 86400) return null;
+  if (!(stepSec > 0) || (stepSec > 86400 && stepSec !== WEEK_SEC)) return null;
   const openSec = lastBarTime > 1e12 ? lastBarTime / 1000 : lastBarTime;
   let closeSec = openSec + stepSec;
-  if (symbol) {
+  if (symbol && stepSec === WEEK_SEC) {
+    if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;
+    const weekClose = forexWeekCloseSec(symbol, openSec * 1000);
+    if (weekClose != null) closeSec = weekClose;
+  } else if (symbol) {
     if (stepSec === 86400) closeSec = dailyBarCloseSec(symbol, openSec);
     if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;
     const weekClose = forexNextCloseSec(symbol, nowMs);
@@ -39,6 +55,12 @@ export function barCloseCountdown(
   const remaining = closeSec - nowMs / 1000;
   if (!(remaining > 0) || remaining > stepSec + 1) return null;
   const total = Math.min(stepSec, Math.ceil(remaining));
+  if (total > 86400) {
+    const d = Math.floor(total / 86400);
+    const hh = String(Math.floor((total % 86400) / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+    return `${d}d ${hh}:${mm}`;
+  }
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
