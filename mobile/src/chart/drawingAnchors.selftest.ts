@@ -423,4 +423,24 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   }
 }
 
+// عبر التوقيت الصيفي قبل أوّل شمعة: افتتاح جلسة D الصيفي (الثلاثاء 21:00 UTC = 17:00 نيويورك) على H1 نافذته شتوية يقع
+// على افتتاح الجلسة (22:00 UTC) بعد أسابيع، لا على 21:00 UTC = آخر شمعة جلسة الثلاثاء (أبكر بشمعة).
+{
+  const H = 3600;
+  const h1: { time: number }[] = [];
+  for (let t = Date.UTC(2026, 10, 9) / 1000; t < Date.UTC(2026, 10, 20) / 1000; t += H) {
+    const d = new Date(t * 1000);
+    const wd = d.getUTCDay();
+    const h = d.getUTCHours();
+    if (!(wd === 6 || (wd === 5 && h >= 22) || (wd === 0 && h < 22))) h1.push({ time: t });
+  }
+  const wk = h1.findIndex((b) => b.time >= Date.UTC(2026, 10, 16) / 1000);
+  const summerOpen = Date.UTC(2026, 9, 27, 21) / 1000;
+  const winterOpen = h1.findIndex((b) => b.time === Date.UTC(2026, 10, 10, 22) / 1000);
+  const p = anchorPoint({ index: 0, price: 1, time: summerOpen } as never, h1, H, false, undefined, 'EURUSD');
+  assert.equal(p.index, winterOpen - 2 * wk, `DST ${p.index}`);
+  assert.equal(indexAtTime(h1, summerOpen, H, undefined, 'EURUSD'), winterOpen - 2 * wk);
+  assert.equal(timeAtIndex(h1, winterOpen - 2 * wk, H, undefined, 'EURUSD'), summerOpen);
+}
+
 console.log('drawingAnchors.selftest: PASS');

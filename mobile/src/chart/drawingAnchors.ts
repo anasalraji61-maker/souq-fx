@@ -175,13 +175,15 @@ function weekPattern(bars: readonly TimeBar[], stepSec: number): { bars: number 
 }
 
 /**
- * `t` مُزاحاً `weeks` أسابيع. على D/W بعطلة (الفوركس) بساعة نيويورك لا UTC: افتتاح الجلسة 17:00 نيويورك ينتقل
- * ساعة بـUTC عبر التوقيت الصيفي ⇒ نقطة يومية مختومة بالافتتاح قبل أوّل شمعة كانت تعود بكسر 1/24. ختم منتصف ليل
- * (رسوم محفوظة قبل ختم الافتتاح) يُزاح بـUTC كما كان.
+ * `t` مُزاحاً `weeks` أسابيع. بعطلة (الفوركس) بساعة نيويورك لا UTC: افتتاح الجلسة 17:00 نيويورك ينتقل
+ * ساعة بـUTC عبر التوقيت الصيفي ⇒ نقطة يومية مختومة بالافتتاح قبل أوّل شمعة كانت تعود بكسر 1/24. وداخل اليوم
+ * كذلك: أسبوع الفوركس نمط بساعة نيويورك، فنقطة D (الثلاثاء 21:00 UTC صيفاً = افتتاح جلسة الأربعاء) على H1 نافذته
+ * شتوية كانت تُزاح إلى الثلاثاء 21:00 UTC = 16:00 نيويورك ⇒ آخر شمعة جلسة الثلاثاء، أبكر بشمعة من الافتتاح (22:00).
+ * ختم منتصف ليل على D/W (رسوم محفوظة قبل ختم الافتتاح) يُزاح بـUTC كما كان.
  */
 function weekShift(t: number, weeks: number, stepSec: number, weekendClosed: WeekendRule): number {
   const s = t + weeks * WEEK_SEC;
-  if (!weekendClosed || (stepSec !== 86400 && stepSec !== WEEK_SEC) || t % 86400 === 0) return s;
+  if (!weekendClosed || ((stepSec === 86400 || stepSec === WEEK_SEC) && t % 86400 === 0)) return s;
   const day = Math.floor(t / 86400) * 86400;
   return s + nyFivePmUtcSec(day + weeks * WEEK_SEC) - weeks * WEEK_SEC - nyFivePmUtcSec(day);
 }
@@ -214,7 +216,7 @@ export function indexAtTime(
     if (wk) {
       // يُقدَّم الزمن أسابيع كاملة حتى يقع بالأسبوع المحمَّل الأوّل، فخانته هناك ناقص شموع تلك الأسابيع
       const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
-      return indexAtTime(bars, time + k * WEEK_SEC, stepSec, endTime)! - k * wk.bars;
+      return indexAtTime(bars, weekShift(time, k, stepSec, weekendClosed), stepSec, endTime)! - k * wk.bars;
     }
     const ts = tradingStep(bars, weekendClosed);
     if (ts != null) return -Math.round(forexTradingSecBetween(time, first, weekSymbol(weekendClosed)) / ts);
