@@ -729,7 +729,7 @@
 | 681e0ff | `useMultiLiveTicks`: `noteServerTime(data.ts)` قبل قبول التيكات (كـ`useLiveTicks`) — جهاز متأخّر ≥3ث لا يرفض كل تيك «من المستقبل» بالطرفية والرباعي | chart-r74a |
 | aacb013 | ذاكرة شموع مشتركة `hooks/chartSeriesCache.ts` (التركيز + الرباعي): التركيز يعرض شموع (الرمز، الفريم) المحفوظة فوراً بلا مؤشّر دوّار والجلب يستبدلها؛ فشل الجلب مع ذاكرة ⇒ تبقى بدل «لا اتصال»؛ التجريبية لا تُخزَّن | chart-r74c |
 | a58f166 | DESIGN-PRO §1/§5.5: زرّ «السعر الحالي» الساكن بـ`AlertsPanel` بحدّ ونصّ محايدين (كشرائح المسافة)؛ فقاعات المتداول بـ`AiPanel` تعبئة وحدها بلا حدّ تأكيد | ميزانية التأكيد |
-| c4873fd | `CommissionPlanPanel`: فشل تقرير الأرباح (غير 401) يعرض `t.cppEarningsLoadError` مكان «—» (المفتاح من launch `4ed9ab0`؛ «تحديث» يطابق زرّ `refreshBtn`) | ui58a |
+| 0176476 | `CommissionPlanPanel`: فشل تقرير الأرباح (غير 401) يعرض `t.cppEarningsLoadError` مكان «—» (المفتاح من launch `4ed9ab0`؛ «تحديث» يطابق زرّ `refreshBtn`) | ui58a |
 
 - جديد بـCOORDINATION: **ui59a** → tools: `TerminalScreen.tsx:154` ينتقل إلى `sharedSeriesCache` كي تصير فتحات التركيز على ما جلبته الطرفية فورية (سطر واحد بملفّهم). حذفت صفّ chart-r74a المنجز واستبدلت r74c بـui59a.
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» لا شيء؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ إعادة الجولة `AccountScreen:209-231`.
