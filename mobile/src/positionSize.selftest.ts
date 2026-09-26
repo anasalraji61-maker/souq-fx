@@ -12,6 +12,7 @@ import {
   LOT_UNIT,
   manualConvLooksInverted,
   manualConvDecimalSlip,
+  priceDecimalSlip,
   manualConvForPair,
   lossStreakDrawdownPct,
   lossRiskPct,
@@ -4251,3 +4252,21 @@ console.log('positionSize parseLostToday selftest OK');
   assert.equal(manualConvDecimalSlip('BTCUSD', 650000), null);
 }
 console.log('positionSize manualConvDecimalSlip selftest OK');
+
+// سعر بلا فاصلة بلا دخول يُقارَن به (الحاسبة بالنقاط): وقف «1500» على USDJPY ⇒ 150؛ الأسعار الحقيقية لا
+{
+  const uj = instrumentSpec('USDJPY')!;
+  assert.equal(priceDecimalSlip(uj, 1500), 150);
+  assert.equal(priceDecimalSlip(uj, 148500), 148.5);
+  assert.equal(priceDecimalSlip(instrumentSpec('EURUSD')!, 10820), 1.082);
+  assert.equal(priceDecimalSlip(instrumentSpec('XAUUSD')!, 26500), 2650);
+  assert.equal(priceDecimalSlip(instrumentSpec('XAGUSD')!, 3095), 30.95);
+  for (const [sym, px] of [['USDJPY', 161], ['XAUUSD', 4200], ['XAUUSD', 1900], ['XAGUSD', 75], ['XAGUSD', 30], ['XAGUSD', 110], ['XAGUSD', 150], ['XAUUSD', 2400], ['EURUSD', 1.08], ['USDTRY', 41], ['XAUJPY', 600000]] as const) {
+    assert.equal(priceDecimalSlip(instrumentSpec(sym)!, px), null, `${sym} ${px}`);
+  }
+  assert.equal(priceDecimalSlip(uj, 15), null);
+  assert.equal(priceDecimalSlip(uj, NaN), null);
+  // وهو ما يرفضه `typedExitQuoteToAccount` بلا سعر حيّ — الرفض والسطر من القاعدة نفسها
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', 1500, NaN, 20), null);
+}
+console.log('positionSize priceDecimalSlip selftest OK');

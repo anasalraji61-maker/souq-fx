@@ -502,14 +502,23 @@ export function manualConvLooksInverted(pair: string | null | undefined, rate: n
  * المعكوسة. زوجٌ لا تعرفه الحاسبة ⇒ null (لا مرجع).
  */
 export function manualConvDecimalSlip(pair: string | null | undefined, rate: number | null | undefined): number | null {
-  if (typeof pair !== 'string' || typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return null;
+  if (typeof pair !== 'string') return null;
   const spec = instrumentSpec(pair);
-  if (!spec) return null;
+  return spec ? priceDecimalSlip(spec, rate) : null;
+}
+
+/**
+ * سعرٌ **بلا فاصلة عشرية** بمرجع سعر الأداة التقريبي وحده (`pairBallpark`) — القاعدة أعلاه لأيّ خانة سعر لا دخول بجانبها يُقارَن
+ * به: الحاسبة بالنقاط والدخول فارغ ووقف «1500» على USDJPY (`typedExitQuoteToAccount` يرفضه فلا لوت، وهذه تقول لماذا: «هل تقصد
+ * 150؟»). أكبر من المرجع وأبعد من √10، والمكتوب ÷ 10^k داخلها ⇒ ذلك السعر؛ وإلا null.
+ */
+export function priceDecimalSlip(spec: InstrumentSpec, price: number | null | undefined): number | null {
+  if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
   const ball = pairBallpark(spec);
   const off = (px: number) => Math.abs(Math.log(px / ball));
-  if (rate <= ball || off(rate) <= TYPED_EXIT_MAX_LOG_OFF) return null;
+  if (price <= ball || off(price) <= TYPED_EXIT_MAX_LOG_OFF) return null;
   for (let k = 1; k <= 6; k++) {
-    const px = Number((rate / 10 ** k).toPrecision(12));
+    const px = Number((price / 10 ** k).toPrecision(12));
     if (off(px) <= TYPED_EXIT_MAX_LOG_OFF) return px;
   }
   return null;
@@ -627,7 +636,7 @@ export function pipsOnlyExitPrice(
 const USD_BALLPARK: Record<string, number> = {
   EUR: 1.1, GBP: 1.3, AUD: 0.65, NZD: 0.6, USD: 1, CAD: 0.73, CHF: 1.2, JPY: 0.0067,
   SEK: 0.1, NOK: 0.095, DKK: 0.15, PLN: 0.27, TRY: 0.025, ZAR: 0.055, MXN: 0.053, SGD: 0.77,
-  HKD: 0.128, CNH: 0.14, ILS: 0.28, SAR: 0.267, AED: 0.272, XAU: 3500, XAG: 40,
+  HKD: 0.128, CNH: 0.14, ILS: 0.28, SAR: 0.267, AED: 0.272, XAU: 4000, XAG: 60,
 };
 
 /** سعر الأداة التقريبي (أساس ÷ تسعير بـ`USD_BALLPARK`)؛ عملة غائبة ⇒ مرجع pip القديم (EURUSD 1.10 لكل 0.0001). */

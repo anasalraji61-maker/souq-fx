@@ -109,6 +109,7 @@ import {
   restoredSmallSymbol,
   manualConvLooksInverted,
   manualConvDecimalSlip,
+  priceDecimalSlip,
   manualConvForPair,
   typicalSlPipsExample,
   typicalSpreadPipsExample,
@@ -1340,7 +1341,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
      * قراءة النقاط للوقف تسبق («11» على EURUSD: 11 pip أرجح من 1.1، ونقرتها تنقله لخانة النقاط)، لكنها لا تُتجاوز إن كان الهدف بلا فاصلة.
      */
     const slipAt = (raw: string, label: string, set: (v: string) => void) => {
-      const hit = levelLooksLikeDecimalSlip({ symbol: spec.symbol, entry: e, level: priceNum(raw) });
+      // بلا دخول (النقاط وحدها): المرجع سعر الأداة التقريبي — وقف «1500» على USDJPY بلا سعر تحويل كان بلا لوت ولا سبب (`priceDecimalSlip`)
+      const noEntryPx = Number.isFinite(e) && e > 0 ? null : priceDecimalSlip(spec, priceNum(raw));
+      const hit =
+        levelLooksLikeDecimalSlip({ symbol: spec.symbol, entry: e, level: priceNum(raw) }) ??
+        (noEntryPx != null ? { price: noEntryPx } : null);
       if (!hit) return null;
       const text = formatPrice(hit.price, spec.symbol);
       return {
