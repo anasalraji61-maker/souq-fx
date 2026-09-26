@@ -42,6 +42,7 @@ import {
   stopTooClose,
   journalStats,
   journalLossStreaks,
+  breakevenWinRatePct,
   journalMaxDrawdownR,
   journalWinRateLine,
   roundHalfEven,
@@ -3654,3 +3655,26 @@ console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
   assert.ok(!Object.is(up!.max, -0) && !Object.is(up!.current, -0));
   console.log('tradePlan journalMaxDrawdownR selftest OK');
 }
+
+// ---- breakevenWinRatePct: نسبة النجاح اللازمة للتعادل بعائد:مخاطرة ----
+{
+  assert.equal(breakevenWinRatePct(1), 50);
+  assert.equal(breakevenWinRatePct(2), 33.4); // 33.33… ⇒ للأعلى
+  assert.equal(breakevenWinRatePct(3), 25);
+  assert.equal(breakevenWinRatePct(1.5), 40);
+  assert.equal(breakevenWinRatePct(0.5), 66.7); // 66.66…
+  assert.equal(breakevenWinRatePct(4), 20);
+  assert.equal(breakevenWinRatePct(9), 10);
+  assert.equal(breakevenWinRatePct(0.25), 80);
+  // تقريب للأعلى يكفي فعلاً: النسبة المعروضة × (1 + rr) ≥ 100
+  for (const rr of [0.3, 0.7, 1.2, 1.8, 2.6, 2.8, 3.3, 7]) {
+    const p = breakevenWinRatePct(rr)!;
+    assert.ok(p * (1 + rr) >= 100 - 1e-9, `rr ${rr}`);
+    assert.ok((p - 0.1) * (1 + rr) < 100, `rr ${rr} tight`);
+  }
+  assert.equal(breakevenWinRatePct(0), null);
+  assert.equal(breakevenWinRatePct(-1), null);
+  assert.equal(breakevenWinRatePct(null), null);
+  assert.equal(breakevenWinRatePct(Infinity), null);
+}
+console.log('tradePlan breakeven win-rate selftest OK');

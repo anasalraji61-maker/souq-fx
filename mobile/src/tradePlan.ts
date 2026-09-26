@@ -417,6 +417,19 @@ export function formatRR(rr: number | null): string {
   return hundredths > 0 ? `1:${hundredths.toFixed(2)}` : '1:<0.01';
 }
 
+/**
+ * **نسبة النجاح اللازمة للتعادل** بعائد:مخاطرة `rr` (بلا تكاليف): 1 ÷ (1 + rr). بـ1:2 يكفي أن تنجح 33.4% من الصفقات؛ بـ1:0.5
+ * تحتاج 66.7%. يُقرن الهدف بما يطلبه من دقّة: هدفٌ بعيد يبدو «أفضل» لكنه يطلب نسبة نجاح لا يملكها المتداول.
+ *
+ * منزلة واحدة مقرَّبة **للأعلى** (33.33…% ⇒ 33.4%: الحدّ الأدنى الذي يكفي فعلاً). `null` لـrr غير موجب أو غير منتهٍ.
+ */
+export function breakevenWinRatePct(rr: number | null | undefined): number | null {
+  if (rr == null || !Number.isFinite(rr) || rr <= 0) return null;
+  const pct = 100 / (1 + rr);
+  // 1:1 ⇒ 50.000…01 من الفاصلة العائمة لا يصير 50.1
+  return Math.ceil(Math.round(pct * 10 * 1e6) / 1e6) / 10;
+}
+
 /** 25 → "25"، 12.5 → "12.5" (pip واحد عشري كحد أقصى). */
 export function formatPips(p: number | null): string | null {
   if (p == null || !Number.isFinite(p)) return null;
