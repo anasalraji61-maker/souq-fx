@@ -1012,3 +1012,58 @@ def test_legacy_row_with_exit_zero_is_still_editable(client):
     r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.2, "seen_status": "closed", "seen_exit": None},
                      headers=_DEV1)
     assert r.status_code == 200 and r.json()["trade"]["exit"] == pytest.approx(1.2)
+
+
+# ─── run 82 (tools122a): الإغلاق يفحص `seen_*` نافذة التأكيد ─────────────────────
+
+def test_close_with_stale_confirm_terms_is_409_and_trade_stays_open(client):
+    """الجهاز B صحّح الدخول؛ الجهاز A يؤكّد الإغلاق من نافذة بُنيت على الدخول القديم — كان يُغلق بصمت
+    على شروط لم يرها المتداول."""
+    trade = _open_trade(client, sl=None, tp=None)
+    assert client.patch(f"/api/trades/{trade['id']}", json={"entry": 1.09}, headers=_DEV1).status_code == 200
+    r = client.post(f"/api/trades/{trade['id']}/close",
+                    json={"exit": 1.12, "seen_entry": trade["entry"], "seen_side": trade["side"]}, headers=_DEV1)
+    assert r.status_code == 409 and r.json()["detail"]["error"] == "trade_changed_concurrently"
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["status"] == "open" and row["exit"] is None and row["entry"] == pytest.approx(1.09)
+
+
+@pytest.mark.parametrize("seen", [
+    {"seen_side": "sell"}, {"seen_sl": 1.0}, {"seen_tp": 2.0}, {"seen_size": 3.0},
+    {"seen_note": "other"}, {"seen_symbol": "GBPUSD"}, {"seen_sl": None, "seen_size": None},
+])
+def test_close_with_any_differing_seen_field_is_409(client, seen):
+    trade = _open_trade(client, sl=1.05, tp=None, size=0.5)
+    r = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.12, **seen}, headers=_DEV1)
+    assert r.status_code == 409
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"][0]["status"] == "open"
+
+
+def test_close_with_matching_seen_fields_closes(client):
+    trade = _open_trade(client, sl=None, tp=None)
+    seen = {f"seen_{k}": trade[k] for k in ("symbol", "side", "entry", "size", "sl", "tp", "note")}
+    r = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.12, **seen}, headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["status"] == "closed"
+
+
+def test_close_of_already_closed_trade_is_still_already_closed_with_seen(client):
+    """سبق جهاز آخر بالإغلاق: الخطأ الأدقّ (الخروج الأول) يبقى، لا «تغيّر»."""
+    trade = _open_trade(client, sl=None, tp=None)
+    assert client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.11}, headers=_DEV1).status_code == 200
+    r = client.post(f"/api/trades/{trade['id']}/close",
+                    json={"exit": 1.12, "seen_entry": trade["entry"]}, headers=_DEV1)
+    assert r.status_code == 409 and r.json()["detail"]["error"] == "trade_already_closed"
+    assert r.json()["detail"]["trade"]["exit"] == pytest.approx(1.11)
+
+
+def test_close_racing_a_stop_edit_rechecks_seen(client, monkeypatch):
+    """PATCH الوقف من جهاز آخر بين قراءة الإغلاق وكتابته: التحديث كان مشروطاً بالدخول/الاتجاه فقط ⇒
+    يمرّ على وقف لم يره العميل. الآن مشروط بالصفّ كلّه فيُعاد الفحص ⇒ 409."""
+    trade = _open_trade(client, sl=None, tp=None)
+    real_conn = _race_before(
+        monkeypatch, "UPDATE trades SET exit", "UPDATE trades SET sl=1.0 WHERE id=?", trade["id"]
+    )
+    r = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.12, "seen_sl": None}, headers=_DEV1)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    assert r.status_code == 409
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"][0]["status"] == "open"

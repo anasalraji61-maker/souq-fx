@@ -682,6 +682,24 @@ class TradeClose(BaseModel):
     بـ`-554%`، وكلاهما يدخل نسبة النجاح وصافي الدفتر ولا يُمحى إلا بحذف الصفقة."""
 
     exit: float = Field(gt=0, allow_inf_nan=False, strict=True)
+    # run 82 (tools122a): الصفّ كما بُنيت عليه نافذة التأكيد. تصحيح دخول/اتجاه/حجم/وقف من جهاز آخر بعد
+    # فتحها كان يُغلق بصمت على شروط لم يرها المتداول ⇒ مختلف ⇒ 409 كقاعدة PATCH. غائب = بلا فحص.
+    seen_symbol: str | None = Field(default=None, max_length=12)
+    seen_side: Literal["buy", "sell"] | None = None
+    seen_entry: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_size: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_note: str | None = Field(default=None, max_length=500)
+
+
+def _seen_expect(body: BaseModel) -> dict:
+    """`seen_X` المُرسَلة فقط (null صريح يُفحص: «رأيته فارغاً»). أعمدة لا تكون null بالجدول ⇒ null = «لم أرها»."""
+    expect = {k.removeprefix("seen_"): getattr(body, k) for k in body.model_fields_set if k.startswith("seen_")}
+    for k in ("status", "symbol", "side", "entry"):
+        if expect.get(k, "") is None:
+            expect.pop(k)
+    return expect
 
 
 class TradeUpdate(BaseModel):
@@ -1724,12 +1742,12 @@ def trades_close(
 ):
     uid = user["user_id"] if user else None
     try:
-        row = db.close_trade(trade_id, body.exit, uid, owner_key=key)
+        row = db.close_trade(trade_id, body.exit, uid, owner_key=key, expect=_seen_expect(body))
     except db.TradeAlreadyClosed as e:
         # 409 لا 200: الخروج المسجَّل أولاً يبقى، والعميل يعرض الصفّ كما هو مخزَّن
         raise HTTPException(409, {"error": "trade_already_closed", "trade": e.trade})
     except db.TradeUpdateConflict:
-        # الدخول/الاتجاه يتغيّران باستمرار من جهاز آخر — لا نُغلق بنتيجة محسوبة من دخول لم يعد قائماً
+        # الصفّ تغيّر عمّا رآه العميل (`seen_*`)، أو الدخول/الاتجاه يتغيّران باستمرار من جهاز آخر
         raise HTTPException(409, {"error": "trade_changed_concurrently"})
     if not row:
         raise HTTPException(404, "trade not found")
@@ -1745,12 +1763,9 @@ def trades_update(
 ):
     uid = user["user_id"] if user else None
     # model_fields_set يميّز «لم يُرسَل» (لا تغيير) عن null صريح (مسح الوقف/الهدف/الخروج)
-    fields = {k: getattr(body, k) for k in body.model_fields_set}
+    fields = {k: getattr(body, k) for k in body.model_fields_set if not k.startswith("seen_")}
     # `seen_exit: null` صريح = «رأيتها مفتوحة بلا خروج» ⇒ يُفحص كذلك
-    expect = {k.removeprefix("seen_"): fields.pop(k) for k in list(fields) if k.startswith("seen_")}
-    for k in ("status", "symbol", "side", "entry"):
-        if expect.get(k, "") is None:
-            expect.pop(k)  # أعمدة لا تكون null بالجدول ⇒ null مُرسَل = «لم أرها» لا «رأيتها فارغة»
+    expect = _seen_expect(body)
     for k in ("symbol", "side", "entry", "note"):
         if k in fields and fields[k] is None:
             fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف
