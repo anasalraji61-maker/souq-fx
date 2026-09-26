@@ -1387,3 +1387,4 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **بعد السحب (bdbf310):** أخضر 0. أُغلقت chart-r109a ← ui `a15e97e` (مُتحقَّق `FocusChartModal.tsx:152/202/213`، `KeyboardShortcutsSheet.tsx:67`). QA134a باقٍ (`ScreenerMini.tsx:227`). diff الجديد بلا أسطر نمط ⇒ قائمة القبول 0/12.
 **بعد السحب الثاني (a40c8d0):** أخضر 0. جديد مُتحقَّق **launch206a → tools** (`ToolsScreen.tsx:845/867/918` `scanInfo.tf` خام).
 **بعد السحب الثالث (43ed43a):** أخضر 0. أُغلقت chart-r109b ← tools `43ed43a` (مُتحقَّق `TerminalScreen.tsx:1977/2000-2001/2053/2076-2077`). المفتوح لوكلاء: launch206a → tools، QA134a → ui.
+**بعد السحب الرابع (456377a):** أخضر 0. أُغلقت launch206a ← tools `e146385` (مُتحقَّق `ToolsScreen.tsx:848/870/921`). المفتوح لوكيل: QA134a → ui وحده.
