@@ -1721,15 +1721,19 @@ export function TerminalScreen() {
                   shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
-                    // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم
-                    if (!sec || sec.symbol !== shownSeries.symbol || (sec.candles?.length ?? 0) < 1) return [];
+                    // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم، ولا ظلّ فريمٍ سابق
+                    // للخانة (شموع 5m تحت وسم «S 30m» حتى يكتمل جلب الخانات كلها)
+                    if (!sec || sec.symbol !== shownSeries.symbol || sec.timeframe !== shadowSlots[i] || (sec.candles?.length ?? 0) < 1)
+                      return [];
                     return [sec];
                   })}
                   shadowTags={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
-                    // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم
-                    if (!sec || sec.symbol !== shownSeries.symbol || (sec.candles?.length ?? 0) < 1) return [];
+                    // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم، ولا ظلّ فريمٍ سابق
+                    // للخانة (شموع 5m تحت وسم «S 30m» حتى يكتمل جلب الخانات كلها)
+                    if (!sec || sec.symbol !== shownSeries.symbol || sec.timeframe !== shadowSlots[i] || (sec.candles?.length ?? 0) < 1)
+                      return [];
                     return [tag];
                   })}
                   height={desktopChartHeight}
