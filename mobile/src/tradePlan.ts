@@ -499,16 +499,12 @@ export function journalIsoToLocalField(iso: string | null | undefined): string |
 
 /**
  * وقت صفّ الدفتر بتوقيت الجهاز: المغلقة ⇒ وقت إغلاقها، المفتوحة ⇒ وقت فتحها (`*_iso`، backend-r93). كان الصفّ بلا أيّ تاريخ —
- * صفقتان بالرمز والدخول نفسيهما لا تُميَّزان، ولا يُعرف أيّ خسارةٍ كانت أمس. صيغة حقل «وقت الإغلاق» نفسها (أرقام، بلا أسماء شهور
- * تحتاج ترجمة): السنة تسقط لسنة الجهاز الحالية. مغلقة بلا `closed_at_iso` ⇒ null — وقت الفتح تحت كلمة «مغلقة» يُقرأ وقتَ إغلاق.
+ * صفقتان بالرمز والدخول نفسيهما لا تُميَّزان، ولا يُعرف أيّ خسارةٍ كانت أمس. صيغة حقل «وقت الإغلاق» نفسها **بالسنة دائماً**
+ * (launch191a): «09-10» بلا سنة يقرؤها القارئ العربي والكردي يوماً-شهراً (9 أكتوبر بدل 10 سبتمبر)؛ «2026-09-10» ISO لا يُقرأ
+ * بترتيبين ولا يحتاج ترجمة. مغلقة بلا `closed_at_iso` ⇒ null — وقت الفتح تحت كلمة «مغلقة» يُقرأ وقتَ إغلاق.
  */
-export function journalRowWhen(
-  row: { status?: string | null; opened_at_iso?: string | null; closed_at_iso?: string | null },
-  nowMs: number
-): string | null {
-  const field = journalIsoToLocalField(row.status === 'closed' ? row.closed_at_iso : row.opened_at_iso);
-  if (!field) return null;
-  return field.slice(0, 4) === String(new Date(nowMs).getFullYear()) ? field.slice(5) : field;
+export function journalRowWhen(row: { status?: string | null; opened_at_iso?: string | null; closed_at_iso?: string | null }): string | null {
+  return journalIsoToLocalField(row.status === 'closed' ? row.closed_at_iso : row.opened_at_iso);
 }
 
 /**

@@ -1731,7 +1731,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
                 }${cashText}${formatSignedPct(mv.pct)}%${rText ? ` · ${rText}` : ''}`
               : '';
             // متى: وقت الإغلاق بعد «مغلقة»، ووقت الفتح أول سطر المفتوحة — بتوقيت الجهاز (`journalRowWhen`)
-            const when = journalRowWhen(tr, Date.now());
+            const when = journalRowWhen(tr);
             if (!closed && !result && !tr.note && !when) return null;
             // الكلمة تسبق النتيجة بالمغلقة؛ بالمفتوحة لا كلمة (السطر الأول يقول «(مفتوحة)») فلا يبدأ
             // السطر بفاصل معلّق.
