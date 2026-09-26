@@ -982,7 +982,14 @@ function pipsLookLikeTwoDecimalPrice(
     const ref = pairBallpark(spec);
     return (hundredths || typed === 2) && Math.max(v / ref, ref / v) <= 1.3;
   }
-  if (EXOTIC_PIP_QUOTES.has(spec.quote)) return v < 100 && (hundredths || typed === 2);
+  if (EXOTIC_PIP_QUOTES.has(spec.quote)) {
+    if (v < 100 && (hundredths || typed === 2)) return true;
+    // **منزلة واحدة** قرب سعر الأداة (±15%): «18.2» (USDZAR) و«41.5» (USDTRY) كانت 18.2 pip ⇒ **10.99 لوت بدل 0.13** لوقف
+    // 1,500 pip (1% من 10,000). وقفٌ حقيقي بهذا الحجم على هذه العملات داخل سبريدها (30–100 pip) فلا يكتبه أحد؛ «500» و«1500.5»
+    // (بعيدة عن السعر) تبقى نقاطاً. المرجع الدخول المكتوب (`roundPriceRef`) — الليرة تتحرّك عن مرجعها الثابت.
+    const ref = roundPriceRef(spec, refPrice);
+    return typed === 1 && Math.max(v / ref, ref / v) <= 1.15;
+  }
   if (hundredths && v < 2.5) return true;
   // التقاطعات فوق 1.5 (GBPNZD ~2.2، GBPAUD ~2.0، EURNZD ~1.9، GBPCAD ~1.8): سعرٌ مستدير «2.20» لا جزء من مئة فيه، و«2.63» فوق 2.5
   // ⇒ كانا 2.2 و2.63 pip ⇒ **7.83 لوت بدل ~0.43** لوقف 40 pip (1% من 10,000، GBPNZD). منزلتان مكتوبتان أو جزءٌ من مئة **وقريبٌ من

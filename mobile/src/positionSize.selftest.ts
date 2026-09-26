@@ -3488,9 +3488,28 @@ console.log('positionSize trailing-zero price in pips field selftest OK');
     assert.equal(slPipsLooksLikePrice(raw, S(sym)), true, raw);
   }
   // النقاط الحقيقية على الغريبة تبقى: أعداد صحيحة، أعشار، ومئات
-  for (const [raw, v] of [['1500', 1500], ['250.5', 250.5], ['18.5', 18.5], ['300', 300], ['150.25', 150.25]] as const) {
+  for (const [raw, v] of [['1500', 1500], ['250.5', 250.5], ['48.5', 48.5], ['300', 300], ['150.25', 150.25], ['18', 18]] as const) {
     assert.equal(parseSlPips(raw, S('USDZAR')), v, raw);
   }
+  // tools152: **منزلة واحدة** قرب السعر سعرٌ كذلك — «18.2» (USDZAR) كانت 18.2 pip ⇒ 10.99 لوت بدل 0.13 لوقف 1,500 pip
+  // (1% من 10,000، حساب ZAR ⇒ قيمة pip للوت 10 ZAR). وقف 18.2 pip داخل سبريد USDZAR فلا يُكتب حقاً.
+  for (const [raw, sym] of [['18.2', 'USDZAR'], ['41.5', 'USDTRY'], ['17.9', 'USDMXN'], ['10.6', 'USDSEK'], ['4.3', 'EURPLN'], ['7.2', 'USDCNH']] as const) {
+    assert.equal(parseSlPips(raw, S(sym)), null, raw);
+    assert.equal(slPipsLooksLikePrice(raw, S(sym)), true, raw);
+  }
+  {
+    const zar = S('USDZAR')!;
+    const pv = pipValuePerLot(zar, 1); // حساب بالراند: 100000 × 0.0001 = 10 ZAR للوت
+    assert.ok(near(pv, 10));
+    // الخطأ القديم: 18.2 pip ⇒ 100,000 × 1% / (18.2 × 10) = 5.49 لوت؛ الصحيح لوقف 1,500 pip = 0.06 — الخانة ترفض فلا لوت
+    assert.equal(parseSlPips('18.2', zar), null);
+    assert.equal(parseSlPips('1500', zar), 1500);
+  }
+  // الليرة بعيدة عن مرجعها الثابت (40): الدخول المكتوب 44 مرجعٌ ⇒ «44.1» سعر؛ و«30.5» (بعيدة) نقاط
+  assert.equal(parseSlPips('44.1', S('USDTRY'), 44), null);
+  assert.equal(parseSlPips('30.5', S('USDTRY'), 44), 30.5);
+  // المربوطة بقاعدتها (±30% بمنزلتين): «20.5» على USDHKD وقفٌ عادي يبقى
+  assert.equal(parseSlPips('20.5', S('USDHKD')), 20.5);
   // والرئيسيات كما كانت: «12.25» على GBPUSD نقاط
   assert.equal(parseSlPips('12.25', S('GBPUSD')), 12.25);
 }
