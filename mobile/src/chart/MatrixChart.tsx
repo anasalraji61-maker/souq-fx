@@ -4068,9 +4068,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         : null,
     };
   }, [dense, chartPlotW, ichimoku, alligator, chandeKroll]);
-  const legendMultiParts = (id: string, index: number | null): { text: string; color: string }[] | null => {
+  const legendMultiParts = (
+    id: string,
+    index: number | null,
+    ahead = 0
+  ): { text: string; color: string }[] | null => {
     const m = legendMulti[id];
     if (!m) return null;
+    // التقاطع بمنطقة المستقبل: خطوط التمساح مُزاحة للأمام ومرسومة هناك (`alligatorLines`) ⇒ قيمها
+    // عند الخانة نفسها، لا قيم الشمعة الحيّة المكرّرة على كل خانة مستقبلية. الشفاه تنتهي بعد 3 خانات
+    // والأسنان بعد 5 ⇒ ما انتهى خطّه لا يُطبع، والباقي يُطبع بلونه. `ahead > 0` أولاً: حجز العرض أدناه
+    // يستدعي هذه الدالة قبل سطر `alligatorLines` (‏const) — بلا `ahead` لا يُلمس.
+    if (id === 'alligator' && ahead > 0 && alligatorLines && index != null) {
+      const out: { text: string; color: string }[] = [];
+      [alligatorLines.jaw, alligatorLines.teeth, alligatorLines.lips].forEach((line, k) => {
+        const v = legendValueAt(line, index + ahead);
+        if (v != null) out.push({ text: fmtPrice(v), color: m.colors[k]! });
+      });
+      return out;
+    }
     const vs = legendMultiAt(m.lines, index);
     return vs ? vs.map((v, k) => ({ text: fmtPrice(v), color: m.colors[k]! })) : null;
   };
@@ -8423,7 +8439,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Text>
                 {(() => {
                   const at = crossIndex ?? legendLastIdx;
-                  const parts = legendMultiParts(chip.id, at);
+                  const parts = legendMultiParts(chip.id, at, crossIndex != null ? crossAhead : 0);
                   if (parts) {
                     return parts.map((p, k) => (
                       <Text key={k} style={[styles.priceLegendValue, { color: p.color }]}>
