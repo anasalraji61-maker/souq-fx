@@ -615,6 +615,10 @@ def register_user(
     stored = _encode_password(password)
     now = time.time()
     with _conn() as c:
+        # قفل الكتابة **قبل** الفحوص (كـ`place_under_sponsor`): طلبان متزامنان «alice»/«аlice» (а سيريلية)
+        # كانا يجتازان `_username_taken` معاً ثم يُدرَجان (مفتاحاهما مختلفان، وفهرس الهيكل غير فريد) ⇒
+        # حسابان يُعرضان بالاسم نفسه.
+        c.execute("BEGIN IMMEDIATE")
         sponsor_id: int | None = None
         if sponsor_code:
             code_norm = sponsor_code.strip().upper()
