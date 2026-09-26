@@ -14,6 +14,14 @@ export function candleBodyWidth(colW: number): number {
   return Math.min(colW, Math.max(2, Math.round((colW + 1) * 0.78)));
 }
 
+/**
+ * إطار جسم الشمعة المجوّفة. 1.5px ثابتاً على جسم 3–5px (الهاتف بالعرض الافتراضي، أو التصغير) يترك فراغاً 0–2px
+ * ⇒ الصاعدة المجوّفة تُقرأ ممتلئة كالعادية ويضيع النوع كلّه. تحت 7px بالعرض أو الارتفاع الإطار 1px.
+ */
+export function hollowBorderWidth(bodyW: number, bodyH: number): number {
+  return Math.min(bodyW, bodyH) >= 7 ? 1.5 : 1;
+}
+
 /** خطوة الشمعة المستهدفة بالعرض الافتراضي (بكسل) وحدّا عدد الشموع. */
 export const REST_BAR_PX = 6;
 export const REST_BARS_MIN = 40;

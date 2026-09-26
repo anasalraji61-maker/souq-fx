@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/candleGeometry.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { candleBodyWidth, restBarCount, REST_BAR_PX, REST_BARS_MAX, REST_BARS_MIN } from './candleGeometry';
+import { candleBodyWidth, hollowBorderWidth, restBarCount, REST_BAR_PX, REST_BARS_MAX, REST_BARS_MIN } from './candleGeometry';
 
 // تصغير شديد: لا يقلّ عن 2px ولا يتجاوز العمود
 assert.equal(candleBodyWidth(2), 2);
@@ -37,3 +37,8 @@ assert.equal(restBarCount(NaN), 80);
 assert.equal(restBarCount(0), 80);
 
 console.log('candleGeometry.selftest: PASS');
+
+// المجوّفة: جسم الهاتف الافتراضي (5px) يبقى فيه فراغ 3px لا 2px
+assert.equal(hollowBorderWidth(5, 40), 1);
+assert.equal(hollowBorderWidth(12, 3), 1);
+assert.equal(hollowBorderWidth(12, 20), 1.5);

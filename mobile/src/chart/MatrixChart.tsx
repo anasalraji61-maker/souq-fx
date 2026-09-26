@@ -60,7 +60,7 @@ import { loadLineBreakCount, saveLineBreakCount, subscribeLineBreakCount } from 
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
-import { candleBodyWidth, restBarCount } from './candleGeometry';
+import { candleBodyWidth, hollowBorderWidth, restBarCount } from './candleGeometry';
 import { pinchSpread, pinchWindow, zoomWindow } from './zoomWindow';
 import {
   AXIS_TAP_SLOP,
@@ -8803,7 +8803,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       width: primaryBodyW,
                       height: bodyClipH,
                       backgroundColor: kind === 'hollow' && bull ? 'transparent' : color,
-                      borderWidth: kind === 'hollow' ? 1.5 : 0,
+                      borderWidth: kind === 'hollow' ? hollowBorderWidth(primaryBodyW, bodyClipH) : 0,
                       borderColor: color,
                       borderRadius: 1,
                     }}
