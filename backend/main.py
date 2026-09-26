@@ -232,8 +232,15 @@ def _blank(text: str) -> bool:
     return not "".join(ch for ch in (text or "") if not ch.isspace() and unicodedata.category(ch) != "Cf")
 
 
+_LINK_DOTS = str.maketrans({"\u3002": ".", "\uff61": "."})
+
+
 def _has_link(text: str) -> bool:
-    return bool(_LINK_RE.search(text or ""))
+    # «ｔ．ｍｅ/x» و«HTTPS：//x» (عرض كامل) و«t。me» و«t\u200b.me» كانت تمرّ: NFKC + النقطة الصينية + حذف
+    # محارف التنسيق غير المرئية قبل الفحص (النصّ المحفوظ نفسه لا يتغيّر)
+    norm = unicodedata.normalize("NFKC", text or "").translate(_LINK_DOTS)
+    norm = "".join(ch for ch in norm if unicodedata.category(ch) != "Cf")
+    return bool(_LINK_RE.search(norm))
 
 
 class VoteBallot(BaseModel):

@@ -117,7 +117,9 @@ def _zwnj_ok(username: str, i: int) -> bool:
 
 LINK_RE = re.compile(
     r"(https?://|www\.|\bt\.me/|\bwa\.me/|\btelegram\.me/|\bchat\.whatsapp\.com/|"
-    r"\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|link|site|online|top|info|biz|co|app)\b)",
+    # + نطاقات المختصِرات وقنوات «توصيات VIP» الشائعة (bit.ly، ‎.ru، ‎.vip…) — كانت تمرّ
+    r"\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|link|site|online|top|info|biz|co|app|"
+    r"ly|ru|vip|cc|tk|club|pro|gg|ws|su|shop|store|live|icu)\b)",
     re.IGNORECASE,
 )
 
