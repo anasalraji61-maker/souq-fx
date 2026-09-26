@@ -2048,7 +2048,8 @@ export function journalSymbol(raw: string): string | null {
   const up = raw.trim().toUpperCase();
   const spec = instrumentSpec(up);
   const pair = /^([A-Z]{3})[\s/_-]*([A-Z]{3})(.*)$/.exec(up);
-  if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3];
+  // «EURUSD pro» بمسافة ⇒ «EURUSDPRO» كما كانت تُحفظ قبل أن يعرفها `instrumentSpec` — لا مسافة داخل رمزٍ محفوظ
+  if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3].replace(/^\s+/, '');
   // «EURUSD-cent»/«EURUSD_micro» تبقى بلاحقتها: حذف الفاصل كان يُخرج «EURUSDCENT» فتضيع النقاط وسعر السوق
   const small = smallContractPair(up) ?? miniAccountSymbol(up);
   // «EURUSD cent» بمسافة ⇒ «EURUSDCENT» كما كانت تُحفظ قبل أن تعرفها `smallContractPair` — لا مسافة داخل رمزٍ محفوظ

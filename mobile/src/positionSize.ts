@@ -72,8 +72,10 @@ export function normalizeSymbol(raw: string): string {
  * وكلمات نوع الحساب الملاصقة («EURUSDpro»، «GBPJPYecn»، «XAUUSDraw»، «USDJPYstd»، «EURUSDstp»، «EURUSDvip») — عقدٌ عادي،
  * والشارت يقرؤها (`chartPipSpec`) فكانت الحاسبة وحدها تقول «رمز غير معروف» والدفتر يحفظها بلا نقاط. كلماتٌ لا حروف:
  * الحاسبة والدفتر يكتبان بالأحرف الكبيرة فلا يُفرَّق «EURUSDt» عن «EURUSDT». «micro»/«c» الملاصقتان عقدٌ أصغر (`smallContractPair`).
+ * والكلمات نفسها **بمسافة** («EURUSD pro»، «EURUSD m»): الدفتر يحذف المسافة فيعرفها، والحاسبة كانت ترفضها. المسافة لهذه الكلمات
+ * وحدها لا لأي لاحقة: «EURUSD i» يحفظها الدفتر «EURUSDI» (لا يعرفها)، فقبولها هنا يعيد التناقض معكوساً.
  */
-const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M|PRO|ECN|RAW|STD|STP|VIP)$/;
+const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|\s*(?:M|PRO|ECN|RAW|STD|STP|VIP))$/;
 
 /**
  * اسما الذهب والفضة الفوريين بمنصّات وسطاء كثيرين («GOLD»، «SILVER»، «GOLD#»، «GOLD.m») — العقد نفسه
@@ -83,13 +85,13 @@ const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M
  * «رمز غير معروف» بالحاسبة والدفتر بينما الشارت يقرؤها ذهباً (`chartPipSpec`) — الرمز نفسه يعمل بشاشة ولا يعمل بأخرى،
  * وM ملاصقة مقبولة أصلاً على «XAUUSDm». حرفٌ آخر ملاصق («GOLDX»، «SILVERY») يبقى مرفوضاً؛ «GOLDc»/«GOLDmicro» عقدٌ أصغر.
  */
-const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5}|M|PRO|ECN|RAW|STD|STP|VIP)?$/;
+const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5}|\s*(?:M|PRO|ECN|RAW|STD|STP|VIP))?$/;
 const METAL_NAME_SYMBOL: Record<string, string> = { GOLD: 'XAUUSD', SILVER: 'XAGUSD' };
 /**
  * الاسم + عملة التسعير («GOLDUSD»، «GOLDEUR»، «SILVERUSD.m») = XAUUSD/XAUEUR/XAGUSD — كانت تُرفض: الحاسبة بلا لوت والدفتر بلا
  * نقاط، بينما «GOLD» بجانبها تُحسب. يُجرَّب بعد `METAL_NAMES` («GOLDPRO»/«GOLDSTD» لواحق هناك لا عملات)، والعملة ورقية فقط.
  */
-const METAL_NAME_QUOTED = /^(GOLD|SILVER)([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M|PRO|ECN|RAW|STD|STP|VIP)?$/;
+const METAL_NAME_QUOTED = /^(GOLD|SILVER)([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|\s*(?:M|PRO|ECN|RAW|STD|STP|VIP))?$/;
 
 /**
  * لاحقة **عقدٍ أصغر بمئة مرّة** بفاصل: «EURUSD.c»، «EURUSD-cent»، «XAUUSD_cent»، «GOLD.c» (حساب سنت)، و«EURUSD.micro»
@@ -98,7 +100,7 @@ const METAL_NAME_QUOTED = /^(GOLD|SILVER)([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M|PR
  * (أو بالعكس لمن رصيده بالسنت: 100,000 سنت = 1,000 دولار تُحسب مئة ألف ⇒ لوت أكبر بمئة مرّة). والدفتر يحسب لها
  * مالاً خاطئاً بمئة ضعف. «c» الملاصقة مرفوضة أصلاً (`centAccountSymbol`)؛ بالفاصل صارت مثلها.
  */
-const SMALL_CONTRACT_SUFFIX = /[.\-_#+](C|CENT|MICRO)$/;
+const SMALL_CONTRACT_SUFFIX = /(?:[.\-_#+]|\s)(C|CENT|MICRO)$/;
 
 /**
  * لاحقة **حساب mini** بفاصل («EURUSD.mini»، «GBPJPY-MINI»، «GOLD_mini»): كانت تمرّ بقاعدة `BROKER_SUFFIXED` (حتى 5 أحرف
@@ -107,14 +109,14 @@ const SMALL_CONTRACT_SUFFIX = /[.\-_#+](C|CENT|MICRO)$/;
  * وعقدٌ عادي باسمٍ تجاري عند غيرهم) فلا يُخمَّن: `instrumentSpec` يرفضه (لا لوت ولا مال)، والدفتر يحسب له النقاط والأسعار
  * بالزوج العادي (`miniAccountSymbol`). «EURUSDmini» الملاصقة مرفوضة أصلاً.
  */
-const MINI_SUFFIX = /[.\-_#+]MINI$/;
+const MINI_SUFFIX = /(?:[.\-_#+]|\s)MINI$/;
 /**
  * لاحقة **تشبه السنت/micro ولا نعرف عقدها** («EURUSD.cents»، «EURUSD_USC»، «EURUSD-cnt»، «EURUSD.mic»، «EURUSD.cent1»، «GOLD.CENTS»):
  * كانت تمرّ بقاعدة `BROKER_SUFFIXED` كعقدٍ عادي 100,000 ⇒ 1% من 1,000 بوقف 25 pip = **0.04 لوت** حيث حساب السنت يحتاج 4.00 —
  * خطأ ×100 باللوت والمال والهامش. لا تُخمَّن (قد تكون سنتاً أو micro أو اسماً تجارياً): تُرفض كالـmini. «.c»/«.cent»/«.micro»
  * المعروفة لها `smallContractSpec`، و«.c1» وسائر اللواحق العادية كما هي.
  */
-const AMBIGUOUS_SMALL_SUFFIX = /[.\-_#+](CENTS|USC|CNT|MIC|CENT\d+|MICRO\d+|MINI\d+)$/;
+const AMBIGUOUS_SMALL_SUFFIX = /(?:[.\-_#+]|\s)(CENTS|USC|CNT|MIC|CENT\d+|MICRO\d+|MINI\d+)$/;
 
 export function instrumentSpec(raw: string): InstrumentSpec | null {
   if (SMALL_CONTRACT_SUFFIX.test(raw.trim().toUpperCase())) return null;

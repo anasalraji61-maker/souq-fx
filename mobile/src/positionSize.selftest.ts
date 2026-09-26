@@ -2116,6 +2116,19 @@ console.log('positionSize smallContractSpec selftest OK');
 }
 console.log('positionSize small contract with space selftest OK');
 
+// كلمات نوع الحساب بمسافة («EURUSD pro»، «EURUSD m»، «GOLD pro»): الدفتر يعرفها (يحذف المسافة) والحاسبة كانت ترفضها
+{
+  for (const [raw, sym] of [['EURUSD pro', 'EURUSD'], ['EURUSD m', 'EURUSD'], ['eurusd  ecn', 'EURUSD'], ['EUR USD pro', 'EURUSD'], ['USDJPY raw', 'USDJPY'], ['GOLD pro', 'XAUUSD'], ['SILVER m', 'XAGUSD'], ['GOLDEUR pro', 'XAUEUR']] as const) {
+    const spec = instrumentSpec(raw)!;
+    assert.equal(spec.symbol, sym, raw);
+    assert.equal(spec.contractSize, instrumentSpec(sym)!.contractSize, raw);
+  }
+  // أي لاحقة أخرى بمسافة تبقى مرفوضة: الدفتر يحفظها ملاصقة («EURUSDI»، «EURUSDT» تيثر) فلا يعرفها — ولا عقدٌ أصغر يصير عادياً
+  for (const raw of ['EURUSD i', 'EURUSD T', 'EURUSD c', 'EURUSD cent', 'EURUSD micro', 'EURUSD mini', 'EURUSD cents', 'EURUSD usc', 'EURUSD mini2', 'GOLD cent'])
+    assert.equal(instrumentSpec(raw), null, raw);
+}
+console.log('positionSize broker word with space selftest OK');
+
 // المخاطرة بالمال بعملة USC (حساب السنت): تُفهم وتُقلب نسبةً، ولا تُقرأ بعملة أخرى — ما يعتمد عليه تبديل EURUSD ⇄ EURUSDc
 {
   assert.deepEqual(parseRiskInput('USC 100', 10_000, 'USC'), { pct: 1, amount: 100 });

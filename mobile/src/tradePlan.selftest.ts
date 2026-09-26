@@ -4027,7 +4027,8 @@ console.log('tradePlan journalCloseSeen selftest OK');
     assert.equal(journalFormSymbol(f), f, raw);
   }
   // «10000» بـ«EURUSD m» ⇒ اقتراح 0.10 لوت كما لـ«EURUSDM»؛ و5000 سنت بـ«EURUSD c» فوق حدّ ١٠٠٠ (قرار ١٥)
-  assert.equal(journalSizeLooksLikeUnits(10000, 'EURUSD m'), null); // النصّ الخام: الفحص كان يسقط
+  // النصّ الخام: الفحص كان يسقط — صار `instrumentSpec` يعرف «EURUSD m» بمسافة، فالنتيجة نفسها
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSD m'), { lots: 0.1 });
   assert.deepEqual(journalSizeLooksLikeUnits(10000, journalFormSymbol('EURUSD m')), { lots: 0.1 });
   assert.deepEqual(journalSizeLooksLikeUnits(5000, journalFormSymbol('EURUSD c')), { lots: null });
   assert.equal(journalMoneyLots('10000', journalFormSymbol('EURUSD m')), null);
@@ -4052,6 +4053,11 @@ console.log('tradePlan journalFormSymbol selftest OK');
   assert.equal(journalSymbol('EURUSD c'), 'EURUSDC');
   assert.equal(journalSymbol('EURUSD  cent'), 'EURUSDCENT');
   assert.equal(journalSymbol('EURUSD-cent'), 'EURUSD-CENT');
+  // والكلمات العادية بمسافة كذلك بعد أن صار `instrumentSpec` يعرفها
+  assert.equal(journalSymbol('EURUSD pro'), 'EURUSDPRO');
+  assert.equal(journalSymbol('eurusd  ecn'), 'EURUSDECN');
+  assert.equal(journalSymbol('EUR USD m'), 'EURUSDM');
+  assert.equal(journalSymbol('GOLD pro'), 'GOLDPRO');
 }
 console.log('tradePlan cent word selftest OK');
 
