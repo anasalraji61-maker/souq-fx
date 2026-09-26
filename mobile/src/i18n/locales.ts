@@ -1199,7 +1199,7 @@ export type Dict = {
   mcAutoShort: string;
   /** مفتاح (switch) «رأس السهم» على خطّ الترند المحدَّد (chart-r37، `4e53e39`): الحالة (مفعّل/لا) يقرؤها قارئ الشاشة من `accessibilityState` — فالنصّ اسمٌ لا فعل. */
   mcArrowHeadA11y: string;
-  /** خطّ التنبيه المسلَّح على الشارت (`c34f991`، «🔔 ▲ السعر · pip») لقارئ الشاشة: {price} بمنازل الشارت، {dist} نصّ `signedDistanceText`
+  /** خطّ التنبيه المسلَّح على الشارت (`c34f991`، «⚑ ▲ السعر · pip»، «⚑» منذ `fef7559`) لقارئ الشاشة: {price} بمنازل الشارت، {dist} نصّ `signedDistanceText`
    * أو يُحذف مع « — » قبله حين لا سعر حالي. Above = `condition: 'above'`. */
   mcArmedAlertAboveA11y: string;
   mcArmedAlertBelowA11y: string;
