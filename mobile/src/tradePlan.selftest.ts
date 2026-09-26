@@ -41,6 +41,7 @@ import {
   pnlPctContradictsCash,
   stopTooClose,
   journalStats,
+  journalLossStreaks,
   journalWinRateLine,
   roundHalfEven,
   floatingResult,
@@ -3565,4 +3566,45 @@ console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
   assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0), nowSec: afterLast(20) }), null);
   assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0.00002), nowSec: afterLast(20) }), 1);
   console.log('tradePlan atrStopPips selftest OK');
+}
+
+// ---- journalLossStreaks: أطول خسائر متتالية والجارية، زمنياً بوقت الإغلاق ----
+{
+  const c = (pnl: number | string | null, closed_at: string, status = 'closed') => ({ status, pnl, closed_at, opened_at: closed_at });
+  // بترتيب الخادم (الأحدث أولاً): الزمني خ خ ر خ خ خ ر خ ⇒ أطول 3، والجارية 1
+  const seq = [
+    c(-1, '2026-09-08 10:00'), c(2, '2026-09-07 10:00'), c(-0.5, '2026-09-06 10:00'), c(-0.2, '2026-09-05 10:00'),
+    c(-1, '2026-09-04 10:00'), c(1, '2026-09-03 10:00'), c(-1, '2026-09-02 10:00'), c(-1, '2026-09-01 10:00'),
+  ];
+  assert.deepEqual(journalLossStreaks(seq), { longest: 3, current: 1 });
+  // الترتيب المُدخل لا يهمّ — الزمن وحده
+  assert.deepEqual(journalLossStreaks([...seq].reverse()), { longest: 3, current: 1 });
+  // التعادل لا يقطع ولا يطيل: خ ت خ ⇒ 2 و2؛ والمفتوحة و`pnl` الفارغ لا تُعدّ
+  assert.deepEqual(
+    journalLossStreaks([c(-1, '2026-09-03 10:00'), c(0, '2026-09-02 10:00'), c('', '2026-09-02 09:00'), c(-1, '2026-09-01 10:00'), c(5, '2026-09-04 10:00', 'open')]),
+    { longest: 2, current: 2 }
+  );
+  // آخرها ربح ⇒ الجارية 0
+  assert.deepEqual(journalLossStreaks([c(1, '2026-09-02 10:00'), c(-1, '2026-09-01 10:00')]), { longest: 1, current: 0 });
+  // كلها ربح ⇒ 0 و0؛ بلا حاسمة (فارغ أو تعادل وحده) ⇒ null
+  assert.deepEqual(journalLossStreaks([c(1, '2026-09-01 10:00')]), { longest: 0, current: 0 });
+  assert.equal(journalLossStreaks([]), null);
+  assert.equal(journalLossStreaks([c(0, '2026-09-01 10:00')]), null);
+  // الإغلاق يحكم لا الفتح: خاسرة فُتحت أولاً وأُغلقت أخيراً هي «الآن»
+  assert.deepEqual(
+    journalLossStreaks([
+      { status: 'closed', pnl: 1, opened_at: '2026-09-02 10:00', closed_at: '2026-09-02 11:00' },
+      { status: 'closed', pnl: -1, opened_at: '2026-09-01 10:00', closed_at: '2026-09-03 10:00' },
+    ]),
+    { longest: 1, current: 1 }
+  );
+  // بلا `closed_at` (صفّ قديم) ⇒ `opened_at`؛ الدقيقة نفسها ⇒ ترتيب الخادم (الأبعد بالمصفوفة أقدم)
+  assert.deepEqual(
+    journalLossStreaks([
+      { status: 'closed', pnl: -1, opened_at: '2026-09-01 10:00' },
+      { status: 'closed', pnl: 1, opened_at: '2026-09-01 10:00' },
+    ]),
+    { longest: 1, current: 1 }
+  );
+  console.log('tradePlan journalLossStreaks selftest OK');
 }

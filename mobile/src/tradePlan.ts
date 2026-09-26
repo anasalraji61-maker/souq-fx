@@ -925,6 +925,47 @@ export function journalStats(
 }
 
 /**
+ * **سلسلة الخسائر**: أطول عدد صفقات خاسرة متتالية (`longest`) والخاسرة المتتالية حتى آخر صفقة مغلقة (`current`) —
+ * بتصنيف `journalStats` نفسه (المغلقة ذات `pnl` منتهٍ؛ خسارة < −ε، ربح > ε).
+ *
+ * لماذا: نسبة النجاح ومتوسط R لا يقولان للمتداول **كم خسارة تأتي متتالية** — وهو الرقم الذي يحدّد نسبة المخاطرة المحتملة
+ * (6 خسائر متتالية بـ2% = −11.4% من الحساب) وقاعدة «أتوقّف بعد 3 خسائر اليوم». `current` يقول إنه **الآن** داخل سلسلة.
+ *
+ * الترتيب زمني بوقت الإغلاق (`closed_at`، ثم `opened_at` إن غاب) — بصيغة الخادم `%Y-%m-%d %H:%M` فالمقارنة النصّية زمنية.
+ * التساوي (الدقيقة نفسها) بترتيب الخادم العكسي (الأحدث أولاً ⇒ الأبعد بالمصفوفة أقدم). **التعادل لا يقطع السلسلة ولا يطيلها**:
+ * نقل الوقف للتعادل بين خسارتين لا يعني أن النظام توقّف عن الخسارة. `null` بلا صفقة حاسمة.
+ */
+export function journalLossStreaks(
+  trades: readonly { status: string; pnl?: number | string | null; closed_at?: string | null; opened_at?: string | null }[]
+): { longest: number; current: number } | null {
+  const rows = trades
+    .map((tr, i) => ({ tr, i }))
+    .filter(
+      ({ tr }) => tr.status === 'closed' && tr.pnl != null && String(tr.pnl).trim() !== '' && Number.isFinite(Number(tr.pnl))
+    )
+    .map(({ tr, i }) => ({
+      pnl: Number(tr.pnl),
+      at: typeof tr.closed_at === 'string' && tr.closed_at ? tr.closed_at : typeof tr.opened_at === 'string' ? tr.opened_at : '',
+      i,
+    }))
+    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : b.i - a.i));
+  let longest = 0;
+  let run = 0;
+  let decided = 0;
+  for (const r of rows) {
+    if (r.pnl < -JOURNAL_BREAKEVEN_EPS) {
+      run += 1;
+      decided += 1;
+      if (run > longest) longest = run;
+    } else if (r.pnl > JOURNAL_BREAKEVEN_EPS) {
+      run = 0;
+      decided += 1;
+    }
+  }
+  return decided ? { longest, current: run } : null;
+}
+
+/**
  * سطر «نسبة نجاح: {pct}%» للدفتر. دفترٌ كل مغلقاته تعادل ⇒ لا صفقة حاسمة و`win_rate` null (خادمٌ أقدم: 0) ⇒ «0%» تُقرأ
  * «خسر كل صفقاته» (backend-r6 (5)). بلا حاسمة، أو `win_rate` غير رقم (null لاحقاً من الخادم) ⇒ «—» بلا علامة %.
  * خادمٌ أقدم بلا `win_count`/`loss_count` ⇒ النسبة كما أرسلها (لا نعرف إن كانت كلها تعادل).
