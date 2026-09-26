@@ -27,6 +27,8 @@ import { formatPct } from './dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from './pipSpec';
 import { projectBarTimeSec } from './marketHours';
+import { isCryptoSymbol } from './newsRisk';
+import { barOpen } from './drawingAnchors';
 
 export type MeasureStats = { bars: number; diff: number; pct: number };
 
@@ -171,15 +173,21 @@ export function measureDurationSec(
   /** الرمز ⇒ طرف المستقبل يتخطّى عطلة نهاية الأسبوع كوسم التقاطع (`projectBarTimeSec`). */
   symbol?: string
 ): number | null {
+  // D/W على الفوركس: شموع الشارت مختومة بافتتاح جلستها (17:00 نيويورك، `barOpen`) وخانة المستقبل تُسقَط من ختم
+  // منتصف الليل ⇒ تُحوَّل لافتتاحها أيضاً. كانت الحيّة ⇒ التالية «1d 3h» (والأسبوعي «7d 3h»).
+  const rule = symbol ? (isCryptoSymbol(symbol) ? false : symbol) : false;
   const at = (p: typeof a) => {
     if (p.time == null || !Number.isFinite(p.time)) return null;
     const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
     const step = p.aheadStep != null && p.aheadStep > 0 ? p.aheadStep : stepSec;
-    return symbol && ahead > 0 ? projectBarTimeSec(symbol, p.time, step, ahead) : p.time + ahead * step;
+    return symbol && ahead > 0 ? barOpen(projectBarTimeSec(symbol, p.time, step, ahead), step, rule) : p.time + ahead * step;
   };
   const ta = at(a);
   const tb = at(b);
-  return ta == null || tb == null ? null : Math.abs(tb - ta);
+  if (ta == null || tb == null) return null;
+  const sec = Math.abs(tb - ta);
+  // اليومي فما فوق أيام كاملة: افتتاح الجلسة يتحرّك ساعة بتبدّل التوقيت الصيفي ⇒ أسبوعان عبر 8 مارس كانا «13d 23h».
+  return stepSec >= 86400 && rule ? Math.round(sec / 86400) * 86400 : sec;
 }
 
 /**

@@ -214,6 +214,19 @@ ok('زمن بطرف في المستقبل', measureDurationSec({ time: 0 }, { ti
   );
   ok('بلا رمز كما كان', measureDurationSec({ time: fri }, { time: fri, ahead: 2, aheadStep: H }, H) === 2 * H);
 }
+{
+  // EURUSD يومي، الحيّة الخميس 24/09/2026 مختومة بافتتاحها (الأربعاء 21:00 UTC)، والخانات بعدها من ختم منتصف الليل
+  const D = 24 * H;
+  const thu = Date.UTC(2026, 8, 24) / 1000;
+  const live = { time: thu - 3 * H };
+  ok('يومي: الحيّة ⇒ التالية 1d لا 1d 3h', measureDurationSec(live, { time: thu, ahead: 1, aheadStep: D }, D, 'EURUSD') === D);
+  ok('يومي: الحيّة ⇒ +2 (عبر العطلة) 4d', measureDurationSec(live, { time: thu, ahead: 2, aheadStep: D }, D, 'EURUSD') === 4 * D);
+  const mon = Date.UTC(2026, 8, 21) / 1000;
+  ok('أسبوعي: الحيّة ⇒ التالية 7d', measureDurationSec({ time: mon - 3 * H }, { time: mon, ahead: 1, aheadStep: 7 * D }, 7 * D, 'EURUSD') === 7 * D);
+  // عبر 8 مارس: افتتاح 23/02 الساعة 22:00 UTC و9/03 الساعة 21:00 ⇒ 14d لا 13d 23h
+  ok('يومي عبر التوقيت الصيفي أيام كاملة', measureDurationSec({ time: Date.UTC(2026, 1, 22, 22) / 1000 }, { time: Date.UTC(2026, 2, 8, 21) / 1000 }, D, 'EURUSD') === 14 * D);
+  ok('الكريبتو بلا تحويل', measureDurationSec({ time: thu }, { time: thu, ahead: 1, aheadStep: D }, D, 'BTCUSD') === D);
+}
 ok('زمن بطرف بلا ختم ⇒ null', measureDurationSec({}, { time: 10 }, H) === null);
 ok('سطر بالزمن',
   measureReadoutText({
