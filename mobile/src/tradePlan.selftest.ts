@@ -3792,6 +3792,14 @@ console.log('tradePlan breakeven win-rate selftest OK');
     assert.ok(r.needPct * (1 + payoff) >= 100 - 1e-9, `${exits}: ${r.needPct}% لا يكفي`);
     assert.ok((r.needPct - 0.1) * (1 + payoff) < 100, `${exits}: ${r.needPct}% ليس الأضيق`);
   }
+  // فوزٌ من 16 = 6.25 بالضبط ⇒ 6.2 كـ`win_rate` (الخادم والمحلّي، `journalStats`) لا 6.3 بسطر النسبة نفسه
+  {
+    const sixteen = [t(1.089), ...Array.from({ length: 15 }, () => t(1.083))];
+    assert.equal(journalPayoffR(sixteen)?.winPct, 6.2);
+    assert.equal(journalPayoffR(sixteen)?.winPct, journalStats(sixteen.map((r) => ({ ...r, pnl: r.exit > 1.085 ? 0.37 : -0.18 }))).win_rate);
+    // 3 من 16 = 18.75 ⇒ 18.8 (النصف إلى الزوجي يرفع هنا)
+    assert.equal(journalPayoffR([t(1.089), t(1.089), t(1.089), ...Array.from({ length: 13 }, () => t(1.083))])?.winPct, 18.8);
+  }
   // رابحات فقط أو خاسرات فقط أو لا شيء ⇒ null
   assert.equal(journalPayoffR([t(1.089), t(1.087)]), null);
   assert.equal(journalPayoffR([t(1.083)]), null);

@@ -1160,7 +1160,7 @@ export function journalMaxDrawdownR(
  *
  * R لكل صفقة بمسطرة «متوسط R» (`exactR`)؛ صفقة بلا R تُتخطّى. رابحة > ε وخاسرة < −ε والتعادل لا يُعدّ (كـ`journalStats`)،
  * و`winPct` = رابحة ÷ (رابحة + خاسرة) من **هذه** الصفقات لا من `win_rate` الخادم (مجموعة أخرى: كل المغلقة ذات `pnl`) — المقارنة
- * بين رقمين من العيّنة نفسها. `winPct` لمنزلة (`roundAway`)، و`needPct` للأعلى. `null` ما لم توجد رابحة **و**خاسرة.
+ * بين رقمين من العيّنة نفسها. `winPct` لمنزلة بالنصف إلى الزوجي (`roundHalfEven`، كـ`win_rate` — فوزٌ من 16 = 6.2 بالسطرين لا 6.2/6.3)، و`needPct` للأعلى. `null` ما لم توجد رابحة **و**خاسرة.
  */
 export function journalPayoffR(
   trades: readonly {
@@ -1199,7 +1199,7 @@ export function journalPayoffR(
     avgLoss: roundR(lossSum / losses),
     payoff: roundAway(payoffExact, 2),
     needPct,
-    winPct: roundAway((wins / (wins + losses)) * 100, 1),
+    winPct: roundHalfEven((wins / (wins + losses)) * 100, 1),
     n: wins + losses,
   };
 }
