@@ -4620,7 +4620,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // 14px حول الإصبع بوحدة السعر عند موضعه (يصحّ مع المقياس اللوغاريتمي كذلك).
     const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
     // بالمستقبل لا شمعة تحت الإصبع ⇒ بلا مغناطيس.
-    const price = crossPriceAt(raw, ahead ? null : candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
+    // تحت الحارة الرئيسية (حارات ظلال الفريم الأعلى، كلٌّ بمقياسها ولا محور لها) `priceAtY` يمدّ مقياس الحارة الرئيسية
+    // ⇒ سعر لا يطابق الشمعة تحت الإصبع بعشرات النقاط، ومنه تنبيه 🔔 بسعر خاطئ. هناك خطّ عمودي فقط.
+    const inShadowLane = !!shadowStack && y > shadowStack.primaryLane.height;
+    const price = inShadowLane
+      ? null
+      : crossPriceAt(raw, ahead ? null : candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
     crossPinned.current = !hover;
     crossFromSync.current = false;
     setCrossHover(hover);
@@ -5860,7 +5865,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // فالخطّ يدلّ أيّ عمود تقرأ قيمته رؤوس اللوحات. داخل صفّ مُزاح بـ`viewXPan` ⇒ يُطرح منه.
   const paneCrossLine =
     cross && crossCandle ? (
-      <View pointerEvents="none" style={[styles.paneCrossV, { left: crossX - viewXPan }]} />
+      <View pointerEvents="none" style={[styles.paneCrossV, { left: crossX - viewXPan - 0.5 }]} />
     ) : null;
   // تغيّر شمعة التقاطع عن إغلاق السابقة (كـTradingView) لا جسمها — راجع `barChangeRef`. واحد لسطر
   // القراءة ولسطر OHLC المدمج. اللون من الرقم المطبوع (`pctDirection`) فلا يخالف ما يُقرأ.
@@ -9482,11 +9487,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {cross && crossCandle ? (
           <>
-            <View pointerEvents="none" style={[styles.crossV, { left: crossX, bottom: timeAxisH }]} />
+            {/* خطّا 1px مركزهما على الإحداثيّ كذيل الشمعة (`primaryColW / 2 - 0.5`): كانا يبدآن عنده فيقعان بجانب
+                الذيل لا عليه (واضح على شاشة 3x)، والأفقي نصف بكسل تحت مستوى السعر. */}
+            <View pointerEvents="none" style={[styles.crossV, { left: crossX - 0.5, bottom: timeAxisH }]} />
             {crossPriceOff || crossPrice == null ? null : (
               <View
                 pointerEvents="none"
-                style={[styles.crossH, { top: crossY, right: PRICE_AXIS_WIDTH }]}
+                style={[styles.crossH, { top: crossY - 0.5, right: PRICE_AXIS_WIDTH }]}
               />
             )}
           </>
