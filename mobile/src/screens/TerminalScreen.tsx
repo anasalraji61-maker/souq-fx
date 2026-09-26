@@ -2469,6 +2469,7 @@ const styles = StyleSheet.create({
   heroLoadingText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.md },
   // §1: تأكيد تسليح التنبيه ليس اتجاه سعر — نصّ أساسي (العلامة ✓ تحمل المعنى)
   chartArmed: {
+    ...numeric,
     color: colors.text,
     fontSize: 11,
     fontWeight: '500',
