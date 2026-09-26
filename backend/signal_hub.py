@@ -226,13 +226,14 @@ def indicator_forecast(
     def add(key: str, name_key: str, score: float, code: str, **values: float) -> None:
         if key not in want:
             return
-        score = max(-1.0, min(1.0, score))
+        # الاتجاه من الدرجة المرسَلة: 0.1197 كانت تُرسَل «0.12» بعنوان «محايد» والعتبة 0.12
+        score = round(max(-1.0, min(1.0, score)), 3) + 0.0  # لا «-0.0»
         votes.append(
             {
                 "id": key,
                 "name": _VOTE_NAMES[tl][name_key],
                 "direction": _direction(score),
-                "score": round(score, 3) + 0.0,  # لا «-0.0»
+                "score": score,
                 "detail": _DETAIL_TEXT[tl][code].format(**values),
                 "detail_code": code,
                 "detail_values": values,
@@ -352,14 +353,14 @@ def indicator_forecast(
                else {"disclaimer": _NO_DATA[tl], "disclaimer_code": "not_enough_data"}),
         }
 
-    avg = sum(v["score"] for v in votes) / len(votes)
+    avg = round(sum(v["score"] for v in votes) / len(votes), 3) + 0.0  # يُصنَّف كما يُرسَل
     direction = _direction(avg)
     levels, levels_basis = _trade_levels(last, direction, candles)
 
     return {
         "symbol": sym,
         "mode": "indicators",
-        "avg_score": round(avg, 3),
+        "avg_score": avg,
         "direction": direction,
         "levels": levels,
         "levels_basis": levels_basis,

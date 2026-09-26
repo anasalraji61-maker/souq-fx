@@ -121,3 +121,26 @@ def test_stochastic_vote_matches_the_displayed_k():
     b = signal_hub.indicator_forecast("EURUSD", series(1.0 + 0.2 * 0.80), enabled=["stoch"])["votes"][0]
     assert a["detail_values"]["k"] == b["detail_values"]["k"] == 80
     assert a["score"] == b["score"] == -0.6
+
+
+def _walk(seed: int, n: int = 180):
+    r = __import__("random").Random(seed)
+    p, out = 1.1, []
+    for i in range(n):
+        o = p
+        p = p * (1 + r.gauss(0, 0.0008))
+        h = max(o, p) * (1 + abs(r.gauss(0, 0.0003)))
+        lo = min(o, p) * (1 - abs(r.gauss(0, 0.0003)))
+        out.append({"time": 1700000000 + 900 * i, "open": o, "high": h, "low": lo, "close": p})
+    return out
+
+
+@pytest.mark.parametrize("seed", [5, 87, 758])
+def test_direction_is_classified_on_the_score_that_is_sent(seed):
+    """الإجماع −0.11967 كان يُرسَل `avg_score: -0.12` بعنوان «محايد» (العتبة ±0.12)، وصوت بولنجر
+    0.1197 كذلك ⇒ الدرجة المعروضة تناقض الاتجاه بجانبها. يُقرَّب أولاً ثم يُصنَّف."""
+    out = signal_hub.indicator_forecast("EURUSD", _walk(seed), lang="en")
+    for v in out["votes"]:
+        assert v["direction"] == signal_hub._direction(v["score"]), v
+    assert out["direction"] == signal_hub._direction(out["avg_score"])
+    assert out["avg_score"] == round(sum(v["score"] for v in out["votes"]) / len(out["votes"]), 3)
