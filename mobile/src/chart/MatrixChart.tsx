@@ -4538,7 +4538,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         pushDrawHistory();
         // شراء/بيع: `b` يُخزَّن عند الوقف بجهته الصحيحة (المقبض حيث يُرى الوقف) — `positionTool.ts`.
         const end = isPositionTool(t)
-          ? { ...positionEndPoint(a, b), price: positionStop(t, a.price, b.price, series.symbol) }
+          ? { ...positionEndPoint(a, b), price: positionStop(t, a.price, b.price, series.symbol, priceDecimalsRef) }
           : b;
         // القناة سحبة واحدة: الموازي يُقدَّر من الشموع بين الطرفين (احتياطه سُبع المدى الظاهر).
         const width =
@@ -4580,7 +4580,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           cur && end === 'b' && isPositionTool(cur.tool)
             ? {
                 ...positionEndPoint(cur.a, point),
-                price: positionStop(cur.tool, cur.a.price, point.price, series.symbol),
+                price: positionStop(cur.tool, cur.a.price, point.price, series.symbol, priceDecimalsRef),
               }
             : point;
         if (!dragChangesDrawing(cur, end, next)) return list;

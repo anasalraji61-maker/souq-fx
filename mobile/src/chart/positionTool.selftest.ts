@@ -39,6 +39,12 @@ near(S.target, 157.05);
 near(positionStop('long', 1.085, 1.085, 'EURUSD'), 1.083);
 near(positionStop('short', 157.5, 157.5, 'USDJPY'), 157.7);
 near(positionStop('long', 100, 100, 'DXY'), 99.8);
+// الوقف الافتراضي على شبكة السعر: DXY 104.235 ⇒ 104.027 لا 104.02653؛ BTC ⇒ منزلتان.
+if (positionStop('long', 104.235, 104.235, 'DXY') !== 104.027) throw new Error('DXY default stop off grid');
+{
+  const s2 = positionStop('short', 65000.12, 65000.12, 'BTCUSD');
+  if (Number(s2.toFixed(2)) !== s2) throw new Error('BTC default stop off grid');
+}
 
 // النسبة: قيم فاسدة ⇒ الافتراضي، ومقيّدة بالمدى
 assert.equal(clampRr(undefined), 2);

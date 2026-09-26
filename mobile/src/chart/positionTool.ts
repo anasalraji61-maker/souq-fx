@@ -38,14 +38,23 @@ export function clampRr(rr: number | null | undefined): number {
 /**
  * سعر الوقف بجهته الصحيحة. مسافة صفرية (نقرتان على السعر نفسه، أو مغناطيس جذب الطرفين للإغلاق
  * ذاته) ⇒ 20 pip للأداة المعروفة، و0.2% من السعر لغيرها — رسمة قابلة للسحب بدل صندوق بلا ارتفاع.
+ * الوقف الافتراضي على شبكة السعر كالهدف: 0.2% من DXY 104.235 كان 104.02653 ووسمه «SL 104.027» ⇒ شمعة قاعها 104.027
+ * بالضبط لا تُعدّ ضرباً للوقف («−0.65R» بدل «SL ✕ −1R»). `priceRef` مرجع منازل الشارت كـ`positionLevels`.
  */
-export function positionStop(side: PositionSide, entry: number, rawStop: number, symbol: string): number {
-  let risk = Math.abs(entry - rawStop);
-  if (!(risk > 0) || !Number.isFinite(risk)) {
-    const spec = chartPipSpec(symbol);
-    risk = spec ? spec.pipSize * 20 : Math.abs(entry) * 0.002;
-  }
-  return side === 'long' ? entry - risk : entry + risk;
+export function positionStop(
+  side: PositionSide,
+  entry: number,
+  rawStop: number,
+  symbol: string,
+  priceRef?: number | null
+): number {
+  const risk = Math.abs(entry - rawStop);
+  if (risk > 0 && Number.isFinite(risk)) return side === 'long' ? entry - risk : entry + risk;
+  const spec = chartPipSpec(symbol);
+  const fallback = spec ? spec.pipSize * 20 : Math.abs(entry) * 0.002;
+  const raw = side === 'long' ? entry - fallback : entry + fallback;
+  const onGrid = Number(formatPrice(raw, symbol, priceRef ?? entry));
+  return Number.isFinite(onGrid) && onGrid > 0 && onGrid !== entry ? onGrid : raw;
 }
 
 /**
@@ -76,7 +85,7 @@ export function positionLevels(
    * الهدف لمنزلتين من سعر الدخول (100.136 ⇒ 100.14) فيُكتب «TP 100.140» وR:R الفعلية 2.06 لا 2. */
   priceRef?: number | null
 ): PositionLevels {
-  const stop = positionStop(side, entry, rawStop, symbol);
+  const stop = positionStop(side, entry, rawStop, symbol, priceRef);
   let r = clampRr(rr);
   // بيع بوقف بعيد ونسبة كبيرة (عملة رقمية: وقف 30% × R:R 5) كان يرسم «TP -0.50000» — سعر لا يوجد، وبلا
   // مسافة pip. النسبة تُقصّ لأعلى ما يُبقي الهدف فوق الصفر (منزلتان للأسفل)، فتقرأ R:R الممكنة فعلاً.
