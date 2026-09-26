@@ -1783,6 +1783,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
+  /** موضع بدء لمسة السحب بالصفحة (الهاتف) — راجع `onPanResponderMove` بـ`chartPan`. */
+  const panStartPage = useRef({ x: 0, y: 0 });
   const panStartBars = useRef(0);
   const offsetRef = useRef(0);
   const panStartPoint = useRef({ x: 0, y: 0 });
@@ -2107,6 +2109,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (added <= 0 && removed <= 0) return;
     const next = Math.min(Math.max(0, all.length - 10), Math.max(0, offsetRef.current + added - removed));
     if (next === offsetRef.current) return;
+    // وسط سحبة: السحب يحسب إزاحته من `panStartOffset` ⇒ بلا هذا تُمحى الإزاحة الممسوكة بالخطوة التالية فيزحف
+    // الشارت شمعة تحت الإصبع مع كل شمعة جديدة.
+    if (gestureOnRef.current) panStartOffset.current += next - offsetRef.current;
     offsetRef.current = next;
     setOffset(next);
   }, [source.all, series.symbol, series.timeframe, kind, syncFollow, replayOn]);
@@ -6211,6 +6216,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             x: evt.nativeEvent.locationX,
             y: evt.nativeEvent.locationY,
           };
+          panStartPage.current = { x: evt.nativeEvent.pageX, y: evt.nativeEvent.pageY };
           plotPageLeft.current = evt.nativeEvent.pageX - evt.nativeEvent.locationX;
           pinchStart.current = null;
           pinchUsed.current = false;
@@ -6226,7 +6232,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
           }, 350);
         },
-        onPanResponderMove: (evt, g) => {
+        onPanResponderMove: (evt) => {
           // إصبع ثانٍ ⇒ قرص يكبّر/يصغّر الشموع كـTradingView على الهاتف. لم يكن بالشارت أيّ
           // تكبير باللمس: زرّا − + وحدهما (وعجلة الفأرة بالويب)، والإصبع الثاني كان يُقرأ
           // سحباً فيقفز الشارت بمقدار انتقال مركز اللمسات.
@@ -6239,15 +6245,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           pinchStart.current = null;
           // رُفع أحد الإصبعين: الباقي لا يسحب الشارت حتى يُرفع — كان سيقفز بفرق مركز اللمسات.
           if (pinchUsed.current) return;
+          // الانزياح من موضع البدء بالصفحة لا `g.dx`: المستجيب يُبنى من جديد مع كل شمعة جديدة (`applyChartDrag`)
+          // وحالة إيماءة الكائن الجديد تبدأ من الصفر ⇒ التقاطع/السحب كان يقفز لموضع بدء اللمسة عند إغلاق الشمعة.
+          const dx = evt.nativeEvent.pageX - panStartPage.current.x;
+          const dy = evt.nativeEvent.pageY - panStartPage.current.y;
           if (scrubbing.current) {
             crossAtRef.current(
-              Math.max(0, Math.min(chartPlotW - 1, panStartPoint.current.x + g.dx)),
-              Math.max(0, Math.min(chartPlotH, panStartPoint.current.y + g.dy))
+              Math.max(0, Math.min(chartPlotW - 1, panStartPoint.current.x + dx)),
+              Math.max(0, Math.min(chartPlotH, panStartPoint.current.y + dy))
             );
             return;
           }
-          if (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4) panMoved.current = true;
-          applyChartDrag(g.dx, g.dy);
+          if (Math.abs(dx) > 4 || Math.abs(dy) > 4) panMoved.current = true;
+          applyChartDrag(dx, dy);
         },
         // أثناء التتبّع لا يُسلَّم الإصبع لتمرير الصفحة الأب — وإلا قطع سحبٌ رأسي التتبّع.
         onPanResponderTerminationRequest: () => !scrubbing.current && !pinchUsed.current,
