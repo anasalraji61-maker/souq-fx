@@ -1320,8 +1320,20 @@ def create_alert(data: dict, user_id: int | None = None, owner_key: str | None =
     return data
 
 
+class AlertChanged(Exception):
+    """التنبيه تغيّر منذ قرأه العميل (`expect`) — `alert` = الصفّ المخزَّن."""
+
+    def __init__(self, alert: dict):
+        super().__init__("alert changed")
+        self.alert = alert
+
+
+_ALERT_EXPECT_COLS = ("symbol", "condition", "price", "triggered", "ts")
+
+
 def update_alert(
-    alert_id: str, data: dict, user_id: int | None = None, owner_key: str | None = None
+    alert_id: str, data: dict, user_id: int | None = None, owner_key: str | None = None,
+    expect: dict | None = None,
 ) -> dict | None:
     """Atomic edit of a price alert (symbol/condition/price/note) — re-arms it (triggered=0).
 
@@ -1329,14 +1341,23 @@ def update_alert(
     updated row, or None when no row matched (missing or not owned) → the API answers 404.
     """
     sql, args = _owner_clause(user_id, owner_key)
+    cond, cargs = "", ()
+    for k, v in (expect or {}).items():
+        if k in _ALERT_EXPECT_COLS:
+            cond += f" AND {k} IS ?"
+            cargs += (int(v) if k == "triggered" else v,)
     with _conn() as c:
         cur = c.execute(
             f"""UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
-               WHERE id=? AND {sql}""",
+               WHERE id=? AND {sql}{cond}""",
             (data["symbol"], data["condition"], data["price"], data.get("note", ""),
-             data["ts"], alert_id, *args),
+             data["ts"], alert_id, *args, *cargs),
         )
         if cur.rowcount == 0:
+            if cond:
+                row = c.execute(f"SELECT * FROM alerts WHERE id=? AND {sql}", (alert_id, *args)).fetchone()
+                if row is not None:
+                    raise AlertChanged(_alert_row(row))
             return None
         row = c.execute("SELECT * FROM alerts WHERE id=?", (alert_id,)).fetchone()
     return _alert_row(row) if row else None

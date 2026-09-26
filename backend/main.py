@@ -315,6 +315,18 @@ class AlertCreate(BaseModel):
     _sym = field_validator("symbol")(_alertable_symbol)
 
 
+class AlertUpdate(AlertCreate):
+    """تعديل تنبيه + الصفّ كما رآه العميل (`seen_*`، كقاعدة PATCH الصفقة). التعديل يكتب كل الحقول ويعيد
+    التسليح، فجهاز بقائمة قديمة يحفظ ملاحظة كان يُرجِع المستوى الذي نقله جهاز آخر (1.2000 ⇒ 1.1000) بلا
+    تنبيه، ويعيد تسليح تنبيه أُطلق بعد قراءته فيُطلق فوراً ويُدفع مرّة ثانية. مختلف ⇒ 409. غائب = بلا فحص."""
+
+    seen_symbol: str | None = Field(default=None, max_length=12)
+    seen_condition: Literal["above", "below"] | None = None
+    seen_price: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    seen_triggered: bool | None = None
+    seen_ts: str | None = Field(default=None, max_length=40)
+
+
 def _alert_level(price: float) -> float:
     """مستوى التنبيه كما كتبه المتداول (10 أرقام معنوية تزيل ضجيج الفاصلة العائمة فقط). كان
     `round(price, 5)`: رمز تحت 0.00001 (SHIB/USD ‏0.0000123 بقائمة متابعة مخصّصة) يُحفظ 0.00001 أو **0**
@@ -1265,11 +1277,12 @@ def create_alert(
 @app.patch("/api/alerts/{alert_id}")
 def update_alert(
     alert_id: str,
-    body: AlertCreate,
+    body: AlertUpdate,
     user: dict | None = Depends(_auth_user),
     key: str | None = Depends(_owner_key),
 ):
-    """تعديل ذرّي للتنبيه (بدل إنشاء جديد ثم حذف القديم) — يُعيد تفعيله. 404 إن لم يوجد أو لا يملكه."""
+    """تعديل ذرّي للتنبيه (بدل إنشاء جديد ثم حذف القديم) — يُعيد تفعيله. 404 إن لم يوجد أو لا يملكه،
+    409 `alert_changed` (مع الصفّ المخزَّن) إن اختلف عن `seen_*` المُرسَلة."""
     data = {
         "symbol": body.symbol.upper(),
         "condition": body.condition,
@@ -1278,7 +1291,16 @@ def update_alert(
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     uid = user["user_id"] if user else None
-    alert = db.update_alert(alert_id, data, uid, owner_key=key)
+    expect = {k.removeprefix("seen_"): getattr(body, k) for k in body.model_fields_set if k.startswith("seen_")}
+    expect = {k: v for k, v in expect.items() if v is not None}
+    if "symbol" in expect:
+        expect["symbol"] = market.canonical_symbol(expect["symbol"])
+    if "price" in expect:
+        expect["price"] = _alert_level(expect["price"])
+    try:
+        alert = db.update_alert(alert_id, data, uid, owner_key=key, expect=expect)
+    except db.AlertChanged as e:
+        raise HTTPException(409, {"error": "alert_changed", "alert": e.alert})
     if alert is None:
         raise HTTPException(status_code=404, detail="alert not found")
     return {"ok": True, "alert": alert}
