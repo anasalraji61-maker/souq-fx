@@ -74,6 +74,7 @@ import {
   draftRiskFigures,
   journalSizeLooksLikeUnits,
   journalSizeMaybeMetalUnits,
+  journalSizeOunces,
   journalMoneyLots,
   parseJournalSize,
   journalSizeDottedThousands,
@@ -600,9 +601,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     return l != null ? journalSizeLooksLikeUnits(l, symbol) : null;
   })();
   /** ذهب/فضة «50» — أونصات (0.50 lot) أم لوتات؟ سؤالٌ بشريحة **لا يمنع الحفظ** (`journalSizeMaybeMetalUnits`) */
-  const sizeMetal = (() => {
+  // «50 Oz» مكتوبة بالأونصة صراحةً (cTrader) ⇒ الشريحة نفسها بمكافئها (`journalSizeOunces`)؛ كانت «رقم غير مفهوم» فقط
+  const sizeMetal = ((): { lots: number; n: string } | null => {
+    if (sizeUnits) return null;
     const l = num(size);
-    return !sizeUnits && l != null ? journalSizeMaybeMetalUnits(l, symbol) : null;
+    if (l != null) {
+      const m = journalSizeMaybeMetalUnits(l, symbol);
+      return m ? { lots: m.lots, n: size.trim() } : null;
+    }
+    const oz = journalSizeOunces(size, symbol);
+    return oz ? { lots: oz.lots, n: String(oz.oz) } : null;
   })();
   const sizeUnitsText = (): string => {
     const l = num(size) ?? 0;
@@ -2339,10 +2347,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               setSizeFor(symbol);
               setFormError(null);
             }}
-            accessibilityLabel={t.journalSizeMetalOuncesFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
+            accessibilityLabel={t.journalSizeMetalOuncesFix.replace('{n}', sizeMetal.n).replace('{lots}', sizeMetal.lots.toFixed(2))}
           >
             <Text style={styles.qChipText}>
-              {t.journalSizeMetalOuncesFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
+              {t.journalSizeMetalOuncesFix.replace('{n}', sizeMetal.n).replace('{lots}', sizeMetal.lots.toFixed(2))}
             </Text>
           </Pressable>
         </View>

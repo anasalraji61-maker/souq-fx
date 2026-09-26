@@ -123,6 +123,27 @@ export function journalSizeMaybeMetalUnits(size: number, symbol: string | null |
   return { lots: Math.round(steps * LOT_STEP * 100) / 100 };
 }
 
+const OUNCE_WORD = /^(.+?)\s*(?:oz|ounces?|أونصات|أونصة|اونصات|اونصة|ئۆنسە|ئۆنس)\.?$/i;
+
+/**
+ * حجم ذهب/فضة **مكتوب بالأونصة صراحةً** («50 Oz» كما يعرضه cTrader، «50 أونصة»): كان «رقم غير مفهوم» بلا طريق للحفظ.
+ * لا يُحفظ كما هو (الخانة باللوت) — يُقترح مكافئه `{ lots }` بشريحة (0.50 lot للذهب، عقد 100 أونصة). غير معدن، أو أونصات
+ * لا تقع على خطوة اللوت (0.01)، أو فوق `MAX_SANE_LOTS` ⇒ `null` (يبقى «غير مفهوم» كما كان — لا تقريب صامت لحجم).
+ */
+export function journalSizeOunces(raw: string, symbol: string | null | undefined): { oz: number; lots: number } | null {
+  const spec = instrumentSpec((symbol || '').trim().toUpperCase());
+  if (!spec || (spec.base !== 'XAU' && spec.base !== 'XAG')) return null;
+  const m = OUNCE_WORD.exec(normalizeDigits(raw).trim());
+  if (!m) return null;
+  const oz = parseDecimal(m[1]);
+  if (oz == null || !(oz > 0)) return null;
+  const lotsRaw = oz / spec.contractSize;
+  const steps = Math.round(lotsRaw / LOT_STEP);
+  if (steps < 1 || Math.abs(lotsRaw / LOT_STEP - steps) > 1e-6) return null;
+  const lots = Math.round(steps * LOT_STEP * 100) / 100;
+  return lots <= MAX_SANE_LOTS ? { oz, lots } : null;
+}
+
 /**
  * الحجم الذي **يُحسب به مال** سطور مسودّة الدفتر (المخاطرة، الربح المحتمل، معاينة الخروج) من نصّ الخانة كما كُتب:
  * `null` حين لا حجم، أو يبدو وحدات (`journalSizeLooksLikeUnits`)، أو «10.000» المبهم (`journalSizeDottedThousands`).

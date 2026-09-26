@@ -4245,3 +4245,27 @@ console.log('tradePlan journalRowWhen selftest OK');
   assert.equal(journalSizeMaybeMetalUnits(50, null), null);
 }
 console.log('tradePlan journalSizeMaybeMetalUnits selftest OK');
+// «50 Oz» (cTrader) — أونصات مكتوبة صراحةً ⇒ اقتراح لوت؛ لا يُقرأ حجماً باللوت أبداً
+{
+  const { journalSizeOunces, parseJournalSize } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.deepEqual(journalSizeOunces('50 Oz', 'XAUUSD'), { oz: 50, lots: 0.5 });
+  assert.deepEqual(journalSizeOunces('50oz', 'XAUUSD'), { oz: 50, lots: 0.5 });
+  assert.deepEqual(journalSizeOunces('1 oz', 'XAUUSD'), { oz: 1, lots: 0.01 });
+  assert.deepEqual(journalSizeOunces('٢٥٠ أونصة', 'XAUUSD'), { oz: 250, lots: 2.5 });
+  assert.deepEqual(journalSizeOunces('1000 ounces', 'xauusd'), { oz: 1000, lots: 10 });
+  assert.deepEqual(journalSizeOunces('5000 oz', 'XAGUSD'), { oz: 5000, lots: 1 });
+  assert.deepEqual(journalSizeOunces('250 oz.', 'XAGUSD'), { oz: 250, lots: 0.05 });
+  // خارج خطوة اللوت ⇒ لا تقريب صامت
+  assert.equal(journalSizeOunces('0.5 oz', 'XAUUSD'), null);
+  assert.equal(journalSizeOunces('55.5 oz', 'XAUUSD'), null);
+  assert.equal(journalSizeOunces('30 oz', 'XAGUSD'), null);
+  assert.deepEqual(journalSizeOunces('100 oz', 'XAGUSD'), { oz: 100, lots: 0.02 });
+  // غير معدن / بلا كلمة / صفر
+  assert.equal(journalSizeOunces('50 oz', 'EURUSD'), null);
+  assert.equal(journalSizeOunces('50', 'XAUUSD'), null);
+  assert.equal(journalSizeOunces('0 oz', 'XAUUSD'), null);
+  assert.equal(journalSizeOunces('oz', 'XAUUSD'), null);
+  // الخانة باللوت لا تقبله رقماً (يبقى السؤال لا حفظ 50 لوتاً)
+  assert.equal(parseJournalSize('50 Oz'), null);
+}
+console.log('tradePlan journalSizeOunces selftest OK');
