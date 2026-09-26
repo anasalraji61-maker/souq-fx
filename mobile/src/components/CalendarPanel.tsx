@@ -133,6 +133,8 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   const [serverStale, setServerStale] = useState(false);
   /** `as_of` للجلب الناجح السابق (ثوانٍ UTC) حين `stale` — null إن غاب أو لم يُقرأ ⇒ السطر العام بلا وقت. */
   const [serverAsOf, setServerAsOf] = useState<number | null>(null);
+  /** وقت آخر جلب ناجح طازج (ثوانٍ، ساعة الخادم) — يُعرض بسطر «محفوظ» إن فشل تحديثٌ صامت بعده. */
+  const lastOkRef = useRef<number | null>(null);
   /**
    * ساعة العدّ التنازلي ("بعد 2س 15د") — بساعة **الخادم** المصحَّحة (`newsClockMs`) كشريط الأخبار فوق الشارت
    * (QA124a): كانت `Date.now()` فجهاز متأخّر 4 دقائق يكتب الخبر نفسه «بعد 1د» على الشارت و«بعد 5د» هنا.
@@ -225,10 +227,18 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
           setEvents(r.events);
           setServerStale(r.stale === true);
           setServerAsOf(r.stale === true ? asOfSeconds(r.as_of) : null);
+          if (r.stale !== true) lastOkRef.current = Math.floor(newsClockMs() / 1000);
           setStatus('ok');
         })
         .catch(() => {
-          if (!alive.on || silent) return;
+          if (!alive.on) return;
+          if (silent) {
+            // القائمة تبقى، لكن لا تبدو حيّة: العدّ التنازلي يتحرّك والرقم الفعلي لا يصل أبداً
+            // والأحداث الجديدة غائبة — فسطر «محفوظ» نفسه يقول منذ متى.
+            setServerStale(true);
+            setServerAsOf((prev) => prev ?? lastOkRef.current);
+            return;
+          }
           setEvents([]);
           setStatus('error');
         });
