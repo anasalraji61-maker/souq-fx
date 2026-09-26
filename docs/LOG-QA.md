@@ -1164,3 +1164,11 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (b — نصوص ثابتة):** لا نصّ حرفي جديد بـ`.tsx`. ومن (e): **QA107a → أنس** — «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض دخول/وقف/هدف بأسعار؛ القرار ٤ خاصّ بالمساعد ⇒ سؤال جديد لا إعادة فتح.
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ متابعة launch (قرارا ٤/٧)؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (1bb0dfc):** أخضر 0؛ `barCountdown`/`liveSeries`/`authErrors` selftests ناجحة. قرارا ٤/٧ أُغلقا ← launch `9b4f9e6`/`29b6cae` + ui `c132823` (قبل أن يُرفع إدخالي). جديد **tools120a → ui** مُتحقَّق (`WatchlistPanel.tsx:67` كامن؛ الموضعان يمرّران `NO_PRICE_BASES`). ui `3a765d3` (إغلاق بـ`textMuted`) ⇒ لا فشل تصميم.
+
+## 2026-09-26 — الدورة 108
+**البناء:** أخضر 0 (على d222e72 ثم 1276abf بعد السحب) — لا إصلاح لازم. **Selftests:** 119/119 ناجح (`npx tsx`)؛ بعد السحب الثلاثة المتغيّرة (`barCountdown`/`liveSeries`/`tradePlan`) ناجحة.
+**التحقّق بالكود:** أُغلقت QA107b ← ui `c38571f`؛ tools120a ← ui `b574e4d`؛ قرار ١٤ ← backend `1276abf` (قراءة diff: `pays_balance_bonus`، `_log_commission_on_place`، `gmtime`؛ pytest غير مثبّت على السيرفر فلم يُشغَّل). باقٍ launch174a → ui (`wlNoPriceA11ySuffix` بلا قارئ).
+**الدفعة الثانية من `DECISIONS-ANAS.md` (`5def7c1`، ٨–١٥):** ٨ → chart+backend (`dailyChange.ts:29` يوم UTC)؛ ٩ → ui (`MessagesScreen.tsx`، `mock.ts:47`)؛ ١٠ → ui (لا راية)؛ ١١ → chart (`paneGuides.ts:168` max 100)؛ ١٢ → backend (القالب الكردي، QA27 أُسقط)؛ ١٣ → ui+launch (لا Sentry)؛ ١٥ → tools (`MAX_SMALL_LOTS` 200). STATUS ⛔ من 22 إلى 16. عنوان الكوميت يذكر «قرار المنصّتين + خمسة أعطال ويب» وليست بالملف ⇒ طُلبت من أنس.
+**قائمة قبول DESIGN-PRO (الثامن والعشرون):** 0/12 فشل (diff منذ 1bb0dfc: منطق، حذف `FALLBACK`، نصوص).
+**المراجعة (c — `accessibilityLabel`):** مسح AST (TypeScript API) على كل `.tsx` ⇒ 5 أغلفة `accessible={false}` و`MessagesScreen` (تُحذف بقرار ٩). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة (حدّ اليوم بعد قرار ٨، حدّ السنت بعد ١٥، DeMarker بعد ١١)؛ متابعة تنفيذ ٨–١٣/١٥؛ وإعادة قائمة DESIGN-PRO.
