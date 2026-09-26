@@ -459,3 +459,20 @@ def test_truncated_reply_with_no_complete_line_is_an_error(monkeypatch):
     monkeypatch.setattr(openrouter_ai.httpx, "Client", lambda **k: _Reply("Buy EURUSD, stop 1.08", "length"))
     with pytest.raises(RuntimeError):
         openrouter_ai.chat("s", "u")
+
+
+@pytest.mark.parametrize("lang", ["ar", "en"])
+def test_move_larger_than_atr_is_not_called_flat_when_its_percent_rounds_to_zero(monkeypatch, lang):
+    """زوج مربوط: +0.0003 على 7.8 = +0.0038% ⇒ `change_pct` المقرَّب 0.00 ⇒ كان «صافي الحركة أصغر من
+    ATR14» بلا اتجاه — والحركة الحقيقية أكبر من ATR (≈0.0002). الإشارة والصفر من الإغلاقين الحقيقيين."""
+    base = _provider_series(0.0002, "USDHKD", 7.8, change_pct=0.0038)
+    build = lambda *a, **k: base(*a, **k).model_copy(update={"change_pct": 0.0})
+    monkeypatch.setattr(main, "build_series", build)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    s = build("USDHKD")
+    move = s.last - s.candles[0].close
+    atr = main.signal_hub._atr_raw([c.model_dump() for c in s.candles])
+    assert move > atr > 0
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "symbol": "USDHKD", "lang": lang}).json()
+    assert body["setup"]["direction"] == "buy"
+    assert "ATR14 —" not in body["answer"] and "أصغر من" not in body["answer"]

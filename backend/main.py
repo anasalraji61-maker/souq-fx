@@ -2127,25 +2127,27 @@ def ai_ask(body: AiAsk):
     # الشموع التي تغطّيها النسبة: من إغلاق الأولى إلى إغلاق الأخيرة = N−1 (كـ`change_bars` بـ`indicators.snapshot`)
     bars = max(len(series.candles) - 1, 0)
     # None = رمز بلا سعر أصلاً (DXY) ⇒ `live` False أعلاه، ولا اتجاه
-    chg = series.change_pct if series.change_pct is not None else 0.0
     atr_raw = signal_hub._atr_raw([c.model_dump() for c in series.candles]) if live else None
     atr_v = atr_raw if atr_raw else None
     # صافي الحركة على النافذة أصغر من مدى شمعة واحدة معتاد (ATR14) = ضجيج لا اتجاه: كان أي إشارة غير صفرية
     # (+0.01% على ~45 ساعة بـ15m) ⇒ «صاعد» وسيناريو شراء كامل بدخول ووقف وهدف. الحركة من الإغلاقين
     # الحقيقيين (الأخير − أول السلسلة) لا من `change_pct`: تلك مقرَّبة لخانتين (0.005% ≈ 15% من ATR 15m
     # لليورو) فكانت حركة +0.0251% تحت ATR تُقرأ +0.03% فوقه ⇒ سيناريو شراء كامل على ضجيج، والعكس.
-    net_move = (
-        abs(series.last - series.candles[0].close)
+    move = (
+        series.last - series.candles[0].close
         if series.last is not None and series.candles else 0.0
     )
+    net_move = abs(move)
     # بلا ATR14 (أقلّ من 15 شمعة) لا مقياس للضجيج ⇒ لا اتجاه: كان المرشّح يُتخطّى فيصير +0.01% على 12 شمعة «شراء»
     # ATR14 = 0 (180 شمعة متطابقة: زوج مربوط أو تغذية متجمّدة) ليس «شموعاً قليلة»: كان `_atr_last` يعيد None
     # للحالتين ⇒ «180 شمعة فقط — أقلّ من أن يُقاس…» سبباً كاذباً للمستخدم وللنموذج. الآن سببان منفصلان.
     still = live and atr_raw == 0
     few = live and atr_raw is None
-    flat = chg == 0 or few or still or (atr_v is not None and net_move < atr_v)
-    bias = "صاعد" if chg > 0 else "هابط"
-    direction: str | None = None if flat else ("شراء" if chg > 0 else "بيع")
+    # الإشارة والصفر من الحركة الحقيقية لا `chg` المقرَّب: زوج مربوط (USDHKD، ATR 15m ≈ 0.00025) يتحرّك +0.0003
+    # = +0.0038% ⇒ `chg` 0.00 ⇒ كان «صافي الحركة أصغر من ATR14» — جملة كاذبة عن حركة أكبر منه.
+    flat = move == 0 or few or still or (atr_v is not None and net_move < atr_v)
+    bias = "صاعد" if move > 0 else "هابط"
+    direction: str | None = None if flat else ("شراء" if move > 0 else "بيع")
     entry: float | None = None
     sl: float | None = None
     tp: float | None = None
@@ -2211,7 +2213,7 @@ def ai_ask(body: AiAsk):
         # نفس القالب التعليمي بالإنجليزية لمستخدمي en-US/en-GB (بلا اقتباس السؤال: بعض الأسئلة
         # قوالب داخلية عربية). الكردية تبقى على القالب العربي (نفس الأبجدية) لغياب مراجعة لغوية.
         if live:
-            bias_en = "bullish" if chg > 0 else "bearish"
+            bias_en = "bullish" if move > 0 else "bearish"
             dir_en = "Buy" if direction == "شراء" else "Sell"
             read = (
                 f"Only {bars + 1} candles ({series.timeframe}) — too few to measure a normal candle range "
