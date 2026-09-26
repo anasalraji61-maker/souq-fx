@@ -172,16 +172,21 @@ export function useDailyRefs(symbols: readonly string[]): Record<string, number>
  */
 export function useDailyPrevBar(symbol: string | null): Candle | undefined {
   const sym = symbol ? symbol.toUpperCase() : '';
-  const [bar, setBar] = useState<Candle | undefined>(() =>
-    sym ? current(sym)?.prevBar ?? undefined : undefined
-  );
+  // الحالة موسومة برمزها: بعد التبديل كان أوّل رسم يحسب المحاور/PDH-PDL من شمعة الرمز **السابق** حتى يعمل التأثير.
+  const [state, setState] = useState<{ sym: string; bar: Candle | undefined }>(() => ({
+    sym,
+    bar: sym ? current(sym)?.prevBar ?? undefined : undefined,
+  }));
 
   useEffect(() => {
     if (!sym) {
-      setBar(undefined);
+      setState({ sym, bar: undefined });
       return;
     }
-    const update = () => setBar(current(sym)?.prevBar ?? undefined);
+    const update = () => {
+      const bar = current(sym)?.prevBar ?? undefined;
+      setState((prev) => (prev.sym === sym && prev.bar === bar ? prev : { sym, bar }));
+    };
     listeners.add(update);
     update();
     request([sym]);
@@ -195,19 +200,27 @@ export function useDailyPrevBar(symbol: string | null): Candle | undefined {
     };
   }, [sym]);
 
-  return bar;
+  if (state.sym !== sym) return sym ? current(sym)?.prevBar ?? undefined : undefined;
+  return state.bar;
 }
 
 /** افتتاح الجلسة الجارية من شموع D1 (نفس مخزن `useDailyPrevBar`)؛ null = غير معروف. */
 export function useDailyCurrOpen(symbol: string | null): number | null {
   const sym = symbol ? symbol.toUpperCase() : '';
-  const [open, setOpen] = useState<number | null>(() => (sym ? current(sym)?.currOpen ?? null : null));
+  // موسومة برمزها كـ`useDailyPrevBar`: افتتاح Woodie للرمز السابق لا يُرسم إطاراً بعد التبديل.
+  const [state, setState] = useState<{ sym: string; open: number | null }>(() => ({
+    sym,
+    open: sym ? current(sym)?.currOpen ?? null : null,
+  }));
   useEffect(() => {
     if (!sym) {
-      setOpen(null);
+      setState({ sym, open: null });
       return;
     }
-    const update = () => setOpen(current(sym)?.currOpen ?? null);
+    const update = () => {
+      const open = current(sym)?.currOpen ?? null;
+      setState((prev) => (prev.sym === sym && prev.open === open ? prev : { sym, open }));
+    };
     listeners.add(update);
     update();
     request([sym]);
@@ -215,5 +228,6 @@ export function useDailyCurrOpen(symbol: string | null): number | null {
       listeners.delete(update);
     };
   }, [sym]);
-  return open;
+  if (state.sym !== sym) return sym ? current(sym)?.currOpen ?? null : null;
+  return state.open;
 }
