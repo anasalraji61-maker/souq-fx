@@ -93,6 +93,11 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   const up = (symbol || '').trim().toUpperCase();
   const spec = instrumentSpec(up);
   if (spec) return sizeLooksLikeUnits(size, spec);
+  // mini («EURUSD.MINI»): لوتها عُشر العادي ⇒ الحدّ نفسه بلوت العادي (`MAX_SANE_LOTS` = 1,000 mini). كانت بلا فحص فتُحفظ «10000» (وحدات)
+  // عشرة آلاف لوت بلا سؤال، بينما السنت وmicro يُنبَّه عليهما. بلا اقتراح تحويل كالسنت.
+  if (miniAccountSymbol(up) && !smallContractPair(up)) {
+    return Number.isFinite(size) && size > MAX_SANE_LOTS * 10 ? { lots: null } : null;
+  }
   // micro («EURUSDMICRO») كالسنت: لوتها أصغر بمئة مرّة فأرقامها أكبر، وعشرة آلاف لوت خطأ كتابة بها أيضاً
   if (!smallContractPair(up)) return null;
   return Number.isFinite(size) && size > MAX_SMALL_LOTS ? { lots: null } : null;

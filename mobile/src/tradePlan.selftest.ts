@@ -1935,6 +1935,12 @@ console.log('tradePlan small-contract suffix selftest OK');
   assert.deepEqual(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: { amount: 2.5, ccy: 'USD' }, cent: false, micro: true });
   assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSDMICRO'), { lots: null });
   assert.equal(journalSizeLooksLikeUnits(150, 'EURUSD.MICRO'), null);
+  // mini: كانت null لأيّ حجم ⇒ «10000» تُحفظ عشرة آلاف لوت. الحدّ 1,000 mini = 100 لوت عادي (`MAX_SANE_LOTS`)
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSD.MINI'), { lots: null });
+  assert.deepEqual(journalSizeLooksLikeUnits(100000, 'GOLDMINI'), { lots: null });
+  assert.deepEqual(journalSizeLooksLikeUnits(1000.01, 'gbpjpy_mini'), { lots: null });
+  for (const n of [0.1, 5, 250, 1000]) assert.equal(journalSizeLooksLikeUnits(n, 'EURUSD.MINI'), null, String(n));
+  assert.equal(journalSizeLooksLikeUnits(NaN, 'EURUSD.MINI'), null);
 }
 console.log('tradePlan journalSpec chips selftest OK');
 
