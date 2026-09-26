@@ -126,7 +126,8 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
               </Text>
             </View>
             <Text style={[styles.headline, { textAlign: align }]}>{n.title}</Text>
-            <Text style={[styles.pairs, { textAlign: align }]}>{n.pair_effect}</Text>
+            {/* `pair_effect` لا يُعرض: الخادم يرسل «Forex» ثابتة لكل خبر (`news_feed.py`) — إنجليزية تحت الواجهة
+                العربية/الكردية ولا تسمّي زوجاً. */}
           </View>
           );
         })}
@@ -198,5 +199,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 20,
   },
-  pairs: { color: colors.textMuted, fontSize: 11, marginTop: spacing.xs },
 });
