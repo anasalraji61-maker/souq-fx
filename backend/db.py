@@ -1074,35 +1074,43 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
                 ).fetchall()
                 row = rows[0] if len(rows) == 1 else None
     if not row:
+        # تجزئة وهمية بالجولات نفسها: بلاها يُجاب الاسم غير الموجود فوراً والموجود بعد PBKDF2 (~60ms)
+        # ⇒ زمن الردّ يكشف وجود الحساب.
+        _verify_password(password, f"{_PBKDF2_ALGO}${_PBKDF2_ITERATIONS}${'0' * 32}${'0' * 64}")
         raise ValueError("invalid credentials")
-    ok, needs_rehash = _verify_password(password, str(row["password_hash"]))
+    stored = str(row["password_hash"])
+    ok, needs_rehash = _verify_password(password, stored)
     if not ok:
         raise ValueError("invalid credentials")
-    if needs_rehash:
-        # ترقية كسولة: الدخول نجح فكلمة المرور بين أيدينا الآن وحدها هذه اللحظة.
-        try:
-            with _conn() as c:
-                c.execute(
-                    "UPDATE users SET password_hash=? WHERE id=?",
-                    (_encode_password(password), int(row["id"])),
-                )
-        except sqlite3.Error:
-            pass  # الدخول ناجح على أي حال؛ تُعاد المحاولة بالدخول التالي.
-    return create_session(
-        int(row["id"]),
-        str(row["username"]),
-        str(row["email"] or "") or None,
+    # ترقية كسولة: الدخول نجح فكلمة المرور بين أيدينا الآن وحدها هذه اللحظة (تُحسب خارج القفل).
+    new_hash = _encode_password(password) if needs_rehash else None
+    uid = int(row["id"])
+    with _conn() as c:
+        # التحقق أعلاه بلا قفل (PBKDF2 بطيء)؛ تغيير كلمة المرور أو حذف الحساب بينهما كان يُلغى:
+        # الترقية تكتب تجزئة الكلمة القديمة فوق الجديدة/الميتة، والجلسة تُنشأ بعد أن أُلغيت الجلسات.
+        # الآن التجزئة يجب أن تبقى هي التي تحقّقنا منها، والترقية والجلسة بالمعاملة نفسها.
+        c.execute("BEGIN IMMEDIATE")
+        cur = c.execute("SELECT username, email, password_hash FROM users WHERE id=?", (uid,)).fetchone()
+        if not cur or str(cur["password_hash"]) != stored:
+            raise ValueError("invalid credentials")
+        if new_hash:
+            c.execute("UPDATE users SET password_hash=? WHERE id=?", (new_hash, uid))
+        token = _insert_session(c, uid)
+    return {"token": token, "user_id": uid, "username": str(cur["username"]), "email": str(cur["email"] or "") or None}
+
+
+def _insert_session(c: sqlite3.Connection, user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    c.execute(
+        "INSERT OR REPLACE INTO sessions(token,user_id,expires_at) VALUES(?,?,?)",
+        (token, user_id, time.time() + 86400 * 30),
     )
+    return token
 
 
 def create_session(user_id: int, username: str, email: str | None = None) -> dict[str, Any]:
-    token = secrets.token_urlsafe(32)
-    exp = time.time() + 86400 * 30
     with _conn() as c:
-        c.execute(
-            "INSERT OR REPLACE INTO sessions(token,user_id,expires_at) VALUES(?,?,?)",
-            (token, user_id, exp),
-        )
+        token = _insert_session(c, user_id)
         if email is None:
             er = c.execute("SELECT email FROM users WHERE id=?", (user_id,)).fetchone()
             email = str(er["email"]) if er and er["email"] else None
