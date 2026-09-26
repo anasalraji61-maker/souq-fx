@@ -21,6 +21,9 @@ export function registerErrorText(t: Dict, err: unknown): string {
       'email taken': t.regErrEmailTaken,
       'invalid email': t.regErrInvalidEmail,
       'sponsor code not found': t.regErrSponsorNotFound,
+      // قرار أنس ٧: `db.PASSWORD_MIN = 8` — التسجيل يُرفض بـ422 قبله، لكن `register_user` يرمي هذا النصّ أيضاً.
+      'password too short': t.regErrPasswordLength,
+      'username/password too short': t.regErrPasswordLength,
     };
     const hit = byDetail[e.detail];
     if (hit) return fill(hit);

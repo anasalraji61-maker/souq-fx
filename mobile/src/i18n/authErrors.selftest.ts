@@ -27,6 +27,8 @@ for (const lang of ['ar', 'en-US', 'en-GB', 'ku'] as const) {
   const role = registerErrorText(t, err(422, [{ loc: ['body', 'role'], msg: 'Input should be trader' }]));
   check(`${lang} role 422 fills {trader}`, role.includes(t.trader) && !role.includes('{trader}'));
   check(`${lang} username 422`, registerErrorText(t, err(422, [{ loc: ['body', 'username'] }])) === t.regErrUsernameLength);
+  check(`${lang} password 400 (server)`, registerErrorText(t, err(400, 'username/password too short')) === t.regErrPasswordLength);
+  check(`${lang} says 8`, t.regErrPasswordLength.includes('8'));
   check(`${lang} password 422`, registerErrorText(t, err(422, [{ loc: ['body', 'password'] }])) === t.regErrPasswordLength);
   check(`${lang} missing fields (client) → not generic`, registerErrorText(t, new Error('missing fields')) === t.regErrMissingFields);
   check(`${lang} login 401 → credentials`, loginErrorText(t, err(401, 'invalid credentials')) === t.loginErrCredentials);
