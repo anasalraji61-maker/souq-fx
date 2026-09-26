@@ -1773,9 +1773,12 @@ export function TerminalScreen() {
                   // و`change_pct` نفسها من أول شمعة محمّلة (≈6 أشهر على D، شهر على 4H) ومجمّدة عند الجلب
                   // بجانب سعر حيّ: EURUSD 4H صاعد أسبوعاً وهابط اليوم كان «+3.33%» أخضر هنا و«−0.09%» بالإطار.
                   // الآن تغيّر اليوم من السعر المطبوع نفسه (`headerChangePct`).
+                  // وبلا إغلاق أمس (تبديل الرمز قبل وصول اليومي، فشل/429 حتى إعادة المحاولة، يومي تجريبي، لحظة 17:00 نيويورك)
+                  // كان `headerChangePct` يرجع إلى نسبة أول شمعة ⇒ «+3.33%» أخضر مكان «−0.09%» تحت اسم اليوم. «—» كشريط الهاتف.
+                  const prevClose = headDailyRefs[symbol.toUpperCase()];
                   const pct =
-                    series && !isSyntheticProvenance(series.data_source)
-                      ? headerChangePct(series, headTick?.price ?? null, headDailyRefs[symbol.toUpperCase()])
+                    series && !isSyntheticProvenance(series.data_source) && prevClose != null && prevClose > 0
+                      ? headerChangePct(series, headTick?.price ?? null, prevClose)
                       : null;
                   const dir = pctDirection(pct);
                   return (
