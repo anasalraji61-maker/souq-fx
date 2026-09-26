@@ -489,3 +489,12 @@ console.log('paneGuides.selftest: PASS');
   const g = placeGuides('percentB', INNER, { min: 0, max: 2 });
   assert.equal(g.find((x) => x.v === 0.5)!.top, 0.75 * INNER);
 }
+
+// سعر مربوط: AO/DPO بقايا فاصلة ‎~1e-16‎ ⇐ صفر لا «4.4e-16»
+{
+  const peg = [4.4e-16, -2.2e-16, 1.1e-16];
+  assert.equal(formatPaneValueScaled(peg, 4.4e-16, 4), '0');
+  assert.equal(formatPaneValueScaled(peg, -2.2e-16), '0');
+  // وحركة حقيقية صغيرة على اليورو تبقى مقروءة
+  assert.equal(formatPaneValueScaled([0.00003, -0.00002], 0.00003, 5), '0.00003');
+}

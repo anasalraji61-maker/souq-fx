@@ -445,6 +445,11 @@ export function formatPaneValueScaled(
     scale = 1e3;
     suffix = 'K';
   }
+  // سعر مربوط (USDHKD/USDAED): AO/DPO/Momentum كلّها بقايا فاصلة ‎~1e-16‎ ⇐ كان الرأس «4.4e-16»؛
+  // أصغر من ‎10^-(منازل+4)‎ للزوج (أو ‎1e-12‎ بلا منازل) صفر فعلاً لا قيمة تُقرأ
+  const zeroBelow =
+    priceDecimals != null && Number.isInteger(priceDecimals) ? 10 ** -(Math.min(8, priceDecimals) + 4) : 1e-12;
+  if (maxAbs < zeroBelow) return '0';
   const base = maxAbs / scale;
   // أطول نصّ ممكن باللوحة: أكبر قيمة، سالبة، **بلا حذف أصفار** — فحذفها يقصّر بعض
   // القيم لا كلّها، والقيمة الوسطى قد تكون أطول من القصوى (‎-0.0001‎ أقصر من ‎-0.000033‎).
