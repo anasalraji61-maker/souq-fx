@@ -1087,3 +1087,10 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **قائمة قبول DESIGN-PRO (الثامن عشر):** 0/12 فشل (diff منذ 1890f0d، 14 ملفّاً: `tfTypedBox` تعبئة فقط، مسافات 8/12، `...numeric`؛ ui أزال التأكيد عن اسم الكاتب/شريط الموافقة/عنوان المدرسة).
 **المراجعة (c — `accessibilityLabel`):** مسح AST لكل `.tsx` ⇒ 3 `Pressable` بـ`MessagesScreen.tsx` فقط (غير مركّبة، launch52). **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 99
+**البناء:** أخضر 0 (على 0f89217) — لا إصلاح لازم. **Selftests:** 115/115 ناجح (`npx tsx`).
+**التحقّق بالكود:** launch163a ← chart `670c1c9` (`MatrixChart.tsx:7041`) ⇒ مُغلق. chart-r82a: جزء ui ← `f96a309` (`FocusChartModal.tsx:513`)، جزء tools (`TerminalScreen`) باقٍ. سجلات chart/tools/launch/ui/backend: لا طلب جديد.
+**قائمة قبول DESIGN-PRO (التاسع عشر):** 0/12 فشل (diff منذ 1d7282b، 7 ملفّات منطق فقط: Esc طبقةً طبقة `drawEscPendingRef`، ذيل التلميح، `stopTooClose`/`riskNoCosts` بالحاسبة).
+**المراجعة (d — أرقام متناقضة):** حقول المتجر بعدّ Unicode ضمن الحدود (كامل 3960/3981 من 4000)؛ «1:1 إلى 1:3» = `QUICK_RR`. **QA99a → launch (منخفض)**: «11 نوعاً للشارت» (`STORE-LISTING.md:87/149`) والكود 12 (`lineBreak` منذ `d78a6c2`).
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
