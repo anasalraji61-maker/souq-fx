@@ -42,6 +42,7 @@ export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
   let vol = 0;
   let t = candles[0].time;
   let src = candles[0].time;
+  let closedHere = 0;
 
   const close = (at: number, c: Candle) => {
     out.push({ time: t, open, high: Math.max(high, at), low: Math.min(low, at), close: at, volume: vol, srcTime: src });
@@ -49,6 +50,7 @@ export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
     src = c.time;
     open = high = low = cur = at;
     vol = 0;
+    closedHere++;
   };
   // يحرّك السعر إلى `target` ويغلق شمعة كلما بلغ المدى الصندوق (هامش 1e-9 من الصندوق لخطأ الجمع العشري).
   // قفزة بأكثر من `RANGE_MAX_BARS` صندوقاً: كل ما قبلها سيسقط بالسقف أصلاً ⇒ يُتخطّى إلى آخر السقف مباشرة
@@ -78,8 +80,15 @@ export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
 
   for (const c of candles) {
     const bull = c.close >= c.open;
+    closedHere = 0;
     for (const p of bull ? [c.open, c.low, c.high, c.close] : [c.open, c.high, c.low, c.close]) moveTo(p, c);
-    vol += c.volume ?? 0;
+    // حجم الشمعة الأصلية يُقسَم بالتساوي على كل شموع Range التي أغلقتها + الشمعة التي تتكوّن بعدها. كان يُضاف كلّه
+    // للأخيرة: شمعة خبر بثلاثة صناديق ⇒ عمودا حجم صفريان ثم عمود بحجم الخبر كلّه — عكس ما حدث.
+    const v = c.volume ?? 0;
+    const k = Math.min(closedHere, out.length);
+    const share = v / (k + 1);
+    for (let i = out.length - k; i < out.length; i++) out[i].volume = (out[i].volume ?? 0) + share;
+    vol += share;
     if (out.length > 2 * RANGE_MAX_BARS) out.splice(0, out.length - RANGE_MAX_BARS);
   }
   if (out.length > RANGE_MAX_BARS) out.splice(0, out.length - RANGE_MAX_BARS);

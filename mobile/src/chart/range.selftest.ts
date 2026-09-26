@@ -66,6 +66,11 @@ ok('صندوق صغير: يصل للسعر', Math.abs(tiny[tiny.length - 1]!.clo
 ok('صندوق صغير: كل شمعة بطول الصندوق', tiny.every((b) => Math.abs(b.high - b.low - 1e-6) < 1e-9));
 ok('صندوق صغير: متّصلة', tiny.every((b, i) => i === 0 || Math.abs(b.open - tiny[i - 1]!.close) < 1e-12));
 
+// حجم شمعة الخبر يُقسَم على الشموع التي أغلقتها + التي تتكوّن (كان كلّه للأخيرة وعمودان صفريان قبلها).
+const vBig = rangeBars([{ ...c(1, 1, 1.2, 1, 1.1), volume: 0 }, { ...c(2, 1.1, 4.5, 1.1, 4.5), volume: 400 }], 1);
+ok('حجم الخبر موزَّع', vBig.length === 4 && vBig.every((b) => Math.abs((b.volume ?? 0) - 100) < 1e-9));
+ok('مجموع الحجم محفوظ', Math.abs(vBig.reduce((a, b) => a + (b.volume ?? 0), 0) - 400) < 1e-9);
+
 if (failures) {
   console.error(`range.selftest: ${failures} FAIL`);
   process.exit(1);
