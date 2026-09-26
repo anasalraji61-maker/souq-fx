@@ -611,8 +611,8 @@ export function bankHolidayToday(
  * تُذكر تحت خبر يورو). الرموز كما كُتبت (مقصوصة)، بلا تكرار بلا اعتبار لحالة الأحرف، بترتيبها. `null` = لا حدث.
  *
  * `shownSymbol` = رمز شريطٍ آخر ظاهر بالشاشة نفسها (نموذج الدفتر، أو الشارت بجانب الرصيف/اللوح): إن كان شريطه يعلن **اللحظة
- * نفسها** (حدثه بالدقيقة نفسها) وعملاته تشمل كل عملة تحرّك المفتوحة ⇒ `null` — لا تحذيران متطابقان، ولا يُعلَن الخبر مرّتين
- * لقارئ الشاشة (كلاهما `alert`). خبرٌ آخر، أو عملة تحرّك المفتوحة لا يذكرها ذلك الشريط (GDP إسترليني مع الرواتب ⇒ EURGBP) ⇒ يبقى.
+ * نفسها** (حدثه بالدقيقة نفسها) وعملاته تشمل كل عملة تحرّك المفتوحة ⇒ الحدث التالي بعد تلك اللحظة، أو `null` إن لم يبقَ —
+ * لا تحذيران متطابقان، ولا يُعلَن الخبر مرّتين لقارئ الشاشة (كلاهما `alert`). خبرٌ آخر، أو عملة تحرّك المفتوحة لا يذكرها ذلك الشريط (GDP إسترليني مع الرواتب ⇒ EURGBP) ⇒ يبقى.
  * **قائمة** رموز = شريط شبكة الطرفية (`alsoSymbols`): يُقاس بعملاتها معاً كما يختار حدثه. كان رمز الرصيف وحده ⇒ على الهاتف
  * (الشبكة USDJPY/EURUSD/GBPUSD/XAUUSD) والدفتر لـUSDCAD، قرار بنك كندا على USDCAD مفتوحة **لا يُقال بأيّ شريط**.
  */
@@ -633,16 +633,25 @@ export function openPositionsNewsRisk(
     if (ccys.length) uniq.push({ sym, ccys });
   }
   const currencies = [...new Set(uniq.flatMap((u) => u.ccys))];
-  const hit = nextHighImpact(events, currencies, nowMs);
+  let pool = events;
+  let hit = nextHighImpact(pool, currencies, nowMs);
   if (!hit) return null;
-  const moving = new Set(sameMinuteCurrencyLabel(events, currencies, hit.event).split('/'));
+  let moving = new Set(sameMinuteCurrencyLabel(pool, currencies, hit.event).split('/'));
   if (shownList(shownSymbol).length) {
     const shownCcys = shownNewsCurrencies(shownList(shownSymbol));
     const shown = nextHighImpact(events, shownCcys, nowMs);
     const sameMoment =
       shown != null && typeof shown.event.ts === 'number' && Math.abs(shown.event.ts - (hit.event.ts as number)) < 60;
     // `ALL` يعلنه كل شريط رمزٍ له عملة (`newsCurrencyMatches`) ⇒ لا يمنع الدمج — كان تحذيران متطابقان لـG20
-    if (sameMoment && [...moving].every((c) => c === 'ALL' || shownCcys.includes(c))) return null;
+    if (sameMoment && [...moving].every((c) => c === 'ALL' || shownCcys.includes(c))) {
+      // تلك اللحظة يعلنها الشريط الآخر ⇒ الحدث **التالي** الذي لا يعلنه. كان `null` حتى تمضي تلك اللحظة: USDJPY وEURUSD
+      // مفتوحتان والنموذج EURUSD ⇒ المركزي الأوروبي بعد 30د يُخفي قرار بنك اليابان بعد 40د حتى 9 دقائق قبله
+      const coveredTs = hit.event.ts as number;
+      pool = events.filter((e) => !(typeof e.ts === 'number' && Math.abs(e.ts - coveredTs) < 60));
+      hit = nextHighImpact(pool, currencies, nowMs);
+      if (!hit) return null;
+      moving = new Set(sameMinuteCurrencyLabel(pool, currencies, hit.event).split('/'));
+    }
   }
   return {
     ...hit,

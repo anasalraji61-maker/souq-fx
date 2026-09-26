@@ -846,6 +846,17 @@ console.log('newsRisk open positions selftest OK');
   assert.deepEqual(both.symbols, ['EURUSD', 'EURGBP']);
   // وشريط GBPUSD يذكر العملتين ⇒ لا تكرار
   assert.equal(openPositionsNewsRisk(['EURUSD', 'EURGBP'], [nfp, ev('GDP', 'GBP', 20)], now, 'GBPUSD'), null);
+  // الشريط الآخر يعلن الأقرب (المركزي الأوروبي بعد 30د) ⇒ التالي لغير عملاته (بنك اليابان بعد 40د) يُقال الآن لا بعد صدور الأول
+  const ecbBoj = [ev('ECB', 'EUR', 30), ev('BoJ', 'JPY', 40)];
+  const next = openPositionsNewsRisk(['USDJPY', 'EURUSD'], ecbBoj, now, 'EURUSD')!;
+  assert.equal(next.event.id, 'BoJ');
+  assert.deepEqual(next.symbols, ['USDJPY']);
+  // وبمهلة «صدر للتوّ» للأول (بعد 30.5د) كذلك
+  assert.equal(openPositionsNewsRisk(['USDJPY', 'EURUSD'], ecbBoj, now + 30.5 * 60_000, 'EURUSD')!.event.id, 'BoJ');
+  // لا حدث بعد اللحظة المغطّاة ⇒ لا شريط
+  assert.equal(openPositionsNewsRisk(['USDJPY', 'EURUSD'], [ev('ECB', 'EUR', 30)], now, 'EURUSD'), null);
+  // حدثٌ آخر للعملة المغطّاة نفسها لاحقاً (الرواتب بعد 50د، الشارت EURUSD يعلن المركزي الأوروبي) ⇒ يُقال: شريط الشارت لا يذكره
+  assert.equal(openPositionsNewsRisk(['EURUSD'], [ev('ECB', 'EUR', 30), ev('NFP2', 'USD', 50)], now, 'EURUSD')!.event.id, 'NFP2');
 }
 console.log('newsRisk open positions shownSymbol selftest OK');
 
