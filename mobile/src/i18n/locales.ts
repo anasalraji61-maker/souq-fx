@@ -1191,11 +1191,13 @@ export type Dict = {
   mcHintNavigate: string;
   /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. واختصارات Alt (`DRAW_TOOL_SHORTCUTS` بـ`drawEdit.ts`،
    * و`KeyR` لإعادة العرض بـ`MatrixChart.tsx`؛ المستطيل Alt+B لا R — `5786c8f`) — لا تلميح غيره يذكرها، فبلا هذا السطر لا يعرف
-   * بها أحد. أسماء الأدوات = `ctlToolTrend/Hline/Vline/Fib`. */
+   * بها أحد. أسماء الأدوات = `ctlToolTrend/Hline/Vline/Fib`. W4 (`864f192`): «+/−» تكبير وF **المجرّد** ملء الشاشة — لذا Alt يُكتب
+   * صراحةً قبل الأحرف الأربعة («Alt+T/H/V/F») فلا يُقرأ «F فيبو» كمفتاح مجرّد. */
   mcHintNavigateWeb: string;
   /**
    * الويب: يُلحق بـ`mcHintNavigateWeb` حين يبدّل المضيف الفريم بالكتابة (`onTimeframeKey`، `tfTyping.ts` — `fcb9d16`).
-   * يبدأ بفاصل « · » لأنه ذيل. أمثلة المكتوب بحروف لاتينية كما تُضغط («15»، «4h»)؛ Enter اسم المفتاح.
+   * يبدأ بفاصل « · » لأنه ذيل. أمثلة المكتوب بحروف لاتينية كما تُضغط («15»، «4h»)؛ Enter اسم المفتاح. W4 (`864f192`): رقم منفرد
+   * 1–8 = الفريم بموضعه في `TIMEFRAMES` (1m…W) بعد 600ms بلا Enter (`slotTimeframe`).
    */
   mcHintTypeTfWeb: string;
   /**
@@ -1743,9 +1745,9 @@ const ar: Dict = {
   aiInputA11y: 'سؤال لمساعد الذكاء الاصطناعي',
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
   aiAskBtn: 'اسأل',
+  aiReplyInArabicNote: 'الردّ بالعربية — لا يتوفّر الردّ بلغتك بعد',
   analystsTitle: 'توقعات المحللين',
   analystsSubSuffix: 'لا مصدر مرخَّص بعد — لا نعرض آراء مختلَقة',
-  aiReplyInArabicNote: 'الردّ بالعربية — لا يتوفّر الردّ بلغتك بعد',
   analystsRefreshA11y: 'تحديث توقعات المحللين',
   analystsLoadError: 'تعذّر تحميل توقعات المحللين — تحقّق من الاتصال ثم اضغط «تحديث»',
   socialPlatformTelegram: 'تيليجرام',
@@ -2559,8 +2561,8 @@ const ar: Dict = {
   mcClearWord: 'مسح',
   mcHintDraw: 'اسحب لرسم، أو المس نقطتين · يُحفظ تلقائياً',
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
-  mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · Alt+R لإعادة العرض · Alt+T ترند، H أفقي، V عمودي، F فيبو',
-  mcHintTypeTfWeb: ' · اكتب 15 أو 4h ثم Enter لتبديل الفريم',
+  mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · +/− تكبير وتصغير · F ملء الشاشة · Alt+R لإعادة العرض · Alt+T/H/V/F ترند/أفقي/عمودي/فيبو',
+  mcHintTypeTfWeb: ' · 1–8 للفريم بترتيبه (1 = 1m … 8 = W) · أو اكتب 15 أو 4h ثم Enter',
   mcHintTypeDateWeb: ' · Home/End لأقدم شمعة وللحيّ · اكتب 2026-09-01 ثم Enter للانتقال إلى ذلك اليوم',
   mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
   mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
@@ -2990,9 +2992,9 @@ const enUS: Dict = {
   aiInputA11y: 'Question for the AI assistant',
   aiSendA11y: 'Send question to the AI assistant',
   aiAskBtn: 'Ask',
+  aiReplyInArabicNote: "This reply is in Arabic — replies in your language aren't available yet",
   analystsTitle: 'Analyst forecasts',
   analystsSubSuffix: 'No licensed source yet — we don’t show made-up views',
-  aiReplyInArabicNote: "This reply is in Arabic — replies in your language aren't available yet",
   analystsRefreshA11y: 'Refresh analyst forecasts',
   analystsLoadError: 'Couldn’t load analyst forecasts — check your connection, then tap “Refresh”',
   socialPlatformTelegram: 'Telegram',
@@ -3807,8 +3809,8 @@ const enUS: Dict = {
   mcClearWord: 'Clear',
   mcHintDraw: 'Drag to draw, or tap two points · saved automatically',
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
-  mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · Alt+R resets the view · Alt+T trend, H H-line, V V-line, F Fib',
-  mcHintTypeTfWeb: ' · type 15 or 4h then Enter to switch timeframe',
+  mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · +/− zoom · F full screen · Alt+R resets the view · Alt+T/H/V/F trend/H-line/V-line/Fib',
+  mcHintTypeTfWeb: ' · 1–8 picks a timeframe in order (1 = 1m … 8 = W) · or type 15 or 4h then Enter',
   mcHintTypeDateWeb: ' · Home/End for oldest bar / live · type 2026-09-01 then Enter to jump to that day',
   mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
   mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
@@ -4276,9 +4278,9 @@ const ku: Dict = {
   aiInputA11y: 'پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiAskBtn: 'بپرسە',
+  aiReplyInArabicNote: 'ئەم وەڵامە بە عەرەبییە — وەڵام بە زمانی تۆ هێشتا بەردەست نییە',
   analystsTitle: 'پێشبینیەکانی شیکارکاران',
   analystsSubSuffix: 'هێشتا سەرچاوەی مۆڵەتدار نییە — بۆچوونی دەستکرد پیشان نادەین',
-  aiReplyInArabicNote: 'ئەم وەڵامە بە عەرەبییە — وەڵام بە زمانی تۆ هێشتا بەردەست نییە',
   analystsRefreshA11y: 'نوێکردنەوەی پێشبینیەکانی شیکارکاران',
   analystsLoadError: 'نەکرا پێشبینیەکانی شیکارکاران باربکرێن — پەیوەندییەکەت بپشکنە و پاشان «نوێکردنەوە» دابگرە',
   socialPlatformTelegram: 'تێلێگرام',
@@ -5103,8 +5105,8 @@ const ku: Dict = {
   mcClearWord: 'سڕینەوە',
   mcHintDraw: 'ڕایبکێشە بۆ کێشان، یان دوو خاڵ دابگرە · خۆکار پاشەکەوت دەبێت',
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
-  mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T ترێند، H ئاسۆیی، V ستوونی، F فیبۆ',
-  mcHintTypeTfWeb: ' · 15 یان 4h بنووسە و Enter دابگرە بۆ گۆڕینی تایم‌فرەیم',
+  mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · +/− گەورە و بچووککردنەوە · F پڕکردنەوەی شاشە · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T/H/V/F ترێند/ئاسۆیی/ستوونی/فیبۆ',
+  mcHintTypeTfWeb: ' · 1–8 بۆ تایم‌فرەیم بە ڕیز (1 = 1m … 8 = W) · یان 15 یان 4h بنووسە و Enter دابگرە',
   mcHintTypeDateWeb: ' · Home/End بۆ کۆنترین مۆم و ڕاستەوخۆ · 2026-09-01 بنووسە و Enter دابگرە بۆ چوون بۆ ئەو ڕۆژە',
   mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
   mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
