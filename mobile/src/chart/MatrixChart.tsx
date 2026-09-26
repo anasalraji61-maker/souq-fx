@@ -10131,10 +10131,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={tr.mcToLatestA11y}
-            style={({ pressed }) => [
+            // W7 (ميزانية التأكيد): ثانويّ ساكناً — كان تعبئة تيل على كل شارت بالرباعي معاً؛ التأكيد عند المرور/الضغط فقط.
+            // `hovered` من react-native-web (ليس بأنواع RN) — على الهاتف `undefined` فيبقى الضغط وحده.
+            style={(st) => [
               styles.toLatestBtn,
               { right: PRICE_AXIS_WIDTH + 8, bottom: timeAxisH + 8 },
-              pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              (st.pressed || (st as { hovered?: boolean }).hovered) && styles.toLatestBtnActive,
+              st.pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
             onPress={() => {
               pricePanRef.current = 0;
@@ -10151,7 +10154,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }}
             hitSlop={10}
           >
-            <Text style={styles.toLatestText}>»</Text>
+            {(st) => (
+              <Text
+                style={[
+                  styles.toLatestText,
+                  (st.pressed || (st as { hovered?: boolean }).hovered) && styles.toLatestTextActive,
+                ]}
+              >
+                »
+              </Text>
+            )}
           </Pressable>
         ) : null}
       </View>
@@ -13835,10 +13847,12 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    // §5.5: التعبئة وحدها تفصله عن الشموع — بلا حدّ لامع ولا ظلّ.
-    backgroundColor: colors.accent,
+    // §5.5: التعبئة وحدها تفصله عن الشموع — بلا حدّ لامع ولا ظلّ. ساكناً لوحة محايدة (§1: التأكيد لعنصر واحد).
+    backgroundColor: colors.bgPanel,
   },
-  toLatestText: { color: '#0B1220', fontSize: 18, lineHeight: 20, fontWeight: '500', marginTop: -2 },
+  toLatestBtnActive: { backgroundColor: colors.accent },
+  toLatestText: { color: colors.textMuted, fontSize: 18, lineHeight: 20, fontWeight: '500', marginTop: -2 },
+  toLatestTextActive: { color: '#0B1220' },
   dot: { position: 'absolute', width: 3, height: 3, borderRadius: 2 },
   hLine: {
     position: 'absolute',
