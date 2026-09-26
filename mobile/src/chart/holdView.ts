@@ -45,8 +45,24 @@ export function appendedAfter(
  * شارت مُمرَّر للخلف ينجرف شمعةً أقدم بكل انقطاع قصير للتيكات. `prevTimesSec`: أزمنة السلسلة قبل التحديث؛
  * `lastSec`: زمن آخر خانة بعده. يُرجع عدد خانات القديمة بعد آخر ظهور لـ`lastSec`، أو 0 إن لم يُوجد (أو لم يسقط شيء).
  */
-export function removedAtTail(prevTimesSec: readonly number[], lastSec: number | null): number {
+export function removedAtTail(
+  prevTimesSec: readonly number[],
+  lastSec: number | null,
+  newLen?: number
+): number {
   if (lastSec == null || !Number.isFinite(lastSec) || prevTimesSec.length === 0) return 0;
+  // `newLen` (طول السلسلة بعد التحديث) كـ`prevLen` بـ`appendedAfter`: لبنات Renko التي صنعتها الشمعة الحيّة تتشارك
+  // زمنها الحقيقي، فالبحث بالزمن يجد آخرها ⇒ سقوط لبنة من [.., 300, 300] كان يُعدّ 0 وعودتها +1 ⇒ الشارت المُمرَّر
+  // للخلف ينجرف لبنةً أقدم بكل تذبذب للّبنة الحيّة.
+  if (
+    newLen != null &&
+    Number.isInteger(newLen) &&
+    newLen >= 1 &&
+    newLen <= prevTimesSec.length &&
+    prevTimesSec[newLen - 1] === lastSec
+  ) {
+    return prevTimesSec.length - newLen;
+  }
   for (let i = prevTimesSec.length - 1; i >= 0; i--) {
     const t = prevTimesSec[i]!;
     if (t === lastSec) return prevTimesSec.length - 1 - i;

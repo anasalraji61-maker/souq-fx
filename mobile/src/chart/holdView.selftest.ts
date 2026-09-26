@@ -66,6 +66,12 @@ assert.equal(removedAtTail([], 100), 0);
 assert.equal(removedAtTail([100], null), 0);
 // Renko: لبنتان بالزمن نفسه تبقيان، والثالثة بعدهما سقطت
 assert.equal(removedAtTail([100, 300, 300, 400], 300), 1);
+// Renko: لبنة حيّة سقطت من ثلاث بزمن واحد — الطول الجديد يعدّها (بالزمن وحده 0 ⇒ انجراف لبنة بكل تذبذب).
+assert.equal(removedAtTail([100, 200, 300, 300], 300, 3), 1);
+assert.equal(removedAtTail([100, 200, 300, 300, 300], 300, 3), 2);
+assert.equal(appendedAfter(300, [100, 200, 300, 300], 3) - removedAtTail([100, 200, 300, 300], 300, 3), 0);
+// طول لا يطابق (سلسلة أُعيد بناؤها) ⇒ البحث بالزمن كما كان.
+assert.equal(removedAtTail([100, 200, 300, 400], 300, 2), 1);
 // سقوط ثم عودة = صفر انجراف: الإزاحة −1 ثم +1
 const dropped = removedAtTail([100, 200, 300, 400], 300);
 const back = appendedAfter(300, [100, 200, 300, 400], 3);

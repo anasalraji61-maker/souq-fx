@@ -1926,7 +1926,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (prev.key !== key || syncFollow || (offsetRef.current <= 0 && !replayOn)) return;
     const added = appendedAfter(prev.lastSec, all.map(barTime), prev.len);
     // الشمعة الحيّة المحلّية سقطت (تيك متقادم) ⇒ الإزاحة تنقص بقدرها، فعودتها لاحقاً (+1) لا تجرّ النافذة شمعةً للخلف.
-    const removed = added > 0 ? 0 : removedAtTail(prev.all.map(barTime), lastSec);
+    const removed = added > 0 ? 0 : removedAtTail(prev.all.map(barTime), lastSec, all.length);
     if (added <= 0 && removed <= 0) return;
     const next = Math.min(Math.max(0, all.length - 10), Math.max(0, offsetRef.current + added - removed));
     if (next === offsetRef.current) return;
