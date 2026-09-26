@@ -10,6 +10,7 @@ from typing import Any
 
 import websockets
 
+import twelve_data as market
 from twelve_data import SYMBOL_MAP, redact
 
 WS_URL = "wss://ws.twelvedata.com/v1/quotes/price"
@@ -53,11 +54,12 @@ def _parse_price(msg: dict[str, Any]) -> tuple[str, float] | None:
     meta = msg.get("meta")
     sym = msg.get("symbol") or (meta.get("symbol") if isinstance(meta, dict) else None)
     price = msg.get("price") or msg.get("close") or msg.get("last")
-    if not sym or price is None or isinstance(price, bool):  # `true` كان سعراً 1.0
+    # `symbol: ["EUR/USD"]` كان يُخزَّن ويُبثّ برمز خردة «['EURUSD']» موسوماً twelvedata_ws
+    if not isinstance(sym, str) or not sym or price is None or isinstance(price, bool):  # `true` كان سعراً 1.0
         return None
     try:
         p = float(price)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):  # عدد JSON بأكثر من ~309 أرقام ⇒ OverflowError
         return None
     # `float("NaN")`/`"inf"` تجتاز التحويل، و`send_json` يكتبها `NaN` حرفياً — JSON غير صالح يُسقط
     # `JSON.parse` بالتطبيق فتتوقّف كل التيكات لا الرمز وحده. وسعر غير موجب ليس سعراً (والتنبيهات تقرؤه).
@@ -82,7 +84,7 @@ def _provider_ts(msg: dict[str, Any]) -> float | None:
         return None
     try:
         ts = float(raw)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     if not math.isfinite(ts) or ts <= 0:
         return None
@@ -143,7 +145,12 @@ async def run_forever() -> None:
                         continue
                     for item in data if isinstance(data, list) else [data]:
                         if isinstance(item, dict):
-                            _store(item)
+                            # إطار واحد معطوب كان يرمي خارج `async for` ⇒ يُغلق الاتصال وتتوقّف تيكات كل
+                            # الرموز ~8ث. يُتجاوَز وحده.
+                            try:
+                                _store(item)
+                            except Exception:  # noqa: BLE001
+                                continue
             # إغلاق نظيف (1000/1001) ينهي `async for` بلا استثناء: كان `connected` يبقى true وإعادة
             # الاتصال فورية بلا انتظار ⇒ خادم يقبل ثم يغلق (نفاد الرصيد) = «متصل» ولا شيء يصل، وحلقة بلا توقّف
             _connected = False
@@ -165,7 +172,10 @@ LIVE_MAX_AGE = 180.0
 def status() -> dict:
     # كان `symbols_live` = كل رمز وصل سعره يوماً — حتى بعد انقطاع الـWS بساعات. الآن ما وصل خلال
     # `LIVE_MAX_AGE` فقط، والباقي بـ`symbols_stale`.
-    live = snapshot(max_age=LIVE_MAX_AGE)
+    # وتيك بعطلة الأسبوع (ملء المزوّد بعد إغلاق الجمعة) ليس «حيّاً»: البثّ والتنبيهات يُسقطانه أصلاً
+    # (`in_weekend_close`)، والحالة كانت تعدّه بـ`symbols_live`.
+    live = {s: p for s, p in snapshot(max_age=LIVE_MAX_AGE).items()
+            if not market.in_weekend_close(s, LATEST_AT.get(s) or market._session_now(), 0)}
     return {
         "connected": _connected,
         "symbols_live": list(live.keys()),
