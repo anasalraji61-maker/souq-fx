@@ -69,7 +69,7 @@ import {
   type AxisTap,
 } from './axisDrag';
 import { barCloseCountdown } from './barCountdown';
-import { axisTagFontSize } from './axisTagFont';
+import { axisTagFontSize, withSideMark } from './axisTagFont';
 import { monoCharW, monoTextWidth, propTextWidth } from './textWidth';
 import { planDenseOhlc } from './denseOhlcFit';
 import { BarCountdown } from './BarCountdown';
@@ -7247,18 +7247,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // خارج اللوح فلا يبقى ما يكذّبه. تُعلَّم الجهة بسهم، ولا يُرسم خطٌّ لا موضع له.
   const currentPriceOff = offAxisSide(currentPriceY, chartPlotH);
   const crossPriceOff = crossPrice != null ? offAxisSide(crossY, chartPlotH) : null;
-  const offMark = (side: 'above' | 'below' | null) =>
-    side === 'above' ? '▲ ' : side === 'below' ? '▼ ' : '';
+  const offMark = (side: 'above' | 'below' | null, text: string) =>
+    withSideMark(side === 'above' ? '▲' : side === 'below' ? '▼' : '', text, AXIS_TAG_TEXT_W);
   // وسما السعر الحيّ والتقاطع بحجم علامات المحور (11) — كانا 9، أصغر من الأرقام الخافتة حولهما.
   const tagFont = (text: string) => {
     const fontSize = axisTagFontSize(text, AXIS_TAG_TEXT_W);
     return { fontSize, lineHeight: fontSize + 3 };
   };
-  const currentTagLabel =
-    offMark(currentPriceOff) +
-    (percentBase != null && percentBase > 0
+  const currentTagLabel = offMark(
+    currentPriceOff,
+    percentBase != null && percentBase > 0
       ? formatScalePercent((currentPrice / percentBase - 1) * 100, percentPlaces)
-      : fmtPrice(currentPrice));
+      : fmtPrice(currentPrice)
+  );
+  const crossTagLabel = crossPrice != null ? offMark(crossPriceOff, fmtPrice(crossPrice)) : '';
 
   // سلسلة بلا شموع (`candles: []` — DXY بعد backend-r19): المدى Infinity/−Infinity ⇒ المحور يطبع «NaN» مكرَّراً،
   // ووسم السعر 0.000، ونقرة أداة الخطّ الأفقي تحفظ رسماً بسعر null. لا شارت يُرسم: إشعار المزوّد إن كانت السلسلة
@@ -10742,7 +10744,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               { top: currentTagTop, minHeight: currentTagH, backgroundColor: currentDirColor },
             ]}
           >
-            <Text style={[styles.currentPriceText, { color: currentTagInk }, tagFont(currentTagLabel)]}>
+            <Text style={[styles.currentPriceText, { color: currentTagInk }, tagFont(currentTagLabel)]} numberOfLines={1}>
               {currentTagLabel}
             </Text>
             {showCountdown && lastRawBar ? (
@@ -10807,9 +10809,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           )}
           {!hidePriceLabels && crossPrice != null && crossTagTop != null ? (
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
-            <Text style={[styles.crossTagText, tagFont(offMark(crossPriceOff) + fmtPrice(crossPrice))]}>
-              {offMark(crossPriceOff)}
-              {fmtPrice(crossPrice)}
+            <Text style={[styles.crossTagText, tagFont(crossTagLabel)]} numberOfLines={1}>
+              {crossTagLabel}
             </Text>
             {crossPipsText ? (
               <Text

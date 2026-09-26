@@ -18,3 +18,17 @@ export function axisTagFontSize(
   const fit = Math.floor(innerWidth / (n * MONO_ADVANCE_EM));
   return Math.max(min, Math.min(max, fit));
 }
+
+/**
+ * سهم «خارج المدى» (▲/▼) أمام سعر الوسم: بمسافة ما دامت لا تصغّر الخطّ، وبلا مسافة حين تصغّره أو
+ * تُخرج النصّ عن المحور — «▲ 0.000008900» (PEPE) 13 حرفاً = 62px بالحدّ الأدنى 8 على 60 فيُقصّ/يلتفّ،
+ * و«▲0.000008900» 58px يتّسع. الأرقام الأكبر أهمّ من المسافة.
+ */
+export function withSideMark(mark: string, text: string, innerWidth: number, max = 11, min = 8): string {
+  if (!mark) return text;
+  const spaced = `${mark} ${text}`;
+  const tight = `${mark}${text}`;
+  const size = axisTagFontSize(spaced, innerWidth, max, min);
+  const fits = [...spaced].length * MONO_ADVANCE_EM * size <= innerWidth;
+  return fits && size >= axisTagFontSize(tight, innerWidth, max, min) ? spaced : tight;
+}
