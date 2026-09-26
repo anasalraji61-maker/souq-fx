@@ -156,8 +156,8 @@ export function computeKeltner(
  * أعلاه حرفياً (خط وسط ± multiplier×ATR) لكن بخط وسط SMA بدل EMA — الفارق التصميمي الجوهري
  * تاريخياً بين الاثنين (كلتنر بُني أصلاً حول EMA، ستولر حول SMA). mid = sma(closes، smaPeriod)،
  * upper/lower = mid ± multiplier×computeAtr(candles، atrPeriod) (**إعادة استخدام كاملة** لـ
- * computeAtr الموجودة، صفر حساب ATR جديد). القيم الافتراضية القياسية smaPeriod=5/atrPeriod=15/
- * multiplier=2 (اصطلاح ستولر الأصلي الشائع بمعظم المنصات المرجعية) — مختلفة عمداً عن
+ * computeAtr الموجودة، صفر حساب ATR جديد). القيم الافتراضية القياسية smaPeriod=6/atrPeriod=15/
+ * multiplier=2 (تعريف ستولر كما بـStockCharts/Investopedia؛ كانت 5 ⇒ الوسط والنطاقان بفارق حتى ~8 pip) — مختلفة عمداً عن
  * keltner(20/10/2) الافتراضية لإبقاء الاثنين متمايزَين زمنياً/بصرياً لا نسخة مكرَّرة بنفس الفترات.
  * **تحقّق يدوي**: سوق مسطّح تماماً (كل high=low=close ثابتة) → TR=0 لكل شمعة (بالتعريف: أعلى−أدنى
  * =0، |أعلى−إغلاق سابق|=0، |أدنى−إغلاق سابق|=0) ⇒ ATR=0 بالضبط ⇒ upper=mid=lower بالضبط بلا فارق
@@ -165,7 +165,7 @@ export function computeKeltner(
  */
 export function computeStarcBands(
   candles: Candle[],
-  smaPeriod = 5,
+  smaPeriod = 6,
   atrPeriod = 15,
   multiplier = 2
 ): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
