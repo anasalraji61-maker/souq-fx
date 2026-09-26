@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 96، على a1be669) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 97، على 6ce3f80) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -25,11 +25,8 @@
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
 | backend | أنس | **backend-r56** مفتاح Twelve Data (المشترك مع الروبوت) كان يُعاد بنصّ 502 من `/api/symbols/search` (بلا دخول) عند أيّ خطأ من المزوّد (429 مثلاً) — أُصلح `80e268a`. لا يمكن معرفة إن قرأه أحد من قبل ⇒ **دوّروا المفتاح** إن كان الخادم منشوراً للعموم | backend-r56 |
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
-| tools | tools | **tools111a/b** المفاتيح ×4 لغات ← launch `17b9528` (`riskCalcDailyLimit/LostToday/DailyRoom/DailyBreach`، `riskCalcScaleOut`)؛ `dailyLossRoom`/`scaleOutPlan` (`positionSize.ts:1926/1958`) بلا قارئ بأي `.tsx` ⇒ الربط بـ`PositionSizePanel` | tools111 |
-| QA | launch | **QA96a** (منخفض، ميت) مفتاحا `mcUndo`/`mcRedo` بـ`locales.ts` (:1197/:1201 والقيم :2514، :3743، :5019…) بلا قارئ منذ chart `ae31a6a` (الشريط أيقونات؛ الاسم من `mcUndoA11y`/`mcRedoA11y`) ⇒ حذفهما من النوع وكل اللغات | QA96 |
-**تحقّق الدورة 96 (بالكود، على a1be669):** البناء أخضر 0، selftests 114/114. أُغلق: **tools110a** ← tools `42e4e0e` (`TradeJournalPanel.tsx:1759` `journalStatPayoff`)؛
-**ui67a** ← chart `ddf4557` (`chart/alpha.ts` `withAlpha`؛ لا `244,63,94` ولا `F43F5E` بأي ملفّ عدا تعليق `theme.ts:15`). مفتوحان مُتحقَّقان: tools111a/tools111b (لا مفاتيح `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts`) → launch.
-**قائمة قبول DESIGN-PRO (السادس عشر): 0 من 12 فشل** (diff منذ bac6631، 9 ملفّات واجهة: شريط الرسم أيقونات 44px مع label وتلميح؛ «مسح الكل» ⌫ خلف `confirmDestructive` — §5.2 يخصّ صفوف القائمة؛ حدود أُزيلت؛ لا وزن ≥700/مسافة/ظلّ).
-**المراجعة (a — ميت/تصديرات):** `withAlpha`/`journalPayoffR` مستوردان؛ `dailyLossRoom`/`scaleOutPlan` بانتظار مفاتيح tools111؛ `styles.tool*` ما زالت مستعملة. بند: QA96a.
-
-**بعد السحب (90ff55f):** أخضر 0. tools111a/b: المفاتيح وصلت ⇒ الربط → tools. ui `52e61c3`/`a379910`/`7d08fa3` تقليل التأكيد وحدّ بطاقة الجولة ⇒ 0/12 باقٍ.
+| QA | tools | **QA97a** (منخفض، نصّ ثابت) الوحدة «lot» مكتوبة بالإنجليزية داخل نصوص الحاسبة المعروضة: `PositionSizePanel.tsx:1831` (« · ≤ 0.36 lot»)، :1858، :1939، و«/lot» :1044 — بينما `locales.ts` يسمّيها «لوت»/«lots»/«لۆت» (`riskCalcLots` :1880/:3110/:4380). مفتاح وحدة واحد أو قرار صريح بإبقاء «lot» رمزاً دولياً | QA97 |
+**تحقّق الدورة 97 (بالكود، على 6ce3f80):** البناء أخضر 0، selftests 114/114. أُغلق: **tools111a/b** ← tools `c146e63`/`1ab19fb`/`b83857e`
+(`PositionSizePanel.tsx:1023` `dailyLossRoom`، :1033 `dailyRoomMaxLots`، :1899 `riskCalcScaleOut`)؛ **QA96a** ← launch `4c36fb5` (لا `mcUndo:`/`mcRedo:` بـ`locales.ts`). سجلات chart/tools/launch/ui/backend: لا طلب جديد.
+**قائمة قبول DESIGN-PRO (السابع عشر): 0 من 12 فشل** (diff منذ 90ff55f، 23 ملفّاً: أحجام خط 13/15/18 و`...numeric` للأسعار؛ خطّ Ask محايد `textDim`؛ أداة المؤشّر بلا تأكيد وقت السكون؛ لا وزن ≥700/مسافة/ظلّ جديد).
+**المراجعة (b — نصوص ثابتة):** العربي خارج `locales.ts` تعليقات/اختبارات، وlaunch52 (`MessagesScreen.tsx:142`)؛ `placeholder="EURUSD"` و«MATRIX» أسماء. بند: QA97a.
