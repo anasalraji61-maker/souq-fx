@@ -29,7 +29,13 @@ import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import { instrumentSpec, pipsBetween, priceAtPipOffset } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipUnit } from '../chart/measureReadout';
-import { formatPips } from '../tradePlan';
+import { formatPips, plainStopText } from '../tradePlan';
+
+/**
+ * حدّ خانة السعر، مثل الدفتر (`TradeJournalPanel` `PRICE_MAX_LEN`). كان 12: أندرويد يقصّ بـ`maxLength` حتى النصّ الذي يملؤه
+ * التطبيق ⇒ تعديل تنبيه بسعر 0.00001234567 كان يُملأ «0.0000123456» ويُحفظ سعرٌ آخر بصمت.
+ */
+const PRICE_MAX_LEN = 20;
 
 /** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
 const QUOTE_REFRESH_MS = 60_000;
@@ -353,8 +359,10 @@ export function AlertsPanel({
   const startEdit = (a: PriceAlert) => {
     setEditingId(a.id);
     setSymbol(a.symbol);
-    setPrice(String(a.price));
-    priceTextRef.current = String(a.price);
+    // بلا صيغة أُسّية: `String(1.23456e-8)` = «1.23456e-8» يرفضه `parseDecimal` فلا يُحفظ تعديل تنبيه عملة رقمية صغيرة.
+    const priceText = plainStopText(a.price);
+    setPrice(priceText);
+    priceTextRef.current = priceText;
     setCondition(a.condition);
     condManualRef.current = true;
     setNote(a.note || '');
@@ -889,7 +897,7 @@ export function AlertsPanel({
           placeholder={t.priceWord}
           placeholderTextColor={colors.textDim}
           keyboardType="decimal-pad"
-          maxLength={12}
+          maxLength={PRICE_MAX_LEN}
           returnKeyType="done"
           underlineColorAndroid="transparent"
           clearButtonMode="while-editing"

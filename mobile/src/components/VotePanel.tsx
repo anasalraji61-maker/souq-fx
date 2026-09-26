@@ -295,7 +295,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               placeholder={t.entryLabel}
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
-              maxLength={12}
+              maxLength={20}
               returnKeyType="done"
               underlineColorAndroid="transparent"
               clearButtonMode="while-editing"
@@ -310,7 +310,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               placeholder={t.slLabel}
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
-              maxLength={12}
+              maxLength={20}
               returnKeyType="done"
               underlineColorAndroid="transparent"
               clearButtonMode="while-editing"
@@ -325,7 +325,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               placeholder={t.tpLabel}
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
-              maxLength={12}
+              maxLength={20}
               returnKeyType="done"
               underlineColorAndroid="transparent"
               clearButtonMode="while-editing"
