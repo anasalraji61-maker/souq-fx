@@ -138,7 +138,9 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           .replace('{worst}', String(s.worst))}`;
         // `formatSignedPct` كتبويب الدفتر («+1.20% / −0.80%»): `String(v)` كان «1.2% / -0.8%» — الربح بلا إشارة.
         const pctOrDash = formatSignedPct;
+        // ui141a: الإحصاء لكل المغلقة لا للأسبوع — يُقال أولاً تحت بلاطة «تقرير أسبوعي».
         userJournalLine = `\n${[
+          t.reportAllTimeNote,
           t.journalStatClosed.replace('{n}', String(count)),
           t.journalStatWinRate.replace('{pct}%', winRateText),
           t.journalStatPriceMoveSum.replace('{pct}', pctOrDash(s.total_pnl_pct)),
