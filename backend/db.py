@@ -2235,25 +2235,28 @@ class TradeAlreadyClosed(Exception):
 
 def close_trade(
     trade_id: str, exit_price: float, user_id: int | None = None, owner_key: str | None = None,
-    expect: dict | None = None,
+    expect: dict | None = None, closed_at: str | None = None,
 ) -> dict | None:
     """يغلق صفقة **مفتوحة** فقط. كان `UPDATE … WHERE id=?` بلا شرط الحالة: جهازان يُغلقان الصفقة
     نفسها معاً ⇒ الثاني يمحو خروج الأول المسجَّل ونتيجته. الآن الشرط `status='open'` داخل
     التحديث نفسه (ذرّي بـSQLite) ⇒ الثاني يتلقّى `TradeAlreadyClosed` بالخروج الأول كما هو.
     تصحيح خروج مسجَّل عمداً يبقى عبر PATCH (`update_trade`).
-    `expect` (`seen_*` من نافذة التأكيد): مختلف عن المخزَّن ⇒ `TradeUpdateConflict` بقاعدة `update_trade`."""
+    `expect` (`seen_*` من نافذة التأكيد): مختلف عن المخزَّن ⇒ `TradeUpdateConflict` بقاعدة `update_trade`.
+    `closed_at` (بصيغة الدفتر، tools130c): وقت الإغلاق الحقيقي بدل «الآن»؛ يسبق `opened_at` ⇒ `TradeCloseTimeInvalid`."""
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
     # النتيجة تُحسب من الدخول والاتجاه المقروءين: PATCH يصحّح الدخول من جهاز آخر بين القراءة والتحديث
     # كان يُكتب بعده `pnl` من الدخول القديم (شراء 1.2 صُحّح لـ1.1 وأُغلق 1.15 ⇒ −4.17% مخزّنة بدل +4.55%،
     # رابحة تُعدّ خاسرة بنسبة الفوز). التحديث مشروط بهما أيضاً؛ تغيّرا ⇒ تُعاد القراءة والحساب.
     for _ in range(_UPDATE_TRADE_ATTEMPTS):
-        row = _try_close_trade(trade_id, exit_price, owner_sql, owner_args, expect or {})
+        row = _try_close_trade(trade_id, exit_price, owner_sql, owner_args, expect or {}, closed_at)
         if row is not _STALE:
             return row
     raise TradeUpdateConflict(trade_id)
 
 
-def _try_close_trade(trade_id: str, exit_price: float, owner_sql: str, owner_args: tuple, expect: dict):
+def _try_close_trade(
+    trade_id: str, exit_price: float, owner_sql: str, owner_args: tuple, expect: dict, closed_at: str | None = None
+):
     with _conn() as c:
         r = c.execute(
             f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
@@ -2269,7 +2272,10 @@ def _try_close_trade(trade_id: str, exit_price: float, owner_sql: str, owner_arg
             raise TradeUpdateConflict(trade_id)
         # نسبة حركة السعر فقط — راجع add_trade. None لصفّ قديم بدخول غير موجب (بدل 500 دائم).
         pnl = _pnl_pct(row["side"], float(row["entry"]), exit_price)
-        closed_at = _close_stamp(row.get("opened_at"))
+        if closed_at is None:
+            closed_at = _close_stamp(row.get("opened_at"))
+        elif row.get("opened_at") and closed_at < str(row["opened_at"]):
+            raise TradeCloseTimeInvalid("closed_at is before opened_at")
         cur = c.execute(
             f"UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' "
             f"WHERE id=? AND {_SEEN_SQL} AND {owner_sql}",

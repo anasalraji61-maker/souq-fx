@@ -695,6 +695,15 @@ class TradeClose(BaseModel):
     seen_sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     seen_note: str | None = Field(default=None, max_length=500)
+    # tools130c: وقت الإغلاق الحقيقي لصفقة أُعيد فتحها بالتعديل ثم أُغلقت من خانة الخروج — كانت تُختم «الآن»
+    # (صفقة أغسطس تُعدّ من هذا الأسبوع بالتقرير وسلسلة الخسائر). قواعد PATCH: لا يسبق `opened_at` (422).
+    # غائب/null = «الآن» كما كان (الإغلاق بالسعر الحالي).
+    closed_at: str | None = Field(default=None, max_length=40)
+
+    @field_validator("closed_at")
+    @classmethod
+    def _closed_as_journal_time(cls, v: str | None) -> str | None:
+        return _journal_time(v)
 
 
 def _seen_expect(body: BaseModel) -> dict:
@@ -1781,7 +1790,11 @@ def trades_close(
 ):
     uid = user["user_id"] if user else None
     try:
-        row = db.close_trade(trade_id, body.exit, uid, owner_key=key, expect=_seen_expect(body))
+        row = db.close_trade(
+            trade_id, body.exit, uid, owner_key=key, expect=_seen_expect(body), closed_at=body.closed_at
+        )
+    except db.TradeCloseTimeInvalid as e:
+        raise HTTPException(422, {"error": "invalid_closed_at", "reason": str(e)})
     except db.TradeAlreadyClosed as e:
         # 409 لا 200: الخروج المسجَّل أولاً يبقى، والعميل يعرض الصفّ كما هو مخزَّن
         raise HTTPException(409, {"error": "trade_already_closed", "trade": e.trade})
