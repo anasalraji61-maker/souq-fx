@@ -5,6 +5,8 @@
 import assert from 'node:assert/strict';
 import { parseDecimal } from './parseDecimal';
 import {
+  atrStopPips,
+  ATR_STOP_TF_SEC,
   analyzePlan,
   minStopPips,
   computedPriceText,
@@ -3518,3 +3520,49 @@ console.log('tradePlan entryLooksLikeDecimalSlip selftest OK');
   }
 }
 console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
+
+// ── atrStopPips: وقف بالتقلّب = 1.5 × ATR(14) Wilder على شموع الساعة المغلقة ──
+{
+  const H = ATR_STOP_TF_SEC;
+  const T0 = 1_790_000_000 - (1_790_000_000 % H);
+  /** `n` شمعة ساعة تبدأ عند T0، مدى كل واحدة `range` حول `mid` (الإغلاق = الافتتاح = mid ⇒ TR = المدى بالضبط) */
+  const bars = (n: number, mid: number, range: number, t0 = T0) =>
+    Array.from({ length: n }, (_, i) => ({
+      time: t0 + i * H, open: mid, high: mid + range / 2, low: mid - range / 2, close: mid, volume: 0,
+    }));
+  const afterLast = (n: number, t0 = T0) => t0 + n * H; // لحظة إغلاق الشمعة الأخيرة
+  // EURUSD مدى 10 pip ⇒ ATR 0.0010 ⇒ ×1.5 = 15 pip
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0.001), nowSec: afterLast(20) }), 15);
+  // شمعة جارية (لم تُغلق) بمدى 200 pip تُسقط؛ وبعد إغلاقها تدخل
+  const forming = [...bars(20, 1.085, 0.001), { time: afterLast(20), open: 1.085, high: 1.095, low: 1.075, close: 1.085, volume: 0 }];
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: forming, nowSec: afterLast(20) + 600 }), 15, 'forming bar ignored');
+  assert.ok((atrStopPips({ symbol: 'EURUSD', candles: forming, nowSec: afterLast(21) }) ?? 0) > 15, 'closed big bar counts');
+  // Wilder لا SMA: 14 شمعة 10 pip ثم واحدة 40 ⇒ (10×13 + 40)/14 = 12.142857 pip ×1.5 = 18.21 ⇒ 19 (للأعلى)
+  const w = [...bars(14, 1.085, 0.001), ...bars(1, 1.085, 0.004, T0 + 14 * H)];
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: w, nowSec: afterLast(15) }), 19, 'wilder smoothing');
+  // مقياس pip لكل أداة: الين 0.01، الذهب 0.1، والسنت بزوجه، واسم المعدن
+  assert.equal(atrStopPips({ symbol: 'USDJPY', candles: bars(20, 150, 0.2), nowSec: afterLast(20) }), 30);
+  assert.equal(atrStopPips({ symbol: 'XAUUSD', candles: bars(20, 2500, 5), nowSec: afterLast(20) }), 75);
+  assert.equal(atrStopPips({ symbol: 'GOLD', candles: bars(20, 2500, 5), nowSec: afterLast(20) }), 75);
+  assert.equal(atrStopPips({ symbol: 'EURUSDC', candles: bars(20, 1.085, 0.001), nowSec: afterLast(20) }), 15);
+  // ترتيب الإدخال لا يهمّ
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: w.slice().reverse(), nowSec: afterLast(15) }), 19);
+  // 15 شمعة مغلقة تكفي (14 + 1)، 14 لا
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(15, 1.085, 0.001), nowSec: afterLast(15) }), 15);
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(14, 1.085, 0.001), nowSec: afterLast(14) }), null);
+  // شمعة فاسدة تُسقط ولا تُفسد ATR
+  const bad = [...bars(20, 1.085, 0.001)];
+  bad.splice(5, 0, { time: T0 + 5 * H + 1, open: 1.085, high: NaN, low: 1.08, close: 1.085, volume: 0 });
+  bad.splice(8, 0, { time: T0 + 8 * H + 1, open: 1.085, high: 1.08, low: 1.09, close: 1.085, volume: 0 });
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bad, nowSec: afterLast(20) }), 15, 'corrupt bars dropped');
+  // بيانات قديمة (آخر شمعة قبل 5 أيام) ⇒ لا شريحة؛ عطلة نهاية أسبوع (يومان) ⇒ شريحة
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0.001), nowSec: afterLast(20) + 5 * 86400 }), null);
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0.001), nowSec: afterLast(20) + 2 * 86400 }), 15);
+  // بلا pip (مؤشر/رقمية) أو بلا شموع أو ATR صفر ⇒ null؛ وأصغر شريحة 1 pip
+  assert.equal(atrStopPips({ symbol: 'US30', candles: bars(20, 42000, 50), nowSec: afterLast(20) }), null);
+  assert.equal(atrStopPips({ symbol: 'BTCUSD', candles: bars(20, 60000, 300), nowSec: afterLast(20) }), null);
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: null, nowSec: afterLast(20) }), null);
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0), nowSec: afterLast(20) }), null);
+  assert.equal(atrStopPips({ symbol: 'EURUSD', candles: bars(20, 1.085, 0.00002), nowSec: afterLast(20) }), 1);
+  console.log('tradePlan atrStopPips selftest OK');
+}

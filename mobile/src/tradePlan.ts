@@ -9,6 +9,8 @@
  */
 import { cryptoPairOf, knownSingleName } from './chart/newsRisk';
 import { normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
+import { computeAtr } from './chart/indicators/volatility';
+import type { Candle } from './api';
 import {
   centAccountSymbol,
   microAccountSymbol,
@@ -1379,6 +1381,56 @@ export function quickStopPips(symbol: string, entry?: number | null): readonly n
   let m: number = STOP_SCALES[0];
   for (const c of STOP_SCALES) if (Math.abs(Math.log(c / f)) < Math.abs(Math.log(m / f))) m = c;
   return base.map((p) => Number((p * m).toFixed(1)));
+}
+
+/** شريحة وقف التقلّب: ATR(14) بتنعيم Wilder (نفس مؤشر ATR بالشارت) على شموع الساعة المغلقة × 1.5. */
+export const ATR_STOP_TF = '1H' as const;
+export const ATR_STOP_TF_SEC = 3600;
+export const ATR_STOP_PERIOD = 14;
+export const ATR_STOP_MULT = 1.5;
+/** آخر شمعة مغلقة أقدم من هذا (بالثواني) ⇒ لا شريحة: ATR بيانات قديمة ليس تقلّب اليوم. 4 أيام تتّسع لعطلة نهاية الأسبوع. */
+export const ATR_STOP_MAX_AGE_SEC = 4 * 86400;
+
+/**
+ * **مسافة وقف بالتقلّب** (بالـpip، مقرَّبة للأعلى لـpip كامل): `mult × ATR(period)` على شموع `tfSec` **المغلقة** فقط.
+ *
+ * لماذا: شرائح الوقف الثابتة (`quickStopPips`: 10/20/30/50) لا تعرف السوق — 20 pip على EURUSD بيومٍ هادئ وقفٌ مريح، وعلى GBPJPY
+ * بعد خبرٍ داخل ضجيج الشمعة الواحدة (ATR الساعة وحده 25–40 pip). الوقف تحت ATR يُضرب بالتذبذب العادي لا بخطأ الفكرة، وهو
+ * أشيع قاعدة وقف عند المتداولين. الشريحة تقيس السوق الآن.
+ *
+ * الشمعة الجارية تُسقط (`time + tfSec > nowSec`): مداها ناقص يُنزل ATR ويتغيّر مع كل تيك. شموع فاسدة (غير منتهية، ≤0، أعلى<أدنى)
+ * تُسقط. `null`: رمز بلا pip (`journalSpec`)، أقلّ من `period + 1` شمعة مغلقة، آخرها أقدم من `ATR_STOP_MAX_AGE_SEC`، أو ATR ≤ 0.
+ */
+export function atrStopPips(input: {
+  symbol: string;
+  candles: readonly Candle[] | null | undefined;
+  nowSec: number;
+  tfSec?: number;
+  period?: number;
+  mult?: number;
+}): number | null {
+  const spec = journalSpec(input.symbol);
+  const tfSec = input.tfSec ?? ATR_STOP_TF_SEC;
+  const period = input.period ?? ATR_STOP_PERIOD;
+  const mult = input.mult ?? ATR_STOP_MULT;
+  if (!spec || !Array.isArray(input.candles) || !Number.isFinite(input.nowSec)) return null;
+  const closed = input.candles
+    .filter(
+      (c) =>
+        c != null &&
+        [c.time, c.open, c.high, c.low, c.close].every((v) => typeof v === 'number' && Number.isFinite(v)) &&
+        c.open > 0 && c.low > 0 && c.close > 0 && c.high >= c.low && c.high >= Math.max(c.open, c.close) &&
+        c.low <= Math.min(c.open, c.close) &&
+        c.time + tfSec <= input.nowSec
+    )
+    .slice()
+    .sort((a, b) => a.time - b.time);
+  if (closed.length < period + 1) return null;
+  if (input.nowSec - closed[closed.length - 1].time > ATR_STOP_MAX_AGE_SEC) return null;
+  const atr = computeAtr(closed as Candle[], period)[closed.length - 1];
+  if (atr == null || !Number.isFinite(atr) || atr <= 0) return null;
+  const pips = (atr * mult) / spec.pipSize;
+  return Math.max(1, Math.ceil(pips - 1e-9));
 }
 
 /**
