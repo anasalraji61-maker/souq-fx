@@ -39,7 +39,7 @@
  *
  * خالص بلا React: يُفحص بـ`drawingAnchors.selftest.ts`.
  */
-import { forexTimeBeforeTrading, forexTradingSecBetween, nyFivePmUtcSec } from './marketHours';
+import { DAY_SEC, forexTimeBeforeTrading, forexTradingSecBetween, nyFivePmUtcSec, tradingSessionSec } from './marketHours';
 import type { ChartPoint, Drawing } from './types';
 
 export type TimeBar = { time: number; srcTime?: number };
@@ -93,8 +93,24 @@ export function timeAtIndex(
   // شمعة D/W كاملة تُختم بافتتاح جلستها (17:00 نيويورك) لا بختم الخادم (تاريخ الإغلاق 00:00 UTC): خطّ عمودي رُسم على
   // اليومي كان يقع على H1 عند 00:00 — 3–4 شموع بعد افتتاح الجلسة — والتقاطع المترابط ينشر الافتتاح (`0e658b4`).
   if (bar.srcTime == null && stepSec > 0 && (frac > 0 || weekendClosed))
-    return barOpen(bar.time, stepSec, weekendClosed) + Math.round(frac * stepSec);
+    return sessionTime(barOpen(bar.time, stepSec, weekendClosed), frac, stepSec, weekendClosed);
   return barTime(bar);
+}
+
+/** عكس `sessionFrac`: الزمن عند نسبة `frac` من شمعة تبدأ عند `open` (بزمن التداول لشمعة D برمز بكسر يومي). */
+function sessionTime(open: number, frac: number, stepSec: number, weekendClosed: WeekendRule): number {
+  const sym = weekSymbol(weekendClosed);
+  const session = stepSec === DAY_SEC && sym ? tradingSessionSec(sym) : DAY_SEC;
+  if (session >= DAY_SEC || !(frac > 0)) return open + Math.round(frac * stepSec);
+  const want = frac * session;
+  // الزمن المتداول لا يزيد عن المنقضي ⇒ التقدّم بالعجز يبلغه من تحت (قطعة لكل كسر).
+  let t = open + want;
+  for (let k = 0; k < 6; k++) {
+    const gap = want - forexTradingSecBetween(open, t, sym);
+    if (gap < 1) break;
+    t += gap;
+  }
+  return Math.round(t);
 }
 
 /**
@@ -295,8 +311,22 @@ export function anchorPoint(
           ? 0
           : brickOffset(bars, base, p)
         : withinBar(bars, base, from, stepSec, weekendClosed);
-  const index = base == null ? null : base + inBar + (ahead * aheadStep) / stepSec;
+  const index = base == null ? null : base + inBar + aheadSteps(ahead, aheadStep, stepSec, weekendClosed);
   return index == null || index === p.index ? p : { ...p, index };
+}
+
+/**
+ * `ahead` خانة بخطوة `aheadStep` مقيسةً بخطوة الفريم المعروض. الشموع داخل اليوم زمن تداول أصلاً، أما شمعة D
+ * فجلسة لا 24 ساعة: الذهب/المؤشرات/WTI 23 (`tradingSessionSec`) ⇒ خطّ رُسم على اليومي بعد الحيّة بيوم كان على
+ * H1 بالشمعة 24 (23:00 UTC) لا بافتتاح الجلسة (22:00)، ويتأخّر شمعة لكل يوم (DXY ثلاثاً). العملات 24 ⇒ بلا تغيير،
+ * والكريبتو (`false`) والأسبوعي بالتقويم كما كانا.
+ */
+function aheadSteps(ahead: number, aheadStep: number, stepSec: number, weekendClosed: WeekendRule): number {
+  const calendar = (ahead * aheadStep) / stepSec;
+  if (aheadStep === stepSec || weekendClosed === false || aheadStep > DAY_SEC || stepSec > DAY_SEC) return calendar;
+  const session = tradingSessionSec(weekSymbol(weekendClosed));
+  const dur = aheadStep === DAY_SEC ? ahead * session : ahead * aheadStep;
+  return stepSec === DAY_SEC ? dur / session : dur / stepSec;
 }
 
 /**
@@ -354,14 +384,27 @@ function withinBar(
   if (!bar || !(stepSec > 0)) return 0;
   // ختم الشمعة نفسه (نقطة رُسمت على هذا الفريم) بدايتُها وإن سبقه افتتاح الجلسة.
   if (time === bar.time) return 0;
-  const frac = (time - barOpen(bar.time, stepSec, weekendClosed)) / stepSec;
+  const frac = sessionFrac(barOpen(bar.time, stepSec, weekendClosed), time, stepSec, weekendClosed);
   if (frac >= 1 && i >= 0 && i + 1 < bars.length) {
     // مساء 17:00–24:00 نيويورك يقع بعد ختم «اليوم» وهو من جلسة الشمعة التالية (المختومة بتاريخ إغلاقها).
     const next = bars[i + 1]!;
-    const f = next.srcTime == null ? (time - barOpen(next.time, stepSec, weekendClosed)) / stepSec : -1;
+    const f =
+      next.srcTime == null ? sessionFrac(barOpen(next.time, stepSec, weekendClosed), time, stepSec, weekendClosed) : -1;
     return f > 0 && f < 1 ? 1 + f : 1;
   }
   return frac > 0 && frac < 1 ? frac : 0;
+}
+
+/**
+ * موضع `time` داخل شمعة تبدأ عند `open` كنسبة منها. شمعة D لرمز بكسر يومي (الذهب/المؤشرات/WTI/DXY/برنت) بزمن
+ * **التداول** على طول جلسته (`tradingSessionSec`) — كما تُعدّ الخانات بعد الحيّة (`aheadSteps`)، وإلا وقعت نقطة
+ * H1 عند افتتاح الجلسة التالية على اليومي عند 4.013 لا 4. ≥1 ⇒ بعد نهاية الجلسة (الشمعة التالية).
+ */
+function sessionFrac(open: number, time: number, stepSec: number, weekendClosed: WeekendRule): number {
+  const sym = weekSymbol(weekendClosed);
+  const session = stepSec === DAY_SEC && sym ? tradingSessionSec(sym) : DAY_SEC;
+  if (session >= DAY_SEC || time <= open || time - open >= stepSec) return (time - open) / stepSec;
+  return forexTradingSecBetween(open, time, sym) / session;
 }
 
 /**

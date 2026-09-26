@@ -395,4 +395,32 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(anchorPoint({ index: 0, price: 1, ...cf }, h1, H, false, undefined, false).index, c0 + 24);
 }
 
+// الذهب: جلسة 23 ساعة (كسر 17:00–18:00 نيويورك) ⇒ خانة D التالية = 23 شمعة H1 بعد افتتاح الحيّة لا 24، والعكس
+// (نقطة H1 بعد 23 شمعة) خانة يومية كاملة لا 0.958.
+{
+  const D = 86400;
+  const thu = Date.UTC(2026, 8, 24) / 1000;
+  const dBars = [-3, -2, -1, 0].map((k) => ({ time: thu + k * D }));
+  const fut = stampAtIndex(dBars, 4, D, undefined, 'XAUUSD')!;
+  const h1: { time: number }[] = [];
+  for (let t = Date.UTC(2026, 8, 23, 3) / 1000; t <= Date.UTC(2026, 8, 24, 14) / 1000; t += H) {
+    if (new Date(t * 1000).getUTCHours() !== 21) h1.push({ time: t });
+  }
+  const wedOpen = h1.findIndex((b) => b.time === Date.UTC(2026, 8, 23, 22) / 1000);
+  const live = stampAtIndex(dBars, 3, D, undefined, 'XAUUSD')!;
+  assert.equal(anchorPoint({ index: 0, price: 1, ...live }, h1, H, false, undefined, 'XAUUSD').index, wedOpen);
+  assert.equal(anchorPoint({ index: 0, price: 1, ...fut }, h1, H, false, undefined, 'XAUUSD').index, wedOpen + 23);
+  const h1Fut = stampAtIndex(h1, wedOpen + 23, H, undefined, 'XAUUSD')!;
+  const onD = anchorPoint({ index: 0, price: 1, ...h1Fut }, dBars, D, false, undefined, 'XAUUSD').index;
+  assert.ok(Math.abs(onD - 4) < 1e-9, `gold H1→D ${onD}`);
+  // سحب على يومي الذهب إلى خانة كسرية يعود إليها بعد الختم (لا ينزاح 1%)، ولـDXY وبرنت كذلك
+  for (const sym of ['XAUUSD', 'DXY', 'UKOIL']) {
+    for (const idx of [1.25, 2.5, 2.9]) {
+      const st = stampAtIndex(dBars, idx, D, undefined, sym)!;
+      const back = anchorPoint({ index: 0, price: 1, ...st }, dBars, D, false, undefined, sym).index;
+      assert.ok(Math.abs(back - idx) < 1e-3, `${sym} ${idx} → ${back}`);
+    }
+  }
+}
+
 console.log('drawingAnchors.selftest: PASS');

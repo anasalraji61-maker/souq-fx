@@ -389,7 +389,7 @@ function weekTradingSpans(wk: { open: number; close: number }, symbol = ''): [nu
   // (الاثنين–الخميس). كان يُعدّ تداولاً ⇒ ترند ذهب رُسم قبل أسبوع يرسو 4 شموع M15 لكل ليلة يساراً (DXY 12).
   const sym = symbol.trim();
   const brent = BRENT_RE.test(sym);
-  const breakLen = isLateOpenSymbol(sym) ? 3600 : DXY_RE.test(sym) ? 3 * 3600 : brent ? 2 * 3600 : 0;
+  const breakLen = dailyBreakSec(sym);
   if (breakLen > 0) {
     for (let d = Math.floor(wk.open / DAY_SEC) * DAY_SEC; d < wk.close; d += DAY_SEC) {
       if (brent && new Date(d * 1000).getUTCDay() === 0) continue; // ليلة الأحد افتتاح لا كسر
@@ -407,6 +407,20 @@ function weekTradingSpans(wk: { open: number; close: number }, symbol = ''): [nu
   }
   if (wk.close > from) spans.push([from, wk.close]);
   return spans;
+}
+
+/** طول الكسر اليومي للرمز: CME ساعة، DXY ثلاث، برنت ساعتان، العملات بلا كسر. */
+function dailyBreakSec(symbol: string): number {
+  const sym = symbol.trim();
+  return isLateOpenSymbol(sym) ? 3600 : DXY_RE.test(sym) ? 3 * 3600 : BRENT_RE.test(sym) ? 2 * 3600 : 0;
+}
+
+/**
+ * ثواني التداول في جلسة يومية كاملة للرمز: 24 ساعة للعملات، 23 للذهب/المؤشرات/WTI، 21 لـDXY، 22 لبرنت.
+ * لتحويل «N شمعة D للأمام» إلى شموع داخل اليوم (`drawingAnchors`): جلسة الذهب 23 شمعة H1 لا 24.
+ */
+export function tradingSessionSec(symbol = ''): number {
+  return DAY_SEC - dailyBreakSec(symbol);
 }
 
 /**
