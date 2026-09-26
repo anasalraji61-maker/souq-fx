@@ -63,6 +63,11 @@ export function KeyboardShortcutsSheet() {
       }
       if (!HELP_KEYS.has(event.key) || event.ctrlKey || event.metaKey || event.altKey) return;
       if (isTypingTarget(event.target)) return;
+      // تكرار المفتاح المضغوط مطوّلاً كان يفتح القائمة ويغلقها بتتابع (chart-r109a) — بعد فحص خانة الكتابة، فـ«??» بحقل نصّ يبقى
+      if (event.repeat) {
+        event.preventDefault();
+        return;
+      }
       event.preventDefault();
       setOpen((v) => !v);
     };
