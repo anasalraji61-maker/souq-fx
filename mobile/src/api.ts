@@ -131,7 +131,7 @@ export type NewsItem = {
   /** `'unknown'` = عنوان بلا كلمة مفتاحية (backend-r18 `19acbae`) — كان يصل «low» فيُقرأ «منخفض» مؤكَّداً. */
   impact: 'high' | 'medium' | 'low' | 'unknown';
   title: string;
-  pair_effect: string;
+  /** `pair_effect` لم يعد يُرسَل (backend-r104 `53aa55c`) — كان «Forex» ثابتاً. */
   when: string;
   /** وقت النشر ثوانٍ UTC (`news_feed.when_and_ts`)؛ null ⇒ بلا تاريخ أو منطقة مجهولة و`when` نصّه الخام. */
   ts?: number | null;

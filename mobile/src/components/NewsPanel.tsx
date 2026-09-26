@@ -126,8 +126,6 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
               </Text>
             </View>
             <Text style={[styles.headline, { textAlign: align }]}>{n.title}</Text>
-            {/* `pair_effect` لا يُعرض: الخادم يرسل «Forex» ثابتة لكل خبر (`news_feed.py`) — إنجليزية تحت الواجهة
-                العربية/الكردية ولا تسمّي زوجاً. */}
           </View>
           );
         })}
