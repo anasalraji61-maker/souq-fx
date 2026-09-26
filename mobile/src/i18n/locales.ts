@@ -968,9 +968,13 @@ export type Dict = {
    *  فطبقة العرض تترجم بـ`t[code]` مباشرة. أي تغيير باسم مفتاح هنا يلزمه تغيير الرمز هناك. */
   layoutSaveFailed: string;
   layoutDeleteFailed: string;
+  /** قراءة التخطيطات المحفوظة فشلت (تخزين مشغول/JSON تالف) — الكتابة ترفض كي لا تمحوها. */
+  layoutReadFailed: string;
   chartTemplateSaveFailed: string;
   drawingsSaveFailed: string;
   drawingsDeleteFailed: string;
+  /** قراءة رسومات الرمز فشلت (خطأ تخزين عابر) — لا تُعرض، وأوّل حفظ يدمج معها بدل الكتابة فوقها. */
+  drawingsReadFailed: string;
   wlSaveFailed: string;
   wlRetryA11y: string;
   wlRetryBtn: string;
@@ -2336,9 +2340,11 @@ const ar: Dict = {
   wlLoadError: 'تعذّرت قراءة قائمة المتابعة من الهاتف — اضغط «إعادة المحاولة»',
   layoutSaveFailed: 'تعذّر حفظ التخطيط على الهاتف — تحقّق من مساحة التخزين وحاول مرة أخرى',
   layoutDeleteFailed: 'تعذّر حذف التخطيط — قد يعود للقائمة عند فتحها مجدداً، فاحذفه مرة أخرى',
+  layoutReadFailed: 'تعذّرت قراءة تخطيطاتك المحفوظة على الهاتف — لم تُحذف، والحفظ متوقّف كي لا يُكتب فوقها. أغلق التطبيق وافتحه ثم حاول مجدداً',
   chartTemplateSaveFailed: 'تعذّر حفظ الإعداد الافتراضي على الهاتف — تحقّق من مساحة التخزين وحاول مرة أخرى',
   drawingsSaveFailed: 'لم تُحفظ الرسومات على الهاتف — تحقّق من مساحة التخزين، وإلا ضاعت بتبديل الرمز أو إغلاق التطبيق',
   drawingsDeleteFailed: 'لم تُمسح الرسومات من الهاتف — قد تعود عند فتح هذا الشارت مجدداً',
+  drawingsReadFailed: 'تعذّرت قراءة رسوماتك المحفوظة لهذا الرمز — لم تُحذف، وما ترسمه الآن يُضاف إليها ولا يحلّ محلّها. أعد فتح الشارت لتظهر',
   wlSaveFailed: 'لم يُحفظ التعديل — أُعيدت القائمة كما كانت. تحقّق من مساحة التخزين وحاول مرة أخرى',
   wlRetryA11y: 'إعادة محاولة تحميل قائمة المتابعة',
   wlRetryBtn: 'إعادة المحاولة',
@@ -3580,9 +3586,11 @@ const enUS: Dict = {
   wlLoadError: "Couldn’t read your watchlist from this phone — tap “Retry”",
   layoutSaveFailed: "Couldn’t save the layout on this phone — check free storage and try again",
   layoutDeleteFailed: "Couldn’t delete the layout — it may reappear next time, so delete it again",
+  layoutReadFailed: "Couldn’t read your saved layouts on this phone — they weren’t deleted, and saving is paused so nothing overwrites them. Close and reopen the app, then try again",
   chartTemplateSaveFailed: "Couldn’t save your default setup on this phone — check free storage and try again",
   drawingsSaveFailed: "Drawings not saved on this phone — check free storage, or they’ll be lost when you switch symbol or close the app",
   drawingsDeleteFailed: "Drawings not cleared from this phone — they may come back when you reopen this chart",
+  drawingsReadFailed: "Couldn’t read your saved drawings for this symbol — they weren’t deleted, and anything you draw now is added to them, not saved over them. Reopen the chart to see them",
   wlSaveFailed: "Change not saved — the list was put back as it was. Check free storage and try again",
   wlRetryA11y: 'Retry loading watchlist',
   wlRetryBtn: 'Retry',
@@ -4871,9 +4879,11 @@ const ku: Dict = {
   wlLoadError: 'نەتوانرا لیستی چاودێری لە مۆبایلەکە بخوێندرێتەوە — «دووبارە هەوڵدان» دابگرە',
   layoutSaveFailed: 'نەتوانرا نەخشەسازی لە مۆبایلەکە پاشەکەوت بکرێت — شوێنی بەتاڵی بیرگە بپشکنە و دووبارە هەوڵ بدەرەوە',
   layoutDeleteFailed: 'نەتوانرا نەخشەسازی بسڕدرێتەوە — لەوانەیە جارێکی تر دەربکەوێتەوە، دووبارە بیسڕەوە',
+  layoutReadFailed: 'نەتوانرا نەخشەسازییە پاشەکەوتکراوەکانت لە مۆبایلەکە بخوێندرێنەوە — نەسڕاونەتەوە، و پاشەکەوتکردن ڕاگیراوە تا هیچ شتێک جێیان نەگرێتەوە. ئەپەکە دابخە و بیکەرەوە، پاشان دووبارە هەوڵ بدەرەوە',
   chartTemplateSaveFailed: 'نەتوانرا ڕێکخستنی بنەڕەت لە مۆبایلەکە پاشەکەوت بکرێت — شوێنی بەتاڵی بیرگە بپشکنە و دووبارە هەوڵ بدەرەوە',
   drawingsSaveFailed: 'وێنەکێشانەکان لە مۆبایلەکە پاشەکەوت نەکران — شوێنی بەتاڵی بیرگە بپشکنە، دەنا بە گۆڕینی هێما یان داخستنی ئەپ ون دەبن',
   drawingsDeleteFailed: 'وێنەکێشانەکان لە مۆبایلەکە نەسڕانەوە — لەوانەیە بە کردنەوەی ئەم چارتە بگەڕێنەوە',
+  drawingsReadFailed: 'نەتوانرا وێنەکێشانە پاشەکەوتکراوەکانت بۆ ئەم هێمایە بخوێندرێنەوە — نەسڕاونەتەوە، و ئەوەی ئێستا دەیکێشیت بۆیان زیاد دەکرێت نەک لە جێیان. چارتەکە دووبارە بکەرەوە بۆ بینینیان',
   wlSaveFailed: 'گۆڕانکارییەکە پاشەکەوت نەکرا — لیستەکە وەک خۆی گەڕایەوە. شوێنی بەتاڵی بیرگە بپشکنە و دووبارە هەوڵ بدەرەوە',
   wlRetryA11y: 'دووبارە هەوڵدانەوەی بارکردنی لیستی چاودێری',
   wlRetryBtn: 'دووبارە هەوڵدان',
