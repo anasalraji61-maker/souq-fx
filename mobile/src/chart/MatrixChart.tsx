@@ -124,6 +124,7 @@ import {
   GUIDES_LABEL_MIN_INNER_H,
   GUIDES_MIN_INNER_H,
 } from './paneGuides';
+import { useStickyPriceRef } from './useStickyPriceRef';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import {
   arrowNudge,
@@ -1718,8 +1719,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // الرأسي العابر أثناء سحب أفقي لا يُعدّ (وإلا أُبرز AUTO بعد كل سحب تقريباً).
   const priceManual = Math.abs(Math.log(priceScale)) > 0.01 || Math.abs(pricePan) > 0.1;
   // كل سعر بالشارت (المحور، الوسوم، التقاطع، القمم، الرسومات) بمنازل واحدة للأداة: لرمز بلا منازل معروفة
-  // تُؤخذ من سعره الجاري لا من كل رقم على حدة (`formatPrice`، `ref`).
-  const priceDecimalsRef = series.last;
+  // تُؤخذ من سعره لا من كل رقم على حدة (`formatPrice`، `ref`) — مرجع ثابت للرمز (`stickyPriceRef`) فلا تقفز
+  // المنازل كلّها كلّما عبر السعر 10 أو 100 ذهاباً وإياباً.
+  const priceDecimalsRef = useStickyPriceRef(series.symbol, series.last);
   const fmtPrice = (v: number) => formatPrice(v, series.symbol, priceDecimalsRef);
   // السعر كما يُطبع رقماً — لسحب/إزاحة/نسخ الرسوم: US30/BTC/DE40 (بلا منازل معروفة) كانت تُترك بضجيج عشري
   // (وقف 38950.2371 مكتوب «SL 38950.24») فشمعة قاعها 38950.24 بالضبط لا تُعدّ ضرباً للوقف، وتنبيه الخطّ يُحفظ

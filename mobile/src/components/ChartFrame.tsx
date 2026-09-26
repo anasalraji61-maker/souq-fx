@@ -6,6 +6,7 @@ import { TimeframeBar } from './TimeframeBar';
 import { isTimeframe, type Timeframe } from '../timeframes';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
+import { useStickyPriceRef } from '../chart/useStickyPriceRef';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
@@ -209,6 +210,8 @@ export function ChartFrame({
   const chgDir = pctDirection(chgPct);
   const chgColor = chgDir === 'up' ? colors.bull : chgDir === 'down' ? colors.bear : colors.textDim;
   const headerPrice = replayPrice ?? headTick?.price ?? series.last;
+  // منازل الرأس بمرجع الشارت نفسه (`useStickyPriceRef`) — لا يقفز الرأس وحده عند عبور 10/100.
+  const priceRef = useStickyPriceRef(series.symbol, series.last);
   const tickKind = replayPrice == null && headTick
     ? tickStatusKind(headTick.source, headTick.source.as_of, nowSec)
     : null;
@@ -468,11 +471,11 @@ export function ChartFrame({
               style={[styles.price, phone && styles.pricePhone]}
               accessibilityLabel={
                 replayPrice != null
-                  ? `${formatPrice(headerPrice, series.symbol, series.last)} — ${t.cfReplayPriceA11y}`
+                  ? `${formatPrice(headerPrice, series.symbol, priceRef)} — ${t.cfReplayPriceA11y}`
                   : undefined
               }
             >
-              {formatPrice(headerPrice, series.symbol, series.last)}
+              {formatPrice(headerPrice, series.symbol, priceRef)}
             </Text>
             {replayPrice != null ? (
               <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
@@ -500,8 +503,8 @@ export function ChartFrame({
                   quoteStale || phone
                     ? null
                     : t.cfSpreadBidAskA11y
-                        .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, series.last))
-                        .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, series.last)),
+                        .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, priceRef))
+                        .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, priceRef)),
                   spreadPips != null ? t.cfSpreadPipsA11y.replace('{pips}', spreadPips.toFixed(1)) : null,
                 ]
                   .filter(Boolean)
@@ -509,7 +512,7 @@ export function ChartFrame({
               >
                 {quoteStale || phone
                   ? ''
-                  : `${t.quoteBidShort} ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · ${t.quoteAskShort} ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
+                  : `${t.quoteBidShort} ${formatPrice(liveQuote!.bid!, series.symbol, priceRef)} · ${t.quoteAskShort} ${formatPrice(liveQuote!.ask!, series.symbol, priceRef)}`}
                 {spreadPips != null ? (
                   <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
                 ) : null}

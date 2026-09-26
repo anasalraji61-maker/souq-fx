@@ -61,6 +61,20 @@ export function magnitudeDecimals(m: number): number {
 }
 
 /**
+ * مرجع منازل ثابت للجلسة لأداة بلا مواصفة: `formatPrice` يقدّرها من `ref`، و`series.last` مرجعاً كان يقلبها عند
+ * عبور 10/100 — LTCUSD من 99.98 إلى 100.01 ⇒ المحور والتقاطع والوسوم كلها من 3 منازل إلى 2 (خطّ محفوظ 99.954
+ * يُقرأ «99.95») ثم ترتدّ مع أوّل تيك تحت 100. يبقى المرجع السابق ما دام السعر الجديد ضمن ×3 منه (تذبذب حول
+ * حدّ لا يقلب شيئاً)؛ خارجها (رمز آخر، سلسلة أولى بعد فراغ، حركة حقيقية بحجم عقد) يُعتمد الجديد. `next` غير
+ * صالح ⇒ يبقى السابق.
+ */
+export function stickyPriceRef(prev: number | null | undefined, next: number | null | undefined): number | null {
+  const ok = (v: number | null | undefined): v is number => v != null && Number.isFinite(v) && v > 0;
+  if (!ok(next)) return ok(prev) ? prev : null;
+  if (ok(prev) && next <= prev * 3 && next >= prev / 3) return prev;
+  return next;
+}
+
+/**
  * فرق سعرَين بمنازل **السعر** لا بحجم الفرق: لأداة بلا منازل معروفة (US30، BTCUSD، النفط) كان `formatPrice(diff)`
  * يقدّرها من الفرق نفسه — رقم صغير دائماً — فوقف 35 نقطة على US30 يُكتب «35.400» وحركة 0.8 «0.80000».
  * `ref` السعر المرجعي (أحد الطرفين). كمّية بلا إشارة. `priceRef` مرجع منازل الشارت (`formatPrice`) إن

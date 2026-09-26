@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { crossPriceAt } from './crossAnchor';
-import { formatPrice, formatPriceDiff, magnitudeDecimals } from './indicators/utils';
+import { formatPrice, formatPriceDiff, magnitudeDecimals, stickyPriceRef } from './indicators/utils';
 
 // ما فوق 0.01 كما كان تماماً
 assert.equal(magnitudeDecimals(2650), 2);
@@ -53,3 +53,19 @@ console.log('cheapPrice DXY/negative-zero OK');
 for (const s of ['USDHUF', 'EURHUF.m', 'USDHUFc', 'TVC:USDHUF']) assert.equal(formatPrice(350.1234, s), '350.123');
 assert.equal(formatPrice(350.1234, 'HUFJPY'), '350.12');
 console.log('cheapPrice HUF OK');
+
+// مرجع المنازل الثابت (`stickyPriceRef`): LTCUSD يعبر 100 ذهاباً وإياباً ⇒ المنازل لا تقفز
+{
+  let r = stickyPriceRef(null, 99.98);
+  assert.equal(r, 99.98);
+  r = stickyPriceRef(r, 100.01);
+  assert.equal(r, 99.98);
+  assert.equal(formatPrice(99.954, 'LTCUSD', r), '99.954');
+  assert.equal(formatPrice(100.012, 'LTCUSD', r), '100.012');
+  // حركة بحجم عقد ⇒ مرجع جديد
+  assert.equal(stickyPriceRef(99.98, 450), 450);
+  assert.equal(stickyPriceRef(99.98, 20), 20);
+  // سعر غير صالح ⇒ يبقى السابق
+  assert.equal(stickyPriceRef(99.98, null), 99.98);
+  assert.equal(stickyPriceRef(null, NaN), null);
+}
