@@ -1214,11 +1214,9 @@ export type Dict = {
   mcAlertAtLineLevel: string;
   mcAlertAtCrossA11y: string;
   // chart/typeLabels.ts chartExtraLabels ← هنا (طلب وكيل الشارت). mcMeasureBarOne/Two: صيغتا المفرد والمثنّى لعدّ القياس (barsCountText)
-  mcUndo: string;
   mcUndoA11y: string;
   mcNothingToUndo: string;
-  /** زرّ «إعادة» بجانب «تراجع» (طلب chart-r60) — ومعه نصّ قارئ الشاشة، و`mcNothingToRedo` للحالة المعطّلة كنظير `mcNothingToUndo` */
-  mcRedo: string;
+  /** زرّ «إعادة» بجانب «تراجع» (طلب chart-r60): نصّ قارئ الشاشة والتلميح، و`mcNothingToRedo` للحالة المعطّلة كنظير `mcNothingToUndo` (الشريط أيقونات فلا تسمية مرئية) */
   mcRedoA11y: string;
   mcNothingToRedo: string;
   /** قارئ الشاشة لزرّ «»» (العودة لآخر شمعة) — كان `chartExtraLabels(lang).toLatest` بـ`typeLabels.ts` */
@@ -2536,10 +2534,8 @@ const ar: Dict = {
   mcAlertZone: 'تنبيه منطقة',
   mcAlertAtLineLevel: 'تنبيه عند مستوى الخط الحالي',
   mcAlertAtCrossA11y: 'إنشاء تنبيه سعر عند',
-  mcUndo: 'تراجع',
   mcUndoA11y: 'تراجع عن آخر تغيير في الرسم',
   mcNothingToUndo: 'لا شيء للتراجع عنه',
-  mcRedo: 'إعادة',
   mcRedoA11y: 'إعادة آخر تغيير تراجعتَ عنه في الرسم',
   mcNothingToRedo: 'لا شيء لإعادته',
   mcToLatestA11y: 'العودة لآخر شمعة',
@@ -3770,10 +3766,8 @@ const enUS: Dict = {
   mcAlertZone: 'Zone alert',
   mcAlertAtLineLevel: 'Alert at the current line level',
   mcAlertAtCrossA11y: 'Create a price alert at',
-  mcUndo: 'Undo',
   mcUndoA11y: 'Undo the last drawing change',
   mcNothingToUndo: 'Nothing to undo',
-  mcRedo: 'Redo',
   mcRedoA11y: 'Redo the last drawing change you undid',
   mcNothingToRedo: 'Nothing to redo',
   mcToLatestA11y: 'Scroll to the latest candle',
@@ -5051,10 +5045,8 @@ const ku: Dict = {
   mcAlertZone: 'ئاگاداری ناوچە',
   mcAlertAtLineLevel: 'ئاگاداری لە ئاستی هێڵی ئێستا',
   mcAlertAtCrossA11y: 'دروستکردنی ئاگاداری نرخ لە',
-  mcUndo: 'گەڕاندنەوە',
   mcUndoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
   mcNothingToUndo: 'هیچ شتێک نییە بۆ گەڕاندنەوە',
-  mcRedo: 'دووبارەکردنەوە',
   mcRedoA11y: 'دووبارەکردنەوەی دوایین گۆڕانکاری کە گەڕاندتەوە لە کێشان',
   mcNothingToRedo: 'هیچ شتێک نییە بۆ دووبارەکردنەوە',
   mcToLatestA11y: 'گەڕانەوە بۆ دوایین مۆم',
