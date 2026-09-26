@@ -119,10 +119,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         setStats(null);
         setTrades([]);
         setEquity([]);
-        // مفتاح launch `backtestNotEnoughCandles` (مطلوب ui130a)؛ حتى يصل: «لا صفقات لهذه الفترة — جرّب فريماً آخر».
-        setError(
-          (t as unknown as Partial<Record<string, string>>).backtestNotEnoughCandles ?? t.backtestNoTrades,
-        );
+        setError(t.backtestNotEnoughCandles);
         return;
       }
       const key = STRATEGIES.find((s) => s.id === strategy)?.labelKey;
