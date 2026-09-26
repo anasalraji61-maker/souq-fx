@@ -12,6 +12,9 @@ import { BacktestPanel } from './BacktestPanel';
 import { NewsPanel } from './NewsPanel';
 import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
+import { IndicatorForecastPanel } from './IndicatorForecastPanel';
+import { GroupChatPanel } from './GroupChatPanel';
+import { VotePanel } from './VotePanel';
 import type { Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 import { SHOW_NEWS_FEED } from '../featureFlags';
@@ -29,6 +32,8 @@ export type EdgePanelId =
   | 'news'
   | 'dom'
   | 'journal'
+  | 'indForecast'
+  | 'community'
   | null;
 
 type Props = {
@@ -69,6 +74,8 @@ export function MatrixSidePanel({
     news: t.mspNewsTitle,
     dom: t.mspDomTitle,
     journal: t.mspJournalTitle,
+    indForecast: t.dockIndForecastTab,
+    community: t.dockCommunityTab,
   };
 
   if (!panel) return null;
@@ -197,6 +204,13 @@ export function MatrixSidePanel({
               <DomLitePanel symbol={symbol} />
             ) : null}
             {panel === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} /> : null}
+            {panel === 'indForecast' ? <IndicatorForecastPanel symbol={symbol} timeframe={timeframe} /> : null}
+            {panel === 'community' ? (
+              <View style={styles.community}>
+                <GroupChatPanel />
+                <VotePanel />
+              </View>
+            ) : null}
           </ScrollView>
         </View>
       </View>
@@ -205,6 +219,7 @@ export function MatrixSidePanel({
 }
 
 const styles = StyleSheet.create({
+  community: { gap: spacing.sm },
   backdrop: {
     flex: 1,
     flexDirection: 'row',

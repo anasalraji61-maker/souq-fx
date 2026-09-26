@@ -334,6 +334,9 @@ export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
     // «₴» رمز الهريفنيا الأوكرانية لا دفتر؛ «▤» صفحةٌ مسطّرة كما `ToolsScreen` (launch4).
     { id: 'journal', mark: '▤', tip: t.toolsTabJournal },
     { id: 'backtest', mark: '↺', tip: t.backtestWord },
+    // كانا بالرصيف السفلي وحده — والرصيف لم يعد يُرسم على الشاشة العريضة (DESIGN-PRO §5.1، عيب أنس W3).
+    { id: 'indForecast', mark: '∑', tip: t.dockIndForecastTab },
+    { id: 'community', mark: '◈', tip: t.dockCommunityTab },
   ];
   // قرار أنس ٦ (`featureFlags.ts`): الأخبار النصية مخفية حتى مصدر مرخَّص؛ التقويم يبقى.
   const RIGHT_ICONS = ALL_RIGHT_ICONS.filter((ic) => SHOW_NEWS_FEED || ic.id !== 'news');

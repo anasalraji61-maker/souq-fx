@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { colors, radii, spacing, buttons, selectedMarkerWidth } from '../theme';
 import type { EdgePanelId } from './MatrixSidePanel';
 import { AlertsPanel } from './AlertsPanel';
@@ -56,6 +56,9 @@ type Props = {
   onLens?: (lens: MatrixLensId) => void;
 };
 
+/** نفس حدّ `phone` (`width < 700`) بـ`TerminalScreen` — فوقه الشريطان الجانبيان يحملان كل مداخل الرصيف. */
+const WIDE_MIN_WIDTH = 700;
+
 const PRIMARY_TABS: DockTabId[] = ['draw', 'alerts', 'calendar', 'journal'];
 
 export function MatrixBottomDock({
@@ -69,6 +72,7 @@ export function MatrixBottomDock({
   onLens,
 }: Props) {
   const { t, rtl } = useI18n();
+  const { width } = useWindowDimensions();
   const ALL_TABS: Tab[] = [
     { id: 'draw', label: t.dockDrawTab, mark: '✏' },
     { id: 'signals', label: t.dockSignalsTab, mark: '✦' },
@@ -120,6 +124,13 @@ export function MatrixBottomDock({
     setMoreOpen(false);
     onTab(null);
   };
+
+  /**
+   * عيب أنس W3 (شريطان سفليان على الويب) + DESIGN-PRO §5.1: على الشاشة العريضة كل مدخل هنا له بيت آخر —
+   * الرسم والعدسات بالشريط الأيسر، واللوحات بالشريط الأيمن (`RightPanelRail`، ومعها «توقّع المؤشرات»
+   * و«المجتمع»). فلا يبقى أسفل الشاشة إلا شريط التنقّل. العتبة 700 هي `phone` بـ`TerminalScreen`.
+   */
+  if (width >= WIDE_MIN_WIDTH) return null;
 
   return (
     <View style={styles.wrap}>
