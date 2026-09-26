@@ -4351,3 +4351,23 @@ console.log('positionSize JPY/gold stop price in pips field selftest OK');
   assert.equal(r.lots, 0.43);
 }
 console.log('positionSize 0.0001 cross stop price in pips field selftest OK');
+{
+  // QA125a: وقف سكالبر مستدير بمنزلتين على الرئيسية نقاطٌ لا سعر — كان يُرفض بمدى «نصف السعر حتى ضعفه»
+  for (const [sym, raw, v] of [
+    ['EURUSD', '2.00', 2], ['EURUSD', '1.50', 1.5], ['EURUSD', '0.80', 0.8], ['EURUSD', '1.00', 1],
+    ['EURGBP', '1.00', 1], ['AUDUSD', '1.00', 1], ['USDCHF', '1.50', 1.5], ['GBPUSD', '2.00', 2], ['GBPNZD', '1.50', 1.5],
+  ] as const) {
+    const sp = instrumentSpec(sym)!;
+    assert.equal(parseSlPips(raw, sp), v, `${sym} ${raw}`);
+    assert.equal(slPipsLooksLikePrice(raw, sp), false, `${sym} ${raw}`);
+  }
+  // والسعر المستدير قرب سعر الأداة، والجزء من مئة بالمدى الواسع، ما زالا سعراً
+  for (const [sym, raw] of [['GBPUSD', '1.30'], ['GBPUSD', '1.20'], ['EURUSD', '1.10'], ['GBPNZD', '2.30'], ['GBPNZD', '2.63'], ['EURUSD', '1.08'], ['AUDUSD', '0.65']] as const) {
+    assert.equal(parseSlPips(raw, instrumentSpec(sym)!), null, `${sym} ${raw}`);
+  }
+  // اللوت الحقيقي لوقف 1.5 pip على EURUSD (1% من 10,000، pip 10$) = 6.66 — ما يتوقّعه السكالبر، لا رفض
+  const eu = instrumentSpec('EURUSD')!;
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: parseSlPips('1.50', eu)!, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 6.66);
+}
+console.log('positionSize round scalper stop pips on majors selftest OK');

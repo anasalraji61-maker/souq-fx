@@ -934,9 +934,16 @@ function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, ty
   // التقاطعات فوق 1.5 (GBPNZD ~2.2، GBPAUD ~2.0، EURNZD ~1.9، GBPCAD ~1.8): سعرٌ مستدير «2.20» لا جزء من مئة فيه، و«2.63» فوق 2.5
   // ⇒ كانا 2.2 و2.63 pip ⇒ **7.83 لوت بدل ~0.43** لوقف 40 pip (1% من 10,000، GBPNZD). منزلتان مكتوبتان أو جزءٌ من مئة **وقريبٌ من
   // سعر الأداة** (نصفه حتى ضعفه، `pairBallpark`) = سعر، كالين الرئيسي؛ «12.25» و«1.5» و«2.2» (منزلة واحدة) تبقى نقاطاً.
+  // لكن **المستدير** (منزلتان مكتوبتان بلا جزء من مئة) بمدى ±9% فقط: بنصف السعر حتى ضعفه كان وقف سكالبر «1.50» أو «2.00» pip على
+  // EURUSD، و«1.00» على EURGBP/AUDUSD، و«1.50» على USDCHF يُرفض كسعر (QA125a). السعر المستدير الذي يكتبه المتداول قريبٌ من السعر
+  // («2.20» GBPNZD، «1.90» GBPCAD، «1.20» GBPUSD)؛ والجزء من مئة يبقى بالمدى الواسع («2.63» GBPNZD).
   const ref = pairBallpark(spec);
-  return (hundredths || typed === 2) && v >= ref / 2 && v <= ref * 2;
+  if (hundredths) return v >= ref / 2 && v <= ref * 2;
+  return typed === 2 && Math.max(v / ref, ref / v) <= ROUND_PRICE_MAX_RATIO;
 }
+
+/** أقصى بُعدٍ لسعرٍ مستدير بمنزلتين («2.20») عن سعر الأداة التقريبي كي يُعدّ سعراً بخانة النقاط لا وقفاً (`pipsLookLikeTwoDecimalPrice`). */
+const ROUND_PRICE_MAX_RATIO = 1.09;
 
 /** أكثر من منزلتين عشريتين ذواتَي قيمة («1.082»، لا «1.0800» ولا «12.25») — مسافة بالـpip لا تحملها، السعر يحملها. */
 function pipsHaveMoreThanTwoDecimals(v: number): boolean {
