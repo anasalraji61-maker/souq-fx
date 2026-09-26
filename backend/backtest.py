@@ -161,6 +161,11 @@ def run_backtest(
     f_sma = ind.sma(closes, fast)
     s_sma = ind.sma(closes, slow)
     r = ind.rsi(closes)
+    # RSI 50 على إغلاقات لم تتحرّك إطلاقاً حتى الشمعة (`_rsi_value`) قيمةٌ بديلة لا قراءة: عتبات مخصّصة
+    # (50/70) كانت تفتح شراءً على زوج مربوط (USDHKD 7.8123) يبقى «مفتوحاً» للنهاية — التنبيهات والتوقعات تُسقطها.
+    moved: list[bool] = []
+    for x in closes:
+        moved.append(bool(moved and moved[-1]) or x != closes[0])
     m_line, m_sig = ind.macd(closes)
     mid = ind.sma(closes, 20)
     # BB bands from mid ± 2 * rolling std approx via ATR-like range
@@ -233,7 +238,7 @@ def run_backtest(
                 signal = "sell"
         elif strategy == "rsi_reversal":
             rv = r[i]
-            if rv is not None:
+            if rv is not None and moved[i]:
                 if rv <= rsi_low:
                     signal = "buy"
                 elif rv >= rsi_high:

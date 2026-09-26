@@ -342,3 +342,16 @@ def test_bb_bounce_no_trades_on_zero_width_band():
                       "high": close + (w if i % 2 else 0.0), "low": close - (0.0 if i % 2 else w)})
         res = backtest.run_backtest(c, "bb_bounce")
         assert res["stats"]["trade_count"] == 0, close
+
+
+def test_rsi_reversal_no_trade_on_never_moved_closes():
+    # RSI 50 لإغلاقات لم تتحرّك = بديل لا قراءة: عتبات 50/70 كانت تفتح شراءً على USDHKD مربوط حتى النهاية
+    for close in (7.8123, 2651.43):
+        c = [{"time": 1_700_000_000 + i * 900, "open": close, "high": close, "low": close, "close": close}
+             for i in range(200)]
+        res = backtest.run_backtest(c, "rsi_reversal", rsi_low=50, rsi_high=70)
+        assert res["trades"] == [], close
+        # ثم حركة حقيقية ⇒ قراءة حقيقية تُحسب (هبوط ⇒ RSI 0 ≤ 50 ⇒ شراء)
+        c2 = c + [{"time": c[-1]["time"] + 900 * (k + 1), "open": close, "high": close,
+                   "low": close * (1 - 0.001 * (k + 1)), "close": close * (1 - 0.001 * (k + 1))} for k in range(3)]
+        assert backtest.run_backtest(c2, "rsi_reversal", rsi_low=50, rsi_high=70)["trades"][0]["side"] == "long"
