@@ -1309,7 +1309,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           ? pxErrorText(badPx)
           : misplacedArabicThousandsSign(size, { unit: 'lot' })
             ? t.arabicThousandsSignHint
-            : t.invalidNumberHint
+            : // مثالا `invalidNumberHint` سعران (10000 أو 1.0850) — والحجم باللوت (launch194a)
+              t.journalSizeInvalidHint
       );
       return;
     }
