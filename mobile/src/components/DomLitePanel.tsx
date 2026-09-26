@@ -7,6 +7,7 @@ import { isRealQuote } from '../chart/dataSource';
 import { quoteBookValid, quoteSpreadPips } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipUnit } from '../chart/measureReadout';
+import { useStickyPriceRef } from '../chart/useStickyPriceRef';
 import { api } from '../api';
 import { formatLocalStamp } from '../localStamp';
 import { useI18n } from '../i18n/I18nContext';
@@ -69,6 +70,9 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
     };
   }, [symbol]);
 
+  // chart-r116a: مرجع منازل واحد ثابت للّوحة كلّها (Bid/Ask وسطر السعر بلا دفتر) — كان سطر السعر بلا مرجع
+  // فيطبع لرمز بلا مواصفة قرب 1/10/100 منازل غير منازل Bid/Ask، ويقفز عند عبور الحدّ.
+  const priceRef = useStickyPriceRef(symbol, quote ? (quote.bid ?? quote.price) : null);
   // `quoteBookValid` كرأس الطرفية: يرفض أيضاً bid/ask غير المنتهيين (NaN كان يمرّ بلا مقارنة صريحة).
   const hasBook = quote != null && quoteBookValid(quote.bid, quote.ask);
   let spreadText: string | null = null;
@@ -78,7 +82,7 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
     const pips = quoteSpreadPips(symbol, quote!.bid, quote!.ask, chartPipSpec);
     // chart-r48: بلا مواصفة pip ⇒ منازل **السعر** لا حجم السبريد (BTCUSD كان «12.500» بجانب «67420.50»).
     spreadText =
-      pips != null ? `${pips.toFixed(1)} ${pipUnit(lang)}` : formatPriceDiff(quote!.ask! - quote!.bid!, quote!.bid!, symbol);
+      pips != null ? `${pips.toFixed(1)} ${pipUnit(lang)}` : formatPriceDiff(quote!.ask! - quote!.bid!, quote!.bid!, symbol, priceRef);
   }
 
   return (
@@ -90,11 +94,11 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
       ) : null}
       {state === 'ok' && hasBook ? (
         <>
-          {/* المرجع نفسه للطرفين (`quote.bid`) كرأس الطرفية: نفط حول 100 كان «99.950» بجانب «100.05» */}
+          {/* المرجع نفسه للطرفين (`priceRef`) كرأس الطرفية: نفط حول 100 كان «99.950» بجانب «100.05» */}
           <View style={[styles.row, rtl && styles.rowRtl]}>
             <View style={styles.cell}>
               <Text style={styles.label}>{t.domBidLabel}</Text>
-              <Text style={[styles.value, styles.bid]}>{formatPrice(quote!.bid!, symbol, quote!.bid)}</Text>
+              <Text style={[styles.value, styles.bid]}>{formatPrice(quote!.bid!, symbol, priceRef)}</Text>
             </View>
             <View style={styles.cell}>
               <Text style={styles.label}>{t.domSpreadLabel}</Text>
@@ -102,7 +106,7 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
             </View>
             <View style={styles.cell}>
               <Text style={styles.label}>{t.domAskLabel}</Text>
-              <Text style={[styles.value, styles.ask]}>{formatPrice(quote!.ask!, symbol, quote!.bid)}</Text>
+              <Text style={[styles.value, styles.ask]}>{formatPrice(quote!.ask!, symbol, priceRef)}</Text>
             </View>
           </View>
           <Text style={[styles.sub, { textAlign: align }]}>{t.domBidAskHint}</Text>
@@ -111,7 +115,7 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
       {state === 'ok' && !hasBook ? (
         <>
           <Text style={[styles.value, styles.spread, { textAlign: align }]}>
-            {formatPrice(quote!.price, symbol)}
+            {formatPrice(quote!.price, symbol, priceRef)}
           </Text>
           {/* بلا Bid/Ask يردّ الخادم إغلاق آخر شمعة (حتى 15د كاشاً، أو إغلاق الجمعة بالعطلة) — كان يُطبع بلا
               وقت فيُقرأ سعراً حالياً. وقته دائماً، و«السوق مغلق» حين يقولها الخادم. */}
