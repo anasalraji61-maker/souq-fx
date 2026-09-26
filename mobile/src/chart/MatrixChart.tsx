@@ -7524,7 +7524,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }
 
   return (
-    <View style={[styles.root, dense && styles.rootDense]}>
+    <View
+      style={[styles.root, dense && styles.rootDense]}
+      // أيّ ضغطة داخل الشارت (زرّ أداة، فريم، رأس) تجعله مالك المفاتيح كنقرة اللوح: كان اختيار «ترند» من شريط الشارت
+      // الرئيسي بعد نقرة على إطار جانبي يترك Esc و«4h⏎» و+/- للإطار، فتبقى الأداة مسلّحة.
+      {...(Platform.OS === 'web' && keyClaimable
+        ? {
+            onPointerDown: () => {
+              webKeyChart = keyToken.current;
+            },
+          }
+        : {})}
+    >
       {interactive && compactUi ? (
         <View style={[styles.compactToolbar, chromeDim && styles.chromeDim]}>
           <ScrollView
