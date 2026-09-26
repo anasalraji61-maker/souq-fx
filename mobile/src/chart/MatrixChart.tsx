@@ -4451,11 +4451,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (!axes.price) steps = 0;
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
     const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
+    // بلا مواصفة: بكسل رأسي، وخانة مطبوعة أخيرة حدّاً أدنى — SHIB «0.00001300» خانته أطول من بكسلين فكان البكسل
+    // يُقرَّب إلى السعر نفسه ⇒ ▲▼ والأسهم لا تحرّك شيئاً (كتنبيه `nudgeAlert` الذي يخطو خانة).
+    const nudgeShown = (price: number) => {
+      const byPx = onShownGrid(fromScale(toScale(price) + steps * pxScaled));
+      if (byPx !== onShownGrid(price)) return byPx;
+      const txt = fmtPrice(price);
+      const dec = txt.includes('.') ? txt.length - txt.indexOf('.') - 1 : 0;
+      const byTick = onShownGrid(price + steps * 10 ** -dec);
+      return byTick > 0 ? byTick : price;
+    };
     const next = translateDrawing(
       d,
       bars,
-      (price) =>
-        !steps ? price : pip ? nudgePipPrice(price, steps, pip) : onShownGrid(fromScale(toScale(price) + steps * pxScaled)),
+      (price) => (!steps ? price : pip ? nudgePipPrice(price, steps, pip) : nudgeShown(price)),
       (index) =>
         stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed),
       logScale
