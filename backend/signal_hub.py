@@ -218,14 +218,25 @@ def _instrument_decimals(symbol: str | None) -> int | None:
     if len(s) != 6 or not _is_iso_pair(s):
         return None
     base, quote = s[:3], s[3:]
-    if base in ("XAU", "XAG"):
-        return {"XAU": 2, "XAG": 3}[base] if quote == "USD" else None
-    if base in _METALS or quote in _METALS:
+    # run 94: كالتطبيق (`instrumentSpec`): المعدن بأي عملة من `_FIAT` (XAGEUR 3 لا 4، XAGJPY 3 لا 2)، والزوج
+    # بعملتين من `_FIAT` فقط — USDIDR ‏16250.4 كان 5 منازل (المزوّد يسعّره بمنزلتين) ⇒ مستوى «16250.52346»
+    if quote == "HUF" and base not in _METALS:
+        return 3
+    if quote not in _FIAT:
         return None
-    return 3 if quote in ("JPY", "HUF") else 5
+    if base in ("XAU", "XAG"):
+        return {"XAU": 2, "XAG": 3}[base]
+    if base not in _FIAT:
+        return None
+    return 3 if quote == "JPY" else 5
 
 
 _METALS = frozenset({"XAU", "XAG", "XPT", "XPD"})
+# عملات التطبيق المعروفة (`FIAT` بـ`positionSize.ts`): KRW/IDR/CLP/INR/CZK… تُترك لحجم السعر عمداً
+_FIAT = frozenset({
+    "EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY", "SEK", "NOK", "DKK", "PLN", "TRY", "ZAR", "MXN",
+    "SGD", "HKD", "CNH", "ILS", "SAR", "AED",
+})
 
 
 def _jpy_quoted(symbol: str | None) -> bool:

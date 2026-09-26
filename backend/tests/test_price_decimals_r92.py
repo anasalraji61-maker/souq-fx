@@ -21,3 +21,17 @@ def test_large_unknown_prices_keep_two_decimals():
 
 def test_oil_levels_round_to_the_tick():
     assert signal_hub.level_round(70.12371, 70.1, "USOIL") == 70.124
+
+
+# run 94: عملات خارج قائمة التطبيق ⇒ حجم السعر (6 أرقام معنوية، لا 5 منازل ثابتة)؛ المعدن بأيّ عملة معروفة بمنازله
+@pytest.mark.parametrize("sym,price,dp", [
+    ("USDIDR", 16250.4, 2), ("USDKRW", 1385.2, 2), ("USDCLP", 951.3, 3), ("USDINR", 83.2, 4), ("USDCZK", 23.1, 4),
+    ("XAGEUR", 27.9, 3), ("XAGJPY", 4700.0, 3), ("XAUEUR", 2200.0, 2), ("USDHUF", 350.1, 3), ("EURTRY", 38.5, 5),
+    ("XPTUSD", 950.0, 3),
+])
+def test_decimals_only_fixed_for_currencies_the_app_knows(sym, price, dp):
+    assert signal_hub.price_decimals(price, sym) == dp
+
+
+def test_idr_level_not_padded_past_the_quote():
+    assert signal_hub.level_round(16250.523456, 16250.4, "USDIDR") == 16250.52
