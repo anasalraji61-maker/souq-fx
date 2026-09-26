@@ -339,6 +339,10 @@ console.log('axisTicks.selftest: PASS');
   const n = percentScaleTicks(1.08, 1.08013, 1.08, 5);
   assert.equal(new Set(n.map((x) => x.label)).size, n.length);
   assert.ok(n.some((x) => x.label === '+0.005%'), JSON.stringify(n));
+  // خطوة 0.025% (±0.06% بخمس علامات) ⇒ ثلاث منازل: «+0.025%» لا «+0.03%» بجانب «+0.05%».
+  const q = percentScaleTicks(1.085 * (1 - 0.0006), 1.085 * (1 + 0.0006), 1.085, 5);
+  assert.ok(q.some((x) => x.label === '+0.025%') && q.some((x) => x.label === '−0.025%'), JSON.stringify(q));
+  assert.ok(!q.some((x) => x.label === '+0.03%'), JSON.stringify(q));
   assert.deepEqual(percentScaleTicks(1, 2, 0, 5), []);
   assert.equal(formatScalePercent(-0.0001), '0.00%');
   assert.equal(formatScalePercent(1.234), '+1.23%');

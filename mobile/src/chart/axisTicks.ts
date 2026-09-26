@@ -371,7 +371,9 @@ export function percentScaleTicks(
   const pcts = nicePriceTicks(pLo, pHi, maxCount, 0.001);
   if (pcts.length === 0) return [];
   const step = pcts.length > 1 ? pcts[1]! - pcts[0]! : 0.01;
-  const places = Math.min(3, Math.max(2, Math.ceil(-Math.log10(step) - 1e-9)));
+  // المنازل تكفي الخطوة كاملةً: خطوة 0.025 (2.5 من `nicePriceTicks`) كانت بمنزلتين ⇒ خطّ +0.025% يُكتب «+0.03%».
+  let places = Math.min(3, Math.max(2, Math.ceil(-Math.log10(step) - 1e-9)));
+  while (places < 3 && Math.abs(step * 10 ** places - Math.round(step * 10 ** places)) > 1e-6) places++;
   return pcts.map((p) => ({ price: base * (1 + p / 100), label: formatScalePercent(p, places) }));
 }
 
