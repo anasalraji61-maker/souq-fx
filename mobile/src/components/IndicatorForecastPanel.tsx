@@ -264,7 +264,9 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
       {hasResult ? (
-        <View style={styles.consensus}>
+        // إعادة الطلب (تبديل مؤشّر، «تشغيل»): النتيجة السابقة تبقى لكن باهتة — بكامل وضوحها كانت تُقرأ
+        // إجماعاً للمؤشرات المختارة الآن وهي لمجموعة سابقة.
+        <View style={[styles.consensus, loading && styles.stale]}>
           <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
             {dirLabel(direction, t)}
           </Text>
@@ -295,7 +297,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         </View>
       ) : null}
 
-      <ScrollView style={styles.list} nestedScrollEnabled>
+      <ScrollView style={[styles.list, loading && styles.stale]} nestedScrollEnabled>
         {votes.map((v) => (
           <View key={v.id} style={[styles.row, rtl && styles.rowRtl]}>
             <View style={{ flex: 1 }}>
@@ -347,6 +349,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   refreshDisabled: { opacity: 0.4 },
+  stale: { opacity: 0.45 },
   refreshText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipsRtl: { flexDirection: 'row-reverse' },
