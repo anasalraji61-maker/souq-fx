@@ -26,6 +26,7 @@ import { parseDecimal } from '../parseDecimal';
 import { isNotOfferedSymbol, isSymbolUnavailableError } from '../providerSymbols';
 import type { Dict } from '../i18n/locales';
 import { QUICK_SYMBOLS } from '../tradePlan';
+import { useNotificationPermissionOnResume } from '../hooks/useNotificationPermissionOnResume';
 
 /** «EURUSD · RSI · تحت 30» / «GBPUSD · تقاطع المتوسطات · تقاطع صاعد ▲» بلغة الواجهة — القائمة وتأكيد
  * الحذف والإشعار كانت تعرض المعرّفات الخام (rsi · below / ma_cross · cross_up) بكل اللغات. */
@@ -139,6 +140,7 @@ export function IndicatorAlertsPanel({
    * لا يُقال إلا حين يغيّر ما سيحدث فعلاً. نفس نصوص شاشة الحساب ولوح تنبيهات السعر حرفياً.
    */
   const [notifState, setNotifState] = useState<NotificationPermissionState | null>(null);
+  useNotificationPermissionOnResume(setNotifState);
   const [notifBusy, setNotifBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   /** هل وقع أول تحميل للقائمة؟ — يضمن أن لوحةً رُكِّبت مخفيّة لا تبقى على «جارٍ التحميل» (انظر أثر الفحص). */

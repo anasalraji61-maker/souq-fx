@@ -27,6 +27,7 @@ import { OnboardingOverlay } from '../components/OnboardingOverlay';
 import { markOnboardingSeen } from '../onboarding';
 import { api } from '../api';
 import { confirmDestructive } from '../chart/confirmDestructive';
+import { useNotificationPermissionOnResume } from '../hooks/useNotificationPermissionOnResume';
 
 /** قرار أنس ٧ (`docs/DECISIONS-ANAS.md`): طول فقط، بلا شروط تعقيد. */
 const PASSWORD_MIN_LENGTH = 8;
@@ -50,6 +51,7 @@ export function AccountScreen() {
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [notifState, setNotifState] = useState<NotificationPermissionState>('undetermined');
   const [notifBusy, setNotifBusy] = useState(false);
+  useNotificationPermissionOnResume(setNotifState, !!user);
   const [tourOpen, setTourOpen] = useState(false);
   /** «تغيير كلمة المرور» (backend-r58): مطوي حتى يُطلب — العضو الذي وضعه راعيه يعرف الراعي كلمته. */
   const [pwOpen, setPwOpen] = useState(false);

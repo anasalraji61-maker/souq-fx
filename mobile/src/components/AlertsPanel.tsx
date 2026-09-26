@@ -30,6 +30,7 @@ import { instrumentSpec, pipsBetween, priceAtPipOffset } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipUnit } from '../chart/measureReadout';
 import { formatPips, plainStopText } from '../tradePlan';
+import { useNotificationPermissionOnResume } from '../hooks/useNotificationPermissionOnResume';
 
 /**
  * حدّ خانة السعر، مثل الدفتر (`TradeJournalPanel` `PRICE_MAX_LEN`). كان 12: أندرويد يقصّ بـ`maxLength` حتى النصّ الذي يملؤه
@@ -163,6 +164,7 @@ export function AlertsPanel({
    * شيء). الأزرار والنصوص كلها مفاتيح قائمة بالثلاث لغات (`notif*`) بنفس منطق شاشة الحساب.
    */
   const [notifState, setNotifState] = useState<NotificationPermissionState | null>(null);
+  useNotificationPermissionOnResume(setNotifState);
   const [notifBusy, setNotifBusy] = useState(false);
   /** تعديل تنبيه قائم: الضغط على سطره يحمّل قيمه بالنموذج؛ الحفظ = إنشاء الجديد ثم حذف القديم
    * (لا يوجد مسار تحديث بالباك-إند، وهذا الترتيب لا يُفقد التنبيه القديم إن فشل الإنشاء). */
