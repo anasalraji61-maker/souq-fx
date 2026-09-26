@@ -829,6 +829,25 @@ def test_old_rows_with_pnl_multiplied_by_size_are_recomputed_on_startup(client):
     assert rows[small["id"]]["pnl"] == pytest.approx(-1.0)
 
 
+
+def test_old_row_with_non_positive_exit_is_not_scored(client):
+    """صفّ قديم بـ`exit=0` (قبل المُصادِق) كان يُعاد حسابه بكل إقلاع −100% ويُعدّ خسارة بالإحصاءات."""
+    good = _open_trade(client, side="buy", entry=1.10)
+    bad = _open_trade(client, side="buy", entry=1.10)
+    neg = _open_trade(client, side="sell", entry=1.10)
+    assert client.post(f"/api/trades/{good['id']}/close", json={"exit": 1.11}, headers=_DEV1).status_code == 200
+    for t in (bad, neg):
+        assert client.post(f"/api/trades/{t['id']}/close", json={"exit": 1.09}, headers=_DEV1).status_code == 200
+    with db._conn() as c:
+        c.execute("UPDATE trades SET exit=0 WHERE id=?", (bad["id"],))
+        c.execute("UPDATE trades SET exit=-5 WHERE id=?", (neg["id"],))
+    db.init_db()
+    body = client.get("/api/trades", headers=_DEV1).json()
+    rows = {t["id"]: t for t in body["trades"]}
+    assert rows[bad["id"]]["pnl"] is None and rows[neg["id"]]["pnl"] is None
+    stats = body["stats"]
+    assert stats["trade_count"] == 1 and stats["loss_count"] == 0 and stats["win_rate"] == 100.0
+
 # ─── وقت الإغلاق لا يُخترع لصفقة تُسجَّل بعد حدوثها (run 54) ─────────────────────
 
 

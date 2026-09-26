@@ -2107,6 +2107,11 @@ def _pnl_pct(side: str, entry: float, exit_price: float) -> float | None:
     الإحصاءات أصلاً)، ويستعيدها تصحيح سعر الدخول بـPATCH — فهو يعيد الحساب."""
     if not entry or entry <= 0:
         return None
+    # **خروج غير موجب يعيد None كالدخول**: المُصادِق يرفضه الآن، لكن صفّاً قديماً بـ`exit=0` كان يُعاد حسابه بكل
+    # إقلاع (`_migrate_trades`) خسارةَ −100% (أو −554% لخروج سالب) تدخل نسبة الفوز والمجموع و«أسوأ صفقة» —
+    # نتيجة لم تحدث. الآن «غير محسوبة» حتى يصحّح المتداول الخروج بـPATCH.
+    if exit_price is None or not exit_price > 0:
+        return None
     if side == "buy":
         pnl = (exit_price - entry) / entry * 100
     else:
