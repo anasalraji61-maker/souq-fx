@@ -4672,6 +4672,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const local = hitIndex(x);
     const candle = source.plot[local];
     if (!candle) return;
+    // يسار أقدم شمعة بالتاريخ (الشارت مسحوب لأوّله، أول شمعة حتى 80% من العرض): لا شمعة هنا، وكان التقاطع
+    // يلتصق بأول شمعة — خطّ عمودي وزمن وOHLC لشمعة بعيدة عن الإصبع. لا تقاطع هنا: ما قبل التاريخ لا زمن له
+    // يُسقَط كمنطقة المستقبل يميناً.
+    const pan = syncFollow && syncWindow?.xPanNorm != null ? syncWindow.xPanNorm * chartPlotW : xPanRef.current;
+    if (source.start === 0 && x < pan) {
+      crossPinned.current = false;
+      if (cross) setCross(null);
+      return;
+    }
     // يمين آخر شمعة (منطقة المستقبل بعد سحب الشارت): الخطّ يتبع الإصبع لا يلتصق بالشمعة الحيّة،
     // ووسم الزمن يُسقَط بخطوة الفريم. لا على Renko/Kagi/P&F/Range — خانتها ليست زمناً.
     const syntheticX = isSyntheticKind(kind);
