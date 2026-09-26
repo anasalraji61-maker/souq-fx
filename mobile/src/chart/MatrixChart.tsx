@@ -6922,6 +6922,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     PRICE_LABEL_GAP,
     chartPlotH - 2
   );
+  // حجم واحد لكل علامات المحور من أطولها (عرض العلامة 68 − الحدّ 1 − 4 − 3 = 60): الويب يتجاهل
+  // `adjustsFontSizeToFit` ⇒ SHIB «0.00001210» (66px بـ11) وPEPE «0.000008700» تُقصّ إلى «0.000012…» متطابقة.
+  const priceAxisLabelSize = axisTagFontSize(
+    priceTicks.reduce((w, t) => {
+      const text = t.label ?? fmtPrice(t.price);
+      return text.length > w.length ? text : w;
+    }, ''),
+    PRICE_AXIS_WIDTH - 8
+  );
   // Renko/Kagi/P&F: زمن اللبنة مختلَق (أوّل شمعة + 60 ث لكل لبنة) — المحور والتقاطع كانا يطبعانه،
   // فـRenko الساعة يقرأ ساعات من الدقائق عند بداية السلسلة. يُطبع زمن شمعتها المصدر (`barTime`).
   const firstVisibleTime = source.plot[0] ? barTime(source.plot[0]) : 0;
@@ -10719,7 +10728,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
-              style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start }]}
+              style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start, fontSize: priceAxisLabelSize }]}
             >
               {tick.label ?? fmtPrice(tick.price)}
             </Text>
