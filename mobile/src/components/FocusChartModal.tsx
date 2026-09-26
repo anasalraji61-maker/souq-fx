@@ -87,6 +87,8 @@ export function FocusChartModal({
   const [series, setSeries] = useState<ChartSeries | null>(null);
   /** الرمز الذي طُلبت له `series` — الخادم قد يعيد اسماً مطبَّعاً، فلا يُقارن بـ`series.symbol`. */
   const [seriesSym, setSeriesSym] = useState<string | null>(null);
+  /** الفريم الذي طُلبت له `series` — 15m→1H بلا ذاكرة يُبقي شموع 15m معروضة حتى يصل الجلب (chart102b). */
+  const [seriesTf, setSeriesTf] = useState<string | null>(null);
   const [compareSeries, setCompareSeries] = useState<ChartSeries | null>(null);
   /** تعذّر تحميل رمز المقارنة (أو جاء تجريبياً فوق شارت حقيقي): لا خط بنفسجي مختلَق — ملاحظة صريحة. */
   const [compareFailed, setCompareFailed] = useState(false);
@@ -130,6 +132,7 @@ export function FocusChartModal({
     if (cached) {
       setSeries(cached);
       setSeriesSym(sym);
+      setSeriesTf(tf);
     }
     (async () => {
       setLoading(!cached);
@@ -138,6 +141,7 @@ export function FocusChartModal({
         if (alive) {
           setSeries(s);
           setSeriesSym(sym);
+          setSeriesTf(tf);
         }
         if (compareSym && alive) {
           // كان الفشل يرسم `mockSeries` كخط مقارنة بنفسجي فوق الشارت الحقيقي — علاقة/تباعد مختلَق بين
@@ -170,6 +174,7 @@ export function FocusChartModal({
           // launch122: كان الفشل يرسم `mockSeries` حول أسعار 2024 (EURUSD 1.0854). الآن سلسلة فارغة ⇒ إشعار «لا اتصال».
           setSeries(serverUnreachableSeries(sym, tf));
           setSeriesSym(sym);
+          setSeriesTf(tf);
           // لا تُبقِ خط مقارنة الرمز السابق فوق الإشعار
           setCompareSeries(null);
           setCompareFailed(compareSym != null);
@@ -197,6 +202,7 @@ export function FocusChartModal({
           rememberChartSeries(sym, tf, s);
           setSeries(s);
           setSeriesSym(sym);
+          setSeriesTf(tf);
         })
         .catch(() => {});
       if (compareSym) {
@@ -296,6 +302,8 @@ export function FocusChartModal({
    * - اللون من الرقم المطبوع: «+0.00%» كانت خضراء ⇒ صفرها مكتوم.
    */
   const headSeries = series && seriesSym === sym ? series : null;
+  /** البثّ الحيّ للشارت يشترط الرمز **والفريم** معاً؛ الرأس يكفيه الرمز (سعره ونسبته لا يتعلّقان بالفريم). */
+  const liveMatches = seriesSym === sym && seriesTf === tf;
   // backend-r19: رمز بلا بيانات حقيقية أصلاً (DXY) ⇒ لا سعر ولا نسبة بالرأس ولا شموع بذرة مكان الشارت.
   const noReal = headSeries != null && seriesHasNoRealData(headSeries.data_source);
   const headPx = headSeries ? livePriceForHeader(headSeries, liveTick) : null;
@@ -507,9 +515,10 @@ export function FocusChartModal({
                     persistDrawings
                     compactUi={phone}
                     accent={sym === 'DXY' ? colors.dxy : colors.accent}
-                    // شموع الرمز السابق ما زالت ظاهرة أثناء التحميل: لا يُرسم تيك الرمز الجديد فوقها
+                    // شموع الرمز أو الفريم السابق ما زالت ظاهرة أثناء التحميل: لا يُدمج التيك بها (15m→1H كان
+                    // يدمج التيكات بشموع 15m والعدّاد يعدّ لإغلاق 15m والشريط يقول 1H — chart102b)
                     livePrice={
-                      seriesSym === sym
+                      liveMatches
                         ? livePriceForChart(series, liveTick, {
                             tickAsOf: liveTick?.source.as_of ?? null,
                             timeframe: series.timeframe,
@@ -517,7 +526,7 @@ export function FocusChartModal({
                           })
                         : null
                     }
-                    liveTickSource={seriesSym === sym ? liveTick?.source ?? null : null}
+                    liveTickSource={liveMatches ? liveTick?.source ?? null : null}
                     onCreateAlert={alertFromDrawing}
                     // الويب: كتابة «15» ثم Enter تبدّل الفريم كشريط `TimeframeBar` أعلاه (chart-r82a)
                     onTimeframeKey={setTf}
