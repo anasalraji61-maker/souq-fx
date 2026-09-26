@@ -360,6 +360,12 @@ export type Dict = {
    */
   riskCalcMiniSymbol: string;
   /**
+   * tools (`f2c0ea7`): لاحقة ملاصقة لا تعرفها الحاسبة («EURUSDi») — تظهر شريحة الزوج وحده (`journalUnknownSuffixPair`)، لكن النصّ فوقها
+   * كان `riskCalcBadSymbol` («رمز غير مدعوم… مثل EURUSD») فيبدو خطأً مطبعياً ولا يقول إنّ الشريحة تفترض عقداً عادياً. بدله حين `suffixPair`.
+   * `{symbol}` كما كُتب؛ `{pair}` الزوج. **غير موصول** — launch186a → tools
+   */
+  riskCalcSuffixSymbol: string;
+  /**
    * وضع حساب السنت/micro بالحاسبة (موصول بـ`PositionSizePanel.tsx`، `6408499`): رمز سنت يُحسب بدل رفضه والرصيد يُقرأ بالسنت
    * (عقدٌ أصغر بمئة مرّة ورصيدٌ بوحدة أصغر بمئة مرّة ⇒ الحساب العادي نفسه بالأرقام نفسها إن عومل USC كـUSD بالتحويل)؛ رمز micro رصيده بعملة الحساب ولوته
    * = اللوت العادي × 100. `{symbol}` كما كُتب؛ `{usd}` مبلغ USC ÷ 100؛ `{std}` اللوت بمقياس الحساب العادي (÷ 100)
@@ -1918,6 +1924,8 @@ const ar: Dict = {
     'رمز غير مدعوم — الحاسبة تحسب أزواج الفوركس والذهب والفضة، مثل EURUSD أو XAUUSD أو GOLD أو EURUSD.m، ورموز حساب السنت مثل EURUSDc',
   riskCalcMiniSymbol:
     '«{symbol}» رمز حساب mini، وحجم لوت mini يختلف بين الوسطاء (10,000 وحدة عند أكثرهم، ولوت عادي عند بعضهم) فلا نخمّنه. اكتب الزوج العادي {pair}، وتأكّد من حجم العقد في مواصفات الرمز بمنصّتك قبل نسخ اللوت',
+  riskCalcSuffixSymbol:
+    'الحاسبة لا تعرف لاحقة «{symbol}». إن كانت لاحقة وسيطك لحساب عادي فاختر {pair} أدناه — وتأكّد قبل نسخ اللوت أنّ حجم العقد في مواصفات الرمز بمنصّتك هو نفسه للرمز العادي',
   riskCalcCentModeNote:
     '«{symbol}» رمز حساب سنت: اكتب الرصيد بالسنت (USC) كما تعرضه منصّتك — 10,000 USC = 100 USD. اللوت أدناه هو ما تكتبه بحساب السنت',
   riskCalcCentBalance: 'رصيد الحساب (USC — بالسنت)',
@@ -3175,6 +3183,8 @@ const enUS: Dict = {
     'Unsupported symbol — the calculator sizes forex pairs, gold and silver, e.g. EURUSD, XAUUSD, GOLD or EURUSD.m, and cent-account symbols such as EURUSDc',
   riskCalcMiniSymbol:
     '“{symbol}” is a mini-account symbol, and mini lot size differs between brokers (10,000 units at most, a full standard lot at some), so we won’t guess it. Type the regular pair {pair}, and check the contract size in your platform’s symbol specification before copying the lot',
+  riskCalcSuffixSymbol:
+    'The calculator doesn’t know the suffix on “{symbol}”. If it’s your broker’s suffix for a standard account, choose {pair} below — and before copying the lot, check that your platform’s symbol specification shows the same contract size as the plain symbol',
   riskCalcCentModeNote:
     '“{symbol}” is a cent-account symbol: enter your balance in cents (USC) as your platform shows it — 10,000 USC = 100 USD. Type the lot below on the cent account',
   riskCalcCentBalance: 'Account balance (USC — cents)',
@@ -4473,6 +4483,9 @@ const ku: Dict = {
     'هێمای پشتگیری نەکراو — ژمێرەرەکە جووتەکانی فۆرێکس و زێڕ و زیو دەژمێرێت، وەک EURUSD یان XAUUSD یان GOLD یان EURUSD.m، و هێماکانی هەژماری سەنت وەک EURUSDc',
   riskCalcMiniSymbol:
     '«{symbol}» هێمای هەژماری mini یە، و قەبارەی لۆتی mini لە بڕۆکەرێکەوە بۆ یەکێکی تر جیاوازە (10,000 یەکە لای زۆربەیان، و لۆتێکی ئاسایی لای هەندێکیان) بۆیە مەزەندەی ناکەین. جووتە ئاساییەکە {pair} بنووسە، و پێش کۆپیکردنی لۆت قەبارەی گرێبەست لە تایبەتمەندییەکانی هێما لە پلاتفۆرمەکەت بپشکنە',
+  // بحاجة مراجعة ناطق كردي
+  riskCalcSuffixSymbol:
+    'ژمێرەرەکە پاشگری «{symbol}» ناناسێت. ئەگەر پاشگری بڕۆکەرەکەتە بۆ هەژمارێکی ئاسایی، {pair} لە خوارەوە هەڵبژێرە — و پێش کۆپیکردنی لۆت دڵنیابە قەبارەی گرێبەست لە تایبەتمەندییەکانی هێما لە پلاتفۆرمەکەت هەمان قەبارەی هێما ئاساییەکەیە',
   riskCalcCentModeNote:
     '«{symbol}» هێمای هەژماری سەنتە: باڵانس بە سەنت (USC) بنووسە وەک پلاتفۆرمەکەت پیشانی دەدات — 10,000 USC = 100 USD. ئەو لۆتەی خوارەوە لە هەژماری سەنت بنووسە',
   riskCalcCentBalance: 'باڵانسی هەژمار (USC — سەنت)',
