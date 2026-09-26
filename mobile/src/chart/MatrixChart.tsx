@@ -6942,7 +6942,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${fmtPrice(crossPrice)}`}
-            hitSlop={6}
+            // 24 + 10 + 10 = 44 (§3 هدف لمس الهاتف؛ كان 6 ⇒ ~36).
+            hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
             style={({ pressed }) => [
               styles.crossAlertBtn,
               { borderColor: accent },
@@ -13354,6 +13355,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
+    // ارتفاع ثابت بارتفاع زرّ 🔔 أدناه: على الهاتف (بلا صفّ التكبير) كان الصفّ سطراً 11px ثم يكبر ~10px حين
+    // يظهر الزرّ مع أول لمسة تقاطع ⇒ الشارت تحته يقفز لأسفل تحت الإصبع (ويعود صعوداً حين يختفي بالقياس/الإعادة).
+    minHeight: 24,
   },
   readoutText: { ...numeric, color: colors.text, fontSize: 11, fontFamily: 'monospace', flex: 1, textAlign: 'right' },
   // ...numeric: عدّاد الإعادة «{n}/{total}» يتغيّر بكل خطوة فلا يهتزّ (DESIGN-PRO §2).
@@ -13370,7 +13374,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.sm,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    height: 24,
+    justifyContent: 'center',
     backgroundColor: colors.controlBg,
   },
   crossAlertText: { ...numeric, fontWeight: '600', fontSize: 11, fontFamily: 'monospace' },
