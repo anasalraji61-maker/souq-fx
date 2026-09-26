@@ -1227,3 +1227,4 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول (قائمة المقياس، ألسنة الرباعي)؛ متابعة backend-r86 → ui؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (55be790، تعارض COORDINATION حُلّ):** أخضر 0، selftests 120/120. أُغلقت chart-r96a/b ← launch `d605f89` وlaunch181a ← ui `9d90fbb` (قبل رفع إدخالي). جديد مُتحقَّق: **backend-r86 → ui** (`useLastCloses.ts:50`). قائمة القبول على diff الجديد 0/12 (`demoTag` قائم، `flexGrow: 0`).
 **بعد السحب (98b85c2، تعارض ثانٍ حُلّ):** **tools126a → ui** مُتحقَّق (`PanSpeedSlider.tsx:270` تعبئة `accent` دائماً + `TimeframeBar.tsx:119`) = فشل البند ٢ من قائمة القبول فاتني سابقاً ⇒ 1/12.
+**بعد السحب (98b85c2):** backend-r86 ← ui `7f9ddde` مُغلق؛ selftests المتغيّرة (`vzoTv`/`positionSize`) ناجحة؛ أخضر 0. المفتوح لوكيل: tools126a → ui وحده.
