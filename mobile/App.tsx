@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 6,
   },
-  tabLabel: { fontSize: 10, fontWeight: '700' },
+  tabLabel: { fontSize: 11, fontWeight: '500' },
   iconWrap: {
     minWidth: 28,
     height: 22,
@@ -175,6 +175,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   iconActive: { backgroundColor: colors.accentSoft },
-  iconText: { color: colors.textDim, fontSize: 10, fontWeight: '800' },
+  iconText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   iconTextActive: { color: colors.accent },
 });
