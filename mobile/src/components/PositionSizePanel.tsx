@@ -93,6 +93,8 @@ import {
   misplacedArabicThousandsSignInRisk,
   planJournalNote,
   LOT_STEP,
+  LOT_UNIT,
+  formatLots,
   parsePriceFor,
   ambiguousThousandsPrice,
   liveEntryFillAllowed,
@@ -1041,7 +1043,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
   const costParts = [
     spreadPips ? `${spreadPips} ${pipUnit(lang)}` : null,
-    commissionPerLot ? `${formatMoney(commissionPerLot, moneyCcy)}/lot` : null,
+    commissionPerLot ? `${formatMoney(commissionPerLot, moneyCcy)}/${LOT_UNIT}` : null,
   ].filter(Boolean);
   /**
    * الهامش المحجوز للّوت المحسوب — من سعر الدخول المكتوب (القيمة الاسمية تحتاج سعراً، ولا يُختلق من
@@ -1828,7 +1830,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
               >
                 {dailyRoom.breach
                   ? t.riskCalcDailyBreach.replace('{room}', money(dailyRoom.room)) +
-                    (dailyFitLots != null ? ` · ≤ ${dailyFitLots.toFixed(2)} lot` : '')
+                    (dailyFitLots != null ? ` · ≤ ${formatLots(dailyFitLots)}` : '')
                   : t.riskCalcDailyRoom
                       .replace('{room}', money(dailyRoom.room))
                       .replace('{n}', String(dailyRoom.losses))
@@ -1855,7 +1857,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             </Text>
             {minLotRisk ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>
-                {LOT_STEP.toFixed(2)} lot = {money(minLotRisk.risk)} · {formatRiskPct(minLotRisk.pct)}
+                {formatLots(LOT_STEP)} = {money(minLotRisk.risk)} · {formatRiskPct(minLotRisk.pct)}
               </Text>
             ) : null}
           </>
@@ -1936,7 +1938,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
                       .replace('{pips}', String(slNum))
                 : t.riskCalcPipValue}
               : {formatPipValue(pv, moneyCcy)}
-              {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
+              {result && lots != null ? ` · ${formatLots(lots)} = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
             </Text>
             {pipAtStop ? (
               <Text style={[styles.hint, { textAlign: align }]}>
@@ -1985,7 +1987,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
               accessibilityLiveRegion="polite"
             >
               {marginOver ? '⚠ ' : ''}
-              {t.riskCalcMargin} ({lots!.toFixed(2)} lot · 1:{leverageNum}
+              {t.riskCalcMargin} ({formatLots(lots!)} · 1:{leverageNum}
               {marginPx?.live && spec ? ` @ ${formatPrice(marginPx.price, spec.symbol)}` : ''}): {money(margin)}
               {marginPct != null ? ` (${formatRiskPct(marginPct)})` : ''}
             </Text>

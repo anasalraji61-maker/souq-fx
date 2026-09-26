@@ -7,6 +7,8 @@ import assert from 'node:assert/strict';
 import { chartPipSpec } from './chart/pipSpec';
 import type { CommissionMode } from './positionSize';
 import {
+  formatLots,
+  LOT_UNIT,
   manualConvLooksInverted,
   lossStreakDrawdownPct,
   dailyLossRoom,
@@ -3864,3 +3866,13 @@ console.log('positionSize restoredLostToday selftest OK');
   }
 }
 console.log('positionSize dailyRoomMaxLots selftest OK');
+
+// formatLots (QA97a): رمز واحد «lot» بعد الحجم بمنزلتين — 0.1 ⇒ «0.10 lot» لا «0.1 lot»
+{
+  assert.equal(LOT_UNIT, 'lot');
+  assert.equal(formatLots(0.36), '0.36 lot');
+  assert.equal(formatLots(0.1), '0.10 lot');
+  assert.equal(formatLots(0.01), '0.01 lot');
+  assert.equal(formatLots(12), '12.00 lot');
+}
+console.log('positionSize formatLots selftest OK');

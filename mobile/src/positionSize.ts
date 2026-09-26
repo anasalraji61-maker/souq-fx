@@ -859,6 +859,18 @@ export function slPipsInPoints(raw: string): { value: string; pips: string } | n
 
 export const LOT_STEP = 0.01;
 
+/**
+ * رمز وحدة الحجم بعد الرقم: «lot» لاتينيّ باللغات الثلاث — كما تكتبه نصوص `locales.ts` نفسها («{lots} lot»
+ * بالعربية والكردية والإنجليزية) وكما يظهر بخانة الحجم بـMT4/MT5، ونظير «pip» (`pipUnit`). «لوت»/«لۆت» كلمةٌ
+ * بعناوين الخانات (`riskCalcLots`) لا رمزٌ بعد العدد. مكان واحد كي لا يتفرّق الرمز بالواجهة (QA97a).
+ */
+export const LOT_UNIT = 'lot';
+
+/** «0.36 lot» — الحجم بمنزلتين (خطوة `LOT_STEP`) ثم الرمز. */
+export function formatLots(lots: number): string {
+  return `${lots.toFixed(2)} ${LOT_UNIT}`;
+}
+
 export type SizeResult = {
   riskAmount: number;
   rawLots: number;
