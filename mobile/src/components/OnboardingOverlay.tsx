@@ -169,10 +169,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderRadius: radii.lg,
     backgroundColor: colors.bgElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
     gap: spacing.sm,
-    // `docs/DESIGN-PRO.md` §5.5: فاصل واحد — الحدّ والخلفية يكفيان فوق الستارة الداكنة، والظلّ الثالث حُذف.
+    // `docs/DESIGN-PRO.md` §5.5: فاصل واحد — التعبئة وحدها (تحجب الشارت خلف البطاقة فلا يُقرأ النصّ فوق الشموع)؛
+    // الحدّ حُذف كما حُذف الظلّ قبله، والبطاقة الأفتح فوق الستارة الداكنة تكفي حافّةً.
   },
   // بلا `gap`: التباعد صار من حشو هدف اللمس نفسه (5+5 = عشر بكسلات بين نقطتين).
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.xs },
