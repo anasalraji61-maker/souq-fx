@@ -315,3 +315,20 @@ export function positionLabelLeft(preferred: number, text: string, plotW: number
   const w = positionLabelWidth(text);
   return Math.max(2, Math.min(preferred, plotW - w - 2));
 }
+
+/**
+ * أعلى وسم حافّة (TP/SL): خارج الصندوق (فوق الحافّة العليا، تحت السفلى) ما دام يتّسع باللوح، وإلا يُقلب
+ * داخل الصندوق. كان بلا حدّ ⇒ هدف شراء على بُعد 10px من أعلى اللوح يضع وسمه عند ‎-7‎ فيُقصّ «TP 1.09350 · 50.0 pip»
+ * نصفه أو كلّه (اللوح `overflow: hidden`)، ووقف الشراء قرب الأسفل كذلك. حافّة خارج اللوح أصلاً ⇒ بلا تغيير
+ * (الخطّ نفسه غير مرئيّ، فلا يُعلَّق وسمه على حافّة الشاشة كأنّه هناك).
+ */
+export function positionLabelTop(y: number, beyondEntry: boolean, plotH: number): number {
+  const h = POSITION_LABEL_LINE_H + 1;
+  const above = y - POSITION_LABEL_LINE_H - 3;
+  const below = y + 2;
+  if (y < 0 || y > plotH) return beyondEntry ? above : below;
+  const fitsAbove = above >= 0;
+  const fitsBelow = below + h <= plotH;
+  if (beyondEntry) return fitsAbove || !fitsBelow ? Math.max(0, above) : below;
+  return fitsBelow || !fitsAbove ? Math.min(below, Math.max(0, plotH - h)) : above;
+}

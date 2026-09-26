@@ -7,6 +7,7 @@ import {
   positionLabels,
   positionEndIndex,
   positionLabelLeft,
+  positionLabelTop,
   positionLabelWidth,
   positionLevels,
   positionOutcome,
@@ -276,6 +277,17 @@ assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.00001, r: -0.000
   const sellStop = positionLevels('short', 1.084, 1.086, 2, 'EURUSD');
   const seq3 = [bar(1.0845, 1.0855, 1.085), bar(1.0795, 1.0842, 1.08), bar(1.08, 1.087, 1.086)];
   assert.equal(positionOutcome(sellStop, seq3, 0, 2, 2)!.state, 'target');
+}
+
+// وسم TP/SL عند حافّة اللوح يُقلب داخل الصندوق بدل القصّ (لوح 300px، سطر 14)
+{
+  assert.equal(positionLabelTop(100, true, 300), 83, 'وسط اللوح: فوق الحافّة العليا');
+  assert.equal(positionLabelTop(100, false, 300), 102, 'وسط اللوح: تحت الحافّة السفلى');
+  assert.equal(positionLabelTop(10, true, 300), 12, 'هدف قرب الأعلى ⇒ داخل الصندوق لا ‎-7‎');
+  assert.equal(positionLabelTop(290, false, 300), 273, 'وقف قرب الأسفل ⇒ داخل الصندوق');
+  assert.equal(positionLabelTop(-40, true, 300), -57, 'حافّة خارج اللوح ⇒ بلا تغيير');
+  const t = positionLabelTop(8, true, 20);
+  assert.equal(t >= 0 && t + 15 <= 20, true, 'لوح ضيّق ⇒ داخل اللوح');
 }
 
 console.log('positionTool.selftest: PASS');

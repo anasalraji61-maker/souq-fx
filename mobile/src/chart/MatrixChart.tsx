@@ -156,6 +156,7 @@ import {
 import {
   isPositionTool,
   positionLabelLeft,
+  positionLabelTop,
   POSITION_LABEL_FONT,
   POSITION_LABEL_LINE_H,
   positionLabels,
@@ -4834,8 +4835,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           {
             // يُزاح يساراً عند حافّة اللوح بدل قصّ النسبة.
             left: positionLabelLeft(box.left, text, chartPlotW),
-            // الحافّة العليا ⇒ الوسم فوقها، والسفلى ⇒ تحتها.
-            top: beyondEntry ? y - POSITION_LABEL_LINE_H - 3 : y + 2,
+            // الحافّة العليا ⇒ الوسم فوقها، والسفلى ⇒ تحتها — ويُقلب داخل الصندوق عند حافّة اللوح.
+            top: positionLabelTop(y, beyondEntry, chartPlotH),
             maxWidth: Math.max(60, chartPlotW - positionLabelLeft(box.left, text, chartPlotW) - 2),
             color: tone,
             borderColor: tone,
