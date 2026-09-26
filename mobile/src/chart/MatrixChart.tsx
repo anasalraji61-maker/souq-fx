@@ -193,7 +193,7 @@ import {
   signedDistanceText,
   measureReadoutText,
 } from './measureReadout';
-import { fitRayLabel, inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
+import { fitRayLabel, inLeftLabelLane, LEFT_LABEL_LANE_W, levelLabelKey, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
 import { isCryptoSymbol } from './newsRisk';
@@ -6946,7 +6946,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const hlinePriceLabels = new Set(
     thinByGap(
       visibleDrawings.filter(({ d }) => d.tool === 'hline' || d.tool === 'hray'),
-      ({ d }) => yOf(d.a.price),
+      ({ d }) => levelLabelKey(yOf(d.a.price)),
       ({ d }) => -d.a.price,
       HLINE_LABEL_GAP
     ).map(({ d }) => d.id)
@@ -6960,7 +6960,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    */
   const takenLabelYs: number[] = visibleDrawings
     .filter(({ d }) => (d.tool === 'hline' || d.tool === 'hray') && hlinePriceLabels.has(d.id))
-    .map(({ d }) => yOf(d.a.price));
+    .map(({ d }) => levelLabelKey(yOf(d.a.price)));
   const fibLabelPlans = new Map<string, FibLabelPlan[]>();
   for (const { d } of visibleDrawings) {
     if (d.tool !== 'fib' || !d.b) continue;
@@ -6976,7 +6976,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       taken: [...takenLabelYs],
     });
     fibLabelPlans.set(d.id, plan);
-    for (const l of plan) takenLabelYs.push(l.y);
+    for (const l of plan) takenLabelYs.push(levelLabelKey(l.y));
   }
 
   // خطوط الارتكاز من بداية الجلسة الجارية لا بعرض اللوح (`pivotSessionStartIndex`): داخل
@@ -7028,7 +7028,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         // W9: كان `y >= 11` ⇒ PDH/R2 عند قمّة اللوح يُرسم خطّاً بلا وسم. الوسم يُقلب تحته كالخطّ الأفقي.
         return y >= 0 && y <= chartPlotH - 2;
       }),
-      (lv) => yOf(lv.price),
+      (lv) => levelLabelKey(yOf(lv.price)),
       (lv) => pivotLabelRank(lv.label),
       HLINE_LABEL_GAP,
       inLeftLabelLane(pivotLabelLeft) ? takenLabelYs : []

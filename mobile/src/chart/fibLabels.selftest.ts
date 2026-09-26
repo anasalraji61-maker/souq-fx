@@ -99,14 +99,19 @@ ok('minGap فاسد ⇒ الافتراض لا تعطيل الفحص',
 ok('قائمة مستويات فارغة ⇒ لا وسوم',
   planFibLabels({ levels: [], hi: 1.1, lo: 1, yOf: () => 0, format: fmt }).length === 0);
 
-// مقياس مقلوب (y يكبر مع السعر) — التباعد بالمطلق فلا يتعطّل الفحص.
+// مقياس مقلوب (y يكبر مع السعر) — التباعد بالمطلق فلا يتعطّل الفحص. بعيداً عن أعلى اللوح (+20):
+// هناك يُقلب الوسم تحت خطّه (`levelLabelKey`) فلا يتناظر المقياسان.
 const inverted = planFibLabels({
   levels: FIB_LEVELS, hi: 1.1, lo: 1.0,
-  yOf: (p) => (p - 1.0) * 600, format: fmt, minGapPx: 13,
+  yOf: (p) => (p - 1.0) * 600 + 20, format: fmt, minGapPx: 13,
+});
+const upright = planFibLabels({
+  levels: FIB_LEVELS, hi: 1.1, lo: 1.0,
+  yOf: (p) => (1.1 - p) * 600 + 20, format: fmt, minGapPx: 13,
 });
 ok('مقياس مقلوب: لا وسمين متلاصقين',
   inverted.every((a) => inverted.every((b) => a === b || Math.abs(a.y - b.y) >= 13)));
-ok('مقياس مقلوب: نفس عدد الوسوم', inverted.length === tight.length);
+ok('مقياس مقلوب: نفس عدد الوسوم', inverted.length === upright.length);
 
 // وسم خطّ أفقي عند y=150 (مستوى 50% بالضبط) ⇒ وسم 50% يُسقَط والبقيّة كما هي.
 const besideLine = planFibLabels({

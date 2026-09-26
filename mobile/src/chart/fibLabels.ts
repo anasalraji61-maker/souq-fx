@@ -25,7 +25,7 @@
  * الوحدة خالصة (تأخذ `yOf` و`format` كدالّتين) فتُفحص بـ`fibLabels.selftest.ts`.
  * والتنقية نفسها بـ`levelLabels.ts` — يستعملها الخطّ الأفقي أيضاً بعدما صار يحمل سعره.
  */
-import { LEVEL_LABEL_GAP, thinByGap } from './levelLabels';
+import { LEVEL_LABEL_GAP, levelLabelKey, thinByGap } from './levelLabels';
 
 /**
  * مستويات الامتداد: **أهداف بعد نهاية الموجة** باتّجاهها (−27.2% و−61.8%، أي 127.2% و161.8% من طول الموجة
@@ -139,6 +139,7 @@ export function planFibLabels(input: {
     candidates.push({ level, price, y, text: `${fibRatioText(level)} · ${format(price)}` });
   }
 
-  const kept = thinByGap(candidates, (c) => c.y, (c) => importanceRank(c.level), minGap, input.taken);
+  // بموضع الوسم (`levelLabelKey`) لا الخطّ: قرب أعلى اللوح الوسم يُقلب تحت خطّه.
+  const kept = thinByGap(candidates, (c) => levelLabelKey(c.y), (c) => importanceRank(c.level), minGap, input.taken);
   return kept.sort((a, b) => b.price - a.price || a.level - b.level);
 }

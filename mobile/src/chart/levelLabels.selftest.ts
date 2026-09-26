@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`levelLabels.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { fitRayLabel, inLeftLabelLane, levelLabelWidth, thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
+import { fitRayLabel, inLeftLabelLane, levelLabelKey, levelLabelWidth, thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -126,10 +126,21 @@ ok('عرض مخصّص', !inLeftLabelLane(60, 50) && inLeftLabelLane(40, 50));
   ok('بلا بُعد ⇒ لا بُعد', !g.showDist);
 }
 
+// قرب أعلى اللوح الوسم يُقلب تحت خطّه ⇒ التنقية بموضع الوسم: خطّان عند 4 و20 وسماهما عند 7 و8 ⇒ واحد فقط.
+{
+  const top: L[] = [
+    { id: 'a', y: 4, rank: 1 },
+    { id: 'b', y: 20, rank: 2 },
+  ];
+  ok('خطّ الموضع وحده كان يُبقيهما', thinByGap(top, y, r).length === 2);
+  const kept = thinByGap(top, (l) => levelLabelKey(l.y), r);
+  ok('بموضع الوسم ⇒ الأهمّ وحده', kept.length === 1 && kept[0].id === 'a');
+  ok('بعيد عن الأعلى ⇒ بلا إزاحة', levelLabelKey(100) === 100);
+}
+
 if (failures) {
   console.error(`levelLabels.selftest: ${failures} FAILED`);
   process.exitCode = 1;
 } else {
   console.log('levelLabels.selftest: PASS');
 }
-
