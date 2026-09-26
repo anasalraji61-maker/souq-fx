@@ -2106,6 +2106,24 @@ export function journalSizeFromSmall(
 }
 
 /**
+ * الصفقات **بترتيب التسجيل** (الأحدث `opened_at` أولاً) لشرائح الدفتر. الخادم يرتّب المفتوحة أولاً ثم الأحدث
+ * (`db.list_trades`: `ORDER BY (status='open') DESC, opened_at DESC`) ⇒ صفقةٌ مفتوحة منذ شهر كانت تسبق صفقات أمس
+ * المغلقة فتتصدّر شريحةُ حجمها ورمزها. ترتيبٌ ثابت (المتساوية كما جاءت)؛ وإن غاب `opened_at` عن أيّ صفقة
+ * فالقائمة كما هي — لا يُخمَّن موضعها.
+ */
+export function newestRecordedFirst<T extends { opened_at?: string | null }>(trades: readonly T[]): readonly T[] {
+  if (!trades.every((tr) => typeof tr.opened_at === 'string' && tr.opened_at)) return trades;
+  return trades
+    .map((tr, i) => ({ tr, i }))
+    .sort((a, b) => {
+      const x = a.tr.opened_at as string;
+      const y = b.tr.opened_at as string;
+      return x < y ? 1 : x > y ? -1 : a.i - b.i;
+    })
+    .map((x) => x.tr);
+}
+
+/**
  * آخر أحجام اللوت **المختلفة** التي سجّلها المتداول (الأحدث أولاً، `max` على الأكثر) — شرائح بخانة الحجم
  * بنموذج الدفتر.
  *
@@ -2113,12 +2131,12 @@ export function journalSizeFromSmall(
  * بيدٍ كل مرّة — وهي خانة المال: «5» بدل «0.5» صفقةٌ بعشرة أضعاف حجمها تُحفظ بصمت. الأحجام من صفقات
  * المتداول نفسه، فالشريحة لا تقترح رقماً لم يكتبه قط.
  *
- * `trades` بترتيب الخادم (الأحدث تسجيلاً أولاً). الحجم المعروف وحده (`knownLots`: الـ1 الافتراضي بالخادم
+ * `trades` بأيّ ترتيب — يُعاد ترتيبها بالتسجيل (`newestRecordedFirst`). الحجم المعروف وحده (`knownLots`: الـ1 الافتراضي بالخادم
  * لا يُقترح)، على خطوة اللوت (0.01) بالضبط كي يطابق نصّ الشريحة «0.50» القيمة المحفوظة، ولا يتجاوز
  * `MAX_SANE_LOTS` (100000 كُتبت وحداتٍ لا لوتاً — لا تُقترح لتتكرّر).
  */
 export function recentLotSizes(
-  trades: readonly { size?: number | null; note?: string | null; symbol?: string | null }[],
+  trades: readonly { size?: number | null; note?: string | null; symbol?: string | null; opened_at?: string | null }[],
   max = 3,
   forSymbol?: string | null
 ): number[] {
@@ -2132,7 +2150,7 @@ export function recentLotSizes(
   const wantMini = forSymbol == null ? null : isMiniJournalSymbol(forSymbol);
   const cap = want === 'small' ? MAX_SMALL_LOTS : MAX_SANE_LOTS;
   const out: number[] = [];
-  for (const tr of trades) {
+  for (const tr of newestRecordedFirst(trades)) {
     if (out.length >= max) break;
     if (want != null && journalContractKind(tr.symbol) !== want) continue;
     if (wantMini != null && isMiniJournalSymbol(tr.symbol) !== wantMini) continue;
@@ -2155,17 +2173,17 @@ export function recentLotSizes(
  * مرّة) أو يُكتب فيها زوجٌ آخر. الرمز من صفقاته هو، فالشريحة لا تقترح أداةً لم يكتبها قط.
  *
  * الأداة الواحدة شريحة واحدة (`journalInstrumentKey`: «XAUUSD.m» تحلّ محلّ «XAUUSD» الافتراضية لا بجانبها)،
- * بالكتابة **الأحدث** لها (`trades` بترتيب الخادم، الأحدث أولاً) — لو غيّر وسيطه تتبعه الشريحة. آخر
+ * بالكتابة **الأحدث** لها (`newestRecordedFirst`: بوقت التسجيل لا بترتيب الخادم) — لو غيّر وسيطه تتبعه الشريحة. آخر
  * `scan` صفقة فقط كي لا تحجز أداةٌ تُركت منذ شهور مكاناً. رمزٌ لا يصلح للحفظ (`journalSymbol`) يُتخطّى.
  */
 export function quickJournalSymbols(
-  trades: readonly { symbol?: string | null }[],
+  trades: readonly { symbol?: string | null; opened_at?: string | null }[],
   defaults: readonly string[],
   max = 6,
   scan = 100
 ): string[] {
   const seen = new Map<string, { text: string; n: number; first: number }>();
-  trades.slice(0, scan).forEach((tr, i) => {
+  newestRecordedFirst(trades).slice(0, scan).forEach((tr, i) => {
     const text = journalSymbol(tr.symbol ?? '');
     if (!text) return;
     const key = journalInstrumentKey(text);

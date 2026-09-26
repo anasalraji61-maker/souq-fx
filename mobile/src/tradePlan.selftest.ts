@@ -61,6 +61,7 @@ import {
   netByInstrument,
   knownLots,
   recentLotSizes,
+  newestRecordedFirst,
   journalContractKind,
   journalSmallLotsStdEquiv,
   journalSizeFromSmall,
@@ -3814,3 +3815,40 @@ console.log('tradePlan payoff-R selftest OK');
   assert.equal(journalChartSymbolAfterSave('GBPJPY', undefined), null);
 }
 console.log('tradePlan journalChartSymbolAfterSave selftest OK');
+
+// —— newestRecordedFirst: شرائح الحجم والرمز بوقت التسجيل لا بترتيب الخادم (المفتوحة أولاً) ——
+{
+  // ترتيب الخادم: مفتوحة منذ شهر أولاً، ثم مغلقة الأمس
+  const book = [
+    { status: 'open', opened_at: '2026-08-20 10:00', size: 2, symbol: 'GBPJPY' },
+    { status: 'closed', opened_at: '2026-09-25 09:00', size: 0.3, symbol: 'EURUSD' },
+    { status: 'closed', opened_at: '2026-09-24 09:00', size: 0.1, symbol: 'XAUUSD' },
+  ];
+  assert.deepEqual(recentLotSizes(book, 3), [0.3, 0.1, 2]);
+  assert.deepEqual(recentLotSizes(book, 1), [0.3]);
+  assert.deepEqual(quickJournalSymbols(book, [], 3), ['EURUSD', 'XAUUSD', 'GBPJPY']);
+  // الكتابة الأحدث للأداة الواحدة تفوز ولو كانت المفتوحة الأقدم أوّل القائمة
+  assert.deepEqual(
+    quickJournalSymbols(
+      [
+        { opened_at: '2026-08-01 10:00', symbol: 'XAUUSD' },
+        { opened_at: '2026-09-25 10:00', symbol: 'XAUUSD.m' },
+      ],
+      [],
+      1
+    ),
+    ['XAUUSD.M']
+  );
+  // المتساوية بالوقت تبقى كما جاءت (ثابت)
+  const tie = [
+    { opened_at: '2026-09-25 09:00', size: 0.2 },
+    { opened_at: '2026-09-25 09:00', size: 0.4 },
+  ];
+  assert.deepEqual(recentLotSizes(tie, 2), [0.2, 0.4]);
+  // صفقة بلا opened_at ⇒ القائمة كما هي (لا يُخمَّن موضعها)
+  const partial = [{ opened_at: '2026-08-01 10:00', size: 0.5 }, { size: 0.7 }];
+  assert.equal(newestRecordedFirst(partial), partial);
+  assert.deepEqual(recentLotSizes(partial, 2), [0.5, 0.7]);
+  assert.deepEqual(newestRecordedFirst([]), []);
+}
+console.log('tradePlan newestRecordedFirst selftest OK');
