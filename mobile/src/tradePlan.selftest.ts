@@ -1735,6 +1735,17 @@ console.log('tradePlan editExitValue selftest OK');
     assert.deepEqual(editClosedAtSend({ ...fresh, text: '' }), { send: null });
     assert.deepEqual(editClosedAtSend({ ...fresh, text: '2026-09-25 22:40' }), { send: '2026-09-25T22:40:00+03:00' });
 
+    // «المستقبل» بساعة الخادم كما يحكم الخادم: جهاز متأخّر 10 د (الخادم 12:10)، والمتداول يكتب 12:08 الحقيقية ⇒ مقبول
+    {
+      const { noteServerTime, serverNowSec } = require('./chart/dataSource') as typeof import('./chart/dataSource');
+      noteServerTime(now / 1000 + 600, now);
+      const skew = { ...fresh, text: '2026-09-26 12:08', nowMs: serverNowSec(now) * 1000 };
+      assert.deepEqual(editClosedAtSend(skew), { send: '2026-09-26T12:08:00+03:00' });
+      assert.deepEqual(editClosedAtSend({ ...skew, text: '2026-09-26 12:16' }), { error: 'future' });
+      noteServerTime(now / 1000, now);
+      assert.equal(serverNowSec(now) * 1000, now);
+    }
+
     // /close من خانة الخروج لصفقة أُعيد فتحها ⇒ وقتها المحفوظ؛ بالسعر الحالي ⇒ «الآن»
     const openRow = { status: 'open', opened_at_iso: openedIso };
     assert.equal(reopenedCloseAt(openRow, 'field', '2026-08-12T13:30:00+02:00'), '2026-08-12T13:30:00+02:00');

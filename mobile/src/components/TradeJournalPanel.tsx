@@ -1434,7 +1434,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         initial: closeTimeInit.text,
         initialIso: closeTimeInit.iso,
         openedIso: editing.opened_at_iso,
-        nowMs: Date.now(),
+        // «المستقبل» بساعة الخادم (هو من يرفض بعد 5 د): جهاز متأخّر 10 د كان يمنع وقت إغلاق حقيقياً، ومتقدّم يمرّره فيلقى 422 عامّاً
+        nowMs: serverNowSec() * 1000,
       });
       if ('error' in closedAt) {
         addInFlightRef.current = false;
@@ -2312,7 +2313,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               initial: closeTimeInit.text,
               initialIso: closeTimeInit.iso,
               openedIso: editing.opened_at_iso,
-              nowMs: Date.now(),
+              nowMs: serverNowSec() * 1000,
             });
             return 'error' in chk ? (
               <Text style={[styles.planWarn, { textAlign: align }]}>{closeTimeErrorText(chk)}</Text>
