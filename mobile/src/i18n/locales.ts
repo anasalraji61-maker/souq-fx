@@ -1530,6 +1530,7 @@ export type Dict = {
    * كل موضع مرة واحدة فقط — يكفي `.replace` لكل منها (لا `replaceAll`).
    */
   riskCalcConvInverted: string;
+  riskCalcConvDecimalSlip: string;
   /**
    * backend-r3 (launch104). لا شيء موصول بعد:
    * `impactHoliday` — `/api/calendar` `impact: "holiday"` (عطلة بنوك ForexFactory) بـ`CalendarPanel` (ui3)؛ `none`/`unknown` بلا كلمة.
@@ -2837,6 +2838,7 @@ const ar: Dict = {
   analystsUnavailable: 'لا مصدر مرخَّص لتوقعات المحللين بعد — لذلك لا نعرض اتجاهاً ولا أهدافاً بدل أن نخترعها',
   socialUnavailable: 'لا مصدر مرخَّص لآراء القنوات بعد — لذلك لا نعرض إجماعاً ولا صفقة مقترحة بدل أن نخترعهما',
   riskCalcConvInverted: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح قصدتَ {likely}؛ اكتبه كما تراه بمنصّتك.',
+  riskCalcConvDecimalSlip: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو بلا فاصلة عشرية. على الأرجح قصدتَ {likely}؛ اكتبه كما تراه بمنصّتك.',
   impactHoliday: 'عطلة — سيولة رقيقة',
   newsHolidayToday: 'عطلة بنوك اليوم · {ccy}{title} — سيولة أقل: سبريد أوسع، وانزلاق وفجوات محتملة',
   backtestBeforeCosts: 'النتائج قبل السبريد والعمولة — لا تقدير سبريد لهذا الرمز، فالنتيجة الفعلية أسوأ من المعروضة.',
@@ -4099,6 +4101,7 @@ const enUS: Dict = {
   analystsUnavailable: "No licensed source for analyst forecasts yet — so we show no direction or targets rather than make them up",
   socialUnavailable: "No licensed source for channel views yet — so we show no consensus or suggested trade rather than make them up",
   riskCalcConvInverted: '“{typed}” can’t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
+  riskCalcConvDecimalSlip: '“{typed}” can’t be the {pair} rate — it looks like the decimal point is missing. You likely meant {likely}; type it as your platform shows it.',
   impactHoliday: 'Bank holiday — thin liquidity',
   newsHolidayToday: 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
   backtestBeforeCosts: "Results are before spread and commission — there’s no spread estimate for this symbol, so real results would be worse.",
@@ -5415,6 +5418,7 @@ const ku: Dict = {
   analystsUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ پێشبینییەکانی شیکەرەوان نییە — بۆیە ئاراستە و ئامانج پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   socialUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ بۆچوونی کەناڵەکان نییە — بۆیە کۆدەنگی و مامەڵەی پێشنیارکراو پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   riskCalcConvInverted: '«{typed}» ناتوانێت نرخی {pair} بێت — پێدەچێت پێچەوانە بێت (1 ÷ نرخ). لەوانەیە مەبەستت {likely} بێت؛ وەک لە پلاتفۆرمەکەتدا دەیبینیت بینووسە.',
+  riskCalcConvDecimalSlip: '«{typed}» ناتوانێت نرخی {pair} بێت — پێدەچێت خاڵی دەیی تێدا نەبێت. لەوانەیە مەبەستت {likely} بێت؛ وەک لە پلاتفۆرمەکەتدا دەیبینیت بینووسە.',
   impactHoliday: 'پشوو — شلەیی کەم',
   newsHolidayToday: 'پشووی بانکەکان ئەمڕۆ · {ccy}{title} — شلەیی کەمتر: سپرێدی فراوانتر، و لەوانەیە خزان و بۆشایی هەبێت',
   backtestBeforeCosts: 'ئەنجامەکان پێش سپرێد و کۆمیسیۆنن — هیچ خەمڵاندنێکی سپرێد بۆ ئەم هێمایە نییە، بۆیە ئەنجامی ڕاستەقینە خراپتر دەبێت.',
