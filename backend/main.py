@@ -735,13 +735,14 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
                 candles = [Candle(**c) for c in raw]
                 first = candles[0].close
                 last = candles[-1].close
-                change = ((last - first) / first) * 100 if first else 0
+                # شمعة واحدة = لا حركة تُقاس ⇒ None لا «0.00%» (تُقرأ «ثابت»)، كالماسح بلا 81 شمعة
+                change = ((last - first) / first) * 100 if first and len(candles) > 1 else None
                 kind = meta.get("kind") if meta.get("kind") in ("provider", "cache") else "unknown"
                 return ChartSeries(
                     symbol=sym,
                     timeframe=tf,
                     candles=candles,
-                    change_pct=round(change, 2) + 0.0,  # لا «−0.00%» لتغيّر دون التقريب
+                    change_pct=round(change, 2) + 0.0 if change is not None else None,  # لا «−0.00%»
                     change_bars=len(candles) - 1,
                     last=last,
                     data_source=DataProvenance(
@@ -2137,8 +2138,9 @@ def ai_ask(body: AiAsk):
         context = (
             f"last={series.last} (last candle close at {at}, source={series.data_source.kind}; "
             f"not a live tick — if it is not recent, say so and do not call it the current price), "
-            f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
-            f"tf={series.timeframe}"
+            + (f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
+               if series.change_pct is not None else "change_pct=unavailable (single candle), ")
+            + f"tf={series.timeframe}"
             + (", bias=none (too few candles for ATR14 — direction cannot be judged)" if few else
                ", bias=none (net move smaller than one ATR14 — no clear direction)" if flat else f", bias={bias}")
         )
@@ -2173,7 +2175,7 @@ def ai_ask(body: AiAsk):
         # نفس القالب التعليمي بالإنجليزية لمستخدمي en-US/en-GB (بلا اقتباس السؤال: بعض الأسئلة
         # قوالب داخلية عربية). الكردية تبقى على القالب العربي (نفس الأبجدية) لغياب مراجعة لغوية.
         if live:
-            bias_en = "bullish" if series.change_pct > 0 else "bearish"
+            bias_en = "bullish" if chg > 0 else "bearish"
             dir_en = "Buy" if direction == "شراء" else "Sell"
             read = (
                 f"Only {bars + 1} candles ({series.timeframe}) — too few to measure a normal candle range "

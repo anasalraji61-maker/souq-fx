@@ -376,3 +376,32 @@ def test_no_card_levels_when_atr_rounds_onto_the_entry(monkeypatch):
 def test_ai_symbol_is_bounded():
     r = TestClient(main.app).post("/api/ai/ask", json={"question": "hi there", "symbol": "X" * 100000})
     assert r.status_code == 422
+
+
+def _one_candle(monkeypatch):
+    c = {"time": 1_790_000_000, "open": 1.1, "high": 1.11, "low": 1.09, "close": 1.1, "volume": None}
+    monkeypatch.setattr(main.market, "configured", lambda: True)
+    monkeypatch.setattr(main.market, "fetch_time_series_with_meta",
+                        lambda *a, **k: ([c], {"kind": "provider", "as_of": 1_790_000_100}))
+
+
+def test_single_candle_series_has_no_change_pct(monkeypatch):
+    """شمعة واحدة من المزوّد: كان `change_pct` = 0.0 ⇒ «0.00%» بالشارت (ثابت) بلا أيّ حركة مقيسة."""
+    _one_candle(monkeypatch)
+    s = main.build_series("EURUSD")
+    assert s.last == 1.1 and s.change_pct is None and s.change_bars == 0
+
+
+@pytest.mark.parametrize("lang", ["ar", "en"])
+@pytest.mark.parametrize("model", [True, False])
+def test_ai_on_single_candle_says_no_direction_without_crashing(monkeypatch, lang, model):
+    _one_candle(monkeypatch)
+    seen = {}
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: model)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer",
+                        lambda q, sym, ctx, lang: seen.setdefault("ctx", ctx) and "انتظر")
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()
+    assert body["setup"]["direction"] is None and body["setup"]["entry"] is None
+    assert "0.00%" not in body["answer"]
+    if model:
+        assert "change_pct=unavailable" in seen["ctx"] and "bias=none" in seen["ctx"]

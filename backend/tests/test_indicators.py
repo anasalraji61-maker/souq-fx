@@ -159,3 +159,9 @@ def test_rsi_flat_then_one_move_leaves_neutral():
 def test_snapshot_rsi_on_flat_candles_is_50():
     candles = [{"close": 1.1, "open": 1.1, "high": 1.1, "low": 1.1} for _ in range(40)]
     assert ind.snapshot(candles)["rsi"] == 50.0
+
+
+def test_snapshot_single_close_has_no_change_not_zero():
+    """إغلاق واحد = لا حركة تُقاس: كان «0.00%» (يُقرأ «ثابت») على رمز أعاد المزوّد له شمعة واحدة."""
+    out = ind.snapshot([{"close": 1.1}])
+    assert out["change_pct"] is None and out["change_bars"] == 0
