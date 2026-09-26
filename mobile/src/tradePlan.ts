@@ -435,10 +435,15 @@ export function breakevenWinRatePct(rr: number | null | undefined): number | nul
   return Math.ceil(Math.round(pct * 10 * 1e6) / 1e6) / 10;
 }
 
-/** 25 → "25"، 12.5 → "12.5" (pip واحد عشري كحد أقصى). */
+/**
+ * 25 → "25"، 12.5 → "12.5" (pip واحد عشري كحد أقصى). QA105a: يُقرَّب لمنزلة **قبل** فحص الصحيح — 0.04 ⇒ «0» لا «0.0»،
+ * ‏999.95 ⇒ «1000» لا «1000.0»، و−0.04 ⇒ «0» بلا إشارة سالبة.
+ */
 export function formatPips(p: number | null): string | null {
   if (p == null || !Number.isFinite(p)) return null;
-  return Number.isInteger(p) ? String(p) : p.toFixed(1);
+  const r = Number(p.toFixed(1));
+  if (r === 0) return '0';
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
 
 /**

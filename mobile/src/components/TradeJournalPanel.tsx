@@ -135,6 +135,8 @@ const formatRAbs = (r: number): string => (Number.isInteger(r) ? String(Math.abs
 /** +80 / −12.5 pip — نفس علامة الناقص المطبعية لـformatR. */
 const formatSignedPips = (p: number): string => {
   const abs = formatPips(Math.abs(p)) ?? '0';
+  // QA105a: ما يُقرَّب إلى صفر لا يحمل إشارة («−0.0 pip»)
+  if (abs === '0') return abs;
   return `${p > 0 ? '+' : p < 0 ? '−' : ''}${abs}`;
 };
 

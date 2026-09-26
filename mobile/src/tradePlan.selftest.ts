@@ -213,6 +213,15 @@ for (let i = 1; i <= 3000; i++) {
 assert.equal(formatPips(25), '25');
 assert.equal(formatPips(12.5), '12.5');
 assert.equal(formatPips(null), null);
+// QA105a: التقريب قبل فحص الصحيح؛ الصفر المقرَّب بلا منزلة ولا إشارة
+assert.equal(formatPips(0.04), '0');
+assert.equal(formatPips(-0.04), '0');
+assert.equal(formatPips(0), '0');
+assert.equal(formatPips(999.95), '1000');
+assert.equal(formatPips(24.96), '25');
+assert.equal(formatPips(0.05), '0.1');
+assert.equal(formatPips(-12.5), '-12.5');
+assert.equal(formatPips(3.14159), '3.1');
 // حساب عائم: 1.0850-1.0825 لا يعطي 24.999999
 assert.equal(analyzePlan({ symbol: 'GBPUSD', side: 'buy', entry: 1.2732, sl: 1.2717, tp: 1.2777 }).riskPips, 15);
 
