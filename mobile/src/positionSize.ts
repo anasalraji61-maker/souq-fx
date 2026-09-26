@@ -428,8 +428,12 @@ export function conversionKey(conv: { symbol: string; invert: boolean } | null):
 /**
  * عملات تسعيرٍ سعرُ الوحدة من أيّ عملة رئيسية (EUR/GBP/AUD/NZD/USD/CAD/CHF) بها **فوق 1 دائماً** — أدنى ما بلغته تاريخياً
  * بعيدٌ عن 1: NZDJPY ~40، NZDPLN ~2.3، USDPLN ~3.6، NZDHKD ~4.5. الأساس عملة ناشئة (HUFJPY ~0.4) لا يُفحص.
+ * والشيكل والريال والدرهم: SAR/AED مربوطان ~3.75/3.67 بالدولار، وأدنى AUDILS/NZDILS ~1.4 — «0.27» لـUSDILS (ILS ⇒ USD) كان
+ * يُقبل ⇒ قيمة pip ×13 ⇒ «تحت الحدّ الأدنى» بدل 0.12 لوت. SGD لا: AUDSGD/NZDSGD/CADSGD تحت 1 اليوم.
  */
-const ALWAYS_OVER_ONE_QUOTES = new Set(['JPY', 'SEK', 'NOK', 'DKK', 'ZAR', 'MXN', 'TRY', 'HUF', 'CZK', 'CNH', 'HKD', 'PLN']);
+const ALWAYS_OVER_ONE_QUOTES = new Set([
+  'JPY', 'SEK', 'NOK', 'DKK', 'ZAR', 'MXN', 'TRY', 'HUF', 'CZK', 'CNH', 'HKD', 'PLN', 'ILS', 'SAR', 'AED',
+]);
 const MAJOR_BASES = new Set(['EUR', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF']);
 /**
  * أزواج رئيسية/تقاطعات لم تنزل تحت 1 تاريخياً (أدناها: GBPUSD ~1.03 عام 1985 و2022، GBPCHF ~1.1 يوم SNB 2015، EURCAD ~1.2،

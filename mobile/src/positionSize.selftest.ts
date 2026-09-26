@@ -3141,6 +3141,13 @@ console.log('positionSize slPipsCarryOver selftest OK');
   assert.ok(Math.abs(inv - 149.5) < 1e-9);
   assert.ok(manualConvLooksInverted('EURSEK', 0.087) != null);
   assert.ok(manualConvLooksInverted('NZDPLN', 0.43) != null);
+  // الشيكل/الريال/الدرهم: مقلوب ⇒ يُعلَّم (كان يُقبل: قيمة pip ×13–20)، والمعقول لا
+  for (const [pair, r] of [['USDILS', 3.7], ['USDSAR', 3.75], ['USDAED', 3.6725], ['EURILS', 4.0], ['GBPAED', 4.9], ['NZDILS', 2.1]] as const) {
+    assert.ok(Math.abs((manualConvLooksInverted(pair, 1 / r) ?? 0) - r) < 1e-9, `${pair} inverted`);
+    assert.equal(manualConvLooksInverted(pair, r), null, `${pair} sane`);
+  }
+  // SGD ليس فوق 1 دائماً (AUDSGD ~0.87) ⇒ لا تخمين
+  assert.equal(manualConvLooksInverted('AUDSGD', 0.87), null);
   // المعقول لا يُعلَّم
   for (const [pair, r] of [['USDJPY', 149.5], ['NZDJPY', 40], ['USDPLN', 3.6], ['NZDHKD', 4.5], ['CHFJPY', 170]] as const) {
     assert.equal(manualConvLooksInverted(pair, r), null, pair);
