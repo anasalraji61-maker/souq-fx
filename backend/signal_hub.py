@@ -7,6 +7,7 @@ Indicator forecasts use real OHLC math from indicators.py.
 from __future__ import annotations
 
 import math
+import re
 from typing import Any
 
 import indicators as ind_engine
@@ -215,6 +216,10 @@ def _instrument_decimals(symbol: str | None) -> int | None:
         return None
     s = canonical_symbol(symbol)
     if s in ("USOIL", "UKOIL"):
+        return 3
+    # الغاز الطبيعي بثلاث منازل كالتطبيق (`symbolPriceDecimals`، XNG/NATGAS/NGAS/USNG): التقدير من الحجم كان يرسل
+    # مستويات «2.51234» (5 منازل) والشارت يطبع السعر نفسه «2.512».
+    if re.sub(r"[^A-Z]", "", s.upper()).startswith(("XNG", "NATGAS", "NGAS", "USNG")):
         return 3
     if len(s) != 6 or not _is_iso_pair(s):
         return None

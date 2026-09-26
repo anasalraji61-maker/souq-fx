@@ -35,3 +35,9 @@ def test_decimals_only_fixed_for_currencies_the_app_knows(sym, price, dp):
 
 def test_idr_level_not_padded_past_the_quote():
     assert signal_hub.level_round(16250.523456, 16250.4, "USDIDR") == 16250.52
+
+
+@pytest.mark.parametrize("sym", ["XNGUSD", "XNG/USD", "NATGAS", "NGAS", "USNG", "xngusd.m"])
+def test_natural_gas_is_three_decimals_like_the_app(sym):
+    # run 107: كالتطبيق `symbolPriceDecimals` (cfb6e3f) — كان 5 منازل من حجم السعر (2.51234)
+    assert signal_hub.price_decimals(2.5, sym) == 3 and signal_hub.price_decimals(12.34, sym) == 3
