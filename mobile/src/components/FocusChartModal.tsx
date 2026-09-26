@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  close: { color: colors.accent, fontWeight: '500' },
+  close: { color: colors.textMuted, fontWeight: '500' },
   symbolHeading: { flex: 1 },
   title: { color: colors.text, fontSize: 18, fontWeight: '500' },
   sub: { color: colors.textDim, fontSize: 11 },

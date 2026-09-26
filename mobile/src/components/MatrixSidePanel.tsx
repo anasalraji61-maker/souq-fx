@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   headRtl: { flexDirection: 'row-reverse' },
   title: { color: colors.text, fontWeight: '500', fontSize: 13, flex: 1 },
-  close: { color: colors.accent, fontWeight: '500', fontSize: 13 },
+  close: { color: colors.textMuted, fontWeight: '500', fontSize: 13 },
   body: { padding: spacing.md, gap: 8, paddingBottom: 40 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   gridRtl: { flexDirection: 'row-reverse' },
