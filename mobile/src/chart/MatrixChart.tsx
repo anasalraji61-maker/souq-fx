@@ -6741,7 +6741,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // خانات معنوية ⇒ ATR البيتكوين 812.345 يُطبع «812» والمحور بمنزلتين، وMomentum الداو 45.67 «45.7».
   const paneDec =
     symbolPriceDecimals(series.symbol) ??
-    (Number.isFinite(priceDecimalsRef) && priceDecimalsRef > 0 ? magnitudeDecimals(priceDecimalsRef) : null);
+    (priceDecimalsRef != null && Number.isFinite(priceDecimalsRef) && priceDecimalsRef > 0
+      ? magnitudeDecimals(priceDecimalsRef)
+      : null);
   const crossCandle = crossIndex != null ? source.plot[crossIndex] ?? null : null;
   // Recomputed every render so the crosshair and its axis tags stay glued to the
   // candle after zoom buttons / live ticks.
