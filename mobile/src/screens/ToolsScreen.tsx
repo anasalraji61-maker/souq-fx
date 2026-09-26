@@ -37,7 +37,7 @@ import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import { formatPct, isVerifiedTickKind, pctDirection } from '../chart/dailyChange';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
-import { isFreshTick } from '../chart/dataSource';
+import { isFreshTick, serverNowSec } from '../chart/dataSource';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useI18n } from '../i18n/I18nContext';
@@ -878,12 +878,13 @@ export function ToolsScreen() {
               /**
                * backend-r17 (a): وقت إغلاق آخر شمعة حين يتأخّر أكثر من شمعتين من فريم الفحص (السبت = إغلاق الجمعة، أو كاش
                * حدّ المزوّد) — كانت البطاقة تعرض سعر الجمعة وRSI كأنهما الآن. داخل شمعتين = لا شيء (شمعة 1H أُغلقت قبل 50د عادية).
+               * «الآن» بساعة الخادم (`price_as_of` بها): بساعة الهاتف، متقدّمٌ 3 دقائق يَسِم كل بطاقة 1m «سعر قديم» ومتأخّرٌ يُخفي القديم.
                */
               const barSec = isTimeframe(scanInfo.tf) ? TF_SECONDS[scanInfo.tf] : 15 * 60;
               const asOf =
                 typeof r.price_as_of === 'number' &&
                 Number.isFinite(r.price_as_of) &&
-                Date.now() / 1000 - r.price_as_of > 2 * barSec
+                serverNowSec() - r.price_as_of > 2 * barSec
                   ? t.screenerPriceAsOf.replace('{time}', formatLocalStamp(r.price_as_of, lang))
                   : null;
               // التسمية تحلّ محلّ نصوص البطاقة كلها: كانت «افتح الشارت: EURUSD 15m» — بلا السعر وRSI والنسبة والمرشّحات
