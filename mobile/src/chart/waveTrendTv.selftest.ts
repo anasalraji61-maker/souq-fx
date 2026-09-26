@@ -45,4 +45,12 @@ ref.forEach((r, i) => {
 });
 assert.equal(wt2[first + 2], null);
 assert.notEqual(wt2[first + 3], null);
+// سعر مربوط ثابت (USDHKD 7.8123، USDAED 3.6725): بقايا الفاصلة كانت تعطي ±66.7 — «تشبّع» وهمي.
+for (const peg of [7.8123, 3.6725]) {
+  const flat = Array.from({ length: 300 }, (_, i) => ({ time: i * 60, open: peg, high: peg, low: peg, close: peg }));
+  const w = computeWaveTrend(flat as never);
+  for (let i = 0; i < flat.length; i++) {
+    if (w.wt1[i] != null) assert.ok(Math.abs(w.wt1[i] as number) < 1e-6, `peg ${peg} bar ${i}: wt1 ${w.wt1[i]}`);
+  }
+}
 console.log('waveTrendTv selftest PASS');

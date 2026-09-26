@@ -1139,7 +1139,9 @@ export function computeWaveTrend(
     const e = esa[i];
     const dv = d[i];
     if (e == null || dv == null) return null;
-    if (dv === 0) return 0;
+    // «لا حركة» بتسامح 1e-10 من السعر (كـCCI أعلاه): سعر ثابت (ربط USDHKD/USDAED، تغذية متوقّفة) يترك
+    // esa بعيدة عن السعر ~1e-16 فـd ~1e-16 لا صفر ⇒ (v−e)/(0.015·d) ≈ ±66.7 — «تشبّع» وهمي فوق ±60.
+    if (dv <= Math.abs(e) * 1e-10) return 0;
     return (v - e) / (0.015 * dv);
   });
   const wt1 = ema(ciRaw, n2);
