@@ -2339,10 +2339,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               setSizeFor(symbol);
               setFormError(null);
             }}
-            accessibilityLabel={t.journalSizeUnitsFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
+            accessibilityLabel={t.journalSizeMetalOuncesFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
           >
             <Text style={styles.qChipText}>
-              {t.journalSizeUnitsFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
+              {t.journalSizeMetalOuncesFix.replace('{n}', size.trim()).replace('{lots}', sizeMetal.lots.toFixed(2))}
             </Text>
           </Pressable>
         </View>
