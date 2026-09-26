@@ -243,6 +243,12 @@ export function positionOutcome(
       if (endInside && i === to) return null;
       fill = i;
       if (hitsStop(b)) return { state: 'stop', exit: levels.stop, exitIndex: i, fillIndex: i, r: -1 };
+      // الهدف بشمعة التنفيذ: أمر إيقاف (شراء فوق السعر) لا يبلغ الهدف إلا عابراً الدخول أوّلاً ⇒ هدف مؤكَّد. كان يُتخطّى
+      // فيُحكم بوقفٍ ضُرب بعد شموع ⇒ «SL ✕ −1R» لصفقة رابحة. أمر حدّ (تحت السعر): القمّة ربما سبقت التنفيذ ⇒ لا حكم.
+      if (hitsTarget(b)) {
+        if (long ? above : below) return { state: 'target', exit: levels.target, exitIndex: i, fillIndex: i, r: levels.rr };
+        return null;
+      }
       continue;
     }
     if (endInside && i === to && (hitsStop(b) || hitsTarget(b))) return null;

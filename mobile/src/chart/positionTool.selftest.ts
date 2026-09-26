@@ -261,4 +261,21 @@ assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.00001, r: -0.000
   assert.equal(positionLabels(oil, 'USOIL', 'en-US', 99.8).target.startsWith('TP 100.136 '), true);
 }
 
+// الهدف بشمعة تنفيذ الأمر المعلّق: أمر إيقاف (شراء فوق المدى) ⇒ الهدف مؤكَّد؛ أمر حدّ (شراء تحت المدى) ⇒ لا حكم
+{
+  const stopEntry = positionLevels('long', 1.086, 1.084, 2, 'EURUSD');
+  const seq = [bar(1.0845, 1.0855, 1.085), bar(1.0858, 1.0925, 1.092), bar(1.083, 1.092, 1.084)];
+  const r = positionOutcome(stopEntry, seq, 0, 2, 2)!;
+  assert.equal(r.state, 'target', 'كان «SL» بالشمعة 2');
+  assert.equal(r.exitIndex, 1);
+  assert.equal(r.fillIndex, 1);
+  const limit = positionLevels('long', 1.084, 1.082, 2, 'EURUSD');
+  const seq2 = [bar(1.0845, 1.0855, 1.085), bar(1.0835, 1.0885, 1.086), bar(1.081, 1.086, 1.082)];
+  assert.equal(positionOutcome(limit, seq2, 0, 2, 2), null);
+  // بيع إيقاف (تحت المدى) كالمرآة
+  const sellStop = positionLevels('short', 1.084, 1.086, 2, 'EURUSD');
+  const seq3 = [bar(1.0845, 1.0855, 1.085), bar(1.0795, 1.0842, 1.08), bar(1.08, 1.087, 1.086)];
+  assert.equal(positionOutcome(sellStop, seq3, 0, 2, 2)!.state, 'target');
+}
+
 console.log('positionTool.selftest: PASS');
