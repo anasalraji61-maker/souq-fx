@@ -682,6 +682,7 @@ export type Dict = {
   journalCloseTimeHint: string;
   journalCloseTimeInvalid: string;
   journalCloseTimeBeforeOpen: string;
+  journalCloseTimeFuture: string;
   journalSizePlaceholder: string;
   journalSizeA11y: string;
   journalSizeUnitsFix: string;
@@ -2139,6 +2140,7 @@ const ar: Dict = {
   journalCloseTimeHint: 'مثل {example} · بتوقيت جهازك · اتركه فارغاً إن كنت لا تعرفه',
   journalCloseTimeInvalid: 'اكتب الوقت بهذه الصيغة: {example}',
   journalCloseTimeBeforeOpen: 'وقت الإغلاق يسبق وقت فتح الصفقة ({opened}) — راجعه',
+  journalCloseTimeFuture: 'وقت الإغلاق بعد الآن — هل كتبته بتوقيت جهازك؟',
   journalSizePlaceholder: 'الحجم لوت (اختياري)',
   journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
   journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
@@ -3403,6 +3405,7 @@ const enUS: Dict = {
   journalCloseTimeHint: 'e.g. {example} · your device’s time zone · leave empty if you don’t know it',
   journalCloseTimeInvalid: 'Type the time like this: {example}',
   journalCloseTimeBeforeOpen: 'The close time is before the trade was opened ({opened}) — check it',
+  journalCloseTimeFuture: 'The close time is later than now — did you type it in your device’s time zone?',
   journalSizePlaceholder: 'Size in lots (optional)',
   journalSizeA11y: 'Trade size in lots (optional)',
   journalSizeUnitsFix: '⚠ {n} looks like units, not lots — select it to convert to {lots} lot',
@@ -4718,6 +4721,7 @@ const ku: Dict = {
   journalCloseTimeHint: 'وەک {example} · بە کاتی ئامێرەکەت · ئەگەر نایزانیت بەتاڵی بهێڵەوە',
   journalCloseTimeInvalid: 'کاتەکە بەم شێوەیە بنووسە: {example}',
   journalCloseTimeBeforeOpen: 'کاتی داخستن پێش کاتی کردنەوەی مامەڵەکەیە ({opened}) — پشکنینی بکە',
+  journalCloseTimeFuture: 'کاتی داخستن دوای ئێستایە — بە کاتی ئامێرەکەت نووسیوتە؟',
   journalSizePlaceholder: 'قەبارە بە لۆت (ئیختیاری)',
   journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
   journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
