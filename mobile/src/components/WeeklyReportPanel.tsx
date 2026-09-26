@@ -160,6 +160,9 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         lang
       );
       if (!mountedRef.current) return;
+      // بلا نموذج مربوط يردّ الخادم 200 بالقالب المحلي («تحليل سريع لـ EURUSD … صاعد (+1.63%)») — اتجاه سوق
+      // بلا رقم من الدفتر، لا تقرير ⇒ البديل الصادق (إحصاءات الدفتر + «الذكاء غير متاح») كالخطأ.
+      if (res.source === 'template') throw new Error('ai_template');
       setText(res.answer.replace(/\*\*/g, ''));
       setArabicReply(res.answer_lang === 'ar' && lang !== 'ar');
       playSoftClick();

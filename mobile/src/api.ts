@@ -970,5 +970,7 @@ export const api = {
       price_as_of?: number | null;
       /** لغة الجواب الفعلية (backend-r78a): "ar" لمستخدم كردي بلا قالب كردي أو باعتذار الحارس؛ غيابه = خادم أقدم. */
       answer_lang?: string;
+      /** "model" = نموذج مربوط؛ "template" = قالب محلي (قراءة شارت عامة لا جواب عن السؤال، `ef38a46`)؛ غيابه = خادم أقدم. */
+      source?: 'model' | 'template';
     }>('/api/ai/ask', { question, symbol, lang }),
 };
