@@ -1235,10 +1235,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     preEditRef.current = null;
     heldChartRef.current = null;
     if (!pre) return;
-    const chartMoved = !!defaultSymbol && defaultSymbol !== pre.chart;
-    setSymbol(chartMoved ? defaultSymbol : pre.symbol);
+    // زوج الشارت **الآن** لا ما التقطته الدالّة: الحفظ/الحذف يستدعيها بعد انتظار الطلب، وتبديلٌ أثناءه (EURUSD ⇒ USDJPY) كان
+    // يُقرأ «لم يتحرّك» فيُعاد EURUSD ويُمسح الانتقال المعلَّق — النموذج تحت USDJPY على الشارت يسجّل EURUSD
+    const chart = chartSymRef.current;
+    const chartMoved = !!chart && chart !== pre.chart;
+    setSymbol(chartMoved ? chart : pre.symbol);
     setSide(pre.side);
-    if (chartMoved && defaultSymbol !== pre.symbol) return;
+    if (chartMoved && chart !== pre.symbol) return;
     const d = pre.draft;
     setEntry(d.entry);
     setExit(d.exit);
@@ -1449,6 +1452,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         else if (exitSent === null && editing.closed_at_iso) reopenedClosedAtRef.current.set(editing.id, editing.closed_at_iso);
         if (!mountedRef.current) return;
         playSoftClick();
+        // كُتب في النموذج أثناء الحفظ (وقفٌ صُحّح بعد الضغط): كان يُمسح بلا كلمة وتعود المسوّدة. يبقى التعديل مفتوحاً على الصفّ
+        // المحفوظ (`seen_*` الجديدة) بما كُتب، فيحفظه المتداول ثانيةً — كالإضافة أدناه لا تمسح صفقةً بدأت كتابتها أثناء طلبها
+        if (formKeyRef.current !== submittedKey) {
+          await refresh();
+          if (!mountedRef.current) return;
+          const fresh = tradesRef.current.find((tr) => tr.id === editing.id);
+          if (fresh && editingRef.current?.id === fresh.id) {
+            setEditing(fresh);
+            if (!closeTimeTouchedRef.current) initCloseTime(fresh);
+          }
+          return;
+        }
         setEditing(null);
         resetForm();
         restorePreEdit();
