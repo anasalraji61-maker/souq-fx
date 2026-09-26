@@ -113,10 +113,13 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         // كل غياب كان «لا بيانات حقيقية الآن — حاول لاحقاً»: DXY لا يقدّمه المزوّد أصلاً (المحاولة لن تنجح)،
         // وشموع حقيقية بلا صوت مؤشّر واحد (MACD وحده على تاريخ قصير) ليست «أسعاراً تجريبية».
         const real = res.data_kind !== 'demo' && res.data_kind !== 'unavailable';
+        // backend-r54: سلسلة كاملة بلا حركة (سوق مغلق) تصل بلا اتجاه أيضاً — ليست «لا بيانات حيّة».
         setNote(
           real && res.disclaimer_code === 'not_enough_data'
             ? t.forecastDisclaimerNoData
-            : providerUnavailableReason(res) === 'not_offered_by_provider'
+            : real && res.disclaimer_code === 'no_movement'
+              ? t.forecastDisclaimerNoMovement
+              : providerUnavailableReason(res) === 'not_offered_by_provider'
               ? t.chartNotOfferedTitle.replace('{symbol}', symbol.toUpperCase())
               : t.noLiveDataResult
         );

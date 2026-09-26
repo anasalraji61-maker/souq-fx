@@ -45,6 +45,9 @@ export function levelsUnavailableText(basis: LevelsBasis, t: Dict): string | nul
       return t.sigLevelsUnavailableAtrWide;
     case 'neutral':
       return t.sigLevelsUnavailableNeutral;
+    // backend-r54: سلسلة كاملة بلا حركة (سوق مجمّد/مغلق) — كانت تُقرأ خطأً «شموع قليلة».
+    case 'no_range':
+      return t.sigLevelsUnavailableNoRange;
     default:
       return null;
   }
