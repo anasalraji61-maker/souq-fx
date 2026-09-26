@@ -10066,7 +10066,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 />
               );
             };
-            const solid = { height: bold ? 3.5 : 2, backgroundColor: d.color };
+            // الأساس والموازي بسُمك/نمط المتداول (`lineStyle.ts`، افتراضي 2px متّصل كما كان)؛ المتّصل تعبئة كالترند.
+            const edgeW = drawingLineWidth(d) + (bold ? LINE_BOLD_EXTRA : 0);
+            const edgeSt = drawingLineStyle(d);
+            const solid =
+              edgeSt === 'solid'
+                ? { height: edgeW, backgroundColor: d.color }
+                : { height: 0, borderTopWidth: edgeW, borderStyle: edgeSt, borderColor: d.color };
             // متوازية بالبكسل بالمقياس اللوغاريتمي أيضاً (`channelLinePrices`).
             const par = channelLinePrices(d.a, d.b, w, 1, logScale);
             const mid = channelLinePrices(d.a, d.b, w, 0.5, logScale);
@@ -10119,7 +10125,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         : d.tool === 'zone'
                           ? 'rgba(45,212,191,0.12)'
                           : 'rgba(251,191,36,0.1)',
-                    borderWidth: bold ? 2.5 : 1,
+                    // المستطيل: إطار بسُمك/نمط المتداول (افتراضي 1px متّصل)؛ المنطقة كما كانت.
+                    borderWidth:
+                      (d.tool === 'rect' ? drawingLineWidth(d) : 1) + (bold ? LINE_BOLD_EXTRA : 0),
+                    borderStyle: d.tool === 'rect' ? drawingLineStyle(d) : 'solid',
                     borderColor: d.color,
                   }}
                 />

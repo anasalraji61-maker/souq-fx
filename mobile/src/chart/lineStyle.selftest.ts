@@ -39,6 +39,13 @@ ok('أفقي: ⇒ متقطّع (افتراضيه، يُحذف)', !('lineStyle' i
 ok('سُمك فاسد ⇒ الافتراضي', drawingLineWidth({ ...base('trend'), lineWidth: 40 }) === 2);
 ok('نمط فاسد ⇒ الافتراضي', drawingLineStyle({ ...base('hline'), lineStyle: 'wavy' as never }) === 'dashed');
 
+// القناة والمستطيل: افتراضيّاهما كما كانا يُرسمان (2px/1px متّصلان)، والدورة تعمل.
+ok('قناة 2px متّصلة', hasLineStyle('channel') && drawingLineWidth(base('channel')) === 2 && drawingLineStyle(base('channel')) === 'solid');
+ok('مستطيل 1px متّصل', hasLineStyle('rect') && drawingLineWidth(base('rect')) === 1 && drawingLineStyle(base('rect')) === 'solid');
+ok('مستطيل ⇒ 2px', withNextLineWidth(base('rect')).lineWidth === 2);
+ok('قناة ⇒ متقطّعة', withNextLineStyle(base('channel')).lineStyle === 'dashed');
+ok('المنطقة ليست خطّاً (تعبئة ووسم pip)', !hasLineStyle('zone'));
+
 // غير الخطوط لا تتغيّر.
 ok('فيبو ليس خطّاً', !hasLineStyle('fib'));
 const fib = base('fib');

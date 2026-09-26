@@ -1,6 +1,7 @@
 /**
- * سُمك ونمط خطوط الرسم (ترند، شعاع، أفقي، شعاع أفقي، رأسي) — كان اللون وحده قابلاً للتغيير، فدعمٌ رئيسي
- * ومستوى ثانوي بالسُمك نفسه لا يُفرَّق بينهما بنظرة، والمتقطّع ثابت للأفقي والرأسي وحدهما.
+ * سُمك ونمط خطوط الرسم (ترند، شعاع، أفقي، شعاع أفقي، رأسي، وحدّا القناة، وإطار المستطيل) — كان اللون وحده
+ * قابلاً للتغيير، فدعمٌ رئيسي ومستوى ثانوي بالسُمك نفسه لا يُفرَّق بينهما بنظرة، والمتقطّع ثابت للأفقي والرأسي وحدهما.
+ * القناة: الأساس والموازي معاً (خطّ الوسط يبقى متقطّعاً باهتاً)؛ المستطيل: الإطار (التعبئة كما هي).
  *
  * الغياب = افتراضي الأداة كما كانت تُرسم (فالرسوم المحفوظة القديمة لا تتغيّر حرفاً)، والعودة للافتراضي
  * تحذف المفتاح لا تكتبه — كالسهم والقفل (`drawEdit.ts`). خالص: يُفحص بـ`lineStyle.selftest.ts`.
@@ -16,16 +17,19 @@ export const LINE_WIDTHS: readonly number[] = [1, 2, 3, 4];
 /** زيادة السُمك للرسم المحدَّد أو تحت الفأرة — كانت 1⇒2.5 و2⇒3.5 قبل أن يصير السُمك قابلاً للتغيير. */
 export const LINE_BOLD_EXTRA = 1.5;
 
-type LineTool = 'trend' | 'ray' | 'hline' | 'hray' | 'vline';
-const LINE_TOOLS: readonly Drawing['tool'][] = ['trend', 'ray', 'hline', 'hray', 'vline'];
+type LineTool = 'trend' | 'ray' | 'hline' | 'hray' | 'vline' | 'channel' | 'rect';
+const LINE_TOOLS: readonly Drawing['tool'][] = ['trend', 'ray', 'hline', 'hray', 'vline', 'channel', 'rect'];
 
 export function hasLineStyle(tool: Drawing['tool']): tool is LineTool {
   return LINE_TOOLS.includes(tool);
 }
 
-/** كما كانت تُرسم: الترند والشعاع 2px متّصلان؛ الأفقي والرأسي 1px متقطّعان؛ الشعاع الأفقي 1px متّصل (لا يُخلط بالأفقي). */
+/**
+ * كما كانت تُرسم: الترند والشعاع وحدّا القناة 2px متّصلة؛ الأفقي والرأسي 1px متقطّعان؛ الشعاع الأفقي 1px متّصل
+ * (لا يُخلط بالأفقي)؛ إطار المستطيل 1px متّصل.
+ */
 export function defaultLineWidth(tool: Drawing['tool']): number {
-  return tool === 'trend' || tool === 'ray' ? 2 : 1;
+  return tool === 'trend' || tool === 'ray' || tool === 'channel' ? 2 : 1;
 }
 
 export function defaultLineStyle(tool: Drawing['tool']): LineStyle {
