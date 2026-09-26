@@ -265,14 +265,18 @@ export function QuadChartModal({
           {symbols.map((tabSym, i) => {
             const on = i === focus;
             const d = cellData(i);
+            // لسان سلسلته تجريبية كان يطبع سعرها ونسبتها الملوّنة بلا وسم (الوسم تحت الشارت للسان المختار وحده)
+            // ⇒ ثلاثة ألسنة بأسعار مولَّدة تُقرأ كسوق. الوسم مكان السعر كـ«غير متاح»، ولا نسبة من بيانات مولَّدة.
+            const tabDemo = d.s != null && !d.noReal && normalizeProvenance(d.s.data_source).kind === 'demo';
+            const tabTag = d.noReal ? t.dsKindUnavailable : tabDemo ? t.dsKindDemo : null;
             const priceText =
-              d.s && !d.noReal && Number.isFinite(d.px) ? formatPrice(d.px, tabSym, d.s.last) : null;
-            const pctText = d.s && !d.noReal ? (d.pct == null ? '—' : formatPct(d.pct)) : null;
+              d.s && !tabTag && Number.isFinite(d.px) ? formatPrice(d.px, tabSym, d.s.last) : null;
+            const pctText = d.s && !tabTag ? (d.pct == null ? '—' : formatPct(d.pct)) : null;
             const a11y = [
               tabSym,
               priceText,
-              d.noReal
-                ? t.dsKindUnavailable
+              tabTag
+                ? tabTag
                 : d.s
                   ? d.pct == null
                     ? t.cfDayChangeNoneA11y
@@ -298,9 +302,9 @@ export function QuadChartModal({
                 <Text style={[styles.tabSym, on && styles.tabSymOn]} numberOfLines={1}>
                   {tabSym}
                 </Text>
-                {d.noReal ? (
+                {tabTag ? (
                   <Text style={styles.demoTag} numberOfLines={1}>
-                    {t.dsKindUnavailable}
+                    {tabTag}
                   </Text>
                 ) : (
                   <Text style={styles.tabPrice} numberOfLines={1}>
