@@ -22,6 +22,7 @@ import {
   livePriceForHeader,
   replayPrevClose,
   tickPlausibleForSeries,
+  tickPredatesLastBar,
 } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
@@ -192,9 +193,7 @@ export function ChartFrame({
   const dailyRefs = useDailyRefs([series.symbol]);
   // تيك أقدم من آخر شمعة جلبها التحديث (رمز غاب عن البثّ ~20ث) لا يُطبع — كالرباعي (`QuadChartModal`):
   // كان سعر ما قبل الجلب يبقى بالرأس والشارت تحته على الإغلاق الأحدث.
-  const lastBar = series.candles[series.candles.length - 1];
-  const tickOlder =
-    resolvedTick?.source.as_of != null && lastBar != null && resolvedTick.source.as_of < candleTimeSec(lastBar.time);
+  const tickOlder = tickPredatesLastBar(series, resolvedTick?.source.as_of);
   const headTick = tickOlder ? null : resolvedTick;
   const headPx = livePriceForHeader(series, headTick);
   const livePct =

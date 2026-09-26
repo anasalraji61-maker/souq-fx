@@ -13,7 +13,7 @@ import {
   type LiveExtremes,
 } from './liveSeries';
 import type { ChartSeries } from '../api';
-import { liveBarOpenSec, replayPrevClose } from './liveSeries';
+import { liveBarOpenSec, replayPrevClose, tickPredatesLastBar } from './liveSeries';
 
 const now = 1_760_000_000;
 const src = { kind: 'provider' as const, as_of: now, channel: 'twelvedata' };
@@ -239,6 +239,22 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.equal(liveBarOpenSec(wedD + 86400, wed22, 86400, wed22 + 1, 'EURUSD'), wedD + 86400, 'D: tick merges into next-day stamp');
   assert.equal(liveBarOpenSec(wedD, wedD + 20 * 3600, 86400, wedD + 20 * 3600 + 1, 'EURUSD'), wedD, 'D: before 17:00 NY merges');
   assert.equal(liveBarOpenSec(wedD, wed22, 86400, wed22 + 1, 'BTCUSD'), wedD, 'D: crypto UTC day');
+}
+
+// الرأس: تيك بعد افتتاح اليومية الحقيقي (X−1 ‏17:00 نيويورك) وقبل ختمها ليس «أقدم من الشمعة»
+{
+  const wedD = Date.UTC(2026, 8, 23) / 1000;
+  const bar = { time: wedD, open: 1, high: 1, low: 1, close: 1 };
+  const d = { symbol: 'EURUSD', timeframe: 'D', candles: [bar] } as unknown as ChartSeries;
+  const tue2215 = Date.UTC(2026, 8, 22, 22, 15) / 1000;
+  assert.equal(tickPredatesLastBar(d, tue2215), false, 'D: Asian-open tick is live');
+  assert.equal(tickPredatesLastBar(d, Date.UTC(2026, 8, 22, 20, 59) / 1000), true, 'D: before 17:00 NY is older');
+  assert.equal(tickPredatesLastBar({ ...d, symbol: 'BTCUSD' } as ChartSeries, tue2215), true, 'D: crypto UTC day');
+  const w = { symbol: 'EURUSD', timeframe: 'W', candles: [{ ...bar, time: Date.UTC(2026, 8, 28) / 1000 }] } as unknown as ChartSeries;
+  assert.equal(tickPredatesLastBar(w, Date.UTC(2026, 8, 27, 21, 30) / 1000), false, 'W: Sunday-open tick is live');
+  const h = { symbol: 'EURUSD', timeframe: '1H', candles: [{ ...bar, time: wedD }] } as unknown as ChartSeries;
+  assert.equal(tickPredatesLastBar(h, wedD - 1), true, 'intraday: stamp is the open');
+  assert.equal(tickPredatesLastBar(h, null), false);
 }
 
 console.log('liveSeries selftest: OK');

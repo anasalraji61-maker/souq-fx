@@ -8,7 +8,7 @@ import {
   timeframeStepSec,
 } from './dataSource';
 import { candlesThrough, prevDayFromIntraday } from './pivotBase';
-import { dailyBarStampSec, forexWeekCloseSec } from './marketHours';
+import { dailyBarStampSec, forexWeekCloseSec, tradingDayStartSec } from './marketHours';
 import { isCryptoSymbol } from './newsRisk';
 
 export type LiveMergeOpts = {
@@ -82,6 +82,23 @@ export function liveBarOpenSec(
   if (k === 0) return open;
   if (k < 0 || k >= ROLL_MAX_BARS || stepSec > ROLL_MAX_STEP_SEC) return null;
   return open + k * stepSec;
+}
+
+/**
+ * تيك أقدم من افتتاح آخر شمعة جلبها التحديث (رمز غاب عن البثّ) ⇒ لا يُطبع بالرأس. الافتتاح **الحقيقي** لا الختم:
+ * يومية الفوركس المختومة X تبدأ X−1 ‏17:00 نيويورك، وأسبوعية الاثنين تبدأ الأحد 17:00 ⇒ المقارنة بالختم كانت ترمي
+ * كل تيك 21:00–24:00 UTC على D (والأحد مساءً على W) فيتجمّد الرأس على `last` الجلب ويختفي «مباشر» والشارت يتحرّك.
+ */
+export function tickPredatesLastBar(series: ChartSeries, asOf: number | null | undefined): boolean {
+  const last = series.candles[series.candles.length - 1];
+  if (asOf == null || !last) return false;
+  const stamp = candleTimeSec(last.time);
+  const step = timeframeStepSec(series.timeframe);
+  const open =
+    series.symbol && step >= 86400 && !isCryptoSymbol(series.symbol)
+      ? tradingDayStartSec(series.symbol, Math.floor(stamp / 86400) * 86400 - 1)
+      : stamp;
+  return asOf < open;
 }
 
 /**

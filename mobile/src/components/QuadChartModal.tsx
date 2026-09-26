@@ -13,12 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
-import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
+import { headerChangePct, livePriceForChart, livePriceForHeader, tickPredatesLastBar } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
-import { candleTimeSec, isSyntheticProvenance, normalizeProvenance } from '../chart/dataSource';
+import { isSyntheticProvenance, normalizeProvenance } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
@@ -277,9 +277,7 @@ export function QuadChartModal({
             // والتيك الأقدم من آخر شمعة جلبها التحديث (رمز غاب عن البثّ — `useMultiLiveTicks` يُبقيه حتى
             // 20 ث) لا يُطبع: كان سعر الساعة الماضية يبقى بالرأس والشارت تحته يتحرّك مع كل تحديث 90 ث.
             const tk = ticks[sym];
-            const lastBar = s?.candles[s.candles.length - 1];
-            const tickOlder =
-              tk?.source.as_of != null && lastBar != null && tk.source.as_of < candleTimeSec(lastBar.time);
+            const tickOlder = s != null && tickPredatesLastBar(s, tk?.source.as_of);
             const headPx = s && !tickOlder ? livePriceForHeader(s, tk ?? null) : null;
             const px = headPx ?? s?.last ?? NaN;
             // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
