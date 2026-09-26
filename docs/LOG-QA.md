@@ -1455,3 +1455,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **بعد السحب (1215e8b):** أخضر 0؛ `tradePlan.selftest` ناجح؛ diff الدفتر بلا سطر نمط ⇒ 0/12. جديدان مُتحقَّقان **launch216a → backend + ui** (`main.py:2159` بلا `source`) و**chart-r117a → ui** (`FocusChartModal.tsx:251`).
 **بعد السحب (daff023):** أخضر 0. أُغلقت chart-r117a ← ui `66631a3` (`FocusChartModal.tsx:252`)؛ حصّة ui من launch216a ← `e77fb5c` (`LectureClassroom.tsx:341/512`) ⇒ الباقي → backend. diff بلا سطر نمط ⇒ 0/12.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة launch216a (backend)؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 144
+**البناء:** أخضر 0 (على bd95b01) — لا إصلاح لازم. **Selftests:** 125/125 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت launch216a ← backend `92849a1` (`main.py:2200` `model`، `:2223/:2246` `template`). launch217a (كتبها launch مباشرة بـCOORDINATION) مُتحقَّقة ومفتوحة — دورتها الأولى (`openrouter_ai.py:918` بلا `ku`). سجلّات chart/tools 149/launch 216/ui 134/backend 120 بلا طلب جديد. DESIGN-PRO وDECISIONS-ANAS بلا تغيير منذ defa994.
+**قائمة قبول DESIGN-PRO (الرابع والستّون):** 0/12 فشل (diff منذ daff023: `MatrixChart.tsx`/`TradeJournalPanel.tsx` منطق فقط).
+**المراجعة (d — أرقام متناقضة):** حدود `maxLength` بالتطبيق مقابل `Field(max_length)` بالخادم متطابقة (1000/2000/500/32/12، كلمة المرور 8). **لا بند.**
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ متابعة launch217a؛ وإعادة قائمة DESIGN-PRO.
