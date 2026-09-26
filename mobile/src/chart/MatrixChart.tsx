@@ -638,19 +638,15 @@ function considerHit(id: string, dist: number, max: number, cur: DrawingHit): Dr
 }
 
 /**
- * هل يُرسم الرسم في النافذة؟ (فهرسا طرفيه نسبةً لأوّل شمعة ظاهرة.) الخطّ الأفقي وفيبو بعرض الشارت،
- * والشعاع المتّجه يميناً يعبر الشموع الظاهرة ولو كان طرفاه يسارها. معيار واحد للرسم (`visibleDrawings`)
- * وللّمس (`hitDrawing`).
+ * هل يُرسم الرسم في النافذة؟ (فهرسا طرفيه نسبةً لأوّل شمعة ظاهرة، و`lastLocal` آخر خانة بالنافذة.) الخطّ
+ * الأفقي وفيبو بعرض الشارت، والشعاع المتّجه يميناً يعبر الشموع الظاهرة ولو كان طرفاه يسارها. معيار واحد
+ * للرسم (`visibleDrawings`) وللّمس (`hitDrawing`). يمين النافذة (شارت مُمرَّر للخلف) كيسارها: ترند/قناة
+ * طرفاهما بعد آخر خانة يُقصّان لنقطة صفرية على الحافّة اليمنى — لا تُرى، وكانت تُلمس وتُرسم مقابضها هناك.
  */
-function drawingOnScreen(tool: DrawTool, aLocal: number, bLocal: number): boolean {
-  return (
-    tool === 'hline' ||
-    tool === 'hray' ||
-    tool === 'fib' ||
-    (tool === 'ray' && bLocal > aLocal) ||
-    aLocal >= -2 ||
-    bLocal >= -2
-  );
+function drawingOnScreen(tool: DrawTool, aLocal: number, bLocal: number, lastLocal: number): boolean {
+  if (tool === 'hline' || tool === 'hray' || tool === 'fib') return true;
+  if (aLocal > lastLocal + 2 && bLocal > lastLocal + 2) return false;
+  return (tool === 'ray' && bLocal > aLocal) || aLocal >= -2 || bLocal >= -2;
 }
 
 function windowFromPlot(
@@ -4548,7 +4544,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         const aLocal = d.a.index - source.start;
         // ما لا يُرسم لا يُلمس: ترند/قناة طرفاهما قبل النافذة كان `clipSegmentToBars` يقصّهما لنقطة على
         // الحافّة اليسرى ⇒ لمسة عند x≈0 تحدّد رسماً غير مرئي (ويُسحب أو يُحذف بلا أن يُرى).
-        if (!drawingOnScreen(d.tool, aLocal, d.b ? d.b.index - source.start : aLocal)) continue;
+        if (!drawingOnScreen(d.tool, aLocal, d.b ? d.b.index - source.start : aLocal, lastDrawLocal)) continue;
         const ax = xOf(aLocal);
         const ay = yOf(d.a.price);
         if (d.tool === 'hline') {
@@ -6037,7 +6033,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // الخطّ الأفقي وفيبو بعرض الشارت كلّه: موضع مرساتهما لا يحدّد ظهورهما. كان خطّ دعم
     // مرسوم عند قاع قبل 120 شمعة يختفي (ووسم سعره) بمجرّد العودة للحيّ، ويبقى قابلاً للتحديد.
     // والشعاع المتّجه يميناً كذلك: امتداده يعبر الشموع الظاهرة ولو كان طرفاه يسارها (`raySegment`).
-    .filter(({ d, aLocal, bLocal }) => drawingOnScreen(d.tool, aLocal, bLocal));
+    .filter(({ d, aLocal, bLocal }) => drawingOnScreen(d.tool, aLocal, bLocal, lastDrawLocal));
 
   /**
    * أي الخطوط الأفقية يحمل وسم سعره. الخطّ الأفقي هو أداة الدعم/المقاومة الأولى عند
