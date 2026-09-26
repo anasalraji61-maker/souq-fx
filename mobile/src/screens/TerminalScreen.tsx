@@ -1474,7 +1474,7 @@ export function TerminalScreen() {
             // تغيّر اليوم بنظرة: فقط مع تيك مزوّد مؤكَّد (لا البثّ التجريبي ولا `unknown`) ومرجع إغلاق أمس.
             const tick = liveTicks[sym];
             const chg =
-              tick && isVerifiedTickKind(tick.source.kind) ? dailyChange(tick.price, stripDailyRefs[sym]) : null;
+              tick && isVerifiedTickKind(tick.source.kind) ? dailyChange(tick.price, stripDailyRefs[sym], sym) : null;
             const pctText = chg ? formatPct(chg.pct) : null;
             return (
               <Pressable

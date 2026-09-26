@@ -151,6 +151,16 @@ assert.equal(dailyChange(2349.0, 2348.6)!.dir, 'up');
 assert.equal(dailyChange(null, 1), null);
 assert.equal(dailyChange(1, null), null);
 assert.equal(dailyChange(1, 0), null);
+// مع الرمز: حدّ رأس الشارت (`headerChangePct`) — شريط الهاتف كان «+32%» والرأس «—» للرمز نفسه بمرجع فاسد
+assert.ok(dailyChange(1.32, 1.0) != null);
+assert.equal(dailyChange(1.32, 1.0, 'EURUSD'), null);
+assert.equal(dailyChange(0.7, 1.0, 'XAUUSD'), null);
+assert.ok(dailyChange(1.24, 1.0, 'EURUSD') != null); // داخل الحدّ
+assert.equal(dailyChange(1.0101, 1.0, 'EURUSD')!.dir, 'up');
+assert.ok(dailyChange(1.32, 1.0, 'PEPEUSD') != null); // ميم كريبتو +32% يوم عادي
+assert.ok(dailyChange(4.9, 1.0, 'BTCUSD') != null);
+assert.equal(dailyChange(5.1, 1.0, 'BTCUSD'), null);
+assert.equal(dailyChange(0.19, 1.0, 'ETHUSD'), null);
 assert.equal(dailyChange(-1, 1), null);
 
 // تنسيق

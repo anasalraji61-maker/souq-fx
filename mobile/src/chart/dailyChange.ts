@@ -13,6 +13,7 @@
 import type { Candle } from '../api';
 import { DAY_SEC, forexSundayOpenSec, isForexMarketOpen, isLateOpenSymbol, nyFivePmUtcSec } from './marketHours';
 import { isFreshTick, serverNowSec } from './dataSource';
+import { isCryptoSymbol } from './newsRisk';
 
 export type Direction = 'up' | 'down' | 'flat';
 
@@ -165,11 +166,18 @@ export function validSessionBar(c: Candle | null | undefined): Candle | null {
  * تغيّر السعر الحالي عن المرجع. عتبة "ثابت" نسبية صغيرة (ما يُطبع «0.00%») كي لا يومض السهم أخضر/أحمر
  * على ضجيج الكسور العشرية.
  */
-export function dailyChange(price: number | null | undefined, prevClose: number | null | undefined): DailyChange | null {
+export function dailyChange(
+  price: number | null | undefined,
+  prevClose: number | null | undefined,
+  symbol?: string | null,
+): DailyChange | null {
   if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
   if (typeof prevClose !== 'number' || !Number.isFinite(prevClose) || prevClose <= 0) return null;
   const abs = price - prevClose;
   const pct = (abs / prevClose) * 100;
+  // مع الرمز: حدّ رأس الشارت نفسه (`headerChangePct`) — ±25%، الكريبتو −80%..+400% — وإلا null («—»). شريط رموز الهاتف كان
+  // يطبع «+32%» لـEURUSD بمرجع فاسد (إغلاق أداة أخرى، تيك شاذّ) والرأس فوقه «—» للرمز نفسه.
+  if (symbol != null && (isCryptoSymbol(symbol) ? pct < -80 || pct > 400 : Math.abs(pct) > 25)) return null;
   // العتبة = «هل تُطبع النسبة غير صفرية» (`pctDirection`) لا مقارنة خام بـ0.005: 99.995 مقابل 100 تعطي
   // ‎−0.00499999…‎ بالفاصلة العائمة فكانت «ثابتاً» بجانب «−0.01%» المطبوعة.
   return { abs, pct, dir: pctDirection(pct) };
