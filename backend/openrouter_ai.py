@@ -248,17 +248,26 @@ _GAP = r"(?:[^\n\d]|\d+(?:[.,]\d+)?\s*(?:pips?|points?|نقط\w*|[x×]\s*ATR)(?!
 # cut losses، close the trade، «هدفنا»، الكردية والفرنسية/الإسبانية). «stop run/hunt» و«the entry of the
 # London session» و«الهدف من هذا الدرس» وصف لا مستوى.
 _LEVEL_WORD = (
-    r"(?:\b(?:entry(?!\s+of\s+the\b)|entries|enter|stop[- ]?loss(?:es)?|stops?(?![- ](?:run|hunt))"
+    r"(?:\b(?:entry(?:\s?price)?(?!\s+of\s+the\b)|entries|enter|stop[- ]?loss(?:es)?|stops?(?![- ](?:run|hunt))"
     r"|s/?l\d?|take[- ]?profits?|t/?p\d?|pt|tgt|targets?(?!\s+of\s+th)|profit target|invalidation"
     r"|objective(?!\s+of\s+th)|exit(?!\s+of\b)|entrée|objectif|objetivo|entrada)(?![a-z])"
     r"|\baim(?:ing)?\s+for\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
     r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
-    r"|" + _AR_PRE + r"(?:دخول|ادخل|وقف|هدف|أهداف|اهداف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
+    r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
     + r"(?!\s+من\s+(?:هذ|ال|درس))"
     r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان|زیان\s*وەستاندن"
     # run 80: التعريب الصوتي «ستوب لوس 1.0800»، «تيك بروفيت 1.0950»
-    r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)تيك\s*بروفيت(?!\w))"
+    r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)تيك\s*بروفيت(?!\w)"
+    # run 83: التركية والألمانية («Giriş: 1.0850»، «zarar durdur 1.0800»، «hedef 1.0950»، «Einstieg 1.0850»)
+    r"|\b(?:giri[şs]|zarar\s+durdur|hedef|k[aâ]r\s+al|einstieg|kursziel)\w*)"
+    # run 83: رقم ترتيب بعد الكلمة («Target 1: 1.0950»، «TP 2: 1.1000»، «T1 1.0950») — كان الرقم يقطع الفجوة
+    r"(?:\s*#?\d(?![\d.,]))?"
 )
+# «T1/T2» اختصار هدف مرقَّم — لا يُضاف لـ_LEVEL_WORD نفسه (تُلحقه اللاحقة أعلاه)
+_LEVEL_WORD = r"(?:" + _LEVEL_WORD + r"|\bt\d(?![\d.,])(?![a-z]))"
+# run 83: «أ/إ/آ» ⇒ «ا» بـ`_guard_norm` («انصحك بالشراء»، «إشتري») ⇒ الأنماط تُكتب بالألف المجرّدة كذلك
+_ALEF = str.maketrans("أإآ", "ااا")
+_LEVEL_WORD = _LEVEL_WORD.translate(_ALEF)
 _PRICE = r"\d+[.,]\d+" + _NOT_PRICE_AFTER
 # فعل صفقة (لا وصف): «selling pressure»/«sell-off»/«buy-side»/«short-term» وصف للسوق ⇒ مستثناة
 # «Many traders sell at resistance like 1.0950» / «tend to buy near 1.0800»: وصف سلوك المتداولين، لا أمر
@@ -271,7 +280,7 @@ _AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?:ال)?(?:شرا�
 # أمر صفقة بأول الجملة: «Buy.»، «Go long.»، «Short it.»، «long EURUSD»، «Accumulate gold below 2350».
 # الرمز حساس لحالة الأحرف (EURUSD، EUR/USD) — «Long wicks»/«Short-term» ليست أمراً.
 _EN_ORDER = (
-    r"(?:^\s*|[.!?]\s+|[-*•>]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
+    r"(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
     r"|load\s+up(?:\s+on)?|accumulate|consider\s+(?:buying|selling|shorting|going\s+(?:long|short)|an?\s+(?:long|short)))"
     r"(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|above|below|on|if|when|it|this|gold|silver|oil|crude|bitcoin|btc"
     r"|the\s+(?:pair|dip|breakout|retest|rally|euro|dollar|yen|pound))\b|(?-i:(?!(?:EMA|SMA|WMA|RSI|MACD|ATR|ADX|CCI|MFI|OBV|VWAP)\b)[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
@@ -285,8 +294,11 @@ _TRADE_CALL_RE = re.compile(
     + r"|\b(?:i|we)(?:\s+would|['’]d)?\s+(?:recommend|suggest|advise)\s+(?:you\s+)?(?:to\s+)?"
     r"(?:buy|sell|buying|selling|go(?:ing)?\s+(?:long|short)|a\s+(?:long|short|buy|sell))\b"
     + r"|\b(?:recommendation|signal|call|direction|action|trade|advice|suggestion|verdict|bias|idea|setup|position"
-    r"|buy\s*/\s*sell|long\s*/\s*short)"
-    r"\s*[:\-–—=]\s*(?:[^\n.:]{0,20}?[\s,])?(?:buy|sell|long|short)\b(?![-‑])"
+    r"|answer|take|side|order|view|opinion|buy\s*/\s*sell|long\s*/\s*short)"
+    r"\s*[:\-–—=]\s*"
+    # «Each order has a side: buy or sell» شرح لا توصية
+    r"(?!\s*(?:buy|sell|long|short)\s*(?:/|or|and|أو)\s*(?:buy|sell|long|short)\b)"
+    r"(?:[^\n.:]{0,20}?[\s,])?(?:buy|sell|long|short)\b(?![-‑])"
     # سعر ثم كلمة المستوى بعدها بالسطر نفسه («1.0950, a good place to take profit»)
     + r"|" + _PRICE + r"[^\n\d]{0,40}?" + _LEVEL_WORD
     # فعل صفقة ثم سعر («You could buy near 1.0850»، «Short it at 1.0900»)
@@ -295,6 +307,16 @@ _TRADE_CALL_RE = re.compile(
     + r"|" + _EN_ACT + r"[^\n\d]{0,30}?\b(?:at|near|around|below|above|from|under|over|@)\s*\d{3,}(?![\d.,%])"
     + r"|\b(?:pending\s+)?(?:buy|sell)\s+(?:limit\s+|stop\s+)?orders?\s+(?:at|near|around|@)\s*\d"
     + r"|" + _EN_ORDER
+    # run 83: جواب مباشر «Yes, buy now.»، «Yes — buying here makes sense»، «Buy? Yes.»
+    + r"|\b(?:yes|yeah|yep|absolutely|definitely)\b[\s,.!:—–-]*(?:buy(?:ing)?|sell(?:ing)?|short(?:ing)?|go(?:ing)?\s+(?:long|short))\b"
+    r"(?![-‑])(?!\s+(?:pressure|interest|volume|climax|momentum|activity|power|wave|orders?|signals?)\b)"
+    + r"|\b(?:buy|sell|long|short)\s*\?\s*(?:yes|yeah|yep|absolutely|definitely)\b"
+    # run 83: «Longs at 1.0850»، «Shorts from 1.0950»، «A long here at 1.0850»
+    + r"|\b(?:longs|shorts|an?\s+(?:long|short)(?=\s+(?:here|from|at|near|around|above|below|@)\b))"
+    r"\s+(?:here\s+)?(?:from|at|near|around|above|below|@)\s*" + _PRICE
+    # run 83: أمر بأول الجملة «Scale in at 1.0850»، «Add at …»، «Close at …»، «Hold until …» («the daily close at» وصف)
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*)(?:scale\s+in|add(?:\s+more)?|close(?:\s+it)?|hold(?:\s+it)?)\s+"
+    r"(?:at|near|around|until|@)\s*" + _PRICE
     # run 80: صيغ أوامر كانت تمرّ
     + r"|\b(?:place|put|set|use)\s+an?\s+(?:(?:pending|limit|stop|buy|sell)\s+){0,3}orders?\s+"
     r"(?:at|near|around|above|below|@)\s*\d"
@@ -330,6 +352,12 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:الاتجاه|القرار|الصفقة|إشارة|اشارة|الإشارة|الاشارة)\s*[:\-–—=]\s*(?:ال)?(?:شراء|بيع)"
     + r"|(?:توصيتي|توصيتنا|الأنسب|الانسب|خياري)\s*(?:هي|هو)?\s*[:\-–—]?\s*(?:ال)?(?:شراء|بيع)(?!\w)"
     + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشتر|اشتري|بع|ادخل)(?!\w)"
+    # «أدخل مؤشر RSI» (أضِف) تصير «ادخل» بعد توحيد الألف — إدخال بالواجهة لا دخول صفقة
+    r"(?!\s+(?:ال)?(?:مؤشر|اداة|أداة|قيمة|رقم|اسم|بريد|كود|رمز|اعدادات|إعدادات|اعداد|إعداد|الى|إلى|على)(?!\w))"
+    # run 83: «قم بالشراء الآن»، «نصيحتي: شراء»، «رأيي شراء»، «الجواب: شراء»، «الشراء أفضل»
+    + r"|(?<!لا )(?:قم|قوموا)\s+ب(?:ال)?(?:شراء|بيع|دخول)(?!\w)"
+    + r"|(?:نصيحتي|نصيحتنا|رأيي|رأينا|الجواب|الإجابة|جوابي)\s*(?:هي|هو)?\s*[:\-–—]?\s*(?:ب?ال)?(?:شراء|بيع)(?!\w)"
+    + r"|(?<!\w)ال(?:شراء|بيع)\s+(?:هو\s+)?(?:أفضل|الأفضل|أنسب|الأنسب)(?!\w)"
     + r"|(?:افتح|أدخل|ادخل|نفذ|خذ)\s+(?:صفقة|صفقه|مركز)\s+(?:ال)?(?:شراء|بيع)"
     # الكردية (سۆرانی): کڕین/فرۆشتن مع سعر أو «ئێستا» (الآن) أو «بکە» (افعل)
     + r"|(?:کڕین|فرۆشتن)\w*[^\n\d]{0,25}?(?:\d|ئێستا|بکە)"
@@ -338,10 +366,16 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:^\s*|[:\-–—=]\s*)(?:کڕین|فرۆشتن)\s*(?:[.!]|$)"
     + r"|(?:کڕین|فرۆشتن)\w*[^\n]{0,30}?پێشنیار|پێشنیار\w*[^\n]{0,30}?(?:کڕین|فرۆشتن)"
     # الفرنسية/الإسبانية: فعل أمر صفقة مع سعر أو «الآن»
-    + r"|\b(?:achetez|achète|achetons|vendez|vends|compra|compre|vende|venda|ingresa)\b[^\n\d]{0,30}?"
-    r"(?:\d|maintenant|ahora)",
+    + r"|\b(?:achetez|achète|achetons|acheter|achat|vendez|vends|vendre|vente|compra|compre|comprar|vende|venda|vender"
+    r"|ingresa|kaufen|kaufe|verkaufen|verkaufe|al[ıi][şs]|sat[ıi][şs])\b[^\n\d]{0,30}?(?:\d|maintenant|ahora|jetzt|şimdi)"
+    # run 83: «Oui, achetez.»، «Sí, compra.»، «Satın al»، «Recomiendo comprar»، «Je recommande d'acheter»
+    + r"|(?:^\s*|[.!?,:;—–-]\s*)(?:achetez|achète|vendez|vends|compra|compre|vende|venda|kaufen|verkaufen)\s*(?:[.!]|$)"
+    + r"|\bsat[ıi]n\s+al(?!\w)"
+    + r"|\b(?:recomiendo|recomendamos|recommande|recommandons|empfehle)\s+(?:de\s+|d['’]\s*|zu\s+)?"
+    r"(?:comprar|vender|acheter|vendre|kaufen|verkaufen)\b",
     re.IGNORECASE | re.MULTILINE,
 )
+_TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
 # الكردية على النصّ العربي (نفس الأبجدية) كقالب `ai_ask` الاحتياطي — لا مراجعة لغوية كردية.
 _GUARD_NOTE = {
     "ar": "_حُذف من الردّ ما يشبه توصية تداول (دخول/وقف/هدف أو شراء/بيع): مساعد MATRIX تعليمي ولا يقدّم توصيات._",
@@ -364,7 +398,8 @@ def _guard_norm(text: str) -> str:
     t = re.sub(r"</?[A-Za-z][^<>\n]{0,40}>", " ", t)
     t = "".join(" " if unicodedata.category(ch) in ("So", "Sk", "Cs") or ch in "\ufe0f\u200d{}\"" else ch for ch in t)
     t = re.sub(r"(?<=\d)٫(?=\d)", ".", t)
-    return re.sub(r"[*_`]", "", t)
+    # run 83: «_» مسافة لا حذف: «entry_price» كان «entryprice» فلا يُعرف «entry»
+    return re.sub(r"[*`]", "", t).replace("_", " ").translate(_ALEF)
 
 
 def has_trade_call(text: str) -> bool:
@@ -375,6 +410,9 @@ def has_trade_call(text: str) -> bool:
 # «| Entry | Stop | Target |» صفوفه أسعار كانت تمرّ كاملة.
 _LABEL_END_RE = re.compile(_LEVEL_WORD + r"[\s:：\-–—=→←>|]*$", re.IGNORECASE)
 _STARTS_NUM_RE = re.compile(r"^[\s\-*•>|:=→←]*\d")
+# run 83: «Entry zone (pullback):\n1.0850» — كلام بعد الكلمة ثم سعر عشري بأول السطر التالي
+_LABEL_NOTE_END_RE = re.compile(_LEVEL_WORD + r"[^\n\d]{0,30}[:：\-–—=→]\s*$", re.IGNORECASE)
+_STARTS_PRICE_RE = re.compile(r"^[\s\-*•>|:=→←]*" + _PRICE)  # «1.5×ATR» مسافة لا سعر
 
 
 def _trade_call_lines(lines: list[str]) -> set[int]:
@@ -382,8 +420,10 @@ def _trade_call_lines(lines: list[str]) -> set[int]:
     # كلمة مستوى تنتهي بها سطر، والسطر غير الفارغ التالي يبدأ برقم
     filled = [i for i, ln in enumerate(lines) if ln.strip()]
     for a, b in zip(filled, filled[1:]):
-        if (_LABEL_END_RE.search(_guard_norm(lines[a])) and _STARTS_NUM_RE.match(_guard_norm(lines[b]))
-                and has_trade_call(lines[a] + " " + lines[b])):
+        la, lb = _guard_norm(lines[a]), _guard_norm(lines[b])
+        if (_LABEL_END_RE.search(la) and _STARTS_NUM_RE.match(lb) and has_trade_call(lines[a] + " " + lines[b])) or (
+            _LABEL_NOTE_END_RE.search(la) and _STARTS_PRICE_RE.match(lb)
+        ):
             bad |= {a, b}
     # جدول Markdown: رأسه فيه كلمة مستوى وصفوفه أسعار ⇒ يُحذف الجدول كله
     i = 0

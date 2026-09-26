@@ -619,3 +619,47 @@ def test_guard_run80_trade_calls(text):
 def test_guard_run80_education_left_alone(text):
     """كانت تُحذف (أيّ عدد صحيح بعد كلمة مستوى = سعر) فيصير الردّ كلّه اعتذاراً."""
     assert openrouter_ai.guard_answer(text, "en") == text
+
+
+# ─── run 83: صيغ كانت تمرّ حارس قرار ٤ كما هي ────────────────────────────────
+
+
+@pytest.mark.parametrize("text", [
+    "Yes, buy now.", "Short answer: yes, buy now.", "Yes — buy.", "Should you buy? Yes, buying here makes sense.",
+    "Answer: buy", "My take: buy.", "side: BUY", "Order: BUY EURUSD", "Buy? Yes.",
+    "قم بالشراء الآن", "قم بالبيع عند 1.0850", "انصحك بالشراء", "إشتري الآن", "نصيحتي: شراء", "رأيي شراء",
+    "الشراء أفضل", "الجواب: شراء", "المستهدف 1.0950", "إدخال عند 1.0850",
+    "Stop 1: 1.0800", "Target 1: 1.0950", "TP 2: 1.1000", "T1 1.0950",
+    '"entry_price": 1.0850', "entryPrice: 1.0850",
+    "Longs at 1.0850", "Shorts from 1.0950", "A long here at 1.0850 makes sense",
+    "Scale in at 1.0850", "Add at 1.0850", "Close at 1.0950", "Hold until 1.0950",
+    "Alış 1.0850, zarar durdur 1.0800, hedef 1.0950", "Giriş: 1.0850", "Satın al", "Kaufen bei 1.0850",
+    "Oui, achetez.", "Achat à 1,0850", "Acheter à 1,0850", "Sí, compra.", "Recomiendo comprar",
+    "Je recommande d'acheter",
+])
+def test_guard_flags_run83_leaks(text):
+    assert openrouter_ai.has_trade_call(text), text
+
+
+@pytest.mark.parametrize("text", [
+    "Entry zone (pullback):\n1.0850", "نقطة الدخول (تقريباً):\n1.0850",
+    '{\n"direction": "buy",\n"entry_price": 1.0850,\n"stop_loss": 1.0800\n}',
+])
+def test_guard_drops_run83_multiline_leaks(text):
+    out = openrouter_ai.guard_answer(text, "en")
+    assert "1.0850" not in out, out
+
+
+@pytest.mark.parametrize("text", [
+    "Each order has a side: buy or sell.",
+    "A long wick at 1.0850 shows rejection.",
+    "The daily close at 1.0950 was the highest this month.",
+    "Yes, selling pressure increased after the data.",
+    "Stop 3 of the lesson covers position sizing.",
+    "Stop-loss placement:\n1.5×ATR beyond the swing is common.",
+    "أدخل مؤشر RSI على الشارت من القائمة.",
+    "Buyers stepped in near the lows yesterday.",
+    "Target audience: beginners.",
+])
+def test_guard_run83_education_left_alone(text):
+    assert openrouter_ai.guard_answer(text, "en") == text
