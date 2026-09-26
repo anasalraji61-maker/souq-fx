@@ -129,8 +129,12 @@ export function QuadChartModal({
   useEffect(() => {
     setSyncWindow(null);
     setCrossTime(null);
-    setLeader(0);
   }, [visible, symbols, tf]);
+  // القائد اختيار المتداول لخانة لا لفريم: تبديل الفريم من شريط الرباعي كان يعيده إلى الخانة الأولى
+  // (الإطار والشارة و«يقود — X» تقفز إلى EURUSD بعد أن اختار XAUUSD). يُصفَّر مع إعادة الفتح أو تغيير الرموز فقط.
+  useEffect(() => {
+    setLeader(0);
+  }, [visible, symbols]);
 
   useEffect(() => {
     if (!visible) return;
