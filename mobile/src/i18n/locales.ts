@@ -804,7 +804,6 @@ export type Dict = {
   coursesLectureA11yPrefix: string;
   coursesMinuteWord: string;
   coursesMinuteAbbrev: string;
-  coursesFullLectureWord: string;
   coursesBackToSchoolsA11y: string;
   coursesBack: string;
   coursesFallbackLevelTitle: string;
@@ -2128,7 +2127,6 @@ const ar: Dict = {
   coursesLectureA11yPrefix: 'محاضرة',
   coursesMinuteWord: 'دقيقة',
   coursesMinuteAbbrev: 'د',
-  coursesFullLectureWord: 'محاضرة كاملة',
   coursesBackToSchoolsA11y: 'رجوع لقائمة المدارس',
   coursesBack: 'رجوع',
   coursesFallbackLevelTitle: 'التأسيس',
@@ -3342,7 +3340,6 @@ const enUS: Dict = {
   coursesLectureA11yPrefix: 'Lecture',
   coursesMinuteWord: 'minute',
   coursesMinuteAbbrev: 'min',
-  coursesFullLectureWord: 'full lecture',
   coursesBackToSchoolsA11y: 'Back to the school list',
   coursesBack: 'Back',
   coursesFallbackLevelTitle: 'Foundation',
@@ -4592,7 +4589,6 @@ const ku: Dict = {
   coursesLectureA11yPrefix: 'وانە',
   coursesMinuteWord: 'خولەک',
   coursesMinuteAbbrev: 'خولەک',
-  coursesFullLectureWord: 'وانەی تەواو',
   coursesBackToSchoolsA11y: 'گەڕانەوە بۆ لیستی قوتابخانەکان',
   coursesBack: 'گەڕانەوە',
   coursesFallbackLevelTitle: 'بناغە',
