@@ -144,4 +144,11 @@ const bar = (time: number) => ({ time });
   assert.equal(crossPriceAt(1.085237, null, false, 5, Infinity, 150), 1.08524); // منازل الأداة تغلب
 }
 
+// Heikin Ashi: الملتقَط (متوسّط) يُقرَّب لشبكة الأداة كما يُقرأ على الوسم — التنبيه يُرسل 1.08535 لا 1.0853475.
+{
+  const ha = { open: 1.0851, high: 1.0856, low: 1.0849, close: 1.0853475 };
+  assert.equal(crossPriceAt(1.08534, ha, true, 5, 0.0002), 1.08535);
+  assert.equal(crossPriceAt(1.08561, { open: 1.0851, high: 1.0856, low: 1.0849, close: 1.0853 }, true, 5, 0.0002), 1.0856);
+}
+
 console.log('crossAnchor.selftest: PASS');

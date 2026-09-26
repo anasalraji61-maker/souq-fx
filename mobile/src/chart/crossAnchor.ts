@@ -64,6 +64,7 @@ export function crossPriceAt(
   ref?: number | null
 ): number | null {
   if (!Number.isFinite(raw)) return null;
+  let at = raw;
   if (magnet && bar) {
     let best = bar.close;
     let d = Infinity;
@@ -74,11 +75,13 @@ export function crossPriceAt(
         best = p;
       }
     }
-    if (d <= snapTol) return best;
+    // الملتقَط يُقرَّب كذلك: Heikin Ashi (متوسّطات) إغلاقها 1.0853475 ووسمها «1.08535» — كان التنبيه يُرسل بالأوّل
+    // فتنبيه «تحت» لا ينطلق على تيك 1.08535 الذي رآه المتداول. الشموع الحقيقية على الشبكة أصلاً فلا تتغيّر.
+    if (d <= snapTol && Number.isFinite(best)) at = best;
   }
-  const a = ref != null && Number.isFinite(ref) && ref > 0 ? ref : Math.abs(raw);
+  const a = ref != null && Number.isFinite(ref) && ref > 0 ? ref : Math.abs(at);
   const dp = decimals ?? magnitudeDecimals(a);
-  return Number(raw.toFixed(dp));
+  return Number(at.toFixed(dp));
 }
 
 /**
