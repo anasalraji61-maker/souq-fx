@@ -78,3 +78,12 @@ def test_tts_200_without_audio_is_an_error(tmp_path, monkeypatch, content, ctype
         with pytest.raises(RuntimeError):
             tts.synthesize("hello", "abcdefghij12")
         assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("hi,lo,want", [("1.3", "1.0", (1.3, 1.0)), ("1.0", "1.3", (None, None)), ("0", "1.0", (None, 1.0))])
+def test_quote_impossible_day_range_is_none(routes, hi, lo, want):  # noqa: F811
+    import time
+
+    routes["/quote"] = _Resp({"close": "1.1", "high": hi, "low": lo, "open": "-1", "last_quote_at": time.time() - 5})
+    q = market.fetch_quote_book("BTCUSD")
+    assert (q["high"], q["low"]) == want and q["open"] is None

@@ -580,6 +580,10 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
     # أو قيمة غير موجبة أو bid > ask = لا دفتر صالح ⇒ كلاهما None والعميل يُخفي السطر.
     if bid_f is None or ask_f is None or bid_f <= 0 or ask_f <= 0 or bid_f > ask_f:
         bid_f = ask_f = None
+    # قمّة وقاع اليوم: سعر موجب، وقمّة تحت القاع ليست يوماً (كـ`_candle`) ⇒ كلاهما None
+    high_f, low_f = _pos(data.get("high")), _pos(data.get("low"))
+    if high_f is not None and low_f is not None and high_f < low_f:
+        high_f = low_f = None
     return {
         "symbol": matrix_symbol.upper(),
         "price": price,
@@ -587,9 +591,9 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         "ask": ask_f,
         # من أين جاء Bid/Ask: `provider` = من المزوّد، None = غير متاح (لا تقدير أبداً).
         "spread_source": "provider" if bid_f is not None else None,
-        "open": _f(data.get("open")),
-        "high": _f(data.get("high")),
-        "low": _f(data.get("low")),
+        "open": _pos(data.get("open")),
+        "high": high_f,
+        "low": low_f,
         # «-0.00000» من المزوّد كان يصل ‎-0.0 ⇒ «−0.00%» لتغيّر صفري
         "percent_change": (pc + 0.0) if (pc := _f(data.get("percent_change"))) is not None else None,
         # وقت السعر نفسه من المزوّد (آخر شمعة دقيقة)، لا لحظة جلبه: بعطلة نهاية الأسبوع كان إغلاق الجمعة
