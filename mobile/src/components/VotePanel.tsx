@@ -465,7 +465,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.btn,
-                    styles.yes,
+                    v.my_choice === 'agree' && styles.btnOn,
                     castingIds.has(v.id) && styles.btnDisabled,
                     pressed && {
                       opacity: buttons.pressedOpacity,
@@ -486,7 +486,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.btn,
-                    styles.no,
+                    v.my_choice === 'disagree' && styles.btnOn,
                     castingIds.has(v.id) && styles.btnDisabled,
                     pressed && {
                       opacity: buttons.pressedOpacity,
@@ -617,12 +617,14 @@ const styles = StyleSheet.create({
   actionsRtl: { flexDirection: 'row-reverse' },
   btn: {
     flex: 1,
+    backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
     paddingVertical: spacing.sm,
     alignItems: 'center',
   },
-  yes: { backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 1, borderColor: colors.bull },
-  no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
+  // DESIGN-PRO §1/§5.5: موافق/معارض رأيٌ لا اتجاه سعر — كانا أخضر وأحمر (حدّ + تعبئة) على كل بطاقة
+  // وقت السكون. الآن تعبئة محايدة، والاختيار تعبئة أقوى + «✓» + `selected` (لا لون وحده).
+  btnOn: { backgroundColor: colors.border },
   btnDisabled: { opacity: 0.4 },
   btnText: { color: colors.text, fontWeight: '500', fontSize: 12 },
   author: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: 4 },
