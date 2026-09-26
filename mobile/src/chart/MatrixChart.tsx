@@ -1158,10 +1158,13 @@ function PaneValueHead({
    *   BBW، الانحراف المعياري): إشارتها لا تتغيّر أبداً فتلوين الجانب يجعل الرقم أخضر
    *   أبداً ولا يقول شيئاً، بينما ما يقرؤه المتداول من هذه اللوحات هو **التوسّع أم
    *   الانكماش**. نفس منطق رأس Gator.
+   * - `'cross'`: فوق الإشارة أم تحتها — للوحات التي يُلوَّن خطّها بالتقاطع (TSI، KST، RVI، PMO،
+   *   Fisher). كان الرقم يُلوَّن بالجانب والخطّ بالتقاطع ⇒ TSI ‎−5‎ فوق إشارته ‎−8‎: خطّ أخضر ورقم أحمر.
+   *   المقارنة كالخطّ تماماً (`>=` على الخام، وبلا إشارة ⇒ أخضر).
    * - `'none'`: بلا لون — حيث تحمل الأعمدة دلالةً أخرى (اتجاه الشمعة مثلاً) فيتنافس
    *   لونان على معنيين مختلفين.
    */
-  tone?: 'sign' | 'trend' | 'none';
+  tone?: 'sign' | 'trend' | 'cross' | 'none';
   /** مركز `'sign'`: الجانب نسبةً إليه لا إلى الصفر (RVI (Vol) حول 50). */
   center?: number;
   /** خطّ الإشارة بلونه — راجع `PaneSignalValue`. */
@@ -1181,11 +1184,17 @@ function PaneValueHead({
   // الجانب من الرقم المطبوع لا الخام: «0» (أو «50» بمركز 50) بلا لون.
   const shown = tone === 'sign' ? paneShownValue(txt) : null;
   const toneColor =
-    (shown != null && shown > center) || trend === 'up'
-      ? colors.bull
-      : (shown != null && shown < center) || trend === 'down'
-        ? colors.bear
-        : null;
+    tone === 'cross'
+      ? v == null
+        ? null
+        : sv == null || v >= sv
+          ? colors.bull
+          : colors.bear
+      : (shown != null && shown > center) || trend === 'up'
+        ? colors.bull
+        : (shown != null && shown < center) || trend === 'down'
+          ? colors.bear
+          : null;
   const inline = compact && signal && txt && stxt && paneInlineFits(txt, stxt);
   return (
     <View style={styles.paneHead} accessible={hint ? true : undefined} accessibilityHint={hint}>
@@ -12469,6 +12478,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="TSI"
+            tone="cross"
             values={tsi.tsi}
             at={crossIndex}
             signal={{ values: tsi.signal, color: colors.warn }}
@@ -13028,6 +13038,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="RVI"
+            tone="cross"
             values={rvi.rvi}
             at={crossIndex}
             signal={{ values: rvi.signal, color: colors.warn }}
@@ -13289,6 +13300,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="Fisher Transform"
+            tone="cross"
             values={fisher.fisher}
             at={crossIndex}
             signal={{ values: fisher.trigger, color: colors.warn }}
@@ -13347,6 +13359,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="KST"
+            tone="cross"
             values={kst.kst}
             at={crossIndex}
             signal={{ values: kst.signal, color: colors.warn }}
@@ -13659,6 +13672,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead
             name="PMO"
+            tone="cross"
             values={pmo.pmo}
             at={crossIndex}
             signal={{ values: pmo.signal, color: colors.warn }}
