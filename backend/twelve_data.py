@@ -533,7 +533,39 @@ def fetch_time_series_with_meta(
     """Candles + provenance: kind provider|cache, as_of unix, channel twelvedata. آخر `outputsize` شمعة."""
     n = max(1, min(int(outputsize), 5000))
     candles, meta = _fetch_bucket(matrix_symbol, timeframe, _size_bucket(n))
+    if meta.get("kind") == "cache":
+        candles, meta = _with_newest_close(matrix_symbol.upper(), timeframe, candles, meta)
     return candles[-n:], meta
+
+
+def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tuple[list[dict], dict]:
+    """**سعر واحد بين الفريمات** (W1): كل فريم بكاشه وعمره (D ‏600ث، 15m ‏90ث، 1m ‏45ث) ⇒ رمز بلا تيك حيّ
+    (14 رمزاً بأيام التداول، والرقمية بالعطلة) كانت قائمة المتابعة (D) تعرض إغلاقاً أقدم بحتى 10 دقائق من
+    رأس الشارت (15m) في اللحظة نفسها — رقمان للرمز. شمعة مخزّنة ما زالت جارية تأخذ إغلاق أحدث جلب للرمز
+    نفسه بأيّ فريم إن وقع جلبه قبل نهايتها (السعر نفسه داخل الشمعة نفسها)، وقمّتها/قاعها يتّسعان له؛
+    `as_of` = وقت ذلك الجلب الحقيقي. جلبٌ بعد نهاية الشمعة (العطلة، شمعة جديدة) لا يُمسّ به شيء."""
+    if not candles:
+        return candles, meta
+    last = candles[-1]
+    as_of = float(meta.get("as_of") or 0)
+    step = TF_SECONDS.get(tf, 900)
+    end = bar_end(sym, last["time"], step)
+    newest: tuple[float, float] | None = None
+    with _cache_lock:
+        for key, (at, rows) in _cache.items():
+            o_sym, o_tf, _size = key.rsplit("|", 2)
+            if not rows or o_sym != sym or o_tf == tf or not as_of < at < end:
+                continue
+            # سلسلة الجلب الأحدث متأخّرة (آخر شمعة فيها انتهت قبل جلبنا) ⇒ إغلاقها ليس سعر لحظة جلبها
+            if bar_end(sym, rows[-1]["time"], TF_SECONDS.get(o_tf, 900)) <= as_of:
+                continue
+            if newest is None or at > newest[0]:
+                newest = (at, rows[-1]["close"])
+    if newest is None:
+        return candles, meta
+    at, close = newest
+    patched = {**last, "close": close, "high": max(last["high"], close), "low": min(last["low"], close)}
+    return candles[:-1] + [patched], {**meta, "as_of": at}
 
 
 def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[list[dict], dict]:
