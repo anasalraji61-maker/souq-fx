@@ -104,8 +104,10 @@ import {
   editExitValue,
   editClosedAtSend,
   editOpenedAtSend,
+  isJournalTimeRejected,
   createTimesSend,
   type CreateTimes,
+  type EditOpenedAt,
   reopenedCloseAt,
   journalRowWhen,
   journalIsoToLocalField,
@@ -649,6 +651,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           : closeTimeErrorText(
               e.error === 'beforeOpen' ? e : e.error === 'closeFuture' ? { error: 'future' } : { error: 'invalid' }
             );
+  /** سبب رفض «وقت الفتح» بالتعديل — فتحٌ بعد إغلاقٍ محفوظ لم يُلمس يُقال بخانة الفتح (launch220a (2)) */
+  const editOpenErrorText = (e: Extract<EditOpenedAt, { error: string }>): string =>
+    e.error === 'openAfterClose' ? t.journalOpenTimeAfterClose.replace('{closed}', () => e.closed) : createTimesErrorText(e);
   /** وقت الفتح الذي يُقارن به «وقت الإغلاق» بالتعديل: المكتوب إن كان مقروءاً، وإلا المحفوظ (خطؤه يُقال بسطره) */
   const editOpenedAtIso = (): string | null | undefined =>
     openTime.trim() !== openTimeInit.text.trim() ? journalLocalFieldToIso(openTime)?.iso ?? editing?.opened_at_iso : editing?.opened_at_iso;
@@ -1496,12 +1501,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         initialIso: openTimeInit.iso ?? editing.opened_at_iso,
         raw: editing.opened_at,
         closeText: typeof exitSent === 'number' ? closeTime : '',
+        closeInitial: closeTimeInit.text,
         nowMs: serverNowSec() * 1000,
       });
       if ('error' in openedAt) {
         addInFlightRef.current = false;
         setBusy(false);
-        setFormError(createTimesErrorText(openedAt));
+        setFormError(editOpenErrorText(openedAt));
         return;
       }
       const closedAt = editClosedAtSend({
@@ -1614,7 +1620,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             setCloseTime('');
             setCloseTimeInit({ text: '', iso: null });
           }
-          setFormError(t.journalEditError);
+          // 422 رفضَ فيه الخادم الوقت (launch220a (1)): الاتصال سليم ⇒ «راجع الوقتين» لا «تحقّق من الاتصال»
+          setFormError(isJournalTimeRejected(err) ? t.journalEditTimeRejected : t.journalEditError);
         }
       } finally {
         addInFlightRef.current = false;
@@ -2402,11 +2409,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               initialIso: openTimeInit.iso ?? editing.opened_at_iso,
               raw: editing.opened_at,
               closeText: pnum(exit) != null ? closeTime : '',
+              closeInitial: closeTimeInit.text,
               nowMs: serverNowSec() * 1000,
             });
-            // «الإغلاق قبل الفتح» مع وقت إغلاقٍ مكتوب يقوله سطر الإغلاق (`editClosedAtSend` بالفتح الجديد) — لا السطر نفسه مرّتين
-            if (!('error' in chk) || (chk.error === 'beforeOpen' && closeTime.trim() !== closeTimeInit.text.trim())) return null;
-            return <Text style={[styles.planWarn, { textAlign: align }]}>{createTimesErrorText(chk)}</Text>;
+            // «الإغلاق قبل الفتح» مع وقت إغلاقٍ مكتوب يقوله سطر الإغلاق (`editClosedAtSend` بالفتح الجديد) — لا السطر نفسه مرّتين؛
+            // الإغلاق لم يُلمس ⇒ `openAfterClose` هنا بخانة الفتح
+            if (!('error' in chk) || chk.error === 'beforeOpen') return null;
+            return <Text style={[styles.planWarn, { textAlign: align }]}>{editOpenErrorText(chk)}</Text>;
           })()
         : null}
       {!editing ? (

@@ -685,7 +685,8 @@ export function createTimesSend(a: { openText: string; closeText: string; exitSe
 export type EditOpenedAt =
   | { send: { opened_at: string; seen_opened_at?: string } | null; openedIso: string | null | undefined }
   | { error: 'openInvalid' | 'openFuture' }
-  | { error: 'beforeOpen'; opened: string };
+  | { error: 'beforeOpen'; opened: string }
+  | { error: 'openAfterClose'; closed: string };
 
 /**
  * `opened_at` بحفظ التعديل (tools150c، `PATCH /api/trades` يقبله بقواعد الإنشاء) من حقل «وقت الفتح». صفقة سُجّلت بوقت «الآن» خطأً
@@ -696,7 +697,8 @@ export type EditOpenedAt =
  * - مكتوب ⇒ ISO بإزاحة الجهاز + `seen_opened_at` = المخزَّن حرفياً (`raw`، الخادم يقارن النصّ ⇒ 409 إن عدّله جهاز آخر؛ بلا نصّ صالح
  *   ⇒ بلا فحص). غير مقروء / بالمستقبل (> الآن + 5 د بساعة الخادم) ⇒ خطأ.
  * - `closeText` = نصّ «وقت الإغلاق» الظاهر (الإغلاق بعد الحفظ: المحفوظ أو المكتوب أو «الآن» المملوء؛ فارغ/مخفيّ ⇒ لا إغلاق) — يسبق
- *   الفتح الجديد بالدقيقة ⇒ `beforeOpen` (الخادم يرفض 422 عامّاً)؛ الدقيقة نفسها مقبولة.
+ *   الفتح الجديد بالدقيقة ⇒ `beforeOpen` (الخادم يرفض 422 عامّاً)؛ الدقيقة نفسها مقبولة. الإغلاق **كما مُلئ** (`closeInitial`، لم
+ *   يلمسه المتداول) ⇒ `openAfterClose` بدل ذلك (launch220a (2)): الخطأ بالفتح الذي غيّره، لا «وقت الإغلاق يسبق الفتح» الموجِّه للخانة الأخرى.
  * `openedIso` يمرَّر لـ`editClosedAtSend` ليقارن الإغلاق المكتوب بالفتح **الجديد**.
  */
 export function editOpenedAtSend(a: {
@@ -705,6 +707,8 @@ export function editOpenedAtSend(a: {
   initialIso: string | null | undefined;
   raw: string | null | undefined;
   closeText: string;
+  /** نصّ «وقت الإغلاق» كما مُلئ عند فتح التعديل — غائب ⇒ `beforeOpen` دائماً كما كان */
+  closeInitial?: string;
   nowMs: number;
 }): EditOpenedAt {
   const text = a.text.trim();
@@ -716,9 +720,27 @@ export function editOpenedAtSend(a: {
   const close = a.closeText.trim() ? journalLocalFieldToIso(a.closeText) : null;
   // الفتح بقراءته الأولى (الساعة المكرَّرة بعودة الشتاء)، والإغلاق بأبعد قراءاته — لا يُمنع حفظٌ قد يكون صحيحاً؛ الخادم يحكم بالإزاحة
   const closeMin = close ? Math.floor((close.later ?? close).ms / 60_000) : null;
-  if (closeMin != null && Math.floor(parsed.ms / 60_000) > closeMin) return { error: 'beforeOpen', opened: text };
+  if (closeMin != null && Math.floor(parsed.ms / 60_000) > closeMin) {
+    const closeTrim = a.closeText.trim();
+    return a.closeInitial != null && closeTrim === a.closeInitial.trim()
+      ? { error: 'openAfterClose', closed: closeTrim }
+      : { error: 'beforeOpen', opened: text };
+  }
   const raw = typeof a.raw === 'string' && a.raw.trim() && a.raw.length <= 40 ? a.raw : undefined;
   return { send: { opened_at: parsed.iso, ...(raw ? { seen_opened_at: raw } : null) }, openedIso: parsed.iso };
+}
+
+/**
+ * خطأ حفظ التعديل (`PATCH /api/trades/{id}`) = 422 رفضَ فيه الخادم **الوقت** (`invalid_opened_at`/`invalid_closed_at`، launch220a
+ * (1)): كان يسقط إلى «تحقّق من الاتصال» — الاتصال سليم والوقت هو المرفوض (ساعة جهاز مختلفة عن الخادم، أو ترتيب لا يُرى محلياً).
+ * 422 آخر (شكل الطلب) أو بلا `status` ⇒ false، ويبقى الخطأ العامّ.
+ */
+export function isJournalTimeRejected(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const x = e as { status?: unknown; detail?: unknown };
+  if (x.status !== 422 || !x.detail || typeof x.detail !== 'object') return false;
+  const code = (x.detail as { error?: unknown }).error;
+  return code === 'invalid_opened_at' || code === 'invalid_closed_at';
 }
 
 /**

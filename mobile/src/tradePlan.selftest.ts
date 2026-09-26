@@ -4639,9 +4639,34 @@ console.log('tradePlan journalSizeOunces selftest OK');
       error: 'beforeOpen',
       opened: '2026-10-25 03:40',
     });
+    // launch220a (2): الإغلاق المحفوظ لم يُلمس ⇒ الخطأ بالفتح («بعد الإغلاق {closed}»)؛ لُمس ⇒ `beforeOpen` كما كان
+    process.env.TZ = 'Asia/Baghdad';
+    assert.deepEqual(
+      editOpenedAtSend({ ...base, text: '2026-09-25 16:41', closeText: ' 2026-09-25 16:40', closeInitial: '2026-09-25 16:40 ' }),
+      { error: 'openAfterClose', closed: '2026-09-25 16:40' }
+    );
+    assert.deepEqual(
+      editOpenedAtSend({ ...base, text: '2026-09-25 16:41', closeText: '2026-09-25 16:40', closeInitial: '2026-09-25 18:00' }),
+      { error: 'beforeOpen', opened: '2026-09-25 16:41' }
+    );
+    assert.ok(!('error' in editOpenedAtSend({ ...base, text: '2026-09-25 16:40', closeText: '2026-09-25 16:40', closeInitial: '2026-09-25 16:40' })));
   } finally {
     if (prevTz === undefined) delete process.env.TZ;
     else process.env.TZ = prevTz;
   }
   console.log('tradePlan editOpenedAtSend selftest OK');
+}
+
+// ——— launch220a (1): 422 رفضُ الوقت من PATCH ⇒ رسالة الوقت لا «تحقّق من الاتصال» ———
+{
+  const { isJournalTimeRejected } = require('./tradePlan') as typeof import('./tradePlan');
+  const httpErr = (status: number, detail: unknown) => Object.assign(new Error(`HTTP ${status}`), { status, detail });
+  assert.equal(isJournalTimeRejected(httpErr(422, { error: 'invalid_opened_at', reason: 'future' })), true);
+  assert.equal(isJournalTimeRejected(httpErr(422, { error: 'invalid_closed_at', reason: 'before open' })), true);
+  // 422 شكل الطلب (قائمة pydantic)، 409، خطأ شبكة، لا شيء ⇒ الخطأ العامّ
+  assert.equal(isJournalTimeRejected(httpErr(422, [{ loc: ['body', 'entry'], msg: 'x' }])), false);
+  assert.equal(isJournalTimeRejected(httpErr(409, { error: 'invalid_opened_at' })), false);
+  assert.equal(isJournalTimeRejected(new TypeError('Network request failed')), false);
+  assert.equal(isJournalTimeRejected(null), false);
+  console.log('tradePlan isJournalTimeRejected selftest OK');
 }
