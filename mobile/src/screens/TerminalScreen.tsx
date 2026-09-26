@@ -2068,7 +2068,7 @@ export function TerminalScreen() {
         timeframe={frameTfs[0]}
       />
 
-      <Modal visible={phoneWatchOpen} animationType="slide" onRequestClose={() => setPhoneWatchOpen(false)}>
+      <Modal visible={phoneWatchOpen} animationType="none" onRequestClose={() => setPhoneWatchOpen(false)}>
         <SafeAreaView style={styles.phoneWatchModal}>
           <View style={[styles.phoneWatchModalBar, !rtl && styles.phoneWatchModalBarLtr]}>
             <Pressable
