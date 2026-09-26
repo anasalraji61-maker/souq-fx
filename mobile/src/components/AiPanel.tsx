@@ -171,9 +171,10 @@ const styles = StyleSheet.create({
   },
   titleInHead: { marginBottom: 0 },
   bubble: { borderRadius: radii.sm, padding: spacing.sm, borderWidth: 1 },
+  // DESIGN-PRO §1/§5.5: تعبئة خفيفة وحدها تميّز رسالة المتداول — كانت حدّاً بلون التأكيد فوق التعبئة بكل فقاعة.
   user: {
     backgroundColor: colors.accentSoft,
-    borderColor: colors.accent,
+    borderColor: 'transparent',
   },
   ai: {
     backgroundColor: colors.bgElevated,

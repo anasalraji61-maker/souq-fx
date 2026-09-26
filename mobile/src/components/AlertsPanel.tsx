@@ -1233,14 +1233,15 @@ const styles = StyleSheet.create({
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
   currentText: { color: colors.textDim, fontSize: 11, flex: 1 },
   currentVal: { ...numeric, color: colors.text, fontWeight: '600' },
+  // DESIGN-PRO §1: زرّ ساكن بحدّ محايد كشرائح المسافة بجانبه — كان حدّاً ونصّاً بلون التأكيد بجانب زرّ «إضافة».
   useCurrent: {
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.border,
     borderRadius: radii.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
   },
-  useCurrentText: { color: colors.accent, fontSize: 11, fontWeight: '500' },
+  useCurrentText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   offsets: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   offsetUnit: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   offsetChip: {
