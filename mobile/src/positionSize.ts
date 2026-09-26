@@ -141,7 +141,10 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
   if (metal) return FIAT.has(quote) ? { symbol, base, quote, ...metal } : null;
   if (METALS[quote]) return null;
   if (!FIAT.has(base) || !FIAT.has(quote)) return null;
-  return { symbol, base, quote, pipSize: quote === 'JPY' ? 0.01 : 0.0001, contractSize: 100_000 };
+  // الين **أساساً** (JPYUSD/JPYEUR ≈ 0.0067، backend-r125): pip ‏0.0001 = 1.5% من السعر ⇒ منازله 5 (خطوة 0.00001 = 0.15% ≈ ATR ساعة)
+  // فيُطبع المستوى «0.00666» ويُقرَّب إليه، و«وقف 30 pip» = 45% من السعر. pip ‏0.000001 كعقد CME للين (6J: نقطة 0.000001) ⇒ 7 منازل
+  // (0.0066593) و30 pip = 0.45% كوقف USDJPY العادي. المال لا يتغيّر بوقفٍ مكتوب سعراً (المسافة × العقد)
+  return { symbol, base, quote, pipSize: quote === 'JPY' ? 0.01 : base === 'JPY' ? 0.000001 : 0.0001, contractSize: 100_000 };
 }
 
 /**

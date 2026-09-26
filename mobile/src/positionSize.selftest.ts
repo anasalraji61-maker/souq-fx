@@ -4678,3 +4678,31 @@ console.log('positionSize min-lot risk with costs selftest OK');
   assert.deepEqual(lostTodayStateOnCcy('', null, 'EUR'), { lostToday: '', lostCcy: null });
   console.log('positionSize lostTodayStateOnCcy selftest OK');
 }
+
+// ——— backend-r125: الين أساساً (JPYUSD ≈ 0.0067) — pip ‏0.000001 (7 منازل) لا 0.0001 (5 منازل = خطوة 0.15% من السعر) ———
+{
+  const { instrumentSpec, priceAtPipOffset, pipsBetween, pipValuePerLot, slPipsFromPrices, positionSize } =
+    require('./positionSize') as typeof import('./positionSize');
+  const jpyUsd = instrumentSpec('JPYUSD')!;
+  assert.equal(jpyUsd.pipSize, 0.000001);
+  assert.equal(instrumentSpec('JPYEUR')!.pipSize, 0.000001);
+  assert.equal(instrumentSpec('JPY/GBP')!.pipSize, 0.000001);
+  // الين تسعيراً والبقية كما هي
+  assert.equal(instrumentSpec('USDJPY')!.pipSize, 0.01);
+  assert.equal(instrumentSpec('EURUSD')!.pipSize, 0.0001);
+  // المستوى لا يُقرَّب لخطوة 0.00001: القديم كان 0.0066593 + 0 ⇒ 0.00666 (فوق آخر إغلاق)
+  assert.equal(priceAtPipOffset(jpyUsd, 0.0066593, 0), 0.0066593);
+  assert.equal(priceAtPipOffset(jpyUsd, 0.0066593, -30), 0.0066293);
+  assert.equal(pipsBetween(jpyUsd, 0.0066593, 0.0066293), 30);
+  // «وقف 30 pip» = 0.45% من السعر (كان 0.003 = 45%)
+  assert.ok((30 * jpyUsd.pipSize) / 0.0066593 < 0.005);
+  // المال لا يتغيّر بوقفٍ مكتوب سعراً: 1% من 10,000 USD، وقف 0.0066293 من 0.0066593 (0.00003 USD/JPY) ⇒ 100 / (0.00003 × 100,000) = 33.33 ⇒ 33.33 لوت
+  const sl = slPipsFromPrices(jpyUsd, 0.0066593, 0.0066293)!;
+  assert.equal(sl, 30);
+  const pv = pipValuePerLot(jpyUsd, 1); // تسعير USD بحساب USD
+  assert.ok(Math.abs(pv - 0.1) < 1e-12);
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: sl, pipValuePerLot: pv, contractSize: jpyUsd.contractSize })!;
+  assert.equal(r.lots, 33.33);
+  assert.ok(r.actualRisk <= 100 + 1e-9);
+  console.log('positionSize JPY-base pip selftest OK');
+}
