@@ -2594,7 +2594,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [source.plot, indicators]
   );
   useEffect(() => {
-    if (initialTool) setTool(initialTool);
+    if (!initialTool) return;
+    setTool(initialTool);
+    // أداة من شريط الطرفية/الرصيف تبدّل الأداة كأزرار الشارت نفسه: النقطة الأولى المعلّقة تُلغى. كانت تبقى ⇒ ترند
+    // بنقرة واحدة ثم «فيبو» من الشريط ⇒ النقرة التالية ترسم فيبو من نقطة الترند القديمة (والمؤشّر يُبقي النقطة ظاهرة).
+    setPending(null);
+    setDragEnd(null);
     // بلا `series.symbol`: نافذة التركيز لا تُعيد الأداة للأعلى فيبقى `initialTool` «ترند» ⇒ كل تبديل رمز كان يُعيد
     // تسليحها بعد إنهاء الخطّ، فأول نقرة للمؤشّر تبدأ خطّاً.
   }, [initialTool]);
