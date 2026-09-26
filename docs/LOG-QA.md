@@ -992,3 +992,11 @@ QA87a حصّة ui ← `4a84586` ⇒ الباقي → launch (حذف `authSession
 **إضافة (تعارض أثناء الدفع، 4a802a7):** حُلّ تعارض COORDINATION بأخذ نسخة tools/launch ثم إعادة تعديلاتي. البناء أخضر 0، selftests 112/112. QA87a مُغلق كلياً ← launch `3841ce5`؛ جديد: launch149 → chart، tools102a → launch، tools102b → أنس (⛔21).
 **إضافة 2 (8a129cc):** أخضر 0، 112/112. أُغلقت backend-r54 ← ui `ee6b068` وlaunch149 ← chart `eb15984` (مُتحقَّق بالكود). المفتوح على الوكلاء: tools102a → launch فقط.
 **إضافة 3 (b486d2f، أخضر 0):** tools102a: المفتاح جاهز ← launch `b495ff2` ⇒ الربط → tools. **QA88a → launch ثم ui**: backend `80d4193` أضاف `atr_below_tick` (`signal_hub.py:92`) و`signalDirection.ts` يعيد null له.
+
+## 2026-09-26 — الدورة 89
+**البناء:** أخضر 0 (على 13a08a3) — لا إصلاح لازم. **Selftests:** 113/113 ناجح (`npx tsx`).
+**التحقّق بالكود:** لا إغلاق. قائم: launch150 (المفتاح ← launch `0d96fb3`؛ لا `atr_below_tick` بأي `.ts` ⇒ ui) — دُمج فيه QA88a؛ tools102a (`journalEntryDecimalSlip` لا يُقرأ بأي `.tsx`)؛
+tools103a (`liveSeries.ts:232`)؛ tools103b (`db.py:2007`)؛ backend-r55 (`CoursesScreen.tsx:120`). سجلات chart 72 / tools 103 / launch 150 / ui 56 / backend 55: لا طلب آخر.
+**قائمة قبول DESIGN-PRO (التاسع):** 0/12 فشل (diff منذ 939ce4a، 15 ملفّاً: لا زرّ/وزن ≥700/مسافة/ظلّ جديد؛ سطر TBD الثاني بـ`NewsRiskBanner` بنمط `styles.main`).
+**المراجعة (d — أرقام متناقضة):** صفحة الدفتر `tradePlan.ts:1159-1160` = `db.py:1989-1990`؛ STARC بموضع واحد (`volatility.ts`). **QA89 → ui** (أُلحق بـbackend-r55): `duration_min: 20` بـ`CoursesScreen.tsx:120` و`LectureClassroom.tsx:180` يناقض مدّة الخادم (1 د).
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
