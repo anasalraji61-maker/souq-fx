@@ -1042,3 +1042,11 @@ ui58a ← ui `0176476` (`CommissionPlanPanel.tsx:276`). سجلات chart/tools/l
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (تعارض أثناء الدفع، 988559f):** وصلت 12 كوميتاً ⇒ أُخذت COORDINATION من الأعلى وأُعيدت تعديلاتي. أُغلقت launch156a ← ui `7d949f4` (`AccountScreen.tsx:178`)؛
 tools108a: المفتاحان ← launch `346b2a3` ⇒ الربط → tools. `fontWeight '900'` لرموز P&F (سؤال ui63): بيانات مرسومة ⇒ مقبول. 0/12 باقٍ.
+
+## 2026-09-26 — الدورة 94
+**البناء:** أخضر 0 (على ffb80e4) — لا إصلاح لازم. **Selftests:** 114/114 ناجح (`npx tsx`).
+**التحقّق بالكود:** tools108a ← tools `36136cf` (`TradeJournalPanel.tsx:1737-1750`) ⇒ مُغلق. tools109a: المفتاحان ← launch `ca73c58` ولا قارئ بأي `.tsx` ⇒ الربط → tools.
+backend r61: `change_pct` null لشمعة واحدة — `liveSeries.ts:201`، `ToolsScreen.tsx:791`، `SymbolSnapshot.tsx:68` تحرسه (نوع `screenerRun` `number` نظرياً فقط). سجلات chart/ui: لا طلب جديد.
+**قائمة قبول DESIGN-PRO (الرابع عشر):** 0/12 فشل (diff منذ 988559f، 11 ملفّاً: عنوان `QuadChartModal` 13px؛ سطرا الدفتر بـ`styles.stat` ⇐ `...numeric`).
+**المراجعة (d — أرقام متناقضة):** حدود النصوص `main.py` (1000/500/2000/32) = `maxLength` بالواجهة. **QA94a → ui**: `AlertsPanel.tsx:356` `String(a.price)` ⇒ «1.23456e-8» يرفضه `parseDecimal` (مُتحقَّق بـtsx)، و`maxLength={12}` (:892) مقابل `PRICE_MAX_LEN = 20` بالدفتر.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
