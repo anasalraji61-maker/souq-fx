@@ -569,6 +569,13 @@ export type Dict = {
   /** «12 points» بخانة السبريد ⇒ «اكتب 1.2» (`slPipsInPoints` يصلح للخانة نفسها) — طلب tools63؛ `{value}` كما كُتب و`{pips}` ÷10 */
   riskCalcSpreadPointsHint: string;
   /**
+   * tools142a: «25 نقطة»/«25 خاڵ» (الكلمة عربية/كردية — `slPipsInPoints().native`) بخانة الوقف/السبريد. بالعربية «نقطة» تعني الـpip
+   * عند أغلب المتداولين، و«اكتب 2.5 pip» (`riskCalc*PointsHint`) كان يعطي من قصد 25 pip لوتاً ×10 ⇒ القراءتان بلا ترجيح، والخيار له.
+   * `{value}` كما كُتب، `{whole}` الرقم نفسه (= pip)، `{pips}` ÷10 (نقاط MT4/MT5). كلٌّ مرّة واحدة.
+   */
+  riskCalcSlPointsAmbiguous: string;
+  riskCalcSpreadPointsAmbiguous: string;
+  /**
    * تحذير لا رفض (طلب tools93): سبريد بمنزلتين عشريّتين على زوج سعره بمدى السبريد نفسه (ZARJPY ~8، USDMXN ~18، USDZAR ~18)
    * قد يكون السعر منسوخاً — لكن سبريدات هذه الأزواج الحقيقية بهذا المدى أحياناً، فالحساب يبقى. `{n}` كما كُتب، `{symbol}` الرمز.
    */
@@ -2078,6 +2085,9 @@ const ar: Dict = {
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: '«{n}» لا يبدو سبريداً بالـpip — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب بالـpip الفرقَ بين Ask وBid كما تعرضه منصّتك الآن (مثل {example}).',
   riskCalcSpreadPointsHint: 'سبريد «{value}» بالنقاط (points) — كل 10 points = 1 pip، فاكتبه هنا {pips}',
+  riskCalcSlPointsAmbiguous:
+    'وقف «{value}»: هل تقصد {whole} pip، أم {pips} pip إن كانت نقاط MT4/MT5 (النقطة هناك عُشر pip)؟ اكتبه بالـpip — حجم اللوت يختلف بينهما عشرة أضعاف',
+  riskCalcSpreadPointsAmbiguous: 'سبريد «{value}»: هل تقصد {whole} pip، أم {pips} إن كانت نقاط MT4/MT5؟ اكتبه هنا بالـpip',
   riskCalcSpreadMaybePrice: 'هل «{n}» سعر {symbol} لا سبريده؟ سعر هذا الزوج قريب من هذا الرقم. إن كان السبريد بالـpip فعلاً فالحساب صحيح كما هو.',
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
@@ -3355,6 +3365,9 @@ const enUS: Dict = {
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
   riskCalcSpreadTooWide: '“{n}” doesn’t look like a spread in pips — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips, as your platform shows it now (e.g. {example}).',
   riskCalcSpreadPointsHint: 'A spread of “{value}” is in points — 10 points = 1 pip, so type {pips} here',
+  riskCalcSlPointsAmbiguous:
+    'Stop “{value}”: do you mean {whole} pips, or {pips} pips if those are MT4/MT5 points (a tenth of a pip there)? Type it in pips — the lot size differs tenfold between the two',
+  riskCalcSpreadPointsAmbiguous: 'Spread “{value}”: do you mean {whole} pips, or {pips} if those are MT4/MT5 points? Type it here in pips',
   riskCalcSpreadMaybePrice: 'Is “{n}” the {symbol} price rather than its spread? This pair trades close to that number. If it really is the spread in pips, the calculation stands as it is.',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
@@ -4686,6 +4699,9 @@ const ku: Dict = {
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcSpreadTooWide: '«{n}» لە سپرێد بە pip ناچێت — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە، وەک ئێستا لە پلاتفۆرمەکەت دیارە (بۆ نموونە {example}).',
   riskCalcSpreadPointsHint: 'سپرێدی «{value}» بە خاڵە (points) — هەر 10 points = 1 pip، بۆیە لێرە {pips} بنووسە',
+  riskCalcSlPointsAmbiguous:
+    'وەستانی «{value}»: مەبەستت {whole} pipە، یان {pips} pip ئەگەر خاڵی MT4/MT5 بن (لەوێ هەر خاڵێک دەیەکی pipە)؟ بە pip بینووسە — قەبارەی لۆت لە نێوانیاندا دە هێندە جیاوازە',
+  riskCalcSpreadPointsAmbiguous: 'سپرێدی «{value}»: مەبەستت {whole} pipە، یان {pips} ئەگەر خاڵی MT4/MT5 بن؟ لێرە بە pip بینووسە',
   riskCalcSpreadMaybePrice: 'ئایا «{n}» نرخی {symbol}ـە نەک سپرێدەکەی؟ نرخی ئەم جووتە نزیکە لەم ژمارەیە. ئەگەر بەڕاستی سپرێدە بە pip، ژماردنەکە وەک خۆی ڕاستە.',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
