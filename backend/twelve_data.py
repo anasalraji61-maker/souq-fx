@@ -725,7 +725,7 @@ def fetch_time_series_with_meta(
     n = max(1, min(int(outputsize), 5000))
     candles, meta = _fetch_bucket(matrix_symbol, timeframe, _size_bucket(n))
     if meta.get("kind") == "cache":
-        candles, meta = _with_newest_close(matrix_symbol.upper(), timeframe, candles, meta)
+        candles, meta = _with_newest_close(canonical_symbol(matrix_symbol), timeframe, candles, meta)
     return candles[-n:], meta
 
 
@@ -742,7 +742,7 @@ def note_quote(matrix_symbol: str, price, quoted_at) -> None:
         return
     if not (math.isfinite(p) and p > 0 and math.isfinite(at)) or at > time.time() + 60:
         return
-    sym = matrix_symbol.upper()
+    sym = canonical_symbol(matrix_symbol)
     with _cache_lock:
         prev = _quote_marks.get(sym)
         if prev is None or at >= prev[0]:
@@ -798,7 +798,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
     if not key:
         raise RuntimeError("TWELVE_DATA_API_KEY missing")
 
-    sym = matrix_symbol.upper()
+    sym = canonical_symbol(matrix_symbol)
     why = unavailable_reason(sym)
     if why:
         raise SymbolUnavailable(sym, why)
@@ -957,7 +957,7 @@ def _price_only(matrix_symbol: str, p: float) -> dict:
     """ردّ `/price` الاحتياطي: رقم بلا أي وقت (المزوّد لا يرسله) — قد يكون إغلاق الجمعة يوم السبت.
     `price_only` يقول ذلك صراحةً: التنبيهات تقبله (سعر قديم لا يقطع مستوى)، ومسار الاقتباس لا يُرسله
     للعميل بوقت «الآن»."""
-    return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": matrix_symbol.upper(),
+    return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": canonical_symbol(matrix_symbol),
             "price_only": True}
 
 
@@ -966,7 +966,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
     key = _api_key()
     if not key or unavailable_reason(matrix_symbol):
         return None
-    td_sym = td_symbol(matrix_symbol.upper())
+    td_sym = td_symbol(canonical_symbol(matrix_symbol))
     with httpx.Client(timeout=15.0) as client:
         r = client.get(f"{API_BASE}/quote", params={"symbol": td_sym, "apikey": key})
         if r.status_code == 429:
@@ -1007,7 +1007,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
     if high_f is not None and low_f is not None and high_f < low_f:
         high_f = low_f = None
     return {
-        "symbol": matrix_symbol.upper(),
+        "symbol": canonical_symbol(matrix_symbol),
         "price": price,
         "bid": bid_f,
         "ask": ask_f,

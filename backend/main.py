@@ -816,7 +816,7 @@ MAX_MA_PERIOD = CHECK_SERIES_SIZE - 1
 
 
 def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> ChartSeries:
-    sym = symbol.upper()
+    sym = market.canonical_symbol(symbol)
     tf = timeframe if timeframe in TF_SECONDS else "15m"
     size = max(50, min(int(outputsize or 180), 5000))
 
@@ -1623,7 +1623,7 @@ def indicators_library():
 @app.get("/api/indicators/snapshot/{symbol}")
 def indicator_snapshot(symbol: str, timeframe: str = "15m"):
     _require_timeframe(timeframe)
-    series = build_series(symbol.upper(), timeframe)
+    series = build_series(market.canonical_symbol(symbol), timeframe)
     if _no_real_data(series):
         # لا RSI ولا تقاطعات ولا «تغيّر %» على شموع مختلَقة (كانت تُحسب وتُعاد موسومة demo — رقم ينتظر
         # عميلاً ينسى فحص الوسم). `SymbolSnapshot` بلا `rsi` لا يعرض شيئاً. الوسم باقٍ للعميل.
@@ -1718,7 +1718,7 @@ def market_quote(symbol: str):
     if why:
         # لا سعر مختلَق لرمز لا يقدّمه المزوّد (DXY): كان يُعاد إغلاق السلسلة البذرية كـ«price».
         return {
-            "symbol": symbol.upper(),
+            "symbol": market.canonical_symbol(symbol),
             "price": None,
             "bid": None,
             "ask": None,
@@ -1727,7 +1727,7 @@ def market_quote(symbol: str):
             "data_kind": "unavailable",
             "unavailable_reason": why,
         }
-    sym = symbol.upper()
+    sym = market.canonical_symbol(symbol)
     hit = _QUOTE_CACHE.get(sym)
     now = time.time()
     if hit and now - hit[0] < QUOTE_TTL:
@@ -1771,7 +1771,7 @@ def market_quote(symbol: str):
         fetched = series.data_source.as_of
         price_at = _series_price_at(series)
         return {
-            "symbol": symbol.upper(),
+            "symbol": market.canonical_symbol(symbol),
             "price": last,
             # لا Bid/Ask بلا دفتر أسعار حقيقي: كان سبريد ثابت مختلَق (0.8 نقطة أساس من الإغلاق) يُعرض
             # بالشارت كـ«Bid/Ask/سبريد» للمتداول — العميل يُخفي السطر حين يكونان null.
