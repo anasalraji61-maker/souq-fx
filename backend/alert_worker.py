@@ -143,17 +143,26 @@ _BAR_SECONDS = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1H": 3600, "4H": 
 _MIN_SERIES_AGE_OK = 180
 
 
-def series_fresh_enough(as_of: float | None, timeframe: str, now: float | None = None) -> bool:
+def series_fresh_enough(
+    as_of: float | None, timeframe: str, now: float | None = None, symbol: str | None = None
+) -> bool:
     """سلسلة تنبيه المؤشر أحدث من شمعة واحدة من فريمها (وأقلّه 3 دقائق)؟
 
     عند 429 يُخدَم كاش حتى 15 دقيقة (`STALE_MAX_SEC`) موسوماً `cache`: تقاطع MA/MACD على 1m بتلك
     السلسلة حدث قبل ربع ساعة — كان يُطلق التنبيه الآن ويُعلَّم «مُطلَق» نهائياً ويُدفع كأنه للتوّ،
     والسعر قد عاد. تنبيه السعر يرفض أصلاً إغلاق 1m أقدم من 3 دقائق؛ هذا شقيقه للمؤشر. القديمة
-    تُتخطّى (لا تُطلق ولا تُعلَّم) ويُعاد الفحص بالدورة التالية."""
+    تُتخطّى (لا تُطلق ولا تُعلَّم) ويُعاد الفحص بالدورة التالية.
+
+    `symbol` (الماسح فقط): سلسلة جُلبت بعد إغلاق الجمعة لرمز بجلسة أسبوعية هي الحالة الحالية حتى افتتاح
+    الأحد (`market._closed_until`، قاعدة `_serve_stale` نفسها) ⇒ عمرها يُعدّ من الافتتاح. بدونه كان فحص
+    السبت يسمّي كل رموز الفوركس/المعادن/النفط «تعذّرت قراءتها» وإغلاق الجمعة الحقيقي بالكاش."""
     if as_of is None:
         return False
     limit = max(_BAR_SECONDS.get(timeframe, 900), _MIN_SERIES_AGE_OK)
-    return (time.time() if now is None else now) - float(as_of) <= limit
+    fresh_from = float(as_of)
+    if symbol:
+        fresh_from = max(fresh_from, market._closed_until(symbol, fresh_from) or 0)
+    return (time.time() if now is None else now) - fresh_from <= limit
 
 
 def cross_predates_arming(a: dict, candles: list[dict]) -> bool:

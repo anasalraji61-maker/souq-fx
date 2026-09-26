@@ -130,7 +130,7 @@ def run_scan_detailed(
         if not raw:
             failed.append(sym.upper())
             continue
-        if not alert_worker.series_fresh_enough(meta.get("as_of"), timeframe):
+        if not alert_worker.series_fresh_enough(meta.get("as_of"), timeframe, symbol=sym):
             # كاش أقدم من شمعة من الفريم (يُخدَم حتى 15د عند 429): تقاطع MA/MACD على 1m «الآن» حدث قبل
             # ربع ساعة، وRSI «تشبّع» قد زال — كانت النتيجة تُعرض كأنها الحالية. يُعدّ «لم يُفحص» كما
             # تُتخطّى تنبيهات المؤشر على السلسلة نفسها (`211a419`)، والتطبيق يسمّي الرموز غير المقروءة.
