@@ -1631,7 +1631,7 @@ const ar: Dict = {
   deleteAccount: 'حذف الحساب',
   deleteAccountConfirmTitle: 'حذف الحساب نهائياً؟',
   deleteAccountConfirmBody:
-    'سيُحذف اسم المستخدم والإيميل وكلمة المرور نهائياً ولن تتمكّن من الدخول بهذا الحساب مرة أخرى. هذا الإجراء لا يمكن التراجع عنه.',
+    'سيُحذف نهائياً دفتر صفقاتك وتنبيهاتك وتخطيطاتك وقائمة متابعتك، مع اسم المستخدم والإيميل وكلمة المرور، ولن تتمكّن من الدخول بهذا الحساب مرة أخرى. لا يمكن التراجع عن هذا.',
   deleteAccountConfirmBtn: 'حذف نهائياً',
   deleteAccountError: 'تعذّر تأكيد حذف الحساب — تحقّق من الاتصال ثم اضغط «حذف الحساب» مرة أخرى.',
   cancel: 'إلغاء',
@@ -2877,9 +2877,9 @@ const enUS: Dict = {
   deleteAccount: 'Delete account',
   deleteAccountConfirmTitle: 'Delete account permanently?',
   deleteAccountConfirmBody:
-    'Your username, email, and password will be permanently erased and you will not be able to sign back into this account. This cannot be undone.',
+    'Your trade journal, alerts, layouts and watchlist will be permanently erased along with your username, email and password, and you will not be able to sign back into this account. This cannot be undone.',
   deleteAccountConfirmBtn: 'Delete permanently',
-  deleteAccountError: 'Couldn’t confirm your account was deleted — check your connection, then tap “Delete account” again.',
+  deleteAccountError: 'Couldn’t confirm your account was deleted — check your connection, then select “Delete account” again.',
   cancel: 'Cancel',
   notifications: 'Notifications',
   notifStatusGranted: 'Enabled',
@@ -4161,7 +4161,7 @@ const ku: Dict = {
   deleteAccount: 'سڕینەوەی هەژمار',
   deleteAccountConfirmTitle: 'هەژمار بە تەواوی بسڕدرێتەوە؟',
   deleteAccountConfirmBody:
-    'ناوی بەکارهێنەر و ئیمەیڵ و وشەی نهێنی بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
+    'دەفتەری مامەڵەکانت و ئاگادارکردنەوەکانت و نەخشەسازییە پاشەکەوتکراوەکانت و لیستی چاودێریت لەگەڵ ناوی بەکارهێنەر و ئیمەیڵ و وشەی نهێنی بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
   deleteAccountConfirmBtn: 'بە تەواوی بسڕەوە',
   deleteAccountError: 'سڕینەوەی هەژمار پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە، پاشان دووبارە «سڕینەوەی هەژمار» دابگرە.',
   cancel: 'پاشگەزبوونەوە',
