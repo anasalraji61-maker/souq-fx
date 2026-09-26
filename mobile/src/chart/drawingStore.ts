@@ -155,6 +155,11 @@ async function migrateV1(symbol: string, timeframe: string): Promise<Drawing[]> 
  */
 const unread = new Set<string>();
 
+/** القائمة المخبّأة للرمز إن قُرئت بهذه الجلسة، بلا انتظار — `null` ⇒ تحتاج `loadDrawings`. */
+export function peekDrawings(symbol: string): Drawing[] | null {
+  return cache.get(symbol) ?? null;
+}
+
 export async function loadDrawings(symbol: string, timeframe: string): Promise<Drawing[]> {
   const hit = cache.get(symbol);
   if (hit) return hit;

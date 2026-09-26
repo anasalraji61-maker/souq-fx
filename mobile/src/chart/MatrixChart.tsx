@@ -39,6 +39,7 @@ import {
 import type { Candle, ChartSeries } from '../api';
 import {
   loadDrawings,
+  peekDrawings,
   saveDrawings,
   clearDrawings,
   subscribeDrawings,
@@ -2821,7 +2822,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setDragEnd(null);
   }, [drawingsPersisted, series.symbol]);
 
-  useEffect(() => {
+  // تخطيط لا تأثير: القائمة المخبّأة (تبديل الفريم — الرسوم مشتركة بين الفريمات) تُرسى قبل الرسم، فلا يظهر
+  // الشارت الجديد إطاراً بلا خطوطه ثم تعود.
+  useLayoutEffect(() => {
     if (!drawingsPersisted) return;
     const k = drawingsKey(series.symbol, series.timeframe);
     // ما تأجّل يخصّ المفتاح **السابق** — يُكتب الآن بمفتاحه هو قبل أن تُستبدل الحمولة.
@@ -2850,24 +2853,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         weekendClosed
       );
     };
-    loadDrawings(series.symbol, series.timeframe).then((d) => {
-      if (!alive) return;
-      const early = loadedRawRef.current;
+    const cached = peekDrawings(series.symbol);
+    if (cached) {
       loadedDrawingsKey.current = k;
-      savedDrawingsSig.current = drawingsSignature(d);
-      if (early === NO_DRAWINGS || early.length === 0) {
-        setDrawings(anchorHere(d));
-        return;
-      }
-      // رُسم خطّ قبل وصول القائمة (أوّل فتح للرمز، ترحيل v1 بطيء): كان يُستبدل فيختفي بلا حفظ، ولقطة التراجع
-      // المسجّلة وقتها فارغة ⇒ «تراجع» يعرض [] ويحفظه فوق كل رسومات الرمز. الآن يُدمج (فيُحفظ)، والتاريخ يُفرَغ.
-      const ids = new Set(d.map((x) => x.id));
-      drawHistory.current = [];
-      redoHistory.current = [];
-      setCanUndo(false);
-      setCanRedo(false);
-      setDrawings(anchorHere([...d, ...early.filter((x) => !ids.has(x.id))]));
-    });
+      savedDrawingsSig.current = drawingsSignature(cached);
+      setDrawings(anchorHere(cached));
+    } else {
+      loadDrawings(series.symbol, series.timeframe).then((d) => {
+        if (!alive) return;
+        const early = loadedRawRef.current;
+        loadedDrawingsKey.current = k;
+        savedDrawingsSig.current = drawingsSignature(d);
+        if (early === NO_DRAWINGS || early.length === 0) {
+          setDrawings(anchorHere(d));
+          return;
+        }
+        // رُسم خطّ قبل وصول القائمة (أوّل فتح للرمز، ترحيل v1 بطيء): كان يُستبدل فيختفي بلا حفظ، ولقطة التراجع
+        // المسجّلة وقتها فارغة ⇒ «تراجع» يعرض [] ويحفظه فوق كل رسومات الرمز. الآن يُدمج (فيُحفظ)، والتاريخ يُفرَغ.
+        const ids = new Set(d.map((x) => x.id));
+        drawHistory.current = [];
+        redoHistory.current = [];
+        setCanUndo(false);
+        setCanRedo(false);
+        setDrawings(anchorHere([...d, ...early.filter((x) => !ids.has(x.id))]));
+      });
+    }
     // شارت آخر على الرمز نفسه كتب (نافذة التركيز فوق الشاشة، أو فريم آخر): يُعرض هنا
     // فوراً، ولا يبقى هنا قديمه ليُكتب فوقه عند أوّل تعديل. تاريخ التراجع يخصّ القائمة
     // السابقة فيُفرَغ.
