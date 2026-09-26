@@ -1,6 +1,6 @@
 /** الاشتراك المشترك بـ`/api/alerts` لخطوط التنبيهات على الشارت — راجع `armedAlerts.ts`. */
 import { useEffect, useState } from 'react';
-import { api, type PriceAlert } from '../api';
+import { alertSeen, api, type PriceAlert } from '../api';
 import { armedAlertsFor, type ArmedAlert } from './armedAlerts';
 
 const REFRESH_MS = 60_000;
@@ -14,6 +14,13 @@ let generation = 0;
 /** سحوب لم يُجب خادمها بعد — كل قراءة تصل أثناءها قديمة. */
 let pendingMoves = 0;
 const soonTimers = new Set<ReturnType<typeof setTimeout>>();
+/** آخر صفّ أكّده الخادم لكل تنبيه — أساس `seen_*`: `latest` قد يحمل سحباً تفاؤلياً لم يُحفظ بعد (سحبان متتاليان). */
+const confirmed = new Map<string, PriceAlert>();
+
+function setConfirmed(rows: PriceAlert[]) {
+  confirmed.clear();
+  for (const a of rows) confirmed.set(a.id, a);
+}
 
 function load() {
   if (inflight) return;
@@ -24,6 +31,7 @@ function load() {
     .then((res) => {
       if (gen !== generation || pendingMoves > 0) return;
       latest = Array.isArray(res?.alerts) ? res.alerts : [];
+      setConfirmed(latest);
       for (const l of listeners) l();
     })
     .catch(() => {
@@ -75,19 +83,28 @@ export function refreshArmedAlertsSoon(): void {
  * سحب خطّ التنبيه على الشارت إلى `price` (`PATCH /api/alerts/{id}` — تعديل وإعادة تسليح ذرّيان). الخطّ ينتقل
  * فوراً (تفاؤلياً) لكل الشارتات المفتوحة، والاتجاه من المستدعي (السعر الجديد فوق السعر الحيّ ⇒ `above`).
  * الرمز والملاحظة من التنبيه نفسه: الخادم يستبدل الملاحظة بما يصله، فإغفالها كان يمسحها. الفشل (خادم أقدم
- * بلا PATCH، تنبيه حُذف) ⇒ قراءة الخادم تعيد الخطّ لمكانه، و`false`.
+ * بلا PATCH، تنبيه حُذف، 409 لأن جهازاً آخر غيّره) ⇒ قراءة الخادم تعيد الخطّ لمكانه، و`false`.
  */
 export async function moveArmedAlert(id: string, price: number, condition: 'above' | 'below'): Promise<boolean> {
   const orig = latest.find((a) => a.id === id);
   if (!orig || !Number.isFinite(price) || price <= 0) return false;
+  const base = confirmed.get(id) ?? orig;
   pendingMoves++;
   generation++;
   latest = latest.map((a) => (a.id === id ? { ...a, price, condition } : a));
   notify();
   let ok = false;
   try {
-    const res = await api.updateAlert(id, { symbol: orig.symbol, condition, price, note: orig.note ?? '' });
+    // `seen_*`: جهاز آخر نقل الخطّ أو أُطلق التنبيه للتوّ ⇒ 409 بلا كتابة، و`load()` يعرض الحال المخزَّنة
+    const res = await api.updateAlert(id, {
+      symbol: orig.symbol,
+      condition,
+      price,
+      note: orig.note ?? '',
+      ...alertSeen(base),
+    });
     ok = !!res?.ok;
+    if (ok && res.alert?.id === id) confirmed.set(id, res.alert);
   } catch {
     ok = false;
   } finally {
