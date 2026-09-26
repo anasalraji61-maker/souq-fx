@@ -261,6 +261,10 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
     friday = opened - timedelta(days=(opened.weekday() - 4) % 7)
     close = _week_close(friday)
     reopen = _week_reopen(friday, sym)
+    # لحظة (step=0: اقتباس/تيك/الساعة) عند الافتتاح نفسه = السوق مفتوح. كانت `<=` تُسقطها ⇒ `last_quote_at`
+    # (بداية شمعة 1m) يساوي الافتتاح طوال الدقيقة الأولى فيُرفض اقتباس حقيقي كل أسبوع و`market_open` خطأ.
+    if not step:
+        return close <= open_ts < reopen
     return close <= open_ts and open_ts + step <= reopen
 
 
@@ -573,6 +577,9 @@ def td_symbol(matrix_symbol: str) -> str:
     return sym
 
 
+_TS_MAX = 4_102_444_800  # 2100-01-01 UTC
+
+
 def _parse_ts(dt_str: str) -> int | None:
     """ثواني UTC، أو `None` إن لم يُقرأ الوقت.
 
@@ -583,9 +590,12 @@ def _parse_ts(dt_str: str) -> int | None:
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
         try:
             dt = datetime.strptime(dt_str, fmt).replace(tzinfo=timezone.utc)
-            return int(dt.timestamp())
+            ts = int(dt.timestamp())
         except ValueError:
             continue
+        # وقت خارج المعقول (0001-01-01، 9999-12-31) كان يُقبل ثم يرمي `bar_end` (`fromtimestamp`) ⇒ 500 من
+        # اللقطة والاقتباس، ويُعرض بالشارت شمعةَ مزوّد. يُسقَط كأيّ صفّ بلا وقت مقروء (يُعدّ بـ`rows_dropped`).
+        return ts if 0 < ts < _TS_MAX else None
     return None
 
 
