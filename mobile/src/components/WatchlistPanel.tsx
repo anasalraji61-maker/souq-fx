@@ -33,6 +33,8 @@ import {
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { PriceFlash } from './PriceFlash';
 import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/dailyChange';
+import { isForexMarketOpen } from '../chart/marketHours';
+import { useLastCloses } from '../hooks/useLastCloses';
 
 /** مدّة بقاء لون آخر تيك. عشرون ثانية: أطول كثيراً من تردّد تيكات زوجٍ نشط (فلا وميض بالسوق
  * المفتوح)، وأقصر كثيراً من أن يُقرأ لونٌ عمره ساعة على أنه حركةٌ الآن. */
@@ -188,6 +190,12 @@ export function WatchlistPanel({
   // مرجع "إغلاق الأمس" لنسبة تغيّر اليوم (مخزن مشترك، 10 دقائق، يتجاهل البيانات التجريبية).
   const dailyRefs = useDailyRefs(list);
   const demoSet = useMemo(() => new Set(demoTicks ?? []), [demoTicks]);
+  /** صفوف بلا تيك ولا `bases` ⇒ آخر سعر محفوظ بمصدر رأس الشارت نفسه (`useLastCloses`)، موسوماً بحالته. */
+  const needLast = useMemo(
+    () => list.filter((s) => ticks[s] == null && bases[s] == null),
+    [list, ticks, bases]
+  );
+  const lastCloses = useLastCloses(needLast);
   /**
    * اتجاه آخر تيك لكل رمز (يلوّن السعر أخضر/أحمر كما يعتاد المتداول) — يُحدَّث فقط عند تغيّر السعر
    * فعلاً، **وينتهي** بعد `TICK_DIR_MS` من آخر حركة.
@@ -373,9 +381,31 @@ export function WatchlistPanel({
           list.map((sym, index) => {
             const on = activeSymbol === sym;
             const live = ticks[sym];
-            const price = live ?? bases[sym];
+            const last = live == null && bases[sym] == null ? lastCloses[sym] : undefined;
+            const lastPrice = last?.state === 'price' ? last.price : undefined;
+            const price = live ?? bases[sym] ?? lastPrice;
             const tickIsDemo = live != null && demoSet.has(sym);
-            const isDemoPrice = price != null && (live == null || tickIsDemo);
+            const isDemoPrice = price != null && lastPrice == null && (live == null || tickIsDemo);
+            /**
+             * صفّ بلا تيك: آخر سعر محفوظ بوسم حالته — «مغلق · مخزن» والسوق مغلق (هو الإغلاق نفسه)، و«آخر سعر»
+             * بتحذير والسوق مفتوح (ليس حيّاً). «غير متاح» لرمز لا يقدّمه المزوّد (DXY). بلا شيء ⇒ «—» وحده.
+             */
+            const lastClosed = lastPrice != null && !isForexMarketOpen(sym);
+            const statusTag =
+              lastPrice != null
+                ? lastClosed
+                  ? `${t.cfMarketClosedTag} · ${t.dsKindCache}`
+                  : t.dsLastPriceWord
+                : last?.state === 'unavailable'
+                  ? t.dsKindUnavailable
+                  : null;
+            const priceA11ySuffix = isDemoPrice
+              ? t.wlDemoPriceA11ySuffix
+              : statusTag
+                ? ` · ${statusTag}`
+                : price == null
+                  ? t.wlNoPriceA11ySuffix
+                  : '';
             const isDxy = sym === 'DXY';
             // تغيّر اليوم فقط مع سعر حيّ + مرجع حقيقي — لا نسبة من سعر افتراضي.
             const chg = live != null && !tickIsDemo ? dailyChange(live, dailyRefs[sym]) : null;
@@ -439,7 +469,7 @@ export function WatchlistPanel({
                     else if (a === 'moveDown') void moveWatchSymbol(sym, 1);
                     else if (a === 'remove') askRemove(sym);
                   }}
-                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}${
+                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${priceA11ySuffix}${
                     armedText ? ` · ${t.alertsStatusArmed}${armedLevels!.length > 1 ? ` ${armedLevels!.length}` : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}` : ''
                   }`}
                   accessibilityState={{ selected: on }}
@@ -459,6 +489,14 @@ export function WatchlistPanel({
                       {sym}
                     </Text>
                     {isDemoPrice ? <Text style={styles.demoTag}>{t.wlDemoTag}</Text> : null}
+                    {statusTag ? (
+                      <Text
+                        numberOfLines={1}
+                        style={[styles.statusTag, lastPrice != null && !lastClosed && styles.statusTagWarn]}
+                      >
+                        {statusTag}
+                      </Text>
+                    ) : null}
                   </View>
                   <View style={[styles.right, rtl && styles.rightRtl]}>
                     <PriceFlash
@@ -471,7 +509,7 @@ export function WatchlistPanel({
                         style={[
                           styles.price,
                           on && styles.priceOn,
-                          isDemoPrice && styles.priceDemo,
+                          (isDemoPrice || lastPrice != null) && styles.priceDemo,
                           tickDir === 'up' && styles.priceUp,
                           tickDir === 'down' && styles.priceDown,
                         ]}
@@ -704,6 +742,9 @@ const styles = StyleSheet.create({
   symOn: { color: colors.text },
   symDxy: { color: colors.dxy },
   demoTag: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: 0 },
+  /** حالة سعر الصفّ بلا تيك — محايدة والسوق مغلق (الإغلاق سعر صحيح)، `warn` والسوق مفتوح (§5.3: متدهور). */
+  statusTag: { color: colors.textDim, fontSize: 11, fontWeight: '400' },
+  statusTagWarn: { color: colors.warn },
   price: { ...numeric, color: colors.textMuted, fontSize: 15, fontWeight: '600', marginLeft: 4 },
   priceOn: { color: colors.text },
   priceDemo: { color: colors.textDim, fontWeight: '600' },
