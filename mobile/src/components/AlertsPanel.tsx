@@ -396,15 +396,24 @@ export function AlertsPanel({
     setSymbol(defaultSymbolRef.current);
   };
 
+  /**
+   * رقم تسلسل لكل طلب يكتب القائمة (`refresh` و`check`): يُطبَّق ردّ **آخر طلب بدأ** وحده.
+   * الفحص يطلب المزوّد (ثوانٍ)، فإن كان جارياً حين يضيف المتداول تنبيهاً أو يحذفه، كان ردّه —
+   * المبنيّ قبل الإضافة — يصل بعد `refresh` الإضافة ويدهسه: «✓ مُسلَّح» والتنبيه غائب عن القائمة
+   * دقيقة، أو المحذوف يعود وحذفه ثانيةً يفشل بـ404. الإطلاقات (`triggered`) تُعالَج دائماً.
+   */
+  const listSeq = useRef(0);
+
   const refresh = useCallback(async () => {
+    const seq = ++listSeq.current;
     try {
       const res = await api.alerts();
-      if (mountedRef.current) {
+      if (mountedRef.current && seq === listSeq.current) {
         setAlerts(res.alerts);
         setListError(false);
       }
     } catch {
-      if (mountedRef.current) {
+      if (mountedRef.current && seq === listSeq.current) {
         setAlerts([]);
         setListError(true);
       }
@@ -414,9 +423,10 @@ export function AlertsPanel({
   }, []);
 
   const check = useCallback(async () => {
+    const seq = ++listSeq.current;
     try {
       const res = await api.checkAlerts();
-      if (mountedRef.current) setAlerts(res.alerts);
+      if (mountedRef.current && seq === listSeq.current) setAlerts(res.alerts);
       if (res.triggered.length) {
         /**
          * وصف الإطلاق — **مصدر واحد للسطرين**. «EURUSD فوق 1.0850 (1.0853)» بلغة الواجهة

@@ -171,15 +171,24 @@ export function IndicatorAlertsPanel({
     };
   }, []);
 
+  /**
+   * رقم تسلسل لكل طلب يكتب القائمة (`refresh` و`check`): يُطبَّق ردّ **آخر طلب بدأ** وحده.
+   * الفحص يطلب المزوّد (ثوانٍ)، فإن كان جارياً حين يضيف المتداول تنبيهاً أو يحذفه، كان ردّه —
+   * المبنيّ قبل الإضافة — يصل بعد `refresh` الإضافة ويدهسه: «✓ مُسلَّح» والتنبيه غائب عن القائمة
+   * دقيقة، أو المحذوف يعود وحذفه ثانيةً يفشل بـ404. الإطلاقات (`triggered`) تُعالَج دائماً.
+   */
+  const listSeq = useRef(0);
+
   const refresh = useCallback(async () => {
+    const seq = ++listSeq.current;
     try {
       const res = await api.indicatorAlerts();
-      if (mountedRef.current) {
+      if (mountedRef.current && seq === listSeq.current) {
         setAlerts(res.alerts);
         setListError(false);
       }
     } catch {
-      if (mountedRef.current) {
+      if (mountedRef.current && seq === listSeq.current) {
         setAlerts([]);
         setListError(true);
       }
@@ -189,9 +198,10 @@ export function IndicatorAlertsPanel({
   }, []);
 
   const check = useCallback(async () => {
+    const seq = ++listSeq.current;
     try {
       const res = await api.checkIndicatorAlerts();
-      if (mountedRef.current) setAlerts(res.alerts);
+      if (mountedRef.current && seq === listSeq.current) setAlerts(res.alerts);
       for (const trig of res.triggered) {
         await pushPriceAlert(t.indAlertsPushTitle, describeIndAlert(trig, t));
       }
