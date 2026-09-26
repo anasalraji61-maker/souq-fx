@@ -603,9 +603,11 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     backgroundColor: colors.bgPanel,
   },
+  /** DESIGN-PRO §1/§4: الاختيار تعبئة محايدة + حدّ أقوى + نصّ أساسي — لا تأكيد بحدّ وتعبئة ونصّ معاً
+   * بجانب الشارت؛ `accessibilityState.selected` يحمله لقارئ الشاشة. */
   phoneModeBtnActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
+    borderColor: colors.border,
+    backgroundColor: colors.selectedFill,
   },
   phoneModeText: {
     fontSize: 11,
@@ -613,7 +615,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   phoneModeTextActive: {
-    color: colors.accent,
+    color: colors.text,
     fontWeight: '500',
   },
   cellHover: {
