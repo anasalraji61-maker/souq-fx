@@ -122,6 +122,8 @@ const DEFAULT_HERO_SYMBOL = 'USDJPY';
 const NO_PRICE_BASES: Record<string, number> = {};
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
+/** chart-r121a: مؤشّرات الطرفية (ما يعرضه الشارت فعلاً) — كانت تضيع بكل إعادة فتح */
+const INDICATORS_KEY = 'matrix.home.indicators.v1';
 /** سرعة السحب يحفظها `savePanSpeed` بمفتاحه — هذا وسمٌ لحارس القراءة فقط. */
 const PAN_SPEED_TOUCH = 'panSpeed';
 const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
@@ -262,6 +264,37 @@ export function TerminalScreen() {
   const [tool, setTool] = useState<DrawTool>('none');
   const [kind, setKind] = useState<ChartKind>('candles');
   const [indicators, setIndicators] = useState<IndicatorId[]>([]);
+  // chart-r121a: قائمة الطرفية = ما يرسمه الشارت فعلاً (`onIndicatorsChange`: زرّ، عدسة، قالب) لا ما نُقر باللوحة وحدها — كان
+  // قالب RSI+MACD يُرسم واللوحة تقول «مطفأ»، وأوّل نقرة «بولنجر» ⇒ ['bb'] تمحوهما. تُحفظ بعد قراءة المحفوظ فقط: القالب يُبلَّغ
+  // عند التركيب قبل انتهاء القراءة، فكان سيدهس اختيار المتداول المحفوظ بمؤشّرات القالب
+  const indicatorsReadRef = useRef(false);
+  const applyIndicators = useCallback((next: IndicatorId[], byUser: boolean) => {
+    if (byUser) touchPref(INDICATORS_KEY);
+    setIndicators((prev) => (prev.join(',') === next.join(',') ? prev : next));
+    if (!indicatorsReadRef.current && !byUser) return;
+    AsyncStorage.setItem(INDICATORS_KEY, JSON.stringify(next)).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `touchPref` يكتب مرجعاً ثابتاً
+  }, []);
+  const onChartIndicators = useCallback((ids: IndicatorId[]) => applyIndicators(ids, false), [applyIndicators]);
+  useEffect(() => {
+    let alive = true;
+    AsyncStorage.getItem(INDICATORS_KEY)
+      .then((raw) => {
+        if (!alive || prefsTouchedRef.current.has(INDICATORS_KEY) || !raw) return;
+        const saved: unknown = JSON.parse(raw);
+        // المحفوظ (ولو فارغاً — أطفأها المتداول كلّها) يتقدّم على قالب بُلّغ قبل القراءة
+        if (Array.isArray(saved) && saved.every((x) => typeof x === 'string' && x !== '')) {
+          setIndicators(saved as IndicatorId[]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (alive) indicatorsReadRef.current = true;
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [edgePanel, setEdgePanel] = useState<EdgePanelId>(null);
   const [dockTab, setDockTab] = useState<DockTabId>(null);
   const [quadOpen, setQuadOpen] = useState(false);
@@ -1798,6 +1831,7 @@ export function TerminalScreen() {
                   initialLens={lens}
                   initialKind={kind}
                   initialIndicators={indicators}
+                  onIndicatorsChange={onChartIndicators}
                 />
                 </View>
                 {chartStale ? (
@@ -1968,6 +2002,7 @@ export function TerminalScreen() {
                   initialLens={lens}
                   initialKind={kind}
                   initialIndicators={indicators}
+                  onIndicatorsChange={onChartIndicators}
                 />
                 </View>
                 {chartStale ? (
@@ -2190,8 +2225,9 @@ export function TerminalScreen() {
           setEdgePanel(null);
         }}
         onToggleIndicator={(id) => {
-          setIndicators((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+          applyIndicators(
+            indicators.includes(id) ? indicators.filter((x) => x !== id) : [...indicators, id],
+            true
           );
         }}
         onPickKind={(k) => {
