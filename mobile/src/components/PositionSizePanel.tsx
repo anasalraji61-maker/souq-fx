@@ -43,6 +43,8 @@ import {
   leverageOutOfRange,
   leverageAmbiguousThousands,
   savedRiskMoney,
+  restoreGroups,
+  type CalcTouchKey,
   balanceOnAccountSwitch,
   savedAccountBalances,
   type AccountBalances,
@@ -259,6 +261,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const slFromPrices = useRef(false);
   const mountedRef = useRef(true);
   const loadedRef = useRef(false);
+  /** ما كتبه المتداول بيده — قراءة التخزين المتأخّرة لا تكتب فوقه (`restoreGroups`) */
+  const touchedRef = useRef(new Set<CalcTouchKey>());
+  const touch = (k: CalcTouchKey) => touchedRef.current.add(k);
 
   useEffect(() => {
     return () => {
@@ -289,31 +294,35 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             lostDay?: string;
             lostCcy?: string;
           };
-          if (typeof p.dailyLimit === 'string' && p.dailyLimit.trim() !== '') {
+          // بدء بارد بطيء: ما كتبه المتداول قبل وصول القراءة يبقى — راجع `restoreGroups`
+          const g = restoreGroups(touchedRef.current, p.riskPct);
+          if (g.dailyLimit && typeof p.dailyLimit === 'string' && p.dailyLimit.trim() !== '') {
             setDailyLimit(p.dailyLimit);
             setDailyOpen(true);
           }
           // خسارة الأمس لا تُقرأ اليوم — راجع `restoredLostToday`
-          const restoredLost = restoredLostToday(p, new Date());
-          setLostToday(restoredLost);
-          setLostCcy(restoredLostCcy(p, new Date()));
-          lostEnteredDayRef.current = restoredLost.trim() !== '' ? tradingDayKey(new Date()) : null;
-          if (typeof p.balance === 'string') setBalance(p.balance);
-          if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
+          if (g.lostToday) {
+            const restoredLost = restoredLostToday(p, new Date());
+            setLostToday(restoredLost);
+            setLostCcy(restoredLostCcy(p, new Date()));
+            lostEnteredDayRef.current = restoredLost.trim() !== '' ? tradingDayKey(new Date()) : null;
+          }
+          if (g.account && typeof p.balance === 'string') setBalance(p.balance);
+          if (g.account && typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
           if (typeof p.smallSuffix === 'string' && withSmallSuffix('EURUSD', p.smallSuffix)) setSmallSuffix(p.smallSuffix);
           // كانت آخر مرّة بوضع السنت/micro: تبويبٌ آخر ثم العودة كان يفتحها على الزوج العادي برصيدٍ آخر (`restoredSmallSymbol`).
-          // رمزٌ بدّله المتداول قبل وصول القراءة لا يُمسّ
-          const restoring = !planTypedRef.current && symbolRef.current === initialSymbolRef.current;
-          if (!planTypedRef.current) {
+          // رمزٌ بدّله المتداول قبل وصول القراءة لا يُمسّ، ولا رصيدٌ كتبه (الخانة كانت ستصير رصيد السنت)
+          const restoring = g.account && !planTypedRef.current && symbolRef.current === initialSymbolRef.current;
+          if (restoring) {
             setSymbol((cur: string) => (cur === initialSymbolRef.current ? restoredSmallSymbol(cur, p) : cur));
           }
           /** الرمز الذي ستفتح عليه اللوحة — العمولة تُحوَّل إلى وضعه (`commissionKindOf`)، لا إلى «EURUSD» الذي تبدأ به */
           const openSymbol = restoring ? restoredSmallSymbol(symbolRef.current, p) : symbolRef.current;
-          if (typeof p.leverage === 'string') setLeverage(p.leverage);
+          if (g.leverage && typeof p.leverage === 'string') setLeverage(p.leverage);
           const loadedAccount =
             p.account && (ACCOUNT_CCYS as string[]).includes(p.account) ? (p.account as AccountCcy) : null;
-          if (typeof p.commission === 'string') {
+          if (g.account && typeof p.commission === 'string') {
             // «0.07» محفوظة من «EURUSDmicro» واللوحة تفتح على زوجٍ عادي ⇒ 7 (نسخة بلا وضع محفوظ تُقرأ كما هي)
             const m = p.commissionMode;
             const now: CommissionMode = {
@@ -326,13 +335,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             commissionModeRef.current = now;
             setCommission(commissionAcrossModes(p.commission, saved, now));
           }
-          if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
+          if (g.risk && typeof p.riskPct === 'string') setRiskPct(p.riskPct);
           // «USC 1000» محفوظة من «EURUSDc» واللوحة تفتح على زوجٍ عادي (الرمز لا يُحفظ): مؤثّر تبدّل العملة يقلبها نسبةً
           // من عملتها ورصيدها المحفوظين — لا «رقم غير مفهوم» على ما كتبته الحاسبة (`savedRiskMoney`)
-          const riskMoney = savedRiskMoney(p);
+          const riskMoney = g.risk ? savedRiskMoney(p) : null;
           if (riskMoney) prevMoneyRef.current = riskMoney;
-          if (loadedAccount) setAccount(loadedAccount);
-          setOtherBalances(savedAccountBalances(p.balances, loadedAccount ?? 'USD'));
+          if (g.account) {
+            if (loadedAccount) setAccount(loadedAccount);
+            setOtherBalances(savedAccountBalances(p.balances, loadedAccount ?? 'USD'));
+          }
         }
       } catch {
         /* ignore */
@@ -1691,6 +1702,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
                 c,
                 account === c,
                 () => {
+                  touch('account');
                   if (c !== account) {
                     setCommission('');
                     // «USD 50» لا تعني 50 يورو: المخاطرة بالمال تعود نسبةً (بالرصيد نفسه) قبل تبديل العملة،
@@ -1713,7 +1725,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       <Text style={[styles.label, { textAlign: align }]}>
         {cent ? t.riskCalcCentBalance : `${t.riskCalcBalance} (${account})`}
       </Text>
-      {input(balanceText, setBalanceText, cent ? '100000' : '10000', cent ? t.riskCalcCentBalance : t.riskCalcBalance)}
+      {input(
+        balanceText,
+        (v: string) => {
+          touch('account');
+          setBalanceText(v);
+        },
+        cent ? '100000' : '10000', cent ? t.riskCalcCentBalance : t.riskCalcBalance)}
       {cent && Number.isFinite(balanceNum) && balanceNum > 0 ? (
         <Text style={[styles.hint, { textAlign: align }]}>
           {t.riskCalcCentUsdEquiv.replace('{usd}', () => formatMoney(balanceNum / CENTS_PER_USD, 'USD').replace(/ USD$/, ''))}
@@ -1722,7 +1740,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcRiskPct}</Text>
       <View style={[styles.chips, rtl && styles.chipsRtl]}>
-        {QUICK_RISK.map((r) => chip(`${r}%`, riskPct === r, () => setRiskPct(r), `${t.riskCalcRiskPct}: ${r}%`))}
+        {QUICK_RISK.map((r) =>
+          chip(
+            `${r}%`,
+            riskPct === r,
+            () => {
+              touch('risk');
+              setRiskPct(r);
+            },
+            `${t.riskCalcRiskPct}: ${r}%`
+          )
+        )}
         {/* المخاطرة بالمال: يقلب الخانة «1» ⇄ «USD 100» بالمخاطرة نفسها — لوحة الأرقام بلا «$» (راجع
             `toggleRiskUnit`). معطَّل بلا رصيد: لا نسبة من مبلغ ولا مبلغ من نسبة */}
         {(() => {
@@ -1731,6 +1759,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             moneyCcy,
             riskIn?.amount != null,
             () => {
+              touch('risk');
               if (flipped != null) setRiskPct(flipped);
             },
             `${t.riskCalcRiskPct}: ${moneyCcy}`,
@@ -1738,7 +1767,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           );
         })()}
       </View>
-      {input(riskPct, setRiskPct, '1', t.riskCalcRiskPct)}
+      {input(
+        riskPct,
+        (v: string) => {
+          touch('risk');
+          setRiskPct(v);
+        },
+        '1',
+        t.riskCalcRiskPct
+      )}
       {/* زرّ عملة الحساب وحده لا يقول ما يفعل — التلميح ما دامت الخانة نسبةً والقلب ممكناً */}
       {riskIn?.amount == null && toggleRiskUnit(riskPct, balanceNum, moneyCcy) != null ? (
         <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcRiskMoneyHint.replace('{ccy}', moneyCcy)}</Text>
@@ -1764,7 +1801,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       </View>
       {dailyOpen ? (
         <>
-          {input(dailyLimit, setDailyLimit, '5', t.riskCalcDailyLimit)}
+          {input(
+            dailyLimit,
+            (v: string) => {
+              touch('dailyLimit');
+              setDailyLimit(v);
+            },
+            '5',
+            t.riskCalcDailyLimit
+          )}
           {dailyLimitErr ? (
             <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
               {dailyLimitErr}
@@ -1774,6 +1819,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           {input(
             lostTodayNow,
             (v: string) => {
+              touch('lostToday');
               setLostToday(v);
               lostEnteredDayRef.current = v.trim() === '' ? null : tradingDayKey(new Date());
               // أفرغها بيده ⇒ لا عملة (لا «أعد كتابتها» عن خانة تركها فارغة ثم بدّل العملة)
@@ -1798,7 +1844,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       ) : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcLeverage}</Text>
-      {input(leverage, setLeverage, '100', t.riskCalcLeverage)}
+      {input(
+        leverage,
+        (v: string) => {
+          touch('leverage');
+          setLeverage(v);
+        },
+        '100',
+        t.riskCalcLeverage
+      )}
 
       <Text style={[styles.label, { textAlign: align }]}>
         {t.riskCalcSlPips}
@@ -1950,7 +2004,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       <Text style={[styles.label, { textAlign: align }]}>
         {t.riskCalcCommission} ({moneyCcy})
       </Text>
-      {input(commission, setCommission, commissionPlaceholder(commissionKind, account), t.riskCalcCommission)}
+      {input(
+        commission,
+        (v: string) => {
+          touch('account');
+          setCommission(v);
+        },
+        commissionPlaceholder(commissionKind, account), t.riskCalcCommission)}
       {commissionErr ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
           {commissionErr}

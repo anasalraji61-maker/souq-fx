@@ -1213,6 +1213,34 @@ export function toggleRiskUnit(raw: string, balance: number, account: string): s
   return amount > 0 ? `${account.toUpperCase()} ${amount}` : null;
 }
 
+/** خانات الحاسبة التي قد يكتبها المتداول قبل وصول قراءة التخزين — راجع `restoreGroups` */
+export type CalcTouchKey = 'account' | 'risk' | 'leverage' | 'dailyLimit' | 'lostToday';
+
+/**
+ * أيّ مجموعات الحفظ تُطبَّق حين تصل قراءة التخزين **بعد** أن كتب المتداول. كانت القراءة تكتب فوق كل شيء: بدء بارد بطيء، نقرة
+ * «0.5%» قبل وصولها ⇒ تعود 1% المحفوظة **واللوت ضعف ما اختاره**؛ ورصيد 5000 مكتوب يعود 10000. ما لمسه يبقى:
+ * - `account` (شريحة العملة، الرصيد، رصيد السنت، العمولة) مجموعة واحدة: رصيدٌ مكتوب تحت «USD» لا يُستعاد له حساب ين
+ *   (1500000 ين تُقرأ دولاراً) ولا رمز سنت (الخانة تصير رصيد السنت).
+ * - `risk`: النسبة وحدها مستقلّة؛ لكن مخاطرة محفوظة **بالمال** («JPY 5000») مربوطة بعملتها ورصيدها ⇒ لا تُستعاد إن لم يُستعد الحساب.
+ * - الرافعة وحدّ اليوم وخسارة اليوم كلٌّ وحده.
+ */
+export function restoreGroups(
+  touched: ReadonlySet<CalcTouchKey>,
+  savedRiskPct: unknown
+): Record<CalcTouchKey, boolean> {
+  const account = !touched.has('account');
+  // نسبةٌ = أرقام وفواصل و«%» فقط؛ أيّ شيء آخر («USD 50»، «$50») مبلغ
+  const riskIsMoney =
+    typeof savedRiskPct === 'string' && !/^[\s\d.,\u066b\u066c\u060c%\u066a\u0660-\u0669\u06f0-\u06f9\uff10-\uff19]*$/.test(savedRiskPct);
+  return {
+    account,
+    risk: !touched.has('risk') && (account || !riskIsMoney),
+    leverage: !touched.has('leverage'),
+    dailyLimit: !touched.has('dailyLimit'),
+    lostToday: !touched.has('lostToday'),
+  };
+}
+
 /**
  * عملة ورصيد **المبلغ** المحفوظ بخانة المخاطرة (`riskPct` = «USC 1000»/«USD 50»)، ليقلبه مؤثّر تبدّل العملة بالحاسبة
  * (`toggleRiskUnit`) نسبةً حين تفتح اللوحة بوضعٍ آخر. `null` = نسبة (معناها واحد بكل وضع) أو غير مفهومة.

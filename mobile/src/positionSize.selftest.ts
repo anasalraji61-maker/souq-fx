@@ -4451,3 +4451,23 @@ console.log('positionSize parseBalance k shorthand selftest OK');
   assert.equal(parseSlPips('25،5', eu), 25.5);
 }
 console.log('positionSize Arabic comma stop/spread selftest OK');
+
+// قراءة التخزين المتأخّرة لا تكتب فوق ما كتبه المتداول (بدء بارد بطيء): «0.5%» قبل وصولها كانت تعود 1% ⇒ لوت ضعفين
+{
+  const { restoreGroups } = require('./positionSize') as typeof import('./positionSize');
+  const all = { account: true, risk: true, leverage: true, dailyLimit: true, lostToday: true };
+  assert.deepEqual(restoreGroups(new Set(), '1'), all);
+  assert.deepEqual(restoreGroups(new Set(['risk'] as const), '1'), { ...all, risk: false });
+  assert.deepEqual(restoreGroups(new Set(['leverage'] as const), '1'), { ...all, leverage: false });
+  assert.deepEqual(restoreGroups(new Set(['dailyLimit', 'lostToday'] as const), '1'), { ...all, dailyLimit: false, lostToday: false });
+  // رصيدٌ مكتوب ⇒ لا حساب محفوظ؛ نسبة المخاطرة المحفوظة مستقلّة فتُستعاد
+  assert.deepEqual(restoreGroups(new Set(['account'] as const), '0.5'), { ...all, account: false });
+  for (const pct of ['0.5%', '١٫٥', '٠٫٥٪', '1,5', ' 2 '])
+    assert.equal(restoreGroups(new Set(['account'] as const), pct).risk, true, pct);
+  // مخاطرة محفوظة بالمال مربوطة بعملتها ⇒ لا تُستعاد بلا حسابها
+  for (const money of ['USD 50', 'JPY 5000', 'USC 1000', '$50', '50 €'])
+    assert.equal(restoreGroups(new Set(['account'] as const), money).risk, false, money);
+  assert.equal(restoreGroups(new Set(), 'USD 50').risk, true);
+  assert.equal(restoreGroups(new Set(['account'] as const), undefined).risk, true);
+}
+console.log('positionSize restore-after-typing selftest OK');
