@@ -47,8 +47,15 @@ def chat(system: str, user: str, max_tokens: int = 900) -> str:
         data = r.json()
     # محتوى null (نفاد max_tokens قبل أي نصّ، أو فلتر محتوى) كان يُعاد نصّاً «None» جواباً للمتداول، و""
     # جواباً فارغاً — بلا استثناء فلا يعمل الردّ الاحتياطي. الآن خطأ ⇒ المسار الاحتياطي القائم.
-    content = data["choices"][0]["message"].get("content")
+    choice = data["choices"][0]
+    content = choice["message"].get("content")
     text = content.strip() if isinstance(content, str) else ""
+    # ردّ قُطع عند max_tokens كان يُعاد كاملاً: «وقف 1.08» بدل 1.0812 — رقم الخادم الصحيح مبتوراً إلى سعر
+    # آخر. يُسقط السطر الأخير غير المكتمل ويُعلَّم الردّ بـ«…»؛ لا سطر مكتمل ⇒ خطأ ⇒ المسار الاحتياطي.
+    if choice.get("finish_reason") == "length":
+        text = text.rsplit("\n", 1)[0].strip() if "\n" in text else ""
+        if text:
+            text += "\n\n…"
     if not text:
         raise RuntimeError("OpenRouter returned no answer text")
     return text

@@ -424,3 +424,38 @@ def test_frozen_series_tells_the_model_no_movement(monkeypatch):
     ctx, setup = _context_for(monkeypatch, _closes_series(1.1, 1.1, 0.0))
     assert "no price movement" in ctx and "too few" not in ctx
     assert "computed_levels: none" in ctx and setup["entry"] is None
+
+
+class _Reply(_NullReply):
+    def __init__(self, content, finish):
+        super().__init__(content)
+        self._finish = finish
+
+    def post(self, *a, **k):
+        content, finish = self._content, self._finish
+
+        class R:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"choices": [{"message": {"content": content}, "finish_reason": finish}]}
+        return R()
+
+
+@pytest.mark.parametrize("content, finish, want", [
+    # قُطع عند max_tokens وسط رقم: «1.08» كان يُعرض بدل 1.0812 ⇒ السطر المبتور يُسقط ويُعلَّم
+    ("Buy EURUSD\nentry 1.0843\nstop 1.08", "length", "Buy EURUSD\nentry 1.0843\n\n…"),
+    ("Buy EURUSD\nentry 1.0843\nstop 1.0812", "stop", "Buy EURUSD\nentry 1.0843\nstop 1.0812"),
+])
+def test_truncated_model_reply_drops_its_cut_line(monkeypatch, content, finish, want):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
+    monkeypatch.setattr(openrouter_ai.httpx, "Client", lambda **k: _Reply(content, finish))
+    assert openrouter_ai.chat("s", "u") == want
+
+
+def test_truncated_reply_with_no_complete_line_is_an_error(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
+    monkeypatch.setattr(openrouter_ai.httpx, "Client", lambda **k: _Reply("Buy EURUSD, stop 1.08", "length"))
+    with pytest.raises(RuntimeError):
+        openrouter_ai.chat("s", "u")
