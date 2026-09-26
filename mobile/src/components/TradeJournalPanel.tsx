@@ -1179,7 +1179,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setFormError(null);
   };
 
+  /** «أضف»/«احفظ التعديل» جارٍ — متزامن: `busy` حالةٌ لا تصل لضغطة ثانية قبل إعادة الرسم ⇒ نقرٌ مزدوج سريع كان يرسل الصفقة مرّتين */
+  const addInFlightRef = useRef(false);
   const add = async () => {
+    if (addInFlightRef.current) return;
     const e = pnum(entry);
     // «EUR/USD» ⇒ EURUSD، و«EU» يُرفض هنا لا بالخادم برسالة عامة — راجع `journalSymbol`
     const sym = journalSymbol(symbol);
@@ -1246,6 +1249,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       setFormError(planIssueText(issue));
       return;
     }
+    addInFlightRef.current = true;
     setBusy(true);
     setFormError(null);
     const submittedKey = formKeyRef.current;
@@ -1282,6 +1286,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           setFormError(t.journalEditError);
         }
       } finally {
+        addInFlightRef.current = false;
         if (mountedRef.current) setBusy(false);
       }
       return;
@@ -1312,6 +1317,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     } catch {
       if (mountedRef.current) setFormError(t.journalAddError);
     } finally {
+      addInFlightRef.current = false;
       if (mountedRef.current) setBusy(false);
     }
   };

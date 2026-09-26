@@ -138,6 +138,7 @@ import {
   atrStopPips,
   ATR_STOP_TF,
   journalSpec,
+  saveOverrideAccepted,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -1319,7 +1320,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * 2026) أو شراء ذهب من 4000 بوقف «3000» لا يُسجَّل إلا بالسعر الخاطئ المقترح — ونقرة سطر الوقف تنقل «85» لخانة النقاط
    * (وقف 0.85$ بدل 25$ ⇒ لوت أكبر ×29).
    */
-  const pipsOverrideRef = useRef<string | null>(null);
+  const pipsOverrideRef = useRef<{ key: string; at: number } | null>(null);
+  /**
+   * التسجيل جارٍ — **متزامن**: `logBusy` حالةٌ لا تصل للضغطة الثانية قبل إعادة الرسم، فنقرٌ مزدوج سريع على الزرّ كان يرسل
+   * `createTrade` مرّتين ⇒ صفقتان مفتوحتان بالدفتر (مخاطرة مفتوحة مضاعفة وإحصاءات مكرّرة).
+   */
+  const logInFlightRef = useRef(false);
   const pipsKey = pipsInPx ? `${symbol}\u0001${entryPx}\u0001${stopPx}\u0001${targetPx}` : null;
   const logBlocked = slMismatch != null;
 
@@ -1332,13 +1338,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const e = priceNum(entryPx);
     const sPx = priceNum(stopPx);
     const tPx = priceNum(targetPx);
-    if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok || logBlocked) return;
+    if (!spec || !plan?.ok || planSide == null || lots == null || logInFlightRef.current || logBusy || logMsg?.ok || logBlocked) return;
     if (pipsInPx?.hard) {
       setLogMsg({ ok: false, text: pipsInPx.msg });
       return;
     }
-    if (pipsInPx && pipsOverrideRef.current !== pipsKey) {
-      pipsOverrideRef.current = pipsKey;
+    // كالدفتر (`saveOverrideAccepted`): الضغطة الثانية تُقبل تأكيداً بعد ≥600ms فقط — نقرٌ مزدوج كان يسجّل «85» سعراً قبل أن يُقرأ التحذير
+    const armed = pipsOverrideRef.current;
+    const now = Date.now();
+    if (pipsInPx && pipsKey != null && !saveOverrideAccepted(armed, pipsKey, now)) {
+      if (armed?.key !== pipsKey || now < armed.at) pipsOverrideRef.current = { key: pipsKey, at: now };
       setLogMsg({
         ok: false,
         text: t.levelLooksLikePipsSaveBlocked.replace(/\{(field|value|button)\}/g, (_, k: string) =>
@@ -1350,6 +1359,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     // لوت السنت/micro يُسجَّل **برمزه** («EURUSDC»): تحت «EURUSD» كان الدفتر سيحسب مالها بعقد الحساب العادي (×100)
     const logSymbol = small ? journalSymbol(symbol) : spec.symbol;
     if (!logSymbol) return;
+    logInFlightRef.current = true;
     setLogBusy(true);
     setLogMsg(null);
     const gen = planGenRef.current;
@@ -1382,6 +1392,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     } catch {
       if (mountedRef.current) setLogMsg({ ok: false, text: t.riskCalcLogFailed });
     } finally {
+      logInFlightRef.current = false;
       if (mountedRef.current) setLogBusy(false);
     }
   };
