@@ -5536,6 +5536,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     schedulePublishSync(false);
   }, [restXPan, restWindowCount, schedulePublishSync]);
 
+  const altAlertRef = useRef<(() => void) | null>(null);
   // Alt+R على الويب: إعادة العرض (كـAUTO). بـ`event.code` لا `event.key`: Alt على ماك يُخرج «†»/«˙»، وبلوحة عربية أو كردية
   // يُخرج حرفاً عربياً — الموضع الفيزيائي للمفتاح هو الثابت. `preventDefault` يمنع Alt+F من فتح
   // قائمة «ملف» بالمتصفّح. للشارت الذي لُمس أخيراً وحده، ولا يسرق المفاتيح من خانة كتابة.
@@ -5550,6 +5551,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (!canPan) return;
         event.preventDefault();
         resetChartView();
+        return;
+      }
+      if (event.code === 'KeyA') {
+        const run = altAlertRef.current;
+        if (!run) return;
+        event.preventDefault();
+        run();
         return;
       }
       // Alt+حرف لأدوات الرسم في مستمع الرسم (`drawToolShortcut`) وحده — كان هنا جدول ثانٍ للحروف نفسها.
@@ -6481,6 +6489,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       priceRef: priceDecimalsRef,
     });
   const measureReadout = measureDone ? measureText(measureDone) : null;
+  // Alt+A (الويب): تنبيه سعر عند التقاطع — المرور بالفأرة يكفي (السعر تحت المؤشّر)، أو المثبَّت. كزرّ ⚑ وبشروطه.
+  altAlertRef.current =
+    onCreateAlert && crossPrice != null && Number.isFinite(crossPrice) && crossPrice > 0 && !measureReadout && !replayOn
+      ? () => createAlert(crossPrice, 'crosshair')
+      : null;
   // الرسم المحدَّد بطرفين يُقرأ كقياس بسطر القراءة («+24.0 pip · 12 شمعة · 3h») — كم قطع خطّ
   // الترند وبكم شمعة، وكم عرض المنطقة زمنياً، بلا إعادة رسمه بأداة القياس. كـTradingView.
   const selectedSpan = selectedId ? drawings.find((d) => d.id === selectedId) : undefined;
