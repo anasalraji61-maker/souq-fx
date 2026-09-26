@@ -997,12 +997,14 @@ export function computeDemarker(candles: Candle[], period = 14): (number | null)
     demax[i] = dHigh > 0 ? dHigh : 0;
     demin[i] = dLow > 0 ? dLow : 0;
   }
-  const smaMax = sma(demax, period);
-  const smaMin = sma(demin, period);
+  // الشمعة 0 بلا سابقة فلا DeMax/DeMin لها — النافذة الأولى 1..period لا 0..period−1 (كانت تُدخل
+  // صفراً مُفترَضاً فتُصغّر أوّل قيمة: الشمعة period−1). أوّل قيمة عند الشمعة period كـTradingView.
+  const smaMax = sma(demax.slice(1), period);
+  const smaMin = sma(demin.slice(1), period);
   const out: (number | null)[] = new Array(n).fill(null);
-  for (let i = 0; i < n; i++) {
-    const mx = smaMax[i];
-    const mn = smaMin[i];
+  for (let i = 1; i < n; i++) {
+    const mx = smaMax[i - 1];
+    const mn = smaMin[i - 1];
     if (mx == null || mn == null) continue;
     const denom = mx + mn;
     out[i] = denom === 0 ? 0.5 : mx / denom;
