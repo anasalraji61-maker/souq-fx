@@ -2245,11 +2245,32 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
     return row
 
 
+def _in_dst_fold(stamp: str) -> bool:
+    """`YYYY-MM-DD HH:MM` بتوقيت الخادم يقع في الساعة المكرَّرة عند نهاية التوقيت الصيفي (02:00–02:59 مرّتين
+    بأوروبا) ⇒ لا تُعرف أيّ المرّتين هو."""
+    try:
+        dt = datetime.strptime(stamp, "%Y-%m-%d %H:%M")
+        return dt.replace(fold=0).astimezone().utcoffset() != dt.replace(fold=1).astimezone().utcoffset()
+    except (ValueError, OverflowError, OSError):
+        return False
+
+
+def journal_time_before(a: str, b: str) -> bool:
+    """وقت الدفتر `a` يسبق `b` **يقيناً**. المقارنة النصّية زمنية إلا في الساعة المكرَّرة: صفقة كريبتو فُتحت 02:40
+    (صيفي) وأُغلقت بعد 30 دقيقة = 02:10 (شتوي) كانت تُرفض «الإغلاق قبل الفتح» (422) بالإنشاء والإغلاق والتعديل،
+    والإغلاق «الآن» يُختم 02:40 — وقت إغلاق مختلَق بعد الحقيقي بنصف ساعة. كلاهما داخل الساعة ⇒ لا يُحكم بالسبق.
+    (خادم UTC — صورة Docker — بلا ساعة مكرَّرة.)"""
+    return a < b and not (_in_dst_fold(a) and _in_dst_fold(b))
+
+
 def _close_stamp(opened_at: str | None) -> str:
     """وقت إغلاق «الآن» لا يسبق الفتح: الفتح يُقبل حتى +5 دقائق (فرق ساعة الجهاز — TradeCreate) فصفقة تُغلق
-    فوراً كانت تُحفظ مغلقة قبل فتحها (مدّة سالبة). الصيغة نفسها `%Y-%m-%d %H:%M` ⇒ المقارنة النصّية زمنية."""
+    فوراً كانت تُحفظ مغلقة قبل فتحها (مدّة سالبة). الصيغة نفسها `%Y-%m-%d %H:%M` ⇒ المقارنة النصّية زمنية
+    (عدا الساعة المكرَّرة — `journal_time_before`)."""
     now = time.strftime("%Y-%m-%d %H:%M")
-    return max(now, opened_at) if opened_at and len(opened_at) == len(now) else now
+    if opened_at and len(opened_at) == len(now) and journal_time_before(now, opened_at):
+        return opened_at
+    return now
 
 
 class TradeAlreadyClosed(Exception):
@@ -2301,7 +2322,7 @@ def _try_close_trade(
         pnl = _pnl_pct(row["side"], float(row["entry"]), exit_price)
         if closed_at is None:
             closed_at = _close_stamp(row.get("opened_at"))
-        elif row.get("opened_at") and closed_at < str(row["opened_at"]):
+        elif row.get("opened_at") and journal_time_before(closed_at, str(row["opened_at"])):
             raise TradeCloseTimeInvalid("closed_at is before opened_at")
         cur = c.execute(
             f"UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' "
@@ -2413,7 +2434,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
             if ca is not None:
                 if row.get("exit") is None:
                     raise TradeCloseTimeInvalid("closed_at needs exit")
-                if row.get("opened_at") and ca < str(row["opened_at"]):
+                if row.get("opened_at") and journal_time_before(ca, str(row["opened_at"])):
                     raise TradeCloseTimeInvalid("closed_at is before opened_at")
             row["closed_at"] = ca if row.get("exit") is not None else None
         if row.get("exit") is not None:

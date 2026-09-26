@@ -646,7 +646,7 @@ class TradeCreate(BaseModel):
                 raise ValueError("closed_at needs exit")
             if self.opened_at is None:
                 raise ValueError("closed_at needs opened_at")  # الفتح يصير «الآن» ⇒ بعد إغلاق ماضٍ
-            if self.closed_at < self.opened_at:
+            if db.journal_time_before(self.closed_at, self.opened_at):  # الساعة المكرَّرة: لا سبق يقيني
                 raise ValueError("closed_at is before opened_at")
         return self
 
