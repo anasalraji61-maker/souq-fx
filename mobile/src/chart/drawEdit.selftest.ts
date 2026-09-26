@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock, withDrawingFibReverse, withNextExtend, drawingExtend, extendedSegment, drawToolShortcut, drawToolShortcutLabel } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock, withDrawingFibReverse, withNextExtend, drawingExtend, extendedSegment, drawToolShortcut, drawToolShortcutLabel, nudgeAxes } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -206,6 +206,12 @@ ok('أداة بلا اختصار ⇒ فارغ', drawToolShortcutLabel('none') ==
   ok('عكس فيبو', withDrawingFibReverse(fib, true).reversed === true && !('reversed' in withDrawingFibReverse({ ...fib, reversed: true }, false)));
   ok('العكس لفيبو فقط', !('reversed' in withDrawingFibReverse(tr, true)));
 }
+
+// ◀▶ على الأفقي و▲▼ على الرأسي لا تُرى ⇒ لا تُعرض ولا تُزاح.
+ok('أفقي: سعر لا زمن', nudgeAxes('hline').price && !nudgeAxes('hline').time);
+ok('رأسي: زمن لا سعر', nudgeAxes('vline').time && !nudgeAxes('vline').price);
+ok('شعاع أفقي: الاثنان (بدايته تتحرّك)', nudgeAxes('hray').time && nudgeAxes('hray').price);
+ok('ترند: الاثنان', nudgeAxes('trend').time && nudgeAxes('trend').price);
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

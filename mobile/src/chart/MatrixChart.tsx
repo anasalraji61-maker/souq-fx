@@ -148,6 +148,7 @@ import {
   withNextExtend,
   TREND_EXTENDS,
   withDrawingLock,
+  nudgeAxes,
 } from './drawEdit';
 import {
   isPositionTool,
@@ -2923,12 +2924,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
     : null;
   // أزرار الإزاحة للرسم المحدَّد (`nudgeSelectedDrawing`) — الزمن يسار⇐يمين بالشارت بكل اللغات.
+  // ما لا يُرى على الأداة لا يُعرض: ◀▶ على الأفقي، ▲▼ على الرأسي (`nudgeAxes`).
+  const nudgeTool = selectedId ? drawings.find((x) => x.id === selectedId)?.tool : undefined;
+  const nudgeAxesSel = nudgeTool ? nudgeAxes(nudgeTool) : { time: true, price: true };
   const nudgeButtons = [
     { key: 'up', icon: '▲', bars: 0, steps: 1, a11y: tr.mcNudgeUpA11y },
     { key: 'down', icon: '▼', bars: 0, steps: -1, a11y: tr.mcNudgeDownA11y },
     { key: 'earlier', icon: '◀', bars: -1, steps: 0, a11y: tr.mcNudgeEarlierA11y },
     { key: 'later', icon: '▶', bars: 1, steps: 0, a11y: tr.mcNudgeLaterA11y },
-  ];
+  ].filter((b) => (b.bars ? nudgeAxesSel.time : nudgeAxesSel.price));
 
   // تبديل الرمز يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها. تبديل **الفريم**
   // لا يمسّه: الرسومات للرمز على كل فريماته (`drawingStore.ts`) — خطّ رُسم على 4H خطأً يُتراجع
@@ -4412,6 +4416,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       flashLockedHint();
       return 'same';
     }
+    // المحور الذي لا يُرى على الأداة (زمن الأفقي، سعر الرأسي) لا يُزاح — لا تعديل خفيّ يستهلك التراجع.
+    const axes = nudgeAxes(d.tool);
+    if (!axes.time) bars = 0;
+    if (!axes.price) steps = 0;
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
     const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
     const next = translateDrawing(

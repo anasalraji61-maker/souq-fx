@@ -360,3 +360,12 @@ export function nudgePipPrice(price: number, steps: number, pipSize: number): nu
   const decimals = Math.max(0, Math.round(-Math.log10(pipSize)) + 1);
   return Number((price + steps * pipSize).toFixed(decimals));
 }
+
+/**
+ * أيّ محورَي الإزاحة (▲▼ سعر، ◀▶ زمن) يُرى على الأداة. الأفقي بعرض اللوح بلا مقبض ⇒ زمنه لا يُرى؛ الرأسي بطول
+ * اللوح ⇒ سعره لا يُرى. كانت ◀▶ على الأفقي و▲▼ على الرأسي تغيّر المرساة بلا أيّ أثر مرئي، وكلّ ضغطة لقطة تراجع
+ * وحفظ ⇒ «تراجع» لا يفعل شيئاً ظاهراً، والضغط المطوَّل يملأ سجلّ التراجع كلّه.
+ */
+export function nudgeAxes(tool: DrawTool): { time: boolean; price: boolean } {
+  return { time: tool !== 'hline', price: tool !== 'vline' };
+}
