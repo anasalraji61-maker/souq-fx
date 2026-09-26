@@ -164,6 +164,18 @@ import { anchorDrawings, anchorPoint, barTime, drawSlotAt, stampAtIndex, type Ti
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
 import { priceSpan } from './priceSpan';
+import {
+  LINE_BOLD_EXTRA,
+  LINE_STYLES,
+  drawingLineStyle,
+  drawingLineWidth,
+  hasLineStyle,
+  nextLineStyle,
+  nextLineWidth,
+  withNextLineStyle,
+  withNextLineWidth,
+  type LineStyle,
+} from './lineStyle';
 import { FIB_EXTENSIONS, fibIsDown, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
   barChangeRef,
@@ -561,6 +573,16 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
  * التأكيد بشريط الرسم يظهر فقط حين يختار المتداول أداة رسم فعلاً. */
 function SelMark({ accent }: { accent?: boolean }) {
   return <View pointerEvents="none" style={[styles.selMark, !accent && styles.selMarkNeutral]} />;
+}
+
+/** معاينة سُمك/نمط الخطّ داخل زرّيهما — الخطّ نفسه لا رقم أو اسم فقط (الحالة تُرى لا تُقرأ). */
+function LinePreview({ width, lineStyle, color }: { width: number; lineStyle: LineStyle; color: string }) {
+  return (
+    <View
+      pointerEvents="none"
+      style={[styles.linePreview, { borderTopWidth: width, borderStyle: lineStyle, borderColor: color }]}
+    />
+  );
 }
 
 /** §5.6: مسكة أطول من هذا على اللوح تُخفت الواجهة؛ الأقصر نقرة. */
@@ -2869,6 +2891,32 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     word: tr.mcDrawColorWord,
     a11y: tr.mcDrawColorA11y.replace('{color}', drawPaletteNames[recolorIdx] ?? drawPaletteNames[0] ?? ''),
   };
+  // سُمك الخطّ المحدَّد ونمطه (ترند/شعاع/أفقي/شعاع أفقي/رأسي) — `lineStyle.ts`. قابلان للتراجع ويُحفظان مع الرسم.
+  const lineTarget = recolorTarget && hasLineStyle(recolorTarget.tool) ? recolorTarget : null;
+  const restyleSelected = useCallback(
+    (fn: (d: Drawing) => Drawing) => {
+      if (!selectedId) return;
+      const d = drawingsRef.current.find((x) => x.id === selectedId);
+      if (!d || !hasLineStyle(d.tool)) return;
+      pushDrawHistory();
+      const next = fn(d);
+      drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
+      setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+    },
+    [selectedId, pushDrawHistory]
+  );
+  const lineLabels = lineTarget
+    ? {
+        width: drawingLineWidth(lineTarget),
+        style: drawingLineStyle(lineTarget),
+        widthA11y: tr.mcLineWidthA11y
+          .replace('{px}', String(drawingLineWidth(lineTarget)))
+          .replace('{next}', String(nextLineWidth(lineTarget))),
+        styleA11y: tr.mcLineStyleA11y
+          .replace('{style}', tr.mcLineStyleNames[LINE_STYLES.indexOf(drawingLineStyle(lineTarget))] ?? '')
+          .replace('{next}', tr.mcLineStyleNames[LINE_STYLES.indexOf(nextLineStyle(lineTarget))] ?? ''),
+      }
+    : null;
   // أزرار الإزاحة للرسم المحدَّد (`nudgeSelectedDrawing`) — الزمن يسار⇐يمين بالشارت بكل اللغات.
   const nudgeButtons = [
     { key: 'up', icon: '▲', bars: 0, steps: 1, a11y: tr.mcNudgeUpA11y },
@@ -7320,6 +7368,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolIcon, { color: recolorTarget!.color }]}>●</Text>
               </Pressable>
             ) : null}
+            {lineLabels && lineTarget ? (
+              <>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={lineLabels.widthA11y}
+                  {...railHintProps(lineLabels.widthA11y)}
+                  style={({ pressed }) => [
+                    styles.compactTool,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
+                  onPress={() => restyleSelected(withNextLineWidth)}
+                >
+                  <LinePreview width={lineLabels.width} lineStyle="solid" color={colors.text} />
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={lineLabels.styleA11y}
+                  {...railHintProps(lineLabels.styleA11y)}
+                  style={({ pressed }) => [
+                    styles.compactTool,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
+                  onPress={() => restyleSelected(withNextLineStyle)}
+                >
+                  <LinePreview width={2} lineStyle={lineLabels.style} color={colors.text} />
+                </Pressable>
+              </>
+            ) : null}
             {drawings.length ? (
               <Pressable
                 accessibilityRole="button"
@@ -9689,7 +9765,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     // وبـ`left:0/right:0` وبلا ارتفاع كان خطّ الدعم يُرسم **شريطاً مجوّفاً**
                     // (حدّ أعلى وحدّ أسفل وطرفان) لا خطّاً واحداً — وحالة التحديد تُسمِك
                     // الشريط بدل الخطّ. بقيّة الرسوم تستعمل الخاصيّة الاتجاهية أصلاً.
-                    borderTopWidth: bold ? 2.5 : 1,
+                    borderTopWidth: drawingLineWidth(d) + (bold ? LINE_BOLD_EXTRA : 0),
+                    borderStyle: drawingLineStyle(d),
                   },
                 ]}
               >
@@ -9750,7 +9827,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 key={d.id}
                 style={[
                   styles.vLine,
-                  { left: xOf(aLocal), borderColor: d.color, borderLeftWidth: bold ? 2.5 : 1 },
+                  {
+                    left: xOf(aLocal),
+                    borderColor: d.color,
+                    borderLeftWidth: drawingLineWidth(d) + (bold ? LINE_BOLD_EXTRA : 0),
+                    borderStyle: drawingLineStyle(d),
+                  },
                 ]}
               />
             );
@@ -9795,19 +9877,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const len =
               Math.hypot(x2 - x1, y2 - y1) * (d.tool === 'ray' ? rayReach(x1, y1, x2, y2, chartPlotW, chartPlotH) : 1);
             const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+            const lineW = drawingLineWidth(d) + (bold ? LINE_BOLD_EXTRA : 0);
+            const lineSt = drawingLineStyle(d);
             return (
               <React.Fragment key={d.id}>
                 <View
-                  style={{
-                    position: 'absolute',
-                    left: x1,
-                    top: y1,
-                    width: len,
-                    height: bold ? 3.5 : 2,
-                    backgroundColor: d.color,
-                    transform: [{ rotate: `${angle}deg` }],
-                    transformOrigin: 'left center',
-                  }}
+                  style={[
+                    {
+                      position: 'absolute',
+                      left: x1,
+                      top: y1,
+                      width: len,
+                      transform: [{ rotate: `${angle}deg` }],
+                      transformOrigin: 'left center',
+                    },
+                    // المتّصل تعبئة (كما كان)؛ المتقطّع والمنقّط حدّ علوي بنمطه — كخطّ الأفقي وخطّ وسط القناة.
+                    lineSt === 'solid'
+                      ? { height: lineW, backgroundColor: d.color }
+                      : { height: 0, borderTopWidth: lineW, borderStyle: lineSt, borderColor: d.color },
+                  ]}
                 />
                 {/* رأس السهم عند الطرف الثاني (وجهة الحركة المتوقّعة) — فقط إن ظهر الطرف بالنافذة لا حين قُصّ. */}
                 {d.tool === 'trend' && d.arrow && seg.bi === bLocal && len >= 6
@@ -9819,7 +9907,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           left: x2,
                           top: y2,
                           width: Math.min(ARROW_HEAD_LEN, len * 0.6),
-                          height: bold ? 3.5 : 2,
+                          height: lineW,
                           borderRadius: 1,
                           backgroundColor: d.color,
                           transform: [{ rotate: `${angle + 180 + spread}deg` }],
@@ -13959,6 +14047,36 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     </Text>
                   </Pressable>
                 ) : null}
+                {lineLabels && lineTarget ? (
+                  <>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={lineLabels.widthA11y}
+                      style={({ pressed }) => [
+                        styles.tool,
+                        styles.toolRow,
+                        pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                      ]}
+                      onPress={() => restyleSelected(withNextLineWidth)}
+                    >
+                      <LinePreview width={lineLabels.width} lineStyle="solid" color={colors.textMuted} />
+                      <Text style={styles.toolText}>{tr.mcLineWidthWord}</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={lineLabels.styleA11y}
+                      style={({ pressed }) => [
+                        styles.tool,
+                        styles.toolRow,
+                        pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                      ]}
+                      onPress={() => restyleSelected(withNextLineStyle)}
+                    >
+                      <LinePreview width={2} lineStyle={lineLabels.style} color={colors.textMuted} />
+                      <Text style={styles.toolText}>{tr.mcLineStyleWord}</Text>
+                    </Pressable>
+                  </>
+                ) : null}
                 {(() => {
                   const d = drawings.find((x) => x.id === selectedId);
                   if ((d?.tool === 'hline' || d?.tool === 'hray') && onCreateAlert) {
@@ -14855,6 +14973,8 @@ const styles = StyleSheet.create({
   toolDisabled: { opacity: 0.35 },
   toolText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   toolTextOn: { color: colors.text },
+  toolRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  linePreview: { width: 16, height: 0 },
   ind: {
     paddingHorizontal: 8,
     paddingVertical: 8,

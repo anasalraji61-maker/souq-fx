@@ -258,6 +258,10 @@ export type Drawing = {
   arrow?: boolean;
   /** فيبو معكوس: 0% و100% يتبادلان طرفي التأرجح (A↔B) والرسم في مكانه — راجع `fibIsDown`. غيابه ⇒ 0% عند B. */
   reversed?: boolean;
+  /** سُمك الخطّ بالبكسل (ترند/شعاع/أفقي/شعاع أفقي/رأسي) — غيابه ⇒ افتراضي الأداة. راجع `lineStyle.ts`. */
+  lineWidth?: number;
+  /** نمط الخطّ للأدوات نفسها — غيابه ⇒ افتراضي الأداة (الأفقي والرأسي متقطّعان، الباقي متّصل). */
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
 };
 
 export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';
