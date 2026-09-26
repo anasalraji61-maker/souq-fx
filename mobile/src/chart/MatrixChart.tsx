@@ -2232,7 +2232,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // قائمة الزرّ الأيمن على الويب (W4): موضعها داخل اللوح، والنقطة (فهرس + سعر بمغناطيس الرسم) تحت المؤشّر.
   // التحديد بنقرة من وضع السحب (`onChartPress`): أداة «تحديد» مؤقّتة تنتهي بانتهاء التحديد. اختيارها من الشريط لا يمسّها.
   const autoSelectRef = useRef(false);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; point: ChartPoint } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; point: ChartPoint; drawingId?: string } | null>(null);
   const ctxMenuRef = useRef<View>(null);
   useEffect(() => {
     if (tool !== 'select') {
@@ -5933,7 +5933,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const x = point.x - (rect?.left ?? 0);
             const y = point.y - (rect?.top ?? 0);
             webKeyChart = keyToken.current;
-            setCtxMenu({ x, y, point: pointFromXY(x, y) });
+            // على رسم: يُحدَّد (كالنقرة، `autoSelectRef`) والقائمة لإجراءاته — نسخة، قفل، حذف.
+            const hit = hitDrawing(x, y);
+            if (hit) {
+              autoSelectRef.current = true;
+              setTool('select');
+              setSelectedId(hit);
+            }
+            setCtxMenu({ x, y, point: pointFromXY(x, y), drawingId: hit ?? undefined });
           },
           // خروج الفأرة من اللوح يمسح المعاينة؛ التقاطع المثبَّت يبقى (زرّ ⚑ خارج اللوح).
           onPointerLeave: () => {
@@ -9993,14 +10000,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           />
         ) : null}
 
-        {ctxMenu && Platform.OS === 'web' && canPan && tool === 'none'
+        {ctxMenu && Platform.OS === 'web' && canPan && (ctxMenu.drawingId ? selectedId === ctxMenu.drawingId : tool === 'none')
           ? (() => {
               const items: { key: string; label: string; price?: number; run: () => void }[] = [];
               const at = ctxMenu.point.price;
-              if (onCreateAlert && !replayOn && Number.isFinite(at) && at > 0) {
+              if (ctxMenu.drawingId) {
+                const drawingId = ctxMenu.drawingId;
+                items.push({ key: 'clone', label: `❐ ${tr.mcCloneDrawing}`, run: cloneSelectedDrawing });
+                items.push({
+                  key: 'lock',
+                  label: selectedLocked ? `🔒 ${tr.mcUnlockDrawing}` : `🔓 ${tr.mcLockDrawing}`,
+                  run: toggleSelectedLock,
+                });
+                items.push({
+                  key: 'delete',
+                  label: `✕ ${tr.deleteWord}`,
+                  run: () => {
+                    pushDrawHistory();
+                    setDrawings((list) => list.filter((x) => x.id !== drawingId));
+                    setSelectedId(null);
+                  },
+                });
+              } else if (onCreateAlert && !replayOn && Number.isFinite(at) && at > 0) {
                 items.push({ key: 'alert', label: `⚑ ${tr.mcAlertAtCrossA11y}`, price: at, run: () => createAlert(at, 'crosshair') });
               }
-              if (Number.isFinite(at)) {
+              if (!ctxMenu.drawingId && Number.isFinite(at)) {
                 items.push({
                   key: 'hline',
                   label: localizedDrawTools(tr).find((t) => t.id === 'hline')?.label ?? '',
@@ -10013,7 +10037,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   },
                 });
               }
-              items.push({ key: 'reset', label: tr.mcAutoA11y, run: resetChartView });
+              if (!ctxMenu.drawingId) items.push({ key: 'reset', label: tr.mcAutoA11y, run: resetChartView });
               const h = items.length * (CTX_ITEM_H + 12) + 8; // بند قد يلتفّ لسطرين (نصّ إعادة العرض)
               return (
                 <View
