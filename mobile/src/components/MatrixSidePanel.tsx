@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, selectedMarkerWidth } from '../theme';
 import { type ChartKind, type DrawTool, type IndicatorId } from '../chart/types';
 import { localizedChartKinds, localizedDrawTools, localizedIndicators } from '../chart/typeLabels';
 import { AlertsPanel } from './AlertsPanel';
@@ -156,6 +156,7 @@ export function MatrixSidePanel({
                       accessibilityLabel={`${t.mspIndicatorA11yPrefix}${ind.label}${on ? t.mspIndicatorEnabledSuffix : ''}`}
                     >
                       <Text style={[styles.cellText, on && styles.cellTextOn]}>{ind.label}</Text>
+                      {on ? <View style={styles.cellMarker} /> : null}
                     </Pressable>
                   );
                 })}
@@ -186,6 +187,7 @@ export function MatrixSidePanel({
                     <Text style={[styles.cellText, activeKind === k.id && styles.cellTextOn]}>
                       {k.label}
                     </Text>
+                    {activeKind === k.id ? <View style={styles.cellMarker} /> : null}
                   </Pressable>
                 ))}
               </View>
@@ -256,8 +258,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.bgElevated,
+    overflow: 'hidden',
   },
-  cellOn: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
+  // DESIGN-PRO §4: الاختيار لا يُقال باللون وحده ⇒ تعبئة محايدة + علامة داخلية 2px. بلون النصّ لا التأكيد:
+  // عدّة مؤشرات تُفعَّل معاً، والتأكيد عنصر واحد لكل منطقة (§1).
+  cellOn: { borderColor: 'transparent', backgroundColor: colors.selectedFill },
+  cellMarker: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: selectedMarkerWidth,
+    backgroundColor: colors.text,
+  },
   cellText: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   cellTextOn: { color: colors.text },
 });
