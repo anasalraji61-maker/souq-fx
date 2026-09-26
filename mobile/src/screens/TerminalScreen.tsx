@@ -61,7 +61,7 @@ import {
 } from '../chart/alertFromChart';
 import { playSoftClick } from '../audio/playSoftClick';
 import { notify } from '../chart/confirmDestructive';
-import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
+import { cachedChartSeries, rememberChartSeries } from '../hooks/chartSeriesCache';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { headerChangePct, livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance, isSyntheticProvenance } from '../chart/dataSource';
@@ -146,24 +146,17 @@ function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
 }
 
 /**
- * ذاكرة جلسة لشموع (رمز، فريم) كالرباعي (`seriesCache`، 5 دقائق): تبديل فريم/رمز كان يُبقي شموع الفريم السابق
- * معروضة **تحت اسم الفريم الجديد** حتى يصل الجلب (15m موسومة 1H)، والرجوع لفريم فُتح قبل ثوانٍ = جولة انتظار كاملة.
- * الآن آخر سلسلة حقيقية لنفس (الرمز، الفريم) تُعرض فوراً والجلب يستبدلها؛ وفشل الجلب يُبقيها بدل شموع وهمية.
- * الإطارات والشارت الرئيسي والبطل تتشارك الذاكرة: فتح رمز/فريم ظاهر بإطار آخر فوري. لا تُخزَّن السلاسل التجريبية ولا «غير المتاحة».
+ * ذاكرة جلسة لشموع (رمز، فريم) **مشتركة** مع التركيز والرباعي (`hooks/chartSeriesCache`، 5 دقائق — ui59a): تبديل فريم/رمز
+ * كان يُبقي شموع الفريم السابق معروضة **تحت اسم الفريم الجديد** حتى يصل الجلب (15m موسومة 1H)، والرجوع لفريم فُتح قبل
+ * ثوانٍ = جولة انتظار كاملة. الآن آخر سلسلة حقيقية لنفس (الرمز، الفريم) تُعرض فوراً والجلب يستبدلها؛ وفشل الجلب يُبقيها
+ * بدل شموع وهمية. وفتح التركيز على رمز/فريم ظاهر بإطار الطرفية فوري (كانت ذاكرة الطرفية منفصلة فيعيد التركيز الجلب).
+ * لا تُخزَّن السلاسل التجريبية ولا «غير المتاحة».
  */
-const terminalSeriesCache = createSeriesCache<ChartSeries>();
-const cachedSeries = (sym: string, tf: Timeframe): ChartSeries | null =>
-  terminalSeriesCache.get(seriesCacheKey(sym, tf));
+const cachedSeries = (sym: string, tf: Timeframe): ChartSeries | null => cachedChartSeries(sym, tf);
+// chart-r66: انقطاع قصير للمزوّد ⇒ الخادم يردّ بشموع تجريبية بأسعار أخرى؛ الحقيقية المخزّنة لنفس (الرمز، الفريم) تبقى
+// (`rememberChartSeries`). كل المستدعين (الاستطلاع، الشارت الرئيسي، تبديل رمز/فريم) يمرّون من هنا.
 async function fetchSeries(sym: string, tf: Timeframe): Promise<ChartSeries> {
-  const s = await api.chart(sym, tf);
-  const key = seriesCacheKey(sym, tf);
-  if (!isSyntheticProvenance(s.data_source)) {
-    terminalSeriesCache.put(key, s);
-    return s;
-  }
-  // chart-r66: انقطاع قصير للمزوّد ⇒ الخادم يردّ بشموع تجريبية بأسعار أخرى؛ الحقيقية المخزّنة لنفس (الرمز، الفريم) تبقى
-  // (كالرباعي والتركيز). كل المستدعين (الاستطلاع، الشارت الرئيسي، تبديل رمز/فريم) يمرّون من هنا.
-  return terminalSeriesCache.get(key) ?? s;
+  return rememberChartSeries(sym, tf, await api.chart(sym, tf));
 }
 
 export function TerminalScreen() {
