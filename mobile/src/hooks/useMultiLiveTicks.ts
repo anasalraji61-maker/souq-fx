@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { API_URL, type LiveTick } from '../api';
-import { parseWsDataSource } from '../chart/dataSource';
+import { noteServerTime, parseWsDataSource } from '../chart/dataSource';
 import { acceptTick } from './tickAge';
 import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, STALE_CHECK_MS, TICK_STALE_MS } from './useLiveTicks';
 
@@ -70,6 +70,8 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
               ts?: number;
             };
             if (!data.ticks || typeof data.ticks !== 'object') return;
+            // ساعة الخادم قبل قبول التيكات: بدونها جهاز متأخّر ≥3ث يرى كل تيك «من المستقبل» فيرفضه.
+            noteServerTime(data.ts);
             const source = parseWsDataSource(data);
             const now = Date.now();
             setTicks((prev) => {
