@@ -31,7 +31,7 @@ import { isForexMarketOpen } from '../chart/marketHours';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
 import type { PanSpeedPercent } from '../chart/panSpeed';
-import { PairDrumWheel } from './PairDrumWheel';
+import { SymbolListPicker } from '../chart/SymbolListPicker';
 import { useI18n } from '../i18n/I18nContext';
 
 type Size = 'hero' | 'large' | 'medium' | 'small';
@@ -536,7 +536,7 @@ export function ChartFrame({
             style={StyleSheet.absoluteFill}
             onPress={() => setWheelOpen(false)}
           />
-          <PairDrumWheel
+          <SymbolListPicker
             value={series.symbol}
             onChange={(next) => {
               setPendingSwitch(next !== series.symbol ? { symbol: next } : null);
@@ -658,12 +658,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   symbolCaret: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
+  // W6: المنتقي ملاصق لزرّ الرمز تحت الرأس، لا وسط اللوح — والشارت بلا تعتيم (يبقى أعلى العناصر صوتاً).
   wheelLayer: {
     ...StyleSheet.absoluteFill, // RN 0.86 أزال absoluteFillObject وقت التشغيل (كان يُنشر undefined فتفقد الطبقة position:absolute)
     zIndex: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(8, 14, 22, 0.35)',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    paddingTop: 36,
+    paddingHorizontal: 8,
   },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.textDim },
   symbol: {
