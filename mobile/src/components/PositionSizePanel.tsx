@@ -150,6 +150,7 @@ import {
   atrStopPips,
   atrStopRefreshDelayMs,
   atrSeriesIsCurrent,
+  atrChipCandles,
   ATR_STOP_TF,
   journalSpec,
   journalUnknownSuffixPair,
@@ -813,10 +814,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       api
         .chart(atrKey, ATR_STOP_TF, 60)
         .then((s) => {
-          const r = rememberChartSeries(atrKey, ATR_STOP_TF, s);
-          if (alive && !isSyntheticProvenance(r.data_source)) setAtrSeries({ key: atrKey, candles: r.candles });
+          rememberChartSeries(atrKey, ATR_STOP_TF, s);
+          return s;
         })
-        .catch(() => {});
+        .catch(() => null)
+        .then((s) => {
+          if (!alive) return;
+          // فشل الجلب ⇒ المخزّنة الحالية فقط، وإلا لا شريحة (لا شموع الصباح عصراً) — `atrChipCandles`
+          const candles = atrChipCandles(s, cachedChartSeries(atrKey, ATR_STOP_TF), serverNowSec());
+          setAtrSeries(candles ? { key: atrKey, candles } : null);
+        });
     }, 600);
     return () => {
       alive = false;

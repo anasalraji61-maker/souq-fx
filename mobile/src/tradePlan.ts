@@ -10,7 +10,8 @@
 import { cryptoPairOf, knownSingleName } from './chart/newsRisk';
 import { normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
 import { computeAtr } from './chart/indicators/volatility';
-import type { Candle } from './api';
+import { isSyntheticProvenance } from './chart/dataSource';
+import type { Candle, DataProvenance } from './api';
 import {
   centAccountSymbol,
   microAccountSymbol,
@@ -2023,6 +2024,30 @@ export function atrSeriesIsCurrent(
   if (!Array.isArray(candles) || !Number.isFinite(nowSec) || !(tfSec > 0)) return false;
   const start = Math.floor(nowSec / tfSec) * tfSec;
   return candles.some((c) => c != null && Number.isFinite(c.time) && c.time >= start);
+}
+
+/**
+ * الشموع التي تبني شريحة وقف التقلّب بعد محاولة الجلب (`fetched` = ردّ `api.chart`، أو `null` إن رُمي الطلب).
+ *
+ * لماذا: عند فشل الجلب كان `rememberChartSeries` يعيد السلسلة المخزّنة نفسها التي رُفضت للتوّ لأنها ليست حالية
+ * (`atrSeriesIsCurrent`)، فتُقبل بوسم المزوّد: حاسبة مفتوحة منذ الصباح والمزوّد متعثّر تعرض ATR شموع الصباح عصراً، وشمعة
+ * جُلبت ناقصة (10:57) تُحسب مغلقة بمداها الناقص. والحالة السابقة كانت تبقى كذلك بعد تجديد فاشل.
+ * الردّ الحقيقي يُقبل كما هو؛ وإلا المخزّنة **الحالية** فقط؛ وإلا `null` (لا شريحة — أفضل من تقلّب قديم يُعرض كتقلّب الآن).
+ */
+export function atrChipCandles(
+  fetched: { data_source?: DataProvenance | null; candles?: Candle[] | null } | null | undefined,
+  cached: { data_source?: DataProvenance | null; candles?: Candle[] | null } | null | undefined,
+  nowSec: number
+): Candle[] | null {
+  if (fetched && Array.isArray(fetched.candles) && !isSyntheticProvenance(fetched.data_source)) return fetched.candles;
+  if (
+    cached &&
+    Array.isArray(cached.candles) &&
+    !isSyntheticProvenance(cached.data_source) &&
+    atrSeriesIsCurrent(cached.candles, nowSec)
+  )
+    return cached.candles;
+  return null;
 }
 
 /**

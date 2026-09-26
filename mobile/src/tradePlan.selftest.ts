@@ -12,6 +12,7 @@ import {
   ATR_STOP_TF_SEC,
   atrStopRefreshDelayMs,
   atrSeriesIsCurrent,
+  atrChipCandles,
   analyzePlan,
   minStopPips,
   calcMinStopPips,
@@ -3879,6 +3880,32 @@ console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
   assert.equal(atrSeriesIsCurrent([], T), false);
   assert.equal(atrSeriesIsCurrent(null, T), false);
   console.log('tradePlan atrStopRefreshDelayMs selftest OK');
+}
+
+// ── atrChipCandles: جلب فاشل لا يعيد شموع الصباح المرفوضة بوسم المزوّد ──
+{
+  const H = ATR_STOP_TF_SEC;
+  const T = 1_790_000_000 - (1_790_000_000 % H);
+  const now = T + 5 * H + 300; // 15:05 إن كانت T = 10:00
+  const bar = (t: number) => ({ time: t, open: 1.085, high: 1.0856, low: 1.0844, close: 1.085, volume: 0 });
+  const morning = Array.from({ length: 30 }, (_, i) => bar(T - (29 - i) * H)); // آخرها 10:00، جُلبت 10:57
+  const fresh = Array.from({ length: 30 }, (_, i) => bar(T + 5 * H - (29 - i) * H)); // فيها 15:00 الجارية
+  const prov = { kind: 'provider' } as never;
+  const unavail = { kind: 'unavailable' } as never;
+  const demo = { kind: 'demo' } as never;
+  // المخزّنة صباحية والجلب «غير متاح» ⇒ لا شريحة (كان: شموع الصباح بوسم المزوّد، الشريحة 12 pip عصراً)
+  assert.equal(atrChipCandles({ data_source: unavail, candles: [] }, { data_source: prov, candles: morning }, now), null);
+  // الطلب رُمي (شبكة) ⇒ كذلك
+  assert.equal(atrChipCandles(null, { data_source: prov, candles: morning }, now), null);
+  // ردّ حقيقي ⇒ يُقبل كما هو (ولو بلا شمعة جارية: عطلة نهاية الأسبوع)
+  assert.equal(atrChipCandles({ data_source: prov, candles: fresh }, null, now), fresh);
+  assert.equal(atrChipCandles({ data_source: prov, candles: morning }, null, now), morning);
+  // فشل الجلب والمخزّنة حالية (الشارت جلبها للتوّ) ⇒ تُستعمل
+  assert.equal(atrChipCandles({ data_source: unavail, candles: [] }, { data_source: prov, candles: fresh }, now), fresh);
+  // تجريبية لا تُستعمل أبداً، ردّاً أو مخزّنة
+  assert.equal(atrChipCandles({ data_source: demo, candles: fresh }, null, now), null);
+  assert.equal(atrChipCandles(null, { data_source: demo, candles: fresh }, now), null);
+  console.log('tradePlan atrChipCandles selftest OK');
 }
 
 // ---- journalLossStreaks: أطول خسائر متتالية والجارية، زمنياً بوقت الإغلاق ----
