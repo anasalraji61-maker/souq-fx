@@ -645,6 +645,12 @@ function isContextClick(event: PointerEventLike): boolean {
   return WEB_MAC && ne?.button === 0 && !!ne.ctrlKey && ne.pointerType !== 'touch' && ne.pointerType !== 'pen';
 }
 
+/** طبقات الرسم غير التفاعلية (أعمدة الشموع، خطّ الإغلاق، الرسوم) على الهاتف لا تستقبل اللمس: `locationX/Y` بـRN
+ *  الأصلي نسبةً للعنصر الملموس لا للّوح، فلمسة أداة رسم على شمعة كانت تُقرأ بإحداثيات عمود الشمعة (0..عرضه) ⇒ الطرف
+ *  يقع عند أوّل خانة يسار الشاشة، ومقبض الخطّ المحدَّد (12px) لا يُسحب. الويب يحسب `locationX` من `currentTarget`
+ *  فلا يحتاجها (وتبقى الشمعة هدفاً ينقل السحب لمستجيب اللوح). */
+const NATIVE_PASS_THROUGH = Platform.OS === 'web' ? undefined : ('none' as const);
+
 /** حافظة رسم Ctrl/⌘+C واحدة للصفحة كلّها: نسخ خطّ بنافذة التركيز ثم لصقه على شارت الطرفية (أو من إطار رباعي
  *  إلى آخر بنفس الرمز) — كانت لكل شارت حافظته فيُهمَل Ctrl+V بصمت بالشارت الآخر. المفتاح الرمز لا الفريم. */
 let copiedDrawing: { d: Drawing; key: string } | null = null;
@@ -5280,9 +5286,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selDragAt = useRef<ChartPoint | null>(null);
   const selDragPushed = useRef(false);
   const selDragRr = useRef<number | null>(null);
+  // موضع بدء اللمسة: نقرة بلا سحب تُعامَل كنقرة اللوح (`onChartPress`) — النقرة على شمعة لا تصل زرّ اللوح الشفّاف
+  // (أخٌ تحت أعمدة الشموع لا جدّ لها)، فكانت نقرة الفراغ فوق الشموع لا تُسقط التحديد ولا تحدّد رسماً آخر ولا تعيد وضع السحب.
+  const selTapFrom = useRef<{ x: number; y: number } | null>(null);
   const selectPan = useMemo(() => {
     return PanResponder.create({
-      onStartShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
+      onStartShouldSetPanResponder: () => interactive && tool === 'select',
       onMoveShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (evt) => {
@@ -5293,6 +5302,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         selDragPushed.current = false;
         selBodyFrom.current = null;
         selBodyLast.current = null;
+        selTapFrom.current = { x: evt.nativeEvent.locationX, y: evt.nativeEvent.locationY };
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
         const d = drawings.find((x) => x.id === selectedId);
@@ -5451,14 +5461,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         selDragAt.current = p;
         moveDrawing(selectedId, p, end);
       },
-      onPanResponderRelease: () => {
+      onPanResponderRelease: (_evt, gesture) => {
+        const tap = selTapFrom.current;
+        const tapped = tap && !selDragPushed.current && Math.abs(gesture.dx) < 5 && Math.abs(gesture.dy) < 5;
+        selTapFrom.current = null;
         selDragEnd.current = null;
         selDragAt.current = null;
         selDragRr.current = null;
         selBodyFrom.current = null;
         selBodyLast.current = null;
+        if (tapped) chartPressRef.current(tap.x, tap.y);
       },
       onPanResponderTerminate: () => {
+        selTapFrom.current = null;
         selDragEnd.current = null;
         selDragAt.current = null;
         selDragRr.current = null;
@@ -8247,6 +8262,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             return (
               <View
                 key={`ln${i}`}
+                pointerEvents={NATIVE_PASS_THROUGH}
                 style={{
                   position: 'absolute',
                   left: x1,
@@ -8672,7 +8688,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }
             if (kind === 'bars') {
               return (
-                <View key={i} style={{ position: 'absolute', left, top: 0, width: primaryColW, height: mainH }}>
+                <View
+                  key={i}
+                  pointerEvents={NATIVE_PASS_THROUGH}
+                  style={{ position: 'absolute', left, top: 0, width: primaryColW, height: mainH }}
+                >
                   <View
                     style={{
                       position: 'absolute',
@@ -8713,6 +8733,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             return (
               <View
                 key={i}
+                pointerEvents={NATIVE_PASS_THROUGH}
                 style={{
                   position: 'absolute',
                   left,
@@ -9997,7 +10018,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             })
           : null}
 
-        {/* drawings */}
+        {/* drawings — على الهاتف لا تستقبل اللمس (`NATIVE_PASS_THROUGH`): مستجيبا الرسم والتحديد يقرآن `locationX`
+            نسبةً للّوح، وسحب مقبض بحجم 12px كان يُقرأ ~6px من يسار الشاشة. الويب `box-none`: الإطار لا يحجب ما تحته. */}
+        <View pointerEvents={NATIVE_PASS_THROUGH ?? 'box-none'} style={StyleSheet.absoluteFill}>
         {visibleDrawings.map(({ d, aLocal, bLocal }) => {
           const sel = d.id === selectedId;
           const bold = sel || d.id === hoverDrawingId;
@@ -10456,6 +10479,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           }
           return null;
         })}
+        </View>
 
         {/* علامة 🔒 صغيرة عند مرساة كل رسم مقفول (كـTradingView): كان القفل يُرى بالشريط فقط حين يُحدَّد الرسم،
             فيحاول المتداول سحب خطّ لا يتحرّك ولا يعرف لماذا. مقصوصة لحدود اللوح (الأفقي مرساته قد تكون خارج النافذة). */}
