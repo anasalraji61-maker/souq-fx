@@ -2281,7 +2281,7 @@ const ar: Dict = {
   calendarAllWord: 'الكل',
   newsAllCurrencies: 'كل العملات',
   calendarImpactA11yPrefix: 'تصفية حسب الأهمية',
-  calendarAllShort: 'كل',
+  calendarAllShort: 'الكل',
   calImpactMedPlus: 'متوسط+',
   calImpactMedPlusA11y: 'عالي ومتوسط',
   calendarLoading: 'جاري تحميل التقويم…',
