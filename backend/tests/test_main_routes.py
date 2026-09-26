@@ -504,7 +504,7 @@ def test_stale_cached_series_does_not_fire_an_indicator_alert(client, monkeypatc
     res = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
     assert res["triggered"] == [] and res["alerts"][0]["triggered"] is False
     monkeypatch.setattr(main, "build_series", lambda s, timeframe="15m", outputsize=180: _fake_series(
-        "cache", _RISING, as_of=time.time() - 30))
+        "cache", _RISING, as_of=time.time()))  # جُلب بعد التسليح (قبله ⇒ لا إطلاق، r111)
     assert len(client.post("/api/indicator-alerts/check", headers=_auth(token)).json()["triggered"]) == 1
 
 

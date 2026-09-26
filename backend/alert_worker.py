@@ -222,11 +222,13 @@ def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
     الطلب لنفس المفتاح بنفس الدورة بعد 429."""
     key = (str(a["symbol"]).upper(), str(a["timeframe"]))
     if cache is not None and key in cache:
-        return cache[key]
+        return _series_after_arming(a, cache[key], cache.get(("as_of",) + key))
     raw: list[dict] | None
+    as_of: float | None = None
     try:
         raw, meta = market.fetch_time_series_with_meta(a["symbol"], a["timeframe"], outputsize=market.CHART_BARS)
-        if raw and not series_fresh_enough(meta.get("as_of"), str(a["timeframe"])):
+        as_of = meta.get("as_of")
+        if raw and not series_fresh_enough(as_of, str(a["timeframe"])):
             log.info("indicator series for %s (%s) is stale cache — skipped this cycle",
                      a.get("symbol"), a.get("timeframe"))
             raw = None
@@ -240,6 +242,25 @@ def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
         raw = None
     if cache is not None:
         cache[key] = raw
+        cache[("as_of",) + key] = as_of
+    return _series_after_arming(a, raw, as_of)
+
+
+def series_predates_arming(a: dict, as_of: object) -> bool:
+    """سلسلة جُلبت **قبل** تسليح التنبيه (كاش 1H حتى 3د، وحتى 15د بعد 429) ليست قراءة بعده — شقيق `q_at >= armed`
+    بتنبيه السعر: تنبيه RSI «فوق 70» سُلِّح 10:59 كان يُطلق ويُدفع على RSI من جلب 10:58. تُتخطّى حتى جلبٍ بعده."""
+    armed = _armed_at(a.get("ts"))
+    try:
+        return armed is not None and as_of is not None and float(as_of) < armed
+    except (TypeError, ValueError):
+        return False
+
+
+def _series_after_arming(a: dict, raw: list[dict] | None, as_of: object) -> list[dict] | None:
+    if raw and series_predates_arming(a, as_of):
+        log.info("indicator series for %s (%s) fetched before the alert was armed — skipped this cycle",
+                 a.get("symbol"), a.get("timeframe"))
+        return None
     return raw
 
 

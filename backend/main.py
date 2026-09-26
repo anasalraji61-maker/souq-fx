@@ -1437,6 +1437,7 @@ def check_indicator_alerts(
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
     cache: dict[tuple[str, str], list[dict] | None] = {}
+    fetched_at: dict[tuple[str, str], float | None] = {}
     rows = db.list_indicator_alerts(uid, owner_key=key)
     for a in rows:
         if not a.get("active") or a.get("triggered"):
@@ -1454,10 +1455,12 @@ def check_indicator_alerts(
                     cache[ck] = None
                 else:
                     cache[ck] = [c.model_dump() for c in series.candles]
+                    fetched_at[ck] = series.data_source.as_of
             except Exception:
                 cache[ck] = None
         candles = cache[ck]
-        if candles is None:
+        # سلسلة من الكاش جُلبت قبل تسليح هذا التنبيه (فحص فوري بعد الإنشاء) ⇒ ليست قراءة بعده
+        if candles is None or alert_worker.series_predates_arming(a, fetched_at.get(ck)):
             continue
         if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(
             a["id"], alert_worker.last_bar_time(candles), seen=a
