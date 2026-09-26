@@ -1288,3 +1288,17 @@
 - مسح آلي بنطاقي: كل `Pressable`/`Touchable*` تفاعلي يحمل `accessibilityLabel` (الأغلفة `accessible={false}` للتحويم فقط) (بند القبول ٩)؛ أسعار/نسب/أوقات اللوحات (`AlertsPanel`، `VotePanel`، `DomLitePanel`، `ChartFrame`، `QuadChartModal`، `FocusChartModal`، `NewsPanel`، `SymbolSnapshot`) كلها بـ`...numeric` (بند ١).
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ `Alert.alert`/`window.confirm` تعليقات خارج `chart/confirmDestructive.ts`؛ منتقي التخطيط زرّ واحد بقائمة (`TerminalScreen:1237`).
 - **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة. للـQA: chart103a يُغلق بالكود.
+
+## 2026-09-26 — تشغيل 109
+لا صفّ بـCOORDINATION (دورة QA 123) موجَّه إلى ui كمنفّذ — الصفّان باسم ui (ui-r77 لون الخطأ، ui85a مفتاح Sentry) عند أنس. بوابة البناء خضراء (0) قبل كل commit.
+
+| commit | ماذا | بند |
+|---|---|---|
+| 88700e0 | `SymbolSnapshot`: تبديل الرمز/الفريم يمسح اللقطة فوراً — RSI ونسبة EURUSD كانا يبقيان تحت XAUUSD حتى يصل الردّ (وبلا حدّ إن علّق الطلب) | رقم خاطئ على الشاشة |
+| e12bfdb | `DomLitePanel`: Bid/Ask بلون النصّ لا أحمر/أخضر — ليسا اتجاه سعر، والتسمية تميّزهما | DESIGN-PRO §1 |
+| 6e97a5a | `ScreenerMini`: RSI بمنزلة ثابتة (`toFixed(1)`) و«—» إن غاب — «RSI 30» بجانب «RSI 29.5» كان يغيّر عرض البطاقة، وقيمة null كانت تُطبع «null» | DESIGN-PRO §2 |
+
+- مسح «لقطة الرمز السابق» بكل لوح بنطاقي يجلب بالرمز: `AlertsPanel` و`BacktestPanel` و`IndicatorForecastPanel` و`DomLitePanel` تمسح أصلاً؛ `AnalystsPanel`/`SocialConsensusPanel` مخفيّتان بالراية (قرار ٥).
+- قائمة المتابعة: فرع «تجريبي» لكل صفّ (`demoTicks`) باقٍ بالكود لكنه ميّت عملياً — الخادم لم يعد يبثّ تيكات تجريبية (`main.py` `/ws/ticks` يرسل `unavailable` بلا تيكات). لم يُمسّ.
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» تعليقان فقط؛ كل تأكيد هدّام عبر `chart/confirmDestructive.ts` (`window.confirm` على الويب)؛ «درجة الاتفاق» لا أثر بالواجهة؛ اختصارات لوحة المفاتيح موجودة (`KeyboardShortcutsSheet`).
+- **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة.
