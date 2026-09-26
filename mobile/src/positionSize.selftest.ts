@@ -3727,6 +3727,39 @@ console.log('positionSize breakevenRR selftest OK');
   assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 0, riskAmount: 0 }), null);
   assert.equal(dailyLossRoom({ balance: NaN, limitPct: 5, lostToday: 0, riskAmount: 100 }), null);
 }
+// maxRiskPct مع التكاليف: الخانة % تقيس الوقف وحده، والخسارة الفعلية شاملة السبريد والعمولة. EURUSD 10,000، حدّ 5%، خسارة 300
+// ⇒ متّسع 215؛ وقف 10 وسبريد 1.5 وعمولة 7 للوت ⇒ كلفة اللوت 122 مقابل 100 للوقف وحده ⇒ 1.76% لا 2.15% (2.15 لوت = 262.30 > 215)
+{
+  const sr = (lots: number, sl: number, sp: number, pv: number, cm: number, balance: number) =>
+    spreadRisk({ lots, slPips: sl, spreadPips: sp, pipValuePerLot: pv, balance, riskPct: 1, contractSize: 100000, commissionPerLot: cm })?.risk ?? lots * sl * pv; // بلا تكاليف ⇒ null كاللوحة (`?? actualRisk`)
+  const base = positionSize({ balance: 9700, riskPct: 1, slPips: 10, pipValuePerLot: 10, contractSize: 100000 })!;
+  const r = dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 300, riskAmount: sr(base.lots, 10, 1.5, 10, 7, 9700), riskNoCosts: base.actualRisk })!;
+  assert.equal(r.room, 215);
+  assert.equal(r.maxRiskPct, 1.76);
+  const next = positionSize({ balance: 10000, riskPct: r.maxRiskPct, slPips: 10, pipValuePerLot: 10, contractSize: 100000 })!;
+  assert.equal(next.lots, 1.76);
+  assert.ok(sr(next.lots, 10, 1.5, 10, 7, 10000) <= r.room);
+  // بلا تكاليف (أو riskNoCosts غائب/غير صالح/أكبر) ⇒ كما كان
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 300, riskAmount: 100 })!.maxRiskPct, 2.15);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 300, riskAmount: 100, riskNoCosts: 100 })!.maxRiskPct, 2.15);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 300, riskAmount: 100, riskNoCosts: 0 })!.maxRiskPct, 2.15);
+  assert.equal(dailyLossRoom({ balance: 10000, limitPct: 5, lostToday: 300, riskAmount: 100, riskNoCosts: NaN })!.maxRiskPct, 2.15);
+  // خاصية: كتابة maxRiskPct بالخانة ⇒ الخسارة الشاملة عند الوقف لا تتخطّى المتّسع
+  for (let i = 0; i < 3000; i++) {
+    const balance = Math.round((500 + Math.random() * 100000) * 100) / 100;
+    const lostToday = Math.round(Math.random() * balance * 0.04 * 100) / 100;
+    const sl = 3 + Math.floor(Math.random() * 80);
+    const sp = [0, 0.3, 1.5, 3][i % 4];
+    const cm = [0, 3.5, 7, 12][(i >> 2) % 4];
+    const pv = [10, 6.7, 9.1, 1][(i >> 4) % 4];
+    const cur = positionSize({ balance, riskPct: 1, slPips: sl, pipValuePerLot: pv, contractSize: 100000 })!;
+    if (cur.lots < 0.01) continue;
+    const d = dailyLossRoom({ balance, limitPct: 5, lostToday, riskAmount: sr(cur.lots, sl, sp, pv, cm, balance), riskNoCosts: cur.actualRisk })!;
+    const nx = positionSize({ balance, riskPct: d.maxRiskPct, slPips: sl, pipValuePerLot: pv, contractSize: 100000 });
+    if (!nx || nx.lots < 0.01) continue;
+    assert.ok(sr(nx.lots, sl, sp, pv, cm, balance) <= d.room + 1e-6, `${balance} ${lostToday} ${sl} ${sp} ${cm} ${pv}`);
+  }
+}
 console.log('positionSize dailyLossRoom selftest OK');
 
 // ---- scaleOutPlan: جني ربح جزئي على خطوة 0.01 لوت والنتيجة بالـR من القسمة الفعلية ----

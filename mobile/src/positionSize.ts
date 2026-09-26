@@ -1934,14 +1934,19 @@ export function lossStreakDrawdownPct(riskPct: number, n: number, compounding: b
  * `room` مقرَّب للأسفل لسنت (لا يُعرض متّسعٌ أكبر من الحقيقي)، و`losses` عدد الخسائر الكاملة **داخل** الحدّ (الحدّ بالضبط
  * يُعدّ — «لا تتجاوز»)، و`breach` = هذه الصفقة وحدها تتخطّاه. `maxRiskPct` أكبر مخاطرة للصفقة التالية لا تتخطّاه، نسبةً من
  * الرصيد **الحالي** (خانة المخاطرة تُحسب منه)، للأسفل لمنزلتين. `null` لمدخل غير صالح.
+ *
+ * `riskNoCosts`: مخاطرة **اللوت نفسه** بلا سبريد ولا عمولة (`actualRisk`) حين `riskAmount` شاملها. خانة المخاطرة % تقيس
+ * الوقف وحده، والتكاليف تزيد الخسارة الفعلية بنسبة ثابتة لأي لوت (كلفة اللوت ثابتة) ⇒ النسبة تُصغَّر بها: بحدّ 215 ووقف 10
+ * وسبريد 1.5 وعمولة 7 كان يقول «2.15%» ⇒ 2.15 لوت تخسر 262.30 شاملةً فتتخطّى الحدّ، والصحيح 1.76% (كـ`dailyRoomMaxLots`).
  */
 export function dailyLossRoom(input: {
   balance: number;
   limitPct: number;
   lostToday: number;
   riskAmount: number;
+  riskNoCosts?: number | null;
 }): { room: number; losses: number; breach: boolean; maxRiskPct: number } | null {
-  const { balance, limitPct, lostToday, riskAmount } = input;
+  const { balance, limitPct, lostToday, riskAmount, riskNoCosts } = input;
   if (!Number.isFinite(balance) || balance <= 0) return null;
   if (!Number.isFinite(limitPct) || limitPct <= 0 || limitPct > 100) return null;
   if (!Number.isFinite(lostToday) || lostToday < 0) return null;
@@ -1950,11 +1955,16 @@ export function dailyLossRoom(input: {
   // هامش الفاصلة العائمة بالسنت: 10,000 × 5% − 300 = 199.99999… لا تُقصّ إلى 199.99
   const room = Math.max(0, Math.floor(Math.round((limit - lostToday) * 100 * 1e6) / 1e6) / 100);
   const ratio = Math.round((room / riskAmount) * 1e9) / 1e9;
+  // حصّة الوقف من الخسارة الشاملة (≤ 1)؛ بلا تكاليف أو بقيمة غير صالحة ⇒ 1
+  const costShare =
+    riskNoCosts != null && Number.isFinite(riskNoCosts) && riskNoCosts > 0 && riskNoCosts < riskAmount
+      ? riskNoCosts / riskAmount
+      : 1;
   return {
     room,
     losses: Math.floor(ratio),
     breach: ratio < 1,
-    maxRiskPct: Math.floor(Math.round((room / balance) * 100 * 100 * 1e6) / 1e6) / 100,
+    maxRiskPct: Math.floor(Math.round(((room * costShare) / balance) * 100 * 100 * 1e6) / 1e6) / 100,
   };
 }
 

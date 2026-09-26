@@ -1039,6 +1039,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           limitPct: dailyLimitNum,
           lostToday: lostTodayNum,
           riskAmount: withSpread?.risk ?? result.actualRisk,
+          riskNoCosts: result.actualRisk,
         })
       : null;
   /** عند التخطّي: أكبر لوت يتّسع لما بقي، بتكاليفه — راجع `dailyRoomMaxLots` */
