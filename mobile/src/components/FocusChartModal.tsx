@@ -18,6 +18,7 @@ import { type Timeframe } from '../timeframes';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
+import { useStickyPriceRef } from '../chart/useStickyPriceRef';
 import { notify } from '../chart/confirmDestructive';
 import { COMPARE_COLOR } from '../chart/compare';
 import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
@@ -284,7 +285,7 @@ export function FocusChartModal({
         note: origin === 'crosshair' ? t.focusAlertFromChartNote : t.focusAlertFromDrawingNote,
       });
       playSoftClick();
-      setArmedMsg(`${t.alertsArmedPrefix}: ${armedText(sym, res.condition, formatPrice(price, sym, seriesSym === sym ? series?.last : null))}`);
+      setArmedMsg(`${t.alertsArmedPrefix}: ${armedText(sym, res.condition, formatPrice(price, sym, seriesSym === sym ? priceRef ?? series?.last : null))}`);
       if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
       armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       setAlertsRefreshKey((k) => k + 1);
@@ -310,6 +311,9 @@ export function FocusChartModal({
   const headPx = headSeries ? livePriceForHeader(headSeries, liveTick) : null;
   // `last: null` (backend-r19) بلا تيك ⇒ لا سعر يُطبع.
   const headPrice = headPx ?? headSeries?.last ?? null;
+  // منازل الرأس بمرجع الشارت نفسه (`useStickyPriceRef`، كـ`ChartFrame`) — لرمز بلا مواصفة (LTCUSD حول 100)
+  // كان الرأس يقفز 3↔2 منازل مع كل شمعة بينما الشارت تحته ثابت.
+  const priceRef = useStickyPriceRef(sym, headSeries?.last);
   const headPctRaw = headSeries ? headerChangePct(headSeries, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
   const headPct = Number.isFinite(headPctRaw) ? headPctRaw : null;
   const headDir = pctDirection(headPct);
@@ -334,7 +338,7 @@ export function FocusChartModal({
       unavailable: t.dsKindUnavailable,
     })}`) +
     (` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`) +
-    (hasSpread ? ` · ${t.quoteBidShort} ${formatPrice(quote!.bid!, sym, headSeries?.last ?? quote!.bid)}/${t.quoteAskShort} ${formatPrice(quote!.ask!, sym, headSeries?.last ?? quote!.bid)}` : '');
+    (hasSpread ? ` · ${t.quoteBidShort} ${formatPrice(quote!.bid!, sym, priceRef ?? quote!.bid)}/${t.quoteAskShort} ${formatPrice(quote!.ask!, sym, priceRef ?? quote!.bid)}` : '');
 
   return (
     <Modal visible={visible} animationType="none" onRequestClose={onClose}>
@@ -381,7 +385,7 @@ export function FocusChartModal({
           </Pressable>
           {headSeries && !noReal && headPrice != null ? (
             <View style={styles.quote}>
-              <Text style={styles.price}>{formatPrice(headPrice, sym, headSeries.last)}</Text>
+              <Text style={styles.price}>{formatPrice(headPrice, sym, priceRef ?? headSeries.last)}</Text>
               <Text
                 style={[styles.change, { color: headPctColor }]}
                 // النسبة وحدها «+0.12%» بلا سياق و«—» علامة ترقيم لقارئ الشاشة (launch109)؛ الذيل كما يُرى.
