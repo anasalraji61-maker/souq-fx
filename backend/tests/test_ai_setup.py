@@ -149,7 +149,7 @@ def test_ai_context_and_reply_carry_the_price_time_and_source(monkeypatch):
     body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()
     series = main.build_series("EURUSD")
     assert body["price_as_of"] == main._series_price_at(series)
-    assert "latest price of the last candle at" in seen["ctx"] and "close at" not in seen["ctx"] and "source=provider" in seen["ctx"]
+    assert "last price of the candle at" in seen["ctx"] and "close at" not in seen["ctx"] and "source=provider" in seen["ctx"]
 
 
 def test_template_reply_carries_the_price_time(monkeypatch):

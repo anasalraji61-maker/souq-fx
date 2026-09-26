@@ -2369,10 +2369,30 @@ def ai_ask(body: AiAsk):
             datetime.fromtimestamp(price_at, timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             if price_at is not None else "unknown"
         )
+        # run 126: «إن لم يكن حديثاً فقُله» بلا وقت الآن ⇒ النموذج لا يميّز سعر الجمعة يوم السبت (30 ساعة) من سعر
+        # دقيقة، فيكتب «EURUSD is currently trading at 1.17179». و«قد تكون جارية» كانت ثابتة حتى لشمعة أُغلقت
+        # يقيناً (نهايتها ≤ وقت السعر). الآن الوقت الحالي والعمر مذكوران، والقديم يُوصف «ليس السعر الحالي» صراحةً.
+        now = time.time()
+        step = TF_SECONDS.get(series.timeframe) or 0
+        candle_end = (
+            market.bar_end(series.symbol, series.candles[-1].time, step) if series.candles and step else None
+        )
+        closed = price_at is not None and candle_end is not None and price_at >= candle_end
+        age_min = max(0, int((now - price_at) // 60)) if price_at is not None else None
+        stale = age_min is None or age_min * 60 > max(2 * step, 1800)
+        age_txt = (
+            "age unknown" if age_min is None else
+            f"{age_min // 60} h {age_min % 60} min old" if age_min >= 60 else f"{age_min} min old"
+        )
         context = (
-            f"last={series.last} (latest price of the last candle at {at} — that candle may still be forming, "
-            f"source={series.data_source.kind}; "
-            f"not a live tick — if it is not recent, say so and do not call it the current price), "
+            f"now={datetime.fromtimestamp(now, timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}, "
+            f"last={series.last} (last price of the candle at {at}, {age_txt} — "
+            + ("that candle is closed" if closed else "that candle was still forming when this price was fetched")
+            + f", source={series.data_source.kind}; not a live tick"
+            + ("; this is NOT the current price (the market may be closed or the feed delayed) — say how old it "
+               "is and never call it the current price" if stale else
+               " — call it the latest available price, not a live price")
+            + "), "
             + (f"change_pct_over_last_{bars}_candles={pct_txt}, "
                if series.change_pct is not None and pct_txt else "change_pct=unavailable (single candle), ")
             + f"tf={series.timeframe}"
