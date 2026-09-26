@@ -1675,9 +1675,18 @@ def save_push_token(
     user_id: int | None = None,
     lang: str | None = None,
     owner_key: str | None = None,
+    session_token: str | None = None,
 ) -> None:
+    """`session_token`: جلسة الطلب نفسها تُفحص تحت القفل — الطلب يصادق ثم ينتظر القفل، وخروج هذا الجهاز أو
+    تغيير كلمة المرور (يُلغي جلسته ويفكّ رمزه) يُلتزم بينهما، و`_lock_owner` يكفيه أيّ جلسة للحساب ⇒ كان
+    التسجيل الجاري يعيد ربط الهاتف بالحساب بعد الفكّ: الهاتف المشترك بعد «الخروج»، وهاتف الراعي بعد تغيير
+    العضو كلمته، يتلقّيان تنبيهات الحساب. PermissionError (⇒ 401)."""
     with _conn() as c:
         _lock_owner(c, user_id)
+        if user_id is not None and session_token is not None and c.execute(
+            "SELECT 1 FROM sessions WHERE token=? AND user_id=?", (session_token, user_id)
+        ).fetchone() is None:
+            raise PermissionError("session gone")
         c.execute(
             """INSERT OR REPLACE INTO push_tokens(token,user_id,platform,updated_at,lang,owner_key)
                VALUES(?,?,?,?,?,?)""",

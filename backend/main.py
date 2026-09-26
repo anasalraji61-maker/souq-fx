@@ -1042,7 +1042,8 @@ def push_register(
     if authorization and not user:
         raise HTTPException(status_code=401, detail="not authenticated")
     uid = user["user_id"] if user else None
-    db.save_push_token(body.token, body.platform, uid, body.lang, owner_key=key)
+    session = authorization.replace("Bearer ", "").strip() if user and authorization else None
+    db.save_push_token(body.token, body.platform, uid, body.lang, owner_key=key, session_token=session)
     return {"ok": True}
 
 
