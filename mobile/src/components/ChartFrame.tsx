@@ -509,7 +509,7 @@ export function ChartFrame({
               >
                 {quoteStale || phone
                   ? ''
-                  : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
+                  : `${t.quoteBidShort} ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · ${t.quoteAskShort} ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
                 {spreadPips != null ? (
                   <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
                 ) : null}

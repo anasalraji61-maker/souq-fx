@@ -334,7 +334,7 @@ export function FocusChartModal({
       unavailable: t.dsKindUnavailable,
     })}`) +
     (` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`) +
-    (hasSpread ? ` · B ${formatPrice(quote!.bid!, sym, headSeries?.last ?? quote!.bid)}/A ${formatPrice(quote!.ask!, sym, headSeries?.last ?? quote!.bid)}` : '');
+    (hasSpread ? ` · ${t.quoteBidShort} ${formatPrice(quote!.bid!, sym, headSeries?.last ?? quote!.bid)}/${t.quoteAskShort} ${formatPrice(quote!.ask!, sym, headSeries?.last ?? quote!.bid)}` : '');
 
   return (
     <Modal visible={visible} animationType="none" onRequestClose={onClose}>
