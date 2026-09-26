@@ -139,6 +139,8 @@ def run_scan_detailed(
         window = raw[-(CHANGE_WINDOW + 1):]
         first_close = float(window[0]["close"]) if len(window) == CHANGE_WINDOW + 1 else 0.0
         chg = ((float(snap["last"]) - first_close) / first_close * 100) if first_close > 0 else None
+        # على المعروض (منزلتان) كـRSI: +0.0004% كان «صاعد» بجانب «0.00%» (و«-0.00%» هابط)
+        chg = round(chg, 2) + 0.0 if chg is not None else None
 
         for f in flt:
             if f == "rsi_oversold" and rsi_v <= rsi_low:
@@ -162,7 +164,7 @@ def run_scan_detailed(
                     "symbol": sym.upper(),
                     "timeframe": timeframe,
                     "last": snap["last"],
-                    "change_pct": round(chg, 2) if chg is not None else None,
+                    "change_pct": chg,
                     "rsi": round(rsi_v, 1),
                     "filters_matched": matched,
                     # عند حدّ المزوّد (429) تُخدَم سلسلة مخزَّنة حتى 15د — كانت النتيجة لا تقول ذلك فيُقرأ

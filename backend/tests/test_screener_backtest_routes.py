@@ -374,6 +374,25 @@ def test_scan_short_series_has_no_80_candle_change(monkeypatch):
     assert all(h["change_pct"] is None for h in out["results"])
 
 
+@pytest.mark.parametrize("last,flt", [(1.100004, "bullish"), (1.099996, "bearish")])
+def test_scan_momentum_is_not_matched_on_a_move_shown_as_zero(monkeypatch, last, flt):
+    """+0.00036% على 80 شمعة كان «زخم صاعد» بجانب `change_pct: 0.0` (والهابط «-0.0»)."""
+    n = 180
+    closes = [1.1] * (n - 1) + [last]
+    now = int(time.time())
+    candles = [
+        {"time": now - (n - i) * 900, "open": c, "high": c, "low": c, "close": c, "volume": 0}
+        for i, c in enumerate(closes)
+    ]
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}),
+    )
+    monkeypatch.setattr(screener_engine.ind, "snapshot", lambda raw, **k: {"rsi": 50.0, "last": last})
+    out = screener_engine.run_scan_detailed("15m", [flt, "rsi_oversold"], ["EURUSD"])
+    assert out["scanned"] == 1 and out["results"] == []
+
+
 def _wave_ending_at(last_time: int, n: int = 200) -> list[dict]:
     """موجة جيبية (دورة 60 شمعة) ⇒ تقاطعات MA منتظمة، آخر شمعة تبدأ عند `last_time`."""
     import math as _m
