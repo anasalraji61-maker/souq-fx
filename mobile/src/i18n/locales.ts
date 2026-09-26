@@ -959,6 +959,8 @@ export type Dict = {
   lectureClarifyPausedLine: string;
   lectureClarifyQuestionLabel: string;
   lectureClarifyFocusLine: string;
+  /** ردّ «اسأل المدرّس» من القالب الثابت (بلا نموذج أو فشله) — يُعرض فوق التوضيح كي لا يُقرأ جواباً (launch216a) */
+  lectureTemplateNote: string;
   lectureResume: string;
   lecturePrev: string;
   lecturePrevA11y: string;
@@ -2415,6 +2417,7 @@ const ar: Dict = {
   lectureClarifyQuestionLabel: 'سؤالك:',
   lectureClarifyFocusLine:
     'ركّز على الفكرة العملية على الشاشة، ثم نتابع من نفس المقطع.',
+  lectureTemplateNote: 'المدرّس الذكي غير متاح الآن — ما يلي توجيه عام ثابت، لا جواب عن سؤالك',
   lectureResume: 'متابعة المحاضرة',
   lecturePrev: 'السابق',
   lecturePrevA11y: 'الفقرة السابقة',
@@ -3704,6 +3707,7 @@ const enUS: Dict = {
   lectureClarifyQuestionLabel: 'Your question:',
   lectureClarifyFocusLine:
     "Focus on the practical idea on the screen, then we’ll continue from the same segment.",
+  lectureTemplateNote: 'The AI teacher isn’t available right now — below is fixed general guidance, not an answer to your question',
   lectureResume: 'Resume the lecture',
   lecturePrev: 'Previous',
   lecturePrevA11y: 'Previous segment',
@@ -5051,6 +5055,7 @@ const ku: Dict = {
   lectureClarifyQuestionLabel: 'پرسیارەکەت:',
   lectureClarifyFocusLine:
     'سەرنج بدە بیرۆکە کارەکییەکە لەسەر شاشەکە، پاشان لە هەمان بەشەوە بەردەوام دەبین.',
+  lectureTemplateNote: 'مامۆستای زیرەک ئێستا بەردەست نییە — ئەوەی خوارەوە ڕێنمایی گشتیی نەگۆڕە، نەک وەڵامی پرسیارەکەت',
   lectureResume: 'بەردەوامبوون لە وانەکە',
   lecturePrev: 'پێشوو',
   lecturePrevA11y: 'بەشی پێشوو',
