@@ -4471,3 +4471,23 @@ console.log('positionSize Arabic comma stop/spread selftest OK');
   assert.equal(restoreGroups(new Set(['account'] as const), undefined).risk, true);
 }
 console.log('positionSize restore-after-typing selftest OK');
+
+// Bid/Ask بشريط الطرفية (TerminalScreen): حيٌّ أو لا شيء — الحكم نفسه لـ«الدخول = السعر الحالي»
+{
+  const { liveEntryQuoteState } = require('./positionSize') as typeof import('./positionSize');
+  const { isRealQuote } = require('./chart/dataSource') as typeof import('./chart/dataSource');
+  const now = Date.parse('2026-09-25T13:30:00Z');
+  const shown = (q: { price: number; bid: number; ask: number; as_of: number; market_open: boolean; data_kind: string }) =>
+    isRealQuote(q) && liveEntryQuoteState(q, now) !== 'stale';
+  const base = { price: 1.0851, bid: 1.085, ask: 1.0852, market_open: true, data_kind: 'provider' };
+  assert.equal(shown({ ...base, as_of: now / 1000 - 30 }), true);
+  assert.equal(shown({ ...base, as_of: now / 1000 - 170 }), true);
+  // إغلاق 15m مخزّن عند تعثّر المزوّد (عمره 12 د) — كان يُعرض «Ask 1.08508» تحت سعرٍ حيّ 1.08620
+  assert.equal(shown({ ...base, as_of: now / 1000 - 12 * 60, data_kind: 'cache' }), false);
+  assert.equal(shown({ ...base, as_of: now / 1000 - 181 }), false);
+  // اقتباس بذري تجريبي ليس سعر سوق (القرار ٢: لا رقم مختلَق موسوم حقيقياً)
+  assert.equal(shown({ ...base, as_of: now / 1000 - 5, data_kind: 'demo' }), false);
+  // السوق مغلق ⇒ آخر تسعيرة هي الصحيحة حتى الافتتاح
+  assert.equal(shown({ ...base, as_of: now / 1000 - 40 * 3600, market_open: false }), true);
+}
+console.log('positionSize terminal bid/ask freshness selftest OK');

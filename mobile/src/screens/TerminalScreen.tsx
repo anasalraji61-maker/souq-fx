@@ -51,7 +51,7 @@ import { formatPrice } from '../chart/math';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipUnit } from '../chart/measureReadout';
 import { formatPriceDiff } from '../chart/indicators/utils';
-import { quoteBookValid, quoteSpreadPips } from '../positionSize';
+import { liveEntryQuoteState, quoteBookValid, quoteSpreadPips, serverClockOffsetMs } from '../positionSize';
 import {
   armedText,
   createChartAlert,
@@ -63,7 +63,14 @@ import { notify } from '../chart/confirmDestructive';
 import { cachedChartSeries, rememberChartSeries } from '../hooks/chartSeriesCache';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { headerChangePct, livePriceForChart } from '../chart/liveSeries';
-import { provenanceLabel, tickStatusLabel, normalizeProvenance, isSyntheticProvenance } from '../chart/dataSource';
+import {
+  provenanceLabel,
+  tickStatusLabel,
+  normalizeProvenance,
+  isSyntheticProvenance,
+  isRealQuote,
+  serverNowSec,
+} from '../chart/dataSource';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import {
@@ -856,7 +863,13 @@ export function TerminalScreen() {
       api
         .marketQuote(symbol)
         .then((q) => {
-          if (alive) setQuote({ bid: q.bid ?? null, ask: q.ask ?? null });
+          if (!alive) return;
+          // Bid/Ask بجانب السعر الحيّ **حيٌّ أو لا شيء**: اقتباس بذري تجريبي (`isRealQuote`) أو إغلاق 15m مخزّن عند تعثّر المزوّد
+          // (`as_of` أقدم من 3 د — حدّ «الدخول = السعر الحالي» بالحاسبة نفسه، `liveEntryQuoteState`) كان يُعرض كتسعيرة الآن.
+          // السوق مغلق ⇒ آخر تسعيرة هي الصحيحة حتى الافتتاح.
+          const now = Date.now();
+          const live = isRealQuote(q) && liveEntryQuoteState(q, now, serverClockOffsetMs(serverNowSec(now), now)) !== 'stale';
+          setQuote(live ? { bid: q.bid ?? null, ask: q.ask ?? null } : null);
         })
         .catch(() => {
           if (alive) setQuote(null);
