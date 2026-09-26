@@ -11,6 +11,7 @@
  */
 
 import { instrumentSpec, smallContractPair } from '../positionSize';
+import { serverNowSec } from './dataSource';
 
 export type NewsEvent = {
   id: string;
@@ -726,6 +727,15 @@ export function newsBannerText(p: { head: string; currency: string; when: string
  * جهة الحذر: «بعد 1د» لخبرٍ بعد 1:59 لا يضرّ، و«بعد 2د» لخبرٍ بعد 1:01 قد يُدخل صفقةً على القفزة.
  * و`m` صفرٌ مع ساعات لا يُكتب («بعد 2س» لا «بعد 2س 0د») — المكوّن يقرّر ذلك من `m === 0`.
  */
+/**
+ * «الآن» للعدّ التنازلي (مللي ثانية) بساعة الخادم المصحَّحة (`serverNowSec`، من `ts` بث التيكات) لا بساعة الجهاز:
+ * أوقات الأخبار مطلقة (UTC)، وجهاز متأخّر 4 دقائق كان يكتب «بعد 5د» لخبرٍ بعد دقيقة — ويُدخل الصفقة واثقاً.
+ * بلا بثّ بعد (الفرق 0) = ساعة الجهاز كما كانت.
+ */
+export function newsClockMs(deviceMs = Date.now()): number {
+  return Math.round(serverNowSec(deviceMs) * 1000);
+}
+
 export function newsCountdown(deltaMs: number): { now: true } | { now: false; h: number; m: number } {
   if (!Number.isFinite(deltaMs) || (Math.abs(deltaMs) <= NEWS_GRACE_MS && deltaMs <= 60_000)) return { now: true };
   const mins = Math.max(1, Math.floor(deltaMs / 60_000));

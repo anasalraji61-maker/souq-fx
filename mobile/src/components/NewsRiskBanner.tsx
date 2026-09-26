@@ -10,6 +10,7 @@ import {
   calendarSourceMs,
   openCalendarUnavailable,
   calendarDown,
+  newsClockMs,
   newsCountdown,
   newsBannerText,
   newsCurrencies,
@@ -57,10 +58,10 @@ function ensureHolidaysFresh(now: number) {
   holidayInflight = api
     .calendar({ impact: 'holiday' })
     .then((r) => {
-      holidayCache = calendarAfterFetch(holidayCache, calendarFetchEvents(r), Date.now());
+      holidayCache = calendarAfterFetch(holidayCache, calendarFetchEvents(r), newsClockMs());
     })
     .catch(() => {
-      holidayCache = calendarAfterFetch(holidayCache, null, Date.now());
+      holidayCache = calendarAfterFetch(holidayCache, null, newsClockMs());
     })
     .finally(() => {
       holidayInflight = null;
@@ -78,13 +79,13 @@ function ensureFresh(now: number) {
     .then((r) => {
       // ردّ الأمثلة (الخادم لم يبلغ مصدره) فشلٌ لا نجاح — لا يمحو تقويماً محفوظاً، راجع `calendarFetchEvents`
       const events = calendarFetchEvents(r);
-      const n = Date.now();
+      const n = newsClockMs();
       // تقويم الخادم المحفوظ يُؤرَّخ بوقت جلبه عند المصدر لا بلحظة الردّ — راجع `calendarSourceMs`
       cache = calendarAfterFetch(cache, events, n, calendarSourceMs(r, n));
       if (events && cache.ok) cacheServerStale = r.stale === true;
     })
     .catch(() => {
-      cache = calendarAfterFetch(cache, null, Date.now());
+      cache = calendarAfterFetch(cache, null, newsClockMs());
     })
     .finally(() => {
       inflight = null;
@@ -145,7 +146,7 @@ export function useChartBannerSymbols(): readonly string[] | null {
 export function NewsRiskBanner({ symbol = '', alsoSymbols, chart, openSymbols, shownSymbol }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => newsClockMs());
   const [, setVersion] = useState(0);
 
   useEffect(() => {
@@ -154,13 +155,13 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, chart, openSymbols, s
       if (!alive) return;
       setVersion((v) => v + 1);
       // تقويم جديد يُقاس بساعة اللحظة لا بآخر دقّة (حتى 60ث قديمة)
-      setNow(Date.now());
+      setNow(newsClockMs());
     };
     listeners.add(onUpdate);
-    ensureFresh(Date.now());
+    ensureFresh(newsClockMs());
     // ساعة دقيقة: تعيد الجلب عند انتهاء صلاحية المخزن (العدّ نفسه يُجدَّد بمؤقّته أدناه).
     const id = setInterval(() => {
-      const n = Date.now();
+      const n = newsClockMs();
       if (alive) setNow(n);
       ensureFresh(n);
     }, 60_000);
@@ -168,7 +169,7 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, chart, openSymbols, s
     // حتى تدقّ الساعة — وهي لحظة فتح التطبيق للدخول بالضبط.
     const sub = AppState.addEventListener('change', (st: AppStateStatus) => {
       if (st !== 'active' || !alive) return;
-      const n = Date.now();
+      const n = newsClockMs();
       setNow(n);
       ensureFresh(n);
     });
@@ -193,14 +194,14 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, chart, openSymbols, s
   // تبديل الرمز والشريط مركَّب (الطرفية، الحاسبة، كتابة رمز الدفتر): `now` كان آخر دقّة للساعة — حتى 60ث قديمة —
   // فخبر الزوج الجديد بعد 40ث يُكتب «بعد 1د» 35ث، ومؤقّت التجديد يُجدول من الفرق الخطأ نفسه
   useEffect(() => {
-    setNow(Date.now());
+    setNow(newsClockMs());
   }, [currencyKey]);
   const openHit = cache && openSymbols ? openPositionsNewsRisk(openSymbols, cache.events, now, shownSymbol) : null;
   const hit = openSymbols ? openHit : cache ? nextHighImpact(cache.events, currencies, now) : null;
   const hitDelta = hit ? hit.deltaMs : null;
   // تجديد العدّ **لحظة يتغيّر** لا بساعة من لحظة التركيب — وإلا بقي «بعد 3د» والخبر بعد 2:50، راجع `newsTickDelayMs`
   useEffect(() => {
-    const id = setTimeout(() => setNow(Date.now()), newsTickDelayMs(hitDelta));
+    const id = setTimeout(() => setNow(newsClockMs()), newsTickDelayMs(hitDelta));
     return () => clearTimeout(id);
   }, [now, hitDelta]);
   // خبرٌ قويّ اليوم **بلا ساعة معلنة** (قرار بنك اليابان «Tentative»): كان يُعدّ لمنتصف ليل نيويورك كأنه موعد — الآن سطرٌ

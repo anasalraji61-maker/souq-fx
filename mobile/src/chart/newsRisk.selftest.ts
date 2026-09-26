@@ -1321,3 +1321,22 @@ console.log('newsRisk open-positions unannounced selftest OK');
   assert.equal(openPositionsNewsRisk(['USDCAD'], [boc], now, ['', ' '])!.event.id, 'BOC');
 }
 console.log('newsRisk grid shownSymbol selftest OK');
+// ساعة العدّ = ساعة الخادم: جهاز متأخّر 4د وخبرٌ بعد 1:30 بساعة الخادم ⇒ «بعد 1د» لا «بعد 5د»
+{
+  const { newsClockMs } = require('./newsRisk') as typeof import('./newsRisk');
+  const { noteServerTime } = require('./dataSource') as typeof import('./dataSource');
+  const device = 1_800_000_000_000;
+  const serverMs = device + 240_000;
+  const event = serverMs + 90_000;
+  // بلا بثّ = ساعة الجهاز
+  assert.equal(newsClockMs(device), device);
+  noteServerTime(serverMs / 1000, device);
+  assert.equal(newsClockMs(device), serverMs);
+  assert.deepEqual(newsCountdown(event - newsClockMs(device)), { now: false, h: 0, m: 1 });
+  // الجهاز متقدّم 4د ⇒ الخبر بعد 9د لا 5د
+  noteServerTime((device - 240_000) / 1000, device);
+  assert.deepEqual(newsCountdown(device + 300_000 - newsClockMs(device)), { now: false, h: 0, m: 9 });
+  noteServerTime(device / 1000, device);
+  assert.equal(newsClockMs(device), device);
+}
+console.log('newsRisk server clock selftest OK');
