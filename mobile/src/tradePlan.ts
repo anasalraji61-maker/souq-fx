@@ -1457,6 +1457,40 @@ export function closedElsewhere(fresh: readonly { id: string; status: string }[]
   return tr != null && tr.status !== 'open';
 }
 
+/**
+ * نافذة «إغلاق» تؤكّد نتيجةً (نقاط، مال، R) محسوبة من الصفّ **كما حُمّل** — والخادم يُغلق بالمخزَّن. صُحّح دخولها أو اتجاهها أو
+ * حجمها أو وقفها (أو ملاحظتها: «1R @ …» والحجم المُعلَّم يدخلان الـR والمال) بجهاز آخر بعد التحميل ⇒ يُسجَّل خروجٌ بنتيجة غير التي
+ * وافق عليها المتداول (+25 pip المؤكَّدة تصير −10 على الدخول المصحَّح). `true` ⇒ لا إغلاق: القائمة تُحدَّث ويُقال السبب. غيابها أو
+ * تعذّر الجلب ⇒ `false` كـ`closedElsewhere` (لا منع للأبد). الأسعار بالمساواة كما وصلت من الخادم؛ الفارغ = الفارغ (null/0/غائب).
+ */
+export function closeTermsChangedElsewhere(
+  fresh: readonly JournalRowTerms[] | null,
+  shown: JournalRowTerms
+): boolean {
+  const tr = fresh?.find((x) => x.id === shown.id);
+  if (tr == null) return false;
+  const lvl = (v: number | null | undefined) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null);
+  return (
+    String(tr.symbol).trim().toUpperCase() !== String(shown.symbol).trim().toUpperCase() ||
+    tr.side !== shown.side ||
+    lvl(tr.entry) !== lvl(shown.entry) ||
+    lvl(tr.size) !== lvl(shown.size) ||
+    lvl(tr.sl) !== lvl(shown.sl) ||
+    (tr.note || '') !== (shown.note || '')
+  );
+}
+
+/** حقول صفّ الدفتر التي تدخل نتيجة الإغلاق المؤكَّدة — `closeTermsChangedElsewhere` */
+export type JournalRowTerms = {
+  id: string;
+  symbol: string;
+  side: string;
+  entry: number;
+  size?: number | null;
+  sl?: number | null;
+  note?: string | null;
+};
+
 /** صفحة الدفتر الافتراضية بالخادم (`db.TRADES_PAGE`) وسقف `limit` (`db.TRADES_PAGE_MAX`) — أكبر منه يُرفض 422. */
 export const JOURNAL_PAGE = 200;
 export const JOURNAL_PAGE_MAX = 500;

@@ -3952,3 +3952,27 @@ console.log('tradePlan journalEditSeen selftest OK');
   assert.equal(journalConflictForm(base, base, journalEditForm({ ...row, sl: null })).sl, '');
 }
 console.log('tradePlan journalConflictForm selftest OK');
+
+// ——— closeTermsChangedElsewhere: «إغلاق» لا يُسجَّل على نتيجةٍ حُسبت من صفٍّ عُدّل بجهاز آخر ———
+{
+  const { closeTermsChangedElsewhere } = require('./tradePlan') as typeof import('./tradePlan');
+  const shown = { id: 'a', symbol: 'EURUSD', side: 'buy', entry: 1.0842, size: 0.3, sl: 1.08, note: '' };
+  const other = { id: 'b', symbol: 'GBPUSD', side: 'sell', entry: 1.3, size: 1, sl: null, note: 'x' };
+  // كما هو ⇒ يُغلق
+  assert.equal(closeTermsChangedElsewhere([other, { ...shown }], shown), false);
+  // دخول صُحّح هناك: +25 pip المؤكَّدة لم تعد النتيجة ⇒ لا إغلاق
+  assert.equal(closeTermsChangedElsewhere([{ ...shown, entry: 1.0867 }], shown), true);
+  for (const ch of [{ side: 'sell' }, { symbol: 'EURGBP' }, { size: 0.5 }, { size: null }, { sl: 1.081 }, { sl: null }, { note: '1R @ 1.079' }])
+    assert.equal(closeTermsChangedElsewhere([{ ...shown, ...ch }], shown), true, JSON.stringify(ch));
+  // الفارغ = الفارغ: وقف 0 قديم/null/غائب، وملاحظة null/'' — لا منعَ بلا تغيير
+  assert.equal(closeTermsChangedElsewhere([{ ...shown, sl: 0 }], { ...shown, sl: null }), false);
+  assert.equal(closeTermsChangedElsewhere([{ ...shown, sl: undefined }], { ...shown, sl: null }), false);
+  assert.equal(closeTermsChangedElsewhere([{ ...shown, note: null }], shown), false);
+  // الرمز بحالة أحرف/فراغ مختلفة = نفسه (الخادم يطبّعه)
+  assert.equal(closeTermsChangedElsewhere([{ ...shown, symbol: ' eurusd ' }], shown), false);
+  // غائبة عن الصفحة أو تعذّر الجلب ⇒ لا منع (كـclosedElsewhere)
+  assert.equal(closeTermsChangedElsewhere([other], shown), false);
+  assert.equal(closeTermsChangedElsewhere(null, shown), false);
+  assert.equal(closeTermsChangedElsewhere([], shown), false);
+}
+console.log('tradePlan closeTermsChangedElsewhere selftest OK');

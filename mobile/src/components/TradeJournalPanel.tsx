@@ -96,6 +96,7 @@ import {
   editExitValue,
   editSizeValue,
   journalEditSeen,
+  closeTermsChangedElsewhere,
   journalEditForm,
   journalConflictForm,
   type JournalEditForm,
@@ -1440,6 +1441,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               await refresh();
               // بلا رسالة كان «إغلاق» يبدو كأنه لم يفعل شيئاً — يُقال للمتداول لماذا لم يُسجَّل خروجه (launch67)
               if (mountedRef.current) notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody);
+              return;
+            }
+            // عُدّلت بجهاز آخر بعد التحميل: النتيجة المؤكَّدة أعلاه محسوبة من دخولٍ/حجمٍ/وقفٍ لم يعد مخزَّناً — لا إغلاق عليها
+            if (closeTermsChangedElsewhere(fresh, tr)) {
+              await refresh();
+              if (mountedRef.current) notify(t.journalCloseConflictTitle, t.journalCloseConflictBody);
               return;
             }
             try {
