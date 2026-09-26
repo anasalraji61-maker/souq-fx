@@ -1346,6 +1346,17 @@ export type Dict = {
   accReplayTour: string;
   accReplayTourA11y: string;
   /**
+   * «تغيير كلمة المرور» بالحساب (backend-r58 `POST /api/auth/password`، ui60a). الخادم يحذف كل الجلسات الأخرى ويفكّ
+   * إشعارات الأجهزة الأخرى (`db.change_password`) ⇒ `accPasswordChanged` يقول ذلك. الجديدة القصيرة ⇒ `regErrPasswordLength`.
+   */
+  accChangePassword: string;
+  accCurrentPassword: string;
+  accNewPassword: string;
+  accPasswordChanged: string;
+  /** 400 `invalid current password` — لا يُخرج المستخدم. */
+  accPasswordWrongCurrent: string;
+  accPasswordChangeError: string;
+  /**
    * قارئ الشاشة لأي زرّ يعرض «...» أثناء الانتظار (10 مواضع: AccountScreen ×3، TradeJournalPanel ×2، AlertsPanel ×2،
    * PositionSizePanel ×2، NetworkTreePanel «…»): `accessibilityLabel={busy ? t.a11yBusy : <النصّ>}` مع `accessibilityState={{ busy }}`.
    * وسم رقائق AccountScreen يُركَّب من مفاتيح موجودة: `${t.language}: ${l.label}`، `${t.underSponsor}: ${t.left}`.
@@ -2638,6 +2649,12 @@ const ar: Dict = {
   accNetLoadError: 'تعذّر تحميل بيانات الشبكة والإحالة — حاول لاحقاً',
   accReplayTour: '↺ أعد الجولة الترحيبية',
   accReplayTourA11y: 'أعد عرض الجولة الترحيبية من أولها',
+  accChangePassword: 'تغيير كلمة المرور',
+  accCurrentPassword: 'كلمة المرور الحالية',
+  accNewPassword: 'كلمة المرور الجديدة',
+  accPasswordChanged: 'تغيّرت كلمة المرور، وسُجّل خروج أجهزتك الأخرى من الحساب',
+  accPasswordWrongCurrent: 'كلمة المرور الحالية غير صحيحة',
+  accPasswordChangeError: 'تعذّر تغيير كلمة المرور — تحقّق من الاتصال وأعد المحاولة',
   a11yBusy: 'جارٍ التنفيذ، انتظر لحظة',
   calendarUnavailable: 'التقويم غير متاح الآن — مصدر الأحداث لم يستجب، وهذا لا يعني أنه لا أخبار اليوم. يعيد المحاولة وحده كل 5 دقائق',
   sigLevelsUnavailableNoPrice: 'لا مستويات دخول ووقف وهدف — لا سعر حيّ الآن',
@@ -3855,6 +3872,13 @@ const enUS: Dict = {
   accNetLoadError: 'Couldn’t load your network and referral data — try again later',
   accReplayTour: '↺ Replay welcome tour',
   accReplayTourA11y: 'Show the welcome tour again from the start',
+  accChangePassword: 'Change password',
+  accCurrentPassword: 'Current password',
+  accNewPassword: 'New password',
+  // «Log out» كزرّ en-US (`logout`)؛ en-GB يقول «signed out» كزرّه.
+  accPasswordChanged: 'Password changed. Your other devices have been logged out.',
+  accPasswordWrongCurrent: 'Your current password isn’t right',
+  accPasswordChangeError: 'Couldn’t change your password — check your connection and try again',
   a11yBusy: 'Working, please wait',
   calendarUnavailable: "Calendar unavailable right now — the events source didn’t respond. That doesn’t mean there’s no news today. Retries on its own every 5 minutes",
   sigLevelsUnavailableNoPrice: 'No entry, stop or target — no live price right now',
@@ -3938,6 +3962,7 @@ const enGB: Dict = {
   // الفعل «practise» بريطاني و«practice» أمريكي — كانت نسخة en-US بالتهجئة البريطانية.
   lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
   domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
+  accPasswordChanged: 'Password changed. Your other devices have been signed out.',
 };
 
 const ku: Dict = {
@@ -5111,6 +5136,12 @@ const ku: Dict = {
   accNetLoadError: 'داتای تۆڕ و بانگهێشت بار نەبوو — دواتر هەوڵ بدەرەوە',
   accReplayTour: '↺ گەشتی ناساندن دووبارە ببینەوە',
   accReplayTourA11y: 'گەشتی ناساندن لە سەرەتاوە دووبارە پیشان بدەوە',
+  accChangePassword: 'گۆڕینی وشەی نهێنی',
+  accCurrentPassword: 'وشەی نهێنیی ئێستا',
+  accNewPassword: 'وشەی نهێنیی نوێ',
+  accPasswordChanged: 'وشەی نهێنی گۆڕدرا، و ئامێرەکانی ترت لە هەژمارەکە دەرچوون',
+  accPasswordWrongCurrent: 'وشەی نهێنیی ئێستا هەڵەیە',
+  accPasswordChangeError: 'وشەی نهێنی نەگۆڕدرا — پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە',
   a11yBusy: 'خەریکە، تکایە کەمێک چاوەڕێ بکە',
   calendarUnavailable: 'ڕۆژژمێر ئێستا بەردەست نییە — سەرچاوەی ڕووداوەکان وەڵامی نەدایەوە، ئەمەش مانای ئەوە نییە کە ئەمڕۆ هیچ هەواڵێک نییە. خۆی هەر 5 خولەک جارێک هەوڵ دەداتەوە',
   sigLevelsUnavailableNoPrice: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئێستا نرخی ڕاستەوخۆ نییە',
