@@ -4834,10 +4834,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // الويب: Shift مضغوط أثناء رسم خطّ اتجاه/شعاع/قناة يثبّت الطرف الثاني على سعر الأوّل (خطّ أفقي محدود بزمنين —
   // قمّة نطاق بين شمعتين). من مستمع لوحة المفاتيح لا من الحدث: أحداث المستجيب على الويب لا تحمل `shiftKey`.
   const shiftHeldRef = useRef(false);
+  // آخر موضع للمؤشّر أثناء الرسم (بكسل اللوح، قبل تثبيت Shift) ⇒ ضغط Shift أو رفعه بلا تحريك الفأرة يعيد رسم
+  // المعاينة فوراً — كانت تبقى على حالها حتى الحركة التالية، فيظنّ المتداول أن Shift لم يعمل.
+  const drawRawXY = useRef<{ x: number; y: number } | null>(null);
+  const shiftRepaintRef = useRef<() => void>(() => {});
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
     const onKey = (e: KeyboardEvent) => {
+      const was = shiftHeldRef.current;
       shiftHeldRef.current = e.shiftKey;
+      if (was !== e.shiftKey) shiftRepaintRef.current();
     };
     const onBlur = () => {
       shiftHeldRef.current = false;
@@ -4868,6 +4874,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           webKeyChart = keyToken.current;
           const { locationX, locationY } = evt.nativeEvent;
           const p = pointFromXY(locationX, locationY);
+          drawRawXY.current = null;
           if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') return;
           if (tool === 'measure') setMeasureDone(null);
           drawGestureHadPending.current = !!pending;
@@ -4877,10 +4884,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         },
         onPanResponderMove: (evt) => {
           const { locationX, locationY } = evt.nativeEvent;
+          drawRawXY.current = { x: locationX, y: locationY };
           setDragEnd(lockDrawEnd(drawAnchorRef.current, pointFromXY(locationX, locationY)));
         },
         onPanResponderRelease: (evt, g) => {
           const { locationX, locationY } = evt.nativeEvent;
+          drawRawXY.current = null;
           const end = lockDrawEnd(drawAnchorRef.current, pointFromXY(locationX, locationY));
           if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') {
             // من ref كباقي مسارات النقر: المستجيب لا يُبنى من جديد مع التمرير/التكبير/شمعة جديدة، فـ`onChartPress`
@@ -4929,7 +4938,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               hoverRaf.current = null;
               const { x, y } = hoverPoint.current;
               crossAtRef.current(x, y, true);
-              if (pending) setDragEnd(lockDrawEnd(pending, pointFromXY(x, y)));
+              if (pending) {
+                drawRawXY.current = { x, y };
+                setDragEnd(lockDrawEnd(pending, pointFromXY(x, y)));
+              }
             });
           },
           onPointerLeave: () => {
@@ -4938,6 +4950,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           },
         }
       : {};
+  shiftRepaintRef.current = () => {
+    const at = drawRawXY.current;
+    const anchor = drawAnchorRef.current ?? pending;
+    if (!at || !anchor) return;
+    setDragEnd(lockDrawEnd(anchor, pointFromXY(at.x, at.y)));
+  };
 
   // حالة سحب المقبض بمراجع لا بمتغيّرات داخل `useMemo`: `selectPan` يُعاد بناؤه مع كل تغيّر بـ`drawings`
   // (وأوّل خطوة سحب تغيّرها)، ونظام المستجيب يستدعي معالجات **الخصائص الحالية** — فمتغيّر الإغلاق
