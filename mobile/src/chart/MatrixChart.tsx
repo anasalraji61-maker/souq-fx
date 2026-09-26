@@ -2698,7 +2698,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setSelectedId(null);
     setPending(null);
     setDragEnd(null);
-  }, [series.timeframe]);
+    // `weekendClosed` يتبع الرمز: بـ[فريم] وحده بقيت قاعدة الرمز السابق ⇒ BTCUSD ثم EURUSD على الفريم نفسه، رسمٌ
+    // بمنطقة المستقبل عبر العطلة، «تراجع» ⇒ يُرسى بقاعدة الكريبتو (بلا عطلة) فيقفز يومين ويُحفظ هناك.
+  }, [series.timeframe, weekendClosed]);
 
   const undoDrawing = useCallback(() => {
     const hist = drawHistory.current;
