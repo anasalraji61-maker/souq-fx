@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from typing import Any
 
 import httpx
@@ -230,8 +231,17 @@ def parse_setup_hint(text: str) -> dict[str, Any]:
 # (شرح إدارة المخاطر مسموح: «ضع الوقف على بعد 1.5×ATR»). الكلمات الوصفية («صاعد»، «bullish») مسموحة: وصف
 # الشارت ليس توصية.
 # «away/apart/ضعف»: مسافة لا سعر («a 1.5× ATR stop would be about 0.0098 away»، «على بعد 1.5 ضعف ATR»)
-_NOT_PRICE_AFTER = r"(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|away\b|apart\b|ضعف|أضعاف)|[.,]?\d)"
-_NUM = r"\d+(?:[.,]\d+)?" + _NOT_PRICE_AFTER
+# run 80: «/» بعده سعر عشري زوج مستويات لا نسبة («SL/TP: 1.0800/1.0950» كان يمرّ)
+_NOT_PRICE_AFTER = r"(?!\s*(?:[x×:%]|/(?!\s*\d+[.,]\d)|pips?\b|points?\b|نقط|نقاط|ATR|R\b|away\b|apart\b|ضعف|أضعاف)|[.,]?\d)"
+# run 80: أيّ عدد صحيح كان «سعراً» ⇒ «Exit polls … in 2024»، «Stop 3 of the lesson»، «Target audience: 18+»
+# تُحذف ويصير الردّ كلّه اعتذاراً. الآن: عشري، أو صحيح 3+ أرقام ليس سنة («in 2024»، «1980s»)، أو صحيح قصير
+# (نفط 65) ينتهي عنده الكلام («Entry 65, stop 62») لا متبوعاً بكلمة («3 key ideas») ولا بعد اسم مؤشر (RSI 14).
+_NUM = (
+    r"(?:\d+[.,]\d+"
+    r"|(?<![\d.,])(?<!\bin\s)(?<!since\s)(?<!during\s)(?<!\bby\s)(?<!\bof\s)\d{3,}(?!s\b)(?![+\d])"
+    r"|(?<![\d.,])(?<!RSI\s)(?<!EMA\s)(?<!SMA\s)(?<!ADX\s)(?<!CCI\s)(?<!MFI\s)(?<!period\s)(?<!length\s)"
+    r"\d{1,2}(?=\s*(?:$|[,;)]|\.(?!\d)|\s(?:and|or|then|now|here|with)\b)))"
+) + _NOT_PRICE_AFTER
 # run 78: فجوة بين كلمة المستوى والسعر تتخطّى مسافة بالنقاط («SL: 20 pips below 1.0850» كان يمرّ)
 _GAP = r"(?:[^\n\d]|\d+(?:[.,]\d+)?\s*(?:pips?|points?|نقط\w*|[x×]\s*ATR)(?!\w))"
 # run 78: اختصارات وصيغ كانت تمرّ (tgt/PT/S/L/T/P/TP1/SL1.0800، take profits، exit، invalidation، get in،
@@ -245,7 +255,9 @@ _LEVEL_WORD = (
     r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
     r"|" + _AR_PRE + r"(?:دخول|ادخل|وقف|هدف|أهداف|اهداف|جني الربح|جني الأرباح)(?:نا|ك|كم|ه|ها)?" + _AR_SUF
     + r"(?!\s+من\s+(?:هذ|ال|درس))"
-    r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان)"
+    r"|ستۆپ(?:\s*لۆس)?|تەیک\s*پرۆفیت|ئامانج\w*|چوونەژوورەوە|وەستاندنی\s+زیان|زیان\s*وەستاندن"
+    # run 80: التعريب الصوتي «ستوب لوس 1.0800»، «تيك بروفيت 1.0950»
+    r"|(?<!\w)(?:ستوب|ستب)(?:\s*لوس)?(?!\w)|(?<!\w)تيك\s*بروفيت(?!\w))"
 )
 _PRICE = r"\d+[.,]\d+" + _NOT_PRICE_AFTER
 # فعل صفقة (لا وصف): «selling pressure»/«sell-off»/«buy-side»/«short-term» وصف للسوق ⇒ مستثناة
@@ -259,7 +271,7 @@ _AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?:ال)?(?:شرا�
 # أمر صفقة بأول الجملة: «Buy.»، «Go long.»، «Short it.»، «long EURUSD»، «Accumulate gold below 2350».
 # الرمز حساس لحالة الأحرف (EURUSD، EUR/USD) — «Long wicks»/«Short-term» ليست أمراً.
 _EN_ORDER = (
-    r"(?:^|[.!?]\s+|[-*•>]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
+    r"(?:^\s*|[.!?]\s+|[-*•>]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
     r"|load\s+up(?:\s+on)?|accumulate|consider\s+(?:buying|selling|shorting|going\s+(?:long|short)|an?\s+(?:long|short)))"
     r"(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|above|below|on|if|when|it|this|gold|silver|oil|crude|bitcoin|btc"
     r"|the\s+(?:pair|dip|breakout|retest|rally|euro|dollar|yen|pound))\b|(?-i:(?!(?:EMA|SMA|WMA|RSI|MACD|ATR|ADX|CCI|MFI|OBV|VWAP)\b)[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
@@ -272,8 +284,9 @@ _TRADE_CALL_RE = re.compile(
     # توصية صريحة
     + r"|\b(?:i|we)(?:\s+would|['’]d)?\s+(?:recommend|suggest|advise)\s+(?:you\s+)?(?:to\s+)?"
     r"(?:buy|sell|buying|selling|go(?:ing)?\s+(?:long|short)|a\s+(?:long|short|buy|sell))\b"
-    + r"|\b(?:recommendation|signal|call|direction|action|trade|advice|suggestion|verdict|bias|idea|setup|position)"
-    r"\s*[:\-–—]\s*(?:[^\n.:]{0,20}?[\s,])?(?:buy|sell|long|short)\b(?![-‑])"
+    + r"|\b(?:recommendation|signal|call|direction|action|trade|advice|suggestion|verdict|bias|idea|setup|position"
+    r"|buy\s*/\s*sell|long\s*/\s*short)"
+    r"\s*[:\-–—=]\s*(?:[^\n.:]{0,20}?[\s,])?(?:buy|sell|long|short)\b(?![-‑])"
     # سعر ثم كلمة المستوى بعدها بالسطر نفسه («1.0950, a good place to take profit»)
     + r"|" + _PRICE + r"[^\n\d]{0,40}?" + _LEVEL_WORD
     # فعل صفقة ثم سعر («You could buy near 1.0850»، «Short it at 1.0900»)
@@ -282,6 +295,20 @@ _TRADE_CALL_RE = re.compile(
     + r"|" + _EN_ACT + r"[^\n\d]{0,30}?\b(?:at|near|around|below|above|from|under|over|@)\s*\d{3,}(?![\d.,%])"
     + r"|\b(?:pending\s+)?(?:buy|sell)\s+(?:limit\s+|stop\s+)?orders?\s+(?:at|near|around|@)\s*\d"
     + r"|" + _EN_ORDER
+    # run 80: صيغ أوامر كانت تمرّ
+    + r"|\b(?:place|put|set|use)\s+an?\s+(?:(?:pending|limit|stop|buy|sell)\s+){0,3}orders?\s+"
+    r"(?:at|near|around|above|below|@)\s*\d"
+    + r"|\b(?:book|take|lock\s+in|bank)\s+(?:some\s+|partial\s+)?profits?\s+(?:at|near|around|above|below|@)\s*\d"
+    + r"|\b(?:take|close|scale\s+out(?:\s+of)?)\s+(?:half|part|some|partials?)(?:\s+off)?\s+(?:at|near|around|@)\s*\d"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>]\s*)move\s+(?:the\s+|your\s+)?stop\s+to\s+(?:break[- ]?even|entry)\b"
+    + r"|\binvalid(?:ated)?\s+(?:below|above|under|over|on\s+a\s+close)\b[^\n\d]{0,20}?" + _PRICE
+    + r"|\bfade\b[^\n\d]{0,30}?" + _PRICE
+    + r"|\b(?:look\s+for|take|consider|favou?r|prefer)\s+(?:longs|shorts)\b[^\n\d]{0,15}?" + _PRICE
+    + r"|\b(?:(?:long|short|cover)\s+(?:from|at|above|below|near|around|under|over|@)\s*|(?:long|short)\s+)" + _PRICE
+    + r"|\d+[.,]\d+\s*[:→\-–—]\s*(?:long|short|buy|sell)\b(?![-‑\w])"
+    r"(?!\s+(?:wicks?|shadows?|tails?|candles?|bod(?:y|ies)|term|squeeze|covering)\b)"
+    + r"|(?<!not\s)(?<!never\s)\brecommend(?:s|ed)?\s+(?:buying|selling|shorting|going\s+(?:long|short))\b"
+    + r"|\bR\s*[:/]\s*R\b[^\n]{0,20}?\b(?:from|at|@)\s*" + _PRICE
     # حثّ بفعل مساعد على الآن/هنا/هذا الزوج — «you would buy when the fast MA crosses» شرح استراتيجية، مسموح
     + r"|\b(?:you|traders?|one)\s+(?:should|could|might|may|can|must|need\s+to|(?:might\s+|may\s+)?want\s+to)\s+"
     r"(?:(?:consider|look\s+to|think\s+about)\s+)?(?:buy(?:ing)?|sell(?:ing)?|short(?:ing)?|go(?:ing)?\s+(?:long|short)|enter)\b"
@@ -300,11 +327,16 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:يفضل|الأفضل|الافضل|من الأفضل|فرصة|فرصه)\s+(?:ل|ال|لل)?(?:شراء|بيع|دخول)(?!\w)"
     + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
     + r"|توصية\s*[:\-–—]?\s*(?:ب|ب?ال)?(?:شراء|بيع)"
-    + r"|(?:الاتجاه|القرار|الصفقة)\s*[:\-–—]\s*(?:شراء|بيع)"
+    + r"|(?:الاتجاه|القرار|الصفقة|إشارة|اشارة|الإشارة|الاشارة)\s*[:\-–—=]\s*(?:ال)?(?:شراء|بيع)"
+    + r"|(?:توصيتي|توصيتنا|الأنسب|الانسب|خياري)\s*(?:هي|هو)?\s*[:\-–—]?\s*(?:ال)?(?:شراء|بيع)(?!\w)"
     + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشتر|اشتري|بع|ادخل)(?!\w)"
     + r"|(?:افتح|أدخل|ادخل|نفذ|خذ)\s+(?:صفقة|صفقه|مركز)\s+(?:ال)?(?:شراء|بيع)"
     # الكردية (سۆرانی): کڕین/فرۆشتن مع سعر أو «ئێستا» (الآن) أو «بکە» (افعل)
     + r"|(?:کڕین|فرۆشتن)\w*[^\n\d]{0,25}?(?:\d|ئێستا|بکە)"
+    # run 80: فعل الأمر «بکڕە/بیکڕە/بفرۆشە»، «EURUSD: کڕین»، و«… پێشنیار دەکەم» (أنصح)
+    + r"|(?<!\w)بی?(?:کڕە|فرۆشە)(?!\w)"
+    + r"|(?:^\s*|[:\-–—=]\s*)(?:کڕین|فرۆشتن)\s*(?:[.!]|$)"
+    + r"|(?:کڕین|فرۆشتن)\w*[^\n]{0,30}?پێشنیار|پێشنیار\w*[^\n]{0,30}?(?:کڕین|فرۆشتن)"
     # الفرنسية/الإسبانية: فعل أمر صفقة مع سعر أو «الآن»
     + r"|\b(?:achetez|achète|achetons|vendez|vends|compra|compre|vende|venda|ingresa)\b[^\n\d]{0,30}?"
     r"(?:\d|maintenant|ahora)",
@@ -326,7 +358,13 @@ _GUARD_REFUSAL = {
 
 def _guard_norm(text: str) -> str:
     # التشكيل («بِع»، «اشترِ»، «يُفضّل») وتنسيق Markdown («**Entry:** 1.0850») لا يغيّران المعنى
-    return re.sub(r"[*_`]", "", _TASHKEEL.sub("", text or ""))
+    # run 80: أحرف عريضة («Ｅｎｔｒｙ») ⇒ NFKC؛ وسوم HTML ورموز/إيموجي قبل الأمر («🟢 BUY»، «<b>BUY</b>»)
+    # وعلامات اقتباس JSON («{"direction":"sell"}») تُزال؛ الفاصلة العربية العشرية «١٫٠٨٥٠» ⇒ نقطة.
+    t = unicodedata.normalize("NFKC", _TASHKEEL.sub("", text or ""))
+    t = re.sub(r"</?[A-Za-z][^<>\n]{0,40}>", " ", t)
+    t = "".join(" " if unicodedata.category(ch) in ("So", "Sk", "Cs") or ch in "\ufe0f\u200d{}\"" else ch for ch in t)
+    t = re.sub(r"(?<=\d)٫(?=\d)", ".", t)
+    return re.sub(r"[*_`]", "", t)
 
 
 def has_trade_call(text: str) -> bool:
