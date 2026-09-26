@@ -869,7 +869,7 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| 3829dba | `FocusChartModal`: `onTimeframeKey={setTf}` لـ`<MatrixChart>` ⇒ كتابة الفريم + Enter على الويب تبدّل فريم نافذة التركيز كشريط `TimeframeBar` (كما `ChartFrame`/`QuadChartModal`). عدّلت الصفّ بـCOORDINATION ليبقى جزء tools (`TerminalScreen`) وحده | chart-r82a |
+| f96a309 | `FocusChartModal`: `onTimeframeKey={setTf}` لـ`<MatrixChart>` ⇒ كتابة الفريم + Enter على الويب تبدّل فريم نافذة التركيز كشريط `TimeframeBar` (كما `ChartFrame`/`QuadChartModal`). عدّلت الصفّ بـCOORDINATION ليبقى جزء tools (`TerminalScreen`) وحده | chart-r82a |
 
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` داخل `confirmDestructive` وحده؛ «درجة الاتفاق» تعليقات فقط؛ «إعادة الجولة» `AccountScreen` (`tourOpen`).
 - فحص الاختيار باللون وحده بنطاقي (`MatrixSidePanel`، `MatrixBottomDock`، `SymbolPairMenu`، `ScreenerMini`، `TimeframeBar`، `MatrixEdgeRails`): كل عنصر شرطي على `Pressable` يحمل `accessibilityState.selected`/`expanded` وتعبئة؛ الفارق بالعدّ نصوص داخلية. لا بند.
