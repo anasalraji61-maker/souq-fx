@@ -8,12 +8,12 @@ import { instrumentSpec } from '../positionSize';
 import {
   NEWS_GRACE_MS,
   NEWS_HORIZON_MS,
-  UNANNOUNCED_SPAN_MS,
   newsClockMs,
   newsCountdown,
   newsCurrencyMatches,
   newsTickDelayMs,
   newsTimeUnannounced,
+  unannouncedEndMs,
 } from '../chart/newsRisk';
 
 type Ev = {
@@ -323,8 +323,8 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
    * معلنة»، بلا عدّ ولا تلوين «قريب»، خارج العدّاد؛ ويبقى «قادماً» حتى نهاية يومه (نفس قاعدة شريط الأخبار).
    */
   const tbd = (e: Ev): boolean => hasTs(e) && newsTimeUnannounced(e);
-  /** لحظة انتهاء الحدث: الموقوت بعد نافذة «الآن»، وما بلا ساعة بنهاية يومه */
-  const endMs = (e: Ev & { ts: number }) => e.ts * 1000 + (tbd(e) ? UNANNOUNCED_SPAN_MS : NOW_WINDOW_MS);
+  /** لحظة انتهاء الحدث: الموقوت بعد نافذة «الآن»، وما بلا ساعة بمنتصف ليل نيويورك التالي (يوما تحويل الساعة 23/25س — tools139a) */
+  const endMs = (e: Ev & { ts: number }) => (tbd(e) ? unannouncedEndMs(e.ts) : e.ts * 1000 + NOW_WINDOW_MS);
   const timed = visible.filter(hasTs);
   const upcoming = timed.filter((e) => endMs(e) >= now).sort((a, b) => a.ts - b.ts);
   const past = timed.filter((e) => endMs(e) < now).sort((a, b) => b.ts - a.ts);
