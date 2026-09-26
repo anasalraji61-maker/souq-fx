@@ -1157,7 +1157,7 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| 7b434e3 | `PanSpeedSlider` تعبئة المسار `textMuted` وقت السكون و`accent` أثناء السحب فقط (`dragging` من `onPanResponderGrant` حتى `Release`/`Terminate`) ⇒ الفريم النشط (`TimeframeBar.tsx:119`) وحده تأكيد الشريط العلوي. المقبض `sliderThumb` محايد أصلاً | tools126a، DESIGN-PRO §1 (بند ٢) |
+| 960096e | `PanSpeedSlider` تعبئة المسار `textMuted` وقت السكون و`accent` أثناء السحب فقط (`dragging` من `onPanResponderGrant` حتى `Release`/`Terminate`) ⇒ الفريم النشط (`TimeframeBar.tsx:119`) وحده تأكيد الشريط العلوي. المقبض `sliderThumb` محايد أصلاً | tools126a، DESIGN-PRO §1 (بند ٢) |
 
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` تعليقات فقط خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ «إعادة الجولة» `AccountScreen:268`؛ `useMultiLiveTicks` يرفض الأقدم من `TICK_STALE_MS`؛ لا وزن 700 خارج chart/i18n؛ كل ملف بنطاقي فيه نمط اختيار شرطي يحمل `accessibilityState`.
 - **ui-r77** (لون الخطأ) و**ui85a** (DSN) ما زالا عند أنس.
