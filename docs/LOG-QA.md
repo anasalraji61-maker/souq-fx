@@ -1173,3 +1173,12 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (c — `accessibilityLabel`):** مسح AST (TypeScript API) على كل `.tsx` ⇒ 5 أغلفة `accessible={false}` و`MessagesScreen` (تُحذف بقرار ٩). **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة (حدّ اليوم بعد قرار ٨، حدّ السنت بعد ١٥، DeMarker بعد ١١)؛ متابعة تنفيذ ٨–١٣/١٥؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (d81f592):** قرار ١٦ + عيوب أنس على الويب (جولتان) ⇒ W1–W9 بـCOORDINATION (W1 مُتحقَّق: `TerminalScreen.tsx:2047/2147` `NO_PRICE_BASES`؛ W2 بملف tools `TerminalScreen.tsx:~1190`). نوافذ التأكيد الفارغة على الويب مُتحقَّقة منجزة (`confirmDestructive` ×11، لا `Alert.alert`). backend-r78a/b أُدرجا، وlaunch77 استُبدل بـr78a. البناء احمرّ (TS1117 `moderation.selftest.ts:57` من `49aa90d`) وأصلحه tools `e33a350` قبل رفع إصلاحي ⇒ أخضر 0؛ selftests المتغيّرة (liveSeries/movingAverages/moderation) ناجحة. diff ChartFrame/QuadChartModal استخراج دالّة ⇒ لا فشل تصميم.
+
+## 2026-09-26 — الدورة 109
+**البناء:** أخضر 0 (على 21a88e8) — لا إصلاح لازم. **Selftests:** 119/119 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت W1 ← ui `b1b9578` (`useLastCloses`، `WatchlistPanel.tsx:384–395`) + backend `a77a23a`/`aa923bf` (r79a)؛ W3 ويب ← ui `939830b`؛ W7 ← chart `21a88e8`؛ قرار ١١ ← chart `0a925d9` (`paneGuides.ts:169`)؛ ٩ ← ui `ba7a5a6`؛ ١٠ ← ui `2bd513c`؛ launch174a ← `WatchlistPanel.tsx:407`.
+مُعلَّمة «منجزة بالكود — تنتظر نظرة أنس» (قاعدة DECISIONS). باقٍ مُتحقَّق: W2 (`TerminalScreen.tsx:~1195`)، W5 (`:2538` `maxHeight: 44`)، ٨ (`dailyChange.ts` يوم UTC — backend-r79b دُمج بالصفّ، الباقي chart)، ١٣، ١٥ (200)، r78a/b، ui84a.
+جديد: **launch175a → chart** (منخفض، `dataSource.ts:11/13` «مزود/مخزن»).
+**قائمة قبول DESIGN-PRO (التاسع والعشرون):** 0/12 فشل (diff منذ d81f592: تبويبات 500، `»` محايد ساكناً، `statusTag` `textDim`؛ `marginTop: -2` قديم).
+**المراجعة (d — أرقام متناقضة):** DeMarker 0–1 متّسق (حساب/دليل/ألوان/`paneBoundedDecimals` = خانتان)؛ لا نصّ 30/70 له. حدّ السنت 200 = قرار ١٥ المفتوح. **لا بند جديد.**
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ متابعة W2/W4/W5/W6/W8/W9 و٨/١٣/١٥؛ وإعادة قائمة DESIGN-PRO.
