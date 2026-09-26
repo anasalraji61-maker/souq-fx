@@ -1177,11 +1177,26 @@ export function journalOlderPage(loaded: number): { limit: number; offset: numbe
  * حُمّل بـ«الأقدم» — المتداول يضيف صفقة فتختفي 300 صفقة قديمة كان يراجعها. صفحاتٌ متتالية بسقف الخادم تغطّي
  * `max(صفحة، المحمَّل)`.
  */
-export function journalRefreshPages(loaded: number): { limit: number; offset: number }[] {
-  const n = Number.isFinite(loaded) ? Math.max(JOURNAL_PAGE, Math.floor(loaded)) : JOURNAL_PAGE;
+export function journalRefreshPages(loaded: number, total?: number | null): { limit: number; offset: number }[] {
+  let n = Number.isFinite(loaded) ? Math.max(JOURNAL_PAGE, Math.floor(loaded)) : JOURNAL_PAGE;
+  /**
+   * **الدفتر كلّه محمَّل** (`total` = المحمَّل) ⇒ صفقة واحدة زيادة: إضافة صفقة إلى دفترٍ من 350 محمَّل كلّه كانت تطلب 350
+   * فتسقط أقدمها، ويصير «معروضة 350 من 351» وتختفي أسطر الصافي بالـpip ومتوسط R حتى «تحميل الأقدم» (وكذلك عند 200 بالضبط).
+   */
+  if (total != null && Number.isFinite(total) && n === Math.floor(loaded) && loaded >= total) n += 1;
   const out: { limit: number; offset: number }[] = [];
   for (let offset = 0; offset < n; offset += JOURNAL_PAGE_MAX) out.push({ limit: Math.min(JOURNAL_PAGE_MAX, n - offset), offset });
   return out;
+}
+
+/**
+ * هل الصفقات **المفتوحة** كلها بين المحمَّلة؟ الخادم يرتّب بتاريخ الفتح (الأحدث أولاً) فصفقة مراكز مفتوحة منذ أسابيع تقع
+ * خارج أحدث 200 — ومجموع «المخاطرة (مفتوحة): 250 USD» كان يُعرض تحت «معروضة 200 من 250 — الإحصاءات على الكل» بينما
+ * مفتوحةٌ أقدم بمخاطرة 4,000 USD غائبة: مجموعٌ جزئي يطمئن كذباً. شرط سطر «أحدث N» نفسه (`total` إن أرسله الخادم، وإلا
+ * صفحةٌ ممتلئة = ربما أكثر). false ⇒ لا مجموع حتى تُحمَّل الأقدم.
+ */
+export function journalOpenRiskComplete(loaded: number, total: number | null | undefined): boolean {
+  return total != null ? loaded >= total : loaded < JOURNAL_PAGE;
 }
 
 /** يُلحق صفحةً أقدم بالقائمة بلا تكرار (بالمعرّف، أول ظهور يبقى) — التداخل وإزاحة الإضافات يعيدان صفوفاً وصلت. */

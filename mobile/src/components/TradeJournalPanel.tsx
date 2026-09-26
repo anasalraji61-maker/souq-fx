@@ -29,6 +29,7 @@ import {
   journalWinRateLine,
   JOURNAL_PAGE,
   journalRefreshPages,
+  journalOpenRiskComplete,
   mergeJournalPage,
   executionPrice,
   exitShortcuts,
@@ -329,6 +330,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    * يُحسبان مرتين). الردّ الأقدم من آخر طلب يُسقط، كأسعار الصفقات المفتوحة (`quoteGenRef`).
    */
   const listGenRef = useRef(0);
+  /** آخر `total` من الخادم للتحديث (`journalRefreshPages`): الدفتر المحمَّل كلّه يبقى كلّه بعد الإضافة. */
+  const totalRef = useRef<number | null>(null);
+  totalRef.current = total;
   /** «تحميل الأقدم» جارٍ / فشل آخرُه — التحديث الناجح يمسح الفشل (القائمة كلّها وصلت من جديد). */
   const [olderBusy, setOlderBusy] = useState(false);
   const [olderError, setOlderError] = useState(false);
@@ -336,7 +340,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     const gen = ++listGenRef.current;
     try {
       // ما حُمّل بـ«تحميل الأقدم» يبقى بعد إضافة/إغلاق/حذف (`journalRefreshPages`) — صفحاتٌ متتالية، الأولى تحمل الإجمالي والإحصاءات
-      const pages = journalRefreshPages(tradesRef.current.length);
+      const pages = journalRefreshPages(tradesRef.current.length, totalRef.current);
       const res = await api.trades(pages[0]);
       let list = res.trades as Trade[];
       for (let i = 1; i < pages.length && list.length >= pages[i].offset; i++) {
@@ -865,7 +869,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    * أربع صفقات بـ1% هي 4% معرَّضة معاً. لا سطر إن كانت بينها صفقة بلا وقف أو بحجم مجهول (مجموعٌ جزئي يطمئن كذباً).
    */
   const openRiskLine = useMemo(() => {
-    const o = openRiskTotals(visibleTrades);
+    // مفتوحةٌ أقدم قد تقع خارج الصفحات المحمَّلة ⇒ لا مجموع (أسطر «بلا وقف»/«مجهول» تبقى: صادقةٌ عمّا حُمّل) — `journalOpenRiskComplete`
+    const complete = journalOpenRiskComplete(trades.length, total);
+    const o = complete ? openRiskTotals(visibleTrades) : null;
     if (!o) {
       // السبب الأشيع لغياب المجموع: مفتوحة بلا وقف — يُقال بدل الصمت (حجمٌ مجهول وحده يبقى بلا سطر)
       const noStop = openTradesWithoutStop(visibleTrades);
@@ -876,7 +882,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       return t.journalOpenRiskUnknown.replace('{n}', String(unknown));
     }
     return `${t.planRiskWord} ${t.journalOpenSuffix}: ${o.totals.map((c) => formatJournalMoney(c, t.journalMoneyUsc)).join(' · ')}`;
-  }, [visibleTrades, t]);
+  }, [visibleTrades, trades.length, total, t]);
 
   /**
    * «صفقات مفتوحة تراهن على USD بالاتجاه نفسه: 3 — خبرٌ واحد يضربها معاً» (`stackedCurrencyExposure`): EURUSD وGBPUSD

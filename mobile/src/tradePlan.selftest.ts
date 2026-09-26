@@ -3179,6 +3179,30 @@ console.log('tradePlan crypto suffix quote selftest OK');
     { limit: 500, offset: 500 },
     { limit: 101, offset: 1000 },
   ]);
+  // الدفتر كلّه محمَّل ثم إضافة ⇒ صفقة زيادة (لا تسقط الأقدم)؛ جزءٌ منه ⇒ كما كان
+  assert.deepEqual(tp.journalRefreshPages(350, 350), [{ limit: 351, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(200, 200), [{ limit: 201, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(200, 350), [{ limit: 200, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(150, 150), [{ limit: 200, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(405, null), [{ limit: 405, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(1000, 1000), [{ limit: 500, offset: 0 }, { limit: 500, offset: 500 }, { limit: 1, offset: 1000 }]);
+  // مجموع المفتوحة: 200 من 250 ⇒ ناقص (مفتوحةٌ أقدم قد تغيب)؛ الكل محمَّل ⇒ كامل؛ بلا `total` صفحةٌ ممتلئة ⇒ ناقص
+  assert.equal(tp.journalOpenRiskComplete(200, 250), false);
+  assert.equal(tp.journalOpenRiskComplete(250, 250), true);
+  assert.equal(tp.journalOpenRiskComplete(3, 3), true);
+  assert.equal(tp.journalOpenRiskComplete(200, null), false);
+  assert.equal(tp.journalOpenRiskComplete(120, null), true);
+  // الحالة: مفتوحة #3 (250 USD) بالصفحة ومفتوحة #230 (4,000 USD) خارجها ⇒ المجموع من الصفحة 250 لا 4,250 — لا يُعرض
+  {
+    const open = (id: string, symbol: string, entry: number, sl: number, size: number) =>
+      ({ id, symbol, side: 'buy' as const, entry, sl, size, status: 'open' });
+    const page = [open('3', 'EURUSD', 1.085, 1.08, 0.5)];
+    const all = [...page, open('230', 'GBPUSD', 1.27, 1.25, 2)];
+    const sum = (xs: typeof page) => tp.openRiskTotals(xs)?.totals.find((c) => c.ccy === 'USD')?.amount;
+    assert.ok(Math.abs((sum(page) ?? 0) - 250) < 1e-6);
+    assert.ok(Math.abs((sum(all) ?? 0) - 4250) < 1e-6);
+    assert.equal(tp.journalOpenRiskComplete(200, 250), false);
+  }
   // الترتيب والأول يبقيان
   assert.deepEqual(
     tp.mergeJournalPage([{ id: 'a', v: 1 }], [{ id: 'a', v: 2 }, { id: 'b', v: 3 }, { id: 'b', v: 4 }]),
