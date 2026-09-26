@@ -428,18 +428,19 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   {t.voteByAuthor.replace('{author}', v.author)}
                 </Text>
               ) : null}
+              {/* مرجع منازل واحد (الدخول) للثلاثة كـchart-r70: رمز بلا منازل معروفة كان «99.950 | 100.45» */}
               <View style={[styles.levels, rtl && styles.levelsRtl]}>
                 <View style={styles.level}>
                   <Text style={styles.levelLabel}>{t.entryLabel}</Text>
-                  <Text style={styles.levelVal}>{formatPrice(v.entry, v.symbol)}</Text>
+                  <Text style={styles.levelVal}>{formatPrice(v.entry, v.symbol, v.entry)}</Text>
                 </View>
                 <View style={styles.level}>
                   <Text style={styles.levelLabel}>{t.slLabel}</Text>
-                  <Text style={[styles.levelVal, styles.levelSl]}>{formatPrice(v.sl, v.symbol)}</Text>
+                  <Text style={[styles.levelVal, styles.levelSl]}>{formatPrice(v.sl, v.symbol, v.entry)}</Text>
                 </View>
                 <View style={styles.level}>
                   <Text style={styles.levelLabel}>{t.tpLabel}</Text>
-                  <Text style={[styles.levelVal, styles.levelTp]}>{formatPrice(v.tp, v.symbol)}</Text>
+                  <Text style={[styles.levelVal, styles.levelTp]}>{formatPrice(v.tp, v.symbol, v.entry)}</Text>
                 </View>
               </View>
               {plan.ok ? (

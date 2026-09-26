@@ -334,8 +334,9 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               </Text>{' '}
               {/* backend-r10 (أ): المركز الباقي بآخر شمعة لم يُغلق — `exit` آخر إغلاق لا خروج، والنسبة غير محقّقة
                   وخارج الإحصاء أعلاه ⇒ «(مفتوحة)» كالدفتر بدل «→ سعر» يُقرأ صفقةً منتهية. */}
-              {formatPrice(tr.entry, sym)}
-              {tr.open ? ` ${t.journalOpenSuffix}` : ` → ${formatPrice(tr.exit, sym)}`} ·{' '}
+              {/* مرجع منازل واحد (الدخول) للطرفين كـchart-r70 */}
+              {formatPrice(tr.entry, sym, tr.entry)}
+              {tr.open ? ` ${t.journalOpenSuffix}` : ` → ${formatPrice(tr.exit, sym, tr.entry)}`} ·{' '}
               <Text style={{ color: tr.pnl_pct >= 0 ? colors.bull : colors.bear }}>
                 {tr.pnl_pct >= 0 ? '+' : ''}
                 {tr.pnl_pct}%
