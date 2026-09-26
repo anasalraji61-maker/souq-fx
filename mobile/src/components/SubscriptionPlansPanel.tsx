@@ -146,12 +146,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    // §5.5: خلفية وحدها (كان حدّاً وخلفية). §1: الاسم كان بالتأكيد — ملاحظة ثابتة لا اختيار ولا إجراء.
     backgroundColor: colors.bgPanel,
-    padding: 12,
+    padding: spacing.md,
   },
-  matrixNoteTitle: { color: colors.accent, fontWeight: '500', letterSpacing: 1 },
+  matrixNoteTitle: { color: colors.text, fontWeight: '500', letterSpacing: 1 },
   matrixNoteText: {
     flex: 1,
     color: colors.textMuted,
