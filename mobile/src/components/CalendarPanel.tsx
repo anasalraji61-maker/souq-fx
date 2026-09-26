@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   tzNote: { ...numeric, color: colors.textDim, fontSize: 11 },
   sampleNote: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '500' },
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
-  evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '600' },
+  evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '500' },
   meta: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 11, marginTop: 4 },
   figures: { color: colors.textMuted, textAlign: 'right', fontSize: 11, marginTop: 0 },
 });

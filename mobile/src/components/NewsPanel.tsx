@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   headline: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     marginTop: 4,
     lineHeight: 20,
   },
