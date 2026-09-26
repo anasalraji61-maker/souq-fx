@@ -650,7 +650,7 @@ export function pipsOnlyExitPrice(
  * «أقرب» ⇒ لا سطر، وحارس النقاط يقترح وقفاً عند 84.916 (−90% بالضغطة الثانية) — الخطأ الذي أصلحه tools102a، على هذه الأزواج.
  */
 const USD_BALLPARK: Record<string, number> = {
-  EUR: 1.1, GBP: 1.3, AUD: 0.65, NZD: 0.6, USD: 1, CAD: 0.73, CHF: 1.2, JPY: 0.0067,
+  EUR: 1.16, GBP: 1.3, AUD: 0.65, NZD: 0.6, USD: 1, CAD: 0.73, CHF: 1.2, JPY: 0.0067,
   SEK: 0.1, NOK: 0.095, DKK: 0.15, PLN: 0.27, TRY: 0.025, ZAR: 0.055, MXN: 0.053, SGD: 0.77,
   HKD: 0.128, CNH: 0.14, ILS: 0.28, SAR: 0.267, AED: 0.272, XAU: 4000, XAG: 60,
 };
@@ -903,14 +903,29 @@ export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips
  * بدل 0.06، بلا أي تحذير (تحت حدّ 50 لوت). مسافة الوقف لا تحمل ثلاث منازل أصلاً (`slPipsFromPrices` لعُشر pip)،
  * و«0.500» تبقى 0.5 (الصفر بالمقدّمة ليس مبهماً). `null` = فارغ أو غير مفهوم أو مبهم.
  */
-export function parseSlPips(raw: string, spec?: InstrumentSpec | null): number | null {
+export function parseSlPips(raw: string, spec?: InstrumentSpec | null, refPrice?: number | null): number | null {
   const v = parseDecimal(raw, { amount: true, unit: 'pip' });
-  return v != null && pipsLookLikePrice(raw, v, spec) ? null : v;
+  return v != null && pipsLookLikePrice(raw, v, spec, refPrice) ? null : v;
 }
 
-function pipsLookLikePrice(raw: string, v: number, spec?: InstrumentSpec | null): boolean {
+function pipsLookLikePrice(raw: string, v: number, spec?: InstrumentSpec | null, refPrice?: number | null): boolean {
   const typed = typedFractionDigits(raw);
-  return pipsHaveMoreThanTwoDecimals(v) || (typed >= 4 && !Number.isInteger(v)) || pipsLookLikeTwoDecimalPrice(v, spec, typed);
+  return (
+    pipsHaveMoreThanTwoDecimals(v) ||
+    (typed >= 4 && !Number.isInteger(v)) ||
+    pipsLookLikeTwoDecimalPrice(v, spec, typed, refPrice)
+  );
+}
+
+/**
+ * سعر الأداة لقرار «سعرٌ مستدير بخانة النقاط» (±9%): **الدخول المكتوب** إن وُجد وكان بمعامل 2 من المرجع الثابت، وإلا `pairBallpark`.
+ * المرجع الثابت يتقادم والنافذة ضيّقة: EURUSD ~1.17 والمرجع 1.10 ⇒ «1.20» (سعر وقف فوق السوق بـ2.6%) كانت 1.2 pip ⇒ **8.33 لوت
+ * بدل 0.03** لوقف 300 pip (1% من 10,000؛ الخسارة عند 1.2000 ‏24,990 USD = 250% من الحساب) بينما «1.10» (6% تحته) تُرفض.
+ */
+function roundPriceRef(spec: InstrumentSpec, refPrice?: number | null): number {
+  const ball = pairBallpark(spec);
+  if (refPrice != null && Number.isFinite(refPrice) && refPrice >= ball / 2 && refPrice <= ball * 2) return refPrice;
+  return ball;
 }
 
 /**
@@ -930,7 +945,12 @@ function typedFractionDigits(raw: string): number {
  * وبجزء من مئة ذي قيمة. مسافةٌ بجزء من مئة pip لا تأتي من الأسعار (`slPipsFromPrices` تقرّب لعُشر pip) ولا يكتبها أحد، والوقف
  * 1.27 pip يمرّ فوق حدّ «أضيق من 1 pip»: 1% من 10,000 = **7.87 لوت** بدل 0.40 لوقف 25 pip. الين والذهب بقاعدتهما أدناه.
  */
-function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, typed = 0): boolean {
+function pipsLookLikeTwoDecimalPrice(
+  v: number,
+  spec?: InstrumentSpec | null,
+  typed = 0,
+  refPrice?: number | null
+): boolean {
   if (v < 0.5) return false;
   const hundredths = Math.abs(v * 10 - Math.round(v * 10)) > 1e-6;
   // تقاطعات الين الناشئة (ZARJPY ~8.6، TRYJPY ~3.7، MXNJPY ~8، SEKJPY ~14): السعر **أصغر** من وقفٍ عادي بالنقاط، فالسعر بخانة
@@ -970,8 +990,11 @@ function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, ty
   // لكن **المستدير** (منزلتان مكتوبتان بلا جزء من مئة) بمدى ±9% فقط: بنصف السعر حتى ضعفه كان وقف سكالبر «1.50» أو «2.00» pip على
   // EURUSD، و«1.00» على EURGBP/AUDUSD، و«1.50» على USDCHF يُرفض كسعر (QA125a). السعر المستدير الذي يكتبه المتداول قريبٌ من السعر
   // («2.20» GBPNZD، «1.90» GBPCAD، «1.20» GBPUSD)؛ والجزء من مئة يبقى بالمدى الواسع («2.63» GBPNZD).
-  const ref = pairBallpark(spec);
-  if (hundredths) return v >= ref / 2 && v <= ref * 2;
+  if (hundredths) {
+    const ball = pairBallpark(spec);
+    return v >= ball / 2 && v <= ball * 2;
+  }
+  const ref = roundPriceRef(spec, refPrice);
   return typed === 2 && Math.max(v / ref, ref / v) <= ROUND_PRICE_MAX_RATIO;
 }
 
@@ -990,9 +1013,9 @@ function pipsHaveMoreThanTwoDecimals(v: number): boolean {
  * 0.6–2 بأربع أو خمس منازل). `parseSlPips` يرفضها، وهذه تقول لماذا (اسم خانة سعر الوقف). «157.42» (ين) و«2650.55» (ذهب)
  * بمنزلتين قرب سعر الأداة سعرٌ كذلك (`pipsLookLikeTwoDecimalPrice`)؛ «2650.5» بعُشر pip تبقى نقاطاً. `false` لغير المفهوم أو المقبول.
  */
-export function slPipsLooksLikePrice(raw: string, spec?: InstrumentSpec | null): boolean {
+export function slPipsLooksLikePrice(raw: string, spec?: InstrumentSpec | null, refPrice?: number | null): boolean {
   const v = parseDecimal(raw, { amount: true, unit: 'pip' });
-  return v != null && v > 0 && pipsLookLikePrice(raw, v, spec);
+  return v != null && v > 0 && pipsLookLikePrice(raw, v, spec, refPrice);
 }
 
 /**

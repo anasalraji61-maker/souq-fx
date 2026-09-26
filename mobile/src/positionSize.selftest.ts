@@ -4479,6 +4479,29 @@ console.log('positionSize 0.0001 cross stop price in pips field selftest OK');
 }
 console.log('positionSize round scalper stop pips on majors selftest OK');
 {
+  // EURUSD ~1.17 والمرجع الثابت كان 1.10 ⇒ «1.20» (سعر وقف) كانت 1.2 pip ⇒ 8.33 لوت بدل 0.03 لوقف 300 pip؛ EURNZD «2.00» ⇒ 8.47 لوت
+  const eu = instrumentSpec('EURUSD')!;
+  const enz = instrumentSpec('EURNZD')!;
+  assert.equal(parseSlPips('1.20', eu), null);
+  assert.equal(slPipsLooksLikePrice('1.20', eu), true);
+  assert.equal(parseSlPips('2.00', enz), null);
+  // الدخول المكتوب مرجعٌ أدقّ من الثابت: بدخول 1.1700 ⇒ «1.20»/«1.15»/«1.25» سعر، و«2.00»/«1.50»/«1.00» نقاط سكالبر
+  for (const raw of ['1.20', '1.15', '1.25']) assert.equal(parseSlPips(raw, eu, 1.17), null, raw);
+  assert.equal(slPipsLooksLikePrice('1.20', eu, 1.17), true);
+  for (const [raw, v] of [['2.00', 2], ['1.50', 1.5], ['1.00', 1]] as const) {
+    assert.equal(parseSlPips(raw, eu, 1.17), v, raw);
+    assert.equal(slPipsLooksLikePrice(raw, eu, 1.17), false, raw);
+  }
+  // السوق تحرّك: بدخول 1.0500 ⇒ «1.05» سعر، و«1.20» (14% فوقه) نقاط كما يكون وقف سكالبر
+  assert.equal(parseSlPips('1.05', eu, 1.05), null);
+  assert.equal(parseSlPips('1.20', eu, 1.05), 1.2);
+  // دخولٌ بخطأ منزلة («11.7») أو فارغ (NaN) لا يُعتمد مرجعاً ⇒ الثابت
+  assert.equal(parseSlPips('1.20', eu, 11.7), null);
+  assert.equal(parseSlPips('1.20', eu, NaN), null);
+  assert.equal(parseSlPips('2.00', eu, NaN), 2);
+}
+console.log('positionSize stale EURUSD round-price reference selftest OK');
+{
   // الرصيد بعلامة عملة الحساب مقبول كخانة المخاطرة («$10,000.00» منسوخاً من المنصّة كان «رقماً غير مفهوم»)
   for (const [raw, ccy, v] of [
     ['$10,000.00', 'USD', 10_000], ['10,000.00 USD', 'USD', 10_000], ['$10000', 'USD', 10_000], ['€5.000,50', 'EUR', 5000.5],

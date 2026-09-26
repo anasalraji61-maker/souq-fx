@@ -594,8 +594,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * `parsePriceFor` (الدفتر يقرأ به منذ `53f1e03`). السبريد والتحويل يبقيان على `num`.
    */
   const priceNum = (s: string) => parsePriceFor(s, spec?.symbol) ?? NaN;
+  /**
+   * الدخول المكتوب مرجعاً لقرار «سعرٌ مستدير بخانة النقاط» («1.20» على EURUSD ~1.17 سعرٌ لا 1.2 pip) — المرجع الثابت يتقادم.
+   * NaN (فارغ) ⇒ المرجع الثابت. راجع `parseSlPips`.
+   */
+  const slPriceRef = priceNum(entryPx);
   /** نقاط الوقف: «1.500» مبهمة (1,500) فتُرفض — كانت تُقرأ 1.5 pip ⇒ لوت أكبر بألف مرّة. راجع `parseSlPips`. */
-  const slNum = parseSlPips(slPips, spec) ?? NaN;
+  const slNum = parseSlPips(slPips, spec, slPriceRef) ?? NaN;
   /**
    * الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts. وبعلامة عملة
    * الحساب («$10,000.00» منسوخاً من المنصّة) مقبول كخانة المخاطرة — `parseBalance`.
@@ -608,7 +613,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const badOtherThanLeverage =
     (balanceText.trim() !== '' && parseBalance(balanceText, moneyCcy) == null) ||
     (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, moneyCcy) == null) ||
-    (slPips.trim() !== '' && parseSlPips(slPips, spec) == null) ||
+    (slPips.trim() !== '' && parseSlPips(slPips, spec, slPriceRef) == null) ||
     (manualConv.trim() !== '' && parseDecimal(manualConv) == null) ||
     [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v)));
   const badNumber = badOtherThanLeverage || (leverage.trim() !== '' && parseLeverage(leverage) == null);
@@ -622,7 +627,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     [t.riskCalcBalance, balanceText, parseBalance(balanceText, moneyCcy) == null],
     [t.riskCalcRiskPct, riskPct, parseRiskInput(riskPct, balanceNum, moneyCcy) == null],
     [t.riskCalcLeverage, leverage, parseLeverage(leverage) == null],
-    [t.riskCalcSlPips, slPips, parseSlPips(slPips, spec) == null],
+    [t.riskCalcSlPips, slPips, parseSlPips(slPips, spec, slPriceRef) == null],
     [t.riskCalcEntry, entryPx, Number.isNaN(priceNum(entryPx))],
     [t.riskCalcStop, stopPx, Number.isNaN(priceNum(stopPx))],
     [t.riskCalcTarget, targetPx, Number.isNaN(priceNum(targetPx))],
@@ -675,7 +680,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           .replace('{value}', () => slAmbig.value)
           .replace('{whole}', slAmbig.whole)
           .replace('{small}', slAmbig.small)
-      : slPipsLooksLikePrice(slPips, spec) && onlySlBad
+      : slPipsLooksLikePrice(slPips, spec, slPriceRef) && onlySlBad
       ? // «1.0820» بخانة النقاط سعرٌ لا مسافة (كانت 1.08 pip ⇒ لوت أكبر بعشرين مرّة) — تُسمّى خانة سعر الوقف التي يقصدها (launch88)
         t.riskCalcSlLooksLikePrice.replace('{value}', () => slPips.trim())
       : slPoints && !slPoints.native && onlySlBad
@@ -1895,7 +1900,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         <View style={[styles.chips, rtl && styles.chipsRtl]}>
           {chip(
             `ATR ${atrPips} ${pipUnit(lang)}`,
-            parseSlPips(slPips, spec) === atrPips,
+            parseSlPips(slPips, spec, slPriceRef) === atrPips,
             () => onSlPipsChange(String(atrPips)),
             `${t.riskCalcSlPips}: ${atrPips} ${pipUnit(lang)} (ATR)`
           )}
