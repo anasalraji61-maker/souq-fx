@@ -9,6 +9,7 @@ import {
 } from './dataSource';
 import { candlesThrough, prevDayFromIntraday } from './pivotBase';
 import { dailyBarStampSec, forexWeekCloseSec } from './marketHours';
+import { isCryptoSymbol } from './newsRisk';
 
 export type LiveMergeOpts = {
   /** unix seconds of the tick (usually source.as_of) */
@@ -234,6 +235,9 @@ export function headerChangePct(
     const pct = ((px - prevClose) / prevClose) * 100;
     // مرفوض (>25%: مرجع أداة أخرى أو يوم استثنائي) ⇒ NaN فيطبع الرأس «—». الرجوع إلى نسبة أول شمعة محمّلة
     // كان يطبع رقماً بتعريف آخر تحت اسم «اليوم» (prevClose 1.0، السعر 1.3، أول شمعة 0.5 ⇒ «+160%») — tools103a.
+    // الكريبتو: عملات الميم (PEPE/WIF/TRUMP) تتحرّك >25% بيوم عادي فكان رأسها «—» والمتابعة «+32%». مرجع أداة أخرى
+    // هناك يبعد أضعافاً (BTC مقابل ETH ≈ −95%) ⇒ نطاق أوسع يبقى حارساً.
+    if (isCryptoSymbol(series.symbol)) return pct >= -80 && pct <= 400 ? pct : NaN;
     return Math.abs(pct) <= 25 ? pct : NaN;
   }
   return liveChangePct(series, price);

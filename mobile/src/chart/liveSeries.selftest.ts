@@ -184,6 +184,10 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.ok(Number.isNaN(headerChangePct(s, 1.1716, 150)));
   const pumped = { ...s, candles: s.candles.map((c, i) => (i === 0 ? { ...c, close: 0.5 } : c)) };
   assert.ok(Number.isNaN(headerChangePct(pumped, 1.3, 1.0)), 'no +160% from first loaded bar');
+  // كريبتو الميم: +32% يوم عادي ⇒ يُعرض؛ مرجع أداة أخرى (−95%) ⇒ «—»
+  const pepe = { ...s, symbol: 'PEPEUSD' };
+  assert.ok(Math.abs(headerChangePct(pepe, 0.0000132, 0.00001) - 32) < 1e-6, 'crypto +32% shown');
+  assert.ok(Number.isNaN(headerChangePct(pepe, 3000, 60000)), 'crypto wrong-instrument ref rejected');
   // شموع تجريبية ⇒ السلوك السابق
   const demo = { ...s, data_source: { kind: 'demo' as const, as_of: now, channel: null } };
   assert.ok(Math.abs(headerChangePct(demo, 1.1716, 1.17) - 1) < 1e-9);
