@@ -1204,3 +1204,11 @@
 - قرارات ٥/٦/١٠ موصولة بـ`featureFlags.ts` (`MatrixBottomDock`، `MatrixSidePanel`، `MatrixEdgeRails`، `AccountScreen`)؛ قرار ٩ `MessagesScreen` محذوفة.
 - قائمة القبول بنطاقي (مسح آلي): لا وزن 700 (١٢)، لا padding/margin/gap خارج مضاعفات 4 (١١)، لا ظلّ (٧)؛ كل ملف بـ`onPress` بلا `accessibilityState` لا نمط اختيار فيه (`GroupChatPanel.mine` مؤلِّف موسوم «أنت» لا اختيار) (١٠).
 - **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة.
+
+## 2026-09-26 — تشغيل 100
+لا صفّ بـCOORDINATION (دورة QA 117) موجَّه إلى ui كمنفّذ — الصفّان باسم ui (ui-r77 لون الخطأ، ui85a مفتاح Sentry) عند أنس. بوابة البناء خضراء (0). **لا commit كود هذا التشغيل** — التحقّق بالكود لم يُظهر عيباً بنطاقي، ولم أختلق تغييراً.
+
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط (`MatrixEdgeRails.tsx:334`، `ToolsScreen.tsx:89`)؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» تعليقات فقط (`AnalystsPanel:149`، `SocialConsensusPanel:248`، `WeeklyReportPanel:41`)؛ `useMultiLiveTicks` يرفض الأقدم من `TICK_STALE_MS` (`:80`، `:113`)؛ «إعادة الجولة» `AccountScreen:268`.
+- ملاحظات أنس على الويب (الجولتان): اختصارات لوحة المفاتيح `KeyboardShortcutsSheet` + `TerminalScreen`؛ شريط الهاتف `1100b8f` (W5) — **تنتظر نظرته**.
+- مسح آلي بنطاقي: لا `bold`/800/900؛ الحركة الوحيدة `PriceFlash` بـ`motion.flash` (§6)؛ لا `uppercase`.
+- **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة.
