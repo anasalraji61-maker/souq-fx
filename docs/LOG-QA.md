@@ -1360,3 +1360,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (a — ميت/تصديرات):** مسح كل `export` ⇒ ~105 بلا مستورد خارجي، كلها مستعملة داخل ملفّها (`export` زائد لا كود ميت). **لا بند.**
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (d7392e2، تعارض COORDINATION حُلّ):** جديد مُتحقَّق **tools139a → ui** (`CalendarPanel.tsx:327` `UNANNOUNCED_SPAN_MS`). بعد السحب: أخضر 0، `newsRisk`/`axisTicks` selftests ناجحة؛ diff الجديد منطق أخبار ومحور لوغاريتمي بلا أنماط ⇒ قائمة القبول 0/12.
+
+## 2026-09-26 — الدورة 132
+**البناء:** أخضر 0 (على f1f0eec) — لا إصلاح لازم. **Selftests:** 124/124 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت tools139a ← ui `cd777f6` (`CalendarPanel.tsx:327` `unannouncedEndMs`). launch `a582699` (إشعارات الويب «ادخل بالحساب نفسه على هاتفك») مُتحقَّق بالخادم (`_push_owner_sql` بـ`user_id`، `claim_device_rows` `db.py:338` عند الدخول). سجلّات tools 139/ui 119/launch 203/backend 108 بلا طلب جديد. **لا صفّ مفتوح لوكيل برمجي** عدا QA1.
+**قائمة قبول DESIGN-PRO (الثاني والخمسون):** 0/12 فشل (diff منذ d7392e2: `AppErrorBoundary` نصّ ويب، `CalendarPanel` منطق، `locales.ts`).
+**المراجعة (b — نصوص ثابتة):** «MATRIX» ×2، «Log»/«TPO»، `placeholder="EURUSD"` ×3 — معروفة؛ `appCrashRepeatBodyWeb` بثلاث لغات. **لا بند.**
+**الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
