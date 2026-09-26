@@ -330,7 +330,8 @@ export function ChartFrame({
         },
       ]}
       onPress={onFocus}
-      accessibilityLabel={t.termOpenFullscreenA11y}
+      // أربعة إطارات بزرّ ⛶ لكلّ منها — بلا الرمز كان قارئ الشاشة يقرأ أربعة أزرار متطابقة
+      accessibilityLabel={`${frameSymbol} — ${t.termOpenFullscreenA11y}`}
       hitSlop={8}
     >
       <Text style={styles.focusBtnText}>⛶</Text>
