@@ -1655,7 +1655,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
 
       <Text style={[styles.label, { textAlign: align }]}>
         {t.riskCalcSlPips}
-        {spec ? ` · 1 pip = ${pipLabel}` : ''}
+        {spec ? <Text style={numeric}>{` · 1 pip = ${pipLabel}`}</Text> : ''}
       </Text>
       {input(slPips, onSlPipsChange, typicalSlPipsExample(spec), t.riskCalcSlPips)}
       {atrPips != null ? (
