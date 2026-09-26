@@ -216,6 +216,17 @@ export function TerminalScreen() {
   const touchPref = (...keys: string[]) => {
     for (const k of keys) prefsTouchedRef.current.add(k);
   };
+  // قوائم الإطارات الثلاثة (رموز/فريمات) تُعدَّل خانةً خانة: نقرة على إطار 1 قبل قراءة القائمة كانت تكتب [الجديد، افتراضي، افتراضي]
+  // وتُعلّم المفتاح كلّه ⇒ رمزا/فريما الإطارين الآخرين المحفوظان يضيعان للأبد. الآن تُحفظ الخانة وحدها هنا، والقراءة تدمجها
+  // فوق المحفوظ ثم تكتب — ولا كتابة قبل القراءة
+  const slotEditsRef = useRef(new Map<string, Map<number, string>>());
+  const slotsReadRef = useRef(new Set<string>());
+  const slotPending = (key: string) => !slotsReadRef.current.has(key) && !prefsTouchedRef.current.has(key);
+  const noteSlotEdit = (key: string, slot: number, value: string) => {
+    const m = slotEditsRef.current.get(key) ?? new Map<number, string>();
+    m.set(slot, value);
+    slotEditsRef.current.set(key, m);
+  };
   // chart-r74b: الاستطلاع الدوري يقرأ الرموز/الفريمات الحالية من مراجع لا من تبعيات التأثير — كان كل تبديل فريم/رمز إطار
   // يعيد تشغيل التأثير فيجلب الخانات الأربعة (5 طلبات لكل ضغطة من حدّ المزوّد)، ويصفّر مؤقّت 90ث، ويرفع عدّاد كل إطار
   // فيُرمى ردّ التبديل السريع وينتظر الإطار أبطأ الأربعة. التبديلات تجلب خانتها وحدها (`changeFrameTf`…).
@@ -382,12 +393,18 @@ export function TerminalScreen() {
       try {
         const parsedTfs = json(await get(PREFS_KEY));
         if (Array.isArray(parsedTfs) && parsedTfs.length === 3 && parsedTfs.every(isTimeframe)) {
-          setFrameTfs(parsedTfs as Timeframe[]);
+          const saved = parsedTfs as Timeframe[];
+          const edits = slotEditsRef.current.get(PREFS_KEY);
+          setFrameTfs(saved.map((v, i) => (edits?.get(i) as Timeframe | undefined) ?? v));
+          flushSlots(PREFS_KEY, saved);
         }
         const syms = json(await get(SYMBOLS_KEY));
         // رموز نصّية غير فارغة فقط: `[null, …]` كان يُمرَّر إلى `api.chart` كما هو
         if (Array.isArray(syms) && syms.length === 3 && syms.every((x) => typeof x === 'string' && x.trim() !== '')) {
-          setFrameSymbols([syms[0], syms[1], syms[2]]);
+          const saved: [string, string, string] = [syms[0], syms[1], syms[2]];
+          const edits = slotEditsRef.current.get(SYMBOLS_KEY);
+          setFrameSymbols([edits?.get(0) ?? saved[0], edits?.get(1) ?? saved[1], edits?.get(2) ?? saved[2]]);
+          flushSlots(SYMBOLS_KEY, saved);
         }
         const parsedLayout = Number(await get(LAYOUT_COUNT_KEY));
         if ([1, 2, 3, 4].includes(parsedLayout)) {
@@ -429,14 +446,32 @@ export function TerminalScreen() {
       } catch {
         /* defaults */
       } finally {
+        // لا محفوظ صالح (أو فشلت القراءة) ⇒ الخانات المنقورة فوق الافتراضي، كما كانت تُكتب
+        flushSlots(PREFS_KEY, [...DEFAULT_FRAME_TIMEFRAMES]);
+        flushSlots(SYMBOLS_KEY, [...DEFAULT_LAYOUT.frameSymbols]);
         setPrefsReady(true);
       }
     })();
   }, []);
 
-  const persistTfs = useCallback(async (next: Timeframe[]) => {
-    touchPref(PREFS_KEY);
+  // القائمة قُرئت: الخانات المنقورة قبلها فوق المحفوظ تُكتب مرّةً واحدة؛ بعدها تكتب النقرات القائمة كاملة كما كانت
+  function flushSlots(key: string, saved: string[]) {
+    if (!slotPending(key)) return;
+    slotsReadRef.current.add(key);
+    const edits = slotEditsRef.current.get(key);
+    slotEditsRef.current.delete(key);
+    if (!edits?.size) return;
+    const merged = saved.map((v, i) => edits.get(i) ?? v);
+    AsyncStorage.setItem(key, JSON.stringify(merged)).catch(() => {});
+  }
+
+  const persistTfs = useCallback(async (next: Timeframe[], slot: number) => {
     setFrameTfs(next);
+    if (slotPending(PREFS_KEY)) {
+      noteSlotEdit(PREFS_KEY, slot, next[slot]);
+      return;
+    }
+    touchPref(PREFS_KEY);
     try {
       await AsyncStorage.setItem(PREFS_KEY, JSON.stringify(next));
     } catch {
@@ -454,9 +489,13 @@ export function TerminalScreen() {
     }
   }, []);
 
-  const persistFrameSymbols = useCallback(async (next: [string, string, string]) => {
-    touchPref(SYMBOLS_KEY);
+  const persistFrameSymbols = useCallback(async (next: [string, string, string], slot: number) => {
     setFrameSymbols(next);
+    if (slotPending(SYMBOLS_KEY)) {
+      noteSlotEdit(SYMBOLS_KEY, slot, next[slot]);
+      return;
+    }
+    touchPref(SYMBOLS_KEY);
     try {
       await AsyncStorage.setItem(SYMBOLS_KEY, JSON.stringify(next));
     } catch {
@@ -469,7 +508,7 @@ export function TerminalScreen() {
       if (frameSymbols[index] === nextSym) return;
       const next: [string, string, string] = [...frameSymbols];
       next[index] = nextSym;
-      await persistFrameSymbols(next);
+      await persistFrameSymbols(next, index);
       pickSymbol(nextSym, frameTfs[index]);
       const gen = ++frameLoadGen.current[index];
       const hit = cachedSeries(nextSym, frameTfs[index]);
@@ -977,7 +1016,7 @@ export function TerminalScreen() {
     if (frameTfs[index] === nextTf) return;
     const next = [...frameTfs] as Timeframe[];
     next[index] = nextTf;
-    await persistTfs(next);
+    await persistTfs(next, index);
     const sym = frameSymbols[index];
     const hit = cachedSeries(sym, nextTf);
     // بلا كاش: تبقى الشموع القديمة بوسمها الحقيقي حتى يصل الجلب — وسمها بالفريم الجديد يُنهي تعتيم
