@@ -15,11 +15,14 @@ import { api } from '../api';
 import type { Candle } from '../api';
 import { prevSessionFromDaily, sessionKeyAt, validSessionBar, weekendMergeOf } from './dailyChange';
 import { currentSessionOpenAfter } from './pivotBase';
+import { serverNowSec } from './dataSource';
 
 const TTL_MS = 10 * 60 * 1000;
 const FAIL_TTL_MS = 2 * 60 * 1000;
 /** فحص تبدّل الجلسة — رخيص (`fresh` بلا شبكة)، فالتأخير بعد التدوير ≤ دقيقة لا ≤ 10. */
 const CHECK_MS = 60 * 1000;
+// الجلسة («أمس» = 17:00 نيويورك) بساعة الخادم `serverNowSec` كرأس الشارت: هاتف متقدّم 10 دقائق قبل الإغلاق كان يأخذ شمعة D
+// الجارية «أمساً» ⇒ القائمة 0.00% والشارت +0.43%. `at`/العمر بساعة الجهاز (مدّة لا لحظة).
 
 // `prevBar`: شمعة الجلسة السابقة كاملة — أساس نقاط الارتكاز بالشارت (`pivotBase.ts`).
 // `currOpen`: افتتاح الجلسة الجارية (شمعة D1 التالية لـ`prevBar`) — محور Woodie على فريم D/W.
@@ -43,7 +46,7 @@ let running = false;
 function fresh(sym: string, now: number): boolean {
   const e = cache.get(sym);
   if (!e) return false;
-  if (e.session != null && sessionKeyAt(now / 1000, e.weekendMerge, sym) !== e.session) return false;
+  if (e.session != null && sessionKeyAt(serverNowSec(now), e.weekendMerge, sym) !== e.session) return false;
   return now - e.at < (e.ok ? TTL_MS : FAIL_TTL_MS);
 }
 
@@ -54,7 +57,7 @@ function fresh(sym: string, now: number): boolean {
  */
 function current(sym: string): Entry | undefined {
   const e = cache.get(sym);
-  if (e && e.session != null && sessionKeyAt(Date.now() / 1000, e.weekendMerge, sym) !== e.session) return undefined;
+  if (e && e.session != null && sessionKeyAt(serverNowSec(), e.weekendMerge, sym) !== e.session) return undefined;
   return e;
 }
 
@@ -77,7 +80,7 @@ async function drain() {
         const demo = s?.data_source?.kind === 'demo';
         const candles = s?.candles ?? [];
         const now = Date.now();
-        const bar = demo ? null : prevSessionFromDaily(candles, now / 1000, sym);
+        const bar = demo ? null : prevSessionFromDaily(candles, serverNowSec(now), sym);
         const c = bar?.close;
         const prev = typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
         const weekendMerge = weekendMergeOf(candles);
@@ -87,7 +90,7 @@ async function drain() {
           currOpen: demo ? null : currentSessionOpenAfter(candles, bar),
           at: now,
           ok: true,
-          session: sessionKeyAt(now / 1000, weekendMerge, sym),
+          session: sessionKeyAt(serverNowSec(now), weekendMerge, sym),
           weekendMerge,
         });
       } catch {
@@ -96,7 +99,7 @@ async function drain() {
         // والارتكاز. المرجع لا يتغيّر داخل الجلسة، فيُبقى ويُعاد المحاولة بعد `FAIL_TTL_MS`.
         const now = Date.now();
         const old = cache.get(sym);
-        if (old?.ok && old.session != null && sessionKeyAt(now / 1000, old.weekendMerge, sym) === old.session) {
+        if (old?.ok && old.session != null && sessionKeyAt(serverNowSec(now), old.weekendMerge, sym) === old.session) {
           cache.set(sym, { ...old, at: now - TTL_MS + FAIL_TTL_MS });
         } else {
           cache.set(sym, { prevClose: null, prevBar: null, currOpen: null, at: now, ok: false, session: null, weekendMerge: true });
