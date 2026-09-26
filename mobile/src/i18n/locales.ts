@@ -604,6 +604,10 @@ export type Dict = {
   journalStatNetPips: string;
   journalStatNetPipsBySymbol: string;
   journalStatAvgR: string;
+  /** `journalLossStreaks` (`tradePlan.ts`): `{max}` أطول سلسلة خسائر، `{now}` الجارية حتى آخر مغلقة؛ التعادل لا يقطعها ولا يطيلها */
+  journalStatLossStreak: string;
+  /** `journalMaxDrawdownR`: `{r}` أقصى هبوط قمّة⇒قاع بمجموع R، `{now}` البعد الحالي عن آخر قمّة، `{n}` الصفقات ذات R — `{r}`/`{now}` موجبان */
+  journalStatMaxDrawdownR: string;
   journalSideA11yPrefix: string;
   journalSymbolPlaceholder: string;
   journalSymbolA11y: string;
@@ -1976,6 +1980,8 @@ const ar: Dict = {
   journalStatNetPips: 'الصافي: {pips} pip',
   journalStatNetPipsBySymbol: 'الصافي لكل أداة: {parts}',
   journalStatAvgR: 'متوسط النتيجة: {r} لكل صفقة ({n} بوقف مسجَّل)',
+  journalStatLossStreak: 'أطول سلسلة خسائر: {max} · الجارية: {now}',
+  journalStatMaxDrawdownR: 'أقصى تراجع: {r}R · الحالي: {now}R ({n} بوقف مسجَّل)',
   journalSideA11yPrefix: 'اتجاه الصفقة',
   journalSymbolPlaceholder: 'الرمز',
   journalSymbolA11y: 'رمز الصفقة',
@@ -3198,6 +3204,8 @@ const enUS: Dict = {
   journalStatNetPips: 'Net: {pips} pips',
   journalStatNetPipsBySymbol: 'Net per instrument: {parts}',
   journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
+  journalStatLossStreak: 'Longest losing streak: {max} · current: {now}',
+  journalStatMaxDrawdownR: 'Max drawdown: {r}R · current: {now}R ({n} with a stop)',
   journalSideA11yPrefix: 'Trade direction',
   journalSymbolPlaceholder: 'Symbol',
   journalSymbolA11y: 'Trade symbol',
@@ -4468,6 +4476,8 @@ const ku: Dict = {
   journalStatNetPips: 'کۆی گشتی: {pips} pip',
   journalStatNetPipsBySymbol: 'کۆی گشتی بۆ هەر ئامرازێک: {parts}',
   journalStatAvgR: 'ناوەندی ئەنجام: {r} بۆ هەر مامەڵەیەک ({n} بە وەستان)',
+  journalStatLossStreak: 'درێژترین زنجیرەی زیان: {max} · ئێستا: {now}',
+  journalStatMaxDrawdownR: 'زۆرترین دابەزین: {r}R · ئێستا: {now}R ({n} بە وەستان)',
   journalSideA11yPrefix: 'ئاراستەی مامەڵە',
   journalSymbolPlaceholder: 'هێما',
   journalSymbolA11y: 'هێمای مامەڵە',
