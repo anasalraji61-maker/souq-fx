@@ -11616,7 +11616,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rainbowOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Rainbow Osc" values={rainbowOsc} at={crossIndex} tone="trend" />
+          {/* الرقم بلون جانب الصفر كالأعمدة تحته — `trend` كان يلوّنه أخضر لعمود أحمر يرتفع تحت الصفر. */}
+          <PaneValueHead name="Rainbow Osc" values={rainbowOsc} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* مذبذب بإشارة (السعر فوق/تحت قوس المتوسّطات) حول الصفر — كان عمود تأكيد أحادي الجانب. */}
