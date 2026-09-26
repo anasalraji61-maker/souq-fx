@@ -695,6 +695,11 @@ export type Dict = {
    */
   journalSizeMetalOuncesFix: string;
   journalSizeUnitsNoFix: string;
+  /**
+   * خانة الحجم بنصّ غير مفهوم («55.5 oz» على الذهب، «0.1o»): `invalidNumberHint` العامّ يقول «مثل 10000 أو 1.0850» — مثالان
+   * لسعر، و«10000» بخانة لوت صفقة مستحيلة. هذا يسمّي الخانة ووحدتها. بلا متغيّرات.
+   */
+  journalSizeInvalidHint: string;
   /** «10.000» مبهم (`journalSizeDottedThousands`): `{n}` كما كُتب، `{units}` الوحدات بفواصل، `{lots}` اللوت المقترح، `{whole}` قراءة اللوت («10»). */
   journalSizeDottedFix: string;
   /** حجمٌ كُتب لرمز سنت/micro ثم تبدّل الرمز إلى عادي: `{n}` الحجم، `{prev}` الرمز السابق، `{symbol}` الحالي، `{std}` = `smallLotsStdEquiv(n)`؛ النقر يحوّله. */
@@ -2153,6 +2158,7 @@ const ar: Dict = {
   journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
   journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
   journalSizeMetalOuncesFix: '{n} بالأونصة تساوي {lots} lot — اضغط للتحويل',
+  journalSizeInvalidHint: 'حجم غير مفهوم — اكتبه رقماً باللوت، مثل 0.10 أو 1.5',
   journalSizeUnitsNoFix: '⚠ {n} lot حجم غير واقعي — يبدو عدد وحدات منسوخاً من منصّتك؛ اكتب الحجم باللوت (مثل 0.10)',
   journalSizeDottedFix: '⚠ {n}: هل تقصد {units} وحدة أم {whole} lot؟ اضغط لتحويلها إلى {lots} lot، أو اكتب {whole} إن كانت لوتات',
   journalSizeFromSmallFix: '⚠ «{n}» كُتبت لـ{prev} — على {symbol} تعني {n} لوت عادي، أي مئة ضعف. اضغط لتحويلها إلى {std} lot',
@@ -3419,6 +3425,7 @@ const enUS: Dict = {
   journalSizeA11y: 'Trade size in lots (optional)',
   journalSizeUnitsFix: '⚠ {n} looks like units, not lots — select it to convert to {lots} lot',
   journalSizeMetalOuncesFix: '{n} oz = {lots} lot — select to convert',
+  journalSizeInvalidHint: 'Size not recognized — type it as a number of lots, e.g. 0.10 or 1.5',
   journalSizeUnitsNoFix: '⚠ {n} lots is not a realistic size — it looks like a unit count copied from your platform; type the size in lots (e.g. 0.10)',
   journalSizeDottedFix: '⚠ {n}: {units} units or {whole} lots? Select it to convert to {lots} lot, or type {whole} if you meant lots',
   journalSizeFromSmallFix: '⚠ “{n}” was typed for {prev} — on {symbol} it means {n} standard lots, 100 times the size. Select it to convert it to {std} lot',
@@ -4194,6 +4201,7 @@ const enGB: Dict = {
   wlCatalogAllAdded: 'All catalogue symbols added',
   journalSymbolSuffixUnknown: 'The journal doesn’t recognise “{symbol}” — the trade is saved, but without pips, R or profit in money. If that’s your broker’s suffix, type the pair alone: {pair}',
   invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
+  journalSizeInvalidHint: 'Size not recognised — type it as a number of lots, e.g. 0.10 or 1.5',
   // الفعل «practise» بريطاني و«practice» أمريكي — كانت نسخة en-US بالتهجئة البريطانية.
   lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
   domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
@@ -4736,6 +4744,7 @@ const ku: Dict = {
   journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
   journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
   journalSizeMetalOuncesFix: '{n} بە ئۆنس دەکاتە {lots} lot — دەست بنێ بۆ گۆڕین',
+  journalSizeInvalidHint: 'قەبارەکە ناناسرێتەوە — بە ژمارەی لۆت بنووسە، وەک 0.10 یان 1.5',
   journalSizeUnitsNoFix: '⚠ {n} lot قەبارەیەکی نائاساییە — وادیارە ژمارەی یەکەکانە لە پلاتفۆرمەکەتەوە کۆپی کراوە؛ قەبارە بە لۆت بنووسە (وەک 0.10)',
   journalSizeDottedFix: '⚠ {n}: مەبەستت {units} یەکەیە یان {whole} lot؟ دەست بنێ بۆ گۆڕینی بۆ {lots} lot، یان {whole} بنووسە ئەگەر لۆتە',
   journalSizeFromSmallFix: '⚠ «{n}» بۆ {prev} نووسرا — لەسەر {symbol} واتە {n} لۆتی ئاسایی، سەد هێندە. دەست بنێ بۆ گۆڕینی بۆ {std} lot',
