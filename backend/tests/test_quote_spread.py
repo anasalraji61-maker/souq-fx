@@ -308,3 +308,23 @@ def test_negative_zero_percent_change_is_sent_as_zero(routes):
     routes["/quote"] = _Resp({"close": "1.10000", "percent_change": "-0.00000"})
     pc = market.fetch_quote_book("BTCUSD")["percent_change"]
     assert pc == 0 and str(pc) == "0.0"
+
+
+def test_cached_quote_says_closed_after_the_friday_close(monkeypatch):
+    """run 90: اقتباس الجمعة 20:59:50 (مفتوح) كان يُعاد من الكاش بـ`market_open: true` بعد إغلاق 17:00 نيويورك."""
+    from datetime import datetime, timezone
+    at = lambda s: datetime.fromisoformat(s).replace(tzinfo=timezone.utc).timestamp()
+    clock = [at("2026-09-25 20:59:50")]
+    monkeypatch.setattr(main.time, "time", lambda: clock[0])
+    monkeypatch.setattr(market, "_session_now", lambda: clock[0])
+    monkeypatch.setattr(market, "WEEKEND_CLOSE_FILTER", True)
+    monkeypatch.setattr(market, "fetch_quote_book", lambda s: {
+        "price": 1.17, "bid": None, "ask": None, "spread_source": None, "source": "twelvedata",
+        "quoted_at": at("2026-09-25 20:59:48"), "market_open": market._market_open(s, True)})
+    main._QUOTE_CACHE.clear()
+    c = TestClient(main.app)
+    assert c.get("/api/market/quote/EURUSD").json()["market_open"] is True
+    clock[0] = at("2026-09-25 21:00:15")
+    body = c.get("/api/market/quote/EURUSD").json()
+    assert body["data_kind"] == "cache" and body["market_open"] is False
+    main._QUOTE_CACHE.clear()

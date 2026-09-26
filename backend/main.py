@@ -1658,7 +1658,12 @@ def market_quote(symbol: str):
     hit = _QUOTE_CACHE.get(sym)
     now = time.time()
     if hit and now - hit[0] < QUOTE_TTL:
-        return {**hit[1], "data_kind": "cache"}
+        out = {**hit[1], "data_kind": "cache"}
+        if "market_open" in out:
+            # run 90: اقتباس الجمعة 20:59:50 مخزَّن بـ`market_open: true` كان يُعاد كما هو حتى 30ث بعد إغلاق
+            # 17:00 نيويورك ⇒ الحاسبة/الدفتر «السوق مفتوح» بعد الإغلاق. الحالة تُحسب الآن لا وقت التخزين.
+            out["market_open"] = market._market_open(sym, out["market_open"])
+        return out
     try:
         book = market.fetch_quote_book(sym)
     except Exception:  # noqa: BLE001
