@@ -1974,7 +1974,7 @@ export function TerminalScreen() {
                         fill
                         panSpeed={panSpeed}
                         liveTick={liveTicks[dxy.symbol] ?? null}
-                        onFocus={() => openFocus(dxy.symbol, dxyTf)}
+                        onFocus={() => openFocus(heroSymbol, dxyTf)}
                         {...syncPropsFor('DXY')}
                       />
                     </View>
@@ -1997,8 +1997,8 @@ export function TerminalScreen() {
                       onTimeframeChange={(nextTf) => void changeFrameTf(i, nextTf)}
                       onSymbolChange={(s) => void changeFrameSymbol(i, s)}
                       onFocus={() => {
-                        pickSymbol(f.symbol, frameTfs[i]);
-                        openFocus(f.symbol, frameTfs[i]);
+                        pickSymbol(frameSymbols[i], frameTfs[i]);
+                        openFocus(frameSymbols[i], frameTfs[i]);
                       }}
                       {...syncPropsFor(`pair-${i}`)}
                     />
@@ -2050,7 +2050,7 @@ export function TerminalScreen() {
                         fill={phone}
                         panSpeed={panSpeed}
                         liveTick={liveTicks[dxy.symbol] ?? null}
-                        onFocus={() => openFocus(dxy.symbol, dxyTf)}
+                        onFocus={() => openFocus(heroSymbol, dxyTf)}
                       />
                     </View>
                   ),
@@ -2073,8 +2073,8 @@ export function TerminalScreen() {
                       onTimeframeChange={(nextTf) => void changeFrameTf(i, nextTf)}
                       onSymbolChange={(s) => void changeFrameSymbol(i, s)}
                       onFocus={() => {
-                        pickSymbol(f.symbol, frameTfs[i]);
-                        openFocus(f.symbol, frameTfs[i]);
+                        pickSymbol(frameSymbols[i], frameTfs[i]);
+                        openFocus(frameSymbols[i], frameTfs[i]);
                       }}
                     />
                   ),
