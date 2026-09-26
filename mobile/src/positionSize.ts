@@ -759,7 +759,19 @@ export function typicalSpreadPipsExample(spec: InstrumentSpec | null | undefined
   if (PEGGED_QUOTES.has(spec.quote)) return '5';
   if (HIGH_VOL_EXOTIC_QUOTES.has(spec.quote)) return '100';
   if (EXOTIC_PIP_QUOTES.has(spec.quote)) return '30';
+  if (wideSpreadCross(spec)) return '3';
   return '1.5';
+}
+/**
+ * تقاطعات السبريد الأوسع بلا دولار: كل ما فيه النيوزيلندي (GBPNZD/EURNZD/AUDNZD/NZDCAD/NZDJPY…) والإسترليني مع غير اليورو
+ * (GBPAUD/GBPCAD/GBPCHF/GBPJPY) — سبريدها المعتاد 2.5–5 pip لا 1.5، فمثال «1.5» يُصغّر الكلفة ×2–3 ولا يُطلق تحذير «الوقف داخل
+ * السبريد المعتاد» لوقفٍ 2–3 pip. EURGBP وEURJPY وEURAUD تبقى 1.5.
+ */
+function wideSpreadCross(spec: InstrumentSpec): boolean {
+  if (spec.base === 'USD' || spec.quote === 'USD') return false;
+  const legs = [spec.base, spec.quote];
+  if (legs.includes('NZD')) return true;
+  return legs.includes('GBP') && !legs.includes('EUR');
 }
 const HIGH_VOL_EXOTIC_QUOTES = new Set(['TRY', 'ZAR', 'MXN']);
 

@@ -3471,6 +3471,9 @@ console.log('positionSize typicalSlPipsExample selftest OK');
     ['EURUSD', '1.5'], ['USDJPY', '1.5'], ['USDSGD', '1.5'], ['USDHKD', '5'], ['USDAED', '5'],
     ['USDSEK', '30'], ['USDPLN', '30'], ['USDZAR', '100'], ['USDTRY', '100'], ['USDMXN', '100'],
     ['XAUUSD', '3'], ['XAGUSD', '3'], ['XAUJPY', ''],
+    // تقاطعات السبريد الأوسع (2.5–5 pip) ⇒ 3؛ EURGBP/EURJPY/EURAUD/AUDJPY تبقى 1.5
+    ['GBPNZD', '3'], ['EURNZD', '3'], ['AUDNZD', '3'], ['NZDJPY', '3'], ['GBPAUD', '3'], ['GBPCAD', '3'], ['GBPJPY', '3'],
+    ['EURGBP', '1.5'], ['EURJPY', '1.5'], ['EURAUD', '1.5'], ['AUDJPY', '1.5'], ['NZDUSD', '1.5'], ['GBPUSD', '1.5'],
   ];
   for (const [sym, want] of cases) assert.equal(typicalSpreadPipsExample(S(sym)), want, sym);
   assert.equal(typicalSpreadPipsExample(null), '1.5');
@@ -3564,6 +3567,10 @@ console.log('positionSize maxSpreadPipsFor selftest OK');
   assert.equal(stopInsideTypicalSpread(2, S('XAUUSD'), ''), 3);
   assert.equal(stopInsideTypicalSpread(1.5, S('EURUSD'), ''), 1.5);
   assert.equal(stopInsideTypicalSpread(20, S('EURUSD'), ''), null);
+  // GBPNZD وقف 2.5 pip بلا سبريد مكتوب: كان صامتاً (المعتاد «1.5») والسبريد الحقيقي 3–5 pip يضرب الوقف لحظة الفتح
+  assert.equal(stopInsideTypicalSpread(2.5, S('GBPNZD'), ''), 3);
+  assert.equal(stopInsideTypicalSpread(2.5, S('EURGBP'), ''), null);
+  assert.equal(stopInsideTypicalSpread(20, S('GBPNZD'), ''), null);
   // خانة مكتوبة ⇒ `stopInsideSpread` بالرقم المكتوب هو الحكم، لا المعتاد
   assert.equal(stopInsideTypicalSpread(50, S('USDZAR'), '40'), null);
   assert.equal(stopInsideTypicalSpread(50, S('USDZAR'), '0'), null);
