@@ -273,7 +273,8 @@ const styles = StyleSheet.create({
   tileDisabled: { opacity: 0.4 },
   tileTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 15 },
   tileHint: { color: colors.textDim, textAlign: 'right', fontSize: 12 },
-  tileOpen: { color: colors.accent, fontWeight: '500', textAlign: 'right', fontSize: 11 },
+  // §1: الخانة المختارة تحمل التأكيد بتعبئتها (`tileOn`) — الوسم بنصّ أساسي لا بتأكيد ثانٍ على العنصر نفسه.
+  tileOpen: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 11 },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
