@@ -352,4 +352,27 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.ok(Math.abs(idx + 5.75) < 1e-9, `crypto pre-first ${idx}`);
 }
 
+// D/W على الفوركس يُختم بافتتاح الجلسة (17:00 نيويورك): خطّ على يومي الثلاثاء 11/08/2026 يقع على H1 عند 21:00 UTC الاثنين
+// لا 00:00 (3 شموع بعده)؛ وعلى اليومي قبل أوّل شمعة عبر التوقيت الصيفي يعود لخانته بلا كسر.
+{
+  const H = 3600;
+  const D = 86400;
+  const tue = Date.UTC(2026, 7, 11) / 1000;
+  const dBars = Array.from({ length: 5 }, (_, i) => ({ time: tue + (i - 1) * D }));
+  const st = stampAtIndex(dBars, 1, D, undefined, 'EURUSD')!;
+  assert.equal(st.time, Date.UTC(2026, 7, 10, 21) / 1000);
+  const h1 = Array.from({ length: 48 }, (_, i) => ({ time: Date.UTC(2026, 7, 10, 12) / 1000 + i * H }));
+  assert.equal(h1[anchorPoint({ index: 0, price: 1, ...st }, h1, H, false, undefined, 'EURUSD').index]!.time, st.time);
+  // يومي من 23/03 (صيفي) ونقاط حتى 8 أسابيع قبله (شتوي قبل 08/03)
+  const days: { time: number }[] = [];
+  for (let t = Date.UTC(2026, 2, 23) / 1000; days.length < 60; t += D) {
+    const wd = new Date(t * 1000).getUTCDay();
+    if (wd !== 0 && wd !== 6) days.push({ time: t });
+  }
+  for (let idx = -1; idx >= -40; idx--) {
+    const s2 = stampAtIndex(days, idx, D, undefined, 'EURUSD')!;
+    assert.equal(anchorPoint({ index: 0, price: 1, ...s2 }, days, D, false, undefined, 'EURUSD').index, idx, `D ${idx}`);
+  }
+}
+
 console.log('drawingAnchors.selftest: PASS');

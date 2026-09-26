@@ -80,7 +80,7 @@ export function timeAtIndex(
     if (wk) {
       // الخانة نفسها بالأسبوع المحمَّل الأوّل، ثم تُرجَع أسابيع كاملة بالزمن
       const k = Math.ceil(-index / wk.bars - 1e-9);
-      return timeAtIndex(bars, index + k * wk.bars, stepSec, endTime, weekendClosed)! - k * WEEK_SEC;
+      return weekShift(timeAtIndex(bars, index + k * wk.bars, stepSec, endTime, weekendClosed)!, -k, stepSec, weekendClosed);
     }
     const ts = tradingStep(bars, weekendClosed);
     if (ts != null) return forexTimeBeforeTrading(barTime(bars[0]), -index * ts, weekSymbol(weekendClosed));
@@ -90,7 +90,10 @@ export function timeAtIndex(
   const i = Math.floor(index);
   const bar = bars[i]!;
   const frac = index - i;
-  if (frac > 0 && bar.srcTime == null && stepSec > 0) return barOpen(bar.time, stepSec, weekendClosed) + Math.round(frac * stepSec);
+  // شمعة D/W كاملة تُختم بافتتاح جلستها (17:00 نيويورك) لا بختم الخادم (تاريخ الإغلاق 00:00 UTC): خطّ عمودي رُسم على
+  // اليومي كان يقع على H1 عند 00:00 — 3–4 شموع بعد افتتاح الجلسة — والتقاطع المترابط ينشر الافتتاح (`0e658b4`).
+  if (bar.srcTime == null && stepSec > 0 && (frac > 0 || weekendClosed))
+    return barOpen(bar.time, stepSec, weekendClosed) + Math.round(frac * stepSec);
   return barTime(bar);
 }
 
@@ -153,6 +156,18 @@ function weekPattern(bars: readonly TimeBar[], stepSec: number): { bars: number 
     else hi = mid - 1;
   }
   return { bars: lo + 1 };
+}
+
+/**
+ * `t` مُزاحاً `weeks` أسابيع. على D/W بعطلة (الفوركس) بساعة نيويورك لا UTC: افتتاح الجلسة 17:00 نيويورك ينتقل
+ * ساعة بـUTC عبر التوقيت الصيفي ⇒ نقطة يومية مختومة بالافتتاح قبل أوّل شمعة كانت تعود بكسر 1/24. ختم منتصف ليل
+ * (رسوم محفوظة قبل ختم الافتتاح) يُزاح بـUTC كما كان.
+ */
+function weekShift(t: number, weeks: number, stepSec: number, weekendClosed: WeekendRule): number {
+  const s = t + weeks * WEEK_SEC;
+  if (!weekendClosed || (stepSec !== 86400 && stepSec !== WEEK_SEC) || t % 86400 === 0) return s;
+  const day = Math.floor(t / 86400) * 86400;
+  return s + nyFivePmUtcSec(day + weeks * WEEK_SEC) - weeks * WEEK_SEC - nyFivePmUtcSec(day);
 }
 
 /** نهاية السلسلة بالزمن الحقيقي: آخر شمعة مصدر (`endTime`) إن كانت بعد آخر لبنة، وإلا زمن آخر خانة. */
@@ -297,7 +312,7 @@ function pastIndex(
   const wk = weekPattern(bars, stepSec);
   if (wk) {
     const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
-    const shifted = time + k * WEEK_SEC;
+    const shifted = weekShift(time, k, stepSec, weekendClosed);
     const i = indexAtTime(bars, shifted, stepSec, endTime)!;
     return i + withinBar(bars, i, shifted, stepSec, weekendClosed) - k * wk.bars;
   }
