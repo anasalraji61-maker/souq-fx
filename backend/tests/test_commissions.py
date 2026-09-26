@@ -54,8 +54,8 @@ def test_rate_summary_balanced_trader():
     assert out["balanced"] is True
     assert out["direct_rate"] == 0.10
     assert out["balance_bonus_rate"] == 0.05
-    # مقارنة بنفس تعبير الجمع بالوحدة نفسها (لا 0.15 حرفياً) لتجنّب أي فرق تقريب عائم
-    assert out["effective_rate"] == comm.DIRECT_RATE + comm.BALANCE_BONUS_RATE
+    # 0.15 حرفياً: الجمع الخام كان يُرسَل 0.15000000000000002 بـ/api/commissions/me
+    assert out["effective_rate"] == 0.15
     assert out["unlocked_levels"] == [2, 4]
     assert out["next_level"] == 8
 

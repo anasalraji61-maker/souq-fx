@@ -820,6 +820,16 @@ def place_under_sponsor(
     stored = _encode_password(pwd)
     now = time.time()
     with _conn() as c:
+        # قفل الكتابة **قبل** فحص الساق: بلا ذلك طلبان متزامنان (مسارات sync على threadpool) يجتازان
+        # الفحص معاً فيُوضع ابنان على الجانب نفسه ويُعدّان مرتين بساق الراعي وأسلافه وبدفتر العمولة.
+        c.execute("BEGIN IMMEDIATE")
+        # حساب محذوف بالشجرة: رمزه لا يعمل بالتسجيل (`DELETED_CODE_PREFIX`) — وكان `under_user_id` إليه
+        # يضع عضواً تحت حساب لا يملكه أحد ويرفع عدّادات أسلافه (نفس ما يمنعه حذف الحساب).
+        parent_code = c.execute(
+            "SELECT referral_code FROM network_members WHERE user_id=?", (parent_id,)
+        ).fetchone()
+        if parent_code and str(parent_code["referral_code"] or "").startswith(DELETED_CODE_PREFIX):
+            raise ValueError("under_user_id is a deleted account")
         taken = c.execute(
             "SELECT 1 FROM network_members WHERE sponsor_id=? AND side=?",
             (parent_id, side_norm),

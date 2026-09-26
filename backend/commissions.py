@@ -123,7 +123,8 @@ def rate_summary(left: int, right: int, role: str) -> dict[str, Any]:
     return {
         "direct_rate": DIRECT_RATE,
         "balance_bonus_rate": BALANCE_BONUS_RATE if balanced else 0.0,
-        "effective_rate": DIRECT_RATE + (BALANCE_BONUS_RATE if balanced else 0.0),
+        # مقرَّب: 0.10 + 0.05 كان يُرسَل 0.15000000000000002
+        "effective_rate": round(DIRECT_RATE + (BALANCE_BONUS_RATE if balanced else 0.0), 4),
         "balanced": balanced,
         "left": left,
         "right": right,
