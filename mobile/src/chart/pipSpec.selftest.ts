@@ -28,6 +28,8 @@ eq('USDJPYc pips', measurePipsText('USDJPYc', 157.5, 157.3), '−20.0 pip');
 eq('NKE 99.8 ref 100.05', formatPrice(99.8, 'NKE', 100.05), '99.80');
 eq('NKE 100.2 ref 99.9', formatPrice(100.2, 'NKE', 99.9), '100.200');
 eq('XNGUSD 9.985 ref 10.01', formatPrice(9.985, 'XNGUSD', 10.01), '9.985');
+eq('XNGUSD 2.5 → 3 decimals like brokers', formatPrice(2.5, 'XNGUSD'), '2.500');
+eq('NATGAS 3.1415', formatPrice(3.1415, 'NATGAS'), '3.142');
 eq('no ref ⇒ by size', formatPrice(99.8, 'NKE'), '99.800');
 eq('ref ignored for known pair', formatPrice(157.4234, 'USDJPY', 1.08), '157.423');
 eq('bad ref ⇒ by size', formatPrice(5.5, 'X', NaN), '5.50000');

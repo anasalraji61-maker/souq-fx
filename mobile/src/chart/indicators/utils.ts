@@ -20,6 +20,9 @@ export function symbolPriceDecimals(symbol: string): number | null {
     // النفط (WTI/برنت وأسماء الوسطاء: XTIUSD، SpotCrude، USOIL.m…) بثلاث منازل ثابتة: التقدير من حجم السعر
     // كان يقلبها عند عبور 100$ من 3 إلى 2 ⇒ خطّ محفوظ عند 99.953 يُطبع «99.95» والمحور والتقاطع يفقدان خانة.
     if (/^(USOIL|UKOIL|USCRUDE|UKBRENT|WTI|BRENT|XTI|XBR|SPOTCRUDE|SPOTBRENT|CLOIL|CRUDE)/.test(bare)) return 3;
+    // الغاز الطبيعي (XNGUSD، NATGAS، NGAS، USNG) يُسعَّر بثلاث منازل (2.500) — بلا هذا كان التقدير من الحجم يطبع
+    // «2.50000» بالمحور والتقاطع والقياس (‎+0.01500‎).
+    if (/^(XNG|NATGAS|NGAS|USNG)/.test(bare)) return 3;
     // الفورنت مسعَّر بثلاث منازل عند وسطاء MT4/MT5 (USDHUF 350.123، EURHUF 395.456). بلا مواصفة pip
     // (الحاسبة لا تدعم HUF عمداً) فكان التقدير من الحجم (≥100 ⇒ منزلتان) يقصّ خانته بالمحور والتقاطع والرأس.
     return /^[A-Z]{3}HUF/.test(bare) ? 3 : null;
