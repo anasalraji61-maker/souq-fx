@@ -809,7 +809,8 @@ def auth_register(body: AuthRegister):
 
 @app.post("/api/auth/login")
 def auth_login(body: AuthLogin):
-    ident = (body.email or body.username or "").strip()
+    # بريد فراغات «  » كان يُقدَّم على اسم مستخدم صحيح ⇒ 400 «مطلوب»
+    ident = (body.email or "").strip() or (body.username or "").strip()
     if not ident:
         raise HTTPException(status_code=400, detail="email or username required")
     try:
@@ -836,6 +837,30 @@ def auth_logout(
         uid = user["user_id"] if user else db.session_user_id(token)
         if uid:
             db.logout_session(token, uid, owner_key=key, push_token=body.push_token if body else None)
+    return {"ok": True}
+
+
+class AuthPassword(BaseModel):
+    current_password: str = Field(max_length=256)
+    new_password: str = Field(max_length=256)
+
+
+@app.post("/api/auth/password")
+def auth_change_password(
+    body: AuthPassword,
+    authorization: str | None = Header(default=None),
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
+    """تغيير كلمة المرور؛ يُخرج كل الأجهزة الأخرى (راجع `db.change_password`)."""
+    if not user or not authorization:
+        raise HTTPException(status_code=401, detail="not authenticated")
+    token = authorization.replace("Bearer ", "").strip()
+    try:
+        db.change_password(user["user_id"], token, body.current_password, body.new_password, owner_key=key)
+    except ValueError as exc:
+        # 400 لا 401: كلمة حالية خاطئة لا تعني جلسة منتهية (العميل لا يُخرج المستخدم)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"ok": True}
 
 

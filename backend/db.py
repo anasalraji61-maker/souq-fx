@@ -1627,6 +1627,27 @@ def logout_session(
                 c.execute(f"UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND {col}=?", (user_id, val))
 
 
+def change_password(
+    user_id: int, session_token: str, current: str, new: str, owner_key: str | None = None
+) -> None:
+    """تغيير كلمة المرور بالحالية. العضو الذي يضعه راعيه (`place_under_sponsor`) يحمل كلمة كتبها الراعي
+    أو استلمها `temp_password` ولم يكن له مسار لتغييرها ⇒ الراعي يدخل حسابه (دفتره، تنبيهاته، حذفه) للأبد.
+    تُلغى كل الجلسات الأخرى ويُفكّ Push الأجهزة الأخرى (إلا جهاز هذا الطلب) — وإلا بقي هاتف الراعي
+    يتلقّى إشعارات تنبيهات العضو. ValueError: الحالية خاطئة أو الجديدة قصيرة (حدّ التسجيل نفسه)."""
+    if len(new or "") < 4:
+        raise ValueError("password too short")
+    with _conn() as c:
+        c.execute("BEGIN IMMEDIATE")
+        row = c.execute("SELECT password_hash FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row or not _verify_password(current, str(row["password_hash"]))[0]:
+            raise ValueError("invalid current password")
+        c.execute("UPDATE users SET password_hash=? WHERE id=?", (_encode_password(new), user_id))
+        c.execute("DELETE FROM sessions WHERE user_id=? AND token<>?", (user_id, session_token))
+        c.execute(
+            "UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND owner_key IS NOT ?", (user_id, owner_key)
+        )
+
+
 def all_push_tokens() -> list[str]:
     with _conn() as c:
         rows = c.execute("SELECT token FROM push_tokens").fetchall()
