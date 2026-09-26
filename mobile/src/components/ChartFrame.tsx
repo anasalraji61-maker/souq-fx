@@ -479,66 +479,76 @@ export function ChartFrame({
           focusButton ? <View style={styles.priceRow}>{focusButton}</View> : null
         ) : (
           <View style={[styles.priceRow, phone && styles.priceRowPhone, switching && styles.stale]}>
-            <Text
-              style={[styles.price, phone && styles.pricePhone]}
-              accessibilityLabel={
-                replayPrice != null
-                  ? `${formatPrice(headerPrice, series.symbol, priceRef)} — ${t.cfReplayPriceA11y}`
-                  : undefined
-              }
-            >
-              {formatPrice(headerPrice, series.symbol, priceRef)}
-            </Text>
-            {replayPrice != null ? (
-              <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
-                ⏪
+            {/* تبديل الرمز: الرأس يسمّي الرمز الجديد (`frameSymbol`) والسعر ما زال للسابق حتى تصل سلسلته ⇒
+                «EURUSD 3,652.40» بسعر الذهب ونسبته وسبريده، يقرؤه قارئ الشاشة كما هو. «—» يحفظ ارتفاع السطر. */}
+            {symbolSwitching ? (
+              <Text style={[styles.price, phone && styles.pricePhone]} accessibilityLabel={t.mcSwitchingA11y}>
+                —
               </Text>
-            ) : null}
-            {tickTag ? (
-              <Text
-                style={[
-                  styles.liveTag,
-                  tickKind !== 'live' && styles.liveTagMuted,
-                  tickKind === 'demo' && styles.sourceTagDemo,
-                ]}
-              >
-                {tickTag}
-              </Text>
-            ) : null}
-            {/* الهاتف: إطار بعرض 48% (~135pt) ورأس بسطر واحد لا يلتفّ — «B 1.08540 · A 1.08550 · 0.9 pips»
-                (~165pt) كان أعرض من الإطار كلّه فيقصّ النسبة وزرّ ملء الشاشة ويُسحق اسم الزوج. السبريد بالـpip وحده. */}
-            {hasSpread && !((quoteStale || phone) && spreadPips == null) ? (
-              <Text
-                style={styles.spreadTag}
-                // launch111: وسم ثابت كان يحلّ محلّ النصّ ⇒ VoiceOver «سبريد البيع والشراء» بلا رقم. يُقرأ ما يظهر فقط.
-                accessibilityLabel={[
-                  quoteStale || phone
-                    ? null
-                    : t.cfSpreadBidAskA11y
-                        .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, priceRef))
-                        .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, priceRef)),
-                  spreadPips != null ? t.cfSpreadPipsA11y.replace('{pips}', spreadPips.toFixed(1)) : null,
-                ]
-                  .filter(Boolean)
-                  .join(rtl ? '، ' : ', ')}
-              >
-                {quoteStale || phone
-                  ? ''
-                  : `${t.quoteBidShort} ${formatPrice(liveQuote!.bid!, series.symbol, priceRef)} · ${t.quoteAskShort} ${formatPrice(liveQuote!.ask!, series.symbol, priceRef)}`}
-                {spreadPips != null ? (
-                  <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
+            ) : (
+              <>
+                <Text
+                  style={[styles.price, phone && styles.pricePhone]}
+                  accessibilityLabel={
+                    replayPrice != null
+                      ? `${formatPrice(headerPrice, series.symbol, priceRef)} — ${t.cfReplayPriceA11y}`
+                      : undefined
+                  }
+                >
+                  {formatPrice(headerPrice, series.symbol, priceRef)}
+                </Text>
+                {replayPrice != null ? (
+                  <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
+                    ⏪
+                  </Text>
                 ) : null}
-              </Text>
-            ) : null}
-            <Text
-              style={[styles.chg, { color: chgColor }]}
-              // منذ 8aeaf13 يصل VoiceOver لهذا النصّ منفرداً: «+0.12%» بلا سياق و«—» علامة ترقيم (launch109).
-              accessibilityLabel={
-                chgPct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(chgPct))
-              }
-            >
-              {chgPct == null ? '—' : formatPct(chgPct)}
-            </Text>
+                {tickTag ? (
+                  <Text
+                    style={[
+                      styles.liveTag,
+                      tickKind !== 'live' && styles.liveTagMuted,
+                      tickKind === 'demo' && styles.sourceTagDemo,
+                    ]}
+                  >
+                    {tickTag}
+                  </Text>
+                ) : null}
+                {/* الهاتف: إطار بعرض 48% (~135pt) ورأس بسطر واحد لا يلتفّ — «B 1.08540 · A 1.08550 · 0.9 pips»
+                    (~165pt) كان أعرض من الإطار كلّه فيقصّ النسبة وزرّ ملء الشاشة ويُسحق اسم الزوج. السبريد بالـpip وحده. */}
+                {hasSpread && !((quoteStale || phone) && spreadPips == null) ? (
+                  <Text
+                    style={styles.spreadTag}
+                    // launch111: وسم ثابت كان يحلّ محلّ النصّ ⇒ VoiceOver «سبريد البيع والشراء» بلا رقم. يُقرأ ما يظهر فقط.
+                    accessibilityLabel={[
+                      quoteStale || phone
+                        ? null
+                        : t.cfSpreadBidAskA11y
+                            .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, priceRef))
+                            .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, priceRef)),
+                      spreadPips != null ? t.cfSpreadPipsA11y.replace('{pips}', spreadPips.toFixed(1)) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(rtl ? '، ' : ', ')}
+                  >
+                    {quoteStale || phone
+                      ? ''
+                      : `${t.quoteBidShort} ${formatPrice(liveQuote!.bid!, series.symbol, priceRef)} · ${t.quoteAskShort} ${formatPrice(liveQuote!.ask!, series.symbol, priceRef)}`}
+                    {spreadPips != null ? (
+                      <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
+                    ) : null}
+                  </Text>
+                ) : null}
+                <Text
+                  style={[styles.chg, { color: chgColor }]}
+                  // منذ 8aeaf13 يصل VoiceOver لهذا النصّ منفرداً: «+0.12%» بلا سياق و«—» علامة ترقيم (launch109).
+                  accessibilityLabel={
+                    chgPct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(chgPct))
+                  }
+                >
+                  {chgPct == null ? '—' : formatPct(chgPct)}
+                </Text>
+              </>
+            )}
             {focusButton}
           </View>
         )}
