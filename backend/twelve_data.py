@@ -56,7 +56,9 @@ class SymbolUnavailable(RuntimeError):
 
 
 def unavailable_reason(matrix_symbol: str) -> str | None:
-    return UNAVAILABLE_AT_PROVIDER.get((matrix_symbol or "").upper())
+    # بالاسم القانوني كـ`td_symbol`: « DXY» (مسافة) كان يجتاز الحارس ويُطلب «DXY» من المزوّد (حدّ مشترك
+    # مع الروبوت) بسبب `provider_unavailable` بدل `not_offered_by_provider`.
+    return UNAVAILABLE_AT_PROVIDER.get(canonical_symbol(matrix_symbol))
 
 
 # رموز تتداول بعطلة الأسبوع — لا إغلاق أسبوعي لها. الباقي بـ`SYMBOL_MAP` (فوركس، معادن، نفط) يُغلق

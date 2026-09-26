@@ -30,6 +30,19 @@ def test_dxy_never_spends_a_provider_request(monkeypatch):
     assert calls == []
 
 
+@pytest.mark.parametrize("spelled", [" DXY", "dxy\t", " dxy "])
+def test_padded_dxy_is_still_unavailable_and_spends_no_request(monkeypatch, spelled):
+    calls: list = []
+    monkeypatch.setattr(market, "_api_key", lambda: "k")
+    monkeypatch.setattr(market.httpx, "Client", lambda **kw: calls.append(kw) or (_ for _ in ()).throw(AssertionError))
+    assert market.unavailable_reason(spelled) == "not_offered_by_provider"
+    with pytest.raises(market.SymbolUnavailable):
+        market.fetch_time_series_with_meta(spelled, "15m", 100)
+    body = TestClient(main.app).get(f"/api/market/quote/{spelled.replace(' ', '%20').replace(chr(9), '%09')}").json()
+    assert body["price"] is None and body["unavailable_reason"] == "not_offered_by_provider"
+    assert calls == []
+
+
 def test_dxy_quote_has_no_price_and_says_why(monkeypatch):
     monkeypatch.setattr(market, "_api_key", lambda: "k")
     body = TestClient(main.app).get("/api/market/quote/DXY").json()
