@@ -16,9 +16,14 @@ ANDROID_CHANNEL_ID = "matrix-alerts"
 
 # أخطاء دائمة فقط — لا تحذف لـ MessageTooBig / MessageRateExceeded وغيرها
 _PERMANENT_TOKEN_ERRORS = frozenset({"DeviceNotRegistered"})
+# خطأ تذكرة عابر: Expo رفض رسالة هذا الجهاز الآن (حدّ المعدّل لكل جهاز) لا نهائياً ⇒ تُعاد لاحقاً.
+# كان يُعامَل كنجاح ⇒ إشعار تنبيه موسوم مُطلَقاً لا يصل ولا يُعاد.
+_TRANSIENT_TOKEN_ERRORS = frozenset({"MessageRateExceeded"})
+# حدّ Expo لطلب واحد: 100 رسالة. `send_push` لا يقبل أكثر؛ المُرسِل يقسّم (`alert_worker._deliver`).
+MAX_BATCH = 100
 
 
-def _invalid_tokens_from_response(tokens: list[str], payload: Any) -> list[str]:
+def _tokens_with_errors(tokens: list[str], payload: Any, errors: frozenset[str]) -> list[str]:
     if not isinstance(payload, dict):
         return []
     data = payload.get("data")
@@ -32,15 +37,22 @@ def _invalid_tokens_from_response(tokens: list[str], payload: Any) -> list[str]:
             continue
         details = item.get("details")
         err = details.get("error") if isinstance(details, dict) else None
-        if err in _PERMANENT_TOKEN_ERRORS:
+        if err in errors:
             bad.append(tokens[i])
     return bad
+
+
+def _invalid_tokens_from_response(tokens: list[str], payload: Any) -> list[str]:
+    return _tokens_with_errors(tokens, payload, _PERMANENT_TOKEN_ERRORS)
 
 
 def send_push(tokens: list[str], title: str, body: str, data: dict | None = None) -> dict:
     if not tokens:
         return {"ok": False, "sent": 0, "invalid_tokens": []}
-    batch = tokens[:100]
+    if len(tokens) > MAX_BATCH:
+        # كان `tokens[:100]` بصمت ⇒ الأجهزة بعد المئة لا تُبلَّغ و«sent» يوحي بالنجاح
+        raise ValueError(f"at most {MAX_BATCH} tokens per request, got {len(tokens)}")
+    batch = list(tokens)
     messages = [
         {
             "to": t,
@@ -63,4 +75,5 @@ def send_push(tokens: list[str], title: str, body: str, data: dict | None = None
         "sent": len(messages),
         "response": payload,
         "invalid_tokens": invalid,
+        "retry_tokens": _tokens_with_errors(batch, payload, _TRANSIENT_TOKEN_ERRORS),
     }

@@ -392,8 +392,9 @@ def dispatch(triggered_msgs: list[tuple[int | None, str | None, dict]], exclude_
                 by_lang.setdefault(_push_lang(lang), []).append(tok)
             for lang, tokens in by_lang.items():
                 title, body = _compose(ev, lang)
-                if not _deliver(tokens, title, body):
-                    _pending_pushes.append((tokens, title, body, time.time()))
+                retry = _deliver(tokens, title, body)
+                if retry:
+                    _pending_pushes.append((retry, title, body, time.time()))
         except Exception:
             log.exception("push dispatch failed for owner=%s event=%s", owner, ev)
 
@@ -415,17 +416,24 @@ def _retryable(exc: Exception) -> bool:
     return isinstance(exc, expo_push.httpx.TransportError)
 
 
-def _deliver(tokens: list[str], title: str, body: str) -> bool:
-    """يرسل دفعة واحدة. False = فشل عابر يستحق الإعادة؛ True = أُرسلت أو فشل دائم (لا إعادة)."""
-    try:
-        result = expo_push.send_push(tokens, title, body, {})
-    except Exception as exc:
-        log.exception("push send failed for message: %s", body)
-        return not _retryable(exc)
-    for tok in result.get("invalid_tokens") or []:
-        db.delete_push_token(tok)
-        log.info("removed invalid push token (%s…)", tok[:24])
-    return True
+def _deliver(tokens: list[str], title: str, body: str) -> list[str]:
+    """يرسل لكل الرموز بدفعات ≤ `expo_push.MAX_BATCH`، ويعيد الرموز التي تستحق الإعادة: دفعة فشلت بخطأ
+    عابر كلها، أو تذكرة رفضها Expo مؤقتاً (`MessageRateExceeded`). [] = أُرسلت أو فشل دائم (لا إعادة)."""
+    retry: list[str] = []
+    for i in range(0, len(tokens), expo_push.MAX_BATCH):
+        chunk = tokens[i : i + expo_push.MAX_BATCH]
+        try:
+            result = expo_push.send_push(chunk, title, body, {})
+        except Exception as exc:
+            log.exception("push send failed for message: %s", body)
+            if _retryable(exc):
+                retry.extend(chunk)
+            continue
+        for tok in result.get("invalid_tokens") or []:
+            db.delete_push_token(tok)
+            log.info("removed invalid push token (%s…)", tok[:24])
+        retry.extend(result.get("retry_tokens") or [])
+    return retry
 
 
 def _retry_pending_pushes() -> None:
@@ -444,8 +452,9 @@ def _retry_pending_pushes() -> None:
         # رمز حُذف أثناء الانتظار (خروج/حذف حساب/DeviceNotRegistered) لا يُرسل إليه
         try:
             live = db.existing_push_tokens(tokens)
-            if live and not _deliver(live, title, body):
-                _pending_pushes.append((live, title, body, first_at))
+            retry = _deliver(live, title, body) if live else []
+            if retry:
+                _pending_pushes.append((retry, title, body, first_at))
         except Exception:
             log.exception("push retry failed: %s", body)
             _pending_pushes.append((tokens, title, body, first_at))
