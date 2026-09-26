@@ -742,8 +742,8 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| 4776121 | «أنت» بـ`NetworkTreePanel`/`TreeDiagramSketch` وصندوق التوضيح بـ`LectureClassroom`: كان حدّ تأكيد فوق تعبئة تأكيد (ونصّان بلون التأكيد) ⇒ التعبئة وحدها، والنصّ محايد (الباقي من تشغيل 59) | DESIGN-PRO §5.5، §1 |
-| 7c2225a | `PairDrumWheel` الزوج الجاري: حدّ + تعبئة + نصّ بالتأكيد ⇒ تعبئة وحدها، و`accessibilityState={{ selected: true }}` | DESIGN-PRO §5.5، §1، §4 |
+| dbd7e94 | «أنت» بـ`NetworkTreePanel`/`TreeDiagramSketch` وصندوق التوضيح بـ`LectureClassroom`: كان حدّ تأكيد فوق تعبئة تأكيد (ونصّان بلون التأكيد) ⇒ التعبئة وحدها، والنصّ محايد (الباقي من تشغيل 59) | DESIGN-PRO §5.5، §1 |
+| a1bc10b | `PairDrumWheel` الزوج الجاري: حدّ + تعبئة + نصّ بالتأكيد ⇒ تعبئة وحدها، و`accessibilityState={{ selected: true }}` | DESIGN-PRO §5.5، §1، §4 |
 
 - مُبقى عمداً: `FrameSizedGrid.cellHover` (حدّ + تعبئة) يظهر أثناء السحب فقط كهدف إفلات — ليس وقت السكون.
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ فحص آلي: كل Pressable باختيار شرطي يحمل `accessibilityState`؛ لا عربي ثابت ظاهر بنطاقي خارج `MessagesScreen` (launch52) — «،» مع `rtl` صحيح للكردية أيضاً.
