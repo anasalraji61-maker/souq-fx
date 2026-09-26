@@ -1280,6 +1280,7 @@ const styles = StyleSheet.create({
   cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   firesNow: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   armed: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
-  rearm: { color: colors.accent, fontWeight: '500', fontSize: 12 },
+  // DESIGN-PRO §1: «إعادة التفعيل» على كل صفّ مُطلَق ⇒ بالتأكيد كانت n عنصر تأكيد بالقائمة وقت السكون؛ نصّ أساسي بوزن 500.
+  rearm: { color: colors.text, fontWeight: '500', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '500', fontSize: 12 },
 });

@@ -697,5 +697,6 @@ const styles = StyleSheet.create({
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '500' },
   itemActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  rearm: { color: colors.accent, fontWeight: '500' },
+  // DESIGN-PRO §1: «إعادة التفعيل» على كل صفّ مُطلَق ⇒ بالتأكيد كانت n عنصر تأكيد بالقائمة وقت السكون؛ نصّ أساسي بوزن 500.
+  rearm: { color: colors.text, fontWeight: '500' },
 });
