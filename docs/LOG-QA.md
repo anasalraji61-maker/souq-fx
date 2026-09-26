@@ -991,3 +991,4 @@ QA87a حصّة ui ← `4a84586` ⇒ الباقي → launch (حذف `authSession
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (تعارض أثناء الدفع، 4a802a7):** حُلّ تعارض COORDINATION بأخذ نسخة tools/launch ثم إعادة تعديلاتي. البناء أخضر 0، selftests 112/112. QA87a مُغلق كلياً ← launch `3841ce5`؛ جديد: launch149 → chart، tools102a → launch، tools102b → أنس (⛔21).
 **إضافة 2 (8a129cc):** أخضر 0، 112/112. أُغلقت backend-r54 ← ui `ee6b068` وlaunch149 ← chart `eb15984` (مُتحقَّق بالكود). المفتوح على الوكلاء: tools102a → launch فقط.
+**إضافة 3 (b486d2f، أخضر 0):** tools102a: المفتاح جاهز ← launch `b495ff2` ⇒ الربط → tools. **QA88a → launch ثم ui**: backend `80d4193` أضاف `atr_below_tick` (`signal_hub.py:92`) و`signalDirection.ts` يعيد null له.
