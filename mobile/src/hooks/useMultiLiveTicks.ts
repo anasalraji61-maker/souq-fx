@@ -105,7 +105,7 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
 
     connect();
 
-    const staleTimer = setInterval(() => {
+    function sweep() {
       const now = Date.now();
       setTicks((prev) => {
         let next: Record<string, LiveTick> | null = null;
@@ -131,10 +131,15 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
       reconnectTimer = null;
       attempt = 0;
       connect();
-    }, STALE_CHECK_MS);
+    }
+
+    const staleTimer = setInterval(sweep, STALE_CHECK_MS);
 
     const appSub = AppState.addEventListener('change', (next) => {
       if (next !== 'active' || !alive) return;
+      // المؤقّتات متوقّفة بالخلفية: بلا كنسٍ فوري تبقى أسعار ما قبل الخلفية (ساعة ربما) معروضة
+      // كحيّة حتى دورة `STALE_CHECK_MS` التالية، والمقبس «المفتوح» الميت (iOS) لا يُستبدل.
+      sweep();
       const cur = ws;
       if (cur && (cur.readyState === WebSocket.OPEN || cur.readyState === WebSocket.CONNECTING)) return;
       if (reconnectTimer) clearTimeout(reconnectTimer);
