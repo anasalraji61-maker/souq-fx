@@ -6,7 +6,7 @@ import { useI18n } from '../i18n/I18nContext';
 /**
  * W4 (قرار ١٦): «?» على الويب يفتح قائمة اختصارات لوحة المفاتيح. النصوص نفسها التي يعرضها الشارت
  * بتلميحه (`mcHintNavigateWeb` + `mcHintTypeTfWeb` + `mcHintTypeDateWeb`) مقسومة سطراً سطراً عند « · » — مصدر واحد، فلا
- * تختلف القائمة عن التلميح إن تغيّر اختصار. لا شيء على الهاتف.
+ * تختلف القائمة عن التلميح إن تغيّر اختصار. ويُلحق بها `shortcutsMouseWeb` (الزرّ الأيمن والنقر، chart-r93a). لا شيء على الهاتف.
  */
 function isTypingTarget(el: EventTarget | null): boolean {
   const node = el as HTMLElement | null;
@@ -40,7 +40,7 @@ export function KeyboardShortcutsSheet() {
 
   if (Platform.OS !== 'web') return null;
 
-  const lines = `${t.mcHintNavigateWeb}${t.mcHintTypeTfWeb}${t.mcHintTypeDateWeb}`
+  const lines = `${t.mcHintNavigateWeb}${t.mcHintTypeTfWeb}${t.mcHintTypeDateWeb}${t.shortcutsMouseWeb}`
     .split(' · ')
     .map((s) => s.trim())
     .filter(Boolean);
