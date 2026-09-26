@@ -100,6 +100,10 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
       }
       setNotice(null);
     } catch {
+      // شبكة/مهلة: الرسالة لم تُنشر — كانت الفقاعة تبقى بوقت محلّي كأنها أُرسلت والنصّ ممسوحاً. كالرفض أعلاه،
+      // إلا أن ما كتبه المستخدم بعد الضغط لا يُستبدل.
+      setMessages((m) => m.filter((x) => x.id !== local.id));
+      setText((cur) => (cur.trim() ? cur : msg));
       setNotice(t.chatSendError);
     }
   };

@@ -27,6 +27,7 @@ type Turn = {
   priceAt?: string;
   arabicReply?: boolean;
   symbol?: string;
+  greeting?: boolean;
 };
 
 /** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
@@ -40,12 +41,8 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
   const align = rtl ? ('right' as const) : ('left' as const);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
-  const [turns, setTurns] = useState<Turn[]>([
-    {
-      role: 'ai',
-      text: t.aiGreeting,
-    },
-  ]);
+  // التحية تُقرأ من القاموس عند الرسم لا تُنسخ في الحالة — نسخها كان يُبقيها بلغة الفتح بعد تبديل اللغة.
+  const [turns, setTurns] = useState<Turn[]>([{ role: 'ai', text: '', greeting: true }]);
 
   const ask = async () => {
     const question = q.trim();
@@ -130,7 +127,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
                 turn.arabicReply && styles.textRtl,
               ]}
             >
-              {turn.text}
+              {turn.greeting ? t.aiGreeting : turn.text}
             </Text>
             {turn.priceAt ? (
               <Text style={[styles.priceAt, { textAlign: align }]}>
