@@ -735,7 +735,7 @@ class TradeClose(BaseModel):
 def _seen_expect(body: BaseModel) -> dict:
     """`seen_X` المُرسَلة فقط (null صريح يُفحص: «رأيته فارغاً»). أعمدة لا تكون null بالجدول ⇒ null = «لم أرها»."""
     expect = {k.removeprefix("seen_"): getattr(body, k) for k in body.model_fields_set if k.startswith("seen_")}
-    for k in ("status", "symbol", "side", "entry"):
+    for k in ("status", "symbol", "side", "entry", "opened_at"):
         if expect.get(k, "") is None:
             expect.pop(k)
     return expect
@@ -770,10 +770,15 @@ class TradeUpdate(BaseModel):
     # «الآن» ⇒ صفقة أغسطس تُعدّ من هذا الأسبوع بالتقرير وسلسلة الخسائر، بلا حقل يعيد تاريخها. null صريح =
     # «غير معروف» (كإنشاء صفقة بأثر رجعي). يشترط صفقة مغلقة بعد التعديل وألّا يسبق `opened_at` (وإلا 422).
     closed_at: str | None = Field(default=None, max_length=40)
+    # tools150c: وقت الفتح الحقيقي بقواعد الإنشاء (`_journal_time`: لا مستقبل، لا قبل 1970) — صفقة سُجّلت «الآن»
+    # خطأً كان فتحها لا يُصحَّح أبداً. null يُتجاهل (العمود إلزامي). بعد الدمج لا يسبق الإغلاقُ الفتحَ (422).
+    opened_at: str | None = Field(default=None, max_length=40)
+    # كما خزّنه الخادم حرفياً (لا يُطبَّع: صفوف قديمة بصيغ أخرى)؛ مختلف ⇒ 409 كبقية `seen_*`
+    seen_opened_at: str | None = Field(default=None, max_length=40)
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
-    @field_validator("closed_at")
+    @field_validator("closed_at", "opened_at")
     @classmethod
     def _closed_as_journal_time(cls, v: str | None) -> str | None:
         return _journal_time(v)
@@ -1901,13 +1906,15 @@ def trades_update(
     fields = {k: getattr(body, k) for k in body.model_fields_set if not k.startswith("seen_")}
     # `seen_exit: null` صريح = «رأيتها مفتوحة بلا خروج» ⇒ يُفحص كذلك
     expect = _seen_expect(body)
-    for k in ("symbol", "side", "entry", "note"):
+    for k in ("symbol", "side", "entry", "note", "opened_at"):
         if k in fields and fields[k] is None:
             fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف
     # `size` ليس منها: null = «غير معروف» كالإنشاء (a078946). كان يُتجاهل ⇒ «1 لوت» الافتراضي القديم
     # بصفوف ما قبل الإصلاح لا يُمحى أبداً ويبقى حجماً لم يكتبه المتداول.
     try:
         row = db.update_trade(trade_id, fields, uid, owner_key=key, expect=expect)
+    except db.TradeOpenTimeInvalid as e:
+        raise HTTPException(422, {"error": "invalid_opened_at", "reason": str(e)})
     except db.TradeCloseTimeInvalid as e:
         raise HTTPException(422, {"error": "invalid_closed_at", "reason": str(e)})
     except db.TradeUpdateConflict:

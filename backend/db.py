@@ -2398,7 +2398,10 @@ _UPDATE_TRADE_ATTEMPTS = 3
 _STALE = object()
 # كل عمود يعيد PATCH كتابته من الصفّ المقروء: كان الشرط الخروج والحالة وحدهما ⇒ تعديلان متزامنان (دخول
 # من جهاز واتجاه من آخر) يعيد الثاني فيهما دخول الأول القديم فيُمحى تصحيحه بصمت، و`pnl` من الخليط.
-_TRADE_WRITE_COLS = ("symbol", "side", "entry", "exit", "size", "pnl", "note", "sl", "tp", "closed_at", "status")
+# `opened_at` منها منذ tools150c (صار قابلاً للتعديل): تصحيح وقت الفتح من جهاز لا يُمحى بحفظ جهاز آخر.
+_TRADE_WRITE_COLS = (
+    "symbol", "side", "entry", "exit", "size", "pnl", "note", "sl", "tp", "opened_at", "closed_at", "status",
+)
 _SEEN_SQL = " AND ".join(f"{k} IS ?" for k in _TRADE_WRITE_COLS)
 
 
@@ -2416,6 +2419,10 @@ def _seen_cmp(col: str, v):
 
 class TradeCloseTimeInvalid(ValueError):
     """`closed_at` بتعديل صفقة تبقى مفتوحة، أو يسبق وقت فتحها."""
+
+
+class TradeOpenTimeInvalid(TradeCloseTimeInvalid):
+    """`opened_at` جديد بعد وقت إغلاق الصفقة (المخزَّن أو المُرسَل معه)."""
 
 
 class TradeUpdateConflict(Exception):
@@ -2445,6 +2452,10 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
             row["size"] = float(fields["size"]) if fields["size"] is not None else None
         if "note" in fields:
             row["note"] = fields["note"] or ""
+        # tools150c: صفقة سُجّلت بوقت «الآن» خطأً لا يُصحَّح فتحها أبداً (وإغلاقها الحقيقي يسبقه ⇒ 422). يُطبَّق قبل
+        # الخروج ⇒ «الآن» لإغلاق بهذا التعديل (`_close_stamp`) وفحص `closed_at` يريان الفتح الجديد.
+        if "opened_at" in fields:
+            row["opened_at"] = fields["opened_at"]
         for k in ("sl", "tp"):
             if k in fields:
                 row[k] = _opt_level(fields[k])
@@ -2469,11 +2480,17 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
                 if row.get("opened_at") and journal_time_before(ca, str(row["opened_at"])):
                     raise TradeCloseTimeInvalid("closed_at is before opened_at")
             row["closed_at"] = ca if row.get("exit") is not None else None
+        if "opened_at" in fields and row.get("closed_at") and journal_time_before(
+            str(row["closed_at"]), str(row["opened_at"])
+        ):
+            # الإغلاق بعد الدمج (المخزَّن أو المُرسَل) يسبق الفتح الجديد. الفحص حين يُعدَّل الفتح فقط: صفّ قديم
+            # مقلوب لا يصير 409/422 دائماً لكل حفظ ملاحظة.
+            raise TradeOpenTimeInvalid("opened_at is after closed_at")
         if row.get("exit") is not None:
             row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))
         cur = c.execute(
             f"""UPDATE trades SET symbol=?, side=?, entry=?, exit=?, size=?, pnl=?, note=?, sl=?, tp=?,
-                closed_at=?, status=? WHERE id=? AND {_SEEN_SQL} AND {owner_sql}""",
+                opened_at=?, closed_at=?, status=? WHERE id=? AND {_SEEN_SQL} AND {owner_sql}""",
             (
                 row["symbol"],
                 row["side"],
@@ -2484,6 +2501,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
                 row["note"],
                 row["sl"],
                 row["tp"],
+                row["opened_at"],
                 row["closed_at"],
                 row["status"],
                 trade_id,
