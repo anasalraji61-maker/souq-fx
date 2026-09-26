@@ -1237,3 +1237,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (e — ما يُحرج أمام متداول):** **QA115a → tools** (منخفض): «EURUSD cent»/«EURUSD micro» بمسافة مقبولة بالدفتر ومرفوضة بالحاسبة (`centAccountSymbol("EURUSD cent")` = null بـ`npx tsx`)، والتعليق `positionSize.ts:149–150` يدّعي القبول. الباقي سليم (نصوص «الماضي/المستقبل»، `fibIsDown` مصدر واحد).
 **الدورة القادمة:** المراجعة (a) — ميت/تصديرات (`lineStyle.ts`، `useChartBannerSymbols`، `fibIsDown`)؛ متابعة tools127a/QA115a؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (b9cfb2f، تعارض COORDINATION حُلّ):** أخضر 0؛ selftests المتغيّرة (`lineStyle`/`liveSeries`) ناجحة. أُغلقت tools127a ← chart `674f2e2` (`liveSeries.ts:266` `NaN`). جديد مُتحقَّق: **launch184a → tools** (`journalSymbolSuffixUnknown` بلا قارئ). `b9cfb2f` منطق رسم فقط ⇒ قائمة القبول 0/12.
+
+## 2026-09-26 — الدورة 116
+**البناء:** أخضر 0 (على 5a50e5f ثم c883b39 بعد السحب) — لا إصلاح لازم. **Selftests:** 122/122 ناجح (`npx tsx`)؛ `positionSize`/`tradePlan` بعد السحب ناجحان.
+**التحقّق بالكود:** أُغلقت QA115a ← tools `0d46016`+`a09c9b4` (`centAccountSymbol("EURUSD cent")` = "EURUSD")؛ launch184a ← tools `be46bf0` (+ شريحة الحاسبة `f2c0ea7`)؛ launch185a ← chart `0fd6e98` (`MatrixChart.tsx:10546/10556/14254/14271`). backend 89 (`0216696`) بلا طلب للتطبيق. **لا صفّ مفتوح لوكيل برمجي** عدا QA1 (جهاز).
+**قائمة قبول DESIGN-PRO (السادس والثلاثون):** 0/12 فشل (diff منذ b9cfb2f: بند تنبيه القائمة بـ`a11y`، `planLine` مكتوم `numeric` 500، شريحة غير مختارة بتسمية).
+**المراجعة (a — ميت/تصديرات):** كل تصدير بـ`lineStyle`/`selectionTags`/`positionSize`/`fibIsDown`/`useChartBannerSymbols`/`journalUnknownSuffixPair` مستعمل (داخل ملفه أو selftest أو مستورد). **لا بند.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
