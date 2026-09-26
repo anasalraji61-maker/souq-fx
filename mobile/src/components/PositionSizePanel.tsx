@@ -148,6 +148,7 @@ import {
   journalSpec,
   journalUnknownSuffixPair,
   saveOverrideAccepted,
+  formatJournalLots,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -974,7 +975,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const minLotRisk = result?.belowMinLot ? actualRiskOf(LOT_STEP) : null;
   /** تسجيل الخطة بالدفتر جارٍ / نتيجته — نقرة واحدة بدل إعادة كتابة الأرقام الأربعة بلوحة الدفتر */
   const [logBusy, setLogBusy] = useState(false);
-  const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  /** `earlier`: سُجِّلت خطةٌ **سابقة** (تغيّرت أثناء الطلب) — الرسالة تقول ما حُفظ والزرّ يبقى متاحاً للخطة الجديدة */
+  const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string; earlier?: boolean } | null>(null);
+  const logDone = logMsg?.ok === true && !logMsg.earlier;
   // تغيّر أي رقم بالخطة يمسح رسالة التسجيل ويتيح الزر من جديد — وبقاؤها يمنع نقرة ثانية تُنشئ صفقة مكرّرة
   // والسبريد والعمولة كذلك: كلاهما يُكتب بملاحظة الصفقة (`planJournalNote`)، فتعديلهما بعد التسجيل كان
   // يترك «سُجِّلت» والزرّ معطّلاً — لا تُسجَّل الخطة بتكاليفها المصحَّحة إلا بتغيير رقم آخر ثم إرجاعه.
@@ -1420,7 +1423,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const e = priceNum(entryPx);
     const sPx = priceNum(stopPx);
     const tPx = priceNum(targetPx);
-    if (!spec || !plan?.ok || planSide == null || lots == null || logInFlightRef.current || logBusy || logMsg?.ok || logBlocked) return;
+    if (!spec || !plan?.ok || planSide == null || lots == null || logInFlightRef.current || logBusy || logDone || logBlocked) return;
     if (pipsInPx?.hard) {
       setLogMsg({ ok: false, text: pipsInPx.msg });
       return;
@@ -1467,9 +1470,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         }),
       });
       if (!mountedRef.current) return;
-      // الخطة تغيّرت أثناء الطلب (هدفٌ عُدِّل قبل الردّ): المسجَّل هو الخطة القديمة — «سُجِّلت» والزرّ المعطَّل تحت
-      // الجديدة كانا يقولان إن هذه حُفظت، ولا تُسجَّل إلا بتغيير رقمٍ آخر. الزرّ يبقى متاحاً للجديدة.
-      if (planGenRef.current !== gen) return;
+      // الخطة تغيّرت أثناء الطلب (هدفٌ عُدِّل قبل الردّ، أو تجديد سعر التحويل الصامت غيّر اللوت): المسجَّل هو الخطة
+      // القديمة — «سُجِّلت» والزرّ المعطَّل تحت الجديدة كانا يقولان إن هذه حُفظت، فالزرّ يبقى متاحاً للجديدة. لكن **الصمت**
+      // كان أسوأ: صفقةٌ حُفظت بلا أيّ خبر والزرّ متاح ⇒ نقرة ثانية = صفقة مكرّرة. الرسالة تقول ما حُفظ فعلاً (لوته).
+      if (planGenRef.current !== gen) {
+        setLogMsg({ ok: true, earlier: true, text: `${t.riskCalcLoggedToJournal} · ${formatJournalLots(lots)} lot` });
+        return;
+      }
       setLogMsg({ ok: true, text: t.riskCalcLoggedToJournal });
     } catch {
       if (mountedRef.current) setLogMsg({ ok: false, text: t.riskCalcLogFailed });
@@ -2176,12 +2183,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         <>
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ disabled: logBusy || logMsg?.ok === true || logBlocked, busy: logBusy }}
+            accessibilityState={{ disabled: logBusy || logDone || logBlocked, busy: logBusy }}
             // بعد نجاح التسجيل يبقى معطَّلاً حتى يتغيّر رقم بالخطة — نقرة ثانية كانت تُنشئ صفقة مكرّرة
-            disabled={logBusy || logMsg?.ok === true || logBlocked}
+            disabled={logBusy || logDone || logBlocked}
             style={({ pressed }) => [
               styles.logBtn,
-              (logBusy || logMsg?.ok === true || logBlocked) && { opacity: 0.5 },
+              (logBusy || logDone || logBlocked) && { opacity: 0.5 },
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
