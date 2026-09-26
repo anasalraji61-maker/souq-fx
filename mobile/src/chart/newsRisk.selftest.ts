@@ -954,6 +954,7 @@ console.log('newsRisk long/spot/roll suffix selftest OK');
     currencies: ['JPY'],
     titles: ['BOJ Policy Rate'],
     tomorrow: false,
+    sameDay: true,
   });
   assert.ok(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - NEWS_HORIZON_MS));
   assert.equal(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - NEWS_HORIZON_MS - 1), null);
@@ -971,6 +972,7 @@ console.log('newsRisk long/spot/roll suffix selftest OK');
     currencies: ['USD', 'JPY'],
     titles: ['BOJ Policy Rate', 'Bank Stress Test'],
     tomorrow: false,
+    sameDay: true,
   });
   // launch113: 3س قبل منتصف ليل نيويورك (01:00–04:00 UTC) — «غداً» بنيويورك (−240د) وسان فرانسيسكو (−420د)،
   // و«اليوم» بطوكيو (+540) ولندن (+60) والقاهرة (+180) حيث التاريخ صار 25 سبتمبر
@@ -997,6 +999,21 @@ console.log('newsRisk long/spot/roll suffix selftest OK');
   );
   assert.equal(
     unannouncedHighImpactToday([nextDay], ['JPY'], t0 + UNANNOUNCED_SPAN_MS - 3_600_000, NEWS_HORIZON_MS, -240)?.tomorrow,
+    true
+  );
+  // tools116a: «اليوم» فقط حين تاريخ الحدث = تاريخ الجهاز، وإلا الصيغة المحايدة
+  const sd = (off: number, at = pre) => unannouncedHighImpactToday([boj], ['JPY'], at, NEWS_HORIZON_MS, off)?.sameDay;
+  // نيويورك 22:00 يوم 24 والقرار (تاريخ طوكيو 25) قد يصدر 23:00 نيويورك ⇒ لا «غداً»
+  assert.equal(sd(-240), false);
+  // طوكيو 11:00 يوم 25 ⇒ اليوم
+  assert.equal(sd(540), true);
+  // طوكيو 13:00 يوم 26 والشريط ما زال عن قرار 25 ⇒ لا «اليوم»
+  assert.equal(sd(540, t0 + UNANNOUNCED_SPAN_MS - 1), false);
+  // لندن بعد منتصف ليل نيويورك ⇒ اليوم
+  assert.equal(sd(60, t0 + 3_600_000), true);
+  // حدثٌ اليوم وآخر غداً ⇒ اليوم
+  assert.equal(
+    unannouncedHighImpactToday([boj, nextDay], ['JPY'], t0 + UNANNOUNCED_SPAN_MS - 3_600_000, NEWS_HORIZON_MS, -240)?.sameDay,
     true
   );
   // الخبر الموقوت لا يتأثّر: رواتب 12:30 UTC بجانب حدث بلا ساعة
@@ -1226,6 +1243,7 @@ console.log('newsRisk unannounced alongside timed selftest OK');
     currencies: ['JPY'],
     titles: ['BOJ Policy Rate'],
     tomorrow: false,
+    sameDay: true,
     symbols: ['USDJPY', 'GBPJPY'],
   });
   // لا مفتوحة بالين ⇒ لا شيء

@@ -436,6 +436,10 @@ export const UNANNOUNCED_SPAN_MS = 24 * 60 * 60 * 1000;
  * `tomorrow` (launch113): الشريط يبدأ قبل منتصف ليل نيويورك بـ3س، فمن 21:00 إلى 24:00 نيويورك كان يقول «اليوم» عن حدثٍ يومُه
  * **غداً** بتقويم المستخدم بالأمريكتين. يُقارَن تاريخ الحدث (تاريخ نيويورك) بتاريخ «الآن» **بساعة الجهاز** (`localOffsetMin`
  * دقائق شرق UTC، افتراضياً من الجهاز): أقدم ⇒ `tomorrow`؛ لمستخدم آسيا/أوروبا هو اليوم نفسه فيبقى «اليوم».
+ *
+ * `sameDay` (tools116a): تاريخ حدثٍ منها = تاريخ الجهاز **بالضبط** ⇒ «اليوم»؛ وإلا صيغة محايدة بلا يوم. ForexFactory يؤرّخ قرار بنك
+ * اليابان بتاريخ طوكيو والقرار ~03:00 UTC = 23:00 نيويورك **اليوم السابق**: بنيويورك 22:30 كان «غداً» والقرار بعد 30د، وبطوكيو
+ * 13:00 يوم 26 كان «اليوم» عن قرار 25. لا نعرف منطقة التأريخ لكل حدث ⇒ لا يومَ نقوله إلا حين يتّفق التاريخان.
  */
 export function unannouncedHighImpactToday(
   events: readonly NewsEvent[],
@@ -443,13 +447,14 @@ export function unannouncedHighImpactToday(
   nowMs: number,
   horizonMs: number = NEWS_HORIZON_MS,
   localOffsetMin: number = -new Date(nowMs).getTimezoneOffset()
-): { currencies: string[]; titles: string[]; tomorrow: boolean } | null {
+): { currencies: string[]; titles: string[]; tomorrow: boolean; sameDay: boolean } | null {
   if (!currencies.length) return null;
   const want = new Set(currencies);
   const hitCcys = new Set<string>();
   const titles: string[] = [];
   const localDay = Math.floor((nowMs + localOffsetMin * 60_000) / 86_400_000);
   let today = false;
+  let sameDay = false;
   for (const e of events) {
     if (e.sample || String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || !newsTimeUnannounced(e)) continue;
@@ -459,7 +464,9 @@ export function unannouncedHighImpactToday(
     if (nowMs < start - horizonMs || nowMs >= start + UNANNOUNCED_SPAN_MS) continue;
     hitCcys.add(c);
     // تاريخ الحدث = تاريخ UTC لمنتصف ليل نيويورك (04:00/05:00 UTC من اليوم نفسه)
-    if (Math.floor(start / 86_400_000) <= localDay) today = true;
+    const evDay = Math.floor(start / 86_400_000);
+    if (evDay <= localDay) today = true;
+    if (evDay === localDay) sameDay = true;
     const title = String(e.title ?? '').trim();
     if (title && !titles.includes(title)) titles.push(title);
   }
@@ -468,7 +475,7 @@ export function unannouncedHighImpactToday(
   // `ALL` (G20 «All Day») لا يقع بين عملات الرمز ⇒ كان `currencies` فارغاً والشريط يطبع « ·  · » بلا عملة — يُلحق `ALL` ليُطبع «كل العملات»
   const ccys = currencies.filter((c) => hitCcys.has(c));
   if (hitCcys.has('ALL') && !ccys.includes('ALL')) ccys.push('ALL');
-  return { currencies: ccys, titles, tomorrow: !today };
+  return { currencies: ccys, titles, tomorrow: !today, sameDay };
 }
 
 /** مدّة «يوم العطلة» من بدايته: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */
@@ -622,7 +629,7 @@ export function openPositionsUnannounced(
   nowMs: number,
   shownSymbol?: string,
   localOffsetMin?: number
-): { currencies: string[]; titles: string[]; tomorrow: boolean; symbols: string[] } | null {
+): { currencies: string[]; titles: string[]; tomorrow: boolean; sameDay: boolean; symbols: string[] } | null {
   const seen = new Set<string>();
   const uniq: { sym: string; ccys: string[] }[] = [];
   for (const raw of symbols) {

@@ -179,13 +179,14 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSym
   // الصفقات المفتوحة كذلك (`openPositionsUnannounced`): حاملُ USDJPY ليلاً كان لا يرى قرار بنك اليابان «Tentative» إطلاقاً
   const tbdOpen = openSymbols && cache ? openPositionsUnannounced(openSymbols, cache.events, now, shownSymbol) : null;
   const tbd = openSymbols ? tbdOpen : cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
-  // يومُه غداً بتقويم الجهاز (21:00–24:00 نيويورك بالأمريكتين) ⇒ «غداً» لا «اليوم» — `unannouncedHighImpactToday().tomorrow`
+  // «اليوم» فقط حين يتّفق تاريخ الحدث وتاريخ الجهاز، وإلا «الموعد غير معلن» بلا يوم (tools116a): قرار بنك اليابان بتاريخ
+  // طوكيو قد يصدر مساء «أمس» نيويورك — `unannouncedHighImpactToday().sameDay`
   const tbdText = tbd
     ? newsBannerText({
         head: t.newsRiskHigh,
         // `ALL` (G20 «All Day») ⇒ «كل العملات» كالسطر الموقوت أدناه
         currency: tbd.currencies.map((c) => (c === 'ALL' ? t.newsAllCurrencies : c)).join('/'),
-        when: tbd.tomorrow ? t.newsTimeTbdTomorrow : t.newsTimeTbd,
+        when: tbd.sameDay ? t.newsTimeTbd : t.newsTimeTbdNeutral,
         title: tbd.titles[0] ?? '',
         more: Math.max(0, tbd.titles.length - 1),
       })
