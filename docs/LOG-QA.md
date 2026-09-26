@@ -1119,3 +1119,13 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **قائمة قبول DESIGN-PRO (الثاني والعشرون):** 0/12 فشل (diff منذ 4ee84e5: «افحص» حدّ فقط، رموز أحادية بالرصيف/الشريط؛ `'900'` بـ`MatrixChart.tsx:7869` لحرفي X/O = محتوى شارت).
 **المراجعة (b — نصوص ثابتة):** لا نصّ حرفي جديد (EURUSD/MATRIX/launch52 فقط). **QA102a → tools (منخفض)**: تحويل `unknown` وتعليق قديم بـ`ToolsScreen.tsx:201/531` بعد أن وصف `api.ts` الحقل.
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 103
+**البناء:** أخضر 0 (على 88b20ea) — لا إصلاح لازم. **Selftests:** 117/117 ناجح (`npx tsx`، -P6).
+**التحقّق بالكود:** QA102a ← tools `86eec1c` (`ToolsScreen.tsx:530`) ⇒ مُغلق. ui75a: chart `fef7559`، tools `70b4e13`، launch `3440a74`/`a557a94` ⇒ الباقي ui وحده (`WatchlistPanel.tsx:414`، `AlertsPanel.tsx:877`).
+ملاحظة launch (run 168) «الرصيف 14 مدخلاً» ليست فشلاً: `MatrixBottomDock.tsx:58` أربعة + «المزيد» = 5. سجلّا ui/backend: لا طلب جديد.
+**بعد السحب (5d2a36f):** أخضر 0. **launch169a → tools** مُتحقَّق (`riskCalcLostTodayOtherCcy` بلا قارئ `.tsx`). chart `ec525b7`/`e4ae27a`/`d862fa0`، tools `2918a82`/`3a73961`/`0b3ce00`، backend `3935ab7`/`a04e78f` منطق فقط؛ selftests المتغيّرة (5) ناجحة.
+**قائمة قبول DESIGN-PRO (الثالث والعشرون):** 1/12 فشل (منخفض) — ردّاً على سؤال chart-r85 للبند 11: وسوم الأسعار داخل اللوح و`'900'` لـX/O مُستثناة (محتوى شارت بميزانية بكسل)؛
+**QA103a → chart**: `priceLegendChip` (:14146) و`collapsedPageChip` (:14216) كروم بـ`paddingVertical: 1`. باقي diff منذ f739fca نظيف.
+**المراجعة (c — `accessibilityLabel`):** مسح AST (`Pressable`/`Touchable*`/`Switch`/`TextInput`) ⇒ 5 أغلفة hover `accessible={false}` وأزرارها الداخلية مسمّاة، و`MessagesScreen` (launch52). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.

@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 102، على f739fca) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 103، على 88b20ea) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -25,13 +25,11 @@
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
 | backend | أنس | **backend-r56** مفتاح Twelve Data (المشترك مع الروبوت) كان يُعاد بنصّ 502 من `/api/symbols/search` (بلا دخول) عند أيّ خطأ من المزوّد (429 مثلاً) — أُصلح `80e268a`. لا يمكن معرفة إن قرأه أحد من قبل ⇒ **دوّروا المفتاح** إن كان الخادم منشوراً للعموم | backend-r56 |
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
-| ui | chart/launch | **ui75a** DESIGN-PRO §1/§4: «🔔» رمز تعبيري ملوّن (أصفر) هو رمز التنبيه المعتمد: زرّ الـcrosshair ووسم خطّ التنبيه (`MatrixChart.tsx:7133`، `:9113`) ونصوص الإرشاد ×3 لغات (`locales.ts:1613/1815/2849/3050/4123/4324`). ui غيّر علامات الرصيف والشريط إلى «⚑» (تنبيه سعر) و«⚐» (تنبيه مؤشّر) بلا صيغة تعبيرية (`e2dbd45`)، ويُبقي «🔔» بصفّ قائمة المتابعة (`WatchlistPanel:414`) ووميض `AlertsPanel:877` حتى يتّفق الرمز: chart يبدّل «🔔» بالشارت إلى «⚑» ⇒ launch يبدّل النصوص ⇒ ui يبدّل موضعيه. (`ToolsScreen:98` يضع «⚡» لتنبيه المؤشّر ⇒ tools «⚐».) | ui75 |
-| QA | tools | **QA102a** (منخفض، تنظيف): `ToolsScreen.tsx:531` يقرأ `insufficient_data` بتحويل `(res as { insufficient_data?: unknown })` وتعليق :201 «نوع `screenerRun` لا يصفه بعد» — النوع صار يصفه (`api.ts:615`، ui `e684b8f`). `readInsufficient` يبقى للتحقّق، يكفي `res.insufficient_data` وحذف الجملة القديمة | QA102 |
+| ui | ui | **ui75a** (باقٍ لـui وحده) DESIGN-PRO §1/§4: «🔔» رمز تعبيري ملوّن. chart `fef7559` (الشارت «⚑»)، tools `70b4e13` («⚑»/«⚐»)، launch `3440a74`/`a557a94` (النصوص) ⇒ منجزة. باقٍ: `WatchlistPanel.tsx:414` «🔔» بصفّ قائمة المتابعة، و`AlertsPanel.tsx:877` وميض «🔔 أُطلق» ⇒ «⚑» | ui75 |
+| QA | chart | **QA103a** (منخفض، ردّ على سؤال chart-r85 للبند 11): وسوم الأسعار داخل اللوح (`hiLoLabel`، `currentPriceTag`، `levelPriceLabel`، `fibLevelLabel`، `crossPriceTag`، `selectionPriceTag`، `paneHead`) وX/O `'900'` = محتوى شارت بميزانية بكسل ⇒ **مُستثناة، لا فشل**. شارتا كروم فقط تفشلان: `priceLegendChip` (`MatrixChart.tsx:14146`) و`collapsedPageChip` (:14216) `paddingVertical: 1` ⇒ 0 أو 4 إن سمح الارتفاع | QA103 |
 | launch | tools | **launch169a** `PositionSizePanel.tsx:1040` (`a672a78`): تغيّر عملة المال يُفرغ «خسارتك اليوم» بصمت ⇒ الخانة فارغة بلا سبب ومتّسع الحدّ اليومي يُحسب كأن الخسارة 0. النصّ جاهز: `t.riskCalcLostTodayOtherCcy` بـ`{from}`=`lostCcy` و`{to}`=`moneyCcy` (ar/en/ku) — اعرضه تحت الخانة حين `lostToday === '' && lostCcy != null && lostCcy !== moneyCcy` | launch169 |
-**تحقّق الدورة 102 (بالكود، على f739fca):** البناء أخضر 0، selftests 116/116. أُغلقت: **backend-r70** ← ui `358bcc5` (`AuthContext.tsx:90` مستمع 401 ⇒ `checkSession`)؛
-**backend-r69/launch167a** ← tools `c91e00a` (`ToolsScreen.tsx:531/796` `readInsufficient` و`screenerInsufficientData`)؛ **tools115a** ← ui `e684b8f` (`api.ts:615`، `ScreenerMini.tsx:106/131`).
-ui75a باقٍ: «🔔» بـ`MatrixChart.tsx:7133/9113`، `WatchlistPanel:414`، `AlertsPanel:877`؛ «⚡» بـ`TerminalScreen.tsx:1125`. سجلّ chart (`278ae65` Pine-lite): لا طلب جديد.
-**قائمة قبول DESIGN-PRO (الثاني والعشرون): 0 من 12 فشل** (diff منذ 4ee84e5: زرّ «افحص» حدّ فقط ⇒ التأكيد الواحد للفريم النشط؛ رموز الرصيف/الشريط أحادية «⚑ ⚐ ◑ ☰»؛
-لا وزن ≥700 بالكروم — `MatrixChart.tsx:7869` `'900'` لحرفي X/O بشارت النقطة والرقم = محتوى الشارت لا كروم؛ لا مسافة خارج ×4 بالملفّات المتغيّرة).
-**المراجعة (b — نصوص ثابتة):** `placeholder`/`accessibilityLabel`/نصوص JSX حرفية بكل `.tsx` ⇒ «EURUSD» (رمز)، «MATRIX» (العلامة)، و`MessagesScreen` (launch52) فقط؛
-أسماء الفلاتر بسطر «شموع غير كافية» من `buildFilters(t)` ومعرّفات الخادم تطابقها (`macd_cross_up`…). **لا بند.**
+**تحقّق الدورة 103 (بالكود، على 88b20ea):** البناء أخضر 0. أُغلق **QA102a** ← tools `86eec1c` (`ToolsScreen.tsx:530` `res.insufficient_data` مباشرةً).
+ui75a: الشارت والطرفية والنصوص أُنجزت؛ الباقي موضعا ui. ملاحظة launch (run 168) «الرصيف 14 مدخلاً» **ليست فشلاً**: `MatrixBottomDock.tsx:58` أربعة أساسية + «المزيد» = 5. جديد مُتحقَّق: **launch169a → tools** (`riskCalcLostTodayOtherCcy` ×3 بـ`locales.ts`، لا قارئ بأي `.tsx`).
+**قائمة قبول DESIGN-PRO (الثالث والعشرون): 1 من 12 فشل (منخفض)** — البند 11: QA103a أعلاه. البنود الأخرى نظيفة على diff منذ f739fca (إعادة التفعيل نصّ أساسي؛ شجرة الإحالة بلون ثانوي واحد؛
+المدرسة تعبئة بلا حدّ؛ `...numeric` لـ«1 pip» ولوحة التوقّع؛ لا وزن ≥700 بالكروم).
+**المراجعة (c — `accessibilityLabel`):** مسح AST لكل `Pressable`/`Touchable*`/`Switch`/`TextInput` ⇒ 5 أغلفة hover `accessible={false}` (أزرارها الداخلية مسمّاة) + `MessagesScreen` (launch52). **لا بند.**
