@@ -2629,6 +2629,12 @@ console.log('tradePlan floating/exit preview R from initial stop selftest OK');
   assert.deepEqual(journalSizeDottedThousands('۱٫۰۰۰', 'EURUSD'), { units: 1000, lots: 0.01 });
   assert.deepEqual(journalSizeDottedThousands('10٫000 lot', 'EURUSD'), { units: 10000, lots: 0.1 });
   assert.equal(journalMoneyLots('١٫٠٠٠', 'EURUSD'), null); // لا مال من حجمٍ مبهم — كاللاتيني
+  // علامة اتجاه خفية (نسخٌ من محادثة عربية): parseDecimal يقرأ 10 والكاشف كان null ⇒ تُحفظ 10 لوتات بلا سؤال ومالٌ ×100 تحت الخانة
+  for (const raw of ['\u200f10.000', '\u200e10.000 lots', '10.000\u200f', '\u061c10.000', '\u2067١٠٫٠٠٠\u2069']) {
+    assert.equal(parseJournalSize(raw), 10, raw);
+    assert.deepEqual(journalSizeDottedThousands(raw, 'EURUSD'), { units: 10000, lots: 0.1 }, raw);
+    assert.equal(journalMoneyLots(raw, 'EURUSD'), null, raw);
+  }
   assert.equal(journalSizeDottedThousands('١٫٥٠٠', 'EURUSD'), null); // 1.5 لوت، لا لبس
   // فضة: 10,000 أونصة = 2 لوت (أصغر من 10) ⇒ يُنبَّه
   assert.deepEqual(journalSizeDottedThousands('10.000', 'XAGUSD'), { units: 10000, lots: 2 });

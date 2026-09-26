@@ -1722,6 +1722,11 @@ console.log('positionSize parsePriceFor selftest OK');
 // ── سبب رفض «3.450» للذهب والقراءتان لرسالة priceAmbiguousThousandsHint ──
 {
   assert.deepEqual(ambiguousThousandsPrice('3.450', 'XAUUSD'), { value: '3.450', whole: '3450', small: '3.45' });
+  // علامة اتجاه خفية لا تُعمي الكاشف (كانت null ⇒ «رقم غير مفهوم» بدل سؤال «3450 أم 3.45؟»)
+  assert.equal(ambiguousThousandsPrice('\u200f3.450', 'XAUUSD')?.whole, '3450');
+  assert.equal(leverageAmbiguousThousands('\u200f1.000')?.big, 1000);
+  assert.equal(parseLeverage('\u200f1:100'), 100); // كانت null — رافعة صحيحة مرفوضة
+  assert.equal(parseLeverage('1:\u200e100\u200e'), 100);
   assert.deepEqual(ambiguousThousandsPrice(' 2.351 ', 'GOLD#'), { value: '2.351', whole: '2351', small: '2.351' });
   // أرقام عربية وفاصل عربي: value كما كُتب، والقراءتان لاتينيتان
   assert.deepEqual(ambiguousThousandsPrice('٣٫٤٥٠', 'XAUUSD.m'), { value: '٣٫٤٥٠', whole: '3450', small: '3.45' });

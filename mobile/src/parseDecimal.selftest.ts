@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/parseDecimal.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { misplacedArabicThousandsSign, parseDecimal } from './parseDecimal';
+import { misplacedArabicThousandsSign, normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
 
 const cases: [string, number | null][] = [
   ['1.0850', 1.085],
@@ -259,3 +259,15 @@ assert.equal(parseDecimal('150.125'), 150.125); // بلا الفاصلة كما 
 assert.equal(parseDecimal('1.000,5'), 1000.5);
 assert.equal(parseDecimal('150,'), 150); // فاصلٌ واحد بلا آخر: لا لبس في المقدار (كما كان)
 console.log('parseDecimal trailing separator selftest OK');
+
+// علامات الاتجاه الخفية تُحذف بالمساعدين أنفسهم — كواشف التحذير تقرأ `normalizeDigits(raw)` بتعابيرها
+{
+  assert.equal(normalizeDigits('\u200f١٠٫٠٠٠\u200e'), '10٫000');
+  assert.equal(normalizeDigits('\u2066\u061c1\u202e2\u202c3\u2069'), '123');
+  assert.equal(stripUnitWord('\u200f0.10 lots\u200f', 'lot'), '0.10');
+  assert.equal(stripUnitWord('25 pips\u200e', 'pip'), '25');
+  assert.equal(stripUnitWord('\u200f25', 'pip'), '25');
+  assert.equal(parseDecimal('\u200f1.0850'), 1.085);
+  assert.equal(parseDecimal('\u200e25 pips', { unit: 'pip' }), 25);
+  console.log('parseDecimal bidi-marks selftest OK');
+}

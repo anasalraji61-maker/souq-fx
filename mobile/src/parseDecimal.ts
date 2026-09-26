@@ -21,8 +21,16 @@ const EXT_ARABIC_INDIC = /[۰-۹]/g;
  */
 const FULLWIDTH = /[０-９]/g;
 
+/**
+ * علامات الاتجاه الخفية (LRM/RLM/ALM وعزل bidi) — تأتي مع النسخ من محادثة/منصّة عربية. تُحذف هنا (و`stripUnitWord`) لا بـ`parseDecimal`
+ * وحده: كواشف التحذير (`journalSizeDottedThousands`، `ambiguousThousandsPrice`، `leverageAmbiguousThousands`، `readLeverage`) تقرأ
+ * `normalizeDigits(raw)` بتعابيرها، وكانت العلامة تُعميها بينما `parseDecimal` يقرأ الرقم ⇒ «‏10.000» بحجم الدفتر = 10 لوتات بلا سؤال.
+ */
+const BIDI_MARKS = /[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g;
+
 export function normalizeDigits(s: string): string {
   return s
+    .replace(BIDI_MARKS, '')
     .replace(ARABIC_INDIC, (c) => String(c.charCodeAt(0) - 0x0660))
     .replace(EXT_ARABIC_INDIC, (c) => String(c.charCodeAt(0) - 0x06f0))
     .replace(FULLWIDTH, (c) => String(c.charCodeAt(0) - 0xff10));
@@ -67,8 +75,9 @@ const UNIT_WORDS: Record<'pip' | 'lot', RegExp> = {
 };
 
 export function stripUnitWord(raw: string, unit: 'pip' | 'lot'): string {
-  const m = UNIT_WORDS[unit].exec(raw.trim());
-  return m ? m[1] : raw;
+  const clean = raw.replace(BIDI_MARKS, '');
+  const m = UNIT_WORDS[unit].exec(clean.trim());
+  return m ? m[1] : clean;
 }
 
 /**
@@ -87,9 +96,9 @@ export function parseDecimal(
   raw: string,
   opts: { signed?: boolean; amount?: boolean; percent?: boolean; unit?: 'pip' | 'lot' } = {}
 ): number | null {
-  if (opts.unit) raw = stripUnitWord(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, ''), opts.unit);
-  // علامات الاتجاه الخفية (LRM/RLM/ALM وعزل bidi) تأتي مع النسخ من محادثة/منصّة عربية: «‏1.0850» كانت «رقم غير مفهوم» بلا سبب يُرى
-  const digits = normalizeDigits(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, '')).trim();
+  if (opts.unit) raw = stripUnitWord(raw, opts.unit);
+  // علامات الاتجاه الخفية يحذفها `normalizeDigits`/`stripUnitWord`: «‏1.0850» كانت «رقم غير مفهوم» بلا سبب يُرى
+  const digits = normalizeDigits(raw).trim();
   if (!groupsBetweenDigitsOk(digits)) return null;
   let s = digits
     .replace(/[\s   ٬'’]/g, '')
