@@ -6419,6 +6419,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             // الإصبعان كلاهما من أصل الثاني ويقفز الشارت؛ و`touchAction: none` يمنع تكبير
             // المتصفّح، فلم يكن بالويب على الهاتف أيّ تكبير إطلاقاً.
             if (webChartPointer.current.active && webPointers.current.size >= 2) {
+              if (scrubTimer.current) clearTimeout(scrubTimer.current);
+              scrubTimer.current = null;
+              scrubbing.current = false;
               event.currentTarget?.setPointerCapture?.(point.pointerId);
               const [a, b] = [...webPointers.current.values()];
               const rect = event.currentTarget?.getBoundingClientRect?.();
@@ -6444,6 +6447,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               x: point.x - (rect?.left ?? 0),
               y: point.y - (rect?.top ?? 0),
             };
+            // إصبع ثابت 350ms على متصفّح الهاتف ⇒ وضع التتبّع كالتطبيق (`chartPan`): كان كل لمس يسحب الشارت،
+            // فقراءة شموع متتالية بالويب على الهاتف نقرةٌ لكل شمعة. الفأرة لها المعاينة بالمرور فلا تحتاجه.
+            scrubbing.current = false;
+            if (scrubTimer.current) clearTimeout(scrubTimer.current);
+            scrubTimer.current = null;
+            if (event.nativeEvent?.pointerType === 'touch') {
+              scrubTimer.current = setTimeout(() => {
+                scrubTimer.current = null;
+                if (panMoved.current || pinchUsed.current || !webChartPointer.current.active) return;
+                scrubbing.current = true;
+                applyChartDrag(0, 0);
+                chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
+              }, 350);
+            }
           },
           onPointerMove: (event: PointerEventLike) => {
             if (!webChartPointer.current.active) {
@@ -6487,10 +6504,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }
             // رُفع أحد الإصبعين: الباقي لا يسحب حتى يُرفع.
             if (pinchUsed.current || point.pointerId !== webChartPointer.current.pointerId) return;
-            applyChartDrag(
-              point.x - webChartPointer.current.x,
-              point.y - webChartPointer.current.y
-            );
+            const dx = point.x - webChartPointer.current.x;
+            const dy = point.y - webChartPointer.current.y;
+            if (scrubbing.current) {
+              crossAtRef.current(
+                Math.max(0, Math.min(chartPlotW - 1, panStartPoint.current.x + dx)),
+                Math.max(0, Math.min(chartPlotH, panStartPoint.current.y + dy))
+              );
+              return;
+            }
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) panMoved.current = true;
+            applyChartDrag(dx, dy);
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
@@ -6508,6 +6532,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             webChartPointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
             if (event.currentTarget?.style) event.currentTarget.style.cursor = 'grab';
+            if (scrubTimer.current) clearTimeout(scrubTimer.current);
+            scrubTimer.current = null;
+            // بعد التتبّع يبقى التقاطع حيث رُفع الإصبع — لا نقرة تعيده لموضع البدء.
+            if (scrubbing.current) {
+              scrubbing.current = false;
+              endDrag();
+              return;
+            }
             // نقرة بلا سحب ⇒ تقاطع عند موضعها (كمسار الهاتف). كان الرفع يُنهي السحب
             // فقط، فالنقر على شارت الويب لا يضع تقاطعاً أبداً.
             if (
@@ -6520,6 +6552,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           },
           onPointerCancel: (event: PointerEventLike) => {
             if (event.currentTarget?.style) event.currentTarget.style.cursor = 'grab';
+            if (scrubTimer.current) clearTimeout(scrubTimer.current);
+            scrubTimer.current = null;
+            scrubbing.current = false;
             webPointers.current.delete(pointerXY(event).pointerId);
             if (webPointers.current.size > 0) return;
             pinchStart.current = null;
