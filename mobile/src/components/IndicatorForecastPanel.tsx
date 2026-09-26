@@ -378,11 +378,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
     padding: 12,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
     gap: 4,
   },
-  dir: { fontWeight: '500', fontSize: 18 },
+  // DESIGN-PRO §1/§2: 18px محجوز لآخر سعر وقيمة التقاطع — كلمة «شراء/بيع» بلون الاتجاه بذلك الحجم كانت
+  // أعلى صوتاً من الشارت ⇒ 15 (سلّم قراءات السعر). والصندوق خلفية وحدها بلا حدّ (§5.5 فاصل واحد).
+  dir: { fontWeight: '500', fontSize: 15 },
   meta: { ...numeric, color: colors.textMuted, fontSize: 11 },
   levels: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '600', marginTop: 4 },
   // DESIGN-PRO §2 — 11px؛ وقت البيانات رقم متغيّر ⇒ `numeric`.
