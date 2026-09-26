@@ -178,6 +178,12 @@ _NO_MOVE = {"ar": "لا حركة سعرية في النافذة: لا اتجاه
             "en": "No price movement in the window: the indicators show no direction."}
 
 
+def _no_vote_basis(basis: dict) -> dict:
+    """سبب غياب المستويات حين لا صوت: «محايد» ادّعاء اتجاه لم يُحسب ⇒ `no_votes`؛ الأسباب الحقيقية
+    (لا مدى، شموع قليلة، لا سعر حيّ) تبقى كما هي."""
+    return {**basis, "unavailable": "no_votes"} if basis.get("unavailable") == "neutral" else basis
+
+
 def price_decimals(price: float | None, symbol: str | None = None) -> int:
     """منازل عرض السعر كما تعرضها المنصّات: ~6 أرقام معنوية (EURUSD 5، USDJPY 3، الذهب 2).
 
@@ -258,6 +264,10 @@ def indicator_forecast(
     # سلسلة لم يتغيّر إغلاقها قطّ: RSI ‏50 اصطلاح (لا ربح ولا خسارة) لا قراءة ⇒ كان صوته «محايد (50.0)» الوحيد
     # فيُعرض «إجماع: محايد» بدل «بلا حركة» (`no_movement` لا يُبلغ بالمؤشّرات الافتراضية).
     flat_closes = rsi_v is not None and max(closes) == min(closes)
+    # مؤشّرات مفعّلة امتنعت عن التصويت لغياب الحركة بنافذتها (لا لقصر السلسلة) ⇒ «بلا حركة» لا «بيانات ناقصة»
+    no_move: set[str] = set()
+    if flat_closes:
+        no_move.add("rsi")
     if rsi_v is not None and not flat_closes:
         # التصنيف على الرقم المعروض: 69.96 كان «زخم إيجابي (70.0)» وصوت شراء بينما 70 «تشبّع شرائي»
         r = round(rsi_v, 1) + 0.0
@@ -280,7 +290,9 @@ def indicator_forecast(
         sf, ss = snap.get("sma_fast"), snap.get("sma_slow")
         # خطّان متساويان (سوق بلا حركة) لا اتجاه لهما: كان `else` يجعل التساوي «تحت» ⇒ صوت بيع −0.45 وفرق
         # فاصلة عائمة يقرّر الصوت. التساوي بحدود ضجيج الحساب ⇒ لا صوت (كـBB/Stoch بمدى صفري).
-        if sf is not None and ss is not None and not _same_level(sf, ss, last):
+        if sf is not None and ss is not None and _same_level(sf, ss, last):
+            no_move.add("ma")
+        elif sf is not None and ss is not None:
             fdp = _distinct_decimals(sf, ss, dp)
             add("ma", "ma_trend", 0.45 if sf > ss else -0.45,
                 "ma_above" if sf > ss else "ma_below", fast=round(sf, fdp), slow=round(ss, fdp))
@@ -291,7 +303,9 @@ def indicator_forecast(
         add("macd", "macd", -0.75, "macd_cross_down")
     else:
         m, ms = snap.get("macd"), snap.get("macd_signal")
-        if m is not None and ms is not None and not _same_level(m, ms, last):
+        if m is not None and ms is not None and _same_level(m, ms, last):
+            no_move.add("macd")
+        elif m is not None and ms is not None:
             # MACD فرق بين سعرين ⇒ بمنازل السعر نفسها (وأكثر إن تساوى الرقمان المعروضان)
             mdp = _distinct_decimals(m, ms, dp)
             add("macd", "macd", 0.35 if m > ms else -0.35,
@@ -307,7 +321,7 @@ def indicator_forecast(
         # نطاق بعرض صفر (20 إغلاقاً متطابقة) لا موقع فيه: كان `or 1e-9` يصنع حدّين حول السعر نفسه
         # و20 إغلاقاً متطابقة بسعر الذهب قد تعطي std≈1e-13 من ضجيج الجمع ⇒ صوت «موقع 25%» من لا حركة
         if std <= abs(mid) * 1e-9:
-            pass
+            no_move.add("bb")
         else:
             # التصنيف على الموقع المعروض (كـRSI/%K): 29.95% و30.14% كلاهما «موقع 30%» وكان الأول شراء
             # (0.1203) والثاني محايداً (0.119). وكذلك الحدّان: موقع 99.99% كان «موقع 100%» بصوت −0.3
@@ -326,7 +340,9 @@ def indicator_forecast(
         hi = max(float(c["high"]) for c in recent)
         lo = min(float(c["low"]) for c in recent)
         # مدى صفري (14 شمعة بلا حركة) ⇒ لا %K: كان `or 1e-9` يعطي %K=0 ⇒ «تشبّع بيعي» وصوت شراء +0.6 من لا حركة
-        if hi > lo:
+        if hi <= lo:
+            no_move.add("stoch")
+        else:
             # التصنيف على %K المعروض (كـRSI): 79.6 كان «%K≈80» بصوت −0.37 و80 «%K≈80» بصوت −0.6
             k = round((last - lo) / (hi - lo) * 100)
             if k >= 80:
@@ -344,6 +360,8 @@ def indicator_forecast(
     # الصغيرة ومُشبَع على الكبيرة. الآن 3×ATR صافية على 10 شموع = أقصى صوت. بلا ATR14 (شموع قليلة أو بلا
     # مدى) لا مقياس ⇒ لا صوت، كالمساعد.
     trend_atr = _atr_last(candles) if len(closes) >= 11 else None
+    if trend_atr is None and len(closes) >= 11 and _atr_raw(candles) == 0:
+        no_move.add("trend")
     if trend_atr is not None:
         move = closes[-1] - closes[-11]
         slope = move / (abs(closes[-11]) or 1)
@@ -354,20 +372,34 @@ def indicator_forecast(
             pdp += 1
         add("trend", "trend", move / (TREND_FULL_ATR * trend_atr), "trend_slope", pct=round(pct, pdp) + 0.0)
 
+    # RSI ‏50 على إغلاقات لم تتغيّر اصطلاح لا قراءة (صوته مكتوم أعلاه) — كان يُرسَل بالـsnapshot فيعرضه
+    # التطبيق «RSI 50.0» مقيساً بجانب صوتَي Stoch/الاتجاه من الذيول (run 91)
+    snapshot = {
+        "rsi": None if flat_closes else snap.get("rsi"),
+        "change_pct": snap.get("change_pct"),
+        # عدد الشموع التي تغطّيها النسبة (~179 = شهور على D): كانت تُرسَل وحدها فتُقرأ «تغيّر اليوم»
+        "change_bars": snap.get("change_bars"),
+        "last": last,
+    }
+
     if not votes:
         # لا صوت واحد ⇒ لا اتجاه ولا درجة (كان «محايد» و0.0 — ادّعاء بأن المؤشّرات لا ترى اتجاهاً)
+        # السبب: مؤشّر مفعّل امتنع لغياب الحركة بنافذته ⇒ «بلا حركة» (كان «بيانات ناقصة» مع 180 شمعة حقيقية
+        # حين تتساوى آخر 20 إغلاقاً وBB وحده مفعّل)؛ وإلا فالسلسلة أقصر من المؤشّرات المفعّلة.
+        # `snapshot` بشكل الردّ العادي: الخام كان يحمل `ma_cross_up: false` لتقاطع لم يُحسب أصلاً (سلسلة قصيرة).
+        moved = not (_atr_raw(candles) == 0 or flat_closes or (no_move & want))
         return {
             "symbol": sym,
             "mode": "indicators",
             "direction": None,
             "avg_score": None,
             "levels": None,
-            "levels_basis": _trade_levels(last, "neutral", candles)[1],
+            "levels_basis": _no_vote_basis(_trade_levels(last, "neutral", candles)[1]),
             "votes": [],
-            "snapshot": snap,
+            "snapshot": snapshot,
             "price_decimals": dp,
             # شموع كافية بلا مدى ⇒ «بلا حركة» لا «بيانات ناقصة» (رمز مجهول ⇒ التطبيق يعرض نصّ الخادم)
-            **({"disclaimer": _NO_MOVE[tl], "disclaimer_code": "no_movement"} if _atr_raw(candles) == 0 or flat_closes
+            **({"disclaimer": _NO_MOVE[tl], "disclaimer_code": "no_movement"} if not moved
                else {"disclaimer": _NO_DATA[tl], "disclaimer_code": "not_enough_data"}),
         }
 
@@ -383,13 +415,7 @@ def indicator_forecast(
         "levels": levels,
         "levels_basis": levels_basis,
         "votes": votes,
-        "snapshot": {
-            "rsi": snap.get("rsi"),
-            "change_pct": snap.get("change_pct"),
-            # عدد الشموع التي تغطّيها النسبة (~179 = شهور على D): كانت تُرسَل وحدها فتُقرأ «تغيّر اليوم»
-            "change_bars": snap.get("change_bars"),
-            "last": last,
-        },
+        "snapshot": snapshot,
         "price_decimals": dp,
         "disclaimer": _DISCLAIMER[tl],
         "disclaimer_code": "indicator_consensus",
