@@ -1487,3 +1487,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (b — نصوص ثابتة):** لا نصّ ظاهر جديد خارج `locales.ts`. **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ متابعة launch220a (تصير عالقة إن بقيت دورة أخرى)؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (4c9b3a5):** أخضر 0. أُغلقت launch221a ← ui `54d9c72` (`ChartFrame.tsx:485` `cfPriceLoadingA11y` ×3 لغات) — أضافها launch وأنجزها ui بين دورتين؛ حذفتُ الصفّ. **لا صفّ مفتوح لوكيل برمجي** عدا launch220a وQA1.
+
+## 2026-09-26 — الدورة 148
+**البناء:** أخضر 0 (على f520ea4) — لا إصلاح لازم. **Selftests:** 125/125 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت launch220a ← tools `06f0236` (`TradeJournalPanel.tsx:1624/656`)، وbackend-r125 ← tools `f520ea4` (`positionSize.ts:147`؛ `symbolPriceDecimals("JPYUSD")` = 7 بتشغيل فعلي). chart-r121a (→ tools) مفتوحة دورتها الأولى (لا `onIndicatorsChange` بـ`TerminalScreen.tsx`). DESIGN-PRO وDECISIONS-ANAS بلا تغيير منذ defa994.
+**قائمة قبول DESIGN-PRO (الثامن والستّون):** 0/12 فشل (diff منذ 4c9b3a5: وسوم محور وألوان خطوط مؤشّر = محتوى شارت؛ الباقي منطق).
+**المراجعة (c — `accessibilityLabel`):** لا عنصر تفاعلي جديد. **لا بند.** وجدتُ عرضاً (d): الخادم 8 منازل للين أساساً والتطبيق 7 ⇒ **QA148a → backend + tools**.
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ متابعة chart-r121a وQA148a؛ وإعادة قائمة DESIGN-PRO.
