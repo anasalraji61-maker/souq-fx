@@ -1605,3 +1605,15 @@
 - **«درجة الاتفاق»**: لا أثر بواجهة؛ اللوحتان خلف `SHOW_UNLICENSED_SIGNAL_PANELS = false` (الرصيف و`ToolsScreen`).
 - قرار ١٠: `SubscriptionPlansPanel`/`CommissionPlanPanel`/`NetworkTreePanel` لا تُستورد إلا بـ`AccountScreen` وكلّها خلف `SHOW_REFERRAL_AND_PLANS = false`.
 - **لم يُتحقَّق بصرياً**: لا خادم على `:8081` ولا متصفّح بالبيئة.
+
+## 2026-09-26 — تشغيل 134
+صفّان بـCOORDINATION (دورة QA 142/143) موجَّهان إلى ui — **chart-r117a أُنجز وحُذف؛ launch216a نصف ui أُنجز** والصفّ باقٍ لـbackend وحده. **ui-r77**/**ui85a** بيد أنس. بوابة البناء خضراء (0) قبل كل commit.
+
+| commit | ماذا | بند |
+|---|---|---|
+| 66631a3 | `FocusChartModal` `pick`: الرمز المقارَن صار رئيسياً ⇒ `setCompareSym(null)` — كان «GBPUSD vs GBPUSD» بخطّ مقارنة فوق السعر نفسه ولا يُزال | chart-r117a |
+| e77fb5c | `LectureClassroom`: ردّ «اسأل المدرّس» بـ`source: 'template'` (أو بديل الفشل المحلي) يُوسم بـ`t.lectureTemplateNote` فوق التوضيح؛ `api.academyInterrupt` يحمل `source` | launch216a (نصف ui) |
+
+- **launch216a**: الخادم (`backend/main.py` `academy_interrupt`) لا يرسل `source` بعد ⇒ الوسم لا يظهر لردّ القالب من الخادم حتى يضيفه backend؛ يظهر الآن لبديل فشل الطلب المحلي.
+- بنود المهمّة الأصلية (تحقّق بالكود): `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده (23 استدعاءً بـ`.tsx`)؛ «₴» تعليقان فقط؛ لا «درجة اتفاق» بواجهة؛ إعادة الجولة `AccountScreen:281`؛ مسح آلي لنطاقي: 0 زرّ اختيار شرطي بلا `accessibilityState`؛ لا وزن 700.
+- **لم يُتحقَّق بصرياً**: لا خادم على `:8081` ولا متصفّح. للـQA: التركيز ⇒ قارِن EURUSD بـGBPUSD ⇒ انقر GBPUSD ⇒ الرأس «GBPUSD» بلا «vs»؛ الأكاديمية بلا خادم ⇒ سؤال ⇒ سطر «المدرّس الذكي غير متاح الآن».
