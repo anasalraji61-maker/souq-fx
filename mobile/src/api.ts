@@ -919,6 +919,9 @@ export const api = {
     /** وقف/هدف اختياريان — باك-إند قديم يتجاهلهما (Pydantic يسقط الحقول غير المعروفة). */
     sl?: number;
     tp?: number;
+    /** وقتا صفقة سُجّلت بعد حدوثها (ISO، tools150a) — من `createTimesSend`؛ غائبان = «الآن» بالخادم. */
+    opened_at?: string;
+    closed_at?: string;
   }) => postJson<{ ok: boolean; trade: Record<string, unknown>; stats: Record<string, number> }>(
     '/api/trades',
     body
