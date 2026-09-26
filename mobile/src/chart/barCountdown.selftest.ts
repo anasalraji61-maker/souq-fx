@@ -51,7 +51,17 @@ const xmasEve = Date.UTC(2026, 11, 24) / 1000;
 assert.equal(barCloseCountdown(xmasEve + 20 * 3600, 14400, Date.UTC(2026, 11, 24, 20), 'EURUSD'), '2:00:00');
 assert.equal(barCloseCountdown(xmasEve, 86400, Date.UTC(2026, 11, 24, 12), 'EURUSD'), '10:00:00');
 // اليوم السابق عادي
-assert.equal(barCloseCountdown(xmasEve - 86400, 86400, Date.UTC(2026, 11, 23, 12), 'EURUSD'), '12:00:00');
+assert.equal(barCloseCountdown(xmasEve - 86400, 86400, Date.UTC(2026, 11, 23, 12), 'EURUSD'), '10:00:00');
+
+// اليومية تُغلق 17:00 نيويورك من يوم ختمها لا منتصف ليل UTC (Twelve Data، `bar_end` بالخادم):
+// صيفاً الأربعاء 23-09 الساعة 10:00 ⇒ 21:00 UTC — كان «14:00:00»
+const wedS = Date.UTC(2026, 8, 23) / 1000;
+assert.equal(barCloseCountdown(wedS, 86400, Date.UTC(2026, 8, 23, 10), 'EURUSD'), '11:00:00');
+assert.equal(barCloseCountdown(wedS, 86400, Date.UTC(2026, 8, 23, 10), 'XAUUSD'), '11:00:00');
+// بعد وصول ختم الغد (21:30 UTC) — كان يختفي حتى منتصف الليل
+assert.equal(barCloseCountdown(wedS + 86400, 86400, Date.UTC(2026, 8, 23, 21, 30), 'EURUSD'), '23:30:00');
+// الكريبتو يوم UTC كما كان
+assert.equal(barCloseCountdown(wedS, 86400, Date.UTC(2026, 8, 23, 10), 'BTCUSD'), '14:00:00');
 
 // كسر ICE اليومي: DXY صيفاً يُغلق 21:00 UTC (حتى 00:00) ⇒ 4H الساعة 20:00 تُغلق فعلياً 21:00 — كان «3:30:00»
 const jul15 = Date.UTC(2026, 6, 15) / 1000;

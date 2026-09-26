@@ -8,7 +8,7 @@ import {
   timeframeStepSec,
 } from './dataSource';
 import { candlesThrough, prevDayFromIntraday } from './pivotBase';
-import { forexWeekCloseSec } from './marketHours';
+import { dailyBarStampSec, forexWeekCloseSec } from './marketHours';
 
 export type LiveMergeOpts = {
   /** unix seconds of the tick (usually source.as_of) */
@@ -68,7 +68,12 @@ export function liveBarOpenSec(
     const weekClose = forexWeekCloseSec(symbol, open * 1000);
     if (weekClose != null && tickSec >= weekClose) return null;
   }
-  const k = Math.floor((tickSec - open) / stepSec);
+  // اليومي: الشمعة المختومة X تبدأ X−1 ‏17:00 نيويورك (`dailyBarStampSec`) — تيكات 21:00–24:00 UTC كانت تُلصق
+  // بشمعة أُغلقت (إغلاقها وقمّتها من الجلسة التالية)، وبعد وصول ختم الغد تُهمل حتى منتصف الليل.
+  const k =
+    symbol && stepSec === 86400
+      ? Math.round((dailyBarStampSec(symbol, tickSec) - Math.floor(open / 86400) * 86400) / 86400)
+      : Math.floor((tickSec - open) / stepSec);
   if (k === 0) return open;
   if (k < 0 || k >= ROLL_MAX_BARS || stepSec > ROLL_MAX_STEP_SEC) return null;
   return open + k * stepSec;

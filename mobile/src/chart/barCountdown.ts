@@ -1,11 +1,13 @@
-import { forexNextCloseSec, iceBreakStartForCloseSec, isForexMarketOpen } from './marketHours';
+import { dailyBarCloseSec, forexNextCloseSec, iceBreakStartForCloseSec, isForexMarketOpen } from './marketHours';
 
 /**
  * العدّ التنازلي لإغلاق الشمعة الجارية — يُكتب تحت سعر وسم السعر الحيّ.
  *
  * متداول الفوركس ينتظر إغلاق الشمعة ليحكم على كسر أو ابتلاع؛ بلا عدّاد يحسب الدقائق
  * بذهنه من ساعة الجهاز وفريم الشارت. الإغلاق = زمن افتتاح آخر شمعة + خطوة الفريم (لا تقريب
- * لحدود الساعة: الشمعة اليومية عند الوسطاء تفتح 21:00/22:00 UTC لا منتصف الليل).
+ * لحدود الساعة: الشمعة اليومية عند الوسطاء تفتح 21:00/22:00 UTC لا منتصف الليل). مع `symbol` اليومية تُغلق
+ * 17:00 نيويورك من يوم ختمها (`dailyBarCloseSec`) — كانت تعدّ لمنتصف ليل UTC: 3 ساعات زائدة صيفاً (2 شتاءً)،
+ * وتختفي كل مساء حين يصل ختم الغد.
  *
  * `null` = لا يُعرض: خطوة أطول من يوم (الأسبوعي — العدّ بالأيام لا يفيد بوسم ضيّق)، أو
  * الشمعة أُغلقت ولم تصل تاليتها (السوق مغلق/عطلة/انقطاع — عدّاد عالق عند 0:00 يوهم بحياة)،
@@ -26,6 +28,7 @@ export function barCloseCountdown(
   const openSec = lastBarTime > 1e12 ? lastBarTime / 1000 : lastBarTime;
   let closeSec = openSec + stepSec;
   if (symbol) {
+    if (stepSec === 86400) closeSec = dailyBarCloseSec(symbol, openSec);
     if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;
     const weekClose = forexNextCloseSec(symbol, nowMs);
     if (weekClose != null && weekClose < closeSec) closeSec = weekClose;

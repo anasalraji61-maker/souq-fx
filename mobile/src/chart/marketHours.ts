@@ -213,6 +213,21 @@ export function tradingDayStartSec(symbol: string, sec: number): number {
 }
 
 /**
+ * شمعة D عند المزوّد (Twelve Data) المختومة X 00:00 UTC تغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك للفوركس والمعادن
+ * والنفط والمؤشرات (مُتحقَّق حيّاً بالخادم، `bar_end` بـ`twelve_data.py`)، لا X ⇒ X+1 00:00 UTC. الكريبتو يوم UTC.
+ * `dailyBarCloseSec`: إغلاق شمعة مختومة `stampSec`. `dailyBarStampSec`: ختم الشمعة التي يقع فيها `sec`.
+ */
+export function dailyBarCloseSec(symbol: string, stampSec: number): number {
+  const day = Math.floor(stampSec / DAY_SEC) * DAY_SEC;
+  return isCryptoSymbol(symbol) ? day + DAY_SEC : nyFivePmUtcSec(day);
+}
+
+export function dailyBarStampSec(symbol: string, sec: number): number {
+  if (isCryptoSymbol(symbol)) return Math.floor(sec / DAY_SEC) * DAY_SEC;
+  return Math.floor(tradingDayStartSec(symbol, sec) / DAY_SEC) * DAY_SEC + DAY_SEC;
+}
+
+/**
  * يوم التداول الذي تُنسب إليه شمعة تبدأ عند `openSec` بطول `stepSec` — بالجزء **الأكبر** من ساعات
  * سوقها المفتوحة، لا بزمن فتحها. شمعة 4H من Twelve Data (محاذاة 00/04/…/20 UTC) تعبر حدّ 17:00
  * نيويورك: 20:00–24:00 صيفاً ثلاث ساعات منها لليوم الجديد، فكانت تُنسب للقديم ⇒ بين 21:00 و24:00

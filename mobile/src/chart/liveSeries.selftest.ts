@@ -224,6 +224,13 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.equal(liveBarOpenSec(mon, wed, W, wed + 1, 'EURUSD'), mon, 'W: midweek tick merges');
   assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1, 'BTCUSD'), mon, 'W: crypto trades the weekend');
   assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1), mon, 'no symbol: unchanged behaviour');
+  // D: الختم X يغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك
+  const wedD = Date.UTC(2026, 8, 23) / 1000;
+  const wed22 = wedD + 22 * 3600;
+  assert.equal(liveBarOpenSec(wedD, wed22, 86400, wed22 + 1, 'EURUSD'), null, 'D: post-17:00 NY tick not merged into closed bar');
+  assert.equal(liveBarOpenSec(wedD + 86400, wed22, 86400, wed22 + 1, 'EURUSD'), wedD + 86400, 'D: tick merges into next-day stamp');
+  assert.equal(liveBarOpenSec(wedD, wedD + 20 * 3600, 86400, wedD + 20 * 3600 + 1, 'EURUSD'), wedD, 'D: before 17:00 NY merges');
+  assert.equal(liveBarOpenSec(wedD, wed22, 86400, wed22 + 1, 'BTCUSD'), wedD, 'D: crypto UTC day');
 }
 
 console.log('liveSeries selftest: OK');
