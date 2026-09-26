@@ -44,6 +44,7 @@ import {
   journalLossStreaks,
   breakevenWinRatePct,
   journalMaxDrawdownR,
+  journalPayoffR,
   journalWinRateLine,
   roundHalfEven,
   floatingResult,
@@ -3678,3 +3679,47 @@ console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');
   assert.equal(breakevenWinRatePct(Infinity), null);
 }
 console.log('tradePlan breakeven win-rate selftest OK');
+
+// ---- journalPayoffR: متوسط الرابحة/الخاسرة بالـR ونسبة النجاح اللازمة بها مقابل الفعلية ----
+{
+  // شراء EURUSD دخول 1.0850 وقف 1.0830 (20 pip = 1R)
+  const t = (exit: number, extra: Record<string, unknown> = {}) => ({
+    symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit, status: 'closed', ...extra,
+  });
+  // رابحتان +0.8R (1.0866) وثلاث خاسرات −1R: النسبة 0.8 ⇒ تحتاج 55.6% (100/1.8 = 55.55…) والفعلية 40%
+  const rows = [t(1.0866), t(1.0866), t(1.083), t(1.083), t(1.083)];
+  assert.deepEqual(journalPayoffR(rows), { avgWin: 0.8, avgLoss: 1, payoff: 0.8, needPct: 55.6, winPct: 40, n: 5 });
+  // +2R و−1R: 1:2 ⇒ 33.4% (للأعلى) والفعلية 50%
+  assert.deepEqual(journalPayoffR([t(1.089), t(1.083)]), { avgWin: 2, avgLoss: 1, payoff: 2, needPct: 33.4, winPct: 50, n: 2 });
+  // التعادل (خروج = دخول) والمفتوحة وبلا وقف لا تُعدّ
+  assert.deepEqual(
+    journalPayoffR([t(1.089), t(1.083), t(1.085), t(1.089, { status: 'open' }), t(1.089, { sl: null })]),
+    { avgWin: 2, avgLoss: 1, payoff: 2, needPct: 33.4, winPct: 50, n: 2 }
+  );
+  // بيع USDJPY دخول 150 وقف 151 (100 pip = 1R): خروج 148.5 ⇒ +1.5R، خروج 151.5 ⇒ −1.5R ⇒ 1:1 ⇒ 50 لا 50.1
+  const j = (exit: number) => ({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 151, exit, status: 'closed' });
+  assert.deepEqual(journalPayoffR([j(148.5), j(151.5)]), { avgWin: 1.5, avgLoss: 1.5, payoff: 1, needPct: 50, winPct: 50, n: 2 });
+  // الوقف الأصلي «1R @» يحكم: وقف منقول للتعادل (1.085) والعلامة 1.083 ⇒ الخروج 1.089 = +2R لا غير محسوب
+  const movedNote = noteWithInitialStop({
+    symbol: 'EURUSD', note: '', before: { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' }, after: { side: 'buy', entry: 1.085, sl: 1.085 },
+  });
+  assert.ok(movedNote.includes('1R'));
+  const moved = t(1.089, { sl: 1.085, note: movedNote });
+  assert.equal(journalPayoffR([moved, t(1.083)])?.avgWin, 2);
+  // المعروض يكفي فعلاً: بـpayoff المحقَّق، needPct × (1 + payoff) ≥ 100 ولـ(needPct − 0.1) لا
+  for (const exits of [[1.0866, 1.0871, 1.083], [1.0893, 1.0827, 1.0839], [1.0851, 1.0849]]) {
+    const r = journalPayoffR(exits.map((e) => t(e)));
+    assert.ok(r);
+    const rs = exits.map((e) => (e - 1.085) / 0.002);
+    const w = rs.filter((x) => x > 0);
+    const l = rs.filter((x) => x < 0);
+    const payoff = w.reduce((a, b) => a + b, 0) / w.length / (-l.reduce((a, b) => a + b, 0) / l.length);
+    assert.ok(r.needPct * (1 + payoff) >= 100 - 1e-9, `${exits}: ${r.needPct}% لا يكفي`);
+    assert.ok((r.needPct - 0.1) * (1 + payoff) < 100, `${exits}: ${r.needPct}% ليس الأضيق`);
+  }
+  // رابحات فقط أو خاسرات فقط أو لا شيء ⇒ null
+  assert.equal(journalPayoffR([t(1.089), t(1.087)]), null);
+  assert.equal(journalPayoffR([t(1.083)]), null);
+  assert.equal(journalPayoffR([]), null);
+}
+console.log('tradePlan payoff-R selftest OK');

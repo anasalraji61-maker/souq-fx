@@ -1025,6 +1025,61 @@ export function journalMaxDrawdownR(
 }
 
 /**
+ * **العائد الفعلي مقابل ما يتطلّبه**: متوسط الرابحة بالـR (`avgWin`) ومتوسط الخاسرة (`avgLoss`، موجب)، ونسبتهما (`payoff`)،
+ * و**نسبة النجاح اللازمة للتعادل** بهذه النسبة المحقَّقة (`needPct`، `breakevenWinRatePct`) مقابل نسبة النجاح **الفعلية** على
+ * الصفقات نفسها (`winPct`).
+ *
+ * لماذا: «نسبة نجاح 45%» وحدها لا تقول إن كانت تكفي. من يغلق رابحاته عند +0.8R وخاسراته عند −1R يحتاج 55.6% — فنظامه
+ * خاسر بـ45% مهما كانت أهدافه المخطَّطة 1:2. `planBreakevenWinRate` بالحاسبة يقول ما يطلبه الهدف **المخطَّط**؛ هذا يقول ما
+ * يطلبه ما **حدث فعلاً** (إغلاق مبكّر، انزلاق).
+ *
+ * R لكل صفقة بمسطرة «متوسط R» (`exactR`)؛ صفقة بلا R تُتخطّى. رابحة > ε وخاسرة < −ε والتعادل لا يُعدّ (كـ`journalStats`)،
+ * و`winPct` = رابحة ÷ (رابحة + خاسرة) من **هذه** الصفقات لا من `win_rate` الخادم (مجموعة أخرى: كل المغلقة ذات `pnl`) — المقارنة
+ * بين رقمين من العيّنة نفسها. `winPct` لمنزلة (`roundAway`)، و`needPct` للأعلى. `null` ما لم توجد رابحة **و**خاسرة.
+ */
+export function journalPayoffR(
+  trades: readonly {
+    symbol?: string;
+    side: string;
+    entry: number;
+    sl?: number | null;
+    exit?: number | null;
+    note?: string | null;
+    status: string;
+  }[]
+): { avgWin: number; avgLoss: number; payoff: number; needPct: number; winPct: number; n: number } | null {
+  let winSum = 0;
+  let lossSum = 0;
+  let wins = 0;
+  let losses = 0;
+  for (const tr of trades) {
+    if (tr.status !== 'closed') continue;
+    const r = exactR({ symbol: tr.symbol, side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit, note: tr.note });
+    if (r == null) continue;
+    if (r > JOURNAL_BREAKEVEN_EPS) {
+      winSum += r;
+      wins += 1;
+    } else if (r < -JOURNAL_BREAKEVEN_EPS) {
+      lossSum -= r;
+      losses += 1;
+    }
+  }
+  if (!wins || !losses) return null;
+  // النسبة والتعادل من المتوسطين **الدقيقين** لا المقرَّبين (0.84/1.04 ≠ 0.8/1.0)
+  const payoffExact = winSum / wins / (lossSum / losses);
+  const needPct = breakevenWinRatePct(payoffExact);
+  if (needPct == null) return null;
+  return {
+    avgWin: roundR(winSum / wins),
+    avgLoss: roundR(lossSum / losses),
+    payoff: roundAway(payoffExact, 2),
+    needPct,
+    winPct: roundAway((wins / (wins + losses)) * 100, 1),
+    n: wins + losses,
+  };
+}
+
+/**
  * سطر «نسبة نجاح: {pct}%» للدفتر. دفترٌ كل مغلقاته تعادل ⇒ لا صفقة حاسمة و`win_rate` null (خادمٌ أقدم: 0) ⇒ «0%» تُقرأ
  * «خسر كل صفقاته» (backend-r6 (5)). بلا حاسمة، أو `win_rate` غير رقم (null لاحقاً من الخادم) ⇒ «—» بلا علامة %.
  * خادمٌ أقدم بلا `win_count`/`loss_count` ⇒ النسبة كما أرسلها (لا نعرف إن كانت كلها تعادل).
