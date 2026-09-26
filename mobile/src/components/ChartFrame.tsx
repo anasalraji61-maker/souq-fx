@@ -482,7 +482,7 @@ export function ChartFrame({
             {/* تبديل الرمز: الرأس يسمّي الرمز الجديد (`frameSymbol`) والسعر ما زال للسابق حتى تصل سلسلته ⇒
                 «EURUSD 3,652.40» بسعر الذهب ونسبته وسبريده، يقرؤه قارئ الشاشة كما هو. «—» يحفظ ارتفاع السطر. */}
             {symbolSwitching ? (
-              <Text style={[styles.price, phone && styles.pricePhone]} accessibilityLabel={t.mcSwitchingA11y}>
+              <Text style={[styles.price, phone && styles.pricePhone]} accessibilityLabel={t.cfPriceLoadingA11y.replace('{symbol}', frameSymbol)}>
                 —
               </Text>
             ) : (
