@@ -278,7 +278,11 @@ export function positionOutcomeText(
   // لم يُنفَّذ: كم يبعد السعر عن الدخول («Entry ⌛ 12.3 pip»)، أو «Entry ✕» إن انتهى الصندوق قبل بلوغه.
   // `entryWord` كلمة «دخول» بلغة الواجهة (`tr.entryLabel`) — كانت «Entry» إنجليزية ثابتة بالعربية والكردية.
   if (outcome.state === 'missed') return `${entryWord} ✕`;
-  if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry, lang, priceRef)}`;
+  if (outcome.state === 'pending') {
+    // «دخول» يجعل السطر من اليمين ⇒ «pip 12.3 ⌛ دخول»؛ LRM على طرفي المسافة يُبقيها «12.3 pip» (كـ`measureReadout`).
+    const dist = distanceText(symbol, outcome.exit, levels.entry, lang, priceRef);
+    return `${entryWord} ⌛ ${lang === 'ar' || lang === 'ku' ? `\u200E${dist}\u200E` : dist}`;
+  }
   const up = outcome.r >= 0;
   // الإشارة من الرقم المطبوع (كـ`measureReadout`): خروج عند الدخول تماماً كان «+0.0 pip · +0R»، و−0.4 نقطة
   // عشرية «−0.0 pip · −0R» — اتجاه لصفقة متعادلة. صفر مطبوع ⇒ بلا إشارة، لكلٍّ من المسافة وR على حدة.

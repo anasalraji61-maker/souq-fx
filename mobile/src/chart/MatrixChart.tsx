@@ -8345,7 +8345,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           lo = Math.min(lo, c.low);
                         }
                         const range = candleRangePipsText(series.symbol, hi, lo, lang, priceDecimalsRef);
-                        return range ? ` ${range}` : null;
+                        // اسم الجلسة العربي/الكردي يجعل السطر من اليمين ⇒ «pip 16.2 ↕ لندن»؛ LRM يُبقي المدى كتلة.
+                        if (!range) return null;
+                        return lang === 'ar' || lang === 'ku' ? ` \u200E${range}\u200E` : ` ${range}`;
                       })()
                     : null}
                 </Text>
