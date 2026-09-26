@@ -1129,3 +1129,12 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **QA103a → chart**: `priceLegendChip` (:14146) و`collapsedPageChip` (:14216) كروم بـ`paddingVertical: 1`. باقي diff منذ f739fca نظيف.
 **المراجعة (c — `accessibilityLabel`):** مسح AST (`Pressable`/`Touchable*`/`Switch`/`TextInput`) ⇒ 5 أغلفة hover `accessible={false}` وأزرارها الداخلية مسمّاة، و`MessagesScreen` (launch52). **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 104
+**البناء:** أخضر 0 (على a2af2ed، ثم 2d7fef1 بعد السحب) — لا إصلاح لازم. **Selftests:** 117/117 ناجح (`npx tsx`)؛ بعد السحب الخمسة المتغيّرة ناجحة.
+**التحقّق بالكود:** أُغلقت QA103a ← chart `5dc60cb`؛ launch169a ← tools `a2af2ed` (`PositionSizePanel.tsx:1655`)؛ ui75a ← ui `f86eca3` (لا «🔔» بكود `.tsx`)؛
+tools116a ← launch `3493f06` + tools `f08db6f` (`NewsRiskBanner.tsx:189`). جديد: **launch170a → tools** (لا قارئ لـ`journalRefreshErrorRetry`)؛ **ui-r77 → أنس** (الأحمر للأخطاء/الحذف مقابل §1).
+backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطبيق يولّد دائماً معرّفاً يطابق `_INSTALL_ID_RE` ⇒ لا أثر.
+**قائمة قبول DESIGN-PRO (الرابع والعشرون):** 0/12 فشل (diff منذ 5d2a36f ثم a2af2ed: أهمية محايدة بكلمة، أوزان 500، شارتا QA103a؛ الباقي منطق).
+**المراجعة (d — أرقام متناقضة):** الجلسة 30 يوماً، ملاحظة 500، رمز ≤12، RSI 1–99 ⊂ 0–100، «50–100 lot» = `MAX_SANE_LOTS`، الماسح 30، الحساب 32/كلمة مرور 4 — متّسقة. **لا بند.**
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
