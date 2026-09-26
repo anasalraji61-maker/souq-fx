@@ -219,6 +219,8 @@ export type Dict = {
   /** قرار أنس ١٢ (backend-r78a، ui84a): سطر خافت فوق ردّ المساعد (`AiPanel`) أو توضيح المحاضرة (`LectureClassroom`) حين
    * `answer_lang`/`clarification_lang` = "ar" ولغة الواجهة غير العربية (الخادم بلا قالب كردي بعد، أو اعتذار الحارس). بالعربية لا يظهر أصلاً. */
   aiReplyInArabicNote: string;
+  /** ردّ `source: 'template'` من `/api/ai/ask`: لا نموذج مربوط بالخادم (لا «تعذّر الاتصال» — لم يُحاوَل اتصال) */
+  aiTemplateNote: string;
   analystsTitle: string;
   analystsSubSuffix: string;
   analystsRefreshA11y: string;
@@ -1856,6 +1858,7 @@ const ar: Dict = {
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
   aiAskBtn: 'اسأل',
   aiReplyInArabicNote: 'الردّ بالعربية — لا يتوفّر الردّ بلغتك بعد',
+  aiTemplateNote: 'المساعد الذكي غير مفعَّل على الخادم الآن — هذا شرح تعليمي عام، لا جواب عن سؤالك',
   analystsTitle: 'توقعات المحللين',
   analystsSubSuffix: 'لا مصدر مرخَّص بعد — لا نعرض آراء مختلَقة',
   analystsRefreshA11y: 'تحديث توقعات المحللين',
@@ -3143,6 +3146,7 @@ const enUS: Dict = {
   aiSendA11y: 'Send question to the AI assistant',
   aiAskBtn: 'Ask',
   aiReplyInArabicNote: "This reply is in Arabic — replies in your language aren't available yet",
+  aiTemplateNote: 'The AI assistant isn’t switched on at the server yet — this is general educational text, not an answer to your question',
   analystsTitle: 'Analyst forecasts',
   analystsSubSuffix: 'No licensed source yet — we don’t show made-up views',
   analystsRefreshA11y: 'Refresh analyst forecasts',
@@ -4479,6 +4483,7 @@ const ku: Dict = {
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiAskBtn: 'بپرسە',
   aiReplyInArabicNote: 'ئەم وەڵامە بە عەرەبییە — وەڵام بە زمانی تۆ هێشتا بەردەست نییە',
+  aiTemplateNote: 'یاریدەدەری زیرەک ئێستا لەسەر ڕاژەکار چالاک نییە — ئەمە ڕوونکردنەوەیەکی فێرکاریی گشتییە، نەک وەڵامی پرسیارەکەت',
   analystsTitle: 'پێشبینیەکانی شیکارکاران',
   analystsSubSuffix: 'هێشتا سەرچاوەی مۆڵەتدار نییە — بۆچوونی دەستکرد پیشان نادەین',
   analystsRefreshA11y: 'نوێکردنەوەی پێشبینیەکانی شیکارکاران',
