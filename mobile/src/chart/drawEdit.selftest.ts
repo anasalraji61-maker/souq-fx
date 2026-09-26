@@ -213,6 +213,17 @@ ok('رأسي: زمن لا سعر', nudgeAxes('vline').time && !nudgeAxes('vline'
 ok('شعاع أفقي: الاثنان (بدايته تتحرّك)', nudgeAxes('hray').time && nudgeAxes('hray').price);
 ok('ترند: الاثنان', nudgeAxes('trend').time && nudgeAxes('trend').price);
 
+// قناة باللوغاريتمي: السحب ×1.25 ينقل العرض بالنسبة نفسها (كان ثابتاً ⇒ تضيق ~20% على الشاشة).
+{
+  const ch = { id: 'c', tool: 'channel', color: '#fff', a: { index: 10, price: 2000 }, b: { index: 20, price: 2100 }, width: 100 } as any;
+  const st = () => null;
+  const up = translateDrawing(ch, 0, (p) => p * 1.25, st, true);
+  ok('لوغاريتمي: العرض ×1.25', Math.abs((up.width ?? 0) - 125) < 1e-9 && up.a.price === 2500);
+  const lin = translateDrawing(ch, 0, (p) => p + 50, st, true);
+  ok('إزاحة جمعية: العرض كما هو', Math.abs((lin.width ?? 0) - 100) < 1e-9);
+  ok('بلا scaleWidth: العرض كما هو', translateDrawing(ch, 0, (p) => p * 1.25, st).width === 100);
+}
+
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);
   process.exitCode = 1;

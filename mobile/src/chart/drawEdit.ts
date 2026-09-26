@@ -215,12 +215,16 @@ export type StampAt = (index: number) => { time: number; ahead?: number; aheadSt
  * - إلا تحريكاً **رأسياً بحتاً** (0 شمعة): الختم يبقى كما هو والسعر وحده يتغيّر. على Renko/Range/Kagi/P&F
  *   نقطةٌ رُسمت على الشموع تقع على آخر لبنة قبل زمنها، فإعادة ختمها كانت تستبدل زمن شمعتها الحقيقي بزمن
  *   تلك اللبنة الأقدم: ▲ واحدة ثم العودة للشموع ⇒ طرفا الترند قفزا لشموع سابقة (وحُفظ ذلك).
+ * - `scaleWidth` (المقياس اللوغاريتمي): عرض القناة `width` إزاحة **سعرية** ثابتة، لكن التحريك هناك ضربٌ لا جمع ⇒
+ *   قناة ذهب 2000/2100 بعرض 100 سُحبت لأعلى 25% ضاقت ~20% على الشاشة (ولأسفل اتّسعت). حينها يُنقل مقبض العرض
+ *   (`channelHandlePrice`) بـ`priceOf` كالطرفين ويُشتقّ العرض منه ⇒ ×1.25 تماماً والشكل كما هو. بالخطّي لا يُمسّ.
  */
 export function translateDrawing(
   orig: Drawing,
   dIndex: number,
   priceOf: (price: number) => number,
-  stamp: StampAt
+  stamp: StampAt,
+  scaleWidth = false
 ): Drawing {
   const minIndex = Math.min(orig.a.index, orig.b?.index ?? orig.a.index);
   const maxIndex = Math.max(orig.a.index, orig.b?.index ?? orig.a.index);
@@ -236,7 +240,15 @@ export function translateDrawing(
     const s = stamp(index);
     return s == null ? { index, price } : { index, price, ...s };
   };
-  return orig.b ? { ...orig, a: move(orig.a), b: move(orig.b) } : { ...orig, a: move(orig.a) };
+  if (!orig.b) return { ...orig, a: move(orig.a) };
+  const a = move(orig.a);
+  const b = move(orig.b);
+  if (scaleWidth && orig.tool === 'channel' && orig.width != null && Number.isFinite(orig.width)) {
+    const handle = (orig.a.price + orig.b.price) / 2 + orig.width;
+    const w = priceOf(handle) - (a.price + b.price) / 2;
+    if (Number.isFinite(w)) return { ...orig, a, b, width: w };
+  }
+  return { ...orig, a, b };
 }
 
 /** هل غيّر التحريك موضع الرسم؟ (يُسقط كتابة لا تغيّر شيئاً — راجع رأس الملف). */

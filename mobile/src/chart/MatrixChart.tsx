@@ -4322,7 +4322,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return pip ? nudgePipPrice(price, Math.round((moved - price) / pip), pip) : moved;
       },
       (index) =>
-        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed)
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed),
+      logScale
     );
     pushDrawHistory();
     setDrawings((list) => [...list, next]);
@@ -4428,7 +4429,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       (price) =>
         !steps ? price : pip ? nudgePipPrice(price, steps, pip) : fromScale(toScale(price) + steps * pxScaled),
       (index) =>
-        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed)
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed),
+      logScale
     );
     if (sameDrawingPlace(d, next)) return 'same';
     if (record) pushDrawHistory();
@@ -5289,7 +5291,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 timeframeStepSec(series.timeframe),
                 sourceEndTime(),
                 weekendClosed
-              )
+              ),
+            logScale
           );
           if (sameDrawingPlace(selBodyLast.current, next)) return;
           if (!selDragPushed.current) {
