@@ -346,7 +346,8 @@ const styles = StyleSheet.create({
   },
   cardTopRtl: { flexDirection: 'row-reverse' },
   order: { color: colors.textDim, fontWeight: '500' },
-  school: { color: colors.accent, fontWeight: '500', fontSize: 15 },
+  // DESIGN-PRO §1: عنوان المدرسة كان بالتأكيد على كل بطاقة بالقائمة ⇒ نصّ أساسي.
+  school: { color: colors.text, fontWeight: '500', fontSize: 15 },
   desc: {
     color: colors.textMuted,
     fontSize: 13,

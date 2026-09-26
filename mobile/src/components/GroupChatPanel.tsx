@@ -254,8 +254,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  mine: { borderColor: 'transparent', backgroundColor: colors.accentSoft },
-  user: { color: colors.accent, fontSize: 11, fontWeight: '500' },
+  // DESIGN-PRO §1: اسم الكاتب كان بالتأكيد على **كل** رسالة، ورسائلك بتعبئة تأكيد ⇒ محايدان؛
+  // رسالتك تبقى متميّزة بتعبئة أفتح و«أنت» مكان الاسم.
+  mine: { borderColor: 'transparent', backgroundColor: colors.bgPanel },
+  user: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   userFlex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   headRtl: { flexDirection: 'row-reverse' },
