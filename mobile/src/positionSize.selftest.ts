@@ -777,6 +777,15 @@ console.log('positionSize journal plan gain selftest OK');
   assert.equal(parseLeverage('２００'), 200);
   assert.equal(parseLeverage('１０００００'), null); // الحدّ نفسه
   assert.equal(parseLeverage('1'), 1); // بلا رافعة: الهامش = القيمة الاسمية كاملة
+  // مسافة بين رقمين مبهمة (1:30 أم 130؟) ⇒ مرفوضة؛ كانت تُلصق «1 30» = 130 ⇒ «أقصى لوت» أكبر 4.3×
+  for (const raw of ['1 30', '1 50', '1 100', '1 500', '1\u00a0200', '١ ٣٠', '1 000', '1:1 000', '10 0']) {
+    assert.equal(parseLeverage(raw), null, raw);
+    assert.equal(leverageOutOfRange(raw), false, raw);
+  }
+  // المسافة حول الفاصل وحول الرقم كما كانت
+  assert.equal(parseLeverage('1 :30'), 30);
+  assert.equal(parseLeverage('1/ 30'), 30);
+  assert.equal(parseLeverage('\t200 '), 200);
   for (const bad of ['', '0', '0.5', '1:0', '10000', '100:1', '2:100', 'abc', '1:', ':100', '-100', '1.000', '1:1.000', '1:2.000', '٢٫٠٠٠', '500.000']) {
     assert.equal(parseLeverage(bad), null, bad);
   }

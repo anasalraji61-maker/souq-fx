@@ -1340,10 +1340,15 @@ export const MAX_LEVERAGE = 3000;
 
 /** الرقم كما كُتب بصيغة رافعة مفهومة («1:5000» ⇒ 5000)، بلا فحص الحدّ. `null` = ليست صيغة رافعة. */
 function readLeverage(raw: string): number | null {
-  const s = normalizeDigits(raw)
+  const spaced = normalizeDigits(raw)
     .replace(/[：]/g, ':')
     .replace(/[／]/g, '/')
-    .replace(/\s/g, '');
+    .trim()
+    .replace(/\s*([:/])\s*/g, '$1');
+  // مسافة بين رقمين مبهمة: «1 30» (لوحة بلا «:») كانت تُلصق 130 ⇒ هامش أصغر 4.3× و«أقصى لوت» أكبر 4.3× بلا تحذير.
+  // `parseDecimal` يرفض «1 30» أيضاً؛ و«1 500» قد تكون 1:500 لا 1500 ⇒ مرفوضة كلها. المسافة حول «:» أو «/» مقبولة.
+  if (/\d\s+\d/.test(spaced)) return null;
+  const s = spaced.replace(/\s/g, '');
   const m = /^(?:1[:/])?(\d+(?:\.\d+)?)$/.exec(s);
   if (!m) return null;
   // «1.000»/«1:1.000» = 1:1000 بكتابة أوروبية (لوحة الأرقام العشرية بلا «:») — كانت تُقرأ رافعة 1 بلا تحذير
