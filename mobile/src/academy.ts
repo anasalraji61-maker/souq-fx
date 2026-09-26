@@ -23,7 +23,8 @@ export type ScriptSegment = {
 export type AcademyLecture = {
   id: string;
   title: string;
-  duration_min: number;
+  /** backend-r55: من كلمات السرد (÷130/د) — `null` حين لا يُعرف؛ لا مدّة مخترعة. */
+  duration_min: number | null;
   format: string;
   video_status: string;
   outline: string[];

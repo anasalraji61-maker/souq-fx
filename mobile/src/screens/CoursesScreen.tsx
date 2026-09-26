@@ -27,6 +27,11 @@ import { useI18n } from '../i18n/I18nContext';
  * `_ku` منفصل (نفس نمط الملف الأصلي: ar/en فقط)، فتُستخدَم النسخة الإنجليزية لأي لغة غير عربية
  * (بضمنها الكردية) — نفس قرار "الإنجليزية محور اللغات غير العربية" المتَّبع بأماكن أخرى للمحتوى
  * (لا نصوص الواجهة الثابتة التي تغطّي الأربع لغات عبر Dict). راجع HANDOFF.md. */
+/** backend-r55: مدّة السرد بالدقائق من الخادم، أو `null` (قيمة غائبة/غير صالحة) ⇒ لا تُعرض. */
+function lectureMinutes(l: { duration_min?: number | null }): number | null {
+  const m = l.duration_min;
+  return typeof m === 'number' && Number.isFinite(m) && m > 0 ? m : null;
+}
 function schoolName(s: { name_ar: string; name_en: string }, lang: string): string {
   return lang === 'ar' ? s.name_ar : s.name_en;
 }
@@ -117,7 +122,7 @@ export function CoursesScreen() {
                 {
                   id: `${id}-demo`,
                   title: t.coursesFallbackLectureTitle,
-                  duration_min: 20,
+                  duration_min: null,
                   format: 'classroom',
                   video_status: 'script_ready',
                   outline: [t.coursesFallbackOutlineIntro],
@@ -264,12 +269,14 @@ export function CoursesScreen() {
                             setSchool(null);
                             setActiveLecture({ schoolId: sid, lectureId: lec.id });
                           }}
-                          accessibilityLabel={`${t.coursesLectureA11yPrefix}: ${lec.title} · ${lec.duration_min} ${t.coursesMinuteWord}`}
+                          accessibilityLabel={`${t.coursesLectureA11yPrefix}: ${lec.title}${lectureMinutes(lec) != null ? ` · ${lectureMinutes(lec)} ${t.coursesMinuteWord}` : ''}`}
                         >
                           <Text style={[styles.lecTitle, { textAlign: align }]}>{lec.title}</Text>
-                          <Text style={[styles.lecMeta, { textAlign: align }]}>
-                            {lec.duration_min} {t.coursesMinuteAbbrev} · {t.coursesFullLectureWord}
-                          </Text>
+                          {lectureMinutes(lec) != null && (
+                            <Text style={[styles.lecMeta, { textAlign: align }]}>
+                              {lectureMinutes(lec)} {t.coursesMinuteAbbrev}
+                            </Text>
+                          )}
                         </Pressable>
                       ))}
                     </View>

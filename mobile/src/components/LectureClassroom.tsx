@@ -177,7 +177,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           setLecture({
             id: lectureId,
             title: t.lectureFallbackTitle,
-            duration_min: 20,
+            duration_min: null,
             format: 'screen_voice',
             video_status: 'script_ready',
             outline: [t.lectureFallbackOutlineDefinition, t.lectureFallbackOutlineApplication],
