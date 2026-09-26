@@ -45,3 +45,11 @@ def _no_candle_disk(monkeypatch):
     monkeypatch.setattr(twelve_data, "CANDLE_DISK", None)
     monkeypatch.setattr(twelve_data, "_disk_checked", set())
     monkeypatch.setattr(twelve_data, "_base_at", {})
+
+
+@pytest.fixture(autouse=True)
+def _fresh_ws_order(monkeypatch):
+    """ترتيب تيكات الـWS بوقت المزوّد (run 91) حالة على مستوى الوحدة — لا تتسرّب بين الاختبارات."""
+    import twelve_data_ws
+
+    monkeypatch.setattr(twelve_data_ws, "_PROVIDER_TS", {})

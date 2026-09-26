@@ -19,6 +19,8 @@ LATEST: dict[str, float] = {}
 # MATRIX symbol -> وقت آخر سعر عند المزوّد (epoch، `_quoted_at`؛ وقت الاستلام إن لم يُرسله) — بلا هذا كان سعر مجمَّد (انقطاع الـWS أو عطلة السوق) يُبثّ
 # للعميل كـ«حي» بوقت الآن، ويُطلق عليه الـworker تنبيهات كأنه السعر الحالي.
 LATEST_AT: dict[str, float] = {}
+# MATRIX symbol -> `timestamp` المزوّد الخام لآخر تيك مخزَّن (بلا سقف وقت الوصول) — للترتيب وحده (`_store`)
+_PROVIDER_TS: dict[str, float] = {}
 _connected = False
 _last_error: str | None = None
 
@@ -69,29 +71,41 @@ def _quoted_at(msg: dict[str, Any], received: float) -> float:
     دائماً: سعر يُعاد إرساله عند الاشتراك/إعادة الاتصال (إغلاق الجمعة بعطلة الأسبوع) يُبثّ «حيّاً» بوقت الآن
     ويقرؤه الـworker سعراً حالياً للتنبيهات. لا يتجاوز وقت الوصول (ساعة مزوّد متقدّمة لا تجعل سعراً «أحدث»)،
     وبلا `timestamp` صالح ⇒ وقت الوصول كما كان."""
+    ts = _provider_ts(msg)
+    return received if ts is None else min(ts, received)
+
+
+def _provider_ts(msg: dict[str, Any]) -> float | None:
+    """`timestamp` التيك عند المزوّد بالثواني، أو None إن غاب/لم يُقرأ."""
     raw = msg.get("timestamp")
     if isinstance(raw, bool):
-        return received
+        return None
     try:
         ts = float(raw)
     except (TypeError, ValueError):
-        return received
+        return None
     if not math.isfinite(ts) or ts <= 0:
-        return received
-    if ts > 1e12:  # ميلي ثانية
-        ts /= 1000.0
-    return min(ts, received)
+        return None
+    return ts / 1000.0 if ts > 1e12 else ts  # ميلي ثانية
 
 
 def _store(msg: dict[str, Any]) -> None:
     parsed = _parse_price(msg)
     if parsed:
-        at = _quoted_at(msg, time.time())
-        # تيك متأخّر الوصول (وقته عند المزوّد أقدم من المخزَّن) كان يمحو سعراً أحدث ويُقرأ للتنبيهات حتى يتقادم
-        if at < LATEST_AT.get(parsed[0], 0.0):
+        sym = parsed[0]
+        received = time.time()
+        at = _quoted_at(msg, received)
+        ts = _provider_ts(msg)
+        # تيك متأخّر الوصول (وقته عند المزوّد أقدم من المخزَّن) كان يمحو سعراً أحدث ويُقرأ للتنبيهات حتى يتقادم.
+        # الترتيب بوقت المزوّد **الخام** (run 91): المقارنة كانت بالوقت المسقوف بوقت الوصول ⇒ ساعة خادم متأخّرة
+        # عن المزوّد تسقف كل التيكات فيحكم ترتيب الوصول (1.1000 الأقدم يمحو 1.1010)، وتيك بلا `timestamp`
+        # (وقت وصول كسري) كان يُسقط تيكاً أحدث بالثانية نفسها. بلا `timestamp` ⇒ لا ترتيب ممكن: يُقبل.
+        if ts is not None and ts < _PROVIDER_TS.get(sym, 0.0):
             return
-        LATEST[parsed[0]] = parsed[1]
-        LATEST_AT[parsed[0]] = at
+        LATEST[sym] = parsed[1]
+        LATEST_AT[sym] = at
+        if ts is not None:
+            _PROVIDER_TS[sym] = ts
 
 
 async def run_forever() -> None:
