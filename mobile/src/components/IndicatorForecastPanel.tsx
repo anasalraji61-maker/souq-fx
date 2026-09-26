@@ -399,7 +399,8 @@ const styles = StyleSheet.create({
   },
   rowRtl: { flexDirection: 'row-reverse' },
   name: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  summary: { color: colors.textDim, fontSize: 11, marginTop: 0 },
+  // تفصيل الصوت يحمل قيماً حيّة (RSI 63.4، MACD −0.0012) ⇒ `numeric` (DESIGN-PRO §2).
+  summary: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: 0 },
   badge: { fontWeight: '500', fontSize: 12 },
   note: { color: colors.textDim, fontSize: 11 },
 });
