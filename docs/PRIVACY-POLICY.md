@@ -26,7 +26,7 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
 - تنبيهات الأسعار والمؤشرات.
 - دفتر الصفقات: الأرقام والملاحظات التي تسجّلها بيدك عن صفقاتك. لا نربطه بأي حساب تداول.
 - قائمة المتابعة وتخطيطات الشارت المحفوظة، وتقدّمك في الأكاديمية.
-- رسائل الدردشة العامة والخاصة، وأفكار الصفقات وتصويتك عليها، وبلاغاتك عن محتوى مسيء.
+- رسائل الدردشة العامة، وأفكار الصفقات وتصويتك عليها، وبلاغاتك عن محتوى مسيء.
 - أسئلتك للمساعد الذكي.
 - إن انضممت لبرنامج الإحالة: موقعك في شجرة الإحالة وسجلّ العمولات المرتبط به.
 
@@ -44,7 +44,7 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
 
 ### 3. من يرى بياناتك
 - **المستخدمون الآخرون** يرون ما تنشره علناً: رسائل الدردشة العامة وأفكار الصفقات، باسم المستخدم الذي اخترته.
-  الرسائل الخاصة يراها طرفا المحادثة.
+  لا توجد رسائل خاصة بين المستخدمين في هذا الإصدار.
 - **مزوّدو خدمة** يعالجون جزءاً محدّداً نيابةً عنّا:
   - **Expo** (خدمة الإشعارات): رمز جهازك ونصّ التنبيه (الرمز ومستوى السعر) — بلا بريدك أو اسمك.
   - **OpenRouter** (المساعد الذكي): نصّ سؤالك ورمز الأداة وسياق السوق — بلا بريدك أو اسمك أو معرّفك. لا تكتب
@@ -91,7 +91,7 @@ text; we cannot read it).
 - Price and indicator alerts.
 - Your trade journal: the figures and notes you record yourself. It is not linked to any trading account.
 - Your watchlist, saved chart layouts, and your progress in the Academy.
-- Public and private chat messages, trade ideas and your votes on them, and reports you file about abusive content.
+- Public chat messages, trade ideas and your votes on them, and reports you file about abusive content.
 - Questions you ask the AI assistant.
 - If you join the referral program: your place in the referral tree and the related commission record.
 
@@ -110,8 +110,8 @@ No location, contacts, photos, camera, microphone, payment details, or broker ac
 No ads, no third-party analytics, tracking or crash-reporting tools, and we do not sell your data or share it for advertising.
 
 ### 3. Who sees your data
-- **Other users** see what you post publicly — public chat messages and trade ideas — under your chosen username. Private
-  messages are visible to both people in the conversation.
+- **Other users** see what you post publicly — public chat messages and trade ideas — under your chosen username. There are
+  no private messages between users in this version.
 - **Service providers** that process a specific part on our behalf:
   - **Expo** (notifications): your device token and the alert text (symbol and price level) — not your email or name.
   - **OpenRouter** (AI assistant): the text of your question, the symbol and market context — not your email, name or ID.

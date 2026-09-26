@@ -63,8 +63,8 @@ npx expo start --lan
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)، ونصوص المتجر في
 [`docs/STORE-LISTING.md`](docs/STORE-LISTING.md) و[`docs/STORE-PRIVACY.md`](docs/STORE-PRIVACY.md).
 
-وتبويب **الحساب** يعرض للجميع أسعار باقات بلا طريق شراء، وخطة عمولات وشجرة إحالة ثنائية —
-كلاهما مانع مراجعة يحتاج قرار أنس قبل الرفع. قائمة الموانع كاملة وخطوات EAS في
+الباقات وخطة العمولات وشجرة الإحالة وخانة «رمز الدعوة» بالتسجيل **مخفية** بتبويب **الحساب** بقرار أنس ١٠
+(`SHOW_REFERRAL_AND_PLANS = false` بـ`mobile/src/featureFlags.ts`، والكود باقٍ). قائمة الموانع كاملة وخطوات EAS في
 [`docs/RELEASE-MOBILE.md`](docs/RELEASE-MOBILE.md).
 
 ## هيكل المشروع
