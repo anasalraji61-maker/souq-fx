@@ -603,6 +603,11 @@ const COUNTDOWN_LINE_H = 13;
 
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
+/** شارتات الويب المركّبة، ومالك المفاتيح لحظةَ تركيب كلٍّ منها — ليعود إليه حين يُفكّ (إغلاق نافذة التركيز/الرباعي). */
+const webKeyMounted = new Set<object>();
+const webKeyBefore = new WeakMap<object, object | null>();
+/** أوّل شارت يُركَّب بدفعة واحدة (خلايا الرباعي معاً) يأخذ المفاتيح، لا آخرها. */
+let webKeyClaimBatch = false;
 
 /** Alt+حرف ⇒ أداة رسم (اختصارات TradingView الافتراضية)، بالموضع الفيزيائي `KeyboardEvent.code`. */
 type DrawingHit = { id: string; dist: number } | null;
@@ -1588,6 +1593,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setHoverDrawingId(null);
   }, [tool]);
   const keyToken = useRef({});
+  // شارت يُركَّب (نافذة التركيز أو الرباعي فوق الطرفية) يأخذ المفاتيح فوراً: كانت الأسهم وDelete وCtrl+Z و«4h⏎»
+  // تذهب للشارت المخفي تحت النافذة (آخر ما نُقر) فتحرّك رسمه المحدَّد أو تحذفه أو تبدّل فريمه، والنافذة لا تستجيب.
+  // وعند فكّه تعود المفاتيح لمن كان يملكها قبله إن بقي مركّباً — كانت تشير لشارت مفكوك فتتجاهل الطرفية المفاتيح حتى نقرة.
+  const keyClaimable = interactive || canPan;
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !keyClaimable) return;
+    const me = keyToken.current;
+    webKeyMounted.add(me);
+    webKeyBefore.set(me, webKeyChart);
+    if (!webKeyClaimBatch) {
+      webKeyChart = me;
+      webKeyClaimBatch = true;
+      setTimeout(() => {
+        webKeyClaimBatch = false;
+      }, 0);
+    }
+    return () => {
+      webKeyMounted.delete(me);
+      if (webKeyChart !== me) return;
+      // `seen`: شارت أُعيد تركيبه قد يشير لسابقه وسابقه إليه — بلا حارس حلقة لا تنتهي.
+      const seen = new Set<object>([me]);
+      let back = webKeyBefore.get(me) ?? null;
+      while (back && !webKeyMounted.has(back) && !seen.has(back)) {
+        seen.add(back);
+        back = webKeyBefore.get(back) ?? null;
+      }
+      webKeyChart = back && webKeyMounted.has(back) ? back : null;
+    };
+  }, [keyClaimable]);
   const [windowCount, setWindowCount] = useState(80);
   const [offset, setOffset] = useState(0);
   const [priceScale, setPriceScale] = useState(1);
