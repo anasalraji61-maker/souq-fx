@@ -1957,6 +1957,21 @@ export function breakevenRR(
  * («$7 per lot») — تُقبل **لعملة الخانة وحدها** بقاعدة خانة المخاطرة (`moneyTextFor`). كانت «رقم غير مفهوم» بينما
  * «$50» بخانة المخاطرة فوقها مقبولة. «€7» بحساب دولار و«$7» بحساب سنت (سبعة دولارات = 700 سنت؟) تبقى مرفوضة.
  */
+/**
+ * خانة **الرصيد**: رقمٌ بقاعدة المبالغ (`parseDecimal` `amount`)، أو مبلغٌ بعلامة/كود/اسم **عملة الحساب** («$10,000»، «10,000 USD»،
+ * «١٠٬٠٠٠ دولار») كخانة المخاطرة (`parseRiskInput`) والعمولة. كان الرصيد المنسوخ من المنصّة بعلامته («$10,000.00») «رقماً غير مفهوم»
+ * بينما «$50» بالمخاطرة تحته مقبولة. عملةٌ أخرى («€10,000» بحساب دولار) تبقى مرفوضة (`moneyInOtherCurrency` يقول لماذا).
+ * `null` = فارغ أو غير مفهوم أو مبهم («10.000») أو سالب.
+ */
+export function parseBalance(raw: string, ccy: string): number | null {
+  let v = parseDecimal(raw, { amount: true });
+  if (v == null) {
+    const text = moneyTextFor(raw, ccy);
+    if (text != null) v = parseDecimal(text, { amount: true });
+  }
+  return v != null && v >= 0 ? v : null;
+}
+
 export function parseCommission(raw: string, ccy?: string): number | null {
   if (raw.trim() === '') return 0;
   let v = parseDecimal(raw, { amount: true });

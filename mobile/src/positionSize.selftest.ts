@@ -43,6 +43,7 @@ import {
   CONV_STALE_AFTER_MS,
   liveEntryFillAllowed,
   parseRiskInput,
+  parseBalance,
   toggleRiskUnit,
   ACCOUNT_CCYS,
   instrumentSpec,
@@ -4371,3 +4372,21 @@ console.log('positionSize 0.0001 cross stop price in pips field selftest OK');
   assert.equal(r.lots, 6.66);
 }
 console.log('positionSize round scalper stop pips on majors selftest OK');
+{
+  // الرصيد بعلامة عملة الحساب مقبول كخانة المخاطرة («$10,000.00» منسوخاً من المنصّة كان «رقماً غير مفهوم»)
+  for (const [raw, ccy, v] of [
+    ['$10,000.00', 'USD', 10_000], ['10,000.00 USD', 'USD', 10_000], ['$10000', 'USD', 10_000], ['€5.000,50', 'EUR', 5000.5],
+    ['£2500', 'GBP', 2500], ['١٠٠٠٠ دولار', 'USD', 10_000], ['100000 USC', 'USC', 100_000], ['A$ 3000', 'AUD', null], ['¥1,000,000', 'JPY', 1_000_000],
+  ] as const) {
+    assert.equal(parseBalance(raw, ccy), v, `${raw} ${ccy}`);
+  }
+  // عملة أخرى، مبهم، سالب، فارغ ⇒ مرفوض كما كان؛ والعملة الأخرى تُقال (moneyInOtherCurrency)
+  // «$10,000» مبهمة كـ«10,000» وحدها (عشرة آلاف أم عشرة بكتابة أوروبية) — العلامة لا تحسم الفاصل
+  for (const raw of ['€10000', '10.000', '$10,000', '-500', '', 'abc', '$$10']) assert.equal(parseBalance(raw, 'USD'), null, raw);
+  assert.equal(moneyInOtherCurrency('€10000', 'USD'), true);
+  // اللوت من الرصيد المكتوب بعلامته = اللوت من الرقم وحده: 1% من $10,000، وقف 25 pip EURUSD ⇒ 0.40
+  const eu = instrumentSpec('EURUSD')!;
+  const r = positionSize({ balance: parseBalance('$10,000.00', 'USD')!, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 0.4);
+}
+console.log('positionSize parseBalance currency-marked balance selftest OK');
