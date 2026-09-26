@@ -432,7 +432,7 @@ type Props = {
   livePrice?: number | null;
   /** provenance of livePrice — required for honest merge into candles */
   liveTickSource?: import('../api').DataProvenance | null;
-  /** origin: 'crosshair' = زر 🔔 بسطر القراءة عند سعر الشمعة المحددة؛ غير ذلك = من أداة رسم. */
+  /** origin: 'crosshair' = زر ⚑ بسطر القراءة عند سعر الشمعة المحددة؛ غير ذلك = من أداة رسم. */
   onCreateAlert?: (price: number, origin?: 'drawing' | 'crosshair') => void;
   initialTool?: DrawTool;
   /**
@@ -562,7 +562,7 @@ const CHROME_DIM_DELAY_MS = 150;
 const PRICE_AXIS_WIDTH = 68;
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -12` + سطر 14) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
 const LEVEL_LABEL_H = 14;
-/** مقبض سحب خطّ التنبيه: بعرض وسمه («🔔 ▲ 1.09250 · +23.4 pip») وارتفاع إصبع حول الخطّ. */
+/** مقبض سحب خطّ التنبيه: بعرض وسمه («⚑ ▲ 1.09250 · +23.4 pip») وارتفاع إصبع حول الخطّ. */
 const ALERT_HANDLE_W = 150;
 const ALERT_HANDLE_H = 28;
 /** أقلّ من هذا (بكسل) رأسياً ⇒ لمسة لا سحب — لا يُعدَّل التنبيه. */
@@ -1565,7 +1565,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // `price` سعر موضع اللمسة (بالمغناطيس إن كان مفعّلاً) — `null` ⇒ لا خطّ أفقي.
   // `ahead`: خانات فارغة يمين الشمعة `time` (منطقة المستقبل) — الخطّ ووسم الزمن هناك، والقيم من الشمعة.
   const [cross, setCross] = useState<{ time: number; price: number | null; ahead?: number } | null>(null);
-  // تقاطع الويب يتبع الفأرة بلا نقر (معاينة)، والنقرة **تثبّته**. المعاينة بلا زرّ 🔔: الزرّ
+  // تقاطع الويب يتبع الفأرة بلا نقر (معاينة)، والنقرة **تثبّته**. المعاينة بلا زرّ ⚑: الزرّ
   // خارج اللوح، فالطريق إليه يمرّ بمستويات أخرى ثم يخرج من اللوح فتُمسح المعاينة — التنبيه
   // يُوضع من تقاطع مثبَّت فقط. `crossPinned` مرآة بـref لأن معالجات المؤشر تُقرأ خارج الرسم.
   const [crossHover, setCrossHover] = useState(false);
@@ -1604,7 +1604,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [percentScale, setPercentScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
   // طرفا آخر قياس لا نصّه: النصّ المجمَّد كان **لا يُمسح أبداً** — بعد قياس واحد يحلّ محلّ
-  // سطر OHLC للتقاطع ويُخفي زرّ 🔔 للأبد، ويبقى pip اليورو مكتوباً فوق شارت الين بعد
+  // سطر OHLC للتقاطع ويُخفي زرّ ⚑ للأبد، ويبقى pip اليورو مكتوباً فوق شارت الين بعد
   // التبديل. الآن يُمسح بأول نقرة/قياس جديد وبتبديل الرمز/الفريم/نوع الشارت، ويُحسب نصّه عند الرسم.
   // نوع الشارت أيضاً: طرفاه فهارس شموع، فعلى Renko/Range تقع فوق لبنات أخرى وعدد الشموع والمدّة كاذبان.
   const [measureDone, setMeasureDone] = useState<{ a: ChartPoint; b: ChartPoint } | null>(null);
@@ -4067,7 +4067,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   // إطار السعر الذي يقرأ به **كل شيء** (المحور، التقاطع و`priceAtY`، الرسومات، وسم السعر
   // الحيّ، التنبيه): مع الظلال الشموع الأساسية تُرسم بمدى حارتها العليا (`yPrimary`)، بينما
-  // كان الباقي بالمدى الكامل مع الظلال — لمسة على ذيل تقرأ سعراً آخر، وتنبيه 🔔 يُضبط عليه،
+  // كان الباقي بالمدى الكامل مع الظلال — لمسة على ذيل تقرأ سعراً آخر، وتنبيه ⚑ يُضبط عليه،
   // وخطّ أفقي يُرسم بعيداً عن القمّة التي وُضع عليها. الآن مدى الحارة ممدوداً لارتفاع اللوح
   // (الحارة تبدأ من 0)، فتطابق `yOf` و`yPrimary` بالضبط. بلا ظلال: المدى كما كان.
   const priceFrame = useMemo(() => {
@@ -4719,7 +4719,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
     // بالمستقبل لا شمعة تحت الإصبع ⇒ بلا مغناطيس.
     // تحت الحارة الرئيسية (حارات ظلال الفريم الأعلى، كلٌّ بمقياسها ولا محور لها) `priceAtY` يمدّ مقياس الحارة الرئيسية
-    // ⇒ سعر لا يطابق الشمعة تحت الإصبع بعشرات النقاط، ومنه تنبيه 🔔 بسعر خاطئ. هناك خطّ عمودي فقط.
+    // ⇒ سعر لا يطابق الشمعة تحت الإصبع بعشرات النقاط، ومنه تنبيه ⚑ بسعر خاطئ. هناك خطّ عمودي فقط.
     const inShadowLane = !!shadowStack && y > shadowStack.primaryLane.height;
     const price = inShadowLane
       ? null
@@ -5856,7 +5856,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             webChartPointer.current.active = false;
             endDrag();
           },
-          // خروج الفأرة من اللوح يمسح المعاينة؛ التقاطع المثبَّت يبقى (زرّ 🔔 خارج اللوح).
+          // خروج الفأرة من اللوح يمسح المعاينة؛ التقاطع المثبَّت يبقى (زرّ ⚑ خارج اللوح).
           onPointerLeave: () => {
             if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
             hoverRaf.current = null;
@@ -7118,7 +7118,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </Text>
         )}
         {onCreateAlert && crossPrice != null && !crossHover && !measureReadout && !replayOn ? (
-          // تنبيه بلمستين من الشارت: المس المستوى (يظهر الـcrosshair بسعر موضع اللمسة) ثم 🔔 — بلا كتابة رقم.
+          // تنبيه بلمستين من الشارت: المس المستوى (يظهر الـcrosshair بسعر موضع اللمسة) ثم ⚑ — بلا كتابة رقم.
           // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
           <Pressable
             accessibilityRole="button"
@@ -7131,7 +7131,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ]}
             onPress={() => createAlert(crossPrice, 'crosshair')}
           >
-            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {fmtPrice(crossPrice)}</Text>
+            <Text style={[styles.crossAlertText, { color: accent }]}>⚑ {fmtPrice(crossPrice)}</Text>
           </Pressable>
         ) : null}
         {interactive && !compactUi ? (
@@ -9068,7 +9068,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           );
         })}
 
-        {/* التنبيهات المُسلَّحة لهذا الرمز: خطّ كهرماني متقطّع + وسم عند المحور «🔔 ▲ السعر · المسافة بالـpip». */}
+        {/* التنبيهات المُسلَّحة لهذا الرمز: خطّ كهرماني متقطّع + وسم عند المحور «⚑ ▲ السعر · المسافة بالـpip». */}
         {armedAlerts.map((al) => {
           const dragging = alertDrag?.id === al.id;
           const price = dragging ? alertDrag.price : al.price;
@@ -9078,7 +9078,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const pips = Number.isFinite(currentPrice)
             ? signedDistanceText(series.symbol, currentPrice, price, lang, priceDecimalsRef)
             : null;
-          // قارئ الشاشة: الوسم رموز («🔔 ▲») — جملة كاملة على الخطّ نفسه، فتُقرأ ولو أُخفيت وسوم الأسعار.
+          // قارئ الشاشة: الوسم رموز («⚑ ▲») — جملة كاملة على الخطّ نفسه، فتُقرأ ولو أُخفيت وسوم الأسعار.
           const a11yTpl = condition === 'above' ? tr.mcArmedAlertAboveA11y : tr.mcArmedAlertBelowA11y;
           const a11y = (pips ? a11yTpl.replace('{dist}', pips) : a11yTpl.replace(/\s*—\s*\{dist\}/, '')).replace(
             '{price}',
@@ -9111,7 +9111,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   ]}
                   numberOfLines={1}
                 >
-                  🔔 {condition === 'above' ? '▲' : '▼'} {fmtPrice(price)}
+                  ⚑ {condition === 'above' ? '▲' : '▼'} {fmtPrice(price)}
                   {pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null}
                 </Text>
               ) : null}
@@ -13561,7 +13561,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
-    // ارتفاع ثابت بارتفاع زرّ 🔔 أدناه: على الهاتف (بلا صفّ التكبير) كان الصفّ سطراً 11px ثم يكبر ~10px حين
+    // ارتفاع ثابت بارتفاع زرّ ⚑ أدناه: على الهاتف (بلا صفّ التكبير) كان الصفّ سطراً 11px ثم يكبر ~10px حين
     // يظهر الزرّ مع أول لمسة تقاطع ⇒ الشارت تحته يقفز لأسفل تحت الإصبع (ويعود صعوداً حين يختفي بالقياس/الإعادة).
     minHeight: 24,
   },
