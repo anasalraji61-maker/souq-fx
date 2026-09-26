@@ -99,17 +99,17 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
 
 المتابعة والتنبيهات
-• قائمة متابعة شخصية لأزواج العملات والرموز التي تهمّك.
+• قائمة متابعة للرموز التي تهمّك.
 • تنبيهات سعر وتنبيهات مؤشرات (RSI، المتوسطات، MACD) تصلك كإشعار.
 • تقويم اقتصادي بمواعيد البيانات المؤثرة.
 
 أدوات المتداول
-• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، والهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه. وحدّ خسارة يومي يُريك ما بقي لك اليوم وأقصى مخاطرة للصفقة التالية.
+• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، والهامش حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه. وحدّ خسارة يومي يُريك ما بقي لك اليوم وأقصى مخاطرة للصفقة التالية.
 • دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالـpip والمال قبل حفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R) مقيسةً من الوقف الذي دخلت به ولو حرّكته بعدها.
 • تنبيه بخبر اقتصادي قوي قريب على عملة الزوج أو المؤشر أو المعدن — قبل الصفقة وعلى صفقاتك المفتوحة، بأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
-• مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني بلغتك، وتقرير أسبوعي مختصر.
+• مساعد تحليل تعليمي يشرح المؤشرات وشارتك بلغتك ولا يقول لك اشترِ أو بِع، وملاحظات أسبوعية في الانضباط وإدارة المخاطر.
 • مشاركة صورة الشارت بضغطة.
 
 الأكاديمية
@@ -160,17 +160,17 @@ CHARTS
 • Candle replay to train your eye.
 
 WATCHLIST & ALERTS
-• A watchlist of the symbols you follow.
+• A watchlist of your symbols.
 • Price and indicator alerts (RSI, moving averages, MACD) as notifications.
 • Economic calendar of key releases.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread. A daily loss limit shows the room left today and your next trade's max risk.
+• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, margin at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread. A daily loss limit shows the room left today and your next trade's max risk.
 • A trade journal you fill in yourself: potential profit before you enter, each result in pips and money before saving — one tap closes it at its stop, breakeven or target — then win rate, net result per instrument and average R, from your entry stop even after trailing it.
 • Heads-up when high-impact news nears the pair's, index's or metal's currency — before a trade and on open ones, in your broker's symbol names. If the calendar can't load, it says so.
 • A screener on common indicator conditions.
-• Simple strategy backtests on past data, for learning.
-• An AI assistant for chart questions, in your language, plus a short weekly report.
+• Strategy backtests on past data, for learning.
+• An educational assistant that explains your chart in your language (no buy/sell calls), plus weekly risk notes.
 • Share a chart image in one tap.
 
 ACADEMY
@@ -273,3 +273,10 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > **2026-09-26 (launch 169)**: chart بدّل رمز التنبيه بالشارت من «🔔» الملوّن إلى «⚑» (`fef7559`، ui75a) فكان الوصف يطلب لمس رمز لم يعد يظهر.
 > السطر صار مستقلاً عن الرمز: ar «ثم المس زرّ التنبيه الذي يظهر بسعره» (كنصّ الترحيب، `3440a74`)، en «then a tap sets an alert there» (لا مكان لأطول).
 > ووصف لقطة الشاشة 4 يذكر الوسم الجديد. العدّ بسكربت: **ar 3996 / en 3997** من 4000.
+
+> **2026-09-26 (launch 173، قرار أنس ٤)**: سطر المساعد كان «مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني… وتقرير أسبوعي مختصر» — والخادم صار
+> «مساعد تحليل تعليمي» يرفض الدخول/الوقف/الهدف/الشراء/البيع ولو طُلب (`352ad77`)، والتقرير الأسبوعي ملاحظات انضباط وإدارة مخاطر بلا اتجاه
+> (`WeeklyReportPanel.tsx:51`). الآن ar «مساعد تحليل تعليمي يشرح المؤشرات وشارتك بلغتك ولا يقول لك اشترِ أو بِع، وملاحظات أسبوعية في الانضباط وإدارة
+> المخاطر» (بلا كلمة «توصيات» — القاعدة 2)، en «An educational assistant that explains your chart in your language (no buy/sell calls), plus weekly
+> risk notes». شرط launch 150 (مفتاح OpenRouter) باقٍ. للإفساح: الهامش «حسب رافعتك» / «margin at your leverage»، قائمة المتابعة، «Strategy backtests».
+> العدّ بسكربت: **ar 3994 / en 3987** من 4000.

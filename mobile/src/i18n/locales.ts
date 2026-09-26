@@ -197,6 +197,7 @@ export type Dict = {
    * {bars} = `change_bars`. بلا `change_bars` (خادم أقدم) ⇒ النسبة وحدها كما اليوم. */
   snapChangeOverBars: string;
   aiPanelTitle: string;
+  /** قرار أنس ٤: «مساعد تحليل تعليمي» — التحية تقول صراحةً إنه لا يعطي دخولاً/وقفاً/هدفاً/شراء/بيع (الخادم يفرض ذلك، `352ad77`). */
   aiGreeting: string;
   /** سطر خافت تحت جواب المساعد له `price_as_of` (backend-r12، ui9): الدخول بالنصّ إغلاق شمعة قد يكون مخزَّناً أو إغلاق الجمعة —
    * `{time}` من `AiPanel.formatPriceAt` («21:45» أو «الجمعة، 25 سبتمبر 21:45»؛ الكردي «26/09 21:45») */
@@ -1724,12 +1725,12 @@ const ar: Dict = {
   snapChangeOverBars: '{pct} خلال آخر {bars} شمعة',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting:
-    'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، أو إدارة المخاطرة. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
+    'أنا مساعد MATRIX للتحليل التعليمي. اسألني ماذا يعني مؤشر أو نمط على الشارت، أو عن مفهوم في التحليل، أو عن إدارة المخاطرة. لا أعطي نقطة دخول ولا وقف خسارة ولا هدفاً ولا توصية شراء أو بيع — حتى لو طلبتها. إجاباتي شرح تتعلّم منه، لا نصيحة مالية.',
   aiPriceAsOf: 'الأسعار في هذا الجواب مبنيّة على إغلاق شمعة {time} بتوقيتك — وليست سعراً حيّاً',
   forecastPriceAsOf: 'المستويات مبنيّة على إغلاق شمعة {time} بتوقيتك — وليست سعراً حيّاً',
   aiOfflineFallback:
-    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب الدولار على أكثر من زوج (EURUSD وUSDJPY) قبل أي دخول على أزواج الدولار، واستخدم وقفاً واضحاً بمخاطرة 1% للصفقة (2% حدّاً أقصى).',
-  aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
+    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتذكير عام في إدارة المخاطرة (ليس تحليلاً للزوج): كثير من المتداولين يحدّدون خسارة الصفقة الواحدة بنحو 1% من الحساب (2% حدّاً أقصى)، ويقارنون حركة الدولار على أكثر من زوج (EURUSD وUSDJPY) قبل الحكم على اتجاهه.',
+  aiInputPlaceholder: 'مثال: ماذا يعني RSI على {symbol} الآن؟',
   aiInputA11y: 'سؤال لمساعد الذكاء الاصطناعي',
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
   aiAskBtn: 'اسأل',
@@ -2969,12 +2970,12 @@ const enUS: Dict = {
   snapChangeOverBars: '{pct} over the last {bars} candles',
   aiPanelTitle: 'AI assistant',
   aiGreeting:
-    "I’m MATRIX’s AI assistant. Ask me about the pair’s analysis, a trade scenario, or risk management. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
+    "I’m MATRIX’s educational analysis assistant. Ask me what an indicator or pattern on the chart means, about an analysis concept, or about risk management. I don’t give entries, stop-losses, targets or buy/sell calls — even if you ask. My answers are explanations to learn from, not financial advice.",
   aiPriceAsOf: 'Prices in this answer are based on the candle close at {time} your time — not a live price',
   forecastPriceAsOf: 'Levels are based on the candle close at {time} your time — not a live price',
   aiOfflineFallback:
-    'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: check the dollar on more than one pair (EURUSD and USDJPY) before entering any dollar pair, and use a clear stop, risking 1% per trade (2% at most).',
-  aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
+    'Could not reach the server — check your internet connection and try again shortly.\n\nA general risk-management reminder (not an analysis of this pair): many traders cap the loss on a single trade at about 1% of the account (2% at most), and compare the dollar across more than one pair (EURUSD and USDJPY) before judging its direction.',
+  aiInputPlaceholder: 'e.g. what does RSI on {symbol} mean right now?',
   aiInputA11y: 'Question for the AI assistant',
   aiSendA11y: 'Send question to the AI assistant',
   aiAskBtn: 'Ask',
@@ -4253,12 +4254,12 @@ const ku: Dict = {
   snapChangeOverBars: '{pct} لە دوایین {bars} مۆمدا',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
-    'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، یان بەڕێوەبردنی مەترسی. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
+    'من یاریدەدەری شیکاریی فێرکاریی MATRIX ـم. پرسیارم لێ بکە کە نیشاندەرێک یان شێوەیەک لەسەر چارتەکە چی دەگەیەنێت، دەربارەی چەمکێکی شیکاری، یان بەڕێوەبردنی مەترسی. خاڵی چوونەژوورەوە، وەستانی زیان، ئامانج یان پێشنیاری کڕین و فرۆشتن نادەم — تەنانەت ئەگەر داوای بکەیت. وەڵامەکانم ڕوونکردنەوەن بۆ فێربوون، نەک ئامۆژگاری دارایی.',
   aiPriceAsOf: 'نرخەکانی ئەم وەڵامە لەسەر داخستنی مۆمی {time} بە کاتی تۆن — نرخی ڕاستەوخۆ نین',
   forecastPriceAsOf: 'ئاستەکان لەسەر داخستنی مۆمی {time} بە کاتی تۆن — نرخی ڕاستەوخۆ نین',
   aiOfflineFallback:
-    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، دۆلار لەسەر زیاتر لە یەک جووت (EURUSD و USDJPY) بپشکنە، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی 1% بۆ هەر مامەڵەیەک (زۆرترین 2%).',
-  aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
+    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nبیرخستنەوەیەکی گشتی لە بەڕێوەبردنی مەترسی (شیکاری ئەم جووتە نییە): زۆر بازرگان زیانی یەک مامەڵە بە نزیکەی 1%ی هەژمارەکە سنووردار دەکەن (زۆرترین 2%)، و جووڵەی دۆلار لەسەر زیاتر لە یەک جووت (EURUSD و USDJPY) بەراورد دەکەن پێش بڕیاردان لەسەر ئاراستەکەی.',
+  aiInputPlaceholder: 'نموونە: RSI لەسەر {symbol} ئێستا چی دەگەیەنێت؟',
   aiInputA11y: 'پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiAskBtn: 'بپرسە',
