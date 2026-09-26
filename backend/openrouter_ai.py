@@ -854,17 +854,45 @@ def _num(tok: str) -> float | None:
         return None
 
 
+# run 120: سعر صحيح بعد كلمة موضع («Gold is trading near 2400»، «USDJPY sits at 148»، «BTC above 65,000»، «الذهب عند 2400»)
+# كان يمرّ لأن الفحص عشري فقط — الذهب/الين/الكريبتو/المؤشرات تُذكر أسعارها صحيحة. مقبول إن طابق رقماً بالسياق مقرَّباً
+# لأقرب واحد (2350 لـlast=2350.12). لا يُحسب: نقاط/نسبة/شموع/لوت/سنوات («from 2020 to 2026» — «to» ليست كلمة موضع).
+_UNGROUNDED_INT_RE = re.compile(
+    r"(?:\b(?:at|near|around|above|below|under|over|toward|towards|beyond|past|hits?|reach(?:es|ed)?|trading|priced|price\s+of)"
+    r"|(?<!\w)(?:عند|قرب|حول|فوق|تحت|مستوى|سعر|يتداول|وصل\s+(?:الى|ل)))\s+(?:the\s+|about\s+|roughly\s+|~\s*)?"
+    r"(?<![\d.,])(\d{1,3}(?:,\d{3})+|\d{3,})(?![\d.,]?\d)"
+    r"(?![-\s]*(?:(?:day|week|hour|period|bar|candle)s?\b|[SE]?MA\b|moving|يوم|اسبوع|فتر))"
+    r"(?!\s*(?:[x×%]|pips?\b|points?\b|pts\b|نقط|نقاط|candles?\b|bars?\b|شمع|lots?\b|لوت|units?\b|وحد|days?\b|يوم|ايام|years?\b|سن|ms\b))",
+    re.IGNORECASE,
+)
+
+
 def _grounded_numbers(ground: str) -> list[float]:
-    return [v for v in (_num(m.group(0)) for m in re.finditer(r"\d+[.,]\d+", _guard_norm(ground))) if v is not None]
+    g = _guard_norm(ground)
+    return [v for v in (_num(m.group(0)) for m in re.finditer(r"\d+[.,]\d+|\d+", g)) if v is not None]
+
+
+def _int_grounded(tok: str, allowed: list[float]) -> bool:
+    tok = tok.replace(",", "")
+    x = float(tok)
+    # «around 65,000» لـlast=65123.4 تقريب صادق (أصفار ذيلية، ≤0.2%)؛ «near 2400» لـ2350.12 ليس كذلك
+    tz = len(tok) - len(tok.rstrip("0"))
+    return any(abs(x - v) <= max(1.0, min(0.5 * 10 ** tz, 0.002 * abs(v))) for v in allowed)
 
 
 def _ungrounded_price_lines(lines: list[str], allowed: list[float]) -> set[int]:
     bad = set()
     for i, ln in enumerate(lines):
+        if any(not _int_grounded(m.group(1), allowed) for m in _UNGROUNDED_INT_RE.finditer(_guard_norm(ln))):
+            bad.add(i)
+            continue
         for m in _UNGROUNDED_NUM_RE.finditer(_guard_norm(ln)):
             tok = re.match(r"\d+[.,]\d+", m.group(0)).group(0)
             x = _num(tok)
             if x is None:
+                continue
+            # «65,000» فاصل آلاف لا عشري: يُقبل إن طابق السياق كعدد صحيح
+            if re.fullmatch(r"\d{1,3},\d{3}", tok) and _int_grounded(tok, allowed):
                 continue
             tol = 0.5 * 10 ** -len(re.split(r"[.,]", tok)[1]) + 1e-12
             if not any(abs(x - v) <= tol for v in allowed):
