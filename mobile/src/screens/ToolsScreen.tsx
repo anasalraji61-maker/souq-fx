@@ -218,6 +218,11 @@ function hubPanelVisible(id: string): boolean {
 /**
  * `insufficient_data` من `/api/screener/run` (backend-r69) — خادم أقدم لا يرسله، والنوع لا يضمن الشكل وقت التشغيل. يُقبل كائن رمز → قائمة نصوص فقط؛ غير ذلك يُهمل فيبقى السلوك القديم.
  */
+/** مفتاح «أيّ فحص هذا»: الفريم والفلاتر **كمجموعة** — الخادم يطابق كل فلتر على حدة، فترتيب النقر لا يغيّر الرموز المطابقة */
+function screenerKey(tf: string, filters: readonly string[]): string {
+  return `${tf}|${[...filters].sort().join(',')}`;
+}
+
 function readInsufficient(raw: unknown): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
@@ -496,7 +501,8 @@ export function ToolsScreen() {
     scanInfo.scanned === 0 && scanInfo.failed.length > 0 && rateFailed.length === scanInfo.failed.length;
 
   /** نتائج فحص سابق لا تُعرض تحت فلاتر/فريم تغيّرت — كانت تبقى فتُقرأ كأنها نتيجة الاختيار الجديد. */
-  const scanKey = `${tf}|${selected.join(',')}`;
+  // مرتّبة: الفلاتر تُطبَّق معاً فترتيب النقر لا يغيّر الفحص — إلغاء فلترٍ وإعادته أثناء الفحص كان يُسقط نتيجته (ويمسح المعروضة)
+  const scanKey = screenerKey(tf, selected);
   const lastScanKey = React.useRef<string | null>(null);
   /** الاختيار **الحالي** لـ`run` بعد انتظار الفحص — الإغلاق يحمل اختيار لحظة النقر */
   const scanKeyNow = React.useRef(scanKey);
@@ -530,7 +536,7 @@ export function ToolsScreen() {
   const run = useCallback(async () => {
     const seq = ++runSeq.current;
     setLoading(true);
-    const key = `${tf}|${selected.join(',')}`;
+    const key = screenerKey(tf, selected);
     /**
      * الفريم والفلاتر تبقى قابلة للتغيير أثناء «جارٍ الفحص…»: فحصٌ على 15m + «تقاطع متوسطات» يعود بعد التبديل إلى 1h
      * كان يُعرض تحت 1h، ويحفظ مفتاحه القديم فلا يمسحه شيء — والبطاقات لا تذكر الفريم. نتيجةٌ لاختيارٍ لم يعد قائماً تُسقط.
