@@ -14,6 +14,7 @@ import { colors } from './src/theme';
 import { ensureAlertChannel, registerPushToken } from './src/notifications';
 import { OnboardingOverlay } from './src/components/OnboardingOverlay';
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
+import { KeyboardShortcutsSheet } from './src/components/KeyboardShortcutsSheet';
 import { hasSeenOnboarding, markOnboardingSeen } from './src/onboarding';
 
 const Tab = createBottomTabNavigator();
@@ -151,6 +152,7 @@ export default function App() {
             <NavigationContainer theme={navTheme}>
               <RootTabs />
             </NavigationContainer>
+            <KeyboardShortcutsSheet />
           </AuthProvider>
         </AppErrorBoundary>
       </I18nProvider>
