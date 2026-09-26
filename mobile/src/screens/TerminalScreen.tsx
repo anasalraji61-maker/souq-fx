@@ -1023,8 +1023,16 @@ export function TerminalScreen() {
    * فمن الشاشة الرئيسية كان لا بدّ من فتح لوحة التنبيهات وكتابة السعر يدوياً. المنطق مشترك
    * (`chart/alertFromChart.ts`): الاتجاه من سعر مرجعي حقيقي للرمز نفسه، وبلا مرجع لا يُنشأ تنبيه.
    */
+  /**
+   * تنبيهات قيد الإنشاء (رمز + سعر) — متزامن: نقرٌ مزدوج على زرّ التنبيه بالشارت كان يُنشئ تنبيهين متطابقين (وإشعارين عند
+   * بلوغ السعر). سعرٌ آخر أثناء الطلب يمرّ (تنبيهان مقصودان).
+   */
+  const alertsInFlightRef = useRef<Set<string>>(new Set());
   const alertFromChart = useCallback(
     async (alertPrice: number, origin?: ChartAlertOrigin) => {
+      const key = `${symbol}\u0001${alertPrice}`;
+      if (alertsInFlightRef.current.has(key)) return;
+      alertsInFlightRef.current.add(key);
       try {
         const res = await createChartAlert({
           symbol,
@@ -1039,6 +1047,8 @@ export function TerminalScreen() {
         armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       } catch {
         notify(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
+      } finally {
+        alertsInFlightRef.current.delete(key);
       }
     },
     [symbol, series, liveTicks, t]
