@@ -184,8 +184,10 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
 export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
   const { t } = useI18n();
   const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
-    { id: 'alerts', mark: '⚡', tip: t.railTipAlert },
-    { id: 'indAlerts', mark: '☢', tip: t.railTipIndicator },
+    // DESIGN-PRO §1/§4: «⚡» يُرسم رمزاً تعبيرياً ملوّناً (أصفر) و«☢» إشعاعي — لون ثالث وعائلة ثانية.
+    // «⚑»/«⚐» (علم مستوى سعر / علم مؤشّر) بلا صيغة تعبيرية في يونيكود فيبقيان أحاديي اللون كبقية الشريط.
+    { id: 'alerts', mark: '⚑', tip: t.railTipAlert },
+    { id: 'indAlerts', mark: '⚐', tip: t.railTipIndicator },
     { id: 'calendar', mark: '◷', tip: t.toolsTabCalendar },
     { id: 'screener', mark: '⌕', tip: t.toolsTabScreener },
     { id: 'reports', mark: '≡', tip: t.railTipReport },

@@ -215,7 +215,7 @@ export function NewsRiskBanner({ symbol = '', alsoSymbols, openSymbols, shownSym
   const holiday =
     !hit && !openSymbols && holidayCache ? bankHolidayToday(holidayCache.events, shownHolidayCurrencies(shown), now) : null;
   if (holiday) {
-    const text = `🏦 ${t.newsHolidayToday
+    const text = `${t.newsHolidayToday
       .split('{ccy}')
       .join(holiday.currencies.join('/'))
       .split('{title}')
