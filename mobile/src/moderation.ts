@@ -20,6 +20,11 @@ let loading: Promise<string[]> | null = null;
  * كان أول حظر بعد فشلٍ عابر يحفظ «[الاسم]» وحده فتُمسح قائمة المتداول كلّها بصمت. الحظر يعمل لهذه الجلسة.
  */
 let diskUnread = false;
+/**
+ * «إلغاء حظر الكل» ضُغط والقراءة الأولى جارية: القائمة المقصودة معروفة (فارغة) فالقرص يُكتب ولو فشلت القراءة بعدها —
+ * كان الفشل المتأخّر يعيد `diskUnread` فلا يُحفظ أيّ حظر بعده بقيّة الجلسة (يعود المحظور ظاهراً بعد إعادة التشغيل).
+ */
+let clearedByUser = false;
 const listeners = new Set<(list: string[]) => void>();
 
 const norm = (name: string) => name.trim().toLowerCase();
@@ -67,7 +72,7 @@ function loadBlocked(): Promise<string[]> {
         return cache;
       })
       .catch(() => {
-        diskUnread = true;
+        if (!clearedByUser) diskUnread = true;
         cache = cache ?? [];
         return cache;
       });
@@ -124,6 +129,7 @@ export function useBlockedUsers() {
   const unblockAll = useCallback(() => {
     // «إلغاء حظر الكل» يقصد القرص أيضاً — يُكتب حتى بعد قراءة فاشلة
     diskUnread = false;
+    clearedByUser = true;
     publish([]);
   }, []);
 

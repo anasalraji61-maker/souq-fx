@@ -54,6 +54,7 @@ function freshModule(disk: Disk) {
   const gate = new Promise<void>((r) => (release = r));
   stubs['@react-native-async-storage/async-storage'] = {
     __esModule: true,
+    __esModule: true,
     default: {
       getItem: async () => {
         await gate;
@@ -136,6 +137,41 @@ function mountHook(mod: typeof import('./moderation')): string[][] {
     assert.deepEqual(again[again.length - 1], ['old', 'spammer']);
   }
   console.log('moderation selftest: OK');
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+
+// —— «إلغاء حظر الكل» أثناء قراءة أولى تفشل: الحظر بعده يُحفظ على القرص ——
+void (async () => {
+  let rejectRead: (e: Error) => void = () => undefined;
+  const writes: string[] = [];
+  stubs['@react-native-async-storage/async-storage'] = {
+    __esModule: true,
+    default: {
+      getItem: () => new Promise<string | null>((_, rej) => (rejectRead = rej)),
+      setItem: (_k: string, v: string) => {
+        writes.push(v);
+        return Promise.resolve();
+      },
+    },
+  };
+  stubs.react = {
+    useCallback: (fn: unknown) => fn,
+    useEffect: (fn: () => void) => fn(),
+    useState: (v: unknown) => [v, () => undefined],
+  };
+  delete require.cache[require.resolve('./moderation')];
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = require('./moderation') as typeof import('./moderation');
+  const hook = mod.useBlockedUsers(); // يبدأ القراءة الأولى (معلّقة)
+  hook.unblockAll();
+  assert.deepEqual(writes, ['[]']);
+  rejectRead(new Error('disk'));
+  await new Promise((r) => setTimeout(r, 0));
+  await mod.blockUser('Spammer');
+  assert.deepEqual(writes, ['[]', '["spammer"]']);
+  console.log('moderation unblockAll-during-failed-read selftest OK');
 })().catch((e) => {
   console.error(e);
   process.exit(1);
