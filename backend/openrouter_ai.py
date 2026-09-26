@@ -1,6 +1,7 @@
 """OpenRouter LLM — educational analysis assistant + academy interrupt."""
 from __future__ import annotations
 
+import html
 import os
 import re
 import unicodedata
@@ -240,7 +241,7 @@ _NUM = (
     r"(?:\d+[.,]\d+"
     r"|(?<![\d.,])(?<!\bin\s)(?<!since\s)(?<!during\s)(?<!\bby\s)(?<!\bof\s)\d{3,}(?!s\b)(?![+\d])"
     r"|(?<![\d.,])(?<![^\W\d_])(?<!RSI\s)(?<!EMA\s)(?<!SMA\s)(?<!ADX\s)(?<!CCI\s)(?<!MFI\s)(?<!period\s)(?<!length\s)"
-    r"\d{1,2}(?=\s*(?:$|[,;)]|\.(?!\d)|\s(?:and|or|then|now|here|with)\b)))"
+    r"\d{1,2}(?=\s*(?:$|[,;)]|\.(?!\d)|\s(?:and|or|then|now|here|with|for|on)\b)))"
 ) + _NOT_PRICE_AFTER
 # run 78: فجوة بين كلمة المستوى والسعر تتخطّى مسافة بالنقاط («SL: 20 pips below 1.0850» كان يمرّ)
 _GAP = r"(?:[^\n\d]|\d+(?:[.,]\d+)?\s*(?:pips?|points?|نقط\w*|[x×]\s*ATR)(?!\w))"
@@ -273,6 +274,18 @@ _LEVEL_WORD = (
 )
 # «T1/T2» اختصار هدف مرقَّم — لا يُضاف لـ_LEVEL_WORD نفسه (تُلحقه اللاحقة أعلاه)
 _LEVEL_WORD = r"(?:" + _LEVEL_WORD + r"|\bt\d(?![\d.,])(?![a-z]))"
+# run 113: كلمات مستوى بلغات/صيغ كانت تمرّ («Stopp bei 1,0800»، «Gewinnmitnahme»، «Zarar kes»، «Obiettivo»، «Prise de
+# bénéfices»، «Toma de ganancias»، «Стоп-лосс»، «Вход»، «止损»، «स्टॉप लॉस»، الفارسية «حد ضرر/حد سود/نقطه ورود»، الأردية
+# «سٹاپ لاس/ٹارگٹ»، الكردية «ستوپ/تارگێت/ڕاگرتنی زیان/خاڵی دەرچوون»، «Stopa»، «استهدف/نستهدف»، «نقطة الانطلاق»، «سعر التنفيذ»،
+# «حمايتك تحت»، «اخرج عند»، «خروج جزئي عند»)
+_LEVEL_WORD = (
+    r"(?:" + _LEVEL_WORD + r"|\bstopp(?:\s*loss)?\b|\bstopa\b|\bgewinnmitnahme\b|\bverlustbegrenzung\b|\bzarar\s+kes\b"
+    r"|\bobiettivo\b|\bprise\s+de\s+(?:bénéfices|benefices|profits?)\b|\bseuil\s+de\s+sortie\b|\btoma\s+de\s+(?:ganancias|beneficios)\b"
+    r"|стоп[- ]?лосс|тейк[- ]?профит|(?<!\w)(?:вход|цель)(?!\w)|止损|止盈|目标位|入场|进场|स्टॉप\s*लॉस|टारगेट"
+    r"|حد\s+ضرر|حد\s+سود|نقطه\s+ورود|سٹاپ\s*لاس|ٹارگٹ|ستوپ|تارگێت|ڕاگرتنی\s+زیان|قازانج\s+وەرگرتن|خاڵی\s+دەرچوون"
+    r"|(?<!\w)[انتي]ستهدف(?:ون|ين|وا)?(?!\w)|نقط[ةه]\s+(?:ال)?انطلاق|سعر\s+(?:ال)?تنفيذ|(?<!\w)حمايت(?:ك|كم|نا)(?!\w)"
+    r"|(?<!\w)[وف]?اخرج(?!\w)|(?<!\w)(?:ال)?خروج\s+(?:ال)?جزئي)"
+)
 # run 83: «أ/إ/آ» ⇒ «ا» بـ`_guard_norm` («انصحك بالشراء»، «إشتري») ⇒ الأنماط تُكتب بالألف المجرّدة كذلك
 _ALEF = str.maketrans("أإآ", "ااا")
 _LEVEL_WORD = _LEVEL_WORD.translate(_ALEF)
@@ -593,7 +606,64 @@ _TRADE_CALL_RE = re.compile(
     + r"|\bbi(?:k[iî]re|k[iî]rin|fro[sş]e|fro[sş]in)\b|\b(?:k[iî]r[iî]n|firotin)\w*\s+veke\b|\b(?:k[ae]ri+n|fro?shtin)\s+bka\b"
     # run 108: إسبانية/ألمانية/تركية («Vende ya»، «Jetzt verkaufen»، «Hemen al»، «Sat şimdi»)
     + r"|\b(?:compra|compre|vende|venda)\b[^\n\d]{0,20}?\bya\b|\bjetzt\s+(?:kaufen|verkaufen)\b"
-    r"|\bhemen\s+(?:al|sat)\b|\b(?:al|sat)\s+şimdi\b",
+    r"|\bhemen\s+(?:al|sat)\b|\b(?:al|sat)\s+şimdi\b"
+    # run 113: أفعال/عامّية أمر بأول الجملة ثم سعر («Purchase EURUSD at»، «Bid it at»، «Offload gold at»، «Trim at»،
+    # «Cash out at»، «Pay yourself at»، «Realise profits at»، «Shoot for 1.0950»، «Work a bid at»، «Plan: bid 1.0850»)
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→(]\s*|\d[.)]\s*)(?:purchase|acquire|bid|offer|offload|unload|trim|peel\s+off|cash\s+(?:out|in)?"
+    r"|pay\s+yourself|reali[sz]e|harvest|ring\s+the\s+register|shoot\s+for|work\s+a\s+bid|press\s+it|protect|bail|cover"
+    r"|join\s+the\s+(?:bulls|bears)|go\s+(?:bullish|bearish)|get\s+(?:some\s+)?exposure)\b[^\n\d]{0,25}?" + _NUM
+    # «I'm wrong below»، «void below»، «Thesis dies under»، «line in the sand is»، «Risk down to»، «Walk away on a close under»،
+    # «I'd want exposure from»، «Upside exposure from»، «The long side from»، «Lean on 1.0900 from the short side»، «a buyer near»
+    + r"|\b(?:wrong|void|invalid(?:ated)?|dies|dead|out)\s+(?:below|above|under|over)\s*" + _NUM
+    + r"|\bline\s+in\s+the\s+sand\b[^\n\d]{0,15}?" + _NUM + r"|\brisk\s+(?:down|up)\s+to\s*" + _NUM
+    + r"|\bwalk\s+away\b[^\n\d]{0,25}?" + _NUM + r"|\b(?:want|get|upside|downside)\s+exposure\s+(?:from|at|near)\s*" + _NUM
+    + r"|\bthe\s+(?:long|short)\s+side\s+(?:from|at|near)\s*" + _NUM + r"|\bfrom\s+the\s+(?:long|short)\s+side\b"
+    + r"|\bworth\s+a\s+punt\b|\ba\s+(?:buyer|seller)\s+(?:near|around|at|from|above|below|under|over)\s*" + _NUM
+    + r"|\b(?:bullish|bearish)\s+(?:position|trade|entry)\s+(?:from|at|near|around)\s*" + _NUM
+    # «Own EURUSD above»، «Own gold here»، «Go overweight EURUSD»
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)(?:own|go\s+(?:overweight|underweight)|overweight|underweight)\s+"
+    r"(?:gold|silver|oil|it|this|the\s+pair|(?-i:[A-Z]{3,6}\b))"
+    # أسماء الأزواج الشائعة وأزواج بأحرف صغيرة («Long the fiber»، «Short cable at»، «Sell the greenback»، «Buy eurusd.»)
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short))\s+(?:the\s+)?"
+    r"(?:fiber|fibre|cable|aussie|kiwi|loonie|swissy|greenback|brent|wti|nasdaq|dow|s&p|ether|eth|xau\w*|xag\w*"
+    r"|(?:eur|gbp|usd|jpy|aud|nzd|cad|chf)(?:usd|eur|jpy|gbp|chf|aud|cad|nzd))\b"
+    # المتكلّم («I'm a buyer above»، «We're sellers at»، «Buyer above 1.0900.»، «count me in/long»، «I'm in»، «that's my cue»)
+    + r"|\b(?:i['’]?m|i\s+am|we['’]?re|we\s+are)\s+(?:an?\s+)?(?:buyers?|sellers?)\b"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>]\s*)(?:buyers?|sellers?)\s+(?:above|below|at|near|from|under|over)\s*" + _NUM
+    + r"|\bcount\s+me\s+(?:in|long|short)\b|\bi['’]?m\s+(?:in|out)(?=\s*(?:[.,!;]|$))"
+    + r"|\b(?:that['’]?s|is)\s+my\s+(?:cue|signal|trigger)\b|\bi['’]?d\s+get\s+involved\b"
+    # سؤال وجواب بسطر واحد («Is it a buy? In my view, yes.»، «Should you sell gold? I would.»، «Long or short? The former.»)
+    + r"|\b(?:should\s+(?:i|you|we)|would\s+(?:i|you|we)|is\s+(?:it|this|gold|\w{3,6})\s+an?)\s+(?:buy|sell|short|long|go\s+long|go\s+short)"
+    r"\b[^\n?]{0,25}\?[^\n]{0,20}?\b(?:yes|yep|yeah|i\s+would|we\s+would|absolutely|definitely)\b"
+    + r"|\blong\s+or\s+short\?\s*(?:the\s+)?(?:former|latter|long|short)\b"
+    # «in=1.0850 out=1.0950»، «B,EURUSD,1.0850,1.0800,1.0950»، «side: B»
+    + r"|(?:^|[\s,;])(?:in|out|cut)\s*=\s*\d+\.\d+|\b[bs]\s*[|,;]\s*[A-Za-z/]{3,7}\s*[|,;]\s*\d+\.\d+\s*[|,;]\s*\d+\.\d+"
+    r"|\bside\s*:\s*(?:b|s)\b"
+    # فرنسية/إسبانية/إيطالية/برتغالية/ألمانية/تركية/روسية/صينية/هندية/إندونيسية
+    + r"|\bentrez\s+(?:long|short|à\s+l['’]achat|à\s+la\s+vente)\b|\bshortez\b|\bpositionnez[- ]vous\b"
+    r"|\b(?:entra|entre)\s+en\s+(?:largo|corto)\b|\bponte\s+(?:largo|corto)\b|\babre\s+(?:largos|cortos)\b"
+    r"|\b(?:compra|compre|vende|venda|vendi)\s+(?:agora|ora|ya)\b|\bvendi\s+a\s+\d|\blong\s+gehen\b|\b(?:ver)?kaufen\s+sie\b"
+    r"|\b(?:long|short)\s+pozisyon\s+aç|\b(?:satış|alış|alım)\s+yap|\bşimdi\s+(?:al|sat)\b|(?-i:\b[A-Z]{3,6})\s+(?:al|sat)\s*[.!]"
+    r"|(?<!\w)(?:покупайте|продавайте|купите|продайте|покупай|продавай)(?!\w)|买入|卖出|做多|做空|खरीदें|बेचें"
+    r"|\b(?:beli|jual)\s+(?:sekarang|di)\b"
+    # الفارسية/الأردية («بخرید در ۱٫۰۸۵۰»، «خرید کنید»، «بفروشید»، «ابھی خریدیں»، «فروخت کریں»، «خرید EURUSD»)
+    + r"|(?<!\w)(?:بخرید|بفروشید|بخر|بفروش|خریدیں|خریداری\s+کریں|فروخت\s+کریں)(?!\w)|(?<!\w)(?:خرید|فروش)\s+(?:کنید|[A-Za-z]{3,7})"
+    # العربية الفصحى/اللهجات («صفقة شرائية من»، «مركز شرائي عند»، «شراء 1.0850»، «شراء ليمت»، «اشتريه من»، «فكّر بالدخول الآن»،
+    # «شرا من»، «اضرب شرا»، «فوت شرا»، «هات شراء»، «قفّل على مكسب»، «دخل فالشرا»، «باي ليمت/باي من/سيل من/لونج من»، «شورت على الذهب»)
+    + r"|(?<!\w)(?:صفق[ةه]|مركز|تمركز|مراكز)\s+(?:شرائي|بيعي)[ةه]?(?!\w)[^\n\d]{0,12}?" + _NUM
+    + r"|(?<!\w)(?<!سعر )(?<!اسعار )(?:ال)?(?:شراء|شرا|بيع)\s+(?:ليمت\s+|ستوب\s+|limit\s+|stop\s+)?" + _PRICE
+    + r"|(?<!\w)(?:اشتري|اشتر|بيع|بع)(?:ه|ها)\s+(?:من|عند|هلق|الان|هسه|هسا|الحين|دابا)"
+    + r"|(?<!\w)فكر\s+(?:ب|في\s+)(?:ال)?(?:دخول|شراء|بيع)\s+(?:الان|فورا|هنا)"
+    + r"|(?<!\w)(?:(?:ال|فال|بال)?شرا)\s+(?:من|عند)\s*" + _NUM
+    + r"|(?<!\w)(?:اضرب|فوت|هات|خذ|شد|دخل|ادخل)\s+(?:لك\s+)?(?:صفق[ةه]\s+)?(?:ف|في\s+)?(?:ال)?(?:شرا|شراء|بيع)(?!\w)"
+    + r"|(?<!\w)(?:باي|سيل)\s+(?:ليمت|ستوب)\s*" + _NUM
+    + r"|(?<!\w)قفل\s+على\s+(?:مكسب|ربح)|(?<!\w)(?:باي|سيل|لونج|شورت)\s+(?:ليمت\s+|ستوب\s+)?(?:من|عند)\s*" + _NUM
+    + r"|(?<!\w)(?:لونج|شورت)\s+(?:على\s+(?:ال)?\w+|[A-Za-z]{3,7}\b)"
+    # عربيزي، كردي («بیکرە ئێستا»، «کرین لە»، «ئێستا کاتی کڕینە»)، كرمانجي («Kirîn li 1.0850»، «Têkeve li»، «Bikeve bazarê»)، مختلط
+    + r"|\b(?:eshtery|eshtiri|eshtry|ishtree|ishtry|shtri|bi3o|bee3o|ed5ol|da5la)\b"
+    + r"|(?<!\w)بی?کر[ەه](?!\w)|(?<!\w)ک[ڕر]ین\s+لە\s*" + _NUM + r"|کاتی\s+ک[ڕر]ینە"
+    + r"|\b(?:k[iî]r[iî]n|firotin)\s+li\s*" + _NUM + r"|\b(?:t[eê]keve|bikeve)\b"
+    + r"|\b(?:buy|sell|long|short)\s+(?:هون|هنا|هلأ|هلا|هلق|الان|هسه|عالدعم|ئێستا)",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
@@ -611,26 +681,68 @@ _GUARD_REFUSAL = {
 }
 
 
-_HOMOGLYPH = str.maketrans("АВЕКМНОРСТХЅІЈаеорсухѕіј", "ABEKMHOPCTXSIJaeopcyxsij")
-_SPACED_WORDS = frozenset({"buy", "sell", "long", "short", "sl", "tp", "stop", "entry"})
+# run 113: + اليونانية («ΒUY»، «LΟNG») والشيروكي («ᏴUY»)
+_HOMOGLYPH = str.maketrans(
+    "АВЕКМНОРСТХЅІЈаеорсухѕіјΑΒΕΖΗΙΚΜΝΟΡΤΥΧαοριυνκᎪᏴᏟᎬᎻᎫᏦᏞᎷᏢᏚᎢᏔᏃ",
+    "ABEKMHOPCTXSIJaeopcyxsijABEZHIKMNOPTYXaopiuvkABCEHJKLMPSTWZ",
+)
+_SPACED_WORDS = frozenset({"buy", "sell", "long", "short", "sl", "tp", "stop", "entry", "target", "stoploss", "takeprofit"})
+# run 113: «5ELL»، «L0NG»، «8UY»، «Buuuy»، «BUYYY» ⇒ الكلمة (بالنسخة الثانية من النصّ فقط)
+_LEET = str.maketrans("01358", "oiesb")
+_LEET_WORDS = {"buy": "buy", "sel": "sell", "long": "long", "short": "short", "shor": "short"}
+
+
+def _xml_tag(m: re.Match) -> str:
+    # «<order side="buy" price="1.0850"/>» — الوسم كان يُحذف بخصائصه ⇒ «side: buy, price: 1.0850,»
+    attrs = re.findall(r"""([A-Za-z_]\w*)\s*=\s*["']([^"'<>]*)["']""", m.group(0))
+    return " " + " ".join(f"{k}: {v}," for k, v in attrs) + " "
+
+
+def _leet_word(m: re.Match) -> str:
+    w = m.group(0)
+    k = re.sub(r"(.)\1+", r"\1", w.lower().translate(_LEET))
+    return _LEET_WORDS.get(k, w)
+
+
+def _guard_variants(text: str) -> list[str]:
+    """النصّ المطبَّع، ونسخة بلا علامات فوق الحروف اللاتينية («Búy»، «S̶e̶l̶l̶»، «Bu̲y») وبلا أرقام/تكرار داخل كلمات
+    الاتجاه — نسخة ثانية لا بديل: الأنماط التركية/الفرنسية («şimdi»، «entrée») تحتاج الحروف كما هي."""
+    t = _guard_norm(text)
+    d = "".join(ch for ch in unicodedata.normalize("NFD", t) if not ("\u0300" <= ch <= "\u036f"))
+    d = unicodedata.normalize("NFC", d)
+    d = re.sub(r"(?<![\w.,])[A-Za-z0-9]{3,8}(?![\w])", _leet_word, d)
+    return [t] if d == t else [t, d]
 
 
 def _guard_norm(text: str) -> str:
     # التشكيل («بِع»، «اشترِ»، «يُفضّل») وتنسيق Markdown («**Entry:** 1.0850») لا يغيّران المعنى
     # run 80: أحرف عريضة («Ｅｎｔｒｙ») ⇒ NFKC؛ وسوم HTML ورموز/إيموجي قبل الأمر («🟢 BUY»، «<b>BUY</b>»)
     # وعلامات اقتباس JSON («{"direction":"sell"}») تُزال؛ الفاصلة العربية العشرية «١٫٠٨٥٠» ⇒ نقطة.
-    t = unicodedata.normalize("NFKC", _TASHKEEL.sub("", text or ""))
+    # run 113: كيانات HTML («&#66;uy»، «Buy&nbsp;EURUSD»)، تعليق «Bu<!-- -->y»، نصّ معكوس بـRLO («\u202eYUB\u202c» يُعرض BUY)،
+    # وكل حرف تنسيق غير مرئي (Cf: ZWNJ/LRM/RLM/العزل/U+2062) — كان يُحذف أربعة فقط
+    t = html.unescape(html.unescape(text or ""))
+    t = re.sub(r"<!--.*?-->", "", t, flags=re.S)
+    t = re.sub(r"\u202e([^\u202c\n]*)\u202c?", lambda m: m.group(1)[::-1], t)
+    t = "".join(ch for ch in t if unicodedata.category(ch) != "Cf" and ch != "\u034f")
+    t = unicodedata.normalize("NFKC", _TASHKEEL.sub("", t))
     # run 108: «🎯 1.0950»/«🛑 1.0800» — الرمز هو الوسم؛ «~~Hold~~ **Buy**» المشطوب ليس جزءاً من الردّ؛ «### Buy EURUSD» عنوان
     t = t.replace("🎯", " target ").replace("🛑", " stop ")
     t = re.sub(r"~~[^~\n]*~~", " ", t)
     t = re.sub(r"(?m)^[ \t]*#{1,6}[ \t]*", "", t)
-    t = re.sub(r"</?[A-Za-z][^<>\n]{0,40}>", " ", t)
+    # run 113: وسم داخل كلمة/رقم («B<span>uy</span>»، «<b>1</b>.0850») يُحذف بلا مسافة؛ رابط «[Buy](#)» ⇒ نصّه؛
+    # LaTeX «$\\textbf{Long}$»؛ «62k» ⇒ 62000 (كان «SL 62k» يمرّ: الصحيح القصير لا ينتهي عنده الكلام)
+    t = re.sub(r"(?<=[\w.])</?[A-Za-z][^<>\n=]{0,40}>(?=[\w.])", "", t)
+    t = re.sub(r"</?[A-Za-z][^<>\n]{0,80}>", _xml_tag, t)
+    t = re.sub(r"\[([^\]\n]{1,40})\]\([^)\n]{0,200}\)", r"\1", t)
+    t = re.sub(r"\\[A-Za-z]+\{?", "", t)
+    t = re.sub(r"\$(?!\s*\d)", " ", t)
+    t = re.sub(r"(?<![\w.,])(\d{1,3})\s?[kK](?!\w)", lambda m: m.group(1) + "000", t)
     # run 109: «B\u200buy»/«BUY\u00ad» (حرف غير مرئي داخل الكلمة)؛ «Вuy»/«Ѕell» (حرف كيريلي بشكل لاتيني داخل كلمة لاتينية)؛
     # «b u y»، «L-O-N-G»، «S L 1.0800»، «T.P. 1.0950» (حروف مفرّقة)؛ رمز قبل سعر («📈 1.0850 ➡️ 1.0950») ⇒ ⊕
     t = re.sub(r"[\u200b\u00ad\u2060\ufeff]", "", t)
     t = re.sub(r"\w*[A-Za-z]\w*", lambda m: m.group(0).translate(_HOMOGLYPH), t)
-    t = re.sub(r"(?<![^\W\d_])[A-Za-z](?:[ .\-][A-Za-z]){1,4}\.?(?![^\W\d_])",
-               lambda m: j if (j := re.sub(r"[ .\-]", "", m.group(0))).lower() in _SPACED_WORDS else m.group(0), t)
+    t = re.sub(r"(?<![^\W\d_])[A-Za-z](?:[ .\-_/][A-Za-z]){1,7}\.?(?![^\W\d_])",
+               lambda m: j if (j := re.sub(r"[ .\-_/]", "", m.group(0))).lower() in _SPACED_WORDS else m.group(0), t)
     t = re.sub(r"(?:[\U0001F300-\U0001FAFF\u2190-\u21FF\u2B00-\u2BFF\u27A0-\u27BF]\ufe0f?)+(?=\s*\d)", " ⊕", t)
     t = "".join(" " if unicodedata.category(ch) in ("So", "Sk", "Cs") or ch in "\ufe0f\u200d{}\"" else ch for ch in t)
     t = re.sub(r"(?<=\d)٫(?=\d)", ".", t)
@@ -642,7 +754,7 @@ def _guard_norm(text: str) -> str:
 
 
 def has_trade_call(text: str) -> bool:
-    return bool(_TRADE_CALL_RE.search(_guard_norm(text)))
+    return any(_TRADE_CALL_RE.search(v) for v in _guard_variants(text))
 
 
 # run 78: الحارس كان يفحص كل سطر وحده ⇒ «Entry:\n1.0850» وقائمة «- Entry\n  - 1.0850» وجدول
@@ -657,6 +769,14 @@ _LABEL_NOTE_END_RE = re.compile(
 _STARTS_PRICE_RE = re.compile(r"^[\s\-*•>|:=→←]*" + _PRICE)  # «1.5×ATR» مسافة لا سعر
 
 
+_QUESTION_CALL_RE = re.compile(
+    r"\b(?:should|would|do|can|where|when)\s+(?:i|you|we)\s+(?:\w+\s+)?(?:buy|sell|short|go\s+(?:long|short)|get\s+(?:in|out)|exit|enter"
+    r"|take\s+profits?|put\s+(?:the|my|your)\s+stop)\b[^\n]*\?\s*$",
+    re.IGNORECASE,
+)
+_ANSWER_YES_RE = re.compile(r"^\s*(?:a\s*[:.)\-]\s*)?(?:yes|yep|yeah|sure|i\s+would|we\s+would|absolutely|definitely|\d+[.,]\d+)", re.IGNORECASE)
+
+
 def _trade_call_lines(lines: list[str]) -> set[int]:
     bad = {i for i, ln in enumerate(lines) if has_trade_call(ln)}
     # كلمة مستوى تنتهي بها سطر، والسطر غير الفارغ التالي يبدأ برقم
@@ -666,6 +786,10 @@ def _trade_call_lines(lines: list[str]) -> set[int]:
         if (_LABEL_END_RE.search(la) and _STARTS_NUM_RE.match(lb) and has_trade_call(lines[a] + " " + lines[b])) or (
             _LABEL_NOTE_END_RE.search(la) and _STARTS_PRICE_RE.match(lb)
         ):
+            bad |= {a, b}
+    # run 113: سؤال بسطر وجوابه بالتالي («Q: Should I buy EURUSD?» ثم «A: Yes.»؛ «Where would you get out?» ثم «A: 1.0950.»)
+    for a, b in zip(filled, filled[1:]):
+        if _QUESTION_CALL_RE.search(_guard_norm(lines[a])) and _ANSWER_YES_RE.match(_guard_norm(lines[b])):
             bad |= {a, b}
     # جدول Markdown: رأسه فيه كلمة مستوى وصفوفه أسعار ⇒ يُحذف الجدول كله
     i = 0
