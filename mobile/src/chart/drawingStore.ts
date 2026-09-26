@@ -193,6 +193,9 @@ export async function saveDrawings(
     if (unread.has(symbol)) {
       // لم تُقرأ المحفوظة قطّ ⇒ لم يرَها المتداول ولم يحذف منها شيئاً: تُضاف لما رسمه. قراءة فاشلة مجدداً ترمي ⇒ لا كتابة.
       const stored = parseList(await AsyncStorage.getItem(keyV2(symbol))) ?? [];
+      // رسمٌ أو مسحٌ أحدث وصل أثناء القراءة ⇒ الكتابة والدمج له (و`unread` باقٍ حتى يدمج هو): كان الدمج يُبنى من
+      // القائمة **القديمة** ويُنشر للشارت الكاتب نفسه فيمحو الخطّ الجديد من الشاشة ويلغي حفظه، ويعيد ما مُسح.
+      if (cache.get(symbol) !== drawings) return;
       unread.delete(symbol);
       const ids = new Set(drawings.map((d) => d.id));
       const kept = stored.filter((d) => d && !ids.has(d.id));
