@@ -1646,6 +1646,12 @@ console.log('tradePlan editExitValue selftest OK');
     assert.equal(journalLocalFieldToIso('2026-08-12T14:30')?.iso, '2026-08-12T14:30:00+03:00');
     assert.equal(journalLocalFieldToIso(' 2026/8/2 9:05 ')?.iso, '2026-08-02T09:05:00+03:00');
     assert.equal(journalLocalFieldToIso('٢٠٢٦-٠٨-١٢ ١٤:٣٠')?.iso, '2026-08-12T14:30:00+03:00');
+    // الثواني (QA120a — سجلّ MT5 «2026.09.26 14:05:30») تُقبل وتسقط: الوقت المحفوظ الدقيقة نفسها لا التالية
+    assert.equal(journalLocalFieldToIso('2026.09.26 14:05:30')?.iso, '2026-09-26T14:05:00+03:00');
+    assert.equal(journalLocalFieldToIso('2026-08-12T14:30:59')?.ms, Date.parse('2026-08-12T11:30:00Z'));
+    assert.equal(journalLocalFieldToIso('٢٠٢٦-٠٨-١٢ ١٤:٣٠:٠٥')?.iso, '2026-08-12T14:30:00+03:00');
+    for (const bad of ['2026-08-12 14:30:60', '2026-08-12 14:30:5', '2026-08-12 14:30:', '2026-08-12 14:30:00:00'])
+      assert.equal(journalLocalFieldToIso(bad), null, bad);
     // غير موجود/غير مقروء ⇒ null (كان `Date` سيحفظ 1 مايو بدل «31 أبريل»)
     for (const bad of ['2026-04-31 10:00', '2026-02-29 10:00', '2026-08-12 24:00', '2026-08-12 14:60', '2026-08-12', '14:30', '12-08-2026 14:30', '1969-12-31 23:00', ''])
       assert.equal(journalLocalFieldToIso(bad), null, bad);

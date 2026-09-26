@@ -509,7 +509,7 @@ export function journalRowWhen(row: { status?: string | null; opened_at_iso?: st
 
 /**
  * نصّ حقل «وقت الإغلاق» (بتوقيت الجهاز) ⇒ ISO **بإزاحة الجهاز لذلك التاريخ** (صحيح عبر التوقيت الصيفي) كما يقبله الخادم
- * (`_journal_time` يحوّله لتوقيته). يقبل «2026-08-12 14:30» و«T» بدل المسافة و«/» أو «.» بالتاريخ والأرقام العربية
+ * (`_journal_time` يحوّله لتوقيته). يقبل «2026-08-12 14:30» (والثواني «:30» تسقط) و«T» بدل المسافة و«/» أو «.» بالتاريخ والأرقام العربية
  * الهندية. تاريخ غير موجود (31 أبريل، 29 فبراير بسنة عادية) أو ساعة سقطت بقفزة الصيف ⇒ null: `Date` كان سيزيحها بصمت
  * لليوم/الساعة التالية فيُحفظ وقتٌ لم يكتبه المتداول.
  */
@@ -518,10 +518,11 @@ export function journalLocalFieldToIso(text: string): { iso: string; ms: number 
     .trim()
     .replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x0660))
     .replace(/[\u06f0-\u06f9]/g, (c) => String(c.charCodeAt(0) - 0x06f0));
-  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:\s+|T)(\d{1,2})[:\u066b.](\d{2})$/.exec(norm);
+  // الثواني اختيارية وتسقط (QA120a: سجلّ MT5 يُنسخ «2026.09.26 14:05:30»؛ الخادم يحفظ بالدقيقة)
+  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:\s+|T)(\d{1,2})[:\u066b.](\d{2})(?:[:\u066b.](\d{2}))?$/.exec(norm);
   if (!m) return null;
-  const [y, mo, d, h, mi] = m.slice(1).map(Number);
-  if (y < 1970 || h > 23 || mi > 59) return null;
+  const [y, mo, d, h, mi] = m.slice(1, 6).map(Number);
+  if (y < 1970 || h > 23 || mi > 59 || (m[6] != null && Number(m[6]) > 59)) return null;
   const dt = new Date(y, mo - 1, d, h, mi);
   if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || dt.getHours() !== h || dt.getMinutes() !== mi) {
     return null;
