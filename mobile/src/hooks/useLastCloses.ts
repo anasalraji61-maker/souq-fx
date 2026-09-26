@@ -6,13 +6,14 @@
  * **الحقل نفسه** الذي يقرؤه رأس الشارت (`ChartSeries.last` من `/api/charts`)، فلا يختلف السعر بين
  * القائمة والشارت.
  *
- * - السلاسل التجريبية لا تُعطي سعراً (قرار أنس ٢)؛ و`unavailable` (DXY) تُعلَّم كذلك ليقول الصفّ «غير متاح».
+ * - السلاسل التجريبية لا تُعطي سعراً (قرار أنس ٢)؛ و`unavailable` بسبب `not_offered_by_provider` (DXY) تُعلَّم كذلك ليقول الصفّ «غير متاح»؛
+ *   أمّا `provider_unavailable` (تعذّر مؤقّت) فكفشل الطلب: يبقى السعر السابق ويُعاد قريباً.
  * - طلبات متتالية لا متوازية (كـ`dailyRefStore`)، وD/50 هو طلبه نفسه ⇒ الخادم يخدمه من مخزنه.
  * - لا طلب لرمز يصله تيك: السوق المفتوح لا يكلّف شيئاً.
  */
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import { normalizeProvenance, type ProvenanceKind } from '../chart/dataSource';
+import { normalizeProvenance, providerUnavailableReason, type ProvenanceKind } from '../chart/dataSource';
 import { rememberChartSeries } from './chartSeriesCache';
 
 const TTL_MS = 2 * 60 * 1000;
@@ -47,8 +48,12 @@ async function drain() {
         const src = normalizeProvenance(s?.data_source);
         const last = s?.last;
         let value: LastClose | null = null;
-        if (src.kind === 'unavailable') value = { state: 'unavailable' };
-        else if (src.kind !== 'demo' && typeof last === 'number' && Number.isFinite(last) && last > 0) {
+        if (src.kind === 'unavailable') {
+          // «غير متاح» للرمز الذي لا يقدّمه المزوّد (DXY) وحده. `provider_unavailable` = تعذّر الجلب الآن
+          // (429 بلا مخزن، انقطاع) — لا يُوسَم الرمز غير متاح؛ يبقى السعر السابق أو «—» ويُعاد بعد `FAIL_TTL_MS`.
+          if (providerUnavailableReason(s?.data_source) === 'not_offered_by_provider') value = { state: 'unavailable' };
+          else throw new Error('provider_unavailable');
+        } else if (src.kind !== 'demo' && typeof last === 'number' && Number.isFinite(last) && last > 0) {
           value = { state: 'price', price: last, kind: src.kind, asOf: src.as_of ?? null };
         }
         cache.set(sym, { value, at: Date.now() });
