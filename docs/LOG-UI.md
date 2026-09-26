@@ -1229,3 +1229,11 @@
 - رايات قرارات ٥/٦/١٠: كل استعمال لـ`NewsPanel`/`AnalystsPanel`/`SocialConsensusPanel`/الباقات/العمولات/الشبكة محاط بالراية (`MatrixBottomDock:261–279`، `MatrixSidePanel:202`، `AccountScreen:280`).
 - قرار ٧: `PASSWORD_MIN_LENGTH = 8` بالتسجيل وتغيير الكلمة (`AccountScreen:32`).
 - **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة.
+
+## 2026-09-26 — تشغيل 103
+لا صفّ بـCOORDINATION (دورة QA 119) موجَّه إلى ui كمنفّذ — الصفّان باسم ui (ui-r77 لون الخطأ، ui85a مفتاح Sentry) عند أنس. بوابة البناء خضراء (0). **لا commit كود هذا التشغيل** — التحقّق بالكود لم يُظهر عيباً بنطاقي، ولم أختلق تغييراً.
+
+- بنود المهمّة السبعة (تحقّق بالكود): اختيار باللون وحده — مسح كل نمط `*On/*Active/*Selected` بنطاقي: كل زرّ اختيار يحمل `accessibilityState` وحاويته خلفية أو حدّاً لا لون نصّ فقط (`TimeframeBar:59`، `MatrixBottomDock:202/233/303/327`، `CalendarPanel:445/467/495`، `WatchlistPanel:475`، `MatrixSidePanel:144/169`، `QuadChartModal:289/383`)؛ «₴» تعليقان فقط؛ `Alert.alert`/`window.confirm` داخل `chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» تعليقات فقط؛ `useMultiLiveTicks` يرفض الأقدم من `TICK_STALE_MS` ويُسقط الصامت (`staleTimer`)؛ «إعادة الجولة» `AccountScreen:258–275`.
+- الكردية: القاموس `Dict` مكتوب النوع فلا مفتاح ناقص يسقط إلى العربية؛ لا نصّ خادم خام (`e.message`/`detail`/`*_ar`) يُعرض بنطاقي خارج `AppErrorBoundary`.
+- ملاحظات أنس على الويب: W3 (الشريط السفلي) — لا رصيف بعرض ≥700 (`MatrixBottomDock` `WIDE_MIN_WIDTH`)، وعلى الهاتف شريط أدوات مفصول بصرياً عن التنقّل (`5d7059f`) — **تنتظر نظرته**.
+- **لم يُتحقَّق بصرياً** — لا خادم على `:8081` ولا متصفّح بالبيئة.
