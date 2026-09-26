@@ -245,3 +245,15 @@ def test_bollinger_band_edge_matches_the_displayed_position(target, score):
     assert v["score"] == score
     if abs(score) == 0.55:
         assert "pos" not in (v.get("detail_values") or {})
+
+
+def test_macd_vote_never_sends_negative_zero(monkeypatch):
+    # خط الإشارة -4e-6 على 5 منازل كان يُرسَل «-0.0» فيعرض التطبيق «-0.00000» لقيمة صفرية بالعرض
+    real = signal_hub.ind_engine.snapshot
+    monkeypatch.setattr(signal_hub.ind_engine, "snapshot", lambda c: {
+        **real(c), "macd": -2.1e-5, "macd_signal": -4e-6, "macd_cross_up": False, "macd_cross_down": False})
+    out = signal_hub.indicator_forecast("EURUSD", _wave(), lang="en")
+    vote = next(v for v in out["votes"] if v["id"] == "macd")
+    assert vote["detail_code"] == "macd_below"
+    assert math.copysign(1, vote["detail_values"]["signal"]) == 1.0
+    assert "-0.0" not in vote["detail"]

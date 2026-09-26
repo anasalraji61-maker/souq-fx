@@ -295,7 +295,7 @@ def indicator_forecast(
             # MACD فرق بين سعرين ⇒ بمنازل السعر نفسها (وأكثر إن تساوى الرقمان المعروضان)
             mdp = _distinct_decimals(m, ms, dp)
             add("macd", "macd", 0.35 if m > ms else -0.35,
-                "macd_above" if m > ms else "macd_below", macd=round(m, mdp), signal=round(ms, mdp))
+                "macd_above" if m > ms else "macd_below", macd=round(m, mdp) + 0.0, signal=round(ms, mdp) + 0.0)  # لا «-0.0»
 
     # Bollinger-ish from recent std
     if len(closes) >= 20:
