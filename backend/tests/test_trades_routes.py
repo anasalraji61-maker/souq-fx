@@ -858,3 +858,29 @@ def test_closing_right_after_a_slightly_future_open_never_closes_before_opening(
         else:
             row = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.11}, headers=_DEV1).json()["trade"]
         assert row["closed_at"] >= row["opened_at"], how
+
+
+# ─── r64: `true` و«1_000» ليستا أسعاراً — Pydantic المرن كان يحوّلهما 1.0 و1000.0 ─────────
+
+@pytest.mark.parametrize("field", ["entry", "exit", "size", "sl", "tp"])
+@pytest.mark.parametrize("bad", [True, "1_000", "1.2"])
+def test_boolean_or_string_price_is_422(client, field, bad):
+    """`{"entry": true, "exit": 1.2}` كان يُحفظ دخولاً 1.0 ⇒ صفقة +20% مختلَقة تدخل نسبة الفوز والصافي."""
+    body = {**_TRADE, "exit": 1.12, field: bad}
+    r = client.post("/api/trades", json=body, headers=_DEV1)
+    assert r.status_code == 422, r.text
+    assert client.get("/api/trades", headers=_DEV1).json()["stats"]["trade_count"] == 0
+
+
+def test_boolean_close_and_patch_are_422(client):
+    t = _open_trade(client)
+    assert client.post(f"/api/trades/{t['id']}/close", json={"exit": True}, headers=_DEV1).status_code == 422
+    assert client.patch(f"/api/trades/{t['id']}", json={"entry": True}, headers=_DEV1).status_code == 422
+    # JSON int ما يزال سعراً صالحاً (JPY/مؤشرات تُكتب بلا كسر)
+    r = client.post(f"/api/trades/{t['id']}/close", json={"exit": 2}, headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["exit"] == 2.0
+
+
+def test_boolean_alert_price_is_422(client):
+    r = client.post("/api/alerts", json={"symbol": "EURUSD", "condition": "above", "price": True}, headers=_DEV1)
+    assert r.status_code == 422

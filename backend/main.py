@@ -202,9 +202,9 @@ class VoteCreate(BaseModel):
 
     symbol: str = Field(min_length=3, max_length=12)
     direction: Literal["buy", "sell"]
-    entry: float = Field(gt=0, allow_inf_nan=False)
-    sl: float = Field(gt=0, allow_inf_nan=False)
-    tp: float = Field(gt=0, allow_inf_nan=False)
+    entry: float = Field(gt=0, allow_inf_nan=False, strict=True)
+    sl: float = Field(gt=0, allow_inf_nan=False, strict=True)
+    tp: float = Field(gt=0, allow_inf_nan=False, strict=True)
     note: str = Field(default="", max_length=500)
 
     @model_validator(mode="after")
@@ -308,7 +308,7 @@ class AlertCreate(BaseModel):
     symbol: str = Field(min_length=3, max_length=12)
     condition: Literal["above", "below"]
     # `inf` كان يجتاز `gt=0` فيُحفظ ثم يسقط تسلسل JSON ⇒ كل GET/check لتنبيهات المالك 500 بعده
-    price: float = Field(gt=0, allow_inf_nan=False)
+    price: float = Field(gt=0, allow_inf_nan=False, strict=True)
     # كملاحظة الدفتر/التصويت: بلا حدّ كان نصّ غير محدود يُخزَّن ويُرسل بالإشعار
     note: str = Field(default="", max_length=500)
 
@@ -494,8 +494,8 @@ class BacktestRun(BaseModel):
     strategy: Literal["ma_cross", "rsi_reversal", "macd_cross", "bb_bounce"] = "ma_cross"
     fast: int = 9
     slow: int = 21
-    rsi_low: float = Field(default=30, gt=0, lt=100, allow_inf_nan=False)
-    rsi_high: float = Field(default=70, gt=0, lt=100, allow_inf_nan=False)
+    rsi_low: float = Field(default=30, gt=0, lt=100, allow_inf_nan=False, strict=True)
+    rsi_high: float = Field(default=70, gt=0, lt=100, allow_inf_nan=False, strict=True)
 
     @model_validator(mode="after")
     def _bounded(self) -> "BacktestRun":
@@ -565,7 +565,7 @@ class IndicatorAlertCreate(BaseModel):
     alert_type: Literal["rsi", "ma_cross", "macd_cross"]
     condition: Literal["above", "below", "cross_up", "cross_down"]
     # Infinity لتنبيه تقاطع كان يُحفظ (فحص المدى لـrsi فقط) ثم يفشل ترميز كل ردّ ⇒ قائمة المالك 500 للأبد
-    value: float | None = Field(default=None, allow_inf_nan=False)
+    value: float | None = Field(default=None, allow_inf_nan=False, strict=True)
     fast_period: int = 9
     slow_period: int = 21
     note: str = Field(default="", max_length=500)
@@ -620,14 +620,14 @@ class TradeCreate(BaseModel):
 
     symbol: str = Field(min_length=3, max_length=12)
     side: Literal["buy", "sell"]
-    entry: float = Field(gt=0, allow_inf_nan=False)
-    exit: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    entry: float = Field(gt=0, allow_inf_nan=False, strict=True)
+    exit: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     # غائب = «غير معروف» (null بالقاعدة) لا لوت واحد: الافتراض 1 كان يُخزَّن فيقرأه المتداول حجماً كتبه.
-    size: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    size: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     note: str = Field(default="", max_length=500)
     opened_at: str | None = Field(default=None, max_length=40)
-    sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
-    tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
@@ -679,7 +679,7 @@ class TradeClose(BaseModel):
     """سعر إغلاق الصفقة. موجب منتهٍ: إغلاق بـ`exit=0` كان يُحفظ بـ`-100%` وبسعر سالب
     بـ`-554%`، وكلاهما يدخل نسبة النجاح وصافي الدفتر ولا يُمحى إلا بحذف الصفقة."""
 
-    exit: float = Field(gt=0, allow_inf_nan=False)
+    exit: float = Field(gt=0, allow_inf_nan=False, strict=True)
 
 
 class TradeUpdate(BaseModel):
@@ -688,12 +688,12 @@ class TradeUpdate(BaseModel):
 
     symbol: str | None = Field(default=None, min_length=3, max_length=12)
     side: Literal["buy", "sell"] | None = None
-    entry: float | None = Field(default=None, gt=0, allow_inf_nan=False)
-    exit: float | None = Field(default=None, gt=0, allow_inf_nan=False)
-    size: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    entry: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    exit: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    size: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
     note: str | None = Field(default=None, max_length=500)
-    sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
-    tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    sl: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
+    tp: float | None = Field(default=None, gt=0, allow_inf_nan=False, strict=True)
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
