@@ -140,7 +140,6 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         accessibilityState={{ expanded: false }}
         style={({ pressed }) => [
           styles.square,
-          pct >= 40 && styles.squareOn,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
@@ -151,7 +150,8 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         accessibilityLabel={`${t.panSpeedMarkA11y} ${pct} ${t.panTapDetailsSuffix}`}
         hitSlop={6}
       >
-        <CruiseSpeedMark size={15} active={pct >= 40} />
+        {/* محايد دائماً: «≥40» ليس اختياراً بل قيمة، والزرّ يفتح الشريط فقط (DESIGN-PRO §1). */}
+        <CruiseSpeedMark size={15} />
       </Pressable>
     );
   }
@@ -172,7 +172,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
           },
         ]}
       >
-        <CruiseSpeedMark size={15} active />
+        <CruiseSpeedMark size={15} />
       </Pressable>
       {/* «adjustable» على المسار نفسه لا الغلاف (الذي يحوي زرّاً): بلا increment/decrement كان قارئ الشاشة
           يعلن «قابل للضبط» والتمرير لا يغيّر شيئاً — السحب وحده يضبط. خطوة 5 من 1..100. */}
@@ -228,10 +228,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  squareOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-  },
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -240,7 +236,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.border,
     backgroundColor: colors.controlBg,
     minWidth: 118,
     maxWidth: 138,
@@ -278,7 +274,7 @@ const styles = StyleSheet.create({
     top: -2.5,
     backgroundColor: colors.sliderThumb,
     borderWidth: 1.5,
-    borderColor: colors.accent,
+    borderColor: colors.border,
   },
   percent: {
     ...numeric,
