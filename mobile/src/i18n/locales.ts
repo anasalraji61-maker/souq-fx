@@ -1350,6 +1350,8 @@ export type Dict = {
   /** backend-r37 `atr_exceeds_price`: الوقف أو الهدف سيكون سعراً ≤ 0 */
   sigLevelsUnavailableAtrWide: string;
   sigLevelsUnavailableNeutral: string;
+  /** backend-r54 `no_range`: سلسلة كاملة بلا حركة (ATR = 0) — ليست «شموع قليلة» */
+  sigLevelsUnavailableNoRange: string;
   journalStatBreakeven: string;
   journalShownOfTotal: string;
   journalLoadOlder: string;
@@ -1411,6 +1413,8 @@ export type Dict = {
   forecastVoteNames: { rsi: string; ma_cross: string; ma_trend: string; macd: string; bb: string; stoch: string; trend: string };
   forecastDisclaimerConsensus: string;
   forecastDisclaimerNoData: string;
+  /** backend-r54 `disclaimer_code: no_movement` — الخادم يرسل ar/en فقط */
+  forecastDisclaimerNoMovement: string;
   dsKindUnavailable: string;
   /**
    * backend-r19: خانة شارت لرمز لا يقدّمه المزوّد (`unavailable_reason: "not_offered_by_provider"`، DXY) — مكان الشارت
@@ -2619,6 +2623,7 @@ const ar: Dict = {
   sigLevelsUnavailableFewCandles: 'لا مستويات دخول ووقف وهدف — الشموع قليلة لحساب المدى (ATR)',
   sigLevelsUnavailableAtrWide: 'لا مستويات دخول ووقف وهدف — المدى (ATR) أوسع من السعر نفسه',
   sigLevelsUnavailableNeutral: 'لا مستويات دخول ووقف وهدف — الاتجاه محايد',
+  sigLevelsUnavailableNoRange: 'لا مستويات دخول ووقف وهدف — السعر لم يتحرّك في هذه الفترة، فلا مدى (ATR) يُقاس عليه',
   journalStatBreakeven: 'تعادل: {n} (لا يدخل نسبة النجاح)',
   journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
   journalLoadOlder: 'تحميل الأقدم',
@@ -2655,6 +2660,7 @@ const ar: Dict = {
   forecastVoteNames: { rsi: 'RSI 14', ma_cross: 'تقاطع MA', ma_trend: 'اتجاه MA', macd: 'MACD', bb: 'بولنجر', stoch: 'Stochastic', trend: 'ميل السعر' },
   forecastDisclaimerConsensus: 'إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.',
   forecastDisclaimerNoData: 'لا بيانات كافية لحساب المؤشرات المختارة — فعّل مؤشراً آخر من الأزرار أعلاه؛ RSI و«ميل» يكفيهما تاريخ أقصر.',
+  forecastDisclaimerNoMovement: 'لم يتحرّك السعر في هذه الفترة — قد يكون السوق مغلقاً، فلا اتجاه تقرؤه المؤشرات. جرّب فريماً أطول أو عُد عند افتتاح السوق.',
   dsKindUnavailable: 'غير متاح',
   chartNotOfferedTitle: '{symbol} غير متاح من مزوّد البيانات',
   chartNotOfferedBody: 'لا نرسم له شموعاً ولا سعراً كي لا تقرأ أرقاماً مولَّدة. اضغط اسم الرمز ▾ فوق الشارت لتختار زوجاً آخر.',
@@ -3830,6 +3836,7 @@ const enUS: Dict = {
   sigLevelsUnavailableFewCandles: 'No entry, stop or target — not enough candles to measure the range (ATR)',
   sigLevelsUnavailableAtrWide: 'No entry, stop or target — the range (ATR) is wider than the price itself',
   sigLevelsUnavailableNeutral: 'No entry, stop or target — direction is neutral',
+  sigLevelsUnavailableNoRange: 'No entry, stop or target — the price hasn’t moved in this window, so there’s no range (ATR) to measure from',
   journalStatBreakeven: 'Breakeven: {n} (not counted in win rate)',
   journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
   journalLoadOlder: 'Load older',
@@ -3866,6 +3873,7 @@ const enUS: Dict = {
   forecastVoteNames: { rsi: 'RSI 14', ma_cross: 'MA cross', ma_trend: 'MA trend', macd: 'MACD', bb: 'Bollinger', stoch: 'Stochastic', trend: 'Price slope' },
   forecastDisclaimerConsensus: 'Technical-indicator consensus inside MATRIX — not a guarantee of profit.',
   forecastDisclaimerNoData: 'Not enough data to compute the selected indicators — turn on another one above; RSI and Trend need the shortest history.',
+  forecastDisclaimerNoMovement: 'The price hasn’t moved in this window — the market may be closed, so the indicators have no direction to read. Try a longer timeframe, or check back when the market opens.',
   dsKindUnavailable: 'Unavailable',
   chartNotOfferedTitle: '{symbol} isn’t offered by our data provider',
   chartNotOfferedBody: 'We draw no candles or price for it, so you never read made-up numbers. Tap the symbol name ▾ above the chart to pick another pair.',
@@ -5077,6 +5085,7 @@ const ku: Dict = {
   sigLevelsUnavailableFewCandles: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مۆمەکان کەمن بۆ پێوانی مەودا (ATR)',
   sigLevelsUnavailableAtrWide: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مەودا (ATR) لە خودی نرخەکە فراوانترە',
   sigLevelsUnavailableNeutral: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئاڕاستە بێلایەنە',
+  sigLevelsUnavailableNoRange: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — نرخ لەم ماوەیەدا نەجووڵاوە، بۆیە هیچ مەودایەک (ATR) نییە بۆ پێوان',
   journalStatBreakeven: 'بێ قازانج و زیان: {n} (لە ڕێژەی سەرکەوتندا ناژمێردرێت)',
   journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
   journalLoadOlder: 'بارکردنی کۆنترەکان',
@@ -5115,6 +5124,7 @@ const ku: Dict = {
   forecastVoteNames: { rsi: 'RSI 14', ma_cross: 'بڕینی MA', ma_trend: 'ئاراستەی MA', macd: 'MACD', bb: 'بۆلینجەر', stoch: 'Stochastic', trend: 'لاری نرخ' },
   forecastDisclaimerConsensus: 'کۆدەنگی پێوەرە تەکنیکییەکان لەناو MATRIX — گەرەنتی قازانج نییە.',
   forecastDisclaimerNoData: 'داتای پێویست نییە بۆ ژماردنی پێوەرە هەڵبژێردراوەکان — پێوەرێکی تر لە دوگمەکانی سەرەوە چالاک بکە؛ RSI و «ترێند» مێژوویەکی کورتتریان بەسە.',
+  forecastDisclaimerNoMovement: 'نرخ لەم ماوەیەدا نەجووڵاوە — لەوانەیە بازاڕ داخرابێت، بۆیە پێوەرەکان هیچ ئاڕاستەیەک نابینن. چوارچێوەیەکی درێژتر تاقی بکەرەوە یان کاتی کردنەوەی بازاڕ بگەڕێوە.',
   dsKindUnavailable: 'بەردەست نییە',
   chartNotOfferedTitle: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت',
   chartNotOfferedBody: 'هیچ مۆم و نرخێکی بۆ ناکێشین تا ژمارەی دروستکراو نەخوێنیتەوە. ناوی هێماکە ▾ لە سەرووی نەخشەکە دابگرە بۆ هەڵبژاردنی جووتێکی تر.',
