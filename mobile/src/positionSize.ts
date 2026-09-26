@@ -146,14 +146,15 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
  * رمز **حساب سنت** (Exness Cent: «EURUSDc»، «USDJPYc»، «XAUUSDc»، «GOLDc») ⇒ الزوج العادي («EURUSD»)؛ null = ليس كذلك.
  * `instrumentSpec` لا يقبله (لوت السنت أصغر بمئة مرّة — عقد الحساب العادي يُعطي لوتاً خاطئاً بمئة ضعف)؛ الحاسبة تحسبه بعقد
  * الزوج ÷ 100 ورصيد بالـUSC (`smallContractSpec`)، والدفتر نقاطاً بلا مال. «c» أو «C» ملاصقة لزوج صالح أو اسم معدن فقط، كالشارت
- * (`chartPipSpec`)؛ رمزٌ تقبله الحاسبة أصلاً ليس سنتاً، ولاحقة فوق لاحقة («EURUSDmc») لا تُخمَّن.
+ * (`chartPipSpec`)؛ رمزٌ تقبله الحاسبة أصلاً ليس سنتاً، ولاحقة فوق لاحقة («EURUSDmc») لا تُخمَّن. «CENT» كلمةً تُقبل بفاصل
+ * أو ملاصقة («EURUSD cent»، «EURUSDcent») كـ«MICRO» — الدفتر يحفظ «EURUSD cent» «EURUSDCENT» فكان يضيع نقاطه وسعره.
  */
 export function centAccountSymbol(raw: string): string | null {
   const s = raw.trim();
   if (instrumentSpec(s)) return null;
   const m =
     /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER|gold|silver|Gold|Silver)[cC]$/.exec(s) ??
-    /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+](?:C|CENT)$/i.exec(s);
+    /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)(?:[.\-_#+](?:C|CENT)|CENT)$/i.exec(s);
   if (!m) return null;
   return instrumentSpec(m[1])?.symbol ?? null;
 }

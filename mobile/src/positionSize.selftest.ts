@@ -1942,6 +1942,8 @@ console.log('positionSize centAccountSymbol selftest OK');
   for (const [raw, pair] of [
     ['EURUSD.c', 'EURUSD'], ['EURUSD.C', 'EURUSD'], ['EURUSD-cent', 'EURUSD'], ['XAUUSD_cent', 'XAUUSD'],
     ['USDJPY#c', 'USDJPY'], ['GOLD.c', 'XAUUSD'], ['silver-cent', 'XAGUSD'], ['EUR/USD.cent', 'EURUSD'],
+    // «CENT» ملاصقة كـ«MICRO» — الدفتر يحفظ «EURUSD cent» «EURUSDCENT» (كانت بلا نقاط ولا سعر سوق)
+    ['EURUSDcent', 'EURUSD'], ['USDJPYCENT', 'USDJPY'], ['GOLDcent', 'XAUUSD'], ['EUR/USDcent', 'EURUSD'],
   ] as const) {
     assert.equal(instrumentSpec(raw), null, raw);
     assert.equal(riskInQuoteCcy({ symbol: raw, entry: 1.085, sl: 1.0825, lots: 0.1 }), null, raw);
@@ -1963,7 +1965,7 @@ console.log('positionSize centAccountSymbol selftest OK');
   const std = instrumentSpec('EURUSD')!;
   assert.equal(positionSize({ balance: 1000, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(std, 1), contractSize: std.contractSize })!.lots, 0.04);
   // لاحقة تشبه السنت/micro بلا عقد معروف: مرفوضة (كانت عقداً عادياً ⇒ 0.04 لوت حيث السنت 4.00، خطأ ×100) — لا تخمين
-  for (const raw of ['EURUSD.cents', 'EURUSD_USC', 'EURUSD-cnt', 'EURUSD.mic', 'EURUSD.cent1', 'GOLD.CENTS', 'XAUUSD.CENTS', 'EURUSD.mini2', 'EURUSD#micro1']) {
+  for (const raw of ['EURUSDcents', 'BTCUSDcent', 'US30cent', 'EURUSDmcent', 'EURUSD.cents', 'EURUSD_USC', 'EURUSD-cnt', 'EURUSD.mic', 'EURUSD.cent1', 'GOLD.CENTS', 'XAUUSD.CENTS', 'EURUSD.mini2', 'EURUSD#micro1']) {
     assert.equal(instrumentSpec(raw), null, raw);
     assert.equal(centAccountSymbol(raw), null, raw);
   }

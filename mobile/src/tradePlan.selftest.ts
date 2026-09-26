@@ -4033,3 +4033,15 @@ console.log('tradePlan journalCloseSeen selftest OK');
   assert.equal(journalSizeLooksLikeUnits(500, journalFormSymbol('EURUSD c')), null);
 }
 console.log('tradePlan journalFormSymbol selftest OK');
+
+// «EURUSD cent» بمسافة أو ملاصقة: يُحفظ «EURUSDCENT» ويُعرف سنتاً ⇒ نقاط وسعر سوق كـ«EURUSD-cent»
+{
+  for (const raw of ['USDJPY cent', 'USDJPYcent', 'usdjpy CENT']) {
+    const sym = journalFormSymbol(raw);
+    assert.equal(sym, 'USDJPYCENT', raw);
+    assert.equal(quoteSymbol(sym), 'USDJPY', raw);
+    assert.equal(realizedMove({ symbol: sym, side: 'buy', entry: 157.4, exit: 157.65 })?.pips, 25, raw);
+    assert.equal(journalPipSize(sym), 0.01, raw);
+  }
+}
+console.log('tradePlan cent word selftest OK');
