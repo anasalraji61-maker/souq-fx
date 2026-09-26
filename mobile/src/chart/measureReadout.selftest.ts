@@ -8,6 +8,7 @@ import {
   measurePipsText,
   measureReadoutText,
   pipUnit,
+  pipsNumber,
   signedDistanceText,
   type MeasureStats,
 } from './measureReadout';
@@ -253,6 +254,10 @@ ok('مسافة بسعر فاسد ⇒ null', signedDistanceText('US30', NaN, 4200
 
 // طرفا رسم مُرسَيان بفهرس كسري (من فريم أصغر) ⇒ عدد شموع صحيح لا «5.2916… شمعة»
 ok('measureStats integer bars', measureStats({ index: 10.375, price: 1 }, { index: 15.666, price: 1.1 }).bars === 5);
+
+// الحدّ 1000 على القيمة المقرَّبة: 999.96 كانت «1000.0»
+ok('999.96 ⇒ 1000', pipsNumber(999.96) === '1000');
+ok('999.94 ⇒ 999.9', pipsNumber(999.94) === '999.9');
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);

@@ -54,7 +54,9 @@ function isEnglish(lang?: string): boolean {
  * وسم محور السعر (68px) فيُقصّ بنقاط حذف.
  */
 export function pipsNumber(pips: number): string {
-  return Math.abs(pips) >= 1000 ? pips.toFixed(0) : pips.toFixed(1);
+  // الحدّ على المقرَّب: 999.96 كانت «1000.0» بينما 1000 نفسها «1000».
+  const r = Math.round(pips * 10) / 10;
+  return Math.abs(r) >= 1000 ? r.toFixed(0) : r.toFixed(1);
 }
 
 export function measurePipsText(symbol: string, a: number, b: number, lang?: string): string | null {
