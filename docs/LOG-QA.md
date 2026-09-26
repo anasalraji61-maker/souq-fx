@@ -1112,3 +1112,10 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **المراجعة (a — ميت/تصديرات):** سكربت على كل `export` بـ`src/`: لا دالة ميتة (`CoursesScreen`/`hasSeenOnboarding` مستوردان بـ`App.tsx`)؛ كل مفاتيح الترجمة مقروءة. **لا بند.**
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (4ee84e5):** launch أضاف `screenerInsufficientData` ×3 و**launch167a → tools** (يكمل backend-r69) — مُتحقَّق: `api.ts` بلا `insufficient_data`. المفتاح غير مقروء بعد بانتظاره.
+
+## 2026-09-26 — الدورة 102
+**البناء:** أخضر 0 (على f739fca) — لا إصلاح لازم. **Selftests:** 116/116 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت backend-r70 ← ui `358bcc5` (`AuthContext.tsx:90`)؛ backend-r69/launch167a ← tools `c91e00a` (`ToolsScreen.tsx:531/796`)؛ tools115a ← ui `e684b8f` (`api.ts:615`، `ScreenerMini.tsx:106`). ui75a باقٍ (`MatrixChart.tsx:7133/9113` «🔔»، `TerminalScreen.tsx:1125` «⚡»). سجلّ chart (`278ae65`): لا طلب جديد.
+**قائمة قبول DESIGN-PRO (الثاني والعشرون):** 0/12 فشل (diff منذ 4ee84e5: «افحص» حدّ فقط، رموز أحادية بالرصيف/الشريط؛ `'900'` بـ`MatrixChart.tsx:7869` لحرفي X/O = محتوى شارت).
+**المراجعة (b — نصوص ثابتة):** لا نصّ حرفي جديد (EURUSD/MATRIX/launch52 فقط). **QA102a → tools (منخفض)**: تحويل `unknown` وتعليق قديم بـ`ToolsScreen.tsx:201/531` بعد أن وصف `api.ts` الحقل.
+**الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.

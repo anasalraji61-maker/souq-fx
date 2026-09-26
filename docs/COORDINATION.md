@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 101، على 11b6e30) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 102، على f739fca) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -25,15 +25,12 @@
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
 | backend | أنس | **backend-r56** مفتاح Twelve Data (المشترك مع الروبوت) كان يُعاد بنصّ 502 من `/api/symbols/search` (بلا دخول) عند أيّ خطأ من المزوّد (429 مثلاً) — أُصلح `80e268a`. لا يمكن معرفة إن قرأه أحد من قبل ⇒ **دوّروا المفتاح** إن كان الخادم منشوراً للعموم | backend-r56 |
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
-| backend | tools | **backend-r69** (اختياري، لا كسر): `/api/screener/run` صار يعيد `insufficient_data: {رمز: [فلاتر]}` = فلاتر لم تكفِ شموع الرمز لتقييمها (تقاطع MA يحتاج `slow`+1 شمعة، MACD ‏35، الزخم 81). رمز كل فلاتره هنا يُعدّ ضمن `failed` (كان «مفحوصاً بلا تطابق» — `87e4b30`). يمكن لـ`ScreenerMini`/`ToolsScreen` أن يقول «شموع غير كافية» بدل «تعذّرت قراءته» لهذه الرموز | backend-r69 |
-| backend | ui | **backend-r70** مسارات البيانات الشخصية (`/api/trades*`، `/api/alerts*`، `/api/indicator-alerts*`، `/api/watchlist/custom*`، `/api/layouts*`) صارت تردّ **401 `login_required`** حين يُرسَل توكن منتهٍ/ملغى (كانت تعامله مجهولاً ⇒ دفتر فارغ بـ200 ونسبة فوز 0% من صفقة واحدة — `6da0602`). الزائر بلا توكن لا يتغيّر، و`logout` يقبل المنتهي كما هو. المطلوب: عند `HTTP 401` من أيّ منها استدعِ `checkSession` في `AuthContext` (فيظهر `sessionExpired`) بدل خطأ تحميل عامّ — اليوم يُكتشف فقط عند الإقلاع/العودة للواجهة | backend-r70 |
-| launch | tools | **launch167a** (يكمل backend-r69): رمز لم تكفِ شموعه يقع في `failed` ⇒ `screenerScanPartial` يقول له «حدّ طلبات المزوّد غالباً» — سبب خاطئ. المفتاح `t.screenerInsufficientData` جاهز (`{tf}` `{list}`، ×3 لغات). أضف `insufficient_data?: Record<string, string[]>` لنوع `screenerRun` (`api.ts:581`)، واعرض السطر بـ`ToolsScreen`/`ScreenerMini` لرموزه، وأخرجها من `{list}` الحدّ | launch167 |
-| tools | ui | **tools115a** (يكمل launch167a؛ `ToolsScreen` نُفِّذ): أضف `insufficient_data?: Record<string, string[]>` لنوع `screenerRun` (`api.ts:564` — `ToolsScreen` يقرؤه اليوم بتحويل `unknown` عبر `readInsufficient`)، وفي `ScreenerMini.tsx:99` (فلتر واحد ⇒ كل رمز هنا هو في `failed`) أخرج رموز `insufficient_data` من سطر «حدّ الطلبات» واعرضها بـ`t.screenerInsufficientData` (`{tf}` `{list}`) | tools115 |
 | ui | chart/launch | **ui75a** DESIGN-PRO §1/§4: «🔔» رمز تعبيري ملوّن (أصفر) هو رمز التنبيه المعتمد: زرّ الـcrosshair ووسم خطّ التنبيه (`MatrixChart.tsx:7133`، `:9113`) ونصوص الإرشاد ×3 لغات (`locales.ts:1613/1815/2849/3050/4123/4324`). ui غيّر علامات الرصيف والشريط إلى «⚑» (تنبيه سعر) و«⚐» (تنبيه مؤشّر) بلا صيغة تعبيرية (`e2dbd45`)، ويُبقي «🔔» بصفّ قائمة المتابعة (`WatchlistPanel:414`) ووميض `AlertsPanel:877` حتى يتّفق الرمز: chart يبدّل «🔔» بالشارت إلى «⚑» ⇒ launch يبدّل النصوص ⇒ ui يبدّل موضعيه. (`ToolsScreen:98` يضع «⚡» لتنبيه المؤشّر ⇒ tools «⚐».) | ui75 |
-**تحقّق الدورة 101 (بالكود، على 11b6e30):** البناء أخضر 0، selftests 115/115. أُغلق **launch166a** ← chart `11b6e30` (`MatrixChart.tsx:7115` يلحق
-`tr.mcHintTypeDateWeb` حين `canPan && !replayOn`؛ المفتاح ×3 بـ`locales.ts:2518/3753/5035`). backend-r69 باقٍ (لا `insufficient_data` بـ`mobile/src`).
-سجلات chart/tools/launch/ui/backend: جديد **launch167a → tools** مُتحقَّق (`api.ts` بلا `insufficient_data`؛ يكمل backend-r69) (طلب chart 84 لـlaunch/ui نُفِّذ).
-**قائمة قبول DESIGN-PRO (الحادي والعشرون): 0 من 12 فشل** (diff منذ aff05e2، 9 ملفّات: `rel` بالتقويم `...numeric` و«قريب» `colors.text`؛ الشبكة/الباقات/المدرسة
-بلا تأكيد؛ فاصل واحد للطرفية والحاسبة والماسح؛ مسافات `spacing.*`؛ لا وزن ≥700).
-**المراجعة (a — ميت/تصديرات):** مسح كل `export` بـ`mobile/src`: لا دالة غير مستعملة (المرشّحان `CoursesScreen`/`hasSeenOnboarding` مستوردان بـ`App.tsx`)؛
-كل مفاتيح `locales.ts` مقروءة عدا `screenerInsufficientData` (جديد، launch167a)؛ التكرار يلتقطه tsc (0). **لا بند.**
+| QA | tools | **QA102a** (منخفض، تنظيف): `ToolsScreen.tsx:531` يقرأ `insufficient_data` بتحويل `(res as { insufficient_data?: unknown })` وتعليق :201 «نوع `screenerRun` لا يصفه بعد» — النوع صار يصفه (`api.ts:615`، ui `e684b8f`). `readInsufficient` يبقى للتحقّق، يكفي `res.insufficient_data` وحذف الجملة القديمة | QA102 |
+**تحقّق الدورة 102 (بالكود، على f739fca):** البناء أخضر 0، selftests 116/116. أُغلقت: **backend-r70** ← ui `358bcc5` (`AuthContext.tsx:90` مستمع 401 ⇒ `checkSession`)؛
+**backend-r69/launch167a** ← tools `c91e00a` (`ToolsScreen.tsx:531/796` `readInsufficient` و`screenerInsufficientData`)؛ **tools115a** ← ui `e684b8f` (`api.ts:615`، `ScreenerMini.tsx:106/131`).
+ui75a باقٍ: «🔔» بـ`MatrixChart.tsx:7133/9113`، `WatchlistPanel:414`، `AlertsPanel:877`؛ «⚡» بـ`TerminalScreen.tsx:1125`. سجلّ chart (`278ae65` Pine-lite): لا طلب جديد.
+**قائمة قبول DESIGN-PRO (الثاني والعشرون): 0 من 12 فشل** (diff منذ 4ee84e5: زرّ «افحص» حدّ فقط ⇒ التأكيد الواحد للفريم النشط؛ رموز الرصيف/الشريط أحادية «⚑ ⚐ ◑ ☰»؛
+لا وزن ≥700 بالكروم — `MatrixChart.tsx:7869` `'900'` لحرفي X/O بشارت النقطة والرقم = محتوى الشارت لا كروم؛ لا مسافة خارج ×4 بالملفّات المتغيّرة).
+**المراجعة (b — نصوص ثابتة):** `placeholder`/`accessibilityLabel`/نصوص JSX حرفية بكل `.tsx` ⇒ «EURUSD» (رمز)، «MATRIX» (العلامة)، و`MessagesScreen` (launch52) فقط؛
+أسماء الفلاتر بسطر «شموع غير كافية» من `buildFilters(t)` ومعرّفات الخادم تطابقها (`macd_cross_up`…). **لا بند.**
