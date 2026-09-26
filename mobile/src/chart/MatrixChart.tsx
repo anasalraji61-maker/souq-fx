@@ -2071,7 +2071,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       return a === m.a && b === m.b ? m : { a, b };
     });
     setPending((p) => (p ? re(p) : p));
-  }, [source.all, kind, series.timeframe, liveSeries.candles, weekendClosed]);
+    // `measureDone`/`pending` أيضاً: قياسٌ اكتمل بطرفٍ التُقط قبل سقوط شمعة أثناء السحب يُصحَّح فوراً لا مع التيك التالي.
+    // لا حلقة: `anchorPoint` يعيد النقطة نفسها حين لا تغيير.
+  }, [source.all, kind, series.timeframe, liveSeries.candles, weekendClosed, measureDone, pending]);
 
   const publishSyncWindow = useCallback(() => {
     if (syncFollow) return;
