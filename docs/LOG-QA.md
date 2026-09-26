@@ -1258,3 +1258,4 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **قائمة قبول DESIGN-PRO (الثامن والثلاثون):** 0/12 فشل (diff منذ 2527ee4: سطر `manualSlip` بـ`styles.warn`، مفتاح النسخ بالرمز).
 **المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 6 أغلفة `accessible={false}` نفسها. **لا بند.** (السكربت `/tmp/a11y.js` يحتاج `NODE_PATH=mobile/node_modules`.)
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة (منازل النفط 3 بين `pipSpec` والخادم والتنبيه)؛ متابعة launch187a/backend-r91a؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (40b181d):** أخضر 0؛ selftests المتغيّرة (`drawingAnchors`/`flatWindow`/`vwapSession`) ناجحة. أُغلقت launch187a ← tools `40b181d`. diff الجديد منطق مؤشرات/مراسٍ + تبديل مفتاح نصّ ⇒ قائمة القبول 0/12. المفتوح لوكيل: backend-r91a → tools وحده.
