@@ -115,6 +115,8 @@ const DEFAULT_HERO_SYMBOL = 'USDJPY';
 const NO_PRICE_BASES: Record<string, number> = {};
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
+/** سرعة السحب يحفظها `savePanSpeed` بمفتاحه — هذا وسمٌ لحارس القراءة فقط. */
+const PAN_SPEED_TOUCH = 'panSpeed';
 const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
 type ShadowSlots = [Timeframe, Timeframe, Timeframe];
 type ShadowEnabled = [boolean, boolean, boolean];
@@ -201,6 +203,12 @@ export function TerminalScreen() {
   const [dxyTf, setDxyTf] = useState<Timeframe>('15m');
   const [heroSymbol, setHeroSymbol] = useState(DEFAULT_HERO_SYMBOL);
   const [prefsReady, setPrefsReady] = useState(false);
+  // مفاتيح غيّرها المتداول **قبل** أن تنتهي قراءة التفضيلات (عشر قراءات متتالية، بدء بارد على أندرويد): القراءة تتخطّاها —
+  // كان فريمٌ/رمزٌ/تخطيطٌ نُقر تحت إصبعه يُدهَس بالمحفوظ (كحارس `tabTouchedRef` بشاشة الأدوات)
+  const prefsTouchedRef = useRef(new Set<string>());
+  const touchPref = (...keys: string[]) => {
+    for (const k of keys) prefsTouchedRef.current.add(k);
+  };
   // chart-r74b: الاستطلاع الدوري يقرأ الرموز/الفريمات الحالية من مراجع لا من تبعيات التأثير — كان كل تبديل فريم/رمز إطار
   // يعيد تشغيل التأثير فيجلب الخانات الأربعة (5 طلبات لكل ضغطة من حدّ المزوّد)، ويصفّر مؤقّت 90ث، ويرفع عدّاد كل إطار
   // فيُرمى ردّ التبديل السريع وينتظر الإطار أبطأ الأربعة. التبديلات تجلب خانتها وحدها (`changeFrameTf`…).
@@ -346,6 +354,7 @@ export function TerminalScreen() {
       // كل مفتاح وحده: كانت القراءات بـ`try` واحد، فقيمةٌ تالفة واحدة (JSON مقطوع لترتيب الإطارات) تُسقط كل ما بعدها
       // — إطار الدولار، رمز البطل، خانات الظلّ، سرعة السحب — بصمت عند كل إقلاع
       const get = async (key: string): Promise<string | null> => {
+        if (prefsTouchedRef.current.has(key)) return null;
         try {
           return await AsyncStorage.getItem(key);
         } catch {
@@ -403,8 +412,10 @@ export function TerminalScreen() {
         if (Array.isArray(enabled) && enabled.length >= 3 && enabled.every((x) => typeof x === 'boolean')) {
           setShadowEnabled([Boolean(enabled[0]), Boolean(enabled[1]), Boolean(enabled[2])]);
         }
-        const speed = await loadPanSpeed();
-        setPanSpeed(clampPanSpeed(speed));
+        if (!prefsTouchedRef.current.has(PAN_SPEED_TOUCH)) {
+          const speed = await loadPanSpeed();
+          if (!prefsTouchedRef.current.has(PAN_SPEED_TOUCH)) setPanSpeed(clampPanSpeed(speed));
+        }
       } catch {
         /* defaults */
       } finally {
@@ -414,6 +425,7 @@ export function TerminalScreen() {
   }, []);
 
   const persistTfs = useCallback(async (next: Timeframe[]) => {
+    touchPref(PREFS_KEY);
     setFrameTfs(next);
     try {
       await AsyncStorage.setItem(PREFS_KEY, JSON.stringify(next));
@@ -423,6 +435,7 @@ export function TerminalScreen() {
   }, []);
 
   const persistDxyTf = useCallback(async (next: Timeframe) => {
+    touchPref(DXY_TF_KEY);
     setDxyTf(next);
     try {
       await AsyncStorage.setItem(DXY_TF_KEY, next);
@@ -432,6 +445,7 @@ export function TerminalScreen() {
   }, []);
 
   const persistFrameSymbols = useCallback(async (next: [string, string, string]) => {
+    touchPref(SYMBOLS_KEY);
     setFrameSymbols(next);
     try {
       await AsyncStorage.setItem(SYMBOLS_KEY, JSON.stringify(next));
@@ -480,6 +494,7 @@ export function TerminalScreen() {
 
   const changeHeroSymbol = useCallback(
     async (nextSym: string) => {
+      touchPref(DXY_SYMBOL_KEY);
       setHeroSymbol(nextSym);
       pickSymbol(nextSym, dxyTf);
       try {
@@ -506,6 +521,7 @@ export function TerminalScreen() {
 
   /** chart-r49: تخطيط محفوظ يعيد رمز الشارت الرئيسي وفريمه معاً (التخزين كتبه تبويب الأدوات قبل الانتقال). */
   const applyHeroLayout = useCallback(async (nextSym: string, nextTf: Timeframe) => {
+    touchPref(DXY_SYMBOL_KEY, DXY_TF_KEY);
     setHeroSymbol(nextSym);
     setDxyTf(nextTf);
     pickSymbol(nextSym, nextTf);
@@ -536,6 +552,8 @@ export function TerminalScreen() {
       const count: FrameLayoutCount = shape === 'shadow' ? 1 : next;
       const nextShape: FrameLayoutShape =
         shape === 'shadow' ? 'shadow' : count === 1 ? 'square' : shape;
+      touchPref(LAYOUT_COUNT_KEY, LAYOUT_SHAPE_KEY);
+      if (nextShape === 'shadow' || count <= 1) touchPref(TIME_SYNC_KEY);
       setLayoutCount(count);
       setLayoutShape(nextShape);
       if (nextShape === 'shadow' || count <= 1) {
@@ -624,6 +642,7 @@ export function TerminalScreen() {
 
   const toggleTimeSync = useCallback(async () => {
     if (!multiCharts) return;
+    touchPref(TIME_SYNC_KEY);
     setTimeSyncEnabled((prev) => {
       const next = !prev;
       if (!next) {
@@ -703,11 +722,13 @@ export function TerminalScreen() {
 
   const changePanSpeed = useCallback(async (next: PanSpeedPercent) => {
     const clamped = clampPanSpeed(next);
+    touchPref(PAN_SPEED_TOUCH);
     setPanSpeed(clamped);
     await savePanSpeed(clamped);
   }, []);
 
   const persistShadowSlots = useCallback(async (next: ShadowSlots) => {
+    touchPref(SHADOW_SECONDARY_KEY);
     setShadowSlots(next);
     try {
       await AsyncStorage.setItem(SHADOW_SECONDARY_KEY, JSON.stringify(next));
@@ -717,6 +738,7 @@ export function TerminalScreen() {
   }, []);
 
   const persistShadowEnabled = useCallback(async (next: ShadowEnabled) => {
+    touchPref(SHADOW_ENABLED_KEY);
     setShadowEnabled(next);
     try {
       await AsyncStorage.setItem(SHADOW_ENABLED_KEY, JSON.stringify(next));
@@ -1018,9 +1040,11 @@ export function TerminalScreen() {
     const tfs = layoutReq?.layoutTfs;
     if (!layoutReq?.layoutNonce) return;
     if (Array.isArray(syms) && syms.length === 3 && syms.every((x) => typeof x === 'string' && x)) {
+      touchPref(SYMBOLS_KEY);
       setFrameSymbols([syms[0], syms[1], syms[2]]);
     }
     if (Array.isArray(tfs) && tfs.length === 3 && tfs.every(isTimeframe)) {
+      touchPref(PREFS_KEY);
       setFrameTfs([...tfs]);
     }
     setFramesReloadTick((n) => n + 1);
