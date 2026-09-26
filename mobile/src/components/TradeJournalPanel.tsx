@@ -894,17 +894,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const openRiskLine = useMemo(() => {
     // مفتوحةٌ أقدم قد تقع خارج الصفحات المحمَّلة ⇒ لا مجموع (أسطر «بلا وقف»/«مجهول» تبقى: صادقةٌ عمّا حُمّل) — `journalOpenRiskComplete`
     // والخادم يرتّب المفتوحة أولاً (tools103b) ⇒ كاملٌ متى حُمّلت كل المفتوحة ولو لم يُحمَّل الدفتر كلّه
-    const complete = journalOpenRiskComplete(
-      trades.length,
-      total,
-      trades.reduce((n, tr) => n + (tr.status === 'open' ? 1 : 0), 0),
-      openTotal
-    );
+    const openLoaded = trades.reduce((n, tr) => n + (tr.status === 'open' ? 1 : 0), 0);
+    const complete = journalOpenRiskComplete(trades.length, total, openLoaded, openTotal);
     const o = complete ? openRiskTotals(visibleTrades) : null;
     if (!o) {
       // السبب الأشيع لغياب المجموع: مفتوحة بلا وقف — يُقال بدل الصمت (حجمٌ مجهول وحده يبقى بلا سطر)
       const noStop = openTradesWithoutStop(visibleTrades);
       if (noStop > 0) return t.journalOpenRiskNoStop.replace('{n}', String(noStop));
+      // launch151: مفتوحةٌ أقدم لم تُحمَّل ⇒ السطر يقول ذلك ويدلّ على «تحميل الأقدم» بدل الاختفاء. بعد «بلا وقف»: ذاك لا يُصلحه التحميل
+      if (!complete && openLoaded > 0) return t.journalOpenRiskPartial;
       // حجمٌ مجهول أو أداةٌ بلا عقد (BTCUSD، US30) — كان السطر يختفي بلا سبب فيبدو أن لا مخاطرة مفتوحة
       const unknown = openTradesUnknownRisk(visibleTrades);
       if (unknown === 0) return null;
