@@ -4,6 +4,7 @@ import {
   forexWeekCloseSec,
   iceBreakStartForCloseSec,
   isForexMarketOpen,
+  nyFivePmUtcSec,
 } from './marketHours';
 
 const WEEK_SEC = 604800;
@@ -19,7 +20,7 @@ const WEEK_SEC = 604800;
  *
  * الأسبوعي: يُغلق مع إغلاق أسبوع شمعته (الجمعة 17:00 نيويورك، `forexWeekCloseSec`) لا بعد 7 أيام من ختم الاثنين،
  * والكريبتو بعد 7 أيام. فوق اليوم يُكتب «4d 06:12» (أيام وساعات:دقائق) — بعرض «23:59:59» نفسه على الوسم.
- * عطلة 25/12 داخل الأسبوع لا تُغلق الأسبوعية؛ السوق مغلق فيها فلا عدّاد أصلاً.
+ * عطلة 25/12 وسط الأسبوع لا تُغلق الأسبوعية (السوق مغلق فيها فلا عدّاد أصلاً)؛ عطلة الجمعة تُنهي الأسبوع الخميس.
  *
  * `null` = لا يُعرض: خطوة أطول من أسبوع، أو
  * الشمعة أُغلقت ولم تصل تاليتها (السوق مغلق/عطلة/انقطاع — عدّاد عالق عند 0:00 يوهم بحياة)،
@@ -43,6 +44,10 @@ export function barCloseCountdown(
     if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;
     const weekClose = forexWeekCloseSec(symbol, openSec * 1000);
     if (weekClose != null) closeSec = weekClose;
+    // عطلة **الجمعة** (25/12 و1/1 عام 2026): آخر تداول الأسبوع الخميس 17:00 نيويورك — كانت الأسبوعية تعدّ «1d 10:00»
+    // واليومية بجانبها «10:00:00»، ثم تختفي عند إغلاق الخميس والعدّاد عند يوم كامل. عطلة وسط الأسبوع لا تُغلقها.
+    const nc = forexNextCloseSec(symbol, nowMs);
+    if (nc != null && nc < closeSec && nyFivePmUtcSec(Math.floor(nc / 86400) * 86400 + 86400) >= closeSec) closeSec = nc;
   } else if (symbol) {
     if (stepSec === 86400) closeSec = dailyBarCloseSec(symbol, openSec);
     if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;

@@ -86,6 +86,14 @@ assert.equal(barCloseCountdown(monW, 604800, utc(25, 20), 'EURUSD'), '1:00:00');
 // بعد إغلاق الجمعة (والأحد قبل وصول شمعة الأسبوع الجديد) ⇒ لا عدّاد
 assert.equal(barCloseCountdown(monW, 604800, utc(25, 21, 30), 'EURUSD'), null);
 assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'EURUSD'), null);
+// عطلة الجمعة (25/12/2026، 1/1/2027): الأسبوعية تُغلق الخميس 17:00 نيويورك كاليومية
+{
+  const w = Date.UTC(2026, 11, 21) / 1000;
+  assert.equal(barCloseCountdown(w, 604800, Date.UTC(2026, 11, 24, 12), 'EURUSD'), '10:00:00');
+  assert.equal(barCloseCountdown(Date.UTC(2026, 11, 28) / 1000, 604800, Date.UTC(2026, 11, 31, 12), 'EURUSD'), '10:00:00');
+  // عطلة الخميس (25/12/2025): الأسبوع يستمرّ للجمعة
+  assert.equal(barCloseCountdown(Date.UTC(2025, 11, 22) / 1000, 604800, Date.UTC(2025, 11, 24, 12), 'EURUSD'), '2d 10:00');
+}
 // الكريبتو: 7 أيام من ختم الاثنين
 assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'BTCUSD'), '2:00:00');
 console.log('barCountdown.selftest: PASS');
