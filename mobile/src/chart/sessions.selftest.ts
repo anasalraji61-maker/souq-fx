@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/sessions.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { inSession, planSessionRuns, sessionWindowUtc, ukDst } from './sessions';
+import { fullSessionSpan, inSession, planSessionRuns, sessionWindowUtc, ukDst } from './sessions';
 
 const at = (iso: string) => Date.parse(iso) / 1000;
 const H = 3600;
@@ -61,5 +61,13 @@ assert.deepEqual(planSessionRuns(hours, H, 0), []);
 // 1m: 1440 شمعة على 360px = 15px للساعة ⇒ تُرسم.
 const mins = Array.from({ length: 1440 }, (_, i) => summer + i * 60);
 assert.equal(planSessionRuns(mins, 60, 360).length, 3);
+
+// مدى الجلسة كاملةً: نافذة تبدأ 04:00 UTC داخل طوكيو (00–09) ⇒ يمتدّ إلى 00:00 وحتى 08:00، ولا يعبر إلى يوم آخر.
+{
+  const t = Array.from({ length: 48 }, (_, i) => at('2026-07-14T00:00:00Z') + i * H);
+  assert.deepEqual(fullSessionSpan('tokyo', (j) => t[j]!, t.length, 4, 6), [0, 8]);
+  assert.deepEqual(fullSessionSpan('tokyo', (j) => t[j]!, t.length, 24, 25), [24, 32]);
+  assert.deepEqual(fullSessionSpan('london', (j) => t[j]!, t.length, 10, 10), [7, 15]);
+}
 
 console.log('sessions.selftest: PASS');

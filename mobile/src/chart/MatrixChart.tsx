@@ -183,7 +183,7 @@ import { planHiLoLabels } from './hiLoLabels';
 import { withAlpha } from './alpha';
 import { planDayBreaks } from './dayBreaks';
 import { barTradingDaySec, projectBarTimeSec } from './marketHours';
-import { planSessionRuns, type SessionId } from './sessions';
+import { fullSessionSpan, planSessionRuns, type SessionId } from './sessions';
 import { formatPct, pctDirection, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyCurrOpen, useDailyPrevBar } from './dailyRefStore';
 import { candlesThrough, currentSessionOpen, currentSessionOpenAfter, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
@@ -7429,8 +7429,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ? (() => {
                         let hi = -Infinity;
                         let lo = Infinity;
-                        for (let i = run.from; i <= run.to; i++) {
-                          const c = liveSeries.candles[source.start + i] ?? source.plot[i];
+                        // الجلسة كلّها لا الجزء المرئي منها (`fullSessionSpan`).
+                        const all = liveSeries.candles;
+                        const [a, b] =
+                          all[source.start + run.from] && all[source.start + run.to]
+                            ? fullSessionSpan(
+                                run.id,
+                                (j) => candleTimeSec(all[j]!.time),
+                                all.length,
+                                source.start + run.from,
+                                source.start + run.to
+                              ).map((j) => j - source.start)
+                            : [run.from, run.to];
+                        for (let i = a; i <= b; i++) {
+                          const c = all[source.start + i] ?? source.plot[i];
                           if (!c) continue;
                           hi = Math.max(hi, c.high);
                           lo = Math.min(lo, c.low);

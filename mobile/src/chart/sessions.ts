@@ -75,3 +75,29 @@ export function planSessionRuns(
   }
   return out;
 }
+
+/**
+ * فهارس الجلسة كاملةً حول `from`…`to` (فهارس `timeAt` المطلقة): الشريحة تُرسم بالنافذة المرئية فقط، لكن مداها
+ * بالـpip يجب أن يكون للجلسة كلّها — شريحة طوكيو تبدأ قبل حافّة النافذة اليسرى كانت تقرأ «18.5 pip» ونطاق آسيا
+ * الحقيقي 32. يمتدّ بالشموع المحمَّلة ما دامت داخل الجلسة نفسها في يوم UTC نفسه.
+ */
+export function fullSessionSpan(
+  id: SessionId,
+  timeAt: (i: number) => number,
+  n: number,
+  from: number,
+  to: number
+): [number, number] {
+  const t0 = timeAt(from);
+  if (!Number.isFinite(t0)) return [from, to];
+  const day = Math.floor(t0 / DAY_SEC);
+  const same = (i: number) => {
+    const t = timeAt(i);
+    return Number.isFinite(t) && Math.floor(t / DAY_SEC) === day && inSession(id, t);
+  };
+  let a = from;
+  while (a > 0 && same(a - 1)) a--;
+  let b = to;
+  while (b < n - 1 && same(b + 1)) b++;
+  return [a, b];
+}
