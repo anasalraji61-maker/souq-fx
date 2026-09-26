@@ -4566,3 +4566,26 @@ console.log('positionSize restore-after-typing selftest OK');
   assert.equal(shown({ ...base, as_of: now / 1000 - 40 * 3600, market_open: false }), true);
 }
 console.log('positionSize terminal bid/ask freshness selftest OK');
+
+// المربوطة بالدولار (HKD/SAR/AED): «20.50» وقفٌ عادي على USDHKD كان «يبدو سعراً» (أيّ شيء < 100 بمنزلتين) فلا لوت
+{
+  const hkd = instrumentSpec('USDHKD')!;
+  const sar = instrumentSpec('USDSAR')!;
+  const aed = instrumentSpec('USDAED')!;
+  for (const [raw, pips] of [['20.50', 20.5], ['12.25', 12.25], ['50.00', 50], ['3.75', 3.75]] as const) {
+    assert.equal(parseSlPips(raw, hkd), pips, `USDHKD ${raw}`);
+    assert.equal(slPipsLooksLikePrice(raw, hkd), false, `USDHKD ${raw}`);
+  }
+  assert.equal(parseSlPips('20.50', sar), 20.5);
+  assert.equal(parseSlPips('12.25', aed), 12.25);
+  // السعر نفسه بخانة النقاط يبقى مرفوضاً
+  for (const [spec, raw] of [[hkd, '7.80'], [hkd, '7.75'], [hkd, '7.85'], [sar, '3.75'], [sar, '3.76'], [aed, '3.67'], [instrumentSpec('EURHKD')!, '8.45'], [instrumentSpec('GBPSAR')!, '5.02']] as const) {
+    assert.equal(parseSlPips(raw, spec), null, `${spec.symbol} ${raw}`);
+    assert.equal(slPipsLooksLikePrice(raw, spec), true, `${spec.symbol} ${raw}`);
+  }
+  // غير المربوطة كما كانت (USDZAR «18.25» سعرٌ يكبّر اللوت، USDCNH «7.20»)
+  assert.equal(parseSlPips('18.25', instrumentSpec('USDZAR')!), null);
+  assert.equal(parseSlPips('20.50', instrumentSpec('USDZAR')!), null);
+  assert.equal(parseSlPips('7.20', instrumentSpec('USDCNH')!), null);
+}
+console.log('positionSize pegged-quote stop pips selftest OK');

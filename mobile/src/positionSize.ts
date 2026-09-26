@@ -747,6 +747,8 @@ const METAL_CARRY_QUOTES = new Set(['USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'N
  * بمنزلتين («18.25») يُكتب بخانة النقاط. SGD (1.35) ليست منها — pip قريب من الرئيسيات.
  */
 const EXOTIC_PIP_QUOTES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'HKD', 'CNH', 'ILS', 'SAR', 'AED']);
+/** من `EXOTIC_PIP_QUOTES`: مربوطة بالدولار ⇒ سعر أزواجها ثابت تقريباً (`pipsLookLikePrice`). */
+const PEGGED_PIP_QUOTES = new Set(['HKD', 'SAR', 'AED']);
 
 /**
  * launch125: مثال خانة «الوقف (pip)» بحسب الأداة. كان «20» ثابتاً: على USDZAR/USDTRY/USDMXN وقف 20 pip = 0.0020 — داخل
@@ -953,6 +955,13 @@ function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, ty
   // وبعملة تسعير ناشئة السعر نفسه بين ~2.5 و~50: «18.25» (USDZAR) و«41.20» (USDTRY) كانت 18.25 pip ⇒ **10.08 لوت بدل 0.12**
   // لوقف 1,500 pip — عكس الرئيسيات، هنا السعر بخانة النقاط **يكبّر** اللوت. حتى 100 كي تبقى EURTRY وما فوقها داخلها. منزلتان
   // **مكتوبتان** تكفيان هنا («41.20» تُقرأ 41.2): أسعار هذه العملات تُعرض بمنزلتين فأكثر، والمسافة لا تُكتب بجزء من مئة pip.
+  // المربوطة بالدولار (HKD ~7.8، SAR ~3.75، AED ~3.67) سعرها لا يتحرّك ⇒ ±30% من سعر الأداة (EURHKD/GBPSAR تتحرّك بالأساس):
+  // «20.50» أو «12.25» وقفٌ عادي على USDHKD (مثال خانته «20») كان «يبدو سعراً» (أيّ شيء < 100 بمنزلتين) فلا لوت؛
+  // «7.80» (USDHKD) و«3.75» (USDSAR) تبقى سعراً.
+  if (PEGGED_PIP_QUOTES.has(spec.quote)) {
+    const ref = pairBallpark(spec);
+    return (hundredths || typed === 2) && Math.max(v / ref, ref / v) <= 1.3;
+  }
   if (EXOTIC_PIP_QUOTES.has(spec.quote)) return v < 100 && (hundredths || typed === 2);
   if (hundredths && v < 2.5) return true;
   // التقاطعات فوق 1.5 (GBPNZD ~2.2، GBPAUD ~2.0، EURNZD ~1.9، GBPCAD ~1.8): سعرٌ مستدير «2.20» لا جزء من مئة فيه، و«2.63» فوق 2.5
