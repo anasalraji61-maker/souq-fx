@@ -252,9 +252,9 @@ _LEVEL_WORD = (
     r"|s/?l\d?|take[- ]?profits?|t/?p\d?|pt|tgt|targets?(?!\s+of\s+th)|profit target|invalidation"
     r"|objective(?!\s+of\s+th)|exit(?!\s+of\b)|entrée|objectif|objetivo|entrada)(?![a-z])"
     # run 90: «Targeting 1.0950»، «Aiming 1.0950»، «Take the trade at 1.0850»، «Jump in at 1.0850»
-    r"|\btargeting\b|\baim(?:ing|s)?\b|\b(?:take|enter)\s+(?:the|this)\s+(?:trade|position)\b|\bjump\s+in\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
+    r"|\blevels?\s+to\s+(?:buy|sell|enter|get\s+in)\b|\btargeting\b|\baim(?:ing|s)?\b|\b(?:take|enter)\s+(?:the|this)\s+(?:trade|position)\b|\bjump\s+in\b|\bget\s+(?:in|out)\b|\bcut\s+(?:your\s+|the\s+)?loss(?:es)?\b"
     r"|\bclose\s+(?:the|your|this)\s+(?:trade|position)\b"
-    r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني\s+(?:ال)?(?:ربح|أرباح)|(?:إيقاف|حد)\s+(?:ال)?خسار[ةه])(?:نا|ك|كم|ه|ها)?" + _AR_SUF
+    r"|" + _AR_PRE + r"(?:دخول|ادخل|إدخال|وقف|هدف|أهداف|اهداف|مستهدف|جني\s+(?:ال)?(?:ربح|أرباح)|(?:إيقاف|حد|وقف)\s+(?:ال)?خسار[ةه])(?:نا|ك|كم|ه|ها)?" + _AR_SUF
     + r"(?!\s+من\s+(?:هذ|ال|درس))"
     # run 94: «الخروج: 1.0950»، «نقطة الخروج 1.0950»، «خروج 1.0950» — «خروج السعر فوق 1.09» وصف كسر لا مستوى
     r"|(?<!\w)(?:(?:نقطة|نقطه|سعر|مستوى)\s+)?(?:ال)?خروج(?=\s*(?:[:\-–—=]|\d))"
@@ -286,7 +286,7 @@ _AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?<!حجم )(?<!ز�
 # أمر صفقة بأول الجملة: «Buy.»، «Go long.»، «Short it.»، «long EURUSD»، «Accumulate gold below 2350».
 # الرمز حساس لحالة الأحرف (EURUSD، EUR/USD) — «Long wicks»/«Short-term» ليست أمراً.
 _EN_ORDER = (
-    r"(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
+    r"(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*|\d[.)]\s*)(?:buy|sell|long|short|go\s+(?:long|short)|get\s+(?:long|short)"
     r"|load\s+up(?:\s+on)?|accumulate|consider\s+(?:buying|selling|shorting|going\s+(?:long|short)|an?\s+(?:long|short)))"
     r"(?![-‑\w])\s*(?:[.!]|$|(?:now|here|at|above|below|on|if|when|it|this|gold|silver|oil|crude|bitcoin|btc"
     r"|the\s+(?:pair|dip|breakout|retest|rally|euro|dollar|yen|pound))\b|(?-i:(?!(?:EMA|SMA|WMA|RSI|MACD|ATR|ADX|CCI|MFI|OBV|VWAP)\b)[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
@@ -301,7 +301,7 @@ _TRADE_CALL_RE = re.compile(
     r"(?:buy|sell|buying|selling|go(?:ing)?\s+(?:long|short)|a\s+(?:long|short|buy|sell))\b"
     + r"|\b(?:recommendation|signal|call|direction|action|trade|advice|suggestion|verdict|bias|idea|setup|position"
     r"|answer|take|side|order|view|opinion|buy\s*/\s*sell|long\s*/\s*short)"
-    r"\s*[:\-–—=]\s*"
+    r"'?\s*[:\-–—=]\s*'?"
     # «Each order has a side: buy or sell» شرح لا توصية
     r"(?!\s*(?:buy|sell|long|short)\s*(?:/|or|and|أو)\s*(?:buy|sell|long|short)\b)"
     r"(?:[^\n.:]{0,20}?[\s,])?(?:buy|sell|long|short)\b(?![-‑])"
@@ -358,7 +358,7 @@ _TRADE_CALL_RE = re.compile(
     + r"|\b(?:long|short)\s+(?:opportunit(?:y|ies)|setup|entry|trade\s+idea)\b"
     # run 94: عنوان «- شراء: 1.0850»، «منطقة البيع: 2350» — «حجم البيع: 1200» مستثنى بـ_AR_ACT
     + r"|" + _AR_ACT + r"\s*[:\-–—=]\s*(?:\d+[.,]\d+|\d{3,})"
-    + r"|" + _AR_ACT + r"\s+(?:من|عند|قرب|فوق|تحت|حول|الآن|الان|فورا|فوراً)(?!\w)"
+    + r"|" + _AR_ACT + r"\s+(?:من|عند|قرب|فوق|تحت|حول|الآن|الان|فورا|فوراً|هلا|هلق|هسه|هسا|هسع|الحين|دلوقتي|دلوقت)(?!\w)"
     + r"|(?:يفضل|الأفضل|الافضل|من الأفضل|فرصة|فرصه)\s+(?:ل|ال|لل)?(?:شراء|بيع|دخول)(?!\w)"
     + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
     + r"|توصية\s*[:\-–—]?\s*(?:ب|ب?ال)?(?:شراء|بيع)"
@@ -381,7 +381,7 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*)(?:place|open|put\s+in|enter)\s+an?\s+(?:buy|sell|long|short)\s+"
     r"(?:order|trade|position)\s*(?:[.!]|$|(?:now|here|today)\b)"
     + r"|(?<!traders )(?<!tend to )(?<!often )(?<!usually )(?<!typically )\b(?:buy|sell|short)\s+(?:from\s+)?there\b|@\s*\d+[.,]\d+\s*(?:buy|sell|long|short)\b"
-    + r"|(?-i:\bE)\s*:\s*\d+[.,]\d+[^\n]{0,15}?(?-i:\b(?:S|SL|T|TP))\s*:\s*\d"
+    + r"|(?-i:\bE)\s*:?\s*\d+[.,]\d+[^\n]{0,15}?(?-i:\b(?:S|SL|T|TP))\s*:?\s*\d"
     + r"|\bin\s+at\s*\d+[.,]\d+[^\n\d]{0,15}\bout\s+at\s*\d"
     + r"|\bget\s+in\s+(?:now|here|today)\b|(?<!\w)(?:ال)?(?:ربح|خروج)\s+(?:عند|قرب|من|فوق|تحت)\s*" + _PRICE
     + r"|(?:^|[.!؟]\s*|[-*•]\s*)(?:اشتر|اشتري|بع|ادخل)(?!\w)"
@@ -451,9 +451,45 @@ _TRADE_CALL_RE = re.compile(
     r"(?:buy|sell|short|long)(?![-‑\w])"
     + r"|\b(?:best|smartest|smart|right|wisest)\s+(?:move|play|trade)\b[^\n.]{0,20}?\b(?:is|would\s+be)\s+(?:to\s+)?"
     r"(?:buy|sell|short|go\s+(?:long|short))(?![-‑\w])"
-    + r"|\bmakes\s+sense\s+to\s+(?:buy|sell|short|go\s+(?:long|short))(?![-‑\w])\s*(?:[.!]|$|(?:now|here|it|this"
+    + r"|\bmakes?\s+sense\s+to\s+(?:buy|sell|short|go\s+(?:long|short))(?![-‑\w])\s*(?:[.!]|$|(?:now|here|it|this"
     r"|gold|silver|oil|crude|bitcoin|btc|the\s+(?:pair|euro|dollar|yen|pound))\b"
-    r"|(?-i:[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))",
+    r"|(?-i:[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))"
+    # run 107: دخول «بالسوق» بلا رقم («Entry: market»، «Buy @ market»، «الدخول: سعر السوق»)
+    + r"|\bentry\s*(?:[:\-–—=@]|at)\s*(?:the\s+)?(?:market|now|immediately)\b|\b(?:buy|sell)\s*@\s*(?:the\s+)?market\b"
+    + r"|(?<!\w)ال(?:دخول|شراء|بيع)\s*[:\-–—=]?\s*(?:من\s+|ب|على\s+)?(?:ال)?(?:سعر\s+(?:ال)?)?سوق(?!\w)"
+    # run 107: وقف/هدف بمسافة أو مضاعف R أو نسبة بأول الجملة («Stop 20 pips below entry»، «SL: 30 pips»، «Target 2R»،
+    # «Exit at +2%»، «Cut losses at -1%»، «الوقف ٢٠ نقطة أسفل القاع»، «الهدف ٥٪») — «a stop 20 pips away is common» شرح
+    + r"|(?:^\s*|[.!?؟]\s+|[-*•>→]\s*)(?:(?:place|put|set|move)\s+(?:your\s+|the\s+)?)?"
+    r"(?:stop(?:[- ]?loss)?|sl|tp|take[- ]?profits?|targets?|aim\s+for|exit|cut\s+(?:your\s+)?loss(?:es)?)"
+    r"\s*[:\-–—=]?\s*(?:at\s+|a\s+|around\s+|of\s+)?[+\-−]?\s*\d+(?:[.,]\d+)?\s*(?:R\b|%|٪|pips?\b|points?\b)"
+    r"(?!\s+(?:annual|yearly|monthly|a\s+(?:year|month)|per\s+(?:year|month)|returns?|of\s+(?:the\s+|your\s+)?(?:account|capital|balance))\b)"
+    + r"|(?:^\s*|[.!?؟]\s*|[-*•>→]\s*)(?:ال)?(?:ستوب|ستب|وقف|هدف|اهداف)(?:\s+(?:ال)?خسار[ةه])?\s*[:\-–—=]?\s*"
+    r"(?:عند\s+|على\s+بعد\s+)?[+\-]?\d+(?:[.,]\d+)?\s*(?:R\b|%|٪|نقط|نقاط)"
+    # run 107: «Risk 1.0800, reward 1.0950»، «Take a long position now»، «Flip long»، «Close your short and go long»،
+    # «Grab some BTC here»، «This is a buying opportunity»
+    + r"|\brisk\s*[:\-–—=]?\s*" + _PRICE + r"[^\n\d]{0,15}?\breward\s*[:\-–—=]?\s*" + _PRICE
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)(?:take|open)\s+an?\s+(?:long|short)(?:\s+(?:position|trade))?(?![-‑\w])"
+    r"(?!\s+(?:position|trade|means|is|requires|involves)\b)"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)flip\s+(?:to\s+)?(?:long|short)\b"
+    + r"|\bclose\s+your\s+(?:long|short)s?\s+and\s+(?:go\s+)?(?:long|short|buy|sell)\b"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–→]\s*)(?:grab|pick\s+up|scoop\s+up)\b[^\n.]{0,25}?"
+    r"\b(?:here|now|today|on\s+(?:the|any|a)\s+dips?)\b"
+    + r"|\b(?:this|that|it)\s+(?:is|looks\s+like|['’]s)\s+(?:an?\s+)?(?:\w+\s+)?(?:buying|selling|shorting)\s+opportunit(?:y|ies)\b"
+    # run 107: عربي — المخاطَب/الجمع («بيعي الذهب»، «ادخلي شراء»)، «خليك شراء»، «لو منك اشتري»، «بالشراء عند 1.0850»،
+    # «بيع ع المقاومة ١٫٠٩٠٠»، «منطقة الشراء 1.0850»، لهجات («شري هلأ»، «فوت شراء»، «خش شراء»، «يلا بيع»،
+    # «روح لونج»، «خذ شورت»)
+    + r"|(?:^|[.!؟]\s*|[-*•→]\s*)(?:بيعي|بيعوا|اشتروا|ادخلي|ادخلوا|شري|شروا)(?!\w)"
+    + r"|(?<!\w)خليك\s+(?:في\s+|على\s+|ب|ع\s+)?(?:ال)?(?:شراء|بيع|لونج|شورت)(?!\w)"
+    + r"|(?<!\w)لو\s+(?:كنت\s+)?(?:منك|مكانك|بمكانك|محلك|بمحلك)[^\n\d]{0,15}?(?:شتري|بيع|بعت|دخل)"
+    + r"|(?<!\w)[بل]ال(?:شراء|بيع)\s+(?:من|عند|قرب|فوق|تحت|حول)\s*" + _PRICE
+    + r"|" + _AR_ACT + r"\s+(?:ع|على)\s+[^\n\d]{0,20}?" + _PRICE
+    + r"|(?<!\w)(?:منطقة|منطقه|مستوى|سعر|نقطة|نقطه)\s+(?:ال)?(?:شراء|بيع|دخول)\s*[:\-–—=]?\s*" + _PRICE
+    + r"|(?<!\w)(?:فوت|خش|اضرب|يلا|يالله)\s+(?:ب)?(?:ال)?(?:شراء|بيع|اشتري|بيع|لونج|شورت)(?!\w)"
+    + r"|(?<!\w)(?:روح|خذ|افتح|ادخل)\s+(?:ال)?(?:لونج|شورت)(?!\w)"
+    + r"|(?:^\s*|[.!؟:\-–—•*→]\s*)(?:ال)?(?:شراء|بيع)\s*[.!؟]?\s*$"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>→]\s*)(?:buy|sell|long|short)\s+\S+\s+(?:الان|الآن|هنا|فورا)(?!\w)"
+    # run 107: الكردية «پێشنیار دەکەم بکڕیت»، «وەرە ژوورەوە بە کڕین»
+    + r"|پێشنیار\w*[^\n]{0,30}?بی?(?:کڕیت|فرۆشیت)|ژوورەوە\s+(?:بە\s+)?(?:کڕین|فرۆشتن)",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
@@ -479,6 +515,9 @@ def _guard_norm(text: str) -> str:
     t = re.sub(r"</?[A-Za-z][^<>\n]{0,40}>", " ", t)
     t = "".join(" " if unicodedata.category(ch) in ("So", "Sk", "Cs") or ch in "\ufe0f\u200d{}\"" else ch for ch in t)
     t = re.sub(r"(?<=\d)٫(?=\d)", ".", t)
+    # run 107: فاصل الآلاف «1,085.50» ⇒ 1085.50؛ «الـentry» — التطويل وحدّ الأبجديتين كانا يلصقان الكلمة الإنجليزية
+    t = re.sub(r"(?<=\d),(?=\d{3}\.\d)", "", t).replace("\u0640", "")
+    t = re.sub(r"(?<=[\u0600-\u06FF])(?=[A-Za-z])|(?<=[A-Za-z])(?=[\u0600-\u06FF])", " ", t)
     # run 83: «_» مسافة لا حذف: «entry_price» كان «entryprice» فلا يُعرف «entry»
     return re.sub(r"[*`]", "", t).replace("_", " ").translate(_ALEF)
 

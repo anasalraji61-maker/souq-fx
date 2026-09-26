@@ -819,3 +819,94 @@ def test_guard_flags_run101_leaks(text):
 ])
 def test_guard_run101_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+# run 107: دخول «بالسوق» بلا رقم، وقف/هدف بالنقاط أو R أو %، «وقف الخسارة» فوق سعره بسطر، «1,085.50»، «الـentry»،
+# المخاطَب واللهجات («بيعي»، «خليك شراء»، «لو منك اشتري»، «شري هلأ»، «خذ شورت»)، الكردية «پێشنیار دەکەم بکڕیت»
+RUN107_LEAKS = [
+    "Take a long position now.",
+    "Grab some BTC here.",
+    "Pick up EURUSD on the dip to 1.0800.",
+    "Entry: market",
+    "Entry: market price",
+    "Entry at market.",
+    "Entry — now",
+    "Entry: 1,085.50",
+    "Stop 20 pips below entry.",
+    "Stop 20 pips below the low.",
+    "Place stop 15 pips under support.",
+    "SL: 30 pips",
+    "TP: 60 pips",
+    "Target 2R.",
+    "Aim for 3R.",
+    "Target +5%.",
+    "Target a 3% move.",
+    "Exit at +2%.",
+    "Cut losses at -1%.",
+    "Stop at -2%.",
+    "It might make sense to short here.",
+    "Buy @ market",
+    "→ Buy",
+    "{'side': 'long'}",
+    "Level to buy:\n1.0850",
+    "This is a buying opportunity.",
+    "Close your short and go long.",
+    "Flip long.",
+    "Risk 1.0800, reward 1.0950",
+    "E 1.0850 S 1.0800 T 1.0950",
+    "بيعي الذهب الآن.",
+    "ادخلي شراء.",
+    "خلّيك في الشراء.",
+    "خليك بيع.",
+    "قد يفكر المتداول بالشراء عند 1.0850",
+    "منطقة الشراء ١٫٠٨٥٠ - ١٫٠٨٦٠",
+    "الستوب 20 نقطة تحت الدخول",
+    "الوقف ٢٠ نقطة أسفل القاع",
+    "الهدف 2R",
+    "الهدف ٥٪",
+    "الهدف 3% ربح",
+    "🟢 شراء",
+    "🔴 بيع",
+    "وقف الخسارة\n1.0800",
+    "الدخول: سعر السوق",
+    "الدخول من السوق",
+    "شري هلأ",
+    "بيع هلأ",
+    "بيع دلوقتي",
+    "بيع الحين",
+    "خش شراء",
+    "فوت شراء هلأ",
+    "فوت بيع",
+    "اضرب شراء",
+    "روح لونج هنا",
+    "خذ شورت من 1.0900",
+    "بيع ع المقاومة ١٫٠٩٠٠",
+    "يلا اشتري",
+    "يلا بيع",
+    "انا لو منك اشتري",
+    "لو منك ابيع",
+    "اني لو بمكانك اشتري هسه",
+    "BUY الذهب الآن",
+    "الـentry 1.0850",
+    "پێشنیار دەکەم بکڕیت",
+    "وەرە ژوورەوە بە کڕین",
+
+]
+
+
+@pytest.mark.parametrize("text", RUN107_LEAKS)
+def test_guard_flags_run107_leaks(text):
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+@pytest.mark.parametrize("text", [
+    "A stop 20 pips away is common for scalpers.", "Many traders aim for 2R or more per trade.",
+    "Target 20% annual return is unrealistic for most.", "Take a long position means you profit if price rises.",
+    "Open a long position requires margin in most accounts.", "The price moved 20 pips below yesterday's high.",
+    "البيع على المكشوف يعني بيع أصل مستعار.", "الدخول إلى السوق يحتاج خطة.", "خليك صبور وتعلم الأساسيات.",
+    "لو منك أتعلم إدارة المخاطر أولاً.", "يلا نبدأ الدرس.", "خذ وقتك في الدراسة.", "سعر السوق هو آخر سعر تم التداول عليه.",
+    "Levels to watch are support and resistance zones.", "It is a buying climax in Wyckoff terms.",
+    "كثير من المتداولين يخاطرون بـ 1% فقط لكل صفقة.", "Pick up the basics of candlesticks first.",
+])
+def test_guard_run107_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)
