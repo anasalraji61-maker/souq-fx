@@ -95,6 +95,7 @@ import {
   type TradePlan,
   editExitValue,
   editSizeValue,
+  journalEditSeen,
   netLineIsWhole,
   noteWithTypedSize,
   formatSignedPct,
@@ -1256,7 +1257,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       try {
         // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد صفقةً بدأ تعديلها مغلقة مفتوحةً) — لا «بلا تغيير» صامت.
         // بدأ مفتوحاً: الخروج الفارغ لا يُرسل، فإغلاقٌ بالسوق أثناء التعديل لا يُلغى بالحفظ (`editExitValue`)
-        await api.updateTrade(editing.id, {
+        const body = {
           symbol: sym,
           side,
           entry: e,
@@ -1266,7 +1267,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           // خانة حجم معروف مُسحت = null «غير معروف» (backend-r17 (b)) كما يُمسح الوقف والهدف؛ فُتحت فارغة ⇒ بلا تغيير (`editSizeValue`)
           size: editSizeValue(editing, num(size)),
           note: savedNote,
-        });
+          // backend-r78b: حالة الصفّ عند فتح النموذج ⇒ 409 إن أُغلق/أُعيد فتحه بجهاز آخر، بدل أن يكتب الخروج القديم فوقه.
+          // متغيّرٌ لا كائنٌ حرفي: نوع `updateTrade` (api.ts، ملك ui) بلا الحقلين بعد — COORDINATION tools122
+          ...journalEditSeen(editing),
+        };
+        await api.updateTrade(editing.id, body);
         if (!mountedRef.current) return;
         playSoftClick();
         setEditing(null);
@@ -1281,6 +1286,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         if (isAlreadyClosedError(err)) {
           setFormError(t.journalEditConflict);
           await refresh();
+          // «راجع حالتها ثم احفظ من جديد»: النموذج يُبنى على الصفّ المحدَّث (حالته وخروجه) — وإلا يعيد كل حفظٍ 409 بـ`seen_*` القديمة،
+          // والخروج بالخانة يصير خروج الجهاز الآخر فلا يُمسح/يُستبدل بصمت. بقيّة ما كتبه المتداول تبقى
+          const fresh = tradesRef.current.find((tr) => tr.id === editing.id);
+          if (fresh && mountedRef.current && editingRef.current?.id === fresh.id) {
+            setEditing(fresh);
+            setExit(fresh.exit != null ? plainStopText(fresh.exit) : '');
+          }
         } else {
           setFormError(t.journalEditError);
         }

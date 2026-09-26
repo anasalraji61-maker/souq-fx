@@ -494,6 +494,21 @@ export function editSizeValue(
 }
 
 /**
+ * حالة الصفّ **كما رآه النموذج** عند فتح التعديل، تُرسل مع `PATCH /api/trades/{id}` (backend-r78b، `seen_status`/`seen_exit`):
+ * مختلفةٌ عن المخزَّن ⇒ 409 `trade_changed_concurrently` بدل الكتابة. بلاها كان حفظ نموذجٍ فُتح على صفقة مغلقة بخروج قديم يعيد
+ * ذلك الخروج فوق إغلاقٍ أحدث من جهاز آخر (+9% ⇒ −4.5%)، أو يعيد إغلاق صفقةٍ أُعيد فتحها. `editExitValue` يحمي المفتوحة وحدها.
+ * حالةٌ غير معروفة (صفّ نسخة قديمة) ⇒ `null`: لا يُرسل شيء، كما كان. `seen_exit` = `null` صريح لصفّ بلا خروج (الخادم يفحصه كذلك).
+ */
+export function journalEditSeen(row: {
+  status?: string | null;
+  exit?: number | null;
+}): { seen_status: 'open' | 'closed'; seen_exit: number | null } | null {
+  if (row.status !== 'open' && row.status !== 'closed') return null;
+  const x = row.exit;
+  return { seen_status: row.status, seen_exit: typeof x === 'number' && Number.isFinite(x) && x > 0 ? x : null };
+}
+
+/**
  * النتيجة بوحدات المخاطرة (R): +2 = ربحت ضعف ما خاطرت به، −1 = ضُرب الوقف كاملاً.
  * يحتاج وقفاً صالحاً بالجهة الصحيحة؛ وإلا null. تقريب لمنزلة عشرية واحدة.
  *

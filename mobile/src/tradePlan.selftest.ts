@@ -3863,3 +3863,19 @@ console.log('tradePlan journalChartSymbolAfterSave selftest OK');
   assert.deepEqual(newestRecordedFirst([]), []);
 }
 console.log('tradePlan newestRecordedFirst selftest OK');
+
+// ——— journalEditSeen: حالة الصفّ عند فتح التعديل تُرسل مع PATCH (backend-r78b) ———
+{
+  const { journalEditSeen } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.deepEqual(journalEditSeen({ status: 'closed', exit: 1.0842 }), { seen_status: 'closed', seen_exit: 1.0842 });
+  // مفتوحة بلا خروج ⇒ seen_exit null صريح (الخادم يفحص «رأيتها بلا خروج»)
+  assert.deepEqual(journalEditSeen({ status: 'open', exit: null }), { seen_status: 'open', seen_exit: null });
+  assert.deepEqual(journalEditSeen({ status: 'open' }), { seen_status: 'open', seen_exit: null });
+  // الخروج يُرسل كما جاء من الخادم بلا تقريب (الخادم يقارن بالمساواة)
+  assert.equal(journalEditSeen({ status: 'closed', exit: 150.123456789 })!.seen_exit, 150.123456789);
+  // خروجٌ غير صالح لا يُرسل رقماً يرفضه الخادم (gt=0) فيفشل الحفظ كلّه بـ422
+  for (const x of [0, -1, NaN, Infinity]) assert.equal(journalEditSeen({ status: 'closed', exit: x })!.seen_exit, null, String(x));
+  // حالة مجهولة ⇒ لا شيء يُرسل (كما قبل)
+  for (const st of [undefined, null, '', 'pending', 'OPEN']) assert.equal(journalEditSeen({ status: st, exit: 1.1 }), null, String(st));
+}
+console.log('tradePlan journalEditSeen selftest OK');
