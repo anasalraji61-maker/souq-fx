@@ -396,6 +396,11 @@ def _store(cache_key: str, now: float, candles: list[dict]) -> None:
                 _cache[key] = (now, candles)
             continue
         first = candles[0]["time"]
+        # بلا تداخل (المدخل الأكبر جُلب قبل أن تبدأ الشموع الجديدة: D/180 قبل أسابيع ثم D/50 الآن) كان الدمج
+        # يلصق القديم بالجديد بفجوة أسابيع وبوقت جلب «الآن» ⇒ الشارت يرسم ثغرة ويُحسب RSI/MACD عبرها. يُحذف.
+        if old[1][-1]["time"] < first:
+            del _cache[key]
+            continue
         merged = [c for c in old[1] if c["time"] < first] + candles
         _cache[key] = (now, merged[-max(len(old[1]), len(candles)):])
 

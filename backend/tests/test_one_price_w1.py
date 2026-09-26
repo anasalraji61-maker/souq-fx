@@ -181,3 +181,19 @@ def test_a_fresh_small_fetch_updates_the_larger_cached_series(provider):  # noqa
     assert market._stats["api_calls"] == before and meta["kind"] == "cache"
     assert big[-1] == small[-1] and big[-1]["close"] == pytest.approx(1.105)
     assert len(big) == 300 and [c["time"] for c in big] == sorted({c["time"] for c in big})
+
+
+def test_a_small_fetch_never_glues_onto_an_old_larger_series_with_a_gap(provider):  # noqa: F811
+    """D/180 جُلب قبل أسابيع ثم D/50 الآن: الدمج كان يُنتج سلسلة بثغرة بينهما موسومة بوقت جلب «الآن»."""
+    provider["payload"] = {"values": _rows_until(320, "1.1000")}
+    market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    _age_cache(30 * 86400)
+    later = _rows_until(2000, "1.1050")[-200:]  # تبدأ بعد نهاية المدخل القديم بأيام
+    provider["payload"] = {"values": later}
+    market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    provider["payload"] = {"values": _rows_until(2000, "1.1050")[-320:]}
+    before = market._stats["api_calls"]
+    big, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    assert market._stats["api_calls"] == before + 1 and meta["kind"] == "provider"
+    gaps = {b["time"] - a["time"] for a, b in zip(big, big[1:])}
+    assert gaps == {900}
