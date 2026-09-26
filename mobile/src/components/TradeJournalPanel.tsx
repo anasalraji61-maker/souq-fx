@@ -568,11 +568,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
    */
   /** مثال حقل «وقت الإغلاق» بصيغته — الوقت الحالي بتوقيت الجهاز (تاريخٌ ثابت يُقرأ كأنه قيمة) */
   const closeTimeExample = () => journalLocalFieldAt(Date.now());
-  /** سبب رفض «وقت الإغلاق». «بالمستقبل» بلا مفتاح بعد (طُلب من launch: `journalCloseTimeFuture`) ⇒ التلميح، وسببه الأرجح توقيتٌ غير الجهاز */
+  /** سبب رفض «وقت الإغلاق». «بالمستقبل» (tools131a) يسأل عن التوقيت — سببه الأرجح ساعةٌ غير ساعة الجهاز */
   const closeTimeErrorText = (e: { error: 'invalid' } | { error: 'beforeOpen'; opened: string } | { error: 'future' }): string =>
     e.error === 'beforeOpen'
       ? t.journalCloseTimeBeforeOpen.replace('{opened}', () => e.opened)
-      : (e.error === 'invalid' ? t.journalCloseTimeInvalid : t.journalCloseTimeHint).replace('{example}', closeTimeExample);
+      : e.error === 'future'
+        ? t.journalCloseTimeFuture
+        : t.journalCloseTimeInvalid.replace('{example}', closeTimeExample);
 
   const pxErrorText = (v: string, sym: string = symbol): string => {
     const a = ambiguousThousandsPrice(v, sym);
