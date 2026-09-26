@@ -172,3 +172,27 @@ def test_ma_lines_equal_at_the_apps_max_decimals_are_the_same_level():
     assert not signal_hub._same_level(c, b, b)
     d = signal_hub._distinct_decimals(c, b, signal_hub.price_decimals(b))
     assert round(c, d) != round(b, d) and d <= 12
+
+
+def test_jpy_pairs_keep_three_decimals_below_100():
+    """r64: AUDJPY ‏97 كان 4 منازل (6 أرقام معنوية) ⇒ هدف «99.9836» دون تسعيرة الين 0.001، ويتغيّر عند 100."""
+    for sym in ("AUDJPY", "CADJPY", "NZD/JPY", "usdjpy"):
+        assert signal_hub.price_decimals(97.123, sym) == 3, sym
+        assert signal_hub.price_decimals(157.123, sym) == 3, sym
+    assert signal_hub.level_round(99.98364, 99.63, "AUDJPY") == 99.984
+    # غير الين كما كان
+    assert signal_hub.price_decimals(97.123) == 4
+    assert signal_hub.price_decimals(1.1, "EURUSD") == 5
+    assert signal_hub.price_decimals(30.12, "XAGUSD") == 4
+
+
+def test_forecast_levels_for_jpy_cross_under_100_have_three_decimals():
+    candles = []
+    for i in range(200):
+        c = 99.5 - 0.02 * i + 0.05 * math.sin(i / 3)
+        candles.append({"time": 1_700_000_000 + i * 900, "open": c, "high": c + 0.137, "low": c - 0.129, "close": c})
+    assert signal_hub.indicator_forecast("AUDJPY", candles)["price_decimals"] == 3
+    lv, _ = signal_hub._trade_levels(candles[-1]["close"], "sell", candles, "AUDJPY")
+    assert lv["entry"] < 100
+    for k in ("entry", "sl", "tp"):
+        assert round(lv[k], 3) == lv[k], (k, lv[k])

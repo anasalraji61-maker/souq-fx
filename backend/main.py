@@ -2131,11 +2131,11 @@ def ai_ask(body: AiAsk):
         if atr_v is not None:
             sgn = 1 if direction == "شراء" else -1
             entry = series.last
-            sl = signal_hub.level_round(entry - sgn * atr_v, entry)
-            tp = signal_hub.level_round(entry + sgn * 2 * atr_v, entry)
+            sl = signal_hub.level_round(entry - sgn * atr_v, entry, sym)
+            tp = signal_hub.level_round(entry + sgn * 2 * atr_v, entry, sym)
             # ATR أوسع من نصف السعر ⇒ هدف/وقف ≤ 0 (سعر مستحيل) ⇒ لا مستويات، كـ`signal_hub._trade_levels`
             # والمدى دون نصف تسعيرة ⇒ الوقف/الهدف يُقرَّب على الدخول (صفقة بلا مخاطرة) ⇒ لا مستويات كذلك
-            if not (sl > 0 and tp > 0) or signal_hub.level_round(entry, entry) in (sl, tp):
+            if not (sl > 0 and tp > 0) or signal_hub.level_round(entry, entry, sym) in (sl, tp):
                 entry = sl = tp = None
 
     # وقت `last` ومصدره: كان السياق `last=` وحده ⇒ النموذج يقول «السعر الحالي» عن سلسلة مخزَّنة (حتى 15د

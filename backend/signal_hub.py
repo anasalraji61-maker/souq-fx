@@ -64,7 +64,7 @@ def _atr_last(candles: list[dict[str, Any]] | None) -> float | None:
 
 
 def _trade_levels(
-    last: float | None, direction: str, candles: list[dict[str, Any]] | None
+    last: float | None, direction: str, candles: list[dict[str, Any]] | None, symbol: str | None = None
 ) -> tuple[dict[str, float] | None, dict[str, Any]]:
     """(المستويات، أساسها). المستويات None — لا رقم مخترَع — حين: لا سعر حقيقي، أو شموع أقلّ من
     ATR14، أو الاتجاه محايد (دخول=وقف=هدف كان يُعرض كصفقة)."""
@@ -80,12 +80,12 @@ def _trade_levels(
     if direction not in ("buy", "sell"):
         return None, {**basis, "unavailable": "neutral"}
     sgn = 1 if direction == "buy" else -1
-    sl = level_round(last - sgn * SL_ATR_MULT * atr_v, last)
-    tp = level_round(last + sgn * TP_ATR_MULT * atr_v, last)
+    sl = level_round(last - sgn * SL_ATR_MULT * atr_v, last, symbol)
+    tp = level_round(last + sgn * TP_ATR_MULT * atr_v, last, symbol)
     # مدى أوسع من السعر (عملة منهارة على W) ⇒ هدف/وقف ≤ 0: سعر مستحيل كان يُعرض هدفاً
     if not (sl > 0 and tp > 0):
         return None, {**basis, "unavailable": "atr_exceeds_price"}
-    entry = level_round(last, last)
+    entry = level_round(last, last, symbol)
     # مدى أصغر من نصف تسعيرة (زوج مربوط كـUSDSAR على 1m) ⇒ الوقف أو الهدف يُقرَّب على الدخول نفسه:
     # كانت «بيع 3.75006 وقف 3.75006» — صفقة بلا مخاطرة تُعرض خطّةً
     if sl == entry or tp == entry:
@@ -93,12 +93,12 @@ def _trade_levels(
     return {"entry": entry, "sl": sl, "tp": tp}, basis
 
 
-def level_round(x: float, ref: float) -> float:
+def level_round(x: float, ref: float, symbol: str | None = None) -> float:
     """مستوى سعري بمنازل `price_decimals(ref)` — أصغر تسعيرة يعرضها التطبيق لهذا السعر.
     كان `round(x, 5)` ⇒ SHIB ‏0.0000123: دخول ووقف وهدف كلها 0.00001 (الوقف 19% تحت السعر الحقيقي).
     وفوق 10 بقيت 5 منازل ⇒ USDJPY «157.88916» والذهب «2651.43218» مع `price_decimals` ‏3 و2: دقّة مختلَقة
     دون تسعيرة المزوّد في ردّ الـAPI."""
-    return round(x, price_decimals(ref))
+    return round(x, price_decimals(ref, symbol))
 
 
 def list_social_sources() -> list[dict[str, Any]]:
@@ -178,7 +178,7 @@ _NO_MOVE = {"ar": "لا حركة سعرية في النافذة: لا اتجاه
             "en": "No price movement in the window: the indicators show no direction."}
 
 
-def price_decimals(price: float | None) -> int:
+def price_decimals(price: float | None, symbol: str | None = None) -> int:
     """منازل عرض السعر كما تعرضها المنصّات: ~6 أرقام معنوية (EURUSD 5، USDJPY 3، الذهب 2).
 
     تحت 0.1 تزيد المنازل كـ`level_round` (6 أرقام معنوية، حتى 12 يقبلها التطبيق): كان السقف 5 ⇒ SHIB
@@ -186,7 +186,15 @@ def price_decimals(price: float | None) -> int:
     if price is None or not math.isfinite(price) or price == 0:
         return 5
     mag = int(math.floor(math.log10(abs(price))))
-    return max(0, min(12 if mag < -1 else 5, 5 - mag))
+    dp = max(0, min(12 if mag < -1 else 5, 5 - mag))
+    # أزواج الين تُسعَّر بثلاث منازل مهما كان السعر: AUDJPY ‏97 كان 4 منازل (6 أرقام معنوية) ⇒ هدف «99.9836» دون
+    # تسعيرة المزوّد 0.001، والزوج نفسه يغيّر دقّته حين يعبر 100
+    return min(dp, 3) if _jpy_quoted(symbol) else dp
+
+
+def _jpy_quoted(symbol: str | None) -> bool:
+    s = (symbol or "").upper().replace("/", "")
+    return len(s) == 6 and s.isalpha() and s.endswith("JPY")
 
 
 def _same_level(a: float, b: float, last: float | None) -> bool:
@@ -224,7 +232,7 @@ def indicator_forecast(
     snap = ind_engine.snapshot(candles) if candles else {}
     closes = [float(c["close"]) for c in candles] if candles else []
     last = float(snap.get("last") or closes[-1]) if closes else None
-    dp = price_decimals(last)
+    dp = price_decimals(last, sym)
 
     want = set(enabled or FORECAST_INDICATOR_IDS)
     votes: list[dict[str, Any]] = []
@@ -361,7 +369,7 @@ def indicator_forecast(
 
     avg = round(sum(v["score"] for v in votes) / len(votes), 3) + 0.0  # يُصنَّف كما يُرسَل
     direction = _direction(avg)
-    levels, levels_basis = _trade_levels(last, direction, candles)
+    levels, levels_basis = _trade_levels(last, direction, candles, sym)
 
     return {
         "symbol": sym,
