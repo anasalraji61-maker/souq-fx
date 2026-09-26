@@ -127,6 +127,8 @@ export function AccountScreen() {
         const ok = await ensureAlertNotifications();
         if (ok) await registerPushToken();
       }
+    } catch {
+      /* كلوحَي التنبيهات: `openSettings` يرفض بأندرويد بلا نشاط إعدادات ⇒ كان رفضاً غير معالَج؛ الحالة تُعاد قراءتها أدناه */
     } finally {
       const s = await getNotificationPermissionState();
       setNotifState(s);
