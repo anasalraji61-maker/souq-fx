@@ -1011,3 +1011,13 @@ ui58a: المفتاح ← launch `4ed9ab0` ولا قارئ بأي `.tsx` (`Commi
 **المراجعة (e — ما يُحرج أمام متداول):** `USD_BALLPARK` (`tradePlan.ts:1472`، `9f000f3`) ضمن ×3 للأسعار ولا يدخل حساب مال؛ لا «مضمون/بلا مخاطرة» بالواجهة. **لا بند.**
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (تعارض أثناء الدفع، aacb013):** أُخذت COORDINATION من الأعلى وأُعيدت تعديلاتي. أخضر 0. أُغلقت chart-r74a (ui `681e0ff`) وchart-r74c حصّة ui (`aacb013`)؛ مفتوحان مُتحقَّقان: chart-r74b وui59a → tools.
+
+## 2026-09-26 — الدورة 91
+**البناء:** أخضر 0 (على e946239) — لا إصلاح لازم. **Selftests:** 114/114 ناجح (`npx tsx`).
+**التحقّق بالكود:** chart-r74b ← tools `78f94e1` (`TerminalScreen.tsx:195-204` مراجع، التأثير :754 بلا `frameTfs/dxyTf`)؛ ui59a ← tools `fdb72a0` (`:157` عبر `hooks/chartSeriesCache`)؛
+ui58a ← ui `0176476` (`CommissionPlanPanel.tsx:276`). سجلات chart/tools/launch/ui/backend: لا طلب جديد. **QA91a → ui (منخفض)**: `LectureClassroom.tsx:731` `clarifyBox` تعبئة+حدّ تأكيد (أبلغ عنه ui).
+**قائمة قبول DESIGN-PRO (الحادي عشر):** 0/12 فشل (diff منذ aacb013، 15 ملفّاً: لا زرّ/وزن ≥700/مسافة/ظلّ جديد؛ `a58f166` أزال حدّي تأكيد).
+**المراجعة (a — ميت/تصديرات):** تصديرات `holdView`/`seriesCache`/`chartSeriesCache` كلها مستوردة؛ `tsc --noUnusedLocals` على المتغيّرة: `React` فقط (ضجيج JSX). **لا بند.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
+**إضافة (تعارض أثناء الدفع، 4d51814):** وصلت 19 كوميتاً ⇒ أُخذت COORDINATION من الأعلى وأُعيدت تعديلاتي. أخضر 0، selftests 114/114. QA91a ← ui `dbd7e94` (أُغلق قبل أن يُرفع).
+جديد مُتحقَّق: **backend-r58 → ui** (`main.py:848` `POST /api/auth/password`، لا مستدعٍ بـ`mobile/src`)؛ **backend-r58b → أنس** (⛔22). diff الواجهة (5 ملفّات) يزيل حدود تأكيد فقط + `accessibilityState` ⇒ 0/12 باقٍ.
