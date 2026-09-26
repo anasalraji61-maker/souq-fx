@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   AppState,
+  Platform,
 } from 'react-native';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type Candle } from '../api';
@@ -2383,6 +2384,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         placeholder={t.journalNotePlaceholder}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
+        // الويب (قرار ١٦): Enter بآخر خانة يحفظ كزرّ «أضف»/«احفظ التعديل» — متداول اللابتوب يكتب الصفقة بـTab ثم Enter
+        // بلا الفأرة. نفس `add` بكل فحوصه (Enter ثانية على القيم نفسها = الضغطة الثانية المقصودة). الهاتف: «تم» يُغلق اللوحة كما كان
+        onSubmitEditing={Platform.OS === 'web' ? () => { if (!busy) void add(); } : undefined}
         underlineColorAndroid="transparent"
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
