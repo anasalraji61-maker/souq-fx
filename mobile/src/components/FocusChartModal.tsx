@@ -509,6 +509,8 @@ export function FocusChartModal({
                     }
                     liveTickSource={seriesSym === sym ? liveTick?.source ?? null : null}
                     onCreateAlert={alertFromDrawing}
+                    // الويب: كتابة «15» ثم Enter تبدّل الفريم كشريط `TimeframeBar` أعلاه (chart-r82a)
+                    onTimeframeKey={setTf}
                     initialTool={initialTool}
                     initialLens={initialLens}
                     initialKind={initialKind}
