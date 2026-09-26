@@ -1070,3 +1070,4 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **قائمة قبول DESIGN-PRO (السادس عشر):** 0/12 فشل (diff منذ bac6631، 9 ملفّات: شريط الرسم أيقونات 44px + label + تلميح `railHintAbove` داخل `dock` بلا `overflow`؛ «مسح الكل» ⌫ خلف `confirmDestructive`).
 **المراجعة (a — ميت/تصديرات):** `withAlpha`/`journalPayoffR` مستوردان؛ `styles.tool*` مستعملة. **QA96a → launch (منخفض)**: `mcUndo`/`mcRedo` بلا قارئ منذ `ae31a6a`.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (90ff55f):** أخضر 0. وصلت 14 كوميتاً: مفاتيح tools111a/b ← launch `17b9528` ⇒ الربط → tools؛ ui تقليل التأكيد (`52e61c3`، `a379910`) وبطاقة الجولة تعبئة فقط ⇒ 0/12 باقٍ.
