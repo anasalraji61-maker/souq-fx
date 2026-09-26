@@ -1924,6 +1924,28 @@ export function spreadRisk(input: {
 }
 
 /**
+ * مخاطرة **أصغر لوت** حين يخرج الحجم المحسوب تحته: بالوقف وحده، وشاملةً السبريد والعمولة المكتوبين (`null` بلا تكاليف).
+ *
+ * لماذا: «0.01 lot = 0.80 USD · 0.80%» هو الرقم الذي يقرّر به فتح أصغر لوت، وكان بالوقف وحده — سطر «شاملة التكاليف»
+ * يُحسب للّوت المحسوب فقط، فيغيب هنا بالضبط. EURUSD رصيد 100 وقف 8 وسبريد 1.5 وعمولة 7 ⇒ الخسارة الفعلية 1.02 لا 0.80
+ * (+27%)، ووقف 5 ⇒ +44%.
+ */
+export function minLotRisk(input: {
+  slPips: number;
+  spreadPips: number;
+  commissionPerLot?: number;
+  pipValuePerLot: number;
+  balance: number;
+  riskPct: number;
+  contractSize: number;
+}): { stop: { risk: number; pct: number } | null; withCosts: { risk: number; pct: number } | null } {
+  const { slPips, pipValuePerLot, balance } = input;
+  const stop = riskForLots({ lots: LOT_STEP, slPips, pipValuePerLot, balance });
+  const c = stop ? spreadRisk({ ...input, lots: LOT_STEP }) : null;
+  return { stop, withCosts: c ? { risk: c.risk, pct: c.pct } : null };
+}
+
+/**
  * السبريد الذي **بقي** ليُضاف للمخاطرة والربح حين يكون الدخول هو Ask الشراء/Bid البيع من لقطة حيّة.
  *
  * لماذا: `spreadRisk`/`profitAfterCosts` تفترضان دخولاً مكتوباً من الشارت، فالسبريد خارج المسافة. لكن «الدخول =

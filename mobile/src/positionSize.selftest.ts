@@ -94,6 +94,7 @@ import {
   parseSpreadPips,
   ambiguousSpreadPips,
   spreadRisk,
+  minLotRisk as mlr,
   parsePriceFor,
   smallContractSpec,
   centQuoteToAccount,
@@ -4612,3 +4613,27 @@ console.log('positionSize terminal bid/ask freshness selftest OK');
   assert.equal(parseSlPips('7.20', instrumentSpec('USDCNH')!), null);
 }
 console.log('positionSize pegged-quote stop pips selftest OK');
+
+// أصغر لوت تحت الحجم المحسوب: السطر بالوقف وحده كان الوحيد — والتكاليف المكتوبة تُضاف بسطرٍ ثانٍ
+{
+  const pv = pipValuePerLot(eu, 1)!;
+  const sp = parseSpreadPips('1.5', eu)!;
+  const cm = parseCommission('7', 'USD')!;
+  const r = positionSize({ balance: 100, riskPct: 0.5, slPips: 8, pipValuePerLot: pv, contractSize: eu.contractSize })!;
+  assert.equal(r.belowMinLot, true);
+  const m = mlr({ slPips: 8, spreadPips: sp, commissionPerLot: cm, pipValuePerLot: pv, balance: 100, riskPct: 0.5, contractSize: eu.contractSize });
+  assert.ok(m.stop && near(m.stop.risk, 0.8) && near(m.stop.pct, 0.8));
+  // (8 + 1.5) × 0.10 + 0.07 = 1.02
+  assert.ok(m.withCosts && near(m.withCosts.risk, 1.02) && near(m.withCosts.pct, 1.02), JSON.stringify(m));
+  assert.equal(formatRiskPct(m.withCosts!.pct), '1.02%');
+  // سبريد وحده
+  const s = mlr({ slPips: 5, spreadPips: sp, pipValuePerLot: pv, balance: 100, riskPct: 0.5, contractSize: eu.contractSize });
+  assert.ok(s.withCosts && near(s.withCosts.risk, 0.65));
+  // بلا تكاليف ⇒ السطر الثاني غائب، والأوّل كما كان
+  const n = mlr({ slPips: 8, spreadPips: 0, pipValuePerLot: pv, balance: 100, riskPct: 0.5, contractSize: eu.contractSize });
+  assert.equal(n.withCosts, null);
+  assert.ok(n.stop && near(n.stop.risk, 0.8));
+  // مدخل غير صالح ⇒ لا شيء
+  assert.deepEqual(mlr({ slPips: 0, spreadPips: sp, pipValuePerLot: pv, balance: 100, riskPct: 0.5, contractSize: eu.contractSize }), { stop: null, withCosts: null });
+}
+console.log('positionSize min-lot risk with costs selftest OK');

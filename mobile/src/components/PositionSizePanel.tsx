@@ -32,6 +32,7 @@ import {
   ambiguousSlPips,
   formatPipValue,
   riskForLots,
+  minLotRisk,
   formatRiskPct,
   parseRiskInput,
   parseBalance,
@@ -1034,7 +1035,6 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const actualRiskOf = (l: number) =>
     pv != null ? riskForLots({ lots: l, slPips: slNum, pipValuePerLot: pv, balance: balanceNum }) : null;
   const actualNow = lots != null ? actualRiskOf(lots) : null;
-  const minLotRisk = result?.belowMinLot ? actualRiskOf(LOT_STEP) : null;
   /** تسجيل الخطة بالدفتر جارٍ / نتيجته — نقرة واحدة بدل إعادة كتابة الأرقام الأربعة بلوحة الدفتر */
   const [logBusy, setLogBusy] = useState(false);
   /** `earlier`: سُجِّلت خطةٌ **سابقة** (تغيّرت أثناء الطلب) — الرسالة تقول ما حُفظ والزرّ يبقى متاحاً للخطة الجديدة */
@@ -1108,6 +1108,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const commissionPerLot = parseCommission(commission, moneyCcy);
   // خانةٌ مرفوضة = صفر هنا (رسالتها تحتها) ولا تُسقط الأخرى من السطر — راجع `costsForRisk`
   const costs = costsForRisk(spreadPips, commissionPerLot);
+  // أصغر لوت حين يخرج الحجم تحته: بالوقف وحده، وشاملاً التكاليف المكتوبة بسطرٍ ثانٍ — راجع `minLotRisk`
+  const minLot =
+    result?.belowMinLot && pv != null && spec
+      ? minLotRisk({
+          slPips: slNum,
+          spreadPips: costs.spreadPips,
+          commissionPerLot: costs.commissionPerLot,
+          pipValuePerLot: pv,
+          balance: balanceNum,
+          riskPct: riskNum,
+          contractSize: spec.contractSize,
+        })
+      : null;
+  const minLotRiskNow = minLot?.stop ?? null;
   const withSpread =
     lots != null && pv != null && spec
       ? spreadRisk({
@@ -2143,9 +2157,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             <Text style={[styles.warn, { textAlign: align }]}>
               {t.riskCalcBelowMin} ({money(result.riskAmount)})
             </Text>
-            {minLotRisk ? (
+            {minLotRiskNow ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>
-                {formatLots(LOT_STEP)} = {money(minLotRisk.risk)} · {formatRiskPct(minLotRisk.pct)}
+                {formatLots(LOT_STEP)} = {money(minLotRiskNow.risk)} · {formatRiskPct(minLotRiskNow.pct)}
+              </Text>
+            ) : null}
+            {minLot?.withCosts ? (
+              <Text style={[styles.resultMeta, { textAlign: align }]} accessibilityLiveRegion="polite">
+                {commissionPerLot ? t.riskCalcRiskWithCosts : t.riskCalcRiskWithSpread} (+{costParts.join(' + ')}):{' '}
+                {money(minLot.withCosts.risk)} ({formatRiskPct(minLot.withCosts.pct)})
               </Text>
             ) : null}
           </>
