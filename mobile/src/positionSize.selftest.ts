@@ -3909,3 +3909,24 @@ console.log('positionSize dailyRoomMaxLots selftest OK');
   assert.equal(formatLots(12), '12.00 lot');
 }
 console.log('positionSize formatLots selftest OK');
+
+// الفضة: سعر الوقف بخانة النقاط («30.95» على XAGUSD 31.45) كان 30.95 pip ⇒ 0.06 لوت (150 = 1.5%) بدل 0.04 لوقف 50 pip
+{
+  const xag = instrumentSpec('XAGUSD')!;
+  assert.equal(parseSlPips('30.95', xag), null);
+  assert.equal(slPipsLooksLikePrice('30.95', xag), true);
+  assert.equal(parseSlPips('31.40', xag), null); // منزلتان مكتوبتان
+  assert.equal(parseSlPips('٣٠٫٩٥', xag), null);
+  assert.equal(parseSlPips('30.95', instrumentSpec('XAGEUR')!), null);
+  // الوقوف الحقيقية تبقى: عدد صحيح، عُشر pip (من السعرين)، وقيم كبيرة
+  assert.equal(parseSlPips('50', xag), 50);
+  assert.equal(parseSlPips('30', xag), 30);
+  assert.equal(parseSlPips('50.5', xag), 50.5);
+  assert.equal(parseSlPips('250', xag), 250);
+  assert.equal(slPipsLooksLikePrice('50', xag), false);
+  const ent = 31.45;
+  for (const stop of [30.95, 31.2, 30.05, 29.5, 31.44]) assert.equal(parseSlPips(String(slPipsFromPrices(xag, ent, stop)), xag), slPipsFromPrices(xag, ent, stop));
+  // الذهب لم يتغيّر: «12.25» تبقى نقاطاً (سعر الذهب بخانة النقاط يُصغّر اللوت، لا يكبّره)
+  assert.equal(parseSlPips('12.25', instrumentSpec('XAUUSD')!), 12.25);
+}
+console.log('positionSize silver price-in-pips selftest OK');
