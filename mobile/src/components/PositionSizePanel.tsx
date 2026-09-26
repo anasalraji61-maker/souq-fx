@@ -79,6 +79,7 @@ import {
   lowRewardWarning,
   lotsOverOrderMax,
   riskIsHigh,
+  lossStreakDrawdownPct,
   spreadTooWide,
   spreadMaybePrice,
   stopInsideSpread,
@@ -106,6 +107,7 @@ import {
   analyzePlan,
   formatPips,
   formatRR,
+  breakevenWinRatePct,
   liveEntryForStop,
   liveEntryQuote,
   liveStopChip,
@@ -137,6 +139,8 @@ type Props = {
 };
 
 const QUICK_RISK = ['0.5', '1', '2'];
+/** سلسلة الخسائر بسطر المخاطرة: 5 عادية لنظام نجاحه 50% (والنصّ العربي «{n} خسائر» صحيح لـ3–10 فقط) */
+const LOSS_STREAK_N = 5;
 const STORE_KEY = 'matrix.tools.riskCalc.v1';
 
 /** أقدم سعر سوق يُبنى عليه سطر الهامش: دورتا تحديث (60 ث) — بعدها لا سطر بدل رقمٍ من سعرٍ قديم. */
@@ -1134,6 +1138,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   /** R:R بالمال: الأساس = عملة الحساب ⇒ الخسارة بسعر الوقف والربح بسعر الهدف (USDJPY 1:2.0 مسافةً = 1:1.96 مالاً) — `moneyRewardRisk` */
   const planRR = plan?.ok ? moneyRewardRisk(plan.rr, rate, targetRate ?? rate) : null;
   const lowWarn = plan?.ok ? lowRewardWarning(planRR, netAfterCosts) : null;
+  const breakevenPct = breakevenWinRatePct(planRR);
 
   /**
    * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
@@ -1382,6 +1387,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * بضغطة زائدة يرى ⚠ عند 20% ثم يختفي التحذير كلّه عند 200%. الشرط الآن بلا سقف.
    */
   const riskHigh = riskIsHigh(riskNum);
+  const lossStreakPct = lossStreakDrawdownPct(riskNum, LOSS_STREAK_N, riskIn?.amount == null);
   /**
    * نسبة فوق 100% مستحيلة (لا يُخاطَر بأكثر من الرصيد كلّه) فيرفضها `positionSize` وتعود النتيجة
    * `null` — وكان الصندوق يقول حينها «أدخل الرصيد ونسبة المخاطرة ووقف الخسارة» والثلاثة مكتوبة
@@ -1536,6 +1542,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         </Text>
       ) : riskHigh ? (
         <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcHighRisk}</Text>
+      ) : null}
+      {/* ما تأخذه 5 خسائر متتالية بهذه المخاطرة — مركّبة للنسبة (تُحسب من الرصيد الباقي)، خطّية للمبلغ الثابت. راجع `lossStreakDrawdownPct` */}
+      {!riskOver && lossStreakPct != null ? (
+        <Text style={[styles.hint, { textAlign: align }]}>
+          {t.riskCalcLossStreak.replace('{n}', String(LOSS_STREAK_N)).replace('{pct}', String(lossStreakPct))}
+        </Text>
       ) : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcLeverage}</Text>
@@ -1799,6 +1811,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
               {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} {pipUnit(lang)} · R:R {formatRR(planRR)}
               {potentialProfit != null ? ` · ${t.riskCalcPotentialProfit} ≈ ${money(potentialProfit)}` : ''}
             </Text>
+            {/* R:R بالمال نفسها المعروضة أعلاه — راجع `breakevenWinRatePct` */}
+            {breakevenPct != null ? (
+              <Text style={[styles.resultMeta, { textAlign: align }]}>
+                {t.planBreakevenWinRate.replace('{pct}', String(breakevenPct))}
+              </Text>
+            ) : null}
             {netAfterCosts ? (
               <Text
                 style={[netAfterCosts.net > 0 ? styles.resultMeta : styles.warn, { textAlign: align }]}
