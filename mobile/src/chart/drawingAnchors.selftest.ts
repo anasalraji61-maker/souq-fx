@@ -317,4 +317,26 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(anchorPoint({ index: -1, price: 1.1, ...s4 } as never, bricks, 3600, true, endTime, true).index, 4);
 }
 
+// قبل أوّل شمعة: كسر الشمعة وقاعدة الفجوة كما داخل السلسلة (كانا يضيعان ⇒ ترند عمودي، ونقطة الأحد على الجمعة).
+{
+  const H = 3600;
+  const D = 86400;
+  const mon = Date.UTC(2026, 0, 5) / 1000;
+  const days: { time: number }[] = [];
+  for (let w = 0; w < 10; w++) for (let d = 0; d < 5; d++) days.push({ time: mon + w * 7 * D + d * D });
+  const at = (t: number) => anchorPoint({ index: 0, price: 1, time: t } as never, days, D, false, undefined, 'EURUSD').index;
+  const preWed = mon - 14 * D + 2 * D;
+  assert.equal(at(preWed + 6 * H), -7.75);
+  assert.equal(at(preWed + 18 * H), -7.25);
+  assert.equal(at(mon - 7 * D - 2 * H), -5); // الأحد 22:00 ⇒ شمعة الاثنين
+  // ختم عند −7.5 ثم إعادة فهرسة ⇒ −7.5 لا −8
+  const s = stampAtIndex(days, -7.5, D, undefined, 'EURUSD')!;
+  assert.equal(anchorPoint({ index: -7.5, price: 1, ...s } as never, days, D, false, undefined, 'EURUSD').index, -7.5);
+  // كريبتو H1 متّصل (متوسّط الخطوة): 5س45د قبل الأولى ⇒ −5.75
+  const t0 = mon;
+  const hours = Array.from({ length: 100 }, (_, i) => ({ time: t0 + i * H }));
+  const idx = anchorPoint({ index: 0, price: 1, time: t0 - 5 * H - 45 * 60 } as never, hours, H, false).index;
+  assert.ok(Math.abs(idx + 5.75) < 1e-9, `crypto pre-first ${idx}`);
+}
+
 console.log('drawingAnchors.selftest: PASS');

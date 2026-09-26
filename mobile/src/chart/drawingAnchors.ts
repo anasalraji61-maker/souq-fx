@@ -263,6 +263,12 @@ export function anchorPoint(
     p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
   // نقطة بمنطقة المستقبل مختومة بزمن **آخر** لبنة (`stampAtIndex`) لا بلبنة بعينها: `brickOffset` كان يعيدها لأولى لبنات
   // الشمعة الحيّة ⇒ على Renko/Kagi/P&F/Range نقطة رُسمت بعد الحيّة بخانة تقفز للخلف فوق اللبنات بأوّل تيك.
+  // قبل أوّل شمعة (فريم آخر أو نافذة أحدث): `withinBar` لا يرى شمعة بفهرس سالب ⇒ الكسر كان يضيع فينهار ترند
+  // H1 (الأربعاء 06:00→18:00) على اليومي إلى خطّ عمودي، ونقطة مختومة عند −7.5 تعود −8 بكل إعادة فهرسة.
+  if (base != null && base < 0 && !synthetic && ahead === 0) {
+    const past = pastIndex(bars, p.time, stepSec, endTime, weekendClosed);
+    return past === p.index ? p : { ...p, index: past };
+  }
   const inBar =
     base == null
       ? 0
@@ -273,6 +279,31 @@ export function anchorPoint(
         : withinBar(bars, base, p.time, stepSec);
   const index = base == null ? null : base + inBar + (ahead * aheadStep) / stepSec;
   return index == null || index === p.index ? p : { ...p, index };
+}
+
+/**
+ * الخانة **الكسرية** لزمن قبل أوّل شمعة — معكوس `timeAtIndex` للفهارس السالبة تماماً: بنمط أسبوعي تُحسب
+ * الخانة وكسرها داخل الأسبوع المحمَّل الأوّل (مع قاعدة الفجوة ⇒ الشمعة التالية) ثم تُرجَع أسابيع كاملة؛
+ * وبخطوة التداول أو متوسّط الخطوة بلا تقريب.
+ */
+function pastIndex(
+  bars: readonly TimeBar[],
+  time: number,
+  stepSec: number,
+  endTime?: number,
+  weekendClosed: WeekendRule = false
+): number {
+  const first = barTime(bars[0]!);
+  const wk = weekPattern(bars, stepSec);
+  if (wk) {
+    const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
+    const shifted = time + k * WEEK_SEC;
+    const i = indexAtTime(bars, shifted, stepSec, endTime)!;
+    return i + withinBar(bars, i, shifted, stepSec) - k * wk.bars;
+  }
+  const ts = tradingStep(bars, weekendClosed);
+  if (ts != null) return -forexTradingSecBetween(time, first, weekSymbol(weekendClosed)) / ts;
+  return (time - first) / pastStep(bars, stepSec);
 }
 
 /**
