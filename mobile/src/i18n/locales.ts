@@ -2091,7 +2091,7 @@ const ar: Dict = {
   riskCalcSpreadPointsHint: 'سبريد «{value}» بالنقاط (points) — كل 10 points = 1 pip، فاكتبه هنا {pips}',
   riskCalcSlPointsAmbiguous:
     'وقف «{value}»: هل تقصد {whole} pip، أم {pips} pip إن كانت نقاط MT4/MT5 (النقطة هناك عُشر pip)؟ اكتبه بالـpip — حجم اللوت يختلف بينهما عشرة أضعاف',
-  riskCalcSpreadPointsAmbiguous: 'سبريد «{value}»: هل تقصد {whole} pip، أم {pips} إن كانت نقاط MT4/MT5؟ اكتبه هنا بالـpip',
+  riskCalcSpreadPointsAmbiguous: 'سبريد «{value}»: هل تقصد {whole} pip، أم {pips} pip إن كانت نقاط MT4/MT5؟ اكتبه هنا بالـpip',
   riskCalcSpreadMaybePrice: 'هل «{n}» سعر {symbol} لا سبريده؟ سعر هذا الزوج قريب من هذا الرقم. إن كان السبريد بالـpip فعلاً فالحساب صحيح كما هو.',
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
@@ -3373,7 +3373,7 @@ const enUS: Dict = {
   riskCalcSpreadPointsHint: 'A spread of “{value}” is in points — 10 points = 1 pip, so type {pips} here',
   riskCalcSlPointsAmbiguous:
     'Stop “{value}”: do you mean {whole} pips, or {pips} pips if those are MT4/MT5 points (a tenth of a pip there)? Type it in pips — the lot size differs tenfold between the two',
-  riskCalcSpreadPointsAmbiguous: 'Spread “{value}”: do you mean {whole} pips, or {pips} if those are MT4/MT5 points? Type it here in pips',
+  riskCalcSpreadPointsAmbiguous: 'Spread “{value}”: do you mean {whole} pips, or {pips} pips if those are MT4/MT5 points? Type it here in pips',
   riskCalcSpreadMaybePrice: 'Is “{n}” the {symbol} price rather than its spread? This pair trades close to that number. If it really is the spread in pips, the calculation stands as it is.',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
@@ -4709,7 +4709,7 @@ const ku: Dict = {
   riskCalcSpreadPointsHint: 'سپرێدی «{value}» بە خاڵە (points) — هەر 10 points = 1 pip، بۆیە لێرە {pips} بنووسە',
   riskCalcSlPointsAmbiguous:
     'وەستانی «{value}»: مەبەستت {whole} pipە، یان {pips} pip ئەگەر خاڵی MT4/MT5 بن (لەوێ هەر خاڵێک دەیەکی pipە)؟ بە pip بینووسە — قەبارەی لۆت لە نێوانیاندا دە هێندە جیاوازە',
-  riskCalcSpreadPointsAmbiguous: 'سپرێدی «{value}»: مەبەستت {whole} pipە، یان {pips} ئەگەر خاڵی MT4/MT5 بن؟ لێرە بە pip بینووسە',
+  riskCalcSpreadPointsAmbiguous: 'سپرێدی «{value}»: مەبەستت {whole} pipە، یان {pips} pip ئەگەر خاڵی MT4/MT5 بن؟ لێرە بە pip بینووسە',
   riskCalcSpreadMaybePrice: 'ئایا «{n}» نرخی {symbol}ـە نەک سپرێدەکەی؟ نرخی ئەم جووتە نزیکە لەم ژمارەیە. ئەگەر بەڕاستی سپرێدە بە pip، ژماردنەکە وەک خۆی ڕاستە.',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
