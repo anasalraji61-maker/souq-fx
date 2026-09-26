@@ -2170,7 +2170,7 @@ const ar: Dict = {
   reportRiskTitle: 'موجز مخاطر',
   reportRiskHint: 'إدارة رأس المال',
   reportOpenWord: 'مفتوح ↓',
-  reportAiFallbackNote: 'تعذّر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص',
+  reportAiFallbackNote: 'التحليل الذكي غير متاح الآن — ما يلي أرقام دفترك مع نقاط عامة ثابتة، لا تحليل مكتوب لك',
   reportJournalDataLine:
     'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades}، نجاح={winRate}%، مجموع حركة السعر={pnl}%، أفضل صفقة={best}%، أسوأ صفقة={worst}%. النسب حركة سعر من الدخول للخروج بلا حجم الصفقة — ليست ربحاً أو خسارة من الحساب، فلا تسمّها كذلك. اعتمد عليها في التقرير.',
   reportJournalEmptyLine: '(لا توجد صفقات مغلقة في الدفتر بعد — لا أرقام أداء لعرضها).',
@@ -3456,7 +3456,7 @@ const enUS: Dict = {
   reportRiskTitle: 'Risk brief',
   reportRiskHint: 'Capital management',
   reportOpenWord: 'Open ↓',
-  reportAiFallbackNote: 'Couldn’t reach the AI — this is a general template, not a custom analysis',
+  reportAiFallbackNote: 'AI analysis isn’t available right now — below are your journal numbers and fixed general points, not an analysis written for you',
   reportJournalDataLine:
     'Actual trade journal data (all closed trades, not just this week): trades={trades}, win rate={winRate}%, sum of price moves={pnl}%, best trade={best}%, worst trade={worst}%. The percentages are price moves from entry to exit with lot size ignored — not account profit or loss, so do not call them that. Base the report on it.',
   reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
@@ -4802,7 +4802,7 @@ const ku: Dict = {
   reportRiskHint: 'بەڕێوەبردنی سەرمایە',
   reportOpenWord: 'کراوەیە ↓',
   reportAiFallbackNote:
-    'نەکرا پەیوەندی بە زیرەکی دەستکردەوە بکرێت — ئەمە دەقێکی ئامادەی گشتییە نەک شیکارییەکی تایبەت',
+    'شیکاری زیرەک ئێستا بەردەست نییە — ئەوەی خوارەوە ژمارەکانی دەفتەرەکەتە لەگەڵ خاڵی گشتیی نەگۆڕ، نەک شیکارییەک بۆ تۆ نووسرابێت',
   reportJournalDataLine:
     'زانیاری ڕاستەقینەی دەفتەری مامەڵە (هەموو مامەڵە داخراوەکان، نەک تەنها ئەم هەفتەیە): مامەڵە={trades}، ڕێژەی سەرکەوتن={winRate}%، کۆی جووڵەی نرخ={pnl}%، باشترین مامەڵە={best}%، خراپترین مامەڵە={worst}%. ڕێژەکان جووڵەی نرخن لە چوونەژوورەوە تا دەرچوون بێ قەبارەی مامەڵە — قازانج یان زیانی هەژمار نین، بەو ناوە ناویان مەبە. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
   reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەکی داخراو لە دەفتەرەکەدا نییە — ژمارەی ئەدا نییە بۆ پیشاندان).',
