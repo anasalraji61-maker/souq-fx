@@ -472,7 +472,9 @@ class ScreenerRun(BaseModel):
         if self.fast == self.slow and {"ma_cross_up", "ma_cross_down"} & set(self.filters):
             raise ValueError("fast and slow periods must differ")
         # « EURUSD» كان يُرسَل للمزوّد بمسافته فيفشل، و«EUR/USD» بلا قصّ الجمعة (`canonical_symbol`)
-        self.symbols = [market.canonical_symbol(s) for s in self.symbols] if self.symbols else self.symbols
+        # ولا تكرار: «EURUSD/eurusd/EUR/USD» كانت ثلاثة صفوف متطابقة و«3 من 3 مفحوصة» (طلبات مزوّد ×3)
+        self.symbols = list(dict.fromkeys(market.canonical_symbol(s) for s in self.symbols)) if self.symbols else self.symbols
+        self.filters = list(dict.fromkeys(self.filters))
         for sym in self.symbols or []:
             if not (3 <= len(sym) <= 12):
                 raise ValueError("symbol must be 3-12 characters")

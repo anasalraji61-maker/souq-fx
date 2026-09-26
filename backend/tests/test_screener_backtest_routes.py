@@ -487,3 +487,17 @@ def test_scan_partly_evaluable_symbol_is_scanned_and_names_the_skipped_filter(cl
     body = r.json()
     assert body["scanned"] == 1 and body["failed"] == []
     assert body["insufficient_data"] == {"EURUSD": ["macd_cross_up"]}
+
+
+def test_scan_repeated_symbol_and_filter_counted_once(client):
+    """«EURUSD/eurusd/EUR/USD» كانت ثلاثة صفوف متطابقة و«3 من 3 مفحوصة»، والفلتر المكرَّر مرّتين بالصفّ."""
+    r = client.post(
+        "/api/screener/run",
+        json={"symbols": ["EURUSD", "eurusd", "EUR/USD"], "filters": ["bullish", "bearish", "bullish"]},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["total"] == 1 and body["scanned"] == 1
+    assert body["count"] == len(body["results"]) == 1
+    fm = body["results"][0]["filters_matched"]
+    assert len(fm) == len(set(fm)) == 1
