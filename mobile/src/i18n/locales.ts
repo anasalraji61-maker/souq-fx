@@ -1357,6 +1357,8 @@ export type Dict = {
   sigLevelsUnavailableNeutral: string;
   /** backend-r54 `no_range`: سلسلة كاملة بلا حركة (ATR = 0) — ليست «شموع قليلة» */
   sigLevelsUnavailableNoRange: string;
+  /** backend `80d4193`: المدى (ATR) دون نصف تسعيرة (زوج مربوط كـUSDSAR على 1m) ⇒ الوقف/الهدف يُقرَّب على الدخول نفسه — صفقة بلا مخاطرة */
+  sigLevelsUnavailableAtrBelowTick: string;
   journalStatBreakeven: string;
   journalShownOfTotal: string;
   journalLoadOlder: string;
@@ -2630,6 +2632,7 @@ const ar: Dict = {
   sigLevelsUnavailableAtrWide: 'لا مستويات دخول ووقف وهدف — المدى (ATR) أوسع من السعر نفسه',
   sigLevelsUnavailableNeutral: 'لا مستويات دخول ووقف وهدف — الاتجاه محايد',
   sigLevelsUnavailableNoRange: 'لا مستويات دخول ووقف وهدف — السعر لم يتحرّك في هذه الفترة، فلا مدى (ATR) يُقاس عليه',
+  sigLevelsUnavailableAtrBelowTick: 'لا مستويات دخول ووقف وهدف — المدى (ATR) أصغر من أصغر خطوة للسعر، فالوقف سيقع على الدخول نفسه. جرّب فريماً أطول',
   journalStatBreakeven: 'تعادل: {n} (لا يدخل نسبة النجاح)',
   journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
   journalLoadOlder: 'تحميل الأقدم',
@@ -3844,6 +3847,7 @@ const enUS: Dict = {
   sigLevelsUnavailableAtrWide: 'No entry, stop or target — the range (ATR) is wider than the price itself',
   sigLevelsUnavailableNeutral: 'No entry, stop or target — direction is neutral',
   sigLevelsUnavailableNoRange: 'No entry, stop or target — the price hasn’t moved in this window, so there’s no range (ATR) to measure from',
+  sigLevelsUnavailableAtrBelowTick: 'No entry, stop or target — the range (ATR) is smaller than the price’s smallest step, so the stop would sit on the entry itself. Try a longer timeframe',
   journalStatBreakeven: 'Breakeven: {n} (not counted in win rate)',
   journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
   journalLoadOlder: 'Load older',
@@ -5095,6 +5099,8 @@ const ku: Dict = {
   sigLevelsUnavailableAtrWide: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مەودا (ATR) لە خودی نرخەکە فراوانترە',
   sigLevelsUnavailableNeutral: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئاڕاستە بێلایەنە',
   sigLevelsUnavailableNoRange: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — نرخ لەم ماوەیەدا نەجووڵاوە، بۆیە هیچ مەودایەک (ATR) نییە بۆ پێوان',
+  // بحاجة مراجعة ناطق كردي
+  sigLevelsUnavailableAtrBelowTick: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مەودا (ATR) لە بچووکترین هەنگاوی نرخ بچووکترە، بۆیە وەستان دەکەوێتە سەر خودی چوونەژوورەوە. تایم‌فرەیمێکی درێژتر تاقی بکەرەوە',
   journalStatBreakeven: 'بێ قازانج و زیان: {n} (لە ڕێژەی سەرکەوتندا ناژمێردرێت)',
   journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
   journalLoadOlder: 'بارکردنی کۆنترەکان',

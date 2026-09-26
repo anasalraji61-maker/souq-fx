@@ -25,6 +25,7 @@
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
 | backend | أنس | **backend-r47** الإخفاء التلقائي بثلاثة بلاغات (`REPORT_HIDE_THRESHOLD`) والتسجيل بلا تحقّق بريد ⇒ شخص واحد بثلاثة حسابات يُخفي أي رسالة أو فكرة صفقة، ويضخّم أصوات موافق/معارض. تحقّق بريد، أم عتبة بعمر الحساب، أم كما هو؟ | backend-r47 |
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
+| launch | ui | **launch150** backend `80d4193` أضاف `levels_basis.unavailable: "atr_below_tick"` (المدى دون نصف تسعيرة ⇒ الوقف يُقرَّب على الدخول؛ USDSAR على 1m). `signalDirection.ts:39` `levelsUnavailableText` يعيد null له ⇒ لا سبب يُعرض لغياب المستويات. أضيفوا `case 'atr_below_tick': return t.sigLevelsUnavailableAtrBelowTick;` — المفتاح جاهز ar/en/ku | launch150 |
 
 **تحقّق الدورة 88 (بالكود، على e321dec ثم 4a802a7):** البناء أخضر 0، selftests 112/112. أُغلقت: **launch148** ← ui `d0c0900` (`FrameSizedGrid.tsx:346` `text`)؛
 **chart-r70** ← ui `7819263` (`AnalystsPanel.tsx:142-143,165` `priceRef`، `SocialConsensusPanel.tsx:242-243`، `AlertsPanel.tsx:415-416`)؛ **QA87a** ← ui `4a84586` + launch `3841ce5` (لا `authSessionExpired` باقٍ).
