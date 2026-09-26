@@ -44,6 +44,7 @@ import { SymbolSnapshot } from './SymbolSnapshot';
 import { BacktestPanel } from './BacktestPanel';
 import { IndicatorAlertsPanel } from './IndicatorAlertsPanel';
 import { useLiveTicks } from '../hooks/useLiveTicks';
+import { cachedChartSeries, rememberChartSeries } from '../hooks/chartSeriesCache';
 import { useI18n } from '../i18n/I18nContext';
 import { playSoftClick } from '../audio/playSoftClick';
 import type { ChartKind, DrawTool, IndicatorId, LensMode } from '../chart/types';
@@ -120,10 +121,17 @@ export function FocusChartModal({
       setCompareFailed(false);
     }
     let alive = true;
+    // chart-r74c: شموع (الرمز، الفريم) نفسه من ذاكرة الجلسة (التركيز/الرباعي، 5 دقائق على الأكثر) تُعرض فوراً
+    // والجلب يستبدلها — 15m→1H→15m كان ينتظر الشبكة مرّتين خلف مؤشّر دوّار. بلا ذاكرة ⇒ مؤشّر التحميل كما كان.
+    const cached = cachedChartSeries(sym, tf);
+    if (cached) {
+      setSeries(cached);
+      setSeriesSym(sym);
+    }
     (async () => {
-      setLoading(true);
+      setLoading(!cached);
       try {
-        const s = await api.chart(sym, tf);
+        const s = rememberChartSeries(sym, tf, await api.chart(sym, tf));
         if (alive) {
           setSeries(s);
           setSeriesSym(sym);
@@ -151,7 +159,11 @@ export function FocusChartModal({
           setCompareFailed(false);
         }
       } catch {
-        if (alive) {
+        if (alive && cached) {
+          // فشل التحديث وبالذاكرة شموع حقيقية حديثة (معروضة للتوّ) ⇒ تبقى هي لا إشعار «لا اتصال».
+          setCompareSeries(null);
+          setCompareFailed(compareSym != null);
+        } else if (alive) {
           // launch122: كان الفشل يرسم `mockSeries` حول أسعار 2024 (EURUSD 1.0854). الآن سلسلة فارغة ⇒ إشعار «لا اتصال».
           setSeries(serverUnreachableSeries(sym, tf));
           setSeriesSym(sym);
@@ -179,6 +191,7 @@ export function FocusChartModal({
         .chart(sym, tf)
         .then((s) => {
           if (!alive || normalizeProvenance(s.data_source).kind === 'demo') return;
+          rememberChartSeries(sym, tf, s);
           setSeries(s);
           setSeriesSym(sym);
         })

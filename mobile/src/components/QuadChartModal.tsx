@@ -22,7 +22,8 @@ import { candleTimeSec, isSyntheticProvenance, normalizeProvenance } from '../ch
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
-import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
+import { cachedChartSeries, rememberChartSeries, sharedSeriesCache } from '../hooks/chartSeriesCache';
+import { seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
 import { ProviderUnavailableNotice, serverUnreachableSeries, seriesHasNoRealData } from './ProviderUnavailableNotice';
 
@@ -42,8 +43,8 @@ const isWeb = Platform.OS === 'web';
 /** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `phoneCellH`. */
 const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
 
-/** آخر شموع ناجحة لكل (رمز، فريم) عبر الجلسة — الرجوع لفريم أو إعادة فتح الرباعي فوري. */
-const quadSeriesCache = createSeriesCache<ChartSeries>();
+/** آخر شموع ناجحة لكل (رمز، فريم) عبر الجلسة، مشتركة مع التركيز — الرجوع لفريم أو إعادة فتح الرباعي فوري. */
+const quadSeriesCache = sharedSeriesCache;
 
 const DEFAULT: [string, string, string, string] = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
 
@@ -140,20 +141,14 @@ export function QuadChartModal({
     // والجلب كان ينتظر الأربعة **واحداً بعد واحد** ثم يعرضها دفعة واحدة: أبطأ رمز يحجب
     // الثلاثة الجاهزة، والانتظار مجموع أزمنتها. الآن متوازٍ، وكل خلية تُملأ لحظة وصول شموعها.
     // الرجوع لفريم فُتح قبل قليل: شموعه المحفوظة فوراً بدل مؤشّر التحميل، والجلب يستبدلها.
-    setSeries(symbols.map((sym) => quadSeriesCache.get(seriesCacheKey(sym, tf))));
+    setSeries(symbols.map((sym) => cachedChartSeries(sym, tf)));
     symbols.forEach((sym, i) => {
       const key = seriesCacheKey(sym, tf);
       api
         .chart(sym, tf)
-        .then((s) => {
-          if (!isSyntheticProvenance(s.data_source)) {
-            quadSeriesCache.put(key, s);
-            return s;
-          }
-          // المزوّد معطّل والخادم ردّ بشموع تجريبية: شموع حقيقية حديثة بالذاكرة (معروضة للتوّ) تبقى — كانت تُستبدل
-          // بعد لحظة بسلسلة «تجريبي» مختلفة. كفشل الجلب أدناه وكالتحديث الدوري.
-          return quadSeriesCache.get(key) ?? s;
-        })
+        // المزوّد معطّل والخادم ردّ بشموع تجريبية: شموع حقيقية حديثة بالذاكرة (معروضة للتوّ) تبقى — كانت تُستبدل
+        // بعد لحظة بسلسلة «تجريبي» مختلفة. كفشل الجلب أدناه وكالتحديث الدوري.
+        .then((s) => rememberChartSeries(sym, tf, s))
         .catch(() => {
           // فشل التحديث وبالذاكرة شموع حقيقية حديثة ⇒ تبقى هي لا الوهمية.
           const cached = quadSeriesCache.get(key);
