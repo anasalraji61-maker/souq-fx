@@ -1451,6 +1451,8 @@ export type Dict = {
    */
   journalRetryBtn: string;
   journalLoadErrorRetry: string;
+  /** فشل **تحديث** دفترٍ معروض (tools `959bed3` يُبقي القائمة): `journalLoadErrorRetry` «تعذّر تحميل الدفتر» فوق قائمة ظاهرة يناقض ما يراه، والمهمّ هنا أن آخر ما سجّله قد لا يظهر ⇒ لا يسجّله مرّتين (launch170a → tools). */
+  journalRefreshErrorRetry: string;
   /**
    * backend-r2: لا مصدر مرخَّص للمحلّلين ولا لقنوات التواصل — `/api/signals/analysts/*` و`/social/consensus` يعيدان
    * `status: "unavailable"`، `unavailable_reason: "no_licensed_feed"`، `direction`/`levels` = null. يُعرض النصّ بدل القائمة
@@ -2744,6 +2746,7 @@ const ar: Dict = {
   journalLoadOlderError: 'تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً. ما يظهر أمامك لم يتغيّر.',
   journalRetryBtn: 'إعادة المحاولة',
   journalLoadErrorRetry: 'تعذّر تحميل الدفتر — تحقّق من الاتصال ثم اضغط «إعادة المحاولة». صفقاتك المسجّلة لم تُحذف.',
+  journalRefreshErrorRetry: 'تعذّر تحديث الدفتر — القائمة أدناه آخر نسخة وصلت، وقد لا تظهر فيها آخر صفقة سجّلتها أو عدّلتها. لا تسجّلها مرّة ثانية: تحقّق من الاتصال ثم اضغط «إعادة المحاولة».',
   analystsUnavailable: 'لا مصدر مرخَّص لتوقعات المحللين بعد — لذلك لا نعرض اتجاهاً ولا أهدافاً بدل أن نخترعها',
   socialUnavailable: 'لا مصدر مرخَّص لآراء القنوات بعد — لذلك لا نعرض إجماعاً ولا صفقة مقترحة بدل أن نخترعهما',
   riskCalcConvInverted: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح قصدتَ {likely}؛ اكتبه كما تراه بمنصّتك.',
@@ -3983,6 +3986,7 @@ const enUS: Dict = {
   journalLoadOlderError: 'Couldn’t load older trades — check your connection and tap “Load older” again. The trades already shown are unchanged.',
   journalRetryBtn: 'Try again',
   journalLoadErrorRetry: 'Couldn’t load your journal — check your connection, then tap “Try again”. Your logged trades haven’t been deleted.',
+  journalRefreshErrorRetry: 'Couldn’t refresh your journal — the list below is the last copy received and may be missing your latest trade or edit. Don’t log it again: check your connection, then tap “Try again”.',
   analystsUnavailable: "No licensed source for analyst forecasts yet — so we show no direction or targets rather than make them up",
   socialUnavailable: "No licensed source for channel views yet — so we show no consensus or suggested trade rather than make them up",
   riskCalcConvInverted: '“{typed}” can’t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
@@ -5272,6 +5276,8 @@ const ku: Dict = {
   // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
   journalRetryBtn: 'دووبارە هەوڵبدەرەوە',
   journalLoadErrorRetry: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە، پاشان «دووبارە هەوڵبدەرەوە» دابگرە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
+  // بحاجة مراجعة ناطق
+  journalRefreshErrorRetry: 'نەکرا تۆمارەکە نوێ بکرێتەوە — لیستەکەی خوارەوە دوایین وەشانی گەیشتووە و لەوانەیە دوایین مامەڵە یان دەستکاریت تێدا نەبێت. دووبارە تۆماری مەکە: پەیوەندییەکەت بپشکنە، پاشان «دووبارە هەوڵبدەرەوە» دابگرە.',
   // بحاجة مراجعة ناطق كردي (الثلاثة أدناه)
   analystsUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ پێشبینییەکانی شیکەرەوان نییە — بۆیە ئاراستە و ئامانج پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   socialUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ بۆچوونی کەناڵەکان نییە — بۆیە کۆدەنگی و مامەڵەی پێشنیارکراو پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
