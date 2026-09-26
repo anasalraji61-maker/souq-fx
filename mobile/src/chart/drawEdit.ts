@@ -199,7 +199,7 @@ export function extendedSegment(
 }
 
 /** ختم الزمن لخانة (`stampAtIndex` مربوطة بالسلسلة والفريم) — يُمرَّر لتبقى الدالة خالصة. */
-export type StampAt = (index: number) => { time: number; ahead?: number; aheadStep?: number; sub?: number } | null;
+export type StampAt = (index: number) => { time: number; ahead?: number; aheadStep?: number; sub?: number; stampStep?: number } | null;
 
 /**
  * تحريك الرسم **كلّه** (سحب جسمه لا مقبضه) كما في TradingView: الطرفان بالإزاحة نفسها بالشموع

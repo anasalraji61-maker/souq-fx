@@ -443,4 +443,33 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(timeAtIndex(h1, winterOpen - 2 * wk, H, undefined, 'EURUSD'), summerOpen);
 }
 
+// نقطة H1 عند 00:00 UTC تطابق ختم شمعة D حرفياً: `stampStep` يرسيها بعد افتتاح الجلسة (22:00 UTC شتاءً) بساعتين
+// لا على بدايتها؛ نقطة اليومي نفسها والنقاط القديمة (بلا الوسم) على البداية كما كانت.
+{
+  const H = 3600;
+  const D = 86400;
+  const mon = Date.UTC(2026, 0, 5) / 1000;
+  const days: { time: number }[] = [];
+  for (let w = 0; w < 4; w++) for (let d = 0; d < 5; d++) days.push({ time: mon + w * 7 * D + d * D });
+  const h1: { time: number }[] = [];
+  for (let t = mon + 7 * D - 2 * H; t < mon + 12 * D - 2 * H; t += H) h1.push({ time: t });
+  const wed = mon + 9 * D;
+  const i0 = h1.findIndex((b) => b.time === wed);
+  const st = stampAtIndex(h1, i0, H, undefined, 'EURUSD')!;
+  assert.deepEqual(st, { time: wed, stampStep: H });
+  assert.equal(stampAtIndex(h1, i0 + 1, H, undefined, 'EURUSD')!.stampStep, undefined);
+  const onD = anchorPoint({ index: 0, price: 1, ...st }, days, D, false, undefined, 'EURUSD').index;
+  assert.ok(Math.abs(onD - (7 + 1 / 12)) < 1e-9, `H1 00:00 on D ${onD}`);
+  assert.equal(anchorPoint({ index: 0, price: 1, time: wed }, days, D, false, undefined, 'EURUSD').index, 7);
+  assert.equal(anchorPoint({ index: 0, price: 1, ...stampAtIndex(days, 7, D, undefined, 'EURUSD')! }, days, D, false, undefined, 'EURUSD').index, 7);
+  // ذهاب وإياب إلى H1 بلا انحراف، وعلى H4 بداية شمعة 00:00 كما هي
+  assert.equal(anchorPoint({ index: 0, price: 1, ...st }, h1, H, false, undefined, 'EURUSD').index, i0);
+  const h4 = h1.filter((b) => b.time % (4 * H) === 0);
+  assert.equal(h4[anchorPoint({ index: 0, price: 1, ...st }, h4, 4 * H, false, undefined, 'EURUSD').index]!.time, wed);
+  // قبل أوّل شمعة D محمَّلة: الكسر نفسه
+  const late = days.slice(10);
+  const pre = anchorPoint({ index: 0, price: 1, ...st }, late, D, false, undefined, 'EURUSD').index;
+  assert.ok(Math.abs(pre - (7 - 10 + 1 / 12)) < 1e-9, `pre ${pre}`);
+}
+
 console.log('drawingAnchors.selftest: PASS');

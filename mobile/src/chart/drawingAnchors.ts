@@ -263,7 +263,7 @@ export function stampAtIndex(
   stepSec: number,
   endTime?: number,
   weekendClosed: WeekendRule = false
-): { time: number; ahead?: number; aheadStep?: number; sub?: number } | null {
+): { time: number; ahead?: number; aheadStep?: number; sub?: number; stampStep?: number } | null {
   const n = bars.length;
   if (n && Number.isFinite(index) && index > n - 1) {
     return { time: seriesEnd(bars, endTime), ahead: index - (n - 1), aheadStep: stepSec };
@@ -275,6 +275,8 @@ export function stampAtIndex(
     const sub = i - runStart(bars, i);
     if (sub > 0) return { time, sub };
   }
+  // H1 00:00 UTC يطابق ختم شمعة D حرفياً — الوسم يفرّقهما (`ChartPoint.stampStep`).
+  if (stepSec > 0 && stepSec < DAY_SEC && time % DAY_SEC === 0) return { time, stampStep: stepSec };
   return { time };
 }
 
@@ -302,7 +304,7 @@ export function anchorPoint(
   // قبل أوّل شمعة (فريم آخر أو نافذة أحدث): `withinBar` لا يرى شمعة بفهرس سالب ⇒ الكسر كان يضيع فينهار ترند
   // H1 (الأربعاء 06:00→18:00) على اليومي إلى خطّ عمودي، ونقطة مختومة عند −7.5 تعود −8 بكل إعادة فهرسة.
   if (base != null && base < 0 && !synthetic && ahead === 0) {
-    const past = pastIndex(bars, p.time, stepSec, endTime, weekendClosed);
+    const past = pastIndex(bars, p.time, stepSec, endTime, weekendClosed, finer(p, stepSec));
     return past === p.index ? p : { ...p, index: past };
   }
   const inBar =
@@ -312,7 +314,7 @@ export function anchorPoint(
         ? ahead > 0
           ? 0
           : brickOffset(bars, base, p)
-        : withinBar(bars, base, from, stepSec, weekendClosed);
+        : withinBar(bars, base, from, stepSec, weekendClosed, finer(p, stepSec));
   const index = base == null ? null : base + inBar + aheadSteps(ahead, aheadStep, stepSec, weekendClosed);
   return index == null || index === p.index ? p : { ...p, index };
 }
@@ -341,7 +343,8 @@ function pastIndex(
   time: number,
   stepSec: number,
   endTime?: number,
-  weekendClosed: WeekendRule = false
+  weekendClosed: WeekendRule = false,
+  fromFiner = false
 ): number {
   const first = barTime(bars[0]!);
   const wk = weekPattern(bars, stepSec);
@@ -349,11 +352,16 @@ function pastIndex(
     const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
     const shifted = weekShift(time, k, stepSec, weekendClosed);
     const i = indexAtTime(bars, shifted, stepSec, endTime)!;
-    return i + withinBar(bars, i, shifted, stepSec, weekendClosed) - k * wk.bars;
+    return i + withinBar(bars, i, shifted, stepSec, weekendClosed, fromFiner) - k * wk.bars;
   }
   const ts = tradingStep(bars, weekendClosed);
   if (ts != null) return -forexTradingSecBetween(time, first, weekSymbol(weekendClosed)) / ts;
   return (time - first) / pastStep(bars, stepSec);
+}
+
+/** نقطة خُتمت على فريم أدقّ من المعروض (`ChartPoint.stampStep`) — لا تُعامَل كختم شمعته. */
+function finer(p: ChartPoint, stepSec: number): boolean {
+  return p.stampStep != null && Number.isFinite(p.stampStep) && p.stampStep < stepSec;
 }
 
 /**
@@ -380,12 +388,14 @@ function withinBar(
   i: number,
   time: number,
   stepSec: number,
-  weekendClosed: WeekendRule = false
+  weekendClosed: WeekendRule = false,
+  fromFiner = false
 ): number {
   const bar = bars[i];
   if (!bar || !(stepSec > 0)) return 0;
-  // ختم الشمعة نفسه (نقطة رُسمت على هذا الفريم) بدايتُها وإن سبقه افتتاح الجلسة.
-  if (time === bar.time) return 0;
+  // ختم الشمعة نفسه (نقطة رُسمت على هذا الفريم) بدايتُها وإن سبقه افتتاح الجلسة — إلا نقطة H1 00:00 (`fromFiner`):
+  // هي داخل شمعة D بعد افتتاحها (21:00/22:00 UTC) بساعتين/ثلاث، وكانت تُرسى على بدايتها.
+  if (time === bar.time && !fromFiner) return 0;
   const frac = sessionFrac(barOpen(bar.time, stepSec, weekendClosed), time, stepSec, weekendClosed);
   if (frac >= 1 && i >= 0 && i + 1 < bars.length) {
     // مساء 17:00–24:00 نيويورك يقع بعد ختم «اليوم» وهو من جلسة الشمعة التالية (المختومة بتاريخ إغلاقها).
