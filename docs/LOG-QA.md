@@ -1032,3 +1032,13 @@ ui58a ← ui `0176476` (`CommissionPlanPanel.tsx:276`). سجلات chart/tools/l
 **المراجعة (b — نصوص ثابتة، كل `.tsx`/`.ts`):** العربي خارج `locales.ts` = تعليقات، أنماط تحليل مدخلات (`parseDecimal`/`positionSize`)، أو صفوف قائمة (launch52، QA27)؛ `ATR_STOP_LABEL` اسم مؤشر مقصود. **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
 **إضافة (تعارض أثناء الدفع، cb975eb):** أُخذت COORDINATION من الأعلى وأُعيدت تعديلاتي؛ أخضر 0. جديد مُتحقَّق: **launch156a → ui** (`AccountScreen.tsx:173-182` بلا فرع 401؛ `accPasswordSessionEnded` بلا قارئ). diff الواجهة (`ac3a381`، `94ec997`، `94bf338`) يزيل حدود/نصّ تأكيد ويضيف `a11yBusy` ⇒ 0/12 باقٍ.
+
+## 2026-09-26 — الدورة 93
+**البناء:** أخضر 0 (على e2e7286) — لا إصلاح لازم. **Selftests:** 114/114 ناجح (`npx tsx`، -P4).
+**التحقّق بالكود:** launch156a ما زال (`AccountScreen.tsx` بلا `401` ولا قارئ لـ`accPasswordSessionEnded`) → ui؛ tools108a جديد مُتحقَّق (`tradePlan.ts:938`، لا `journalStatLossStreak` بـ`locales.ts`) → launch.
+بنود chart المعلّقة بسجلّه (قصّ الترند بالحافّة، انزلاق القياس، تراجع بقاعدة عطلة الرمز) أُنجزت بـ`905e131`، `bf108fa`/`e2e7286`، `695b733`. backend r60 (W من D الاثنين–الجمعة) مُضاف لصفّ backend-r1 بقرارات أنس.
+**قائمة قبول DESIGN-PRO (الثالث عشر):** 0/12 فشل (diff منذ cb975eb: 7 ملفّات، لا تغيير أنماط).
+**المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 6 بلا label، كلها غير تفاعلية أو بشاشة غير مركّبة (launch52). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
+**إضافة (تعارض أثناء الدفع، 988559f):** وصلت 12 كوميتاً ⇒ أُخذت COORDINATION من الأعلى وأُعيدت تعديلاتي. أُغلقت launch156a ← ui `7d949f4` (`AccountScreen.tsx:178`)؛
+tools108a: المفتاحان ← launch `346b2a3` ⇒ الربط → tools. `fontWeight '900'` لرموز P&F (سؤال ui63): بيانات مرسومة ⇒ مقبول. 0/12 باقٍ.
