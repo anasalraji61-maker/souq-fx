@@ -2114,9 +2114,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    // DESIGN-PRO 5.5/§1: فاصل واحد — الخطّ السفلي وحده. كان معه `bgElevated` (لون القوائم المنبثقة) فيعلو الشريط على الشارت.
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
-    backgroundColor: colors.bgElevated,
     zIndex: 80,
     overflow: 'visible',
   },
@@ -2309,9 +2309,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+    // DESIGN-PRO 5.5: كالشريط العلوي — خطّ سفلي فقط، بلا خلفية `bgElevated`.
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
-    backgroundColor: colors.bgElevated,
     zIndex: 70,
     overflow: 'visible',
   },
