@@ -227,7 +227,9 @@ export function headerChangePct(
     px > 0
   ) {
     const pct = ((px - prevClose) / prevClose) * 100;
-    if (Math.abs(pct) <= 25) return pct;
+    // مرفوض (>25%: مرجع أداة أخرى أو يوم استثنائي) ⇒ NaN فيطبع الرأس «—». الرجوع إلى نسبة أول شمعة محمّلة
+    // كان يطبع رقماً بتعريف آخر تحت اسم «اليوم» (prevClose 1.0، السعر 1.3، أول شمعة 0.5 ⇒ «+160%») — tools103a.
+    return Math.abs(pct) <= 25 ? pct : NaN;
   }
   return liveChangePct(series, price);
 }

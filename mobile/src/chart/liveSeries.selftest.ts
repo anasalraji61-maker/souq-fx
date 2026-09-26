@@ -180,8 +180,11 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.ok(Math.abs(headerChangePct(s, null, 1.17) - ((1.1702 - 1.17) / 1.17) * 100) < 1e-9);
   // لا مرجع ⇒ من أول شمعة (السلوك السابق)
   assert.ok(Math.abs(headerChangePct(s, 1.1716, undefined) - 1) < 1e-9);
-  // مرجع لا يعقل (>25%) أو شموع تجريبية ⇒ السلوك السابق
-  assert.ok(Math.abs(headerChangePct(s, 1.1716, 150) - 1) < 1e-9);
+  // مرجع لا يعقل (>25%) ⇒ لا نسبة («—»)، لا نسبة أول شمعة بتعريف آخر (tools103a)
+  assert.ok(Number.isNaN(headerChangePct(s, 1.1716, 150)));
+  const pumped = { ...s, candles: s.candles.map((c, i) => (i === 0 ? { ...c, close: 0.5 } : c)) };
+  assert.ok(Number.isNaN(headerChangePct(pumped, 1.3, 1.0)), 'no +160% from first loaded bar');
+  // شموع تجريبية ⇒ السلوك السابق
   const demo = { ...s, data_source: { kind: 'demo' as const, as_of: now, channel: null } };
   assert.ok(Math.abs(headerChangePct(demo, 1.1716, 1.17) - 1) < 1e-9);
 }
