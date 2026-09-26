@@ -506,11 +506,12 @@ export function computeRelativeVolatilityIndex(
   const stdev = computeStdDev(closes, length);
   const upRaw: (number | null)[] = new Array(n).fill(null);
   const downRaw: (number | null)[] = new Array(n).fill(null);
+  // قبل اكتمال stdev يبقى الجانب «الصفري» صفراً حقيقياً كـPine (`change <= 0 ? 0 : stdev`) ⇒ أحد المتوسّطين يبدأ
+  // مبكراً. كان الجانبان يُتركان فارغين معاً ⇒ أوّل ~30 قيمة تنحرف حتى 12 نقطة عن TV.
   for (let i = 1; i < n; i++) {
-    if (stdev[i] == null) continue;
     const upBar = closes[i] > closes[i - 1];
-    upRaw[i] = upBar ? stdev[i]! : 0;
-    downRaw[i] = upBar ? 0 : stdev[i]!;
+    upRaw[i] = upBar ? stdev[i] : 0;
+    downRaw[i] = upBar ? 0 : stdev[i];
   }
   const upEma = ema(upRaw, smooth);
   const downEma = ema(downRaw, smooth);

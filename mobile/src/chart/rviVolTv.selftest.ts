@@ -30,6 +30,8 @@ const emaRef = (src: (number | null)[]) => {
   const buf: number[] = [];
   for (const v of src) {
     if (v == null) {
+      // ta.sma بنافذة فيها na ⇒ na: البذرة تحتاج S قيمة متتالية
+      if (prev == null) buf.length = 0;
       out.push(null);
       continue;
     }
@@ -45,8 +47,9 @@ const emaRef = (src: (number | null)[]) => {
   }
   return out;
 };
-const up = emaRef(closes.map((c, i) => (i === 0 || sd[i] == null ? null : c - closes[i - 1] <= 0 ? 0 : sd[i])));
-const dn = emaRef(closes.map((c, i) => (i === 0 || sd[i] == null ? null : c - closes[i - 1] > 0 ? 0 : sd[i])));
+// Pine حرفياً: `change <= 0 ? 0 : stdev` — الصفر حقيقي حتى قبل اكتمال stdev
+const up = emaRef(closes.map((c, i) => (i === 0 ? null : c - closes[i - 1] <= 0 ? 0 : sd[i])));
+const dn = emaRef(closes.map((c, i) => (i === 0 ? null : c - closes[i - 1] > 0 ? 0 : sd[i])));
 
 const got = computeRelativeVolatilityIndex(closes);
 let checked = 0;
@@ -73,5 +76,27 @@ assert.ok(tail[tail.length - 1]! < 100, 'flat closes after a rise must pull RVI 
 // سلسلة مسطّحة تماماً من البداية: الانحراف 0 بالضبط ⇒ محايد 50 (كان بقايا 2e-16 «هابطة» ⇒ 0)
 const flat = computeRelativeVolatilityIndex(new Array(60).fill(1.08523));
 assert.equal(flat[flat.length - 1], 50, 'flat series is neutral, not 0');
+
+// تسع شموع هابطة أولاً: الجانب الصاعد صفر حقيقي منذ الشمعة 1 فمتوسّطه يُبذر قبل اكتمال stdev (كـPine).
+// كان الجانبان فارغين حتى الشمعة 9 ⇒ الشمعة 22 ‏63.4 بدل ~51 بـTV.
+{
+  const c2: number[] = [1.2];
+  for (let i = 1; i <= 8; i++) c2.push(1.2 - i * 0.001);
+  for (let i = 9; i < 80; i++) c2.push(c2[i - 1] + (rnd() - 0.5) * 0.004);
+  const sd2 = c2.map((_, i) => {
+    if (i < L - 1) return null;
+    const w = c2.slice(i - L + 1, i + 1);
+    const m = w.reduce((a, b) => a + b, 0) / L;
+    return Math.sqrt(w.reduce((a, b) => a + (b - m) ** 2, 0) / L);
+  });
+  const u2 = emaRef(c2.map((c, i) => (i === 0 ? null : c - c2[i - 1] <= 0 ? 0 : sd2[i])));
+  const d2 = emaRef(c2.map((c, i) => (i === 0 ? null : c - c2[i - 1] > 0 ? 0 : sd2[i])));
+  const g2 = computeRelativeVolatilityIndex(c2);
+  for (let i = 0; i < c2.length; i++) {
+    const ref = u2[i] == null || d2[i] == null ? null : (100 * u2[i]!) / (u2[i]! + d2[i]!);
+    if (ref == null) assert.equal(g2[i], null, `falling-start bar ${i} warm-up`);
+    else assert.ok(Math.abs(g2[i]! - ref) < 1e-9, `falling-start bar ${i}: ${g2[i]} vs ${ref}`);
+  }
+}
 
 console.log(`rviVolTv selftest PASS (${checked} bars vs Pine reference)`);
