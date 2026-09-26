@@ -1235,7 +1235,8 @@ def check_alerts(
             # (`/api/indicator-alerts/check`) وكان شقيقه السعريّ خارجه. العميل الحالي يبني
             # قائمته من `alerts` ويستعمل `triggered` للوميض والإشعار وحدهما فلا يظهر الأثر
             # اليوم — **يُقال كما هو**: هذا إغلاق فخّ لا إصلاح عطب ظاهر.
-            triggered.append({**a, "triggered": True, "current": q})
+            # `current_at` = وقت `q` لدى المزوّد (None إن لم يعطِ وقتاً): قد يكون إغلاق 1m عمره دقائق أو كاشاً
+            triggered.append({**a, "triggered": True, "current": q, "current_at": q_at})
     # الوسم أعلاه يجعل الـworker يتخطّاه ⇒ دفع إشعار بقية أجهزة المالك من هنا (لا لهذا الجهاز). صفوف
     # القائمة العامة بلا `user_id`/`owner_key` ⇒ المالك = المستدعي (القائمة قائمته وحده).
     if triggered:

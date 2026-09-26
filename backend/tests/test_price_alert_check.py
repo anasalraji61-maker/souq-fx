@@ -242,3 +242,13 @@ def test_alert_fired_by_one_devices_check_is_pushed_to_the_owners_other_devices(
     assert sent == [(["ExponentPushToken[phone]"], sent[0][1])] and "EURUSD" in sent[0][1]
     alert_worker._check_once()  # والـworker لا يكرّره
     assert len(sent) == 1
+
+
+def test_fired_alert_carries_the_time_of_its_current_price(client, monkeypatch):
+    """`current` قد يكون إغلاق 1m عمره دقائق: كان بلا وقت فيُقرأ سعراً لحظياً."""
+    import time
+    at = float(int(time.time()) + 60)  # بعد دقيقة التسليح وإلا يُرفض كسعر أقدم من التنبيه
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], at))
+    aid = _create(client, 1.1000)
+    fired = [a for a in client.post("/api/alerts/check", headers=_DEVICE).json()["triggered"] if a["id"] == aid]
+    assert fired[0]["current"] == 1.2000 and fired[0]["current_at"] == at
