@@ -12,7 +12,8 @@ export const colors = {
   accent: '#2DD4BF',
   accentSoft: 'rgba(45, 212, 191, 0.14)',
   bull: '#22C55E',
-  bear: '#F43F5E',
+  /** DESIGN-PRO §1 `down` — اتجاه السعر فقط (كان #F43F5E وردياً، خارج اللوحة). */
+  bear: '#EF4444',
   warn: '#F59E0B',
   highImpact: '#FB7185',
   dxy: '#38BDF8',
@@ -89,7 +90,7 @@ export const colors = {
   /** خلفية حمراء شفافة خفيفة (15%) لتمييز حالة "بيع/خسارة" مختارة — كانت مكرَّرة مرتين
    * بنفس الملف (`no`/`dirSellOn` بـVotePanel) لنفس الاستخدام بالضبط؛ وُحِّدت هنا بلا أي
    * تغيير بصري. */
-  bearSoft: 'rgba(244,63,94,0.15)',
+  bearSoft: 'rgba(239,68,68,0.15)',
   /** DESIGN-PRO §4 — تعبئة الاختيار المحايدة (صفّ/زرّ مختار): الاختيار لا يُقال باللون وحده،
    * فتقترن هذه التعبئة بعلامة `selectedMarkerWidth` بلون التأكيد لا بحدّ ونصّ ملوّنين. */
   selectedFill: 'rgba(255,255,255,0.06)',
@@ -128,7 +129,7 @@ export const numeric = {
 export const motion = {
   flash: 180,
   flashUp: 'rgba(34,197,94,0.12)',
-  flashDown: 'rgba(244,63,94,0.12)',
+  flashDown: 'rgba(239,68,68,0.12)',
 };
 
 /**
