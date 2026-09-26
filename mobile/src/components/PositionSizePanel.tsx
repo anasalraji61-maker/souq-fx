@@ -1963,10 +1963,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           ) : null}
           {manualSlip != null ? (
             <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-              {t.journalLevelDecimalSlip
-                .split('{field}').join(conv.symbol)
-                .split('{value}').join(manualConv.trim())
-                .split('{price}').join(formatPrice(manualSlip, conv.symbol))}
+              {/* نصّ الحاسبة (launch187a) لا نصّ الدفتر: ذاك `{field}` فيه اسم خانة فلم يذكر أنه سعر التحويل */}
+              {t.riskCalcConvDecimalSlip
+                .split('{pair}').join(conv.symbol)
+                .split('{typed}').join(manualConv.trim())
+                .split('{likely}').join(formatPrice(manualSlip, conv.symbol))}
             </Text>
           ) : null}
         </>
