@@ -455,7 +455,7 @@ export function ChartFrame({
         ) : (
           <View style={[styles.priceRow, phone && styles.priceRowPhone, switching && styles.stale]}>
             <Text
-              style={styles.price}
+              style={[styles.price, phone && styles.pricePhone]}
               accessibilityLabel={
                 replayPrice != null
                   ? `${formatPrice(headerPrice, series.symbol, series.last)} — ${t.cfReplayPriceA11y}`
@@ -665,7 +665,10 @@ const styles = StyleSheet.create({
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
   priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 4, rowGap: 4 },
-  price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
+  // DESIGN-PRO §2: سعر رأس الشارت 15px. الهاتف يبقى 13 — الإطار بعرض 48% (~135pt) وسطر السعر فيه السبريد والنسبة وزرّ
+  // ملء الشاشة؛ 15 هناك يدفع النسبة لسطر ثانٍ فيقصر اللوح.
+  price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 15 },
+  pricePhone: { fontSize: 13 },
   // DESIGN-PRO §1/§5.3: الأخضر للاتجاه وحده، و«مباشر» حالة طبيعية تخفت؛ ما تدهور (سعر أخير/تجريبي) أعلى صوتاً.
   liveTag: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   liveTagMuted: { color: colors.textMuted, fontWeight: '500' },
