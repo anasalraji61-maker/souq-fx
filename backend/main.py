@@ -1548,10 +1548,14 @@ def trades_list(
     user: dict | None = Depends(_auth_user),
     key: str | None = Depends(_install_key),
 ):
-    """صفحة من الدفتر (الأحدث أولاً) + `total` لكل الصفقات؛ `stats` على كل المغلقة لا الصفحة."""
+    """صفحة من الدفتر (المفتوحة أولاً ثم الأحدث) + `total` لكل الصفقات؛ `stats` على كل المغلقة لا الصفحة.
+    `open_first` يعلن الترتيب؛ `open_total` عدد المفتوحة كلها ⇒ الصفحة الأولى تحمل كل المفتوحة
+    متى `open_total <= limit` (وإلا فمجموع خطرها من الصفحة جزئي)."""
     uid = user["user_id"] if user else None
     return {
         "trades": db.list_trades(uid, owner_key=key, limit=limit, offset=offset),
+        "open_first": True,
+        "open_total": db.count_trades(uid, owner_key=key, status="open"),
         "total": db.count_trades(uid, owner_key=key),
         "limit": limit,
         "offset": offset,

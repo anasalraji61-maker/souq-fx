@@ -499,6 +499,37 @@ def test_older_trades_are_reachable_by_paging(client):
     assert first["total"] == rest["total"] == 15
 
 
+def test_old_open_trade_is_on_the_first_page_before_newer_closed_ones(client):
+    """tools103b: صفقة مفتوحة منذ 2025 ثم 250 مغلقة أحدث ⇒ بترتيب «الأحدث» وحده لا تصل الصفحة
+    الأولى (200) فيغيب خطرها عن مجموع المخاطر المفتوحة بالتطبيق."""
+    key = _DEV1["X-Install-Id"]
+    with db._conn() as c:
+        c.execute(
+            "INSERT INTO trades(id,user_id,owner_key,symbol,side,entry,exit,size,pnl,note,opened_at,status) "
+            "VALUES('old-open',NULL,?,'EURUSD','buy',1.1,NULL,0.5,NULL,'','2025-01-01 00:00','open')",
+            (key,),
+        )
+        c.executemany(
+            "INSERT INTO trades(id,user_id,owner_key,symbol,side,entry,exit,size,pnl,note,opened_at,status) "
+            "VALUES(?,NULL,?,'EURUSD','buy',1.1,1.11,0.5,0.909,'',?,'closed')",
+            [(f"c{i:03d}", key, f"2026-01-01 {i // 60:02d}:{i % 60:02d}") for i in range(250)],
+        )
+    body = client.get("/api/trades", headers=_DEV1).json()
+    assert body["trades"][0]["id"] == "old-open"
+    assert body["open_first"] is True and body["open_total"] == 1 and body["total"] == 251
+    closed = [t["opened_at"] for t in body["trades"][1:]]
+    assert closed == sorted(closed, reverse=True), "المغلقة بعدها الأحدث أولاً كما كانت"
+    rest = client.get("/api/trades?offset=200", headers=_DEV1).json()["trades"]
+    assert "old-open" not in {t["id"] for t in rest} and len(rest) == 51
+
+
+def test_open_total_counts_only_the_callers_open_trades(client):
+    _open_trade(client)
+    _open_trade(client, exit=1.105)
+    _open_trade(client, headers=_DEV2)
+    assert client.get("/api/trades", headers=_DEV1).json()["open_total"] == 1
+
+
 @pytest.mark.parametrize("q", ["limit=0", "limit=501", "offset=-1"])
 def test_page_bounds_are_enforced(client, q):
     assert client.get(f"/api/trades?{q}", headers=_DEV1).status_code == 422

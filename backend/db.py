@@ -1998,13 +1998,15 @@ def list_trades(
 ) -> list[dict]:
     """Journal visible to the caller — same ownership rule as alerts (`_owner_clause`): an
     anonymous device used to see (and close/delete) every anonymous trader's journal.
-    صفحة واحدة (الأحدث أولاً)؛ `count_trades` يعطي الإجمالي ليعرف العميل أن هناك المزيد."""
+    صفحة واحدة: **المفتوحة أولاً** ثم الأحدث (tools103b) — بترتيب «الأحدث» وحده كانت صفقة مفتوحة
+    أقدم من أحدث 200 لا تصل التطبيق فيغيب خطرها عن مجموع المخاطر المفتوحة وتراكم العملة.
+    `count_trades` يعطي الإجمالي ليعرف العميل أن هناك المزيد."""
     sql, args = _owner_clause(user_id, owner_key)
     limit = max(1, min(int(limit), TRADES_PAGE_MAX))
     offset = max(0, int(offset))
     with _conn() as c:
         rows = c.execute(
-            f"SELECT * FROM trades WHERE {sql} ORDER BY opened_at DESC, id DESC LIMIT ? OFFSET ?",
+            f"SELECT * FROM trades WHERE {sql} ORDER BY (status='open') DESC, opened_at DESC, id DESC LIMIT ? OFFSET ?",
             (*args, limit, offset),
         ).fetchall()
     out = [dict(r) for r in rows]
@@ -2013,8 +2015,12 @@ def list_trades(
     return out
 
 
-def count_trades(user_id: int | None = None, owner_key: str | None = None) -> int:
+def count_trades(
+    user_id: int | None = None, owner_key: str | None = None, *, status: str | None = None
+) -> int:
     sql, args = _owner_clause(user_id, owner_key)
+    if status is not None:
+        sql, args = f"({sql}) AND status=?", (*args, status)
     with _conn() as c:
         return int(c.execute(f"SELECT COUNT(*) FROM trades WHERE {sql}", args).fetchone()[0])
 
