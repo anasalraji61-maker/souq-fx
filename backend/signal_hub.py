@@ -10,6 +10,7 @@ import math
 from typing import Any
 
 import indicators as ind_engine
+from twelve_data import _is_iso_pair, canonical_symbol
 
 # لا مصدر حقيقي للمحلّلين ولا لقنوات التواصل. كان هنا فهرس بأسماء بنوك حقيقية (HSBC، Citi، UBS،
 # Nomura، Commerzbank، ING) و14 «قناة» (منها اسم منافس «TradingCentral-like»)، واتجاه كل منها
@@ -189,13 +190,42 @@ def price_decimals(price: float | None, symbol: str | None = None) -> int:
 
     تحت 0.1 تزيد المنازل كـ`level_round` (6 أرقام معنوية، حتى 12 يقبلها التطبيق): كان السقف 5 ⇒ SHIB
     ‏0.0000123 يُرسَل مستوياتٍ بعشر منازل مع `price_decimals: 5` فيعرض التطبيق الدخول والوقف والهدف كلّها «0.00001»."""
+    fixed = _instrument_decimals(symbol)
+    if fixed is not None:
+        return fixed
     if price is None or not math.isfinite(price) or price == 0:
         return 5
     mag = int(math.floor(math.log10(abs(price))))
     dp = max(0, min(12 if mag < -1 else 5, 5 - mag))
+    # منزلتان حدّاً أدنى فوق 1 (كالتطبيق): BTC ‏100001.2 كان 0 منازل ⇒ «الدخول» 100001 لا آخر إغلاق حقيقي
+    if abs(price) >= 1:
+        dp = max(dp, 2)
     # أزواج الين تُسعَّر بثلاث منازل مهما كان السعر: AUDJPY ‏97 كان 4 منازل (6 أرقام معنوية) ⇒ هدف «99.9836» دون
     # تسعيرة المزوّد 0.001، والزوج نفسه يغيّر دقّته حين يعبر 100
     return min(dp, 3) if _jpy_quoted(symbol) else dp
+
+
+def _instrument_decimals(symbol: str | None) -> int | None:
+    """منازل الأداة الثابتة كما يعرضها التطبيق (`symbolPriceDecimals`) لا حسب حجم الرقم: النفط 3 والفضة 3
+    والذهب 2 وأزواج العملات 5 (الين والفورنت 3). كان التقدير من الحجم يعطي النفط ‏70.12 أربع منازل ثم ثلاثاً
+    فوق 100$، وUSDSEK ‏9.9/10.1 خمساً ثم أربعاً ⇒ مستويات أدقّ من تسعيرة المزوّد وتتغيّر دقّتها مع السعر.
+    None = أداة غير معروفة (عملة رقمية، سهم، مؤشّر) ⇒ من حجم السعر."""
+    if not symbol:
+        return None
+    s = canonical_symbol(symbol)
+    if s in ("USOIL", "UKOIL"):
+        return 3
+    if len(s) != 6 or not _is_iso_pair(s):
+        return None
+    base, quote = s[:3], s[3:]
+    if base in ("XAU", "XAG"):
+        return {"XAU": 2, "XAG": 3}[base] if quote == "USD" else None
+    if base in _METALS or quote in _METALS:
+        return None
+    return 3 if quote in ("JPY", "HUF") else 5
+
+
+_METALS = frozenset({"XAU", "XAG", "XPT", "XPD"})
 
 
 def _jpy_quoted(symbol: str | None) -> bool:

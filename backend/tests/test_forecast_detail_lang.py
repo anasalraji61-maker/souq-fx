@@ -21,7 +21,7 @@ def _candles(base: float, n: int = 80, step: float = 0.0004):
 ARABIC = re.compile(r"[؀-ۿ]")
 
 
-@pytest.mark.parametrize("price,dp", [(1.0842, 5), (0.6512, 5), (157.42, 3), (2650.0, 2), (61000.0, 1)])
+@pytest.mark.parametrize("price,dp", [(1.0842, 5), (0.6512, 5), (157.42, 3), (2650.0, 2), (61000.0, 2)])
 def test_price_decimals_follow_market_convention(price, dp):
     assert signal_hub.price_decimals(price) == dp
 

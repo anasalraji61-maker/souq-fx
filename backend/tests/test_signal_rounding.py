@@ -183,7 +183,7 @@ def test_jpy_pairs_keep_three_decimals_below_100():
     # غير الين كما كان
     assert signal_hub.price_decimals(97.123) == 4
     assert signal_hub.price_decimals(1.1, "EURUSD") == 5
-    assert signal_hub.price_decimals(30.12, "XAGUSD") == 4
+    assert signal_hub.price_decimals(30.12, "XAGUSD") == 3  # منازل الأداة (run 102)
 
 
 def test_forecast_levels_for_jpy_cross_under_100_have_three_decimals():
