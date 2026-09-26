@@ -1052,8 +1052,10 @@ export function TerminalScreen() {
   const headTick = (() => {
     const tk = liveTicks[symbol];
     if (!tk) return null;
-    // غير مؤكَّد (`unknown` من خادمٍ أقدم) يُقبل كذلك حين السلسلة نفسها غير مؤكَّدة (الرأس موسوم بمصدرها)
-    return isVerifiedTickKind(tk.source.kind) || !isVerifiedTickKind(normalizeProvenance(series?.data_source).kind)
+    // غير مؤكَّد (`unknown` من خادمٍ أقدم) يُقبل كذلك حين السلسلة نفسها غير مؤكَّدة (الرأس موسوم بمصدرها). **لا سلسلة
+    // بعد** (رمز جديد يُحمَّل) ليست «سلسلة تجريبية»: `normalizeProvenance(undefined)` غير مؤكَّد فكان التيك العشوائي يُعرض
+    // «السعر» بجانب شارت يُحمَّل ⇒ «—» حتى تصل السلسلة
+    return isVerifiedTickKind(tk.source.kind) || (series != null && !isVerifiedTickKind(normalizeProvenance(series.data_source).kind))
       ? tk
       : null;
   })();
