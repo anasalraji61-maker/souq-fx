@@ -698,9 +698,10 @@ def test_deleting_by_the_local_id_removes_every_server_copy_of_it(client):
     """الحفظ القديم كان يُنشئ صفاً بمعرّف خادم **جديد** بكل حفظ لنفس التخطيط المحلي،
     فتتراكم نسخ يراها المتداول تخطيطات مستقلّة. الحذف بالمعرّف المحلي يزيلها كلها."""
     token = _register(client, "laydup")
-    for _ in range(3):
-        _layout(client, token, "dup", "loc-9")
-    assert len(client.get("/api/layouts", headers=_auth(token)).json()["layouts"]) == 3
+    for i in range(3):
+        _layout(client, token, f"dup{i}", "loc-9")
+    # run 99: القائمة تُعيد أحدث نسخة وحدها (التطبيق يأخذ أول تطابق لـ`payload.id`)
+    assert [x["name"] for x in client.get("/api/layouts", headers=_auth(token)).json()["layouts"]] == ["dup2"]
     assert client.delete("/api/layouts/loc-9", headers=_auth(token)).json()["deleted"] == 3
     assert client.get("/api/layouts", headers=_auth(token)).json()["layouts"] == []
 
@@ -985,3 +986,33 @@ def test_anonymous_push_register_without_install_id_is_refused(client):
     r = client.post("/api/push/register", json={"token": "ExponentPushToken[snoop1]"})
     assert r.status_code == 400
     assert "ExponentPushToken[snoop1]" not in db.push_tokens_for(None, None)
+
+
+def test_resaving_a_local_layout_id_held_by_another_owner_updates_one_copy(client):
+    """run 99: المعرّف المحلي عند مالك آخر (حساب المتداول نفسه قبل الخروج) ⇒ كل حفظ لاحق كان صفاً جديداً،
+    والجهاز الجديد يستعيد أقدم نسخة. الآن نسخة المستدعي تُحدَّث."""
+    bob = _register(client, "laybob")
+    client.post("/api/layouts", json={"id": "l1700", "name": "v0", "payload": {"id": "l1700"}}, headers=_auth(bob))
+    ids = {
+        client.post("/api/layouts", json={"id": "l1700", "name": f"v{v}", "payload": {"id": "l1700"}},
+                    headers=_DEV1).json()["layout"]["id"]
+        for v in (1, 2)
+    }
+    assert len(ids) == 1 and "l1700" not in ids
+    rows = client.get("/api/layouts", headers=_DEV1).json()["layouts"]
+    assert [x["name"] for x in rows] == ["v2"]
+    # بوب ما زال يرى نسخته هو، لم تُمسّ
+    assert [x["name"] for x in client.get("/api/layouts", headers=_auth(bob)).json()["layouts"]] == ["v0"]
+
+
+def test_old_duplicate_copies_are_collapsed_to_the_newest_on_list_and_save(client):
+    import db
+    tok = _register(client, "laycopies")
+    uid = _me(client, tok)
+    for i, lid in enumerate(("layout_a", "layout_b")):
+        db.save_layout(lid, f"old{i}", {"id": "loc-7"}, user_id=uid)
+    assert [x["name"] for x in client.get("/api/layouts", headers=_auth(tok)).json()["layouts"]] == ["old1"]
+    client.post("/api/layouts", json={"id": "loc-7", "name": "new", "payload": {"id": "loc-7"}}, headers=_auth(tok))
+    rows = client.get("/api/layouts", headers=_auth(tok)).json()["layouts"]
+    assert [x["name"] for x in rows] == ["new"]
+    assert client.delete("/api/layouts/loc-7", headers=_auth(tok)).json()["deleted"] == 1

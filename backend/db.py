@@ -1789,6 +1789,7 @@ def save_layout(
     (`_owner_clause` — حسابه أو تخطيطات جهازه المجهولة)؛ وإلا يُخصَّص معرّف جديد (نسخته الخاصة)،
     فلا فقدان بيانات ولا اختطاف ملكية — ولا يكتب مجهول فوق تخطيط مجهول آخر بعد الآن.
     """
+    local_id = layout_id
     with _conn() as c:
         _lock_owner(c, user_id)
         if layout_id:
@@ -1799,9 +1800,24 @@ def save_layout(
                     f"SELECT 1 FROM layouts WHERE id=? AND {sql}", (layout_id, *args)
                 ).fetchone()
                 if mine is None:
-                    layout_id = None
+                    # المعرّف المحلي (`l<ms>`) عند مالك آخر (الحساب قبل الخروج، جهاز آخر): كان كل حفظ لاحق
+                    # يُنشئ صفاً جديداً (التطبيق لا يحفظ المعرّف المُعاد) ⇒ نسخ تتراكم، والجهاز الجديد يستعيد
+                    # **أقدمها**. الآن نسخة المستدعي السابقة لنفس المعرّف المحلي تُكتب فوقها.
+                    own = c.execute(
+                        f"SELECT id FROM layouts WHERE json_extract(payload, '$.id')=? AND {sql} "
+                        "ORDER BY updated_at DESC LIMIT 1",
+                        (layout_id, *args),
+                    ).fetchone()
+                    layout_id = own["id"] if own is not None else None
         if not layout_id:
             layout_id = _new_layout_id(c)
+        if local_id:
+            # نسخ قديمة للتخطيط المحلي نفسه عند المستدعي (من الحفظ القديم، أو ضمّ صفوف الجهاز للحساب) تُزال
+            sql, args = _owner_clause(user_id, owner_key)
+            c.execute(
+                f"DELETE FROM layouts WHERE id<>? AND json_extract(payload, '$.id')=? AND {sql}",
+                (layout_id, local_id, *args),
+            )
         c.execute(
             """INSERT OR REPLACE INTO layouts(id,user_id,owner_key,name,payload,updated_at)
                VALUES(?,?,?,?,?,?)""",
@@ -1832,7 +1848,18 @@ def list_layouts(user_id: int | None = None, owner_key: str | None = None) -> li
     out = []
     for r in rows:
         out.append({"id": r["id"], "name": r["name"], "payload": json.loads(r["payload"])})
-    return out
+    # نسخ متعدّدة لنفس التخطيط المحلي (`payload.id`) من الحفظ القديم: التطبيق يأخذ **أولها** (الأقدم) ⇒
+    # كان يستعيد نسخة قديمة. تبقى الأحدث وحدها بموضعها.
+    newest: dict = {}
+    for i, item in enumerate(out):
+        pid = item["payload"].get("id") if isinstance(item["payload"], dict) else None
+        if isinstance(pid, str):
+            newest[pid] = i
+    return [
+        item for i, item in enumerate(out)
+        if not (isinstance(item["payload"], dict) and isinstance(item["payload"].get("id"), str)
+                and newest[item["payload"]["id"]] != i)
+    ]
 
 
 def get_watchlist(user_id: int | None = None, owner_key: str | None = None) -> list[str]:
