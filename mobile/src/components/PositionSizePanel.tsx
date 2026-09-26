@@ -116,6 +116,7 @@ import {
   levelLooksLikePipsText,
   entryLooksLikeDecimalSlip,
   entryDecimalSlipText,
+  levelLooksLikeDecimalSlip,
   type TradeSide,
   QUICK_SYMBOLS,
   minStopPips,
@@ -1128,11 +1129,34 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         },
       };
     }
+    /**
+     * **وقف/هدف بلا فاصلة** (tools104a، `levelLooksLikeDecimalSlip`): شراء EURUSD على 1.0850 بهدف «10900» كان «R:R 1:9800» و«سجّل
+     * الخطة» تحفظه، ووقف «10880» لوتاً 0.00 بلا سبب ويُحفظ وقفاً عند 10880. النقرة تكتب السعر المقصود، والتسجيل ممنوع (`hard`).
+     * قراءة النقاط للوقف تسبق («11» على EURUSD: 11 pip أرجح من 1.1، ونقرتها تنقله لخانة النقاط)، لكنها لا تُتجاوز إن كان الهدف بلا فاصلة.
+     */
+    const slipAt = (raw: string, label: string, set: (v: string) => void) => {
+      const hit = levelLooksLikeDecimalSlip({ symbol: spec.symbol, entry: e, level: priceNum(raw) });
+      if (!hit) return null;
+      const text = formatPrice(hit.price, spec.symbol);
+      return {
+        msg: levelLooksLikePipsText(t.journalLevelDecimalSlip, label, raw, '', text),
+        field: label,
+        value: raw.trim(),
+        hard: true,
+        apply: () => {
+          playSoftClick();
+          set(text);
+        },
+      };
+    };
+    const stopSlip = slipAt(stopPx, shortLabel(t.riskCalcStop), setStopPx);
+    const targetSlip = slipAt(targetPx, shortLabel(t.riskCalcTarget), setTargetPx);
     const stopAt = (side: TradeSide) =>
       levelLooksLikePips({ symbol: spec.symbol, side, entry: e, level: priceNum(stopPx), kind: 'sl' });
     const asStop = stopAt('buy') ?? stopAt('sell');
     if (asStop) {
       return {
+        hard: targetSlip != null,
         // نصّ launch88: يقول ما الخطأ وأن السطر يُلمس — بدل «سعر الوقف «25» → وقف الخسارة 25?»
         msg: t.riskCalcStopPxLooksLikePips.replace('{value}', () => stopPx.trim()),
         field: shortLabel(t.riskCalcStop),
@@ -1144,6 +1168,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         },
       };
     }
+    if (stopSlip) return stopSlip;
+    if (targetSlip) return targetSlip;
     if (planSide == null) return null;
     const asTarget = levelLooksLikePips({ symbol: spec.symbol, side: planSide, entry: e, level: priceNum(targetPx), kind: 'tp' });
     if (!asTarget) return null;
@@ -1571,6 +1597,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       {pipsInPx ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={pipsInPx.msg}
           onPress={pipsInPx.apply}
           style={({ pressed }) => pressed && { opacity: buttons.pressedOpacity }}
         >
