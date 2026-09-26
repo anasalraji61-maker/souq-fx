@@ -418,7 +418,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         <View style={styles.chartBox}>
           <View style={[styles.chartHead, rtl && styles.chartHeadRtl]}>
             <Text style={styles.chartLabel}>
-              {t.lectureChartLabel} · {chartMeta.symbol} · {chartMeta.tf}
+              {t.lectureChartLabel} · {chartMeta.symbol} · {t.tfLabels[chartMeta.tf]}
               {/* شموع تجريبية (بلا اتصال أو بذرة الخادم) كانت تُعرض بلا وسم فتُقرأ كسوق حقيقي — كوسم الرباعي. */}
               {chartKind === 'demo' ? <Text style={styles.chartDemoTag}>{` · ${t.dsKindDemo}`}</Text> : null}
               {chartKind === 'unavailable' ? (

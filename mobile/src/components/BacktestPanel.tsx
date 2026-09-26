@@ -115,7 +115,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       }
       const key = STRATEGIES.find((s) => s.id === strategy)?.labelKey;
       const label = key ? t[key] : strategy;
-      setRanFor(`${symbol.trim().toUpperCase()} · ${tf} · ${label}`);
+      setRanFor(`${symbol.trim().toUpperCase()} · ${t.tfLabels[tf]} · ${label}`);
       setRanSymbol(symbol.trim().toUpperCase());
       setStats(res.stats as Stats);
       setTrades(res.trades ?? []);

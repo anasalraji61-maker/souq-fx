@@ -374,7 +374,7 @@ export function FocusChartModal({
             </Text>
             <Text style={[styles.sub, { textAlign: align }]}>
               {phone
-                ? `${tf} · ${t.focusPhoneSubHint}`
+                ? `${t.tfLabels[tf]} · ${t.focusPhoneSubHint}`
                 : t.focusDesktopSub}
             </Text>
           </Pressable>

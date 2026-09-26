@@ -25,6 +25,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { isNotOfferedSymbol, isSymbolUnavailableError } from '../providerSymbols';
 import type { Dict } from '../i18n/locales';
+import { isTimeframe } from '../timeframes';
 import { QUICK_SYMBOLS } from '../tradePlan';
 import { useNotificationPermissionOnResume } from '../hooks/useNotificationPermissionOnResume';
 
@@ -38,7 +39,9 @@ function describeIndAlert(
     condition: string;
     value?: number | null;
   },
-  t: Dict
+  t: Dict,
+  /** لقارئ الشاشة: «15 دقيقة» لا «15m» (يُنطق «15 متراً») */
+  a11y = false
 ): string {
   const typeLabel: Record<string, string> = {
     rsi: t.indAlertsTypeRsi,
@@ -57,7 +60,8 @@ function describeIndAlert(
             ? t.indAlertsCrossDownChip
             : `${a.condition}${val}`;
   // الفريم جزء من المعنى: «RSI تحت 30» على 15 دقيقة غير نفسه على اليومي — كان مخفياً (15m ثابت).
-  const tf = a.timeframe ? ` · ${a.timeframe}` : '';
+  const tfId = a.timeframe;
+  const tf = tfId ? ` · ${isTimeframe(tfId) ? (a11y ? t.tfLabelsA11y[tfId] : t.tfLabels[tfId]) : tfId}` : '';
   return `${a.symbol}${tf} · ${typeLabel[a.alert_type] ?? a.alert_type} · ${cond}`;
 }
 
@@ -456,7 +460,7 @@ export function IndicatorAlertsPanel({
                   onAccessibilityAction={(e) => {
                     if (e.nativeEvent.actionName === 'delete') askDelete(a);
                   }}
-                  accessibilityLabel={`${describeIndAlert(a, t)} · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
+                  accessibilityLabel={`${describeIndAlert(a, t, true)} · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
                 >
                   <Text style={[styles.itemText, { textAlign: align }]}>
                     {describeIndAlert(a, t)}
@@ -480,7 +484,7 @@ export function IndicatorAlertsPanel({
                         },
                       ]}
                       onPress={() => void rearm(a)}
-                      accessibilityLabel={`${t.indAlertsRearmA11yPrefix}: ${describeIndAlert(a, t)}`}
+                      accessibilityLabel={`${t.indAlertsRearmA11yPrefix}: ${describeIndAlert(a, t, true)}`}
                       hitSlop={8}
                     >
                       <Text style={styles.rearm}>{t.indAlertsRearmBtn}</Text>
@@ -496,7 +500,7 @@ export function IndicatorAlertsPanel({
                         },
                       ]}
                       onPress={() => askDelete(a)}
-                      accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
+                      accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t, true)}`}
                       hitSlop={8}
                     >
                       <Text style={styles.del}>{t.deleteWord}</Text>

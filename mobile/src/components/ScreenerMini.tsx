@@ -5,9 +5,10 @@ import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { formatLocalStamp } from '../localStamp';
+import type { Timeframe } from '../timeframes';
 
 /** فريم الفحص السريع — موضعٌ واحد بدل تكراره بالنداء وبنصّ «لا تطابق». */
-const TF = '15m';
+const TF = '15m' satisfies Timeframe;
 /** أقصى ما يُعرض من نتائج بهذه اللوحة المصغّرة (شريط أفقي داخل لوحٍ جانبي/رصيف). */
 const MAX_HITS = 5;
 /** نتيجة من شموع أقدم من شمعتين بفريم الفحص ⇒ يُطبع وقتها (backend-r17): يوم السبت تقاطع/RSI من إغلاق
@@ -128,14 +129,14 @@ export function ScreenerMini() {
           );
         }
         if (shortSyms.length > 0) {
-          notes.push(t.screenerInsufficientData.replace('{tf}', TF).replace('{list}', shortSyms.join(sep)));
+          notes.push(t.screenerInsufficientData.replace('{tf}', t.tfLabels[TF]).replace('{list}', shortSyms.join(sep)));
         }
         if (notes.length) setPartialNote(notes.join('\n'));
         // لا رمز فُحص وكلّها قصيرة التاريخ ⇒ سطر الشموع يقول كل شيء؛ «لا تطابق من 0» فوقه ضجيج.
         if (!all.length && !(res.scanned === 0 && shortSyms.length > 0)) {
           setEmptyNote(
             res.scanned != null
-              ? t.screenerNoMatchOf.replace('{k}', String(res.scanned)).replace('{tf}', TF)
+              ? t.screenerNoMatchOf.replace('{k}', String(res.scanned)).replace('{tf}', t.tfLabels[TF])
               : t.screenerNoResults
           );
         }
