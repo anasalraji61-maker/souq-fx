@@ -625,12 +625,8 @@ const styles = StyleSheet.create({
   },
   cellDragging: {
     opacity: 0.92,
+    // DESIGN-PRO §5.5: حدّ التأكيد وحده يدلّ على الإطار المسحوب — لا ظلّ فوق الحدّ والخلفية.
     borderColor: colors.accent,
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
   },
   handleBar: {
     position: 'absolute',
