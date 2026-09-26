@@ -1040,8 +1040,8 @@ export type Dict = {
   focusCompareHint: string;
   focusCompareTag: string;
   focusPickSymbolA11yPrefix: string;
-  /** Symbol picker row tag (`SymbolPairMenu.tsx`, `group` from `chart/watchlist.ts`) — shown and read aloud (QA130a) */
-  focusSymbolGroups: Record<'FX' | 'Index' | 'Metals' | 'Energy' | 'Crypto', string>;
+  /** Symbol picker row tag (`SymbolPairMenu.tsx`, `group` from `chart/watchlist.ts`, `custom` = a symbol the trader added — `watchlistStoreCore.ts:241`) — shown and read aloud (QA130a) */
+  focusSymbolGroups: Record<'FX' | 'Index' | 'Metals' | 'Energy' | 'Crypto' | 'custom', string>;
   focusCompareNotePrefix: string;
   focusCompareNoteSuffix: string;
   focusCompareUnavailable: string;
@@ -2459,7 +2459,7 @@ const ar: Dict = {
   focusCompareHint: 'اضغط مطوّلاً على رمز لتقارنه بالشارت، ومرة أخرى لإزالته',
   focusCompareTag: 'مقارنة',
   focusPickSymbolA11yPrefix: 'اختيار الرمز',
-  focusSymbolGroups: { FX: 'عملات', Index: 'مؤشر', Metals: 'معادن', Energy: 'طاقة', Crypto: 'كريبتو' },
+  focusSymbolGroups: { FX: 'عملات', Index: 'مؤشر', Metals: 'معادن', Energy: 'طاقة', Crypto: 'كريبتو', custom: 'مُضاف' },
   focusCompareNotePrefix: 'مقارنة مع',
   focusCompareNoteSuffix: '(بنفسجي)',
   focusCompareUnavailable: 'تعذّر تحميل بيانات {sym} الحقيقية — لا خط مقارنة',
@@ -3729,7 +3729,7 @@ const enUS: Dict = {
   focusCompareHint: 'Press and hold a symbol to compare it on the chart; again to remove it',
   focusCompareTag: 'Compare',
   focusPickSymbolA11yPrefix: 'Select symbol',
-  focusSymbolGroups: { FX: 'FX', Index: 'Index', Metals: 'Metals', Energy: 'Energy', Crypto: 'Crypto' },
+  focusSymbolGroups: { FX: 'FX', Index: 'Index', Metals: 'Metals', Energy: 'Energy', Crypto: 'Crypto', custom: 'Added' },
   focusCompareNotePrefix: 'Comparing with',
   focusCompareNoteSuffix: '(purple)',
   focusCompareUnavailable: 'Couldn’t load real {sym} data — no comparison line',
@@ -5049,7 +5049,7 @@ const ku: Dict = {
   focusCompareHint: 'لەسەر هێمایەک درێژ دابگرە بۆ بەراوردکردنی لەسەر چارتەکە، دووبارە بۆ لابردنی',
   focusCompareTag: 'بەراورد',
   focusPickSymbolA11yPrefix: 'هەڵبژاردنی هێما',
-  focusSymbolGroups: { FX: 'دراو', Index: 'پێوەر', Metals: 'کانزا', Energy: 'وزە', Crypto: 'کریپتۆ' },
+  focusSymbolGroups: { FX: 'دراو', Index: 'پێوەر', Metals: 'کانزا', Energy: 'وزە', Crypto: 'کریپتۆ', custom: 'زیادکراو' },
   focusCompareNotePrefix: 'بەراوردکردن لەگەڵ',
   focusCompareNoteSuffix: '(مۆر)',
   focusCompareUnavailable: 'نەکرا زانیاری ڕاستەقینەی {sym} باربکرێت — هێڵی بەراوردکردن نییە',
