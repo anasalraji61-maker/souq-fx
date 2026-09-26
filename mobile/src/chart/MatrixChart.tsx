@@ -115,6 +115,8 @@ import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPer
 import {
   arrowNudge,
   shortcutLetter,
+  drawToolShortcut,
+  drawToolShortcutLabel,
   clipSegmentToBars,
   raySegment,
   dragChangesDrawing,
@@ -2445,6 +2447,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setRailHint(null);
     },
   });
+
+  /** تلميح أداة الرسم: على الويب يحمل اختصارها («خط اتجاه · Alt+T») — الاختصار لا يُكتشف إلا هنا. */
+  const toolHintLabel = (id: DrawTool, label: string) => {
+    const keys = Platform.OS === 'web' ? drawToolShortcutLabel(id) : '';
+    return keys ? `${label} · ${keys}` : label;
+  };
 
   // DESIGN-PRO §5.6 — الواجهة تخفت إلى 40% ما دام الإصبع/الزرّ على اللوح وتعود عند الرفع. بعد
   // `CHROME_DIM_DELAY_MS` فقط: نقرة تقاطع قصيرة لا تُومض الشريط (§6 — لا حركة غير وميض السعر).
@@ -5049,6 +5057,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         redoDrawing();
         return;
       }
+      // Alt+حرف ⇒ أداة رسم (`DRAW_TOOL_SHORTCUTS`)، كنقرة زرّها بالشريط: تُلغي رسماً بدأ وتُسقط التحديد.
+      const shortcutTool = drawToolShortcut(key, event.code, {
+        alt: event.altKey,
+        ctrl: event.ctrlKey,
+        meta: event.metaKey,
+        shift: event.shiftKey,
+      });
+      if (shortcutTool) {
+        event.preventDefault();
+        setTool(shortcutTool);
+        setPending(null);
+        setDragEnd(null);
+        setSelectedId(null);
+        return;
+      }
       if (key === 'Escape') {
         if (pending) {
           setPending(null);
@@ -6593,7 +6616,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t.label}
-                {...railHintProps(t.label)}
+                {...railHintProps(toolHintLabel(t.id, t.label))}
                 accessibilityState={{ selected: tool === t.id }}
                 key={t.id}
                 style={({ pressed }) => [
@@ -12880,7 +12903,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t.label}
-                {...railHintProps(t.label)}
+                {...railHintProps(toolHintLabel(t.id, t.label))}
                 accessibilityState={{ selected: tool === t.id }}
                 key={t.id}
                 style={({ pressed }) => [

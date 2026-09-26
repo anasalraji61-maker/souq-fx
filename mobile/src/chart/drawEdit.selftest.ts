@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock, drawToolShortcut, drawToolShortcutLabel } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -157,6 +157,18 @@ ok('نسخة خطّ رأسي ⇒ 3 شموع', cloneShift('vline', true).bars ===
   ok('الإزاحة تُبقي السهم', translateDrawing(ar, 2, (p) => p, () => null).arrow === true);
   ok('غير الترند لا يحمل سهماً', !('arrow' in withDrawingArrow({ ...d, tool: 'hline' }, true)));
 }
+
+// ── drawToolShortcut ───────────────────────────────────────────────────────
+const alt = { alt: true, ctrl: false, meta: false, shift: false };
+ok('Alt+H ⇒ خطّ أفقي', drawToolShortcut('h', 'KeyH', alt) === 'hline');
+ok('Alt+T بلوحة عربية (الحرف «ف») ⇒ من الموضع', drawToolShortcut('ف', 'KeyT', alt) === 'trend');
+ok('Option+F على ماك («ƒ») ⇒ فيبو', drawToolShortcut('ƒ', 'KeyF', alt) === 'fib');
+ok('بلا Alt ⇒ لا شيء (الكتابة لا تُسرق)', drawToolShortcut('h', 'KeyH', { ...alt, alt: false }) === null);
+ok('Ctrl+Alt ⇒ لا شيء (AltGr بويندوز)', drawToolShortcut('h', 'KeyH', { ...alt, ctrl: true }) === null);
+ok('Alt+Shift ⇒ لا شيء', drawToolShortcut('H', 'KeyH', { ...alt, shift: true }) === null);
+ok('حرف بلا أداة ⇒ لا شيء', drawToolShortcut('q', 'KeyQ', alt) === null);
+ok('وسم الاختصار', drawToolShortcutLabel('hline') === 'Alt+H');
+ok('أداة بلا اختصار ⇒ فارغ', drawToolShortcutLabel('none') === '');
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

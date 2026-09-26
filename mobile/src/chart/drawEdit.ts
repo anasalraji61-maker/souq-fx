@@ -18,7 +18,7 @@
  *
  * الدوال هنا خالصة بلا حالة، فتُفحص بـ`drawEdit.selftest.ts` بلا شجرة مكوّنات.
  */
-import type { ChartPoint, Drawing } from './types';
+import type { ChartPoint, DrawTool, Drawing } from './types';
 
 /** طرف الرسم المسحوب: `a` البداية، `b` النهاية (الأخيرة للرسوم ذات الطرفين فقط). */
 export type DrawEnd = 'a' | 'b';
@@ -196,6 +196,37 @@ export function shortcutLetter(key: string, code: string | undefined): string {
   if (/^[a-z]$/i.test(key)) return key.toLowerCase();
   const m = /^Key([A-Z])$/.exec(code ?? '');
   return m ? m[1]!.toLowerCase() : '';
+}
+
+/**
+ * اختصارات أدوات الرسم على الويب: Alt+حرف (الحرف من `shortcutLetter` فيعمل بلوحة عربية/كردية، وبـOption على ماك حيث
+ * `event.key` رمز خاص «†»). بلا اختصار كان كل خطّ أفقي يعني رحلة إلى الشريط ثم العودة للشمعة — والمتداول على الويب
+ * يرسم عشرات المستويات بالجلسة. Alt وحده: Ctrl/⌘ محجوزان للتراجع/الإعادة والمتصفّح، والحرف المجرّد يسرق الكتابة.
+ */
+export const DRAW_TOOL_SHORTCUTS: Readonly<Record<string, DrawTool>> = {
+  t: 'trend',
+  h: 'hline',
+  v: 'vline',
+  r: 'rect',
+  f: 'fib',
+  c: 'channel',
+  m: 'measure',
+  n: 'note',
+};
+
+export function drawToolShortcut(
+  key: string,
+  code: string | undefined,
+  mods: { alt: boolean; ctrl: boolean; meta: boolean; shift: boolean }
+): DrawTool | null {
+  if (!mods.alt || mods.ctrl || mods.meta || mods.shift) return null;
+  return DRAW_TOOL_SHORTCUTS[shortcutLetter(key, code)] ?? null;
+}
+
+/** «Alt+T» لتلميح الأداة على الويب؛ فارغ لأداة بلا اختصار. */
+export function drawToolShortcutLabel(tool: DrawTool): string {
+  const letter = Object.keys(DRAW_TOOL_SHORTCUTS).find((k) => DRAW_TOOL_SHORTCUTS[k] === tool);
+  return letter ? `Alt+${letter.toUpperCase()}` : '';
 }
 
 /**
