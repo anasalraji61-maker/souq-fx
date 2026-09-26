@@ -4334,14 +4334,40 @@ console.log('positionSize parseLostToday selftest OK');
   ] as const) {
     assert.equal(manualConvDecimalSlip(pair, px), null, `${pair} ${px}`);
   }
-  // الأصغر ليس «بلا فاصلة» (لا يُفحص هنا)، ومدخل غير صالح أو زوج مجهول ⇒ null
-  assert.equal(manualConvDecimalSlip('USDJPY', 15), null);
+  // مدخل غير صالح أو زوج مجهول ⇒ null
   assert.equal(manualConvDecimalSlip('USDJPY', NaN), null);
   assert.equal(manualConvDecimalSlip('USDJPY', 0), null);
   assert.equal(manualConvDecimalSlip(null, 1500), null);
   assert.equal(manualConvDecimalSlip('BTCUSD', 650000), null);
 }
 console.log('positionSize manualConvDecimalSlip selftest OK');
+// الفاصلة منزلةً يساراً على زوج تحويل **مباشر**: USDJPY «15.0» بحساب ين على EURUSD كان 5.00 لوت بدل 0.50 (خسارة 10% عند الوقف)
+{
+  const eu = instrumentSpec('EURUSD')!;
+  const conv = conversionPair('USD', 'JPY')!;
+  assert.deepEqual(conv, { symbol: 'USDJPY', invert: false });
+  const lotsAt = (m: number) =>
+    positionSize({ balance: 1_500_000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(eu, quoteToAccountRate(conv, m)!), contractSize: eu.contractSize })!.lots;
+  assert.equal(lotsAt(150), 0.5);
+  assert.equal(lotsAt(15), 5); // لهذا يُرصد
+  assert.equal(manualConvDecimalSlip('USDJPY', 15), 150);
+  assert.equal(manualConvDecimalSlip('USDJPY', 1.5), 150);
+  assert.equal(manualConvDecimalSlip('USDJPY', 14.985), 149.85);
+  assert.equal(manualConvDecimalSlip('AUDUSD', 0.066), 0.66);
+  assert.equal(manualConvDecimalSlip('NZDUSD', 0.059), 0.59);
+  assert.equal(manualConvDecimalSlip('USDCHF', 0.08), 0.8);
+  assert.equal(manualConvDecimalSlip('GBPJPY', 20.8), 208);
+  assert.equal(manualConvDecimalSlip('USDZAR', 1.85), 18.5);
+  // أسعار حقيقية منخفضة تبقى مقبولة (الحدّ الأدنى تاريخياً وأبعد)
+  for (const [pair, px] of [
+    ['USDJPY', 76], ['USDJPY', 100], ['AUDUSD', 0.48], ['NZDUSD', 0.42], ['USDCHF', 0.72], ['EURUSD', 0.83], ['GBPUSD', 1.04],
+    ['EURGBP', 0.69], ['USDCAD', 0.95], ['TRYJPY', 2.5], ['ZARJPY', 5.5], ['MXNJPY', 4.5], ['USDTRY', 20], ['USDSEK', 8.5],
+    ['CHFJPY', 110], ['AUDJPY', 55], ['EURCHF', 0.9], ['USDHKD', 7.75], ['USDSGD', 1.25],
+  ] as const) {
+    assert.equal(manualConvDecimalSlip(pair, px), null, `${pair} ${px}`);
+  }
+}
+console.log('positionSize manualConvDecimalSlip (smaller) selftest OK');
 
 // سعر بلا فاصلة بلا دخول يُقارَن به (الحاسبة بالنقاط): وقف «1500» على USDJPY ⇒ 150؛ الأسعار الحقيقية لا
 {

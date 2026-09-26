@@ -889,7 +889,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const manual = num(manualConv);
   // «0.0067» لـUSDJPY: مقلوبٌ قطعاً ⇒ لا لوت منه (كالوقف < 1 pip) — بحساب ين على EURUSD كان لوتاً أكبر ×22,000
   const manualInverted = fetchedConv ? null : manualConvLooksInverted(conv?.symbol, Number.isFinite(manual) ? manual : null);
-  // «1500» لـUSDJPY (بدل 150.0): بلا فاصلة ⇒ لا لوت منه (لوت ×10 على الأزواج المعكوسة) — `manualConvDecimalSlip`
+  // «1500»/«15.0» لـUSDJPY (بدل 150.0): الفاصلة منزلةً ⇒ لا لوت منه (لوت ×10 بالجهتين حسب الزوج) — `manualConvDecimalSlip`
   const manualSlip =
     fetchedConv || manualInverted != null ? null : manualConvDecimalSlip(conv?.symbol, Number.isFinite(manual) ? manual : null);
   // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض

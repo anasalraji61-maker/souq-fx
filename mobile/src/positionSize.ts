@@ -502,13 +502,25 @@ export function manualConvLooksInverted(pair: string | null | undefined, rate: n
  * معكوس ⇒ قيمة الـpip أصغر ×10 ⇒ **7.50 لوت بدل 0.75** لـ1% من 10,000 بوقف 20 (خسارة 1,000 USD = 10% عند الوقف)، بلا أي تحذير
  * (تحت حدّ 50 لوت). و«127» لـGBPUSD (حساب دولار على EURGBP) لوتٌ أصغر ×100. `manualConvLooksInverted` لا يراه (1500 > 1 ليس مقلوباً).
  * المكتوب أبعد من √10 عن سعر الزوج التقريبي (`pairBallpark`، بمعامل 2) **وأكبر منه**، والمكتوب ÷ 10^k (k من 1 إلى 6) داخلها ⇒
- * يعيد ذلك السعر المرجَّح (للسطر «هل تقصد 150؟»)؛ وإلا null. الأصغر («15») لا يُفحص هنا: ليس «بلا فاصلة»، ويُصغّر اللوت على الأزواج
- * المعكوسة. زوجٌ لا تعرفه الحاسبة ⇒ null (لا مرجع).
+ * يعيد ذلك السعر المرجَّح (للسطر «هل تقصد 150؟»)؛ وإلا null. والأصغر بالقاعدة نفسها («15.0» ⇒ 150، أدناه). زوجٌ لا تعرفه الحاسبة ⇒ null (لا مرجع).
  */
 export function manualConvDecimalSlip(pair: string | null | undefined, rate: number | null | undefined): number | null {
   if (typeof pair !== 'string') return null;
   const spec = instrumentSpec(pair);
-  return spec ? priceDecimalSlip(spec, rate) : null;
+  if (!spec) return null;
+  const up = priceDecimalSlip(spec, rate);
+  if (up != null || typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return up;
+  // **والأصغر أيضاً** (الفاصلة منزلةً يساراً): «15.0» لـUSDJPY بحساب ين على EURUSD — الزوج **مباشر** ⇒ قيمة الـpip أصغر ×10 ⇒
+  // **5.00 لوت بدل 0.50** لـ1% من 1,500,000 بوقف 20 (خسارة 150,000 JPY = 10%)؛ وAUDUSD «0.066» (GBPAUD بحساب دولار)، USDCHF «0.08»
+  // (حساب فرنك). على المعكوس يُصغّر اللوت — خطأٌ أيضاً، فيُرصد بالجهتين. تحت المرجع وأبعد من √10، و× 10^k داخلها ⇒ ذلك السعر.
+  const ball = pairBallpark(spec);
+  const off = (px: number) => Math.abs(Math.log(px / ball));
+  if (rate >= ball || off(rate) <= TYPED_EXIT_MAX_LOG_OFF) return null;
+  for (let k = 1; k <= 6; k++) {
+    const px = Number((rate * 10 ** k).toPrecision(12));
+    if (off(px) <= TYPED_EXIT_MAX_LOG_OFF) return px;
+  }
+  return null;
 }
 
 /**
