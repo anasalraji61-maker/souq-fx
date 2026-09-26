@@ -694,24 +694,34 @@ _TRADE_CALL_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
-# الكردية على النصّ العربي (نفس الأبجدية) كقالب `ai_ask` الاحتياطي — لا مراجعة لغوية كردية.
+# الكردية (سورانية) بنصّ launch217a ومفردات `aiGreeting` الكردي — تحتاج مراجعة ناطق كباقي الكردية.
 _GUARD_NOTE = {
     "ar": "_حُذف من الردّ ما يشبه توصية تداول (دخول/وقف/هدف أو شراء/بيع): مساعد MATRIX تعليمي ولا يقدّم توصيات._",
     "en": "_Part of this reply looked like a trade recommendation (entry/stop/target or buy/sell) and was removed: "
           "MATRIX's assistant is educational and does not give trade calls._",
+    "ku": "_بەشێک لەم وەڵامە لە پێشنیاری مامەڵە دەچوو (چوونەژوورەوە/وەستانی زیان/ئامانج یان کڕین/فرۆشتن) و لابرا: "
+          "یاریدەدەری MATRIX فێرکارییە و پێشنیاری مامەڵە نادات._",
 }
 # سطر حُذف لأنه يذكر رقماً ليس بالبيانات (لا لأنه توصية): «RSI is 63.2» والـRSI غير مُعطى للنموذج
 _GUARD_NUMBER_NOTE = {
     "ar": "_حُذف من الردّ رقم لا يوجد في بيانات السوق المعطاة للمساعد: MATRIX لا يعرض أرقاماً غير مصدرها المزوّد._",
     "en": "_A number that is not in the market data given to the assistant was removed from this reply: "
           "MATRIX shows no figures that did not come from the data provider._",
+    "ku": "_ژمارەیەک کە لە داتای بازاڕی دراو بە یاریدەدەرەکە نەبوو لەم وەڵامە لابرا: "
+          "MATRIX هیچ ژمارەیەک پیشان نادات کە لە دابینکەری داتاوە نەهاتبێت._",
 }
 _GUARD_REFUSAL = {
     "ar": "مساعد MATRIX تعليمي: لا يقدّم نقاط دخول ولا وقف خسارة ولا أهداف ولا توصيات شراء/بيع. "
           "يمكنني شرح المؤشرات، أو وصف ما يظهر على الشارت، أو شرح إدارة المخاطر.",
     "en": "MATRIX's assistant is educational: it does not give entries, stop-losses, targets or buy/sell calls. "
           "I can explain indicators, describe what the chart shows, or explain risk management.",
+    "ku": "یاریدەدەری MATRIX فێرکارییە: خاڵی چوونەژوورەوە، وەستانی زیان، ئامانج یان پێشنیاری کڕین و فرۆشتن نادات. "
+          "دەتوانم نیشاندەرەکان ڕوون بکەمەوە، ئەوەی لەسەر چارتەکە دیارە وەسف بکەم، یان بەڕێوەبردنی مەترسی ڕوون بکەمەوە.",
 }
+
+
+def _guard_lang(lang: str) -> str:
+    return lang if lang in ("en", "ku") else "ar"
 
 
 # run 113: + اليونانية («ΒUY»، «LΟNG») والشيروكي («ᏴUY»)
@@ -915,12 +925,12 @@ def guard_answer(text: str, lang: str = "ar", ground: str | None = None) -> str:
         return text
     kept = [ln for i, ln in enumerate(lines) if i not in bad]
     if not any(re.search(r"\w", ln) for ln in kept):
-        return _GUARD_REFUSAL["en" if lang == "en" else "ar"]
+        return _GUARD_REFUSAL[_guard_lang(lang)]
     body = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
     note = _GUARD_NUMBER_NOTE if only_numbers else _GUARD_NOTE
-    return f"{body}\n\n{note["en" if lang == "en" else "ar"]}"
+    return f"{body}\n\n{note[_guard_lang(lang)]}"
 
 
 def reply_lang(text: str, lang: str) -> str:
-    """لغة ردّ النموذج بعد الحارس: الكردي يأخذ ردّاً كردياً، إلا اعتذار الحارس الكامل فهو عربي (لا نصّ كردي مراجَع)."""
-    return "ar" if lang == "ku" and text == _GUARD_REFUSAL["ar"] else lang
+    """لغة ردّ النموذج بعد الحارس: ردّ النموذج واعتذار الحارس وملاحظته كلها بلغة الطلب (للكردي نصّ منذ launch217a)."""
+    return lang

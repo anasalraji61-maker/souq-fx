@@ -256,7 +256,7 @@ def test_guard_drops_trade_lines_and_says_so(monkeypatch):
     assert "RSI is 72" in ans and "Risk 1% per trade." in ans and "was removed" in ans
 
 
-@pytest.mark.parametrize("lang, want", [("ar", "مساعد MATRIX تعليمي"), ("en", "educational"), ("ku", "مساعد MATRIX")])
+@pytest.mark.parametrize("lang, want", [("ar", "مساعد MATRIX تعليمي"), ("en", "educational"), ("ku", "یاریدەدەری MATRIX فێرکارییە")])
 def test_guard_all_trade_lines_gives_the_refusal(lang, want):
     out = openrouter_ai.guard_answer("Buy EURUSD now\nStop 1.0812", lang)
     assert want in out and "1.0812" not in out
@@ -615,12 +615,13 @@ def test_ai_ask_reports_the_reply_language(monkeypatch, lang, configured, want):
     assert body["answer_lang"] == want
 
 
-def test_ai_ask_kurdish_guard_refusal_is_arabic(monkeypatch):
+def test_ai_ask_kurdish_guard_refusal_is_kurdish(monkeypatch):
     monkeypatch.setattr(main, "build_series", _flat_series(0.3))
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
     monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "کڕین لە 1.0850")
     body = TestClient(main.app).post("/api/ai/ask", json={"question": "RSI?", "lang": "ku"}).json()
-    assert "1.0850" not in body["answer"] and body["answer_lang"] == "ar"
+    assert "1.0850" not in body["answer"] and body["answer_lang"] == "ku"
+    assert body["answer"] == openrouter_ai._GUARD_REFUSAL["ku"]
 
 
 # ─── run 80: فحص عدائي ثالث — صيغ كانت تمرّ، وأعداد صحيحة كانت «أسعاراً» ───────
