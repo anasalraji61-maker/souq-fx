@@ -219,6 +219,9 @@ def run_backtest(
             "exit": exit_price,
             "pnl_pct": _round(pnl, 3),
             "mae_pct": _round(mae, 3),
+            # غير مقرَّبة: السبريد يُطرح منها ثم يُقرَّب مرّة واحدة (كان يُطرح من المقرَّب ⇒ +0.0006% صافٍ يظهر 0.000 «تعادل»)
+            "_pnl": pnl,
+            "_mae": mae,
             "entry_time": times[entry_i],
             "exit_time": times[exit_i],
             "_path": path,
@@ -290,13 +293,15 @@ def run_backtest(
     if spread > 0:
         for t in trades:
             cost = spread / t["entry"] * 100
-            t["pnl_pct"] = _round(t["pnl_pct"] - cost, 3)
-            t["mae_pct"] = _round(t["mae_pct"] - cost, 3)
+            t["pnl_pct"] = _round(t["_pnl"] - cost, 3)
+            t["mae_pct"] = _round(t["_mae"] - cost, 3)
             t["_path"] = [(a - cost, c - cost) for a, c in t["_path"]]
 
     stats, curve = _stats(trades)
     for t in trades:
         t.pop("_path", None)
+        t.pop("_pnl", None)
+        t.pop("_mae", None)
     return {
         "strategy": strategy,
         "trades": trades[-40:],

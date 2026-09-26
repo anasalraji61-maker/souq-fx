@@ -355,3 +355,16 @@ def test_rsi_reversal_no_trade_on_never_moved_closes():
         c2 = c + [{"time": c[-1]["time"] + 900 * (k + 1), "open": close, "high": close,
                    "low": close * (1 - 0.001 * (k + 1)), "close": close * (1 - 0.001 * (k + 1))} for k in range(3)]
         assert backtest.run_backtest(c2, "rsi_reversal", rsi_low=50, rsi_high=70)["trades"][0]["side"] == "long"
+
+
+def test_spread_is_taken_from_the_unrounded_pnl_r118():
+    """السبريد يُطرح من الربح الخام ثم يُقرَّب مرّة: كان يُطرح من `pnl_pct` المقرَّب لـ3 منازل ⇒ صافٍ +0.0006%
+    يظهر 0.000 ويُعدّ تعادلاً (ونسبة الفوز تتغيّر)."""
+    c = _candles()
+    for k in range(1, 40):
+        spread = 0.0000137 * k
+        for t in backtest.run_backtest(c, "ma_cross", spread=spread)["trades"]:
+            sgn = 1 if t["side"] == "long" else -1
+            raw = sgn * (t["exit"] - t["entry"]) / t["entry"] * 100
+            assert t["pnl_pct"] == backtest._round(raw - spread / t["entry"] * 100, 3), (spread, t)
+            assert "_pnl" not in t and "_mae" not in t
