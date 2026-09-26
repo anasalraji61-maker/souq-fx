@@ -133,6 +133,8 @@ export type NewsItem = {
   title: string;
   pair_effect: string;
   when: string;
+  /** وقت النشر ثوانٍ UTC (`news_feed.when_and_ts`)؛ null ⇒ بلا تاريخ أو منطقة مجهولة و`when` نصّه الخام. */
+  ts?: number | null;
   /** `'headline_keywords'` = شارة التأثير تقدير من كلمات العنوان (backend `9a05735`)، لا تصنيف مصدر. */
   impact_basis?: string;
 };

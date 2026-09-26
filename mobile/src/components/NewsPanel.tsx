@@ -119,7 +119,11 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
                 </Text>
               </View>
               )}
-              <Text style={styles.when}>{n.when}</Text>
+              {/* `when` من الخادم «2026-09-26 14:30 UTC» — بتوقيت غرينتش والتقويم والشارت بتوقيت الجهاز ⇒ خبرُ
+                  الساعة 17:30 محلياً كان يُقرأ «14:30». `ts` موجود ⇒ طابع محلي كرسائل المجموعة. */}
+              <Text style={styles.when}>
+                {typeof n.ts === 'number' && Number.isFinite(n.ts) ? formatLocalStamp(n.ts, lang) : n.when}
+              </Text>
             </View>
             <Text style={[styles.headline, { textAlign: align }]}>{n.title}</Text>
             <Text style={[styles.pairs, { textAlign: align }]}>{n.pair_effect}</Text>
