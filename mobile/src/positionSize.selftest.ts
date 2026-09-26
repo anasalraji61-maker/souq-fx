@@ -10,6 +10,7 @@ import {
   manualConvLooksInverted,
   lossStreakDrawdownPct,
   dailyLossRoom,
+  scaleOutPlan,
   convStaleMinutes,
   convQuoteNotice,
   combinedMarketOpen,
@@ -3721,3 +3722,58 @@ console.log('positionSize breakevenRR selftest OK');
   assert.equal(dailyLossRoom({ balance: NaN, limitPct: 5, lostToday: 0, riskAmount: 100 }), null);
 }
 console.log('positionSize dailyLossRoom selftest OK');
+
+// ---- scaleOutPlan: جني ربح جزئي على خطوة 0.01 لوت والنتيجة بالـR من القسمة الفعلية ----
+{
+  // نصف 0.40 عند 1R والباقي عند 3R: 0.20 + 0.20 ⇒ الأسوأ (الباقي بالتعادل) +0.5R، الأفضل +2R
+  assert.deepEqual(scaleOutPlan({ lots: 0.4, closePct: 50, r1: 1, r2: 3 }), {
+    close: 0.2,
+    keep: 0.2,
+    closedPct: 50,
+    worstR: 0.5,
+    bestR: 2,
+  });
+  // «نصف» 0.05 لوت لا يُنفَّذ 0.025: يُغلق 0.03 (2.5 خطوة ⇒ 3) ويبقى 0.02 ⇒ 60% ⇒ +0.6R لا +0.5R
+  const odd = scaleOutPlan({ lots: 0.05, closePct: 50, r1: 1, r2: 2 })!;
+  assert.equal(odd.close, 0.03);
+  assert.equal(odd.keep, 0.02);
+  assert.equal(odd.closedPct, 60);
+  assert.equal(odd.worstR, 0.6);
+  assert.equal(odd.bestR, 1.4);
+  // 0.02 لوت ⇒ 0.01 + 0.01؛ 0.01 لا يُقسم
+  assert.deepEqual(scaleOutPlan({ lots: 0.02, closePct: 25, r1: 2 }), { close: 0.01, keep: 0.01, closedPct: 50, worstR: 1, bestR: null });
+  assert.equal(scaleOutPlan({ lots: 0.01, closePct: 50, r1: 1 }), null);
+  // نسبة تُقرَّب للصفر أو للكل ⇒ يبقى 0.01 بكل جزء: 1% من 0.10 ⇒ 0.01 يُغلق؛ 99% ⇒ 0.09 ويبقى 0.01
+  assert.equal(scaleOutPlan({ lots: 0.1, closePct: 1, r1: 1 })!.close, 0.01);
+  assert.equal(scaleOutPlan({ lots: 0.1, closePct: 99, r1: 1 })!.keep, 0.01);
+  // الفاصلة العائمة: 0.3 لوت (0.1 × 3) = 30 خطوة لا 29؛ الثلث ⇒ 0.1 و0.2
+  assert.deepEqual(scaleOutPlan({ lots: 0.1 * 3, closePct: 100 / 3, r1: 1.5, r2: 3 }), {
+    close: 0.1,
+    keep: 0.2,
+    closedPct: 33.3,
+    worstR: 0.5,
+    bestR: 2.5,
+  });
+  // خاصية: الجزءان على الخطوة، مجموعهما اللوت، كلٌّ ≥ 0.01، والنسبة الفعلية أقرب ما تتيحه الخطوة للمطلوبة
+  for (let i = 0; i < 2000; i++) {
+    const steps = 2 + Math.floor(Math.random() * 5000);
+    const lots = steps / 100;
+    const pct = 1 + Math.random() * 98;
+    const r = scaleOutPlan({ lots, closePct: pct, r1: 1, r2: 2 })!;
+    const c = Math.round(r.close * 100);
+    const k = Math.round(r.keep * 100);
+    assert.ok(Math.abs(r.close * 100 - c) < 1e-9 && Math.abs(r.keep * 100 - k) < 1e-9);
+    assert.equal(c + k, steps);
+    assert.ok(c >= 1 && k >= 1);
+    if (c > 1 && c < steps - 1) assert.ok(Math.abs(c / steps - pct / 100) <= 0.5 / steps + 1e-9);
+    assert.ok(Math.abs(r.worstR - c / steps) < 1e-9);
+    assert.ok(Math.abs(r.bestR! - (c / steps + (2 * k) / steps)) < 1e-9);
+  }
+  // مدخل غير صالح
+  assert.equal(scaleOutPlan({ lots: 0, closePct: 50, r1: 1 }), null);
+  assert.equal(scaleOutPlan({ lots: 1, closePct: 0, r1: 1 }), null);
+  assert.equal(scaleOutPlan({ lots: 1, closePct: 100, r1: 1 }), null);
+  assert.equal(scaleOutPlan({ lots: 1, closePct: 50, r1: 0 }), null);
+  assert.equal(scaleOutPlan({ lots: 1, closePct: 50, r1: 1, r2: -1 })!.bestR, null);
+}
+console.log('positionSize scaleOutPlan selftest OK');

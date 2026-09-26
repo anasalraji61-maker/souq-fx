@@ -1946,6 +1946,41 @@ export function dailyLossRoom(input: {
   };
 }
 
+/**
+ * **جني ربح جزئي**: إغلاق `closePct`% من المركز عند الهدف الأول (`r1` بالـR) والباقي إلى الهدف الثاني (`r2`) أو إلى وقفٍ
+ * نُقل للتعادل. اللوت يُقسم على خطوة 0.01 (`LOT_STEP`) لا بالنسبة الاسمية: «نصف» 0.05 لوت ليس 0.025 (لا يُنفَّذ) بل 0.03 و0.02،
+ * فالنتيجة بالـR تُحسب من **القسمة الفعلية** (0.03 ÷ 0.05 = 60%) — «نصف عند 1R ثم التعادل = +0.5R» كانت ستعِد بما لن يحدث
+ * (+0.6R هنا، و+0.4R لو قُرّبت القسمة للجهة الأخرى). ما يُغلق يُقرَّب لأقرب خطوة، ولا يقلّ أيٌّ من الجزأين عن 0.01.
+ *
+ * `worstR` = الباقي خرج بالتعادل (الجزء المغلق × r1)؛ `bestR` = الباقي بلغ r2 (`null` بلا r2 صالح). `closedPct` النسبة الفعلية
+ * لأقرب منزلة. `null` لمركزٍ لا يُقسم (أقل من 0.02 لوت) أو مدخل غير صالح.
+ */
+export function scaleOutPlan(input: {
+  lots: number;
+  closePct: number;
+  r1: number;
+  r2?: number | null;
+}): { close: number; keep: number; closedPct: number; worstR: number; bestR: number | null } | null {
+  const { lots, closePct, r1, r2 } = input;
+  if (!Number.isFinite(lots) || lots <= 0) return null;
+  if (!Number.isFinite(closePct) || closePct <= 0 || closePct >= 100) return null;
+  if (!Number.isFinite(r1) || r1 <= 0) return null;
+  const steps = Math.round(lots / LOT_STEP + 1e-9);
+  if (steps < 2) return null;
+  const closeSteps = Math.min(steps - 1, Math.max(1, Math.round((steps * closePct) / 100 + 1e-9)));
+  const frac = closeSteps / steps;
+  const clean = (v: number) => Math.round(v * 1e9) / 1e9;
+  const worstR = clean(frac * r1);
+  const bestR = r2 != null && Number.isFinite(r2) && r2 > 0 ? clean(worstR + (1 - frac) * r2) : null;
+  return {
+    close: Math.round(closeSteps * LOT_STEP * 100) / 100,
+    keep: Math.round((steps - closeSteps) * LOT_STEP * 100) / 100,
+    closedPct: Math.round(frac * 1000) / 10,
+    worstR,
+    bestR,
+  };
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 /**
