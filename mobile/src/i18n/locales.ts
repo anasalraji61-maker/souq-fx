@@ -1356,6 +1356,8 @@ export type Dict = {
   /** 400 `invalid current password` — لا يُخرج المستخدم. */
   accPasswordWrongCurrent: string;
   accPasswordChangeError: string;
+  /** 401 من `POST /api/auth/password` (جلسة انتهت أو أُلغيت من جهاز آخر) — ليس انقطاعاً، فـ`accPasswordChangeError` يضلّل. */
+  accPasswordSessionEnded: string;
   /**
    * قارئ الشاشة لأي زرّ يعرض «...» أثناء الانتظار (10 مواضع: AccountScreen ×3، TradeJournalPanel ×2، AlertsPanel ×2،
    * PositionSizePanel ×2، NetworkTreePanel «…»): `accessibilityLabel={busy ? t.a11yBusy : <النصّ>}` مع `accessibilityState={{ busy }}`.
@@ -2655,6 +2657,7 @@ const ar: Dict = {
   accPasswordChanged: 'تغيّرت كلمة المرور، وسُجّل خروج أجهزتك الأخرى من الحساب',
   accPasswordWrongCurrent: 'كلمة المرور الحالية غير صحيحة',
   accPasswordChangeError: 'تعذّر تغيير كلمة المرور — تحقّق من الاتصال وأعد المحاولة',
+  accPasswordSessionEnded: 'انتهت جلستك على هذا الجهاز — سجّل الدخول مجدداً ثم غيّر كلمة المرور',
   a11yBusy: 'جارٍ التنفيذ، انتظر لحظة',
   calendarUnavailable: 'التقويم غير متاح الآن — مصدر الأحداث لم يستجب، وهذا لا يعني أنه لا أخبار اليوم. يعيد المحاولة وحده كل 5 دقائق',
   sigLevelsUnavailableNoPrice: 'لا مستويات دخول ووقف وهدف — لا سعر حيّ الآن',
@@ -3879,6 +3882,7 @@ const enUS: Dict = {
   accPasswordChanged: 'Password changed. Your other devices have been logged out.',
   accPasswordWrongCurrent: 'Your current password isn’t right',
   accPasswordChangeError: 'Couldn’t change your password — check your connection and try again',
+  accPasswordSessionEnded: 'Your session on this device has ended — log in again, then change your password',
   a11yBusy: 'Working, please wait',
   calendarUnavailable: "Calendar unavailable right now — the events source didn’t respond. That doesn’t mean there’s no news today. Retries on its own every 5 minutes",
   sigLevelsUnavailableNoPrice: 'No entry, stop or target — no live price right now',
@@ -3963,6 +3967,7 @@ const enGB: Dict = {
   lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
   domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
   accPasswordChanged: 'Password changed. Your other devices have been signed out.',
+  accPasswordSessionEnded: 'Your session on this device has ended — sign in again, then change your password',
 };
 
 const ku: Dict = {
@@ -5142,6 +5147,7 @@ const ku: Dict = {
   accPasswordChanged: 'وشەی نهێنی گۆڕدرا، و ئامێرەکانی ترت لە هەژمارەکە دەرچوون',
   accPasswordWrongCurrent: 'وشەی نهێنیی ئێستا هەڵەیە',
   accPasswordChangeError: 'وشەی نهێنی نەگۆڕدرا — پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە',
+  accPasswordSessionEnded: 'دانیشتنەکەت لەم ئامێرە کۆتایی هات — دووبارە بچۆ ژوورەوە، پاشان وشەی نهێنی بگۆڕە',
   a11yBusy: 'خەریکە، تکایە کەمێک چاوەڕێ بکە',
   calendarUnavailable: 'ڕۆژژمێر ئێستا بەردەست نییە — سەرچاوەی ڕووداوەکان وەڵامی نەدایەوە، ئەمەش مانای ئەوە نییە کە ئەمڕۆ هیچ هەواڵێک نییە. خۆی هەر 5 خولەک جارێک هەوڵ دەداتەوە',
   sigLevelsUnavailableNoPrice: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئێستا نرخی ڕاستەوخۆ نییە',
