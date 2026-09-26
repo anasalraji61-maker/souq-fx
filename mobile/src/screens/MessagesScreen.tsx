@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
-  brand: { color: colors.text, fontSize: 24, fontWeight: '500', textAlign: 'right' },
+  brand: { color: colors.text, fontSize: 18, fontWeight: '500', textAlign: 'right' },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textAlign: 'right' },
   notice: {
     color: colors.warn,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderColor: colors.border,
   },
-  msg: { color: colors.text, fontSize: 14, textAlign: 'right', lineHeight: 20 },
+  msg: { color: colors.text, fontSize: 13, textAlign: 'right', lineHeight: 20 },
   ts: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   composer: {
     flexDirection: 'row-reverse',

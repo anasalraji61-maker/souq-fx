@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   meta: { color: colors.textDim, fontSize: 12 },
   title: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '500',
     marginTop: spacing.md,
   },

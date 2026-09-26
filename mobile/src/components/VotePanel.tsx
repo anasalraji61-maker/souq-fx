@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   headRtl: { flexDirection: 'row-reverse' },
   headEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   blockedLine: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
-  symbol: { color: colors.text, fontWeight: '500', fontSize: 14 },
+  symbol: { color: colors.text, fontWeight: '500', fontSize: 13 },
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   badgeText: { color: colors.white, fontWeight: '500', fontSize: 11 },
   meta: { color: colors.textMuted, fontSize: 11, marginTop: 4 },

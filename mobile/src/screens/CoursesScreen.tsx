@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
-  brand: { color: colors.text, fontSize: 24, fontWeight: '500' },
+  brand: { color: colors.text, fontSize: 18, fontWeight: '500' },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   staleNote: {
     color: colors.warn,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   cardTopRtl: { flexDirection: 'row-reverse' },
   order: { color: colors.textDim, fontWeight: '500' },
-  school: { color: colors.accent, fontWeight: '500', fontSize: 16 },
+  school: { color: colors.accent, fontWeight: '500', fontSize: 15 },
   desc: {
     color: colors.textMuted,
     fontSize: 13,

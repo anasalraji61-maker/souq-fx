@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headRtl: { flexDirection: 'row-reverse' },
-  title: { color: colors.text, fontWeight: '500', fontSize: 14 },
+  title: { color: colors.text, fontWeight: '500', fontSize: 13 },
   sub: { color: colors.textDim, fontSize: 11, marginTop: 4 },
   refresh: {
     flexShrink: 0,

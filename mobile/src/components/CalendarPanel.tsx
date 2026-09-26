@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 4,
   },
-  title: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 14 },
+  title: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 13 },
   filters: { flexDirection: 'row', gap: 4, paddingVertical: spacing.xs },
   filtersRtl: { flexDirection: 'row-reverse' },
   chip: {

@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     color: colors.text,
     fontWeight: '500',
-    fontSize: 14,
+    fontSize: 13,
     marginBottom: spacing.sm,
   },
   modalList: { maxHeight: 320 },

@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   triggerOn: { backgroundColor: colors.selectedFill },
   triggerText: { color: colors.text, fontWeight: '500', fontSize: 13 },
-  triggerTextLarge: { color: colors.text, fontSize: 14 },
+  triggerTextLarge: { color: colors.text, fontSize: 15 },
   caret: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   caretLarge: { color: colors.textMuted },
   panel: {

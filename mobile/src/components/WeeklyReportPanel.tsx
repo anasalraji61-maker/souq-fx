@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   cardMarkerRtl: { left: undefined, right: 0 },
-  cardTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 14 },
+  cardTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 13 },
   cardHint: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
   out: {
     maxHeight: 320,

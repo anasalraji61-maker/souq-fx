@@ -667,7 +667,7 @@ export function AccountScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   wrap: { padding: spacing.lg, gap: spacing.md, backgroundColor: colors.bg, minHeight: '100%' },
-  title: { color: colors.text, fontSize: 22, fontWeight: '500' },
+  title: { color: colors.text, fontSize: 18, fontWeight: '500' },
   sub: { color: colors.textDim, fontSize: 12 },
   langBox: {
     backgroundColor: colors.bgElevated,
@@ -799,5 +799,5 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   legTitle: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
-  legNum: { ...numeric, color: colors.text, fontSize: 22, fontWeight: '500' },
+  legNum: { ...numeric, color: colors.text, fontSize: 18, fontWeight: '500' },
 });

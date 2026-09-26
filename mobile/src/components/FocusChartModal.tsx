@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   symbolHeading: { flex: 1 },
   title: { color: colors.text, fontSize: 18, fontWeight: '500' },
   sub: { color: colors.textDim, fontSize: 11 },
-  price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 14 },
+  price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 15 },
   quote: { alignItems: 'flex-start' },
   change: { ...numeric, fontWeight: '500', fontSize: 11, marginTop: 4 },
   body: { flex: 1, flexDirection: 'row' },
