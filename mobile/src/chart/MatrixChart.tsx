@@ -102,6 +102,7 @@ import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
   legendBandAt,
   legendChipWidth,
+  LEGEND_MORE_W,
   legendMultiAt,
   legendValueAt,
   planPriceLegendForWidth,
@@ -9024,6 +9025,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               if (!plan) return null;
               const yP = hasShadows ? yPrimary : yOf;
               const laneBot = shadowStack ? shadowStack.primaryLane.height : chartPlotH;
+              // القمّة عند حافّة اللوح العليا (هامش المقياس 6% ⇒ ~13px على هاتف) تقع تحت سطر OHLC المدمج وشارات
+              // المفتاح (فوقها بـ`zIndex`) فيُحجب رقمها: تنزل تحت ما يتقاطع معها أفقياً. الحساب كحساب `styles.priceLegend`.
+              const topBase = shadowStack ? 24 : 4;
+              const denseH = denseOhlcPlan ? denseOhlcPlan.lines * denseOhlcPlan.lineH : 0;
+              const covers: { l: number; r: number; bottom: number }[] = [];
+              if (denseOhlcPlan) covers.push({ l: 6, r: chartPlotW - 6, bottom: topBase + denseH });
+              if (priceLegend.chips.length > 0 || priceLegend.more > 0 || showCompareChip) {
+                const legendW =
+                  (showCompareChip ? compareChipW : 0) +
+                  priceLegend.chips.reduce((sum, c) => sum + legendChipWidth(c, legendValueChars[c.id] ?? 0), 0) +
+                  (priceLegend.more > 0 ? LEGEND_MORE_W : 0);
+                covers.push({
+                  l: 6,
+                  r: Math.min(chartPlotW - 6, 6 + legendW),
+                  bottom: topBase + (denseOhlcPlan ? denseH + 6 : 0) + 16,
+                });
+              }
               return (['high', 'low'] as const).map((which) => {
                 const m = plan[which];
                 const y = yP(m.price);
@@ -9031,7 +9049,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 const text = fmtPrice(m.price);
                 const w = text.length * HILO_CHAR_W + 12;
                 const x = xOf(m.index);
-                const top = Math.max(0, Math.min(laneBot - HILO_LABEL_H, y - HILO_LABEL_H / 2));
+                const left = m.leftSide ? x - primaryColW / 2 - 2 - w : x + primaryColW / 2 + 2;
+                let top = Math.max(0, Math.min(laneBot - HILO_LABEL_H, y - HILO_LABEL_H / 2));
+                if (which === 'high') {
+                  for (const c of covers) {
+                    if (left < c.r && left + w > c.l && top < c.bottom + 2) top = c.bottom + 2;
+                  }
+                  top = Math.min(top, laneBot - HILO_LABEL_H);
+                }
                 return (
                   <View
                     key={`hilo-${which}`}
@@ -9040,7 +9065,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       styles.hiLoLabel,
                       {
                         top,
-                        left: m.leftSide ? x - primaryColW / 2 - 2 - w : x + primaryColW / 2 + 2,
+                        left,
                         width: w,
                         flexDirection: m.leftSide ? 'row-reverse' : 'row',
                       },
