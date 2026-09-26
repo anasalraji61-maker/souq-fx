@@ -371,3 +371,8 @@ def test_no_card_levels_when_atr_rounds_onto_the_entry(monkeypatch):
     s = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "USDSAR"}).json()["setup"]
     assert s["direction"] == "buy"
     assert s["entry"] is None and s["sl"] is None and s["tp"] is None
+
+
+def test_ai_symbol_is_bounded():
+    r = TestClient(main.app).post("/api/ai/ask", json={"question": "hi there", "symbol": "X" * 100000})
+    assert r.status_code == 422

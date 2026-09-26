@@ -230,7 +230,8 @@ class VoteBallot(BaseModel):
 
 class AiAsk(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
-    symbol: str | None = None
+    # كان بلا حدّ: 100 ألف حرف تذهب لرابط المزوّد وموجّه النموذج المدفوع (حدّ `question` يُتجاوز به)
+    symbol: str | None = Field(default=None, max_length=12)
     # لغة واجهة المتداول ('ar' | 'en-US' | 'en-GB' | 'ku'). اختياري: غيابه = عربي (عملاء أقدم).
     lang: str | None = Field(default=None, max_length=10)
 
@@ -1970,7 +1971,7 @@ def ai_ask(body: AiAsk):
     `win_probability` يبقى بالشكل (null) توافقاً مع العملاء القدامى. وعند سلسلة demo البذرية (المزوّد
     متعذّر) لا دخول/وقف/هدف ولا اتجاه: كانت تُشتق من شموع مختلَقة وتُعرض كسيناريو على سعر حقيقي."""
     q = body.question.strip()
-    sym = (body.symbol or "EURUSD").upper()
+    sym = market.canonical_symbol(body.symbol or "") or "EURUSD"
     lang = openrouter_ai.normalize_lang(body.lang)
     series = build_series(sym)
     live = series.data_source.kind != "demo"
