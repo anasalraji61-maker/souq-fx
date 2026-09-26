@@ -1096,3 +1096,10 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (d33f514):** وصلت 11 كوميتاً ⇒ أخضر 0، `crossAnchor.selftest` ناجح. أُغلق chart-r82a ← tools `cced072`. tools أزال صفّ الفريمات المكرّر (`25069dd`) وشريط الطرفية 32px بحدّ فقط (`d0226cb`/`b594403`؛ كان 34–38 بلا `hitSlop` أصلاً) ⇒ 0/12 باقٍ.
 **بعد السحب (40054bc):** أخضر 0. ui `b1bec76` (حذف التنبيه مخفي وقت السكون، بند 4) و`9370541` (`animationType="none"`)؛ **ui72a → tools** مُتحقَّق (`TerminalScreen.tsx:2071` `"slide"`، صُحّح السطر من :2088). 0/12 باقٍ.
+
+## 2026-09-26 — الدورة 100
+**البناء:** أخضر 0 (على 52cdc2f) — لا إصلاح لازم. **Selftests:** 115/115 ناجح (`npx tsx`، -P4).
+**التحقّق بالكود:** QA99a ← launch `59f30b7` (`STORE-LISTING.md:87/149` «12») ⇒ مُغلق. launch165a: `LayoutPanel.tsx:271` ← `52cdc2f`؛ `IndicatorAlertsPanel`/`WatchlistPanel` بلا `rowDeleteLongPressHint` ⇒ باقٍ → ui. ui72a باقٍ (`TerminalScreen.tsx:2071`). سجلات chart/tools/ui/backend: لا طلب جديد (ملاحظة chart الاختيارية `mcHintNavigateWeb` مذكورة بالتذييل).
+**قائمة قبول DESIGN-PRO (العشرون):** 0/12 فشل (diff منذ 40054bc، 8 ملفّات: `longPressHint` 11px/`lineHeight` 16/`textMuted`؛ الباقي منطق).
+**المراجعة (e — ما يُحرج أمام متداول):** tsx على `parseLeverage`/`parseDecimal`: «1 30» ⇒ null، «1 : 30»/«١:٣٠»/«1：100»/RLM ⇒ صحيحة، «1:1.000» ⇒ سؤال الآلاف، «‏10.000» ⇒ 10 مع كاشف السؤال؛ «30x» مرفوضة (اتجاه آمن). **لا بند.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
