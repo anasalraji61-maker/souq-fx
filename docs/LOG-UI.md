@@ -766,10 +766,10 @@
 
 | commit | ماذا | صفّ |
 |---|---|---|
-| 8ce3613 | `AccountScreen`: «تغيير كلمة المرور» زرّ محايد مطوي (`expanded`) فوق «الخروج» ⇒ الحالية + الجديدة (`secureTextEntry`، `current-password`/`new-password`)؛ <4 ⇒ `regErrPasswordLength` بلا طلب؛ 400 `invalid current password` ⇒ `accPasswordWrongCurrent`؛ `password too short`/422 ⇒ `regErrPasswordLength`؛ غيره ⇒ `accPasswordChangeError`؛ النجاح ⇒ `accPasswordChanged` ومسح الحقلين | backend-r58، ui60a |
-| 050db45 | قارئ الشاشة: 13 زرّاً يعرض «...» أثناء الانتظار كان يُعلن الإجراء الساكن ⇒ `t.a11yBusy` (Account ×4، Alerts ×2، IndicatorAlerts ×2، Forecast، Backtest، Lecture، Vote، NetworkTree) + `busy` بالحالة حيث غاب | إتاحة (تعليق القاموس) |
-| caf66ab | `AccountScreen` ميزانية التأكيد: تسميات الحقول والاسم وعدّادا الساقين كانت كلها بالتأكيد ⇒ محايدة؛ اللغة/التبويب المختار بالتعبئة وحدها | DESIGN-PRO §1، §5.5 |
-| 460bede | الشيء نفسه بـ9 لوحات (`cellOn`، `chipOn`، `pillOn`، `watchOn`، `condOn`، `tileOn`، `mine`): حدّ تأكيد + تعبئة + نصّ تأكيد ⇒ تعبئة وحدها ونصّ محايد؛ تحقّقت أن كل موضع يحمل `accessibilityState.selected` | DESIGN-PRO §1، §5.5، §4 |
+| 435ff8d | `AccountScreen`: «تغيير كلمة المرور» زرّ محايد مطوي (`expanded`) فوق «الخروج» ⇒ الحالية + الجديدة (`secureTextEntry`، `current-password`/`new-password`)؛ <4 ⇒ `regErrPasswordLength` بلا طلب؛ 400 `invalid current password` ⇒ `accPasswordWrongCurrent`؛ `password too short`/422 ⇒ `regErrPasswordLength`؛ غيره ⇒ `accPasswordChangeError`؛ النجاح ⇒ `accPasswordChanged` ومسح الحقلين | backend-r58، ui60a |
+| 94bf338 | قارئ الشاشة: 13 زرّاً يعرض «...» أثناء الانتظار كان يُعلن الإجراء الساكن ⇒ `t.a11yBusy` (Account ×4، Alerts ×2، IndicatorAlerts ×2، Forecast، Backtest، Lecture، Vote، NetworkTree) + `busy` بالحالة حيث غاب | إتاحة (تعليق القاموس) |
+| 94ec997 | `AccountScreen` ميزانية التأكيد: تسميات الحقول والاسم وعدّادا الساقين كانت كلها بالتأكيد ⇒ محايدة؛ اللغة/التبويب المختار بالتعبئة وحدها | DESIGN-PRO §1، §5.5 |
+| ac3a381 | الشيء نفسه بـ9 لوحات (`cellOn`، `chipOn`، `pillOn`، `watchOn`، `condOn`، `tileOn`، `mine`): حدّ تأكيد + تعبئة + نصّ تأكيد ⇒ تعبئة وحدها ونصّ محايد؛ تحقّقت أن كل موضع يحمل `accessibilityState.selected` | DESIGN-PRO §1، §5.5، §4 |
 
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط؛ `Alert.alert`/`window.confirm` لا شيء خارج `confirmDestructive`؛ «درجة الاتفاق» تعليقات فقط؛ الشريط الجانبي أيقونات مع تلميح.
 - باقٍ بالتأكيد عمداً: `QuadChartModal.cellLeader` (حدّ وحده، الخانة القائدة)، `FrameSizedGrid`/`PanSpeedSlider` (أثناء السحب)، `MessagesScreen` (غير مركّبة، launch52).
