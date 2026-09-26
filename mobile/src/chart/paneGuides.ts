@@ -241,9 +241,15 @@ const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > 
  * يحوّل عتبات لوحة إلى مواضع بكسل داخل مساحة رسم بارتفاع `innerH`.
  * يعيد [] للوحة بلا عتبات معروفة أو لارتفاع لا يتّسع.
  */
-export function placeGuides(paneId: string, innerH: number): PlacedGuide[] {
-  const spec = PANE_GUIDES[paneId];
-  if (!spec) return [];
+export function placeGuides(
+  paneId: string,
+  innerH: number,
+  range?: { min: number; max: number }
+): PlacedGuide[] {
+  const base = PANE_GUIDES[paneId];
+  if (!base) return [];
+  // `range`: لوحة يتّسع مداها بالقيم (‎%B‎ خارج الحزام) — الخطوط بقيمها على المدى المرسوم فعلاً.
+  const spec = range ? { ...base, min: range.min, max: range.max } : base;
   if (!Number.isFinite(innerH) || innerH < GUIDES_MIN_INNER_H) return [];
   const span = spec.max - spec.min;
   if (!(span > 0)) return [];
@@ -542,4 +548,19 @@ export function paneValueTrend(
     return v < last ? 'up' : v > last ? 'down' : 'flat';
   }
   return null;
+}
+
+/**
+ * مدى لوحة ‎%B‎: ‎0..1‎ على الأقلّ، ويتّسع لما يظهر خارجه. كان مثبّتاً على ‎0..1‎ ⇒ إغلاق فوق الحزام العلوي
+ * (‎1.25‎) يُرسم على البكسل نفسه كلمسه (‎1.0‎)، وهو بالضبط ما يُقرأ ‎%B‎ من أجله (TradingView يقيس القيم).
+ */
+export function percentBRange(visible: readonly number[]): { min: number; max: number } {
+  let min = 0;
+  let max = 1;
+  for (const v of visible) {
+    if (!Number.isFinite(v)) continue;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  return { min, max };
 }

@@ -118,6 +118,7 @@ import {
   paneValueState,
   paneValueTrend,
   placeGuides,
+  percentBRange,
   placeScaledGuides,
   GUIDES_LABEL_MIN_INNER_H,
   GUIDES_MIN_INNER_H,
@@ -942,8 +943,16 @@ function AlertDragHandle({
   );
 }
 
-function PaneGuideLines({ paneId, innerH }: { paneId: string; innerH: number }) {
-  const guides = placeGuides(paneId, innerH);
+function PaneGuideLines({
+  paneId,
+  innerH,
+  range,
+}: {
+  paneId: string;
+  innerH: number;
+  range?: { min: number; max: number };
+}) {
+  const guides = placeGuides(paneId, innerH, range);
   if (guides.length === 0) return null;
   return (
     <>
@@ -12915,14 +12924,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="percentB" name="%B" values={percentB} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <PaneGuideLines paneId="percentB" innerH={paneH - 16} />
-            {/* ‎%B‎ خارج 0..1 (السعر خارج البولنجر) يُقصّ على حافّة اللوحة بلون التحذير كما كان. */}
-            <BoundedLineSeries
-              values={percentB}
-              paneH={paneH}
-              max={1}
-              color={(v) => (v > 1 || v < 0 ? colors.warn : v > 0.8 ? colors.bear : v < 0.2 ? colors.bull : accent)}
-            />
+            {(() => {
+              // ‎%B‎ خارج 0..1 (السعر خارج البولنجر) يوسّع المدى بالظاهر لا يُقصّ على الحافّة — لونه التحذير كما كان.
+              const r = percentBRange(visibleValues(percentB, paneVis));
+              return (
+                <>
+                  <PaneGuideLines paneId="percentB" innerH={paneH - 16} range={r} />
+                  <BoundedLineSeries
+                    values={percentB}
+                    paneH={paneH}
+                    min={r.min}
+                    max={r.max}
+                    color={(v) => (v > 1 || v < 0 ? colors.warn : v > 0.8 ? colors.bear : v < 0.2 ? colors.bull : accent)}
+                  />
+                </>
+              );
+            })()}
           </View>
         </View>
       ) : null}

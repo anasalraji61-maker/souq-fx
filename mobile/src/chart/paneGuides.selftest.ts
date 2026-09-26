@@ -14,6 +14,7 @@ import {
   formatPaneValueScaled,
   paneShownValue,
   latestPaneValue,
+  percentBRange,
   paneSeriesMaxAbs,
   paneSpreadSeries,
   paneValueAt,
@@ -479,4 +480,12 @@ console.log('paneGuides.selftest: PASS');
   assert.ok(t.length <= 8, t);
   // لوحة K/M لا تتأثّر
   assert.ok(formatPaneValueScaled([5e5, -5e5], 250000, 5)!.endsWith('K'));
+}
+
+// ‎%B‎: المدى 0..1 أدنى، ويتّسع للظاهر خارجه ⇒ 1.25 لا يقع على بكسل 1.0.
+{
+  assert.deepEqual(percentBRange([0.3, 0.7]), { min: 0, max: 1 });
+  assert.deepEqual(percentBRange([1.25, -0.2, 0.5]), { min: -0.2, max: 1.25 });
+  const g = placeGuides('percentB', INNER, { min: 0, max: 2 });
+  assert.equal(g.find((x) => x.v === 0.5)!.top, 0.75 * INNER);
 }
