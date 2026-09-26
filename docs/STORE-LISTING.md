@@ -84,7 +84,7 @@ MATRIX Charts
 MATRIX مساحة تحليل فني مصممة للمتداول الفردي: شارتات سريعة، أدوات رسم دقيقة، تنبيهات أسعار، وأكاديمية تعلّمك التحليل من الصفر — بواجهة عربية كاملة، وتدعم الإنجليزية والكردية أيضاً.
 
 الشارت
-• 11 نوعاً للشارت: شموع يابانية ومجوّفة، أعمدة، هايكن آشي، خط، مساحة، خط أساس، رينكو، كاجي، نقطة ورقم، ونطاق (Range).
+• 12 نوعاً للشارت: شموع يابانية ومجوّفة، أعمدة، هايكن آشي، خط، مساحة، خط أساس، رينكو، كاجي، نقطة ورقم، نطاق (Range)، وكسر الخطوط.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة.
 • قارن زوجين على شارت واحد: بالشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول، كل شمعة مقابل نظيرتها زمنياً.
 • المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip وتغيّرها عن إغلاق السابقة، وكم pip يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
@@ -146,7 +146,7 @@ forex,charts,technical analysis,indicators,candlestick,alerts,economic calendar,
 MATRIX is a technical-analysis workspace built for individual traders: fast charts, precise drawing tools, price alerts, and an academy that teaches chart reading from the ground up. Available in English, Arabic and Kurdish.
 
 CHARTS
-• 11 chart types: solid/hollow candles, bars, Heikin-Ashi, line, area, baseline, Renko, Kagi, Point & Figure, Range.
+• 12 chart types: solid/hollow candles, bars, Heikin-Ashi, line, area, baseline, Renko, Kagi, Point & Figure, Range, Line Break.
 • Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned in time.
 • Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then 🔔 sets an alert there.
 • Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back; one tap returns to the live candle, zoom intact.
@@ -266,3 +266,6 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > اختُصرت عبارات بلا حذف ميزة (التنبيه، أداة القياس، القمّة/القاع، الرجوع للخلف، المقارنة — «بخطّ بنفسجي» حُذف، الدفتر، الهامش، الخطة، الارتكاز، الرباعي)،
 > وأُضيف **حدّ الخسارة اليومي** لسطر الحاسبة (معروض: `PositionSizePanel.tsx:1621`، والسطر :1845؛ النسبة شاملة السبريد والعمولة `421adcb`).
 > العدّ بسكربت (نصّ الوصف بين عنوانه و«ما الجديد»، أحرف Unicode بالأسطر الفارغة): **ar 3960 / en 3981** من 4000. تعديلا en-GB («Analyse»، «colours») بلا تغيير.
+
+> **2026-09-26 (launch 165، QA99a)**: سطر أنواع الشارت «11» ⇒ **12** — `CHART_KINDS` (`chart/types.ts:263`) فيها `lineBreak` منذ `d78a6c2`، واسمه بالتطبيق
+> من القاموس (`typeLabels.ts:37` ⇒ `ctlKindLineBreak`: «كسر الخطوط» / «Line break») فالمتجر بالاسم نفسه. العدّ بسكربت: **ar 3972 / en 3993** من 4000.
