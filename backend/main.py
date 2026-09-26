@@ -2413,8 +2413,8 @@ def ai_ask(body: AiAsk):
             f"- The dollar's strength shows best across more than one pair (EURUSD and USDJPY), not one chart.\n"
             f"- A break of a level is usually treated as confirmed only after a candle closes beyond it.\n"
             f"- Risk management: many traders cap the risk on any one trade at about 1% of capital.\n\n"
-            f"_Educational read only — not a trade recommendation. Local MVP model — connect OpenRouter for "
-            f"deeper analysis._"
+            # لا «connect OpenRouter»: تعليمة مطوّر لا نصّ واجهة (ui131a) — التطبيق يسم ردّ القالب بنفسه
+            f"_Educational read only — not a trade recommendation._"
         )
     else:
         if live:
@@ -2438,11 +2438,11 @@ def ai_ask(body: AiAsk):
         answer = (
             f"**تحليل سريع لـ {sym}**\n\n"
             f"{read}"
-            f"بالنسبة لسؤالك:\n"
+            # لا «بالنسبة لسؤالك»: النقاط عامة لا تجيب عن السؤال (ui131a)
             f"- قوة الدولار تظهر على أكثر من زوج (EURUSD وUSDJPY) لا على شارت واحد.\n"
             f"- كسر المستوى يُعدّ مؤكَّداً عادةً بعد إغلاق شمعة خلفه لا بمجرّد لمسه.\n"
             f"- إدارة المخاطر: كثير من المتداولين لا يخاطرون بأكثر من نحو 1% من رأس المال في الصفقة الواحدة.\n\n"
-            f"_قراءة تعليمية فقط — ليست توصية تداول. هذا النموذج MVP محلي — اربطه بـ OpenRouter لاحقاً لتحليل أعمق._"
+            f"_قراءة تعليمية فقط — ليست توصية تداول._"
         )
     return {
         "answer": answer,

@@ -585,9 +585,22 @@ def test_template_reply_does_not_quote_a_trade_call_question(monkeypatch):
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
     c = TestClient(main.app)
     ans = c.post("/api/ai/ask", json={"question": "اشترِ عند 1.0850 الآن", "lang": "ar"}).json()["answer"]
-    assert "1.0850" not in ans and "بالنسبة لسؤالك:" in ans
+    assert "1.0850" not in ans and "إدارة المخاطر" in ans
     ans = c.post("/api/ai/ask", json={"question": "ما هو RSI؟", "lang": "ar"}).json()["answer"]
-    assert "ما هو RSI؟" not in ans and "بالنسبة لسؤالك:" in ans
+    assert "ما هو RSI؟" not in ans and "إدارة المخاطر" in ans
+
+
+# ui131a: القالب كان يطبع للمستخدم تعليمة مطوّر («اربطه بـ OpenRouter لاحقاً») و«بالنسبة لسؤالك:» قبل نقاط عامة
+@pytest.mark.parametrize("lang", ["ar", "en", "ku"])
+def test_template_reply_has_no_developer_note_or_fake_answer_lead(monkeypatch, lang):
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "ما هو RSI؟", "lang": lang}).json()
+    ans = body["answer"]
+    assert body["source"] == "template"
+    for bad in ("OpenRouter", "MVP", "بالنسبة لسؤالك", "your question"):
+        assert bad not in ans
+    assert ("not a trade recommendation" in ans) if lang == "en" else ("ليست توصية تداول" in ans)
 
 
 # قرار أنس ١٢: الكردي يُجاب بالقالب العربي عند غياب النموذج ⇒ الردّ يقول لغته ليقولها التطبيق صراحةً
