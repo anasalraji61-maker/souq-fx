@@ -210,6 +210,9 @@ export type Dict = {
   aiInputA11y: string;
   aiSendA11y: string;
   aiAskBtn: string;
+  /** قرار أنس ١٢ (backend-r78a، ui84a): سطر خافت فوق ردّ المساعد (`AiPanel`) أو توضيح المحاضرة (`LectureClassroom`) حين
+   * `answer_lang`/`clarification_lang` = "ar" ولغة الواجهة غير العربية (الخادم بلا قالب كردي بعد، أو اعتذار الحارس). بالعربية لا يظهر أصلاً. */
+  aiReplyInArabicNote: string;
   analystsTitle: string;
   analystsSubSuffix: string;
   analystsRefreshA11y: string;
@@ -1742,6 +1745,7 @@ const ar: Dict = {
   aiAskBtn: 'اسأل',
   analystsTitle: 'توقعات المحللين',
   analystsSubSuffix: 'لا مصدر مرخَّص بعد — لا نعرض آراء مختلَقة',
+  aiReplyInArabicNote: 'الردّ بالعربية — لا يتوفّر الردّ بلغتك بعد',
   analystsRefreshA11y: 'تحديث توقعات المحللين',
   analystsLoadError: 'تعذّر تحميل توقعات المحللين — تحقّق من الاتصال ثم اضغط «تحديث»',
   socialPlatformTelegram: 'تيليجرام',
@@ -2988,6 +2992,7 @@ const enUS: Dict = {
   aiAskBtn: 'Ask',
   analystsTitle: 'Analyst forecasts',
   analystsSubSuffix: 'No licensed source yet — we don’t show made-up views',
+  aiReplyInArabicNote: "This reply is in Arabic — replies in your language aren't available yet",
   analystsRefreshA11y: 'Refresh analyst forecasts',
   analystsLoadError: 'Couldn’t load analyst forecasts — check your connection, then tap “Refresh”',
   socialPlatformTelegram: 'Telegram',
@@ -4273,6 +4278,7 @@ const ku: Dict = {
   aiAskBtn: 'بپرسە',
   analystsTitle: 'پێشبینیەکانی شیکارکاران',
   analystsSubSuffix: 'هێشتا سەرچاوەی مۆڵەتدار نییە — بۆچوونی دەستکرد پیشان نادەین',
+  aiReplyInArabicNote: 'ئەم وەڵامە بە عەرەبییە — وەڵام بە زمانی تۆ هێشتا بەردەست نییە',
   analystsRefreshA11y: 'نوێکردنەوەی پێشبینیەکانی شیکارکاران',
   analystsLoadError: 'نەکرا پێشبینیەکانی شیکارکاران باربکرێن — پەیوەندییەکەت بپشکنە و پاشان «نوێکردنەوە» دابگرە',
   socialPlatformTelegram: 'تێلێگرام',
