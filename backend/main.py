@@ -1925,7 +1925,8 @@ def courses():
                 "title": s["name_ar"],
                 "level": f"{s['levels_count']} مستويات",
                 "lessons": s["lectures_count"],
-                "ai_tutor": True,
+                # المعلّم = `/api/academy/interrupt` بالنموذج؛ بلا مفتاح يردّ قالباً ثابتاً ⇒ لا يُعلَن
+                "ai_tutor": openrouter_ai.configured(),
                 "progress": s["progress"],
                 "desc": s["summary"],
             }
@@ -1944,14 +1945,14 @@ def course_detail(course_id: str):
         "title": school["name_ar"],
         "level": f"حتى مستوى {school['max_level']}",
         "lessons": sum(len(lv["lectures"]) for lv in school["levels"]),
-        "ai_tutor": True,
+        "ai_tutor": openrouter_ai.configured(),
         "progress": None,  # لا مستخدم هنا ⇒ غير معروف لا «0%» (التقدّم الحقيقي بـ/api/academy/progress)
         "desc": school["summary"],
         "modules": [
             {
                 "id": f"lv{lv['level']}",
                 "title": f"المستوى {lv['level']}: {lv['title']}",
-                "ai_quiz": True,
+                "ai_quiz": False,  # لا مسار اختبار بالخادم أصلاً — كان True لميزة غير موجودة
             }
             for lv in school["levels"]
         ],

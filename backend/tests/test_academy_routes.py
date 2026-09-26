@@ -200,3 +200,13 @@ def test_lecture_duration_comes_from_its_narration_not_a_hand_written_number():
                 words = sum(len(s["narration"].split()) for s in lec["script_segments"])
                 assert lec["narration_words"] == words
                 assert lec["duration_min"] == max(1, -(-words // academy_data.NARRATION_WPM))
+
+
+def test_courses_do_not_advertise_features_that_do_not_exist(monkeypatch):
+    from fastapi.testclient import TestClient
+    import main
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    c = TestClient(main.app)
+    assert all(x["ai_tutor"] is False for x in c.get("/api/courses").json()["courses"])
+    d = c.get("/api/courses/basics").json()
+    assert d["ai_tutor"] is False and all(m["ai_quiz"] is False for m in d["modules"])
