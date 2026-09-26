@@ -224,6 +224,11 @@ export function WatchlistPanel({
       }
       prev[sym] = price;
     }
+    // رمزٌ سقط من البثّ (صمت `TICK_STALE_MS`، انقطاع، إغلاق السوق) يُنسى سعره السابق: أول تيك بعد
+    // العودة كان يُقارَن بسعر ما قبل الفجوة — دقائق أو عطلة أسبوع — فيومض الصفّ ويُلوَّن «تحرّك للتوّ».
+    for (const sym of Object.keys(prev)) {
+      if (ticks[sym] == null) delete prev[sym];
+    }
     if (changed && mountedRef.current) {
       const upd = changed;
       setTickDirs((cur) => ({ ...cur, ...upd }));
