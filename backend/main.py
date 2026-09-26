@@ -2170,6 +2170,20 @@ def course_detail(course_id: str):
     }
 
 
+def _move_pct_text(move: float, first: float | None) -> str | None:
+    """نسبة حركة حقيقية بخانتين، وبخانات أكثر إن كانت الخانتان تُظهرانها صفراً وهي ليست صفراً
+    (حتى رقمين معنويين: +0.0038%) — لا «+0.00%» بجانب اتجاه، ولا «−0.00%»."""
+    if not first or not math.isfinite(move):
+        return None
+    pct = move / first * 100
+    if not math.isfinite(pct):
+        return None
+    dp = 2
+    if pct != 0 and round(pct, 2) == 0:
+        dp = min(-math.floor(math.log10(abs(pct))) + 1, 10)
+    return f"{round(pct, dp) + 0.0:+.{dp}f}%"
+
+
 @app.post("/api/ai/ask")
 def ai_ask(body: AiAsk):
     """سؤال المساعد التعليمي. قرار أنس ٤: لا دخول ولا وقف ولا هدف ولا توصية شراء/بيع بأي مسار — كانت بطاقة
@@ -2209,6 +2223,9 @@ def ai_ask(body: AiAsk):
     flat = move == 0 or few or still or (atr_v is not None and net_move < atr_v)
     # وصف الحركة (صاعدة/هابطة) مسموح — وصف ما على الشارت ليس توصية
     bias = "صاعد" if move > 0 else "هابط"
+    # النسبة المعروضة من الحركة نفسها التي قرّرت الاتجاه: `change_pct` مقرَّبة لخانتين ⇒ USDHKD +0.0003
+    # (+0.0038%، فوق ATR) كانت «صاعد (تغيّر +0.00%)» — اتجاه بجانب رقم يقول «لا تغيّر».
+    pct_txt = _move_pct_text(move, series.candles[0].close if series.candles else None)
 
     # «close» كان يصف شمعة 15m لم تُغلق بعد (`at` = وقت الجلب) بأنها إغلاق ⇒ «latest price» الآن.
     # وقت `last` ومصدره: كان السياق `last=` وحده ⇒ النموذج يقول «السعر الحالي» عن سلسلة مخزَّنة (حتى 15د
@@ -2223,8 +2240,8 @@ def ai_ask(body: AiAsk):
             f"last={series.last} (latest price of the last candle at {at} — that candle may still be forming, "
             f"source={series.data_source.kind}; "
             f"not a live tick — if it is not recent, say so and do not call it the current price), "
-            + (f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
-               if series.change_pct is not None else "change_pct=unavailable (single candle), ")
+            + (f"change_pct_over_last_{bars}_candles={pct_txt}, "
+               if series.change_pct is not None and pct_txt else "change_pct=unavailable (single candle), ")
             + f"tf={series.timeframe}"
             + (", bias=none (too few candles for ATR14 — direction cannot be judged)" if few else
                ", bias=none (no price movement: every candle in the window has zero range)" if still else
@@ -2256,11 +2273,11 @@ def ai_ask(body: AiAsk):
                 f"No price movement over the last {bars + 1} candles ({series.timeframe}) — every candle has "
                 f"zero range, so no direction.\n\n"
                 if still else
-                f"Over the last {bars} candles ({series.timeframe}) the net move ({series.change_pct:+.2f}%) is "
+                f"Over the last {bars} candles ({series.timeframe}) the net move ({pct_txt}) is "
                 f"smaller than one average candle range (ATR14) — no clear direction.\n\n"
                 if flat else
                 f"Over the last {bars} candles ({series.timeframe}) the move looks **{bias_en}** "
-                f"(change {series.change_pct:+.2f}%).\n\n"
+                f"(change {pct_txt}).\n\n"
             )
         else:
             read = "No live price is available right now, so no trend read.\n\n"
@@ -2283,11 +2300,11 @@ def ai_ask(body: AiAsk):
                 f"لا حركة سعرية على آخر {bars + 1} شمعة ({series.timeframe}) — مدى كل شمعة صفر، فلا قراءة "
                 f"اتجاه.\n\n"
                 if still else
-                f"على آخر {bars} شمعة ({series.timeframe}) صافي الحركة ({series.change_pct:+.2f}%) أصغر من "
+                f"على آخر {bars} شمعة ({series.timeframe}) صافي الحركة ({pct_txt}) أصغر من "
                 f"مدى شمعة واحدة معتاد (ATR14) — لا اتجاه واضح.\n\n"
                 if flat else
                 f"على آخر {bars} شمعة ({series.timeframe}) الحركة تبدو **{bias}** "
-                f"(تغيّر {series.change_pct:+.2f}%).\n\n"
+                f"(تغيّر {pct_txt}).\n\n"
             )
         else:
             read = "لا يتوفر سعر حي الآن، لذلك لا قراءة اتجاه.\n\n"

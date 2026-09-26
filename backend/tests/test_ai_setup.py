@@ -665,3 +665,40 @@ def test_guard_drops_run83_multiline_leaks(text):
 ])
 def test_guard_run83_education_left_alone(text):
     assert openrouter_ai.guard_answer(text, "en") == text
+
+
+# run 88: النسبة المعروضة من الحركة نفسها التي قرّرت الاتجاه — كانت «صاعد (تغيّر +0.00%)» على USDHKD
+@pytest.mark.parametrize("lang", ["ar", "en"])
+def test_direction_is_never_shown_next_to_zero_pct(monkeypatch, lang):
+    base = _provider_series(0.0002, "USDHKD", 7.8, change_pct=0.0038)
+    build = lambda *a, **k: base(*a, **k).model_copy(update={"change_pct": 0.0})
+    monkeypatch.setattr(main, "build_series", build)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    s = build("USDHKD")
+    want = main._move_pct_text(s.last - s.candles[0].close, s.candles[0].close)
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "symbol": "USDHKD", "lang": lang}).json()
+    assert "0.00%" not in body["answer"]
+    assert want in body["answer"] and want.startswith("+0.00")
+
+
+def test_ai_context_pct_matches_real_move(monkeypatch):
+    base = _provider_series(0.0002, "USDHKD", 7.8, change_pct=0.0038)
+    monkeypatch.setattr(main, "build_series", lambda *a, **k: base(*a, **k).model_copy(update={"change_pct": 0.0}))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    seen = {}
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda q, sym, ctx, lang: seen.setdefault("ctx", ctx))
+    TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "symbol": "USDHKD"})
+    assert "bias=" in seen["ctx"] and "=+0.00%" not in seen["ctx"]
+
+
+@pytest.mark.parametrize("move, first, want", [
+    (0.0003, 7.8, "+0.0038%"),
+    (-0.0003, 7.8, "-0.0038%"),
+    (0.0030, 1.0, "+0.30%"),
+    (-0.00001, 1.0, "-0.0010%"),
+    (0.0, 1.0, "+0.00%"),
+    (0.1, 0.0, None),
+    (float("nan"), 1.0, None),
+])
+def test_move_pct_text(move, first, want):
+    assert main._move_pct_text(move, first) == want
