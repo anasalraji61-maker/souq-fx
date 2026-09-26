@@ -1082,7 +1082,7 @@ function PaneHead({
 }
 
 /**
- * خطّ الإشارة للوحات ذات الخطّين (MACD، Stoch/StochRSI ‎%D‎، KST، TSI، PMO): كان الرأس يطبع الخطّ الأول وحده
+ * خطّ الإشارة للوحات ذات الخطّين (MACD وVW-MACD، Stoch/StochRSI ‎%D‎، KST، TSI، PMO، SMI، WaveTrend): كان الرأس يطبع الخطّ الأول وحده
  * — و«MACD» كان يطبع **الهيستوغرام** تحت اسم MACD — بينما التقاطع بين الخطّين هو ما يُقرأ. كـTradingView:
  * القيمتان، كلّ واحدة بلون خطّها. بسطر ثالث حين يتّسع ارتفاع اللوحة (`PANE_SIGNAL_MIN_H`)، وإلا (`compact`)
  * بجانب القيمة الأولى إن اتّسعتا بسطر واحد (`PaneInlinePair`)، فلا يُقصّ نصف رقم بلوحة مضغوطة.
@@ -11539,7 +11539,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vwMacd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name={volName('VW-MACD')} priceDec={paneDec} values={vwMacd.hist} at={crossIndex} />
+          <PaneValueHead
+            name={volName('VW-MACD')}
+            priceDec={paneDec}
+            values={vwMacd.macdLine}
+            at={crossIndex}
+            signal={{ values: vwMacd.signal, color: colors.warn }}
+            compact={!paneSignalFits}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -12078,7 +12085,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {waveTrend ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="WaveTrend" values={waveTrend.wt1} at={crossIndex} />
+          <PaneValueHead
+            name="WaveTrend"
+            values={waveTrend.wt1}
+            at={crossIndex}
+            signal={{ values: waveTrend.wt2, color: colors.infoAccent }}
+            compact={!paneSignalFits}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -13540,7 +13553,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {smi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="SMI" values={smi.smi} at={crossIndex} />
+          <PaneValueHead
+            name="SMI"
+            values={smi.smi}
+            at={crossIndex}
+            signal={{ values: smi.signal, color: colors.infoAccent }}
+            compact={!paneSignalFits}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
