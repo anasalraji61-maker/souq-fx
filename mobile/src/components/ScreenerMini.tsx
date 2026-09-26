@@ -5,6 +5,7 @@ import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { formatLocalStamp } from '../localStamp';
+import { serverNowSec } from '../chart/dataSource';
 import type { Timeframe } from '../timeframes';
 
 /** فريم الفحص السريع — موضعٌ واحد بدل تكراره بالنداء وبنصّ «لا تطابق». */
@@ -81,6 +82,26 @@ export function ScreenerMini() {
       mountedRef.current = false;
     };
   }, []);
+
+  /**
+   * QA134a: الوسم يُحسب عند التصيير وحده، ولا شيء يُعيد تصيير اللوحة بعد الفحص ⇒ نتيجة طازجة 10:00 تبقى
+   * بلا وسم 10:45. مؤقّتٌ واحد لأقرب لحظة يتخطّى فيها سعرُ نتيجةٍ `STALE_SEC` (نمط `ToolsScreen` `asOfBeat`).
+   * والقِدَم بساعة الخادم (`serverNowSec`) لا الهاتف — `price_as_of` بساعة الخادم.
+   */
+  const [asOfBeat, setAsOfBeat] = useState(0);
+  useEffect(() => {
+    if (hits.length === 0) return;
+    const now = serverNowSec();
+    let next = Infinity;
+    for (const h of hits) {
+      const at =
+        typeof h.price_as_of === 'number' && Number.isFinite(h.price_as_of) ? h.price_as_of + STALE_SEC : NaN;
+      if (at >= now && at < next) next = at;
+    }
+    if (!Number.isFinite(next)) return;
+    const id = setTimeout(() => setAsOfBeat((v) => v + 1), Math.min(2 ** 31 - 1, (next - now + 1) * 1000));
+    return () => clearTimeout(id);
+  }, [hits, asOfBeat]);
 
   const run = useCallback(async (filter: string) => {
     setLoading(true);
@@ -224,7 +245,7 @@ export function ScreenerMini() {
             const asOf =
               typeof h.price_as_of === 'number' &&
               Number.isFinite(h.price_as_of) &&
-              Date.now() / 1000 - h.price_as_of > STALE_SEC
+              serverNowSec() - h.price_as_of > STALE_SEC
                 ? t.screenerPriceAsOf.replace('{time}', formatLocalStamp(h.price_as_of, lang))
                 : null;
             return (
