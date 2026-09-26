@@ -204,7 +204,7 @@ export function QuadChartModal({
   }, [visible, symbols, tf]);
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="none" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe}>
         <View style={[styles.top, rtl && styles.topRtl]}>
           <Pressable

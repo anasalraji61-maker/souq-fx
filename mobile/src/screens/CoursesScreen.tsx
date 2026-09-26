@@ -207,7 +207,7 @@ export function CoursesScreen() {
           يضغط المتداول بطاقة المدرسة فلا يحدث **شيء مرئي** حتى يردّ الخادم. */}
       <Modal
         visible={!!school || loadingSchool}
-        animationType="slide"
+        animationType="none"
         transparent
         onRequestClose={cancelOpen}
       >

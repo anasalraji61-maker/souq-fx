@@ -325,7 +325,7 @@ export function FocusChartModal({
     (hasSpread ? ` · B ${formatPrice(quote!.bid!, sym, quote!.bid)}/A ${formatPrice(quote!.ask!, sym, quote!.bid)}` : '');
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="none" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={[styles.top, rtl && styles.topRtl, phone && styles.topPhone]}>
           <Pressable

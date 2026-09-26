@@ -48,7 +48,7 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
   const back = () => (step > 0 ? go(step - 1) : finish());
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={back}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={back}>
       <View style={styles.backdrop}>
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <View style={styles.card}>

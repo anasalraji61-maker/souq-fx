@@ -73,7 +73,7 @@ export function MatrixSidePanel({
   if (!panel) return null;
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         {/* الخلفية المعتمة: نقرة للإغلاق باللمس فقط — قارئ الشاشة يغلق بزرّ الإغلاق المسمّى بالرأس، فلا عنصر بلا اسم. */}
         <Pressable style={styles.dim} onPress={onClose} accessible={false} importantForAccessibility="no" />

@@ -563,7 +563,7 @@ export function WatchlistPanel({
         )}
       </ScrollView>
 
-      <Modal visible={addOpen} transparent animationType="fade" onRequestClose={() => setAddOpen(false)}>
+      <Modal visible={addOpen} transparent animationType="none" onRequestClose={() => setAddOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={[styles.modalTitle, { textAlign: align }]}>{t.wlCatalogTitle}</Text>
