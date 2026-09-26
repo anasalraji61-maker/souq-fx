@@ -171,6 +171,9 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
     // وتصفّر التضاعف، إلا إن كان المقبس مفتوحاً أو قيد الاتصال أصلاً.
     const appSub = AppState.addEventListener('change', (next) => {
       if (next !== 'active' || !alive) return;
+      // المؤقّتات تتوقّف بالخلفية: تيك ما قبل ساعة كان يُعرض حيّاً (رأس الشارت وفحص التنبيه) حتى أوّل
+      // دورة فحص بعد العودة. يُكنس فوراً كـ`useMultiLiveTicks`.
+      setState((s) => (s && Date.now() - s.at > TICK_STALE_MS ? null : s));
       const cur = wsRef.current;
       if (cur && (cur.readyState === WebSocket.OPEN || cur.readyState === WebSocket.CONNECTING)) return;
       if (reconnectTimer) clearTimeout(reconnectTimer);
