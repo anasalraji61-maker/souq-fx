@@ -35,6 +35,8 @@ type Stats = {
   breakeven_count?: number;
   /** ربح/خسارة المركز المفتوح بآخر شمعة — خارج كل ما سبق (backend-r10 أ)؛ null = لا مركز، غائب = باك-إند أقدم */
   open_pnl_pct?: number | null;
+  /** رقم الصفقة (من 1) التي خسرت ≥100% فتوقّفت المحاكاة عندها؛ null = لم يُصفَّر، غائب = باك-إند أقدم (`c670673`) */
+  ruined_at_trade?: number | null;
 };
 
 type Strategy = 'ma_cross' | 'rsi_reversal' | 'macd_cross' | 'bb_bounce';
@@ -73,6 +75,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
     { side: string; entry: number; exit: number; pnl_pct: number; open?: boolean }[]
   >([]);
   const [equity, setEquity] = useState<{ i: number; equity: number }[]>([]);
+  /** الخادم يرسل آخر 40 صفقة و`trade_count` على كلّها (`trades_truncated`) */
+  const [truncated, setTruncated] = useState(false);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تشغيل الاختبار الخلفي بدل صمت كامل (نتائج فارغة كأنه لا صفقات) */
   const [error, setError] = useState<string | null>(null);
   /** لأي رمز·فريم·استراتيجية حُسبت النتيجة الظاهرة — تُعرض فوقها كي لا تُقرأ لاختيار آخر. */
@@ -93,6 +97,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
   useEffect(() => {
     reqRef.current += 1;
     setLoading(false);
+    setTruncated(false);
     setStats(null);
     setTrades([]);
     setEquity([]);
@@ -142,6 +147,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       setStats(res.stats as Stats);
       setTrades(res.trades ?? []);
       setEquity(res.equity_curve ?? []);
+      setTruncated(res.trades_truncated === true);
       playSoftClick();
     } catch {
       if (req !== reqRef.current) return;
@@ -270,6 +276,12 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
           <Text style={[styles.statLine, { textAlign: align }]}>
             {t.backtestStatTrades.replace('{n}', String(stats.trade_count))}
           </Text>
+          {/* launch224a: بلا هذا السطر «رأس المال النهائي: 0» بلا تفسير */}
+          {typeof stats.ruined_at_trade === 'number' ? (
+            <Text style={[styles.sampleWarn, { textAlign: align }]}>
+              {t.backtestRuined.replace('{n}', String(stats.ruined_at_trade))}
+            </Text>
+          ) : null}
           {stats.trade_count === 0 ? (
             <Text style={[styles.sampleWarn, { textAlign: align }]}>{t.backtestNoTrades}</Text>
           ) : null}
@@ -345,6 +357,13 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
             })}
           </View>
         </View>
+      ) : null}
+      {truncated && stats && trades.length > 0 ? (
+        <Text style={[styles.ranFor, { textAlign: align }]}>
+          {t.backtestTradesTruncated
+            .replace('{shown}', String(trades.length))
+            .replace('{n}', String(stats.trade_count))}
+        </Text>
       ) : null}
       <ScrollView style={{ maxHeight: 180 }}>
         {trades.map((tr, i) => {

@@ -681,6 +681,10 @@ export const api = {
       error?: string;
       /** 'demo' = مسار بذري مختلَق (المزوّد متعذّر) — لا تُعرض النتيجة؛ غيابه = خادم أقدم. */
       data_kind?: string;
+      /** true = `trades` آخر 40 فقط و`stats.trade_count` على كلّها (backend `c670673`) */
+      trades_truncated?: boolean;
+      /** وقت جلب الشموع (ث يونكس؛ مع `data_kind: cache` قد يكون حتى 15د) — backend `72c8725` */
+      as_of?: number | null;
     }>('/api/backtest', body),
   indicatorAlerts: () =>
     getJson<{
