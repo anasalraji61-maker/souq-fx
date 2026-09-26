@@ -2535,7 +2535,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
-  phoneWatch: { maxHeight: 44, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  // W5: `maxHeight: 44` قصّ الأسماء (المحتوى ~50: حشوة الصفّ + الحبّة + الحدّ + السطر). `flexGrow: 0` ⇒ ارتفاع المحتوى، بلا تمدّد عمودي.
+  phoneWatch: { flexGrow: 0, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   phoneWatchRow: { gap: 4, paddingHorizontal: spacing.sm, paddingVertical: 8 },
   phoneWatchModal: { flex: 1, backgroundColor: colors.bg },
   phoneWatchModalBar: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
