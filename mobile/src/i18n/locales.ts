@@ -1271,6 +1271,9 @@ export type Dict = {
   mcSaveTemplate: string;
   mcAlertLine: string;
   mcAlertZone: string;
+  /** قارئ الشاشة لزرّ «تنبيه خط»/«تنبيه منطقة» (الشريط والزرّ الأيمن): زرّ المنطقة يُنشئ **تنبيهين** عند حدّيها — `{hi}`/`{lo}` بسعر الرمز، `{price}` مستوى الخطّ */
+  mcAlertLineA11y: string;
+  mcAlertZoneA11y: string;
   mcAlertAtLineLevel: string;
   mcAlertAtCrossA11y: string;
   // chart/typeLabels.ts chartExtraLabels ← هنا (طلب وكيل الشارت). mcMeasureBarOne/Two: صيغتا المفرد والمثنّى لعدّ القياس (barsCountText)
@@ -2630,6 +2633,8 @@ const ar: Dict = {
   mcSaveTemplate: 'حفظ كافتراضي',
   mcAlertLine: 'تنبيه خط',
   mcAlertZone: 'تنبيه منطقة',
+  mcAlertLineA11y: 'تنبيه سعر عند مستوى الخط {price}',
+  mcAlertZoneA11y: 'تنبيهان، واحد عند كل حدّ للمنطقة: {hi} و{lo}',
   mcAlertAtLineLevel: 'تنبيه عند مستوى الخط الحالي',
   mcAlertAtCrossA11y: 'إنشاء تنبيه سعر عند',
   mcUndoA11y: 'تراجع عن آخر تغيير في الرسم',
@@ -3887,6 +3892,8 @@ const enUS: Dict = {
   mcSaveTemplate: 'Save as default',
   mcAlertLine: 'Line alert',
   mcAlertZone: 'Zone alert',
+  mcAlertLineA11y: 'Price alert at the line level {price}',
+  mcAlertZoneA11y: 'Two alerts, one at each edge of the zone: {hi} and {lo}',
   mcAlertAtLineLevel: 'Alert at the current line level',
   mcAlertAtCrossA11y: 'Create a price alert at',
   mcUndoA11y: 'Undo the last drawing change',
@@ -5193,6 +5200,8 @@ const ku: Dict = {
   mcSaveTemplate: 'پاشەکەوت وەک بنەڕەت',
   mcAlertLine: 'ئاگاداری هێڵ',
   mcAlertZone: 'ئاگاداری ناوچە',
+  mcAlertLineA11y: 'ئاگاداری نرخ لە ئاستی هێڵەکە {price}',
+  mcAlertZoneA11y: 'دوو ئاگاداری، یەکێک لە هەر لێوارێکی ناوچەکە: {hi} و {lo}',
   mcAlertAtLineLevel: 'ئاگاداری لە ئاستی هێڵی ئێستا',
   mcAlertAtCrossA11y: 'دروستکردنی ئاگاداری نرخ لە',
   mcUndoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
