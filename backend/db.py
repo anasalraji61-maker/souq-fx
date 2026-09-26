@@ -559,7 +559,10 @@ def register_user(
     if len(username) < 3 or len(password) < 4:
         raise ValueError("username/password too short")
     _check_username(username)
-    if not email_norm or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email_norm):
+    # محارف تحكّم/تنسيق («b\x00@x.com»، عرض صفري) كانت تُقبل ⇒ بريد يُحفظ ويُعاد بمحرف لا يُرى
+    if not email_norm or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email_norm) or any(
+        unicodedata.category(ch)[0] == "C" for ch in email_norm
+    ):
         raise ValueError("invalid email")
     role = (role or "trader").strip().lower()
     if role not in commissions_mod.ROLE_LABELS_AR:

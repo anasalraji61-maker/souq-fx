@@ -489,3 +489,9 @@ def test_existing_look_alike_pair_does_not_break_startup(tmp_path, monkeypatch):
     with db._conn() as c:
         skels = {r[0] for r in c.execute("SELECT username_skel FROM users")}
     assert skels == {"alice"}
+
+
+@pytest.mark.parametrize("bad", ["b\x00@x.com", "b​@x.com", "b@x\x7f.com"])
+def test_email_with_control_or_invisible_chars_is_rejected(_db, bad):
+    with pytest.raises(ValueError, match="invalid email"):
+        _register("trader9", email=bad)
