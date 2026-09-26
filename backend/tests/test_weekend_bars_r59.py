@@ -40,6 +40,20 @@ def _ts(s: str) -> float:
     ("BTCUSD", "2026-09-26 03:00", 60, False),     # يتداول بالعطلة
     ("AAPL", "2026-09-26 03:00", 60, False),       # جلسة مجهولة ⇒ لا إسقاط
     ("EURUSD", "2026-09-21 00:00", 604800, False),
+    # run 96: المعادن والنفط تفتح الأحد 18:00 نيويورك (22:00 UTC صيفاً، 23:00 شتاءً) لا 17:00
+    ("XAUUSD", "2026-09-27 21:30", 60, True),
+    ("XAUUSD", "2026-09-27 21:59", 60, True),
+    ("XAUUSD", "2026-09-27 22:00", 60, False),
+    ("XAGUSD", "2026-09-27 21:30", 60, True),
+    ("XAUEUR", "2026-09-27 21:30", 60, True),
+    ("USOIL", "2026-09-27 21:30", 60, True),
+    ("UKOIL", "2026-09-27 21:30", 60, True),
+    ("WTI/USD", "2026-09-27 21:30", 60, True),
+    ("USOIL", "2026-11-29 22:30", 60, True),
+    ("USOIL", "2026-11-29 23:00", 60, False),
+    ("EURUSD", "2026-11-29 22:30", 60, False),
+    ("XAUUSD", "2026-09-25 20:59", 60, False),   # الإغلاق الجمعة 17:00 كالفوركس
+    ("XAUUSD", "2026-09-25 21:00", 60, True),
 ])
 def test_in_weekend_close(sym, when, step, dropped):
     assert market.in_weekend_close(sym, _ts(when), step) is dropped
@@ -170,3 +184,12 @@ def test_weekend_fallback_quote_says_market_closed(routes, monkeypatch, sym, now
     body = TestClient(main.app).get(f"/api/market/quote/{sym}").json()
     assert body["source"] == "ohlc_fallback"
     assert "market_open" in body and body["market_open"] is expected
+
+
+def test_metal_cache_valid_until_its_own_reopen():
+    """run 96: شموع الذهب المجلوبة بالعطلة صالحة حتى افتتاحه 18:00 نيويورك، لا 17:00 كالفوركس."""
+    fetched = _ts("2026-09-26 12:00")
+    assert market._closed_until("EURUSD", fetched) == _ts("2026-09-27 21:00")
+    assert market._closed_until("XAUUSD", fetched) == _ts("2026-09-27 22:00")
+    assert market._closed_until("UKOIL", _ts("2026-09-27 21:30")) == _ts("2026-09-27 22:00")
+    assert market._closed_until("EURUSD", _ts("2026-09-27 21:30")) is None

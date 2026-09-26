@@ -118,11 +118,23 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
         close = _weekly_close_utc(friday + timedelta(days=7))
     return float(min(end, close))
 
-def _weekly_open_utc(sunday: datetime) -> int:
-    """الأحد 17:00 نيويورك بثواني UTC — يوم تحويل الساعة نفسه يأخذ الإزاحة الجديدة (التحويل 02:00)."""
+# المعادن والنفط تفتح الأحد 18:00 نيويورك (CME Globex للذهب/الفضة/WTI، وICE برنت 23:00 لندن) لا 17:00
+# كالفوركس. كانت كلها تُعدّ مفتوحة من 17:00 ⇒ شموع ملء العطلة من المزوّد لتلك الساعة تمرّ «أسعاراً حيّة»
+# للذهب والنفط: تُطلق عليها التنبيهات وتُعرض آخر سعر.
+_SUNDAY_18 = frozenset({"USOIL", "UKOIL"})
+
+
+def _opens_sunday_18(sym: str) -> bool:
+    return sym in _SUNDAY_18 or sym[:3] in ("XAU", "XAG", "XPT", "XPD")
+
+
+def _weekly_open_utc(sunday: datetime, sym: str = "") -> int:
+    """الأحد 17:00 نيويورك بثواني UTC (18:00 للمعادن والنفط) — يوم تحويل الساعة نفسه يأخذ الإزاحة الجديدة
+    (التحويل 02:00)."""
     y = sunday.year
     dst = (3, _nth_sunday(y, 3, 2)) <= (sunday.month, sunday.day) < (11, _nth_sunday(y, 11, 1))
-    return int(sunday.replace(hour=21 if dst else 22, minute=0, second=0, microsecond=0).timestamp())
+    hour = (21 if dst else 22) + (1 if _opens_sunday_18(sym) else 0)
+    return int(sunday.replace(hour=hour, minute=0, second=0, microsecond=0).timestamp())
 
 
 # مفتاح للاختبارات فقط: اختبارات قديمة تبني اقتباسات EURUSD بوقت «الآن» فتسقط يوم السبت (`tests/conftest.py`).
@@ -151,7 +163,7 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
         return opened.weekday() >= 5
     friday = opened - timedelta(days=(opened.weekday() - 4) % 7)
     close = _weekly_close_utc(friday)
-    reopen = _weekly_open_utc(friday + timedelta(days=2))
+    reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
     return close <= open_ts and open_ts + step <= reopen
 
 
@@ -166,12 +178,13 @@ def _closed_until(matrix_symbol: str, fetched_at: float) -> float | None:
     صالحة حتى الافتتاح بدل TTL الفريم. W1: قائمة المتابعة تطلب شمعة D لكل رمز (16) — كل 10 دقائق طوال
     العطلة من حدّ الروبوت المشترك، وأيّ 429 بعد 15 دقيقة من الجلب كان يعيد الصفّ «—». `as_of` يبقى وقت
     الجلب الحقيقي."""
-    if not WEEKEND_CLOSE_FILTER or not _has_weekly_session(canonical_symbol(matrix_symbol)):
+    sym = canonical_symbol(matrix_symbol)
+    if not WEEKEND_CLOSE_FILTER or not _has_weekly_session(sym):
         return None
     d = datetime.fromtimestamp(float(fetched_at), tz=timezone.utc)
     friday = (d - timedelta(days=(d.weekday() - 4) % 7)).replace(hour=0, minute=0, second=0, microsecond=0)
     close = _weekly_close_utc(friday)
-    reopen = _weekly_open_utc(friday + timedelta(days=2))
+    reopen = _weekly_open_utc(friday + timedelta(days=2), sym)
     return float(reopen) if close + _CLOSE_SETTLE <= fetched_at < reopen else None
 
 
@@ -243,7 +256,7 @@ CANDLE_DISK: Path | None = (
 _disk_checked: set[str] = set()
 # الجدول باسم نسخة: تغيير بمعالجة الشموع (فلتر العطلة، بناء W من D، `_candle`) لا يصل لسلسلة محفوظة قبله —
 # كانت تُحمَّل بعد النشر وتبقى. رفع الرقم مع أيّ تغيير كهذا ⇒ النشر يبدأ بقرص فارغ ويُجلب من المزوّد.
-_DISK_TABLE = "candles_v2"
+_DISK_TABLE = "candles_v3"
 
 # وقت آخر جلب **كامل** لكل مدخل (بحجمه هو). الدمج يُبقي شموع المدخل الأكبر الأقدم ويختم المدخل «الآن» ⇒ القائمة
 # (D/50 كل 90ث) كانت تُبقي أول ~130 شمعة من D/180 بلا جلب أبداً (والقرص يحفظها عبر إعادة التشغيل) — تصحيح
