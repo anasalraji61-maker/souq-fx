@@ -10534,6 +10534,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 });
               } else if (ctxMenu.drawingId) {
                 const drawingId = ctxMenu.drawingId;
+                // تنبيه الخطّ/المنطقة أوّلاً (كزرّ الشريط): على الويب الزرّ الأيمن على الدعم هو المكان المتوقَّع له —
+                // كانت القائمة نسخة/قفل/حذف فقط ويضطرّ المتداول للشريط أسفل الشارت.
+                const dr = drawings.find((x) => x.id === drawingId);
+                if (dr && onCreateAlert && (dr.tool === 'hline' || dr.tool === 'hray')) {
+                  const p = dr.a.price;
+                  items.push({ key: 'alert', label: `⚑ ${tr.mcAlertLine}`, price: p, run: () => createAlert(p) });
+                } else if (dr?.tool === 'zone' && dr.b && onCreateAlert) {
+                  const hi = Math.max(dr.a.price, dr.b.price);
+                  const lo = Math.min(dr.a.price, dr.b.price);
+                  items.push({
+                    key: 'alert',
+                    label: `⚑ ${tr.mcAlertZone}`,
+                    run: () => {
+                      createAlert(hi);
+                      createAlert(lo);
+                    },
+                  });
+                }
                 items.push({ key: 'clone', label: `❐ ${tr.mcCloneDrawing}`, run: () => cloneSelectedDrawing() });
                 items.push({
                   key: 'lock',
