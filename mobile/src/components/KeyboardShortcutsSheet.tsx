@@ -5,7 +5,7 @@ import { useI18n } from '../i18n/I18nContext';
 
 /**
  * W4 (قرار ١٦): «?» على الويب يفتح قائمة اختصارات لوحة المفاتيح. النصوص نفسها التي يعرضها الشارت
- * بتلميحه (`mcHintNavigateWeb` + `mcHintTypeTfWeb`) مقسومة سطراً سطراً عند « · » — مصدر واحد، فلا
+ * بتلميحه (`mcHintNavigateWeb` + `mcHintTypeTfWeb` + `mcHintTypeDateWeb`) مقسومة سطراً سطراً عند « · » — مصدر واحد، فلا
  * تختلف القائمة عن التلميح إن تغيّر اختصار. لا شيء على الهاتف.
  */
 function isTypingTarget(el: EventTarget | null): boolean {
@@ -40,7 +40,7 @@ export function KeyboardShortcutsSheet() {
 
   if (Platform.OS !== 'web') return null;
 
-  const lines = `${t.mcHintNavigateWeb}${t.mcHintTypeTfWeb}`
+  const lines = `${t.mcHintNavigateWeb}${t.mcHintTypeTfWeb}${t.mcHintTypeDateWeb}`
     .split(' · ')
     .map((s) => s.trim())
     .filter(Boolean);
@@ -55,7 +55,10 @@ export function KeyboardShortcutsSheet() {
         accessibilityLabel={t.closeWord}
       >
         <Pressable style={styles.sheet} onPress={() => undefined} accessible={false}>
-          <View accessibilityRole="list">
+          <Text accessibilityRole="header" style={[styles.title, { textAlign: align }]}>
+            {t.shortcutsSheetTitle}
+          </Text>
+          <View accessibilityRole="list" accessibilityLabel={t.shortcutsSheetTitle}>
             {lines.map((line, i) => (
               <Text key={i} style={[styles.line, { textAlign: align }]}>
                 {line}
@@ -94,6 +97,7 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     width: '100%',
   },
+  title: { color: colors.text, fontSize: 15, fontWeight: '500', marginBottom: 4 },
   line: { color: colors.text, fontSize: 13, lineHeight: 20, fontVariant: ['tabular-nums'] },
   closeBtn: { alignSelf: 'flex-end', paddingVertical: 8, paddingHorizontal: 12, marginTop: 4 },
   closeBtnRtl: { alignSelf: 'flex-start' },
