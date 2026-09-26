@@ -3864,7 +3864,7 @@ console.log('tradePlan journalChartSymbolAfterSave selftest OK');
 }
 console.log('tradePlan newestRecordedFirst selftest OK');
 
-// ——— journalEditSeen: حالة الصفّ عند فتح التعديل تُرسل مع PATCH (backend-r78b) ———
+// ——— journalEditSeen: الصفّ عند فتح التعديل يُرسل مع PATCH (backend-r78b، backend-r80a) ———
 {
   const { journalEditSeen } = require('./tradePlan') as typeof import('./tradePlan');
   assert.deepEqual(journalEditSeen({ status: 'closed', exit: 1.0842 }), { seen_status: 'closed', seen_exit: 1.0842 });
@@ -3877,5 +3877,40 @@ console.log('tradePlan newestRecordedFirst selftest OK');
   for (const x of [0, -1, NaN, Infinity]) assert.equal(journalEditSeen({ status: 'closed', exit: x })!.seen_exit, null, String(x));
   // حالة مجهولة ⇒ لا شيء يُرسل (كما قبل)
   for (const st of [undefined, null, '', 'pending', 'OPEN']) assert.equal(journalEditSeen({ status: st, exit: 1.1 }), null, String(st));
+  // backend-r80a: الصفّ الكامل كما فُتح عليه النموذج — تصحيح دخول من جهاز آخر لا يُمحى بحفظ ملاحظة من نموذج قديم
+  const row = { status: 'open', exit: null, symbol: 'EURUSD', side: 'buy', entry: 1.0842, size: 0.3, sl: 1.08, tp: 1.09, note: 'breakout' };
+  assert.deepEqual(journalEditSeen(row), {
+    seen_status: 'open',
+    seen_exit: null,
+    seen_symbol: 'EURUSD',
+    seen_side: 'buy',
+    seen_entry: 1.0842,
+    seen_size: 0.3,
+    seen_sl: 1.08,
+    seen_tp: 1.09,
+    seen_note: 'breakout',
+  });
+  // حجم/وقف/هدف مجهول ⇒ null صريح («رأيته فارغاً»؛ الخادم يقارن 0 القديم كفارغ) لا رقمٌ يرفضه (gt=0 ⇒ 422 يمنع الحفظ)
+  const blank = journalEditSeen({ ...row, size: null, sl: 0, tp: undefined, note: '' })!;
+  assert.equal(blank.seen_size, null);
+  assert.equal(blank.seen_sl, null);
+  assert.equal(blank.seen_tp, null);
+  assert.equal(blank.seen_note, '');
+  // الملاحظة null من صفّ قديم = '' (الخادم يقارن `note or ""`)
+  assert.equal(journalEditSeen({ ...row, note: null })!.seen_note, '');
+  // الأسعار بلا تقريب: الخادم يقارن بالمساواة، و150.123456789 المقرّبة كانت 409 دائماً
+  assert.equal(journalEditSeen({ ...row, entry: 150.123456789 })!.seen_entry, 150.123456789);
+  // اتجاه/رمز/دخول غير صالح ⇒ null = بلا فحص (الخادم يسقطه: أعمدة لا تكون فارغة) — لا 422
+  const odd = journalEditSeen({ ...row, side: 'SELL', symbol: '  ', entry: NaN })!;
+  assert.equal(odd.seen_side, null);
+  assert.equal(odd.seen_symbol, null);
+  assert.equal(odd.seen_entry, null);
+  // حدود الطول بالخادم (رمز 12، ملاحظة 500): أطول ⇒ لا يُرسل الفحص بدل 422 يمنع كل حفظ لهذا الصفّ
+  assert.equal(journalEditSeen({ ...row, symbol: 'ABCDEFGHIJKLM' })!.seen_symbol, null);
+  assert.equal(journalEditSeen({ ...row, symbol: 'ABCDEFGHIJKL' })!.seen_symbol, 'ABCDEFGHIJKL');
+  assert.equal('seen_note' in journalEditSeen({ ...row, note: 'x'.repeat(501) })!, false);
+  assert.equal(journalEditSeen({ ...row, note: 'x'.repeat(500) })!.seen_note!.length, 500);
+  // صفّ بلا الحقل أصلاً لا يُفحص به (الحالة والخروج وحدهما كما قبل)
+  assert.equal('seen_entry' in journalEditSeen({ status: 'open' })!, false);
 }
 console.log('tradePlan journalEditSeen selftest OK');

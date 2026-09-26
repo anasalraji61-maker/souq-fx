@@ -1267,8 +1267,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           // خانة حجم معروف مُسحت = null «غير معروف» (backend-r17 (b)) كما يُمسح الوقف والهدف؛ فُتحت فارغة ⇒ بلا تغيير (`editSizeValue`)
           size: editSizeValue(editing, num(size)),
           note: savedNote,
-          // backend-r78b: حالة الصفّ عند فتح النموذج ⇒ 409 إن أُغلق/أُعيد فتحه بجهاز آخر، بدل أن يكتب الخروج القديم فوقه.
-          // متغيّرٌ لا كائنٌ حرفي: نوع `updateTrade` (api.ts، ملك ui) بلا الحقلين بعد — COORDINATION tools122
+          // backend-r78b/r80a: الصفّ كما فُتح عليه النموذج (الحالة والخروج وكل حقل يُعاد إرساله) ⇒ 409 إن أُغلق/عُدّل بجهاز آخر،
+          // بدل أن يكتب الخروج أو الدخول القديم فوقه. متغيّرٌ لا كائنٌ حرفي: نوع `updateTrade` (api.ts، ملك ui) بلا حقول `seen_*`
           ...journalEditSeen(editing),
         };
         await api.updateTrade(editing.id, body);

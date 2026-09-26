@@ -494,18 +494,55 @@ export function editSizeValue(
 }
 
 /**
- * حالة الصفّ **كما رآه النموذج** عند فتح التعديل، تُرسل مع `PATCH /api/trades/{id}` (backend-r78b، `seen_status`/`seen_exit`):
- * مختلفةٌ عن المخزَّن ⇒ 409 `trade_changed_concurrently` بدل الكتابة. بلاها كان حفظ نموذجٍ فُتح على صفقة مغلقة بخروج قديم يعيد
- * ذلك الخروج فوق إغلاقٍ أحدث من جهاز آخر (+9% ⇒ −4.5%)، أو يعيد إغلاق صفقةٍ أُعيد فتحها. `editExitValue` يحمي المفتوحة وحدها.
- * حالةٌ غير معروفة (صفّ نسخة قديمة) ⇒ `null`: لا يُرسل شيء، كما كان. `seen_exit` = `null` صريح لصفّ بلا خروج (الخادم يفحصه كذلك).
+ * الصفّ **كما رآه النموذج** عند فتح التعديل، يُرسل مع `PATCH /api/trades/{id}` (backend-r78b الحالة والخروج، backend-r80a كل
+ * حقل يعيد النموذج إرساله): مختلفٌ عن المخزَّن ⇒ 409 `trade_changed_concurrently` بدل الكتابة. بلا الحالة/الخروج كان حفظ نموذجٍ
+ * فُتح على صفقة مغلقة يعيد خروجها القديم فوق إغلاقٍ أحدث من جهاز آخر (+9% ⇒ −4.5%)؛ وبلا البقيّة كان تصحيح دخول/اتجاه/وقف من
+ * جهاز آخر يُمحى بحفظ ملاحظة من نموذج قديم (والنتيجة تُحسب من الدخول القديم).
+ * حالةٌ غير معروفة (صفّ نسخة قديمة) ⇒ `null`: لا يُرسل شيء، كما كان. الأسعار والحجم: موجب منتهٍ وإلا `null` صريح («رأيته فارغاً»؛
+ * الخادم يقارن 0 القديم كفارغ). الرمز/الاتجاه/الدخول بلا قيمة صالحة ⇒ `null` = بلا فحص (أعمدة لا تكون فارغة بالخادم)؛ ورمز
+ * > 12 حرفاً أو ملاحظة > 500 كذلك بلا فحص (`seen_symbol`/`seen_note` بحدّ طول ⇒ 422 يمنع الحفظ للأبد). الملاحظة الغائبة = ''.
  */
+export type JournalEditSeen = {
+  seen_status: 'open' | 'closed';
+  seen_exit: number | null;
+  seen_symbol?: string | null;
+  seen_side?: 'buy' | 'sell' | null;
+  seen_entry?: number | null;
+  seen_size?: number | null;
+  seen_sl?: number | null;
+  seen_tp?: number | null;
+  seen_note?: string;
+};
+
 export function journalEditSeen(row: {
   status?: string | null;
   exit?: number | null;
-}): { seen_status: 'open' | 'closed'; seen_exit: number | null } | null {
+  symbol?: string | null;
+  side?: string | null;
+  entry?: number | null;
+  size?: number | null;
+  sl?: number | null;
+  tp?: number | null;
+  note?: string | null;
+}): JournalEditSeen | null {
   if (row.status !== 'open' && row.status !== 'closed') return null;
-  const x = row.exit;
-  return { seen_status: row.status, seen_exit: typeof x === 'number' && Number.isFinite(x) && x > 0 ? x : null };
+  const px = (x: number | null | undefined) => (typeof x === 'number' && Number.isFinite(x) && x > 0 ? x : null);
+  const out: JournalEditSeen = { seen_status: row.status, seen_exit: px(row.exit) };
+  // الأعمدة تُضاف فقط حين يحملها الصفّ: صفّ بلا الحقل أصلاً (نسخة/اختبار قديم) لا يُفحص بما لم يُرَ
+  if ('symbol' in row) {
+    const sym = typeof row.symbol === 'string' ? row.symbol.trim() : '';
+    out.seen_symbol = sym && sym.length <= 12 ? sym : null;
+  }
+  if ('side' in row) out.seen_side = row.side === 'buy' || row.side === 'sell' ? row.side : null;
+  if ('entry' in row) out.seen_entry = px(row.entry);
+  if ('size' in row) out.seen_size = px(row.size);
+  if ('sl' in row) out.seen_sl = px(row.sl);
+  if ('tp' in row) out.seen_tp = px(row.tp);
+  if ('note' in row) {
+    const n = typeof row.note === 'string' ? row.note : '';
+    if (n.length <= 500) out.seen_note = n;
+  }
+  return out;
 }
 
 /**
