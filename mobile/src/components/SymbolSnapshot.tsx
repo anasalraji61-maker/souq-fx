@@ -28,6 +28,7 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
     ma_cross_up?: boolean;
     ma_cross_down?: boolean;
     macd_cross_up?: boolean;
+    macd_cross_down?: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -88,10 +89,12 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
         {pctText}
       </Text>
       {/* DESIGN-PRO §1: الأخضر/الأحمر لاتجاه السعر وحده (نسبة التغيّر أعلاه) — التقاطع إشارة مؤشّر،
-          فشريحته محايدة والسهم يحمل الاتجاه (لا لون وحده). */}
+          فشريحته محايدة والسهم يحمل الاتجاه (لا لون وحده). تقاطع MACD الهابط كان يُهمل والصاعد يُعرض ⇒
+          الشريط لا يُظهر إلا الإشارات الصاعدة. */}
       {snap.ma_cross_up ? <Text style={styles.chip}>MA ↑</Text> : null}
       {snap.ma_cross_down ? <Text style={styles.chip}>MA ↓</Text> : null}
       {snap.macd_cross_up ? <Text style={styles.chip}>MACD ↑</Text> : null}
+      {snap.macd_cross_down ? <Text style={styles.chip}>MACD ↓</Text> : null}
     </View>
   );
 }
