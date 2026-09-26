@@ -175,11 +175,14 @@ export function AccountScreen() {
       setPwMsg({
         ok: false,
         text:
-          status === 400 && detail === 'invalid current password'
-            ? t.accPasswordWrongCurrent
-            : (status === 400 && detail === 'password too short') || status === 422
-              ? t.regErrPasswordLength
-              : t.accPasswordChangeError,
+          // 401: الجلسة انتهت أو أُلغيت من جهاز آخر غيّر كلمة المرور — الاتصال سليم (launch156a).
+          status === 401
+            ? t.accPasswordSessionEnded
+            : status === 400 && detail === 'invalid current password'
+              ? t.accPasswordWrongCurrent
+              : (status === 400 && detail === 'password too short') || status === 422
+                ? t.regErrPasswordLength
+                : t.accPasswordChangeError,
       });
     } finally {
       setPwBusy(false);
