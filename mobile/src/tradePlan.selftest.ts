@@ -3470,3 +3470,45 @@ console.log('tradePlan points-vs-pips wording selftest OK');
   );
 }
 console.log('tradePlan entryLooksLikeDecimalSlip selftest OK');
+
+// ---- levelLooksLikeDecimalSlip (tools104a): بيع EURUSD 1.0850 بوقف «10880» ⇒ «هل تقصد 1.088؟» (كان يُحفظ بلا حارس) ----
+{
+  const tp = require('./tradePlan') as typeof import('./tradePlan');
+  const slip = (symbol: string, entry: number | null, level: number | null) => tp.levelLooksLikeDecimalSlip({ symbol, entry, level });
+  // الحالة المبلَّغة: حارس النقاط صامت هنا
+  assert.equal(tp.levelLooksLikePips({ symbol: 'EURUSD', side: 'sell', entry: 1.085, level: 10880, kind: 'sl' }), null);
+  assert.deepEqual(slip('EURUSD', 1.085, 10880), { price: 1.088, k: 4 });
+  assert.deepEqual(slip('EURUSD', 1.085, 1082), { price: 1.082, k: 3 });
+  assert.deepEqual(slip('EURUSD.m', 1.085, 10880), { price: 1.088, k: 4 });
+  assert.deepEqual(slip('USDJPY', 157.4, 15800), { price: 158, k: 2 });
+  assert.deepEqual(slip('XAUUSD', 2650, 26800), { price: 2680, k: 1 });
+  assert.deepEqual(slip('USDZAR', 18.2, 185000), { price: 18.5, k: 4 });
+  // قراءتان: USDJPY «1590» ⇒ 159.0 بلا فاصلة، أو 1590 pip = 173.30 (حارس النقاط) — كلتاهما تُعرضان
+  assert.deepEqual(slip('USDJPY', 157.4, 1590), { price: 159, k: 1 });
+  assert.equal(tp.levelLooksLikePips({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 1590, kind: 'tp' })?.price, 173.3);
+  // ZARJPY (8.5) بوقف «85»: شرط «أقرب لسعر الأداة» كان سيُسقطه
+  assert.deepEqual(slip('ZARJPY', 8.5, 84), { price: 8.4, k: 1 });
+  // EURUSD بوقف «11» (نقاط): قراءتان أيضاً — 1.1 أو 11 pip — والمكتوب ليس سعراً بأيّ منهما
+  assert.deepEqual(slip('EURUSD', 1.085, 11), { price: 1.1, k: 1 });
+  assert.ok(tp.levelLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 11, kind: 'sl' }));
+  // لا شيء: مستوى صحيح، ذهب هدفه 4000 حقيقي، نقاط «50»، مؤشر/رقمية بلا pip، دخول/مستوى فارغ
+  assert.equal(slip('EURUSD', 1.085, 1.088), null);
+  assert.equal(slip('XAUUSD', 2650, 4000), null);
+  assert.equal(slip('EURUSD', 1.085, 50), null);
+  assert.equal(slip('US30', 42000, 420500), null);
+  assert.equal(slip('BTCUSD', 65000, 660000), null);
+  assert.equal(slip('EURUSD', null, 10880), null);
+  assert.equal(slip('EURUSD', 1.085, NaN), null);
+  // لا إنذار كاذب: مستويات حقيقية بين نصف الدخول وضعفه لكل الأدوات المعروفة
+  for (const [sym, px] of [['EURUSD', 1.085], ['USDJPY', 157.4], ['XAUUSD', 2650], ['XAGUSD', 31], ['USDZAR', 18.2], ['USDTRY', 34], ['XAUJPY', 380000], ['ZARJPY', 8.5]] as const) {
+    for (const f of [0.5, 0.8, 0.95, 0.999, 1.001, 1.05, 1.3, 2]) {
+      assert.equal(slip(sym, px, px * f), null, `${sym} ${f}`);
+    }
+    // وكل مستوى صحيح ×10..×10^4 يُكشف ويُعاد هو نفسه
+    for (const k of [1, 2, 3, 4]) {
+      const hit = slip(sym, px, Number((px * 1.004 * 10 ** k).toPrecision(12)));
+      assert.ok(hit && Math.abs(hit.price - px * 1.004) < px * 1e-9, `${sym} ×10^${k}`);
+    }
+  }
+}
+console.log('tradePlan levelLooksLikeDecimalSlip selftest OK');

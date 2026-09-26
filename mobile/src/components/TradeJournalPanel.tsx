@@ -51,6 +51,7 @@ import {
   levelLooksLikePipsText,
   entryLooksLikeDecimalSlip,
   entryDecimalSlipText,
+  levelLooksLikeDecimalSlip,
   netByInstrument,
   openRiskTotals,
   stackedCurrencyExposure,
@@ -714,38 +715,62 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     // launch140b: مؤشر/رقمية بلا `journalSpec` تُقاس بالنقاط لا pip («50 pip تعني 41,950» على US30 خطأ لغةً)
     const points = !journalSpec(sym);
     const hint = points ? t.levelLooksLikePointsHint : t.levelLooksLikePipsHint;
-    for (const kind of ['sl', 'tp'] as const) {
+    const spec = journalSpec(sym)?.symbol ?? sym;
+    /**
+     * tools104a: «10880» وقفاً لبيع EURUSD على 1.0850 — بلا فاصلة لا نقاطاً (`levelLooksLikeDecimalSlip`) ⇒ «هل تقصد 1.08800؟» أولاً،
+     * وقراءة النقاط بعده إن وُجدت (USDJPY «1590» ⇒ 159.000 أو 173.300). `slip` يمنع الحفظ بلا ضغطة ثانية: الرقم ليس سعراً بأيّ قراءة.
+     */
+    const slipFix = (label: string, raw: string) => {
+      const hit = levelLooksLikeDecimalSlip({ symbol: sym, entry: e, level: pnum(raw) });
+      if (!hit) return [];
+      const text = formatPrice(hit.price, spec);
+      return [{ text, msg: levelLooksLikePipsText(t.journalLevelDecimalSlip, label, raw, '', text) }];
+    };
+    const found = (['sl', 'tp'] as const).map((kind) => {
       const raw = kind === 'sl' ? sl : tp;
-      const hit = levelLooksLikePips({ symbol: sym, side, entry: e, level: pnum(raw), kind });
-      if (!hit) continue;
       const label = (kind === 'sl' ? t.journalSlPlaceholder : t.journalTpPlaceholder).split(' (')[0].trim();
-      const text = formatPrice(hit.price, journalSpec(sym)?.symbol ?? sym);
+      const slip = slipFix(label, raw);
+      const hit = levelLooksLikePips({ symbol: sym, side, entry: e, level: pnum(raw), kind });
+      if (!hit && slip.length === 0) return null;
+      const pipFix = hit ? formatPrice(hit.price, spec) : null;
       return {
         kind,
         label,
         points,
+        slip: slip.length > 0,
         raw: raw.trim(),
-        fixes: [{ text, msg: levelLooksLikePipsText(hint, label, raw, hit.pips, text) }],
+        fixes: [
+          ...slip,
+          ...(hit && pipFix != null && pipFix !== slip[0]?.text
+            ? [{ text: pipFix, msg: levelLooksLikePipsText(hint, label, raw, hit.pips, pipFix) }]
+            : []),
+        ],
       };
-    }
+    });
     // والخروج («25» من «أغلقتُ +25» كانت تُحفظ خروجاً عند 25.00 ⇒ +2,204%): بأيّ جهة، فسطرٌ لكلٍّ منهما بإشارته — `exitLooksLikePips`
+    const exLabel = t.journalExitPlaceholder.split(' (')[0].trim();
+    const exSlip = slipFix(exLabel, exit);
     const ex = exitLooksLikePips({ symbol: sym, side, entry: e, exit: pnum(exit) });
-    if (ex) {
-      const label = t.journalExitPlaceholder.split(' (')[0].trim();
-      const spec = journalSpec(sym)?.symbol ?? sym;
-      const fixes = (
-        [
-          [ex.win, `+${ex.pips}`],
-          [ex.loss, `\u2212${ex.pips}`],
-        ] as const
-      ).flatMap(([px, signed]) => {
-        if (px == null) return [];
-        const text = formatPrice(px, spec);
-        return [{ text, msg: levelLooksLikePipsText(hint, label, exit, signed, text) }];
-      });
-      return { kind: 'exit' as const, label, points, raw: exit.trim(), fixes };
-    }
-    return null;
+    const exFixes = (
+      ex
+        ? ([
+            [ex.win, `+${ex.pips}`],
+            [ex.loss, `\u2212${ex.pips}`],
+          ] as const)
+        : []
+    ).flatMap(([px, signed]) => {
+      if (px == null) return [];
+      const text = formatPrice(px, spec);
+      return text === exSlip[0]?.text ? [] : [{ text, msg: levelLooksLikePipsText(hint, exLabel, exit, signed, text) }];
+    });
+    const all = [
+      ...found,
+      ex || exSlip.length > 0
+        ? { kind: 'exit' as const, label: exLabel, points, slip: exSlip.length > 0, raw: exit.trim(), fixes: [...exSlip, ...exFixes] }
+        : null,
+    ];
+    // بلا فاصلة (لا يُتجاوز) يسبق نقاطاً بخانة أخرى (يُتجاوز بضغطة ثانية) — وإلا حفظت الضغطة الثانية هدفاً عند 10880
+    return all.find((r) => r?.slip) ?? all.find((r) => r != null) ?? null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, tp, exit, t, entrySlip]);
 
@@ -1100,6 +1125,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     // سعرٌ حقيقي لا 85 pip، ولا تمييز بالأرقام وحدها — المنع بلا مخرج كان يُجبر على كسرٍ وهمي أو السعر الخاطئ المقترح.
     if (entrySlip) {
       setFormError(entrySlip.msg);
+      return;
+    }
+    if (pipsLevel?.slip) {
+      setFormError(pipsLevel.fixes[0].msg);
       return;
     }
     const pipsKey = pipsLevel ? `${pipsLevel.kind}\u0001${formKeyRef.current}` : null;
@@ -2134,6 +2163,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           <Pressable
             key={f.text}
             accessibilityRole="button"
+            accessibilityLabel={f.msg}
             onPress={() => {
               playSoftClick();
               (pipsLevel.kind === 'sl' ? setSl : pipsLevel.kind === 'tp' ? setTp : setExit)(f.text);

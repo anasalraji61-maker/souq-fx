@@ -1501,6 +1501,29 @@ export function entryDecimalSlipText(template: string, value: string, price: str
 }
 
 /**
+ * **وقف/هدف/خروج بلا فاصلة عشرية** (tools104a، مرآة `entryLooksLikeDecimalSlip`): بيع EURUSD على 1.0850 بوقف «10880» — لا حارس
+ * إطلاقاً (`levelLooksLikePips` يعيد null: قراءة النقاط تعطي 2.173، سعراً بعيداً هو نفسه) ⇒ يُحفظ وقفاً عند 10880 والـR ≈ 0
+ * يسحب متوسط R للدفتر. المستوى ÷ 10^k (k من 1 إلى 6) ضمن **15%** من الدخول ⇒ `{ price }` المقصود؛ لرمزٍ له pip فقط. بلا شرط
+ * «أقرب لسعر الأداة» الذي يحتاجه الدخول: المكتوب هنا ≥ 8.5× الدخول دائماً، ولا وقف ولا هدف حقيقي كذلك بزوج أو معدن — والشرط
+ * كان يُسقط ZARJPY (8.5، بعيد عن مرجع EURUSD) بوقف «85». ذهب 2650 بهدف «4000» حقيقي: 400 ليس ضمن 15%. قد يكون للرقم قراءة نقاطٍ أيضاً
+ * (USDJPY 157.40 بهدف «1590» ⇒ 159.00 أو 1590 pip = 173.30) — تعرض اللوحة الاقتراحين، والرقم المكتوب نفسه خاطئ بكلتيهما.
+ */
+export function levelLooksLikeDecimalSlip(input: {
+  symbol: string;
+  entry: number | null;
+  level: number | null;
+}): { price: number; k: number } | null {
+  const { entry, level } = input;
+  const spec = journalSpec(input.symbol);
+  if (!spec || !finitePos(entry) || !finitePos(level)) return null;
+  for (let k = 1; k <= 6; k++) {
+    const price = Number((level / 10 ** k).toPrecision(12));
+    if (Math.abs(price - entry) <= entry * 0.15) return { price, k };
+  }
+  return null;
+}
+
+/**
  * **نقاطٌ بخانة الخروج** بالدفتر: «25» (من «أغلقتُ +25») لشراء EURUSD على 1.0850 كانت تُحفظ خروجاً عند **25.00** بلا أي حارس
  * (الوقف والهدف لهما `levelLooksLikePips`) ⇒ «+239,150 pip · +2,204%» و+11,957R، ومتوسّط R للدفتر كلّه +3,986R. القاعدة نفسها،
  * لكن الخروج بأيّ جهة: `win` السعر على تلك المسافة بجهة الربح و`loss` بجهة الخسارة (`null` لما لا يقع ضمن القاعدة). `null` = ليس نقاطاً.
