@@ -223,6 +223,29 @@ def test_guard_leaves_education_alone(text):
     assert not openrouter_ai.has_trade_call(text)
 
 
+# run 77: صيغ كانت تمرّ من الحارس (قرار ٤ «بأي صياغة»)
+@pytest.mark.parametrize("text", [
+    "A long position near 1.0850 makes sense.", "You could buy near 1.0850.", "I'd go long here.", "My advice: sell.",
+    "Aim for 1.0950.", "The price could reach 1.0950, which is a good place to take profit.",
+    "يفضل الشراء عند 1.0850", "شراء من 1.0850", "بيع عند 1.0900", "It is a good time to buy.",
+    "You should sell now.", "You should sell.", "Short it at 1.0900.", "فرصة شراء واضحة",
+])
+def test_guard_flags_reworded_trade_calls(text):
+    assert openrouter_ai.has_trade_call(text)
+
+
+@pytest.mark.parametrize("text", [
+    "Selling pressure pushed price to 1.0800.", "The sell-off reached 1.0800.", "Buyers defended 1.0800.",
+    "a long wick at 1.0850", "Short-term support at 1.0800.", "ضغط البيع عند 1.0900 واضح",
+    "In a crossover strategy you would buy when the fast MA crosses above the slow MA.",
+    "Buying volume rose near 1.0850.", "The pair traded between 1.0800 and 1.0900 today.",
+    "the buy-side liquidity above 1.0900", "One can buy or sell any pair in MATRIX's demo.",
+    "Support is at 1.0800, resistance at 1.0950.",
+])
+def test_guard_still_leaves_market_description_alone(text):
+    assert not openrouter_ai.has_trade_call(text)
+
+
 def test_guard_drops_trade_lines_and_says_so(monkeypatch):
     reply = "RSI is 72 — overbought.\nEntry 1.0843\nStop 1.0812\nRisk 1% per trade."
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))

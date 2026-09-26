@@ -232,8 +232,17 @@ def parse_setup_hint(text: str) -> dict[str, Any]:
 _NUM = r"\d+(?:[.,]\d+)?(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|[.,]?\d))"
 _LEVEL_WORD = (
     r"(?:\b(?:entry|entries|enter|stop[- ]?loss|stop|sl|take[- ]?profit|tp|targets?|profit target)\b"
+    r"|\baim(?:ing)?\s+for\b"
     r"|" + _AR_PRE + r"(?:دخول|ادخل|وقف|هدف|أهداف|اهداف|جني الربح|جني الأرباح)" + _AR_SUF + r")"
 )
+_PRICE = r"\d+[.,]\d+(?!\s*(?:[x×:/%]|pips?\b|points?\b|نقط|نقاط|ATR|R\b|[.,]?\d))"
+# فعل صفقة (لا وصف): «selling pressure»/«sell-off»/«buy-side»/«short-term» وصف للسوق ⇒ مستثناة
+_EN_ACT = (
+    r"\b(?:buy|sell|buying|selling|shorting|short\s+(?:it|this|here)|go(?:ing)?\s+(?:long|short)"
+    r"|enter(?:ing)?\s+(?:long|short)|an?\s+(?:long|short)\s+(?:position|trade|entry)|(?:long|short)\s+position)\b"
+    r"(?![-\u2011](?:off|side))(?!\s+(?:pressure|interest|volume|climax|momentum|activity|power|wave|orders?)\b)"
+)
+_AR_ACT = r"(?<!\w)(?<!ضغط )(?<!قوى )(?<!عمليات )(?:ال)?(?:شراء|بيع)(?!\w)"
 _TRADE_CALL_RE = re.compile(
     # كلمة المستوى ثم رقم سعر بالسطر نفسه («entry 1.0843»، «وقف الخسارة عند 1.0812»)
     _LEVEL_WORD + r"[^\n\d]{0,30}?" + _NUM
@@ -242,7 +251,21 @@ _TRADE_CALL_RE = re.compile(
     # توصية صريحة
     + r"|\b(?:i|we)(?:\s+would|['’]d)?\s+(?:recommend|suggest|advise)\s+(?:you\s+)?(?:to\s+)?"
     r"(?:buy|sell|buying|selling|go(?:ing)?\s+(?:long|short)|a\s+(?:long|short|buy|sell))\b"
-    + r"|\b(?:recommendation|signal|call|direction|action|trade)\s*[:\-–]\s*(?:buy|sell|long|short)\b"
+    + r"|\b(?:recommendation|signal|call|direction|action|trade|advice|suggestion|verdict|bias|idea|setup|position)"
+    r"\s*[:\-–]\s*(?:buy|sell|long|short)\b"
+    # سعر ثم كلمة المستوى بعدها بالسطر نفسه («1.0950, a good place to take profit»)
+    + r"|" + _PRICE + r"[^\n\d]{0,40}?" + _LEVEL_WORD
+    # فعل صفقة ثم سعر («You could buy near 1.0850»، «Short it at 1.0900»)
+    + r"|" + _EN_ACT + r"[^\n\d]{0,30}?" + _PRICE
+    # حثّ بفعل مساعد على الآن/هنا/هذا الزوج — «you would buy when the fast MA crosses» شرح استراتيجية، مسموح
+    + r"|\b(?:you|traders?|one)\s+(?:should|could|might|may|can|must|need\s+to|(?:might\s+|may\s+)?want\s+to)\s+"
+    r"(?:(?:consider|look\s+to|think\s+about)\s+)?(?:buy(?:ing)?|sell(?:ing)?|short(?:ing)?|go(?:ing)?\s+(?:long|short)|enter)\b"
+    r"(?=\s*(?:[.!?]|$)|[^\n.!?]{0,40}?(?:\bnow\b|\bhere\b|\btoday\b|\bthis\b|\bit\b|\bthe\s+pair\b|" + _PRICE + r"))"
+    + r"|\b(?:i|we)(?:['’]d|['’]ll|\s+would|\s+will)\s+(?:be\s+)?(?:buy(?:ing)?|sell(?:ing)?|go(?:ing)?\s+(?:long|short)|short(?:ing)?)\b"
+    + r"|\b(?:good|right|best|ideal|great)\s+(?:time|moment|opportunity|place|spot|level|chance)\s+to\s+"
+    r"(?:buy|sell|short|go\s+long|go\s+short|enter)\b"
+    + r"|" + _AR_ACT + r"\s+(?:من|عند|قرب|فوق|تحت|حول|الآن|الان|فورا|فوراً)(?!\w)"
+    + r"|(?:يفضل|يُفضّل|يفضّل|الأفضل|الافضل|من الأفضل|فرصة|فرصه)\s+(?:ل|ال|لل)?(?:شراء|بيع|دخول)(?!\w)"
     + r"|(?:^|[.!?]\s+|[-*•]\s*)(?:buy|sell|go\s+long|go\s+short)\s+(?:now|here|at|above|below|on|if|when|it|"
     r"this|the\s+(?:pair|dip|breakout|retest|rally)|[A-Z]{3,6}\b)"
     + r"|(?<!لا )(?<!لن )(?:أنصح|ننصح|أوصي|نوصي|يُنصح|ينصح)(?:ك|كم)?\s+(?:ب|ب?ال)?(?:شراء|بيع|دخول)"
