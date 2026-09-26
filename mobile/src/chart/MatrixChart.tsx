@@ -8199,6 +8199,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           );
         })}
 
+        {/* تعبئة «منطقة» تحت الإغلاق حتى أسفل اللوح، و«خطّ أساس» بين الإغلاق والأساس بلون جانبه — كانت «منطقة» خطّاً
+            أسمك قليلاً لا غير، فلا فرق يُرى بينها وبين «خطّ». شرائح عمودية بعرض الخانة كسحابة Ichimoku (لا SVG هنا). */}
+        {(kind === 'area' || kind === 'baseline') &&
+          source.plot.map((c, i) => {
+            const y = yOf(c.close);
+            const x = xOf(i);
+            if (!Number.isFinite(y) || !Number.isFinite(x)) return null;
+            const base = kind === 'area' ? chartPlotH : yOf(firstVisibleClose ?? c.close);
+            const top = Math.max(0, Math.min(y, base));
+            const bottom = Math.min(chartPlotH, Math.max(y, base));
+            if (bottom - top < 0.5) return null;
+            const fill =
+              kind === 'area' ? accent : c.close >= (firstVisibleClose ?? c.close) ? colors.bull : colors.bear;
+            return (
+              <View
+                key={`af${i}`}
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: x - bandW / 2,
+                  top,
+                  width: bandW,
+                  height: bottom - top,
+                  backgroundColor: withAlpha(fill, 0.12),
+                }}
+              />
+            );
+          })}
+
         {/* area / line / baseline */}
         {(kind === 'line' || kind === 'area' || kind === 'baseline') &&
           source.plot.map((c, i) => {
@@ -8221,7 +8250,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 style={{
                   position: 'absolute',
                   left: x1,
-                  top: y1,
+                  // مركز الخطّ على الإغلاق (كان `top: y1` ⇒ 0.8–1.25px تحته، كخطّ المقارنة قبل إصلاحه).
+                  top: y1 - (kind === 'area' || kind === 'baseline' ? 1.25 : 0.8),
                   width: len,
                   height: kind === 'area' || kind === 'baseline' ? 2.5 : 1.6,
                   backgroundColor: segColor,
