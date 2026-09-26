@@ -379,7 +379,7 @@ import {
   replayZoomOffset,
   replayWindow,
 } from './replayCursor';
-import { clampXPan } from './panClamp';
+import { clampXPan, foldRightGap } from './panClamp';
 import { ProviderUnavailableNotice, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
 
 export type SyncTimeWindow = {
@@ -1650,6 +1650,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [canPan, replayOn]
   );
   const xPanAtRest = useRef(true);
+  /** سحب/قرص/سحب محور جارٍ: الطيّ (`foldRightGap`) يؤجَّل لنهايته — الإيماءة تحسب من إزاحة بدايتها. */
+  const gestureOnRef = useRef(false);
   const chartPlotHRef = useRef(200);
   const sourceRef = useRef({
     plot: [] as { time: number; close: number; open: number; high: number; low: number }[],
@@ -5099,12 +5101,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const nextPricePan =
         panStartPrice.current +
         (sdy / Math.max(1, chartPlotH)) * priceScaleRef.current;
-      offsetRef.current = nextOffset;
-      xPanRef.current = nextXPan;
+      // الهامش الأيمن الفارغ بعد السحب للخلف يمتلئ بالشموع الأحدث بلا تحريك ما يُرى (`foldRightGap`).
+      const folded = replayOnRef.current
+        ? { offset: nextOffset, xPan: nextXPan }
+        : foldRightGap(nextOffset, nextXPan, barWidth, source.all.length, windowCountRef.current);
+      offsetRef.current = folded.offset;
+      xPanRef.current = folded.xPan;
       xPanAtRest.current = false;
       pricePanRef.current = nextPricePan;
-      setOffset(nextOffset);
-      setXPan(nextXPan);
+      setOffset(folded.offset);
+      setXPan(folded.xPan);
       setPricePan(nextPricePan);
       schedulePublishSync(false);
     },
@@ -5166,6 +5172,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const stepReplayRef = useRef(stepReplay);
   stepReplayRef.current = stepReplay;
 
+  // الأزرار والتكبير وخطوات التقاطع تغيّر الإزاحة وحدها فيبقى الهامش الأيمن فارغاً فوق شموع موجودة؛
+  // يُطوى بعد كل تغيير خارج الإيماءات (الأثر أدناه) وعند نهايتها (`endDrag`).
+  const foldGapNow = useCallback(() => {
+    if (replayOnRef.current || syncFollow) return;
+    const src = sourceRef.current;
+    const f = foldRightGap(
+      offsetRef.current,
+      xPanRef.current,
+      chartPlotWRef.current / Math.max(1, src.slots),
+      src.all.length,
+      windowCountRef.current
+    );
+    if (f.offset === offsetRef.current) return;
+    offsetRef.current = f.offset;
+    xPanRef.current = f.xPan;
+    xPanAtRest.current = false;
+    setOffset(f.offset);
+    setXPan(f.xPan);
+    schedulePublishSync(false);
+  }, [syncFollow, schedulePublishSync]);
+  useLayoutEffect(() => {
+    if (!gestureOnRef.current) foldGapNow();
+  }, [offset, xPan, windowCount, chartPlotW, source.slots, source.all.length, foldGapNow]);
+
   const panByButton = useCallback(
     (bars: number) => {
       const maxOffset = Math.max(0, sourceRef.current.all.length - 10);
@@ -5173,9 +5203,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (next === offsetRef.current) return;
       offsetRef.current = next;
       setOffset(next);
+      // › حتى الحيّ يعيد الهامش الافتراضي: بعد الطيّ كانت الشمعة الحيّة ستلتصق بمحور السعر.
+      if (next === 0 && !replayOnRef.current && !xPanAtRest.current) {
+        xPanRef.current = restXPan();
+        xPanAtRest.current = true;
+        setXPan(xPanRef.current);
+      }
       schedulePublishSync(false);
     },
-    [schedulePublishSync]
+    [schedulePublishSync, restXPan]
   );
 
   const beginDrag = useCallback(() => {
@@ -5188,6 +5224,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     );
     panStartX.current = xPanRef.current;
     panStartPrice.current = pricePanRef.current;
+    gestureOnRef.current = true;
     panMoved.current = false;
     crossPinned.current = false;
     crossFromSync.current = false;
@@ -5195,8 +5232,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }, [replayMinOffsetNow]);
 
   const endDrag = useCallback(() => {
+    gestureOnRef.current = false;
+    foldGapNow();
     schedulePublishSync(true);
-  }, [schedulePublishSync]);
+  }, [schedulePublishSync, foldGapNow]);
 
   // حول المركز، إلا عند متابعة الحيّ (offset 0) فالطرف الأيمن مثبَّت — `zoomWindow.ts`.
   const zoomAroundCenter = useCallback(
@@ -5361,6 +5400,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       scrubbing.current = false;
       panMoved.current = true;
       pinchUsed.current = true;
+      gestureOnRef.current = true;
       crossPinned.current = false;
       setCross(null);
       pinchStart.current = {

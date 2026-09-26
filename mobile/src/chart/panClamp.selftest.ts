@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/panClamp.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { clampXPan } from './panClamp';
+import { clampXPan, foldRightGap } from './panClamp';
 
 const W = 340;
 const n = 80;
@@ -28,4 +28,23 @@ assert.ok(Math.abs(xOf(0, replayLeft) - 0.2 * W) < 1e-9, 'شمعة الإعاد�
 assert.ok(Math.abs(xOf(29, clampXPan(-1000, n, W, undefined, 30)) - 0.2 * W) < 1e-9);
 assert.equal(clampXPan(400, n, W, undefined, 30), clampXPan(400, n, W));
 assert.equal(clampXPan(-1000, n, W, undefined, 0), clampXPan(-1000, n, W));
+// foldRightGap: مُمرَّر 20 شمعة للخلف بهامش 10% (34px من 340، خانة 4.25px) ⇒ 8 خانات تُطوى
+{
+  const bw = W / n;
+  const f = foldRightGap(20, -34, bw, 500, n);
+  assert.equal(f.offset, 12);
+  assert.ok(Math.abs(f.xPan) < 1e-9, 'لا فراغ باقٍ');
+  // المواضع ثابتة: الشمعة العالمية g عند x نفسه قبل وبعد
+  const xAt = (g: number, off: number, pan: number) => xOf(g - (500 - off - n), pan);
+  assert.ok(Math.abs(xAt(470, 20, -34) - xAt(470, f.offset, f.xPan)) < 1e-9);
+  // قرب الحيّ: الإزاحة 3 فقط ⇒ 3 تُطوى والباقي منطقة مستقبل حقيقية
+  const g = foldRightGap(3, -34, bw, 500, n);
+  assert.equal(g.offset, 0);
+  assert.ok(Math.abs(g.xPan - (-34 + 3 * bw)) < 1e-9);
+  // لا شيء: عند الحيّ، هامش أقل من خانة، سحب يميناً، نافذة غير ممتلئة (أقدم التاريخ)
+  assert.deepEqual(foldRightGap(0, -34, bw, 500, n), { offset: 0, xPan: -34 });
+  assert.deepEqual(foldRightGap(20, -3, bw, 500, n), { offset: 20, xPan: -3 });
+  assert.deepEqual(foldRightGap(20, 40, bw, 500, n), { offset: 20, xPan: 40 });
+  assert.deepEqual(foldRightGap(440, -34, bw, 500, n), { offset: 440, xPan: -34 });
+}
 console.log('panClamp selftest: PASS');

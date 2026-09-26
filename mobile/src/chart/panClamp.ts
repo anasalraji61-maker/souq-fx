@@ -24,3 +24,24 @@ export function clampXPan(
   const max = (1 - edge) * plotW - (0.5 / n) * plotW;
   return Math.min(max, Math.max(min, xPan));
 }
+
+/**
+ * شارت مُمرَّر للخلف (`offset > 0`) يبقى فيه الهامش الأيمن (`xPan` سالب) فارغاً: آخر ~10% من اللوح
+ * (8 خانات من 80) تبدو «منطقة مستقبل» بينما شموعها الحقيقية موجودة — لمسة هناك تعطي تقاطعاً بلا OHLC
+ * وزمناً مُسقَطاً لا زمن الشمعة الفعلية. الخانات الكاملة الفارغة تُطوى في الإزاحة: `offset − k` و`xPan + k·barW`
+ * يرسمان الشموع نفسها بالمواضع نفسها (`xOf(i) = ((i + 0.5) / n) × W + xPan`) والفراغ يمتلئ بالشموع الأحدث.
+ * يبقى فراغ حقيقي فقط حين تبلغ الإزاحة الصفر (الشمعة الحيّة ظاهرة). يُشترط أن تبقى النافذة ممتلئة
+ * (`len − offset ≥ window`) وإلا تغيّر عدد الخانات وعرضها.
+ */
+export function foldRightGap(
+  offset: number,
+  xPan: number,
+  barW: number,
+  len: number,
+  window: number
+): { offset: number; xPan: number } {
+  if (!(offset > 0) || !(xPan < 0) || !(barW > 0) || len - offset < window) return { offset, xPan };
+  const k = Math.min(offset, Math.floor(-xPan / barW + 1e-6));
+  if (k <= 0) return { offset, xPan };
+  return { offset: offset - k, xPan: xPan + k * barW };
+}
