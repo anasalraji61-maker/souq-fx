@@ -1679,6 +1679,9 @@ console.log('tradePlan editExitValue selftest OK');
     assert.equal(journalLocalFieldToIso('2026-08-12T14:30')?.iso, '2026-08-12T14:30:00+03:00');
     assert.equal(journalLocalFieldToIso(' 2026/8/2 9:05 ')?.iso, '2026-08-02T09:05:00+03:00');
     assert.equal(journalLocalFieldToIso('٢٠٢٦-٠٨-١٢ ١٤:٣٠')?.iso, '2026-08-12T14:30:00+03:00');
+    // علامات الاتجاه من نسخٍ بمحادثة عربية، وأرقام/فواصل كاملة العرض (لوحة يابانية) — كانت null ⇒ «وقت غير صالح»
+    for (const txt of ['\u200f2026-09-26 14:30', '2026-09-26 14:30\u200e', '\u061c٢٠٢٦-٠٩-٢٦ ١٤:٣٠', '２０２６-０９-２６ １４:３０', '2026-09-26 14：30', '２０２６／０９／２６\u00a0１４：３０'])
+      assert.equal(journalLocalFieldToIso(txt)?.iso, '2026-09-26T14:30:00+03:00', JSON.stringify(txt));
     // الثواني (QA120a — سجلّ MT5 «2026.09.26 14:05:30») تُقبل وتسقط: الوقت المحفوظ الدقيقة نفسها لا التالية
     assert.equal(journalLocalFieldToIso('2026.09.26 14:05:30')?.iso, '2026-09-26T14:05:00+03:00');
     assert.equal(journalLocalFieldToIso('2026-08-12T14:30:59')?.ms, Date.parse('2026-08-12T11:30:00Z'));

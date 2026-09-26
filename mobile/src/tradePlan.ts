@@ -554,10 +554,11 @@ export function journalRowWhen(row: { status?: string | null; opened_at_iso?: st
  * لليوم/الساعة التالية فيُحفظ وقتٌ لم يكتبه المتداول.
  */
 export function journalLocalFieldToIso(text: string): { iso: string; ms: number } | null {
-  const norm = text
-    .trim()
-    .replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x0660))
-    .replace(/[\u06f0-\u06f9]/g, (c) => String(c.charCodeAt(0) - 0x06f0));
+  // `normalizeDigits` كبقية خانات الدفتر: علامات الاتجاه (RLM/LRM من نسخٍ بمحادثة عربية) والأرقام كاملة العرض (لوحة يابانية)
+  // كانت ⇒ null ⇒ «وقت غير صالح» لوقتٍ صحيح. وفواصل كاملة العرض «：－／．» ⇒ مقابلاتها.
+  const norm = normalizeDigits(text)
+    .replace(/[\uff1a\uff0d\uff0f\uff0e]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .trim();
   // الثواني اختيارية وتسقط (QA120a: سجلّ MT5 يُنسخ «2026.09.26 14:05:30»؛ الخادم يحفظ بالدقيقة)
   const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:\s+|T)(\d{1,2})[:\u066b.](\d{2})(?:[:\u066b.](\d{2}))?$/.exec(norm);
   if (!m) return null;
