@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 128، على a2a479d) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 129، على 60caca4) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
@@ -21,8 +21,8 @@
 | QA | أنس | **QA107a** (بلا قرار سابق — القرار ٤ خاصّ بالمساعد): «توقعات المؤشرات» (`IndicatorForecastPanel.tsx:279`) تعرض «مستويات محسوبة: دخول · وقف · هدف» بأسعار (ATR من `/api/signals/indicators/forecast`، backend أبقاه عمداً). المنطق نفسه (`app.json` «لا يقدّم نصيحة استثمارية») ينطبق؟ إخفاء المستويات وإبقاء التصويت، أم كما هي؟ | QA107 |
 | ui | أنس | **ui85a** (قرار ١٣، Sentry `e522621`): مربوط ولا يعمل إلا بمفتاح. المطلوب بشرياً: حساب Sentry (مجاني) ⇒ `EXPO_PUBLIC_SENTRY_DSN` ببيئة EAS (`eas env:create`)؛ ولرفع خرائط المصدر `SENTRY_AUTH_TOKEN` سرّاً بـEAS ثم يضيف ui الإضافة بـ`app.json`. (launch سمّى المزوّد بـ`PRIVACY-POLICY.md`/`STORE-PRIVACY.md` — `8148712`) — خطوة بشرية لا قرار | ui85 |
 | backend | tools | **backend-r105 (ردّ tools137a)** `db.trade_stats` صار يصنّف بـ`db.journal_outcome` = إشارة `round(pnl, 2)` كـ`journalOutcome` (`7b61ad5`) ⇒ احذفوا «الخادم ما زال ±1e-9، طُلب منه» من تعليق `journalStats` (`tradePlan.ts:1204`) | backend-r105 |
+| QA | tools | **QA129a** (منخفض، أرقام متناقضة): الحاسبة تحكم على عمر السعر نفسه بحدّين — `LIVE_ENTRY_MAX_AGE_MS` = 3 د (`positionSize.ts:2525`) و`MARGIN_QUOTE_MAX_AGE_MS` = 2 د (`:1630`). بـ`npx tsx`: سعر عمره 150/170 ث ⇒ `liveEntryQuoteState` «live» (يُعبَّأ «الدخول = السعر الحالي») و`marginQuoteUsable` false (يختفي سطر الهامش كقديم)؛ 90 ث كلاهما سليم، 200 ث كلاهما قديم. حدّ واحد للاثنين | QA129 |
 
-**تحقّق الدورة 128 (بالكود، على a2a479d):** البناء أخضر 0، selftests 124/124 ناجح. مفتوح جديد مُتحقَّق: **backend-r104 → ui** (`api.ts:134`). سجلّات chart 106 وtools وlaunch بلا طلب جديد لوكيل (chart §طلب تنسيق: بنود مؤجّلة/جهاز/أنس، معروفة).
-**قائمة قبول DESIGN-PRO (الثامن والأربعون): 0 من 12 فشل** — diff منذ 5b81db2 بـ`mobile`: `drawingAnchors.ts` (منطق) و`locales.ts` (نصوص) فقط، لا `.tsx`.
-**المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 6 أغلفة `accessible={false}` المعروفة نفسها (`MatrixSidePanel:87`، `LayoutPanel:235`، `KeyboardShortcutsSheet:85`، `WatchlistPanel:444`، `AlertsPanel:792`، `IndicatorAlertsPanel:429`). **لا بند.**
-**بعد السحب (a4a76c4):** أخضر 0. أُغلقت backend-r104 ← ui `4088536` (`api.ts:134` تعليق فقط، لا حقل). **لا صفّ مفتوح لوكيل برمجي** عدا QA1.
+**تحقّق الدورة 129 (بالكود، على 60caca4):** البناء أخضر 0، selftests 124/124 ناجح. backend-r105 → tools ما زال مفتوحاً (`tradePlan.ts:1204` «الخادم ما زال ±1e-9، طُلب منه») — دورته الأولى. سجلّات chart 106/ui 115/launch 199/backend 105 بلا طلب جديد لوكيل.
+**قائمة قبول DESIGN-PRO (التاسع والأربعون): 0 من 12 فشل** — diff منذ a4a76c4: `TerminalScreen`/`ModerationActions` حدّ وحده وقت السكون (يُصلح البند 7)، عدّادات الماسح بـ`numeric` (البند 1)، خطوط ±40/صفر لـSMI بأنماط `paneGuide*` الموجودة؛ الباقي منطق.
+**المراجعة (d — أرقام متناقضة):** **QA129a → tools** (أعلاه). سليم: فترات تنبيه MA 9/21 (نصّ `indAlertsHintMa` = `main.py:569–570`)، RSI 30/70 بالماسح والخطوط، حدّ 180 ث للسعر الحيّ بالخادم = 3 د بالحاسبة، `MAX_MA_PERIOD` 179.
