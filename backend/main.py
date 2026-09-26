@@ -1230,7 +1230,8 @@ def check_alerts(
     # طلب واحد لكل رمز (كان طلب quote لكل تنبيه — 10 تنبيهات EURUSD × كل جهاز مفتوح كل دقيقة تستنزف حد
     # Twelve Data)، ونفس قاعدة الـworker: السعر الحالي أو ذيل شمعة 1m بعد دقيقة التسليح.
     quotes: dict[str, tuple[float | None, list[dict], float | None]] = {}
-    for a in db.list_alerts(uid, owner_key=key):
+    rows = db.list_alerts(uid, owner_key=key)
+    for a in rows:
         if not a.get("active") or a.get("triggered"):
             continue
         sym = str(a["symbol"]).upper()
@@ -1254,7 +1255,16 @@ def check_alerts(
         background.add_task(
             alert_worker.dispatch, [alert_worker.price_event({**a, "user_id": uid, "owner_key": key}) for a in triggered], key
         )
-    return {"triggered": triggered, "alerts": db.list_alerts(uid, owner_key=key)}
+    # القراءة الثانية بعد الوسم: «database is locked» هنا كان 500 ⇒ التطبيق لا يرى `triggered` ولا يُشعر،
+    # والدفع لبقية الأجهزة (مهمة خلفية) لا يجري لطلب فاشل، والتنبيه موسوم مُطلَقاً فلا يُعاد ⇒ ضاع كلياً.
+    # عند فشلها: الصفوف المقروءة أولاً بعد قلب ما أُطلق (الوسم لا يغيّر عموداً غيره).
+    try:
+        alerts = db.list_alerts(uid, owner_key=key)
+    except Exception:
+        alert_worker.log.exception("alerts re-read failed after check; returning pre-check rows")
+        fired = {a["id"] for a in triggered}
+        alerts = [{**a, "triggered": True} if a["id"] in fired else a for a in rows]
+    return {"triggered": triggered, "alerts": alerts}
 
 
 def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:

@@ -337,7 +337,19 @@ def _check_once() -> None:
     triggered_msgs: list[tuple[int | None, str | None, dict]] = []
     # طلب واحد لكل رمز بالدورة: 30 تنبيهاً على EURUSD كانت 30 طلباً للمزوّد (تستنزف حد Twelve Data).
     prices: dict[str, tuple[float | None, list[dict], float | None]] = {}
+    # الدفع في `finally`: `list_indicator_alerts` بلا try ⇒ «database is locked» فيها كان يُنهي الدورة بعد
+    # وسم تنبيهات السعر مُطلَقة وقبل دفعها ⇒ لا تُعاد ولا يصل إشعارها أبداً.
+    try:
+        _check_alerts(triggered_msgs, prices)
+    finally:
+        _retry_pending_pushes()
+        dispatch(triggered_msgs)
 
+
+def _check_alerts(
+    triggered_msgs: list[tuple[int | None, str | None, dict]],
+    prices: dict[str, tuple[float | None, list[dict], float | None]],
+) -> None:
     for a in db.list_alerts(all_users=True):
         try:
             if not a.get("active") or a.get("triggered"):
@@ -374,29 +386,36 @@ def _check_once() -> None:
                 a.get("symbol"),
             )
 
-    _retry_pending_pushes()
-    dispatch(triggered_msgs)
-
 
 def dispatch(triggered_msgs: list[tuple[int | None, str | None, dict]], exclude_key: str | None = None) -> None:
     """يدفع إشعار كل تنبيه أُطلق لأجهزة مالكه. يستدعيه الـworker، ومسارا `/check` بالتطبيق أيضاً: كانا
     يَسِمان التنبيه مُطلَقاً (فيتخطّاه الـworker) بلا أي دفع ⇒ تنبيه أطلقه فحص نسخة سطح المكتب (ويب، بلا
     إشعار) لا يصل هاتف المالك أبداً. الجهاز الفاحص نفسه (`exclude_key`) يُظهر إشعاره محلياً فيُستثنى."""
     for owner, owner_key, ev in triggered_msgs:
-        # كل رسالة بمعزل: قراءة الرموز كانت خارج أي try ⇒ «database is locked» عند مالك واحد يُسقط
-        # إشعارات كل من بعده بالدورة، وتنبيهاتهم موسومة مُطلَقة فلا تُعاد أبداً.
-        try:
-            targets = db.push_targets_for(owner, owner_key, exclude_key=exclude_key)
-            by_lang: dict[str, list[str]] = {}
-            for tok, lang in targets:
-                by_lang.setdefault(_push_lang(lang), []).append(tok)
-            for lang, tokens in by_lang.items():
-                title, body = _compose(ev, lang)
-                retry = _deliver(tokens, title, body)
-                if retry:
-                    _pending_pushes.append((retry, title, body, time.time()))
-        except Exception:
-            log.exception("push dispatch failed for owner=%s event=%s", owner, ev)
+        _dispatch_one(owner, owner_key, ev, exclude_key, time.time())
+
+
+def _dispatch_one(owner: int | None, owner_key: str | None, ev: dict, exclude_key: str | None, first_at: float) -> None:
+    # كل رسالة بمعزل: قراءة الرموز كانت خارج أي try ⇒ «database is locked» عند مالك واحد يُسقط
+    # إشعارات كل من بعده بالدورة، وتنبيهاتهم موسومة مُطلَقة فلا تُعاد أبداً.
+    try:
+        targets = db.push_targets_for(owner, owner_key, exclude_key=exclude_key)
+    except Exception:
+        # لم يُرسل شيء بعد ⇒ الحدث كله يُعاد بالدورة التالية (كان يُسجَّل فقط فيضيع الإشعار)
+        log.exception("push target lookup failed for owner=%s event=%s", owner, ev)
+        _pending_events.append((owner, owner_key, ev, exclude_key, first_at))
+        return
+    try:
+        by_lang: dict[str, list[str]] = {}
+        for tok, lang in targets:
+            by_lang.setdefault(_push_lang(lang), []).append(tok)
+        for lang, tokens in by_lang.items():
+            title, body = _compose(ev, lang)
+            retry = _deliver(tokens, title, body)
+            if retry:
+                _pending_pushes.append((retry, title, body, first_at))
+    except Exception:
+        log.exception("push dispatch failed for owner=%s event=%s", owner, ev)
 
 
 # دفعات فشل إرسالها لـExpo بخطأ عابر (انقطاع/مهلة/5xx/429). التنبيه يُوسَم مُطلَقاً **قبل** الإرسال
@@ -407,6 +426,8 @@ def dispatch(triggered_msgs: list[tuple[int | None, str | None, dict]], exclude_
 _PUSH_RETRY_MAX_AGE = 15 * 60
 _PUSH_RETRY_MAX_PENDING = 1000
 _pending_pushes: list[tuple[list[str], str, str, float]] = []
+# أحداث لم تُعرف أجهزة مالكها بعد (فشلت قراءة الرموز) — (مالك، مفتاح، حدث، الجهاز المستثنى، أول محاولة)
+_pending_events: list[tuple[int | None, str | None, dict, str | None, float]] = []
 
 
 def _retryable(exc: Exception) -> bool:
@@ -437,9 +458,17 @@ def _deliver(tokens: list[str], title: str, body: str) -> list[str]:
 
 
 def _retry_pending_pushes() -> None:
+    now = time.time()
+    n = len(_pending_events)
+    events = _pending_events[:n][-_PUSH_RETRY_MAX_PENDING:]
+    del _pending_events[:n]
+    for owner, owner_key, ev, exclude_key, first_at in events:
+        if now - first_at > _PUSH_RETRY_MAX_AGE:
+            log.warning("dropping push event after %.0fs of failed target lookups: %s", now - first_at, ev)
+            continue
+        _dispatch_one(owner, owner_key, ev, exclude_key, first_at)
     if not _pending_pushes:
         return
-    now = time.time()
     # `dispatch` يُلحق من خيط آخر (BackgroundTask لـ/check): `clear()` بعد النسخ كان يمحو ما أُلحق بينهما
     # فيضيع دفع تنبيه عُلِّم مُطلَقاً. تُحذف العناصر المنسوخة وحدها (الإلحاق وحده يجري بالتوازي).
     n = len(_pending_pushes)

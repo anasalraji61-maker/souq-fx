@@ -17,6 +17,7 @@ def worker(tmp_path, monkeypatch):
     db.init_db()
     monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], None))
     monkeypatch.setattr(alert_worker, "_pending_pushes", [])
+    monkeypatch.setattr(alert_worker, "_pending_events", [])
     db.save_push_token("ExponentPushToken[aaa]", "ios", owner_key="install-retry-device-1")
     return monkeypatch
 
@@ -183,3 +184,73 @@ def test_message_rate_exceeded_ticket_is_retried(worker, monkeypatch):
     assert out["retry_tokens"] == ["ExponentPushToken[b]"]
     assert out["invalid_tokens"] == ["ExponentPushToken[c]"]
     assert alert_worker._deliver(toks, "t", "b") == ["ExponentPushToken[b]"]
+
+
+# ─── run 72: خطأ قاعدة بيانات بين وسم التنبيه ودفعه كان يُفقد الإشعار نهائياً ───
+
+def _locked(*a, **k):
+    import sqlite3
+    raise sqlite3.OperationalError("database is locked")
+
+
+def _price_alert():
+    db.create_alert({"id": "r72", "symbol": "EURUSD", "condition": "above", "price": 1.1, "note": "",
+                     "ts": "2026-01-01T00:00:00+00:00"}, None, owner_key="install-retry-device-1")
+
+
+def test_indicator_list_failure_still_pushes_fired_price_alerts(worker):
+    _price_alert()
+    sent: list = []
+    worker.setattr(alert_worker.expo_push, "send_push", _ok(sent))
+    worker.setattr(db, "list_indicator_alerts", _locked)
+    with pytest.raises(Exception):
+        alert_worker._check_once()
+    assert [a["triggered"] for a in db.list_alerts(all_users=True)] == [True]
+    assert len(sent) == 1
+
+
+def test_target_lookup_failure_is_retried_next_cycle(worker):
+    _price_alert()
+    sent: list = []
+    worker.setattr(alert_worker.expo_push, "send_push", _ok(sent))
+    real = db.push_targets_for
+    worker.setattr(db, "push_targets_for", _locked)
+    alert_worker._check_once()
+    assert sent == [] and len(alert_worker._pending_events) == 1
+    worker.setattr(db, "push_targets_for", real)
+    alert_worker._check_once()
+    assert len(sent) == 1 and alert_worker._pending_events == []
+    alert_worker._check_once()
+    assert len(sent) == 1  # لا تكرار
+
+
+def test_target_lookup_retry_expires(worker):
+    worker.setattr(db, "push_targets_for", _locked)
+    alert_worker.dispatch([(None, "install-retry-device-1", {"body": "x"})])
+    assert len(alert_worker._pending_events) == 1
+    alert_worker._pending_events[:] = [
+        (o, k, e, x, at - alert_worker._PUSH_RETRY_MAX_AGE - 1) for o, k, e, x, at in alert_worker._pending_events
+    ]
+    alert_worker._retry_pending_pushes()
+    assert alert_worker._pending_events == []
+
+
+def test_check_route_reread_failure_still_returns_triggered(worker):
+    from fastapi.testclient import TestClient
+    import main
+    _price_alert()
+    worker.setattr(alert_worker.expo_push, "send_push", _ok([]))
+    real = db.list_alerts
+    calls = {"n": 0}
+
+    def flaky(*a, **k):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            _locked()
+        return real(*a, **k)
+    worker.setattr(db, "list_alerts", flaky)
+    r = TestClient(main.app).post("/api/alerts/check", headers={"X-Install-Id": "install-retry-device-1"})
+    assert r.status_code == 200
+    body = r.json()
+    assert [a["id"] for a in body["triggered"]] == ["r72"]
+    assert [a["triggered"] for a in body["alerts"]] == [True]
