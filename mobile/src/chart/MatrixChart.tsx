@@ -143,6 +143,10 @@ import {
   cloneShift,
   withDrawingArrow,
   withDrawingFibReverse,
+  drawingExtend,
+  extendedSegment,
+  withNextExtend,
+  TREND_EXTENDS,
   withDrawingLock,
 } from './drawEdit';
 import {
@@ -696,8 +700,9 @@ function considerHit(id: string, dist: number, max: number, cur: DrawingHit): Dr
  * للرسم (`visibleDrawings`) وللّمس (`hitDrawing`). يمين النافذة (شارت مُمرَّر للخلف) كيسارها: ترند/قناة
  * طرفاهما بعد آخر خانة يُقصّان لنقطة صفرية على الحافّة اليمنى — لا تُرى، وكانت تُلمس وتُرسم مقابضها هناك.
  */
-function drawingOnScreen(tool: DrawTool, aLocal: number, bLocal: number, lastLocal: number): boolean {
-  if (tool === 'hline' || tool === 'hray' || tool === 'fib') return true;
+function drawingOnScreen(tool: DrawTool, aLocal: number, bLocal: number, lastLocal: number, extended = false): boolean {
+  // ترند ممتدّ: قد يعبر النافذة وطرفاه خارجها — `extendedSegment` يقرّر (null ⇒ لا يُرسم ولا يُلمس).
+  if (tool === 'hline' || tool === 'hray' || tool === 'fib' || extended) return true;
   // شعاع متّجه يساراً وطرفاه يمين النافذة يعبر الشموع الظاهرة كذلك (مرآة الحالة أدناه، `raySegment`).
   if (aLocal > lastLocal + 2 && bLocal > lastLocal + 2) return tool === 'ray' && bLocal < aLocal;
   return (tool === 'ray' && bLocal > aLocal) || aLocal >= -2 || bLocal >= -2;
@@ -4348,6 +4353,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
     setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
   };
+  // امتداد خطّ الترند المحدَّد: بلا ⇒ للماضي ⇒ للمستقبل ⇒ الاتجاهين (كـ«Extend» بـTradingView) — الخطّ نفسه بطرفيه
+  // لا يتغيّر، ويمتدّ حتى حافّة اللوح. قابل للتراجع ويُحفظ مع الرسم.
+  const cycleSelectedExtend = () => {
+    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+    if (!d || d.tool !== 'trend') return;
+    pushDrawHistory();
+    const next = withNextExtend(d);
+    drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
+    setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+  };
   // عكس فيبو المحدَّد: 0% و100% يتبادلان طرفي التأرجح بلا إعادة رسم الأداة (كـ«Reverse» بـTradingView) — قابل للتراجع ويُحفظ.
   const toggleSelectedFibReverse = () => {
     const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
@@ -4372,6 +4387,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedTrend = selectedId ? drawings.find((x) => x.id === selectedId && x.tool === 'trend') : undefined;
   const selectedArrow = !!selectedTrend?.arrow;
   const arrowA11y = tr.mcArrowHeadA11y;
+  const selectedExtend = selectedTrend ? drawingExtend(selectedTrend) : 'none';
+  const extendIdx = TREND_EXTENDS.indexOf(selectedExtend);
+  const extendA11y = tr.mcExtendA11y
+    .replace('{mode}', tr.mcExtendModes[extendIdx] ?? '')
+    .replace('{next}', tr.mcExtendModes[(extendIdx + 1) % TREND_EXTENDS.length] ?? '');
+  // الزمن يسار⇐يمين بالشارت بكل اللغات، فالسهم يسار = الماضي. معزول LTR (U+2066…U+2069): رموز محايدة بفقرة عربية
+  // تُعرض معكوسة فيصير «←—·» «·—←» (سهم الماضي على اليمين).
+  const extendGlyph = `\u2066${{ none: '·—·', past: '←—·', future: '·—→', both: '←—→' }[selectedExtend]}\u2069`;
   const selectedFib = selectedId ? drawings.find((x) => x.id === selectedId && x.tool === 'fib') : undefined;
   const selectedFibReversed = !!selectedFib?.reversed;
 
@@ -4755,7 +4778,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         const aLocal = d.a.index - source.start;
         // ما لا يُرسم لا يُلمس: ترند/قناة طرفاهما قبل النافذة كان `clipSegmentToBars` يقصّهما لنقطة على
         // الحافّة اليسرى ⇒ لمسة عند x≈0 تحدّد رسماً غير مرئي (ويُسحب أو يُحذف بلا أن يُرى).
-        if (!drawingOnScreen(d.tool, aLocal, d.b ? d.b.index - source.start : aLocal, lastDrawLocal)) continue;
+        if (
+          !drawingOnScreen(
+            d.tool,
+            aLocal,
+            d.b ? d.b.index - source.start : aLocal,
+            lastDrawLocal,
+            drawingExtend(d) !== 'none'
+          )
+        )
+          continue;
         const ax = xOf(aLocal);
         const ay = yOf(d.a.price);
         if (d.tool === 'hline') {
@@ -4803,6 +4835,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             Math.hypot(x - box.xEnd, y - box.yStop),
             Math.hypot(x - box.xEnd, y - box.yTarget)
           );
+        } else if (d.tool === 'trend' && drawingExtend(d) !== 'none') {
+          const ext = extendedSegment(xOf(aLocal), ay, xOf(bLocal), by, chartPlotW, chartPlotH, drawingExtend(d));
+          if (!ext) continue;
+          bodyDist = segmentDistance(x, y, ext.x1, ext.y1, ext.x2, ext.y2, 1);
         } else if (d.tool === 'trend' || d.tool === 'ray') {
           // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ حتى حافّة اللوح.
           const seg = (d.tool === 'ray' ? raySegment : clipSegmentToBars)(aLocal, ay, bLocal, by, lastDrawLocal);
@@ -6704,7 +6740,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // الخطّ الأفقي وفيبو بعرض الشارت كلّه: موضع مرساتهما لا يحدّد ظهورهما. كان خطّ دعم
     // مرسوم عند قاع قبل 120 شمعة يختفي (ووسم سعره) بمجرّد العودة للحيّ، ويبقى قابلاً للتحديد.
     // والشعاع المتّجه يميناً كذلك: امتداده يعبر الشموع الظاهرة ولو كان طرفاه يسارها (`raySegment`).
-    .filter(({ d, aLocal, bLocal }) => drawingOnScreen(d.tool, aLocal, bLocal, lastDrawLocal));
+    .filter(({ d, aLocal, bLocal }) =>
+      drawingOnScreen(d.tool, aLocal, bLocal, lastDrawLocal, drawingExtend(d) !== 'none')
+    );
 
   /**
    * أي الخطوط الأفقية يحمل وسم سعره. الخطّ الأفقي هو أداة الدعم/المقاومة الأولى عند
@@ -7296,6 +7334,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 <Text style={[styles.compactToolIcon, selectedArrow && styles.compactToolTextOn]}>➚</Text>
                 {selectedArrow ? <SelMark /> : null}
+              </Pressable>
+            ) : null}
+            {selectedTrend ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={extendA11y}
+                {...railHintProps(extendA11y)}
+                accessibilityState={{ selected: selectedExtend !== 'none' }}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  selectedExtend !== 'none' && styles.compactToolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={cycleSelectedExtend}
+              >
+                <Text style={[styles.compactToolIcon, selectedExtend !== 'none' && styles.compactToolTextOn]}>
+                  {extendGlyph}
+                </Text>
+                {selectedExtend !== 'none' ? <SelMark /> : null}
               </Pressable>
             ) : null}
             {selectedFib ? (
@@ -9860,6 +9917,64 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 {noteText}
               </Text>
+            );
+          }
+          if (d.tool === 'trend' && d.b && drawingExtend(d) !== 'none') {
+            // ممتدّ للماضي/للمستقبل حتى حافّة اللوح (`extendedSegment`) — المقبضان والسهم عند طرفيه الحقيقيين إن ظهرا.
+            const pax = xOf(aLocal);
+            const pay = yOf(d.a.price);
+            const pbx = xOf(bLocal);
+            const pby = yOf(d.b.price);
+            const ext = extendedSegment(pax, pay, pbx, pby, chartPlotW, chartPlotH, drawingExtend(d));
+            if (!ext) return null;
+            const len = Math.hypot(ext.x2 - ext.x1, ext.y2 - ext.y1);
+            const angle = (Math.atan2(ext.y2 - ext.y1, ext.x2 - ext.x1) * 180) / Math.PI;
+            const abAngle = (Math.atan2(pby - pay, pbx - pax) * 180) / Math.PI;
+            const lineW = drawingLineWidth(d) + (bold ? LINE_BOLD_EXTRA : 0);
+            const lineSt = drawingLineStyle(d);
+            const inPlot = (px: number, py: number) => px >= 0 && px <= chartPlotW && py >= 0 && py <= chartPlotH;
+            return (
+              <React.Fragment key={d.id}>
+                <View
+                  style={[
+                    {
+                      position: 'absolute',
+                      left: ext.x1,
+                      top: ext.y1,
+                      width: len,
+                      transform: [{ rotate: `${angle}deg` }],
+                      transformOrigin: 'left center',
+                    },
+                    lineSt === 'solid'
+                      ? { height: lineW, backgroundColor: d.color }
+                      : { height: 0, borderTopWidth: lineW, borderStyle: lineSt, borderColor: d.color },
+                  ]}
+                />
+                {d.arrow && inPlot(pbx, pby) && Math.hypot(pbx - pax, pby - pay) >= 6
+                  ? ARROW_HEAD_SPREAD.map((spread) => (
+                      <View
+                        key={spread}
+                        style={{
+                          position: 'absolute',
+                          left: pbx,
+                          top: pby,
+                          width: Math.min(ARROW_HEAD_LEN, Math.hypot(pbx - pax, pby - pay) * 0.6),
+                          height: lineW,
+                          borderRadius: 1,
+                          backgroundColor: d.color,
+                          transform: [{ rotate: `${abAngle + 180 + spread}deg` }],
+                          transformOrigin: 'left center',
+                        }}
+                      />
+                    ))
+                  : null}
+                {sel && inPlot(pax, pay) ? (
+                  <View style={[styles.grabHandle, { left: pax, top: pay, borderColor: d.color }]} />
+                ) : null}
+                {sel && inPlot(pbx, pby) ? (
+                  <View style={[styles.grabHandle, { left: pbx, top: pby, borderColor: d.color }]} />
+                ) : null}
+              </React.Fragment>
             );
           }
           if ((d.tool === 'trend' || d.tool === 'ray') && d.b) {
@@ -13980,6 +14095,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   >
                     <Text style={selectedArrow ? styles.toolTextOn : styles.toolText}>➚</Text>
                     {selectedArrow ? <SelMark /> : null}
+                  </Pressable>
+                ) : null}
+                {selectedTrend ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={extendA11y}
+                    accessibilityState={{ selected: selectedExtend !== 'none' }}
+                    style={({ pressed }) => [
+                      styles.tool,
+                      selectedExtend !== 'none' && styles.toolOn,
+                      pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                    ]}
+                    onPress={cycleSelectedExtend}
+                  >
+                    <Text style={selectedExtend !== 'none' ? styles.toolTextOn : styles.toolText}>
+                      {extendGlyph} {tr.mcExtendWord}
+                    </Text>
+                    {selectedExtend !== 'none' ? <SelMark /> : null}
                   </Pressable>
                 ) : null}
                 {selectedFib ? (

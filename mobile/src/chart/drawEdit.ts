@@ -131,6 +131,73 @@ export function rayReach(x1: number, y1: number, x2: number, y2: number, w: numb
   return Number.isFinite(t) ? Math.max(1, t) : 1;
 }
 
+export type TrendExtend = 'none' | 'past' | 'future' | 'both';
+/** بترتيب `tr.mcExtendModes`، والنقر يدور عليها. */
+export const TREND_EXTENDS: readonly TrendExtend[] = ['none', 'past', 'future', 'both'];
+
+export function drawingExtend(d: Pick<Drawing, 'tool' | 'extend'>): TrendExtend {
+  return d.tool === 'trend' && d.extend && TREND_EXTENDS.includes(d.extend) ? d.extend : 'none';
+}
+
+/** الامتداد التالي لخطّ الترند؛ «بلا امتداد» يحذف المفتاح كالسهم. غير الترند لا يتغيّر. */
+export function withNextExtend(d: Drawing): Drawing {
+  if (d.tool !== 'trend') return d;
+  const cur = drawingExtend(d);
+  const next = TREND_EXTENDS[(TREND_EXTENDS.indexOf(cur) + 1) % TREND_EXTENDS.length]!;
+  const { extend: _drop, ...rest } = d;
+  return next === 'none' ? rest : { ...rest, extend: next };
+}
+
+/**
+ * قطعة خطّ الترند **الممتدّ** بالبكسل، مقصوصة للّوح `[0,w]×[0,h]` (Liang–Barsky)، أو `null` إن لم يبقَ منها شيء
+ * ظاهر. `(x1,y1)` الطرف A و`(x2,y2)` الطرف B بمواضعهما الحقيقية ولو خارج اللوح (`xOf` خطّية). الماضي = نحو اليسار
+ * (الزمن يسار⇐يمين بكل اللغات)، والمستقبل نحو اليمين، أيّاً كان الطرف المرسوم أولاً. خطّ رأسي (A وB بخانة واحدة)
+ * لا اتجاه زمنياً له ⇒ لا يمتدّ. ما يُرسم وما يُلمس من هذه الدالة نفسها.
+ */
+export function extendedSegment(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  w: number,
+  h: number,
+  extend: TrendExtend
+): { x1: number; y1: number; x2: number; y2: number } | null {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  let t0 = 0;
+  let t1 = 1;
+  if (Math.abs(dx) > 1e-9) {
+    // t يزيد نحو B؛ إن كان B يسار A فالمستقبل نحو t السالب.
+    const futureUp = dx > 0;
+    const past = extend === 'past' || extend === 'both';
+    const future = extend === 'future' || extend === 'both';
+    if (future) {
+      if (futureUp) t1 = Infinity;
+      else t0 = -Infinity;
+    }
+    if (past) {
+      if (futureUp) t0 = -Infinity;
+      else t1 = Infinity;
+    }
+  }
+  const clip = (p: number, q: number): boolean => {
+    if (Math.abs(p) < 1e-12) return q >= 0;
+    const r = q / p;
+    if (p < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+    return true;
+  };
+  if (!clip(-dx, x1) || !clip(dx, w - x1) || !clip(-dy, y1) || !clip(dy, h - y1)) return null;
+  if (!Number.isFinite(t0) || !Number.isFinite(t1) || t1 < t0) return null;
+  return { x1: x1 + t0 * dx, y1: y1 + t0 * dy, x2: x1 + t1 * dx, y2: y1 + t1 * dy };
+}
+
 /** ختم الزمن لخانة (`stampAtIndex` مربوطة بالسلسلة والفريم) — يُمرَّر لتبقى الدالة خالصة. */
 export type StampAt = (index: number) => { time: number; ahead?: number; aheadStep?: number; sub?: number } | null;
 

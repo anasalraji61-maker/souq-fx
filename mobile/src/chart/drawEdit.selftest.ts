@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock, drawToolShortcut, drawToolShortcutLabel } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock, withDrawingFibReverse, withNextExtend, drawingExtend, extendedSegment, drawToolShortcut, drawToolShortcutLabel } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -176,6 +176,36 @@ ok('وسم الاختصار', drawToolShortcutLabel('hline') === 'Alt+H');
 ok('Alt+B ⇒ مستطيل', drawToolShortcut('b', 'KeyB', alt) === 'rect');
 ok('Alt+R محجوز لإعادة العرض ⇒ لا أداة', drawToolShortcut('r', 'KeyR', alt) === null);
 ok('أداة بلا اختصار ⇒ فارغ', drawToolShortcutLabel('none') === '');
+
+// ── امتداد الترند وعكس فيبو ─────────────────────────────────────────────────
+{
+  const tr: Drawing = { id: 't', tool: 'trend', a: { index: 0, price: 1, time: 0 }, b: { index: 5, price: 1.1, time: 300 }, color: '#fff' };
+  const modes: string[] = [];
+  let x = tr;
+  for (let i = 0; i < 4; i++) {
+    x = withNextExtend(x);
+    modes.push(drawingExtend(x));
+  }
+  ok('الامتداد يدور past→future→both→none', modes.join() === 'past,future,both,none');
+  ok('«بلا» يحذف المفتاح', !('extend' in x));
+  ok('غير الترند لا يمتدّ', drawingExtend({ ...tr, tool: 'ray', extend: 'both' }) === 'none');
+  const none = extendedSegment(100, 100, 200, 50, 400, 300, 'none');
+  ok('بلا امتداد = الطرفان', !!none && none.x1 === 100 && none.x2 === 200);
+  const fut = extendedSegment(100, 100, 200, 50, 400, 300, 'future');
+  ok('للمستقبل حتى الحافّة العليا', !!fut && fut.x1 === 100 && Math.abs(fut.x2 - 300) < 1e-9 && Math.abs(fut.y2) < 1e-9);
+  const past = extendedSegment(100, 100, 200, 50, 400, 300, 'past');
+  ok('للماضي حتى الحافّة اليسرى', !!past && Math.abs(past.x1) < 1e-9 && Math.abs(past.y1 - 150) < 1e-9 && past.x2 === 200);
+  // B رُسم أولاً يميناً ثم A يساراً: المستقبل ما زال نحو اليمين.
+  const rev = extendedSegment(200, 50, 100, 100, 400, 300, 'future');
+  ok('المستقبل يميناً أيّاً كان الطرف الأوّل', !!rev && Math.max(rev.x1, rev.x2) > 299);
+  ok('طرفاه يسار اللوح بلا امتداد ⇒ لا شيء', extendedSegment(-500, 100, -400, 100, 400, 300, 'none') === null);
+  const cross = extendedSegment(-500, 100, -400, 100, 400, 300, 'future');
+  ok('طرفاه يسار اللوح وممتدّ للمستقبل ⇒ يعبر اللوح', !!cross && cross.x1 === 0 && cross.x2 === 400);
+  ok('رأسي لا يمتدّ', JSON.stringify(extendedSegment(50, 10, 50, 90, 400, 300, 'both')) === JSON.stringify({ x1: 50, y1: 10, x2: 50, y2: 90 }));
+  const fib: Drawing = { ...tr, tool: 'fib' };
+  ok('عكس فيبو', withDrawingFibReverse(fib, true).reversed === true && !('reversed' in withDrawingFibReverse({ ...fib, reversed: true }, false)));
+  ok('العكس لفيبو فقط', !('reversed' in withDrawingFibReverse(tr, true)));
+}
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);
