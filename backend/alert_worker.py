@@ -59,7 +59,10 @@ def _price_at(symbol: str) -> tuple[float | None, float | None]:
     p = snap.get(symbol.upper())
     if p is None:
         return None, None
-    return float(p), td_ws.received_at([symbol.upper()]).get(symbol.upper())
+    at = td_ws.received_at([symbol.upper()]).get(symbol.upper())
+    if market.in_weekend_close(symbol, at if at is not None else market._session_now(), 0):
+        return None, None  # تيك العطلة بعد إغلاق الجمعة — لا يُنفَّذ عليه ولا يُطلق تنبيهاً
+    return float(p), at
 
 
 # شموع 1m التي تُفحص ذيولها: كانت 5 ⇒ بعد 429 (كاش قديم حتى `STALE_MAX_SEC` = 15د) أو دورة أطول من 5د،

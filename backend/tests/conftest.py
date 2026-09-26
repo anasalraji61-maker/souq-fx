@@ -25,3 +25,12 @@ def _fresh_quote_cache():
     main._QUOTE_CACHE.clear()
     yield
     main._QUOTE_CACHE.clear()
+
+
+@pytest.fixture(autouse=True)
+def _no_weekend_close_filter(monkeypatch):
+    """اختبارات كثيرة تبني اقتباسات EURUSD بوقت «الآن»: إسقاط شموع/اقتباسات العطلة (run 59) كان سيُفشلها
+    كل سبت. `tests/test_weekend_bars_r59.py` يعيد تفعيله ويثبّت الساعة."""
+    import twelve_data
+
+    monkeypatch.setattr(twelve_data, "WEEKEND_CLOSE_FILTER", False)

@@ -81,6 +81,11 @@ def _weekly_close_utc(friday: datetime) -> int:
     return int(friday.replace(hour=21 if dst else 22, minute=0, second=0, microsecond=0).timestamp())
 
 
+def _has_weekly_session(sym: str) -> bool:
+    """فوركس/معادن/نفط `SYMBOL_MAP` وأزواج ISO: تُغلق الجمعة 17:00 وتفتح الأحد 17:00 نيويورك."""
+    return (sym in SYMBOL_MAP or _is_iso_pair(sym)) and sym not in WEEKEND_TRADED
+
+
 def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     """نهاية شمعة فُتحت `open_ts` وطولها `step` ثانية: فتحها + طولها، **ولا تتجاوز إغلاق السوق الأسبوعي**.
 
@@ -93,7 +98,7 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     # زوج ISO من البحث (USDMXN، EURSEK، XAUEUR) يُطلب زوجَ فوركس (`td_symbol`) ويُغلق الجمعة كالرئيسية:
     # كان «مجهول الجلسة» فشمعة W تبقى «جارية» طوال العطلة ⇒ تنبيه تقاطع يُسلَّح السبت يُطلق على تقاطع
     # الأسبوع الماضي، و`price_as_of` لإغلاق الجمعة يُرسَل حتى ~51 ساعة لاحقاً.
-    if (sym not in SYMBOL_MAP and not _is_iso_pair(sym)) or sym in WEEKEND_TRADED:
+    if not _has_weekly_session(sym):
         return end
     opened = datetime.fromtimestamp(float(open_ts), tz=timezone.utc)
     friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
@@ -101,6 +106,57 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     if close <= open_ts:  # فُتحت بعد إغلاق هذه الجمعة (نادر) ⇒ إغلاق الجمعة التالية
         close = _weekly_close_utc(friday + timedelta(days=7))
     return float(min(end, close))
+
+def _weekly_open_utc(sunday: datetime) -> int:
+    """الأحد 17:00 نيويورك بثواني UTC — يوم تحويل الساعة نفسه يأخذ الإزاحة الجديدة (التحويل 02:00)."""
+    y = sunday.year
+    dst = (3, _nth_sunday(y, 3, 2)) <= (sunday.month, sunday.day) < (11, _nth_sunday(y, 11, 1))
+    return int(sunday.replace(hour=21 if dst else 22, minute=0, second=0, microsecond=0).timestamp())
+
+
+# مفتاح للاختبارات فقط: اختبارات قديمة تبني اقتباسات EURUSD بوقت «الآن» فتسقط يوم السبت (`tests/conftest.py`).
+WEEKEND_CLOSE_FILTER = True
+
+
+def _session_now() -> float:
+    """الساعة لفحص الجلسة حين لا يرسل المزوّد وقتاً (`/price`، تيك WS) — تُثبَّت بالاختبارات."""
+    return time.time()
+
+
+def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
+    """شمعة تقع كلّها بين إغلاق الجمعة 17:00 وافتتاح الأحد 17:00 نيويورك لرمز له جلسة أسبوعية.
+
+    المزوّد يملأ العطلة كلّها شموعاً (السبت 2026-09-26: 284 شمعة 1m لليورو دولار بعد 21:00 UTC، والأحد كل دقيقة؛ سيولة
+    ما بعد الإغلاق بلا وسيط تجزئة يُنفّذ عليها) ⇒ كانت تُعرض «آخر سعر» بوقت السبت، وتُطلق عليها التنبيهات
+    ويحسب منها الاختبار الخلفي والمستويات — بينما `bar_end` نفسه يعدّ السوق مغلقاً. شمعة تعبر الافتتاح
+    (4H شتاءً 20:00 الأحد) تبقى."""
+    sym = canonical_symbol(matrix_symbol)
+    if not WEEKEND_CLOSE_FILTER or not _has_weekly_session(sym):
+        return False
+    opened = datetime.fromtimestamp(float(open_ts), tz=timezone.utc)
+    if step == _DAY:
+        # شمعة D المؤرَّخة X عند المزوّد تغطّي X−1 ‏17:00 ⇒ X ‏17:00 نيويورك (افتتاح شمعة السبت 26-09 = افتتاح
+        # 1m الجمعة 21:00 UTC) ⇒ شمعتا السبت والأحد عطلة كلّها (الأحد 20-09: مدى 20 نقطة من تداول العطلة).
+        return opened.weekday() >= 5
+    friday = opened - timedelta(days=(opened.weekday() - 4) % 7)
+    close = _weekly_close_utc(friday)
+    reopen = _weekly_open_utc(friday + timedelta(days=2))
+    return close <= open_ts and open_ts + step <= reopen
+
+
+TF_SECONDS: dict[str, int] = {
+    "1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1H": 3600, "4H": 14400, "D": 86400, "W": 604800,
+}
+
+def _weekend_allowance(matrix_symbol: str, tf: str, n: int) -> int:
+    """شموع إضافية تُطلب لتعوّض ما يُسقطه `in_weekend_close`: المزوّد يملأ كل عطلة (~48 ساعة) لليورو دولار
+    شموعاً ⇒ بلا هذا كان طلب 120 شمعة 15m صباح الاثنين يعود بـ16 فقط بعد الإسقاط. عطلة لكل 5 أيام تداول + واحدة."""
+    step = TF_SECONDS.get(tf, 900)
+    if step >= 7 * _DAY or not _has_weekly_session(canonical_symbol(matrix_symbol)):
+        return 0
+    weekends = n * step // (5 * _DAY) + 1
+    return weekends * -(-49 * 3600 // step)
+
 
 TF_MAP: dict[str, str] = {
     "1m": "1min",
@@ -332,7 +388,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         # `symbol_search`). كل نداء اليوم يمرّ بثابت أو بقيمة محصورة بـ`build_series`،
         # فهذا حارس مسارٍ مستقبليّ — ورفعُ الخطأ هنا لا يصلح: `build_series` يبتلعه فيُعرض
         # شارت تجريبي بدل رسالة.
-        "outputsize": str(max(1, min(outputsize, 5000))),
+        "outputsize": str(max(1, min(outputsize + _weekend_allowance(sym, tf, outputsize), 5000))),
         "apikey": key,
         "timezone": "UTC",
         "order": "ASC",
@@ -373,10 +429,13 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
 
     candles: list[dict] = []
     dropped = 0
+    step = TF_SECONDS[tf]
     for row in data["values"] or []:
         candle = _candle(row)
         if candle is None:
             dropped += 1
+            continue
+        if in_weekend_close(sym, candle["time"], step):
             continue
         candles.append(candle)
     if dropped:
@@ -432,18 +491,23 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code == 200:
                 p = _pos(r2.json().get("price"))
-            return _price_only(matrix_symbol, p) if p else None
+            return _price_only(matrix_symbol, p) if p and not in_weekend_close(matrix_symbol, _session_now(), 0) else None
         if r.status_code >= 400:
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code != 200:
                 return None
             p = _pos(r2.json().get("price"))
-            return _price_only(matrix_symbol, p) if p else None
+            return _price_only(matrix_symbol, p) if p and not in_weekend_close(matrix_symbol, _session_now(), 0) else None
         data = r.json()
     if data.get("status") == "error":
         return None
     price = _pos(data.get("close") or data.get("price"))
     if not price:
+        return None
+    quoted_at = _quote_time(data.get("last_quote_at"))
+    # تيك العطلة (المزوّد يواصل بعد إغلاق الجمعة ويقول `is_market_open: true`) ليس سعراً قابلاً للتداول:
+    # كان يُعرض «آخر سعر» بوقت السبت ويُطلق تنبيهات السعر ⇒ None، والمسار يعود لإغلاق الجمعة الحقيقي بوقته.
+    if in_weekend_close(matrix_symbol, quoted_at if quoted_at is not None else _session_now(), 0):
         return None
     bid_f = _pos(data.get("bid"))
     ask_f = _pos(data.get("ask"))
@@ -465,7 +529,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         "percent_change": _f(data.get("percent_change")),
         # وقت السعر نفسه من المزوّد (آخر شمعة دقيقة)، لا لحظة جلبه: بعطلة نهاية الأسبوع كان إغلاق الجمعة
         # يُعاد `as_of` = «الآن» فتقرؤه الحاسبة/الدفتر سعراً حيّاً. None حين لا يرسله (المسار يقرّر).
-        "quoted_at": _quote_time(data.get("last_quote_at")),
+        "quoted_at": quoted_at,
         # السوق مفتوح/مغلق كما يقوله المزوّد — None حين لا يقول (لا تخمين من الساعة)
         "market_open": data.get("is_market_open") if isinstance(data.get("is_market_open"), bool) else None,
     }

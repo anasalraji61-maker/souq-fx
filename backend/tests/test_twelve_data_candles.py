@@ -205,7 +205,8 @@ def test_chart_route_sends_null_volume_for_forex(provider):
 @pytest.mark.parametrize("asked,sent", [(-5, "16"), (0, "16"), (180, "180"), (99_999, "5000")])
 def test_outputsize_never_leaves_as_a_non_positive_number(provider, asked, sent):
     market.fetch_time_series_with_meta("EURUSD", "15m", asked)
-    assert provider["sink"]["params"]["outputsize"] == sent
+    # + شموع العطلة التي يُسقطها `in_weekend_close` (run 59)
+    assert provider["sink"]["params"]["outputsize"] == str(min(5000, int(sent) + market._weekend_allowance("EURUSD", "15m", int(sent))))
 
 
 # ------------------------- سعر غير موجب أو شمعة مستحيلة ليست سوقاً
@@ -294,7 +295,7 @@ def test_arbitrary_outputsizes_share_one_provider_request(provider):
         assert len(candles) == n
         last = last or candles[-1]["time"]
         assert candles[-1]["time"] == last  # الأحدث دائماً، لا أوّل n
-    assert provider["sink"]["params"]["outputsize"] == "300"
+    assert provider["sink"]["params"]["outputsize"] == str(300 + market._weekend_allowance("EURUSD", "15m", 300))
     assert market._stats["api_calls"] - before == 1 and len(market._cache) == 1
 
 
