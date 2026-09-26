@@ -1183,7 +1183,9 @@ export function riskForLots(input: {
  */
 export function formatRiskPct(pct: number): string {
   if (!Number.isFinite(pct) || pct < 0) return '—';
-  return `${pct.toFixed(pct < 10 ? 2 : 1)}%`;
+  // المنازل تُقرَّر من القيمة المقرَّبة (QA105a): 9.996 كانت «10.00%» بمنزلتين بجانب «10.0%» لـ10 نفسها
+  const two = pct.toFixed(2);
+  return `${Number(two) < 10 ? two : pct.toFixed(1)}%`;
 }
 
 /**

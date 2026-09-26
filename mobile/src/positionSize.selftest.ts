@@ -514,6 +514,11 @@ console.log('positionSize pipValue-for-position selftest OK');
   assert.ok(riskForLots({ lots: LOT_STEP, slPips: 30, pipValuePerLot: 10, balance: 50 })!.pct > 1);
   // تنسيق: منزلة واحدة من 10% فما فوق، وتقريب لا قصّ
   assert.equal(formatRiskPct(12.46), '12.5%');
+  // QA105a: الحدّ 10% بعد التقريب لا قبله
+  assert.equal(formatRiskPct(9.996), '10.0%');
+  assert.equal(formatRiskPct(9.994), '9.99%');
+  assert.equal(formatRiskPct(10), '10.0%');
+  assert.equal(formatRiskPct(0), '0.00%');
   assert.equal(formatRiskPct(0.8666), '0.87%');
   assert.equal(formatRiskPct(NaN), '—');
   // مدخل فاسد
