@@ -108,10 +108,18 @@ const SMALL_CONTRACT_SUFFIX = /[.\-_#+](C|CENT|MICRO)$/;
  * بالزوج العادي (`miniAccountSymbol`). «EURUSDmini» الملاصقة مرفوضة أصلاً.
  */
 const MINI_SUFFIX = /[.\-_#+]MINI$/;
+/**
+ * لاحقة **تشبه السنت/micro ولا نعرف عقدها** («EURUSD.cents»، «EURUSD_USC»، «EURUSD-cnt»، «EURUSD.mic»، «EURUSD.cent1»، «GOLD.CENTS»):
+ * كانت تمرّ بقاعدة `BROKER_SUFFIXED` كعقدٍ عادي 100,000 ⇒ 1% من 1,000 بوقف 25 pip = **0.04 لوت** حيث حساب السنت يحتاج 4.00 —
+ * خطأ ×100 باللوت والمال والهامش. لا تُخمَّن (قد تكون سنتاً أو micro أو اسماً تجارياً): تُرفض كالـmini. «.c»/«.cent»/«.micro»
+ * المعروفة لها `smallContractSpec`، و«.c1» وسائر اللواحق العادية كما هي.
+ */
+const AMBIGUOUS_SMALL_SUFFIX = /[.\-_#+](CENTS|USC|CNT|MIC|CENT\d+|MICRO\d+|MINI\d+)$/;
 
 export function instrumentSpec(raw: string): InstrumentSpec | null {
   if (SMALL_CONTRACT_SUFFIX.test(raw.trim().toUpperCase())) return null;
   if (MINI_SUFFIX.test(raw.trim().toUpperCase())) return null;
+  if (AMBIGUOUS_SMALL_SUFFIX.test(raw.trim().toUpperCase())) return null;
   let symbol = normalizeSymbol(raw);
   const named = METAL_NAMES.exec(raw.trim().toUpperCase());
   if (named) symbol = METAL_NAME_SYMBOL[named[1]];
@@ -444,6 +452,9 @@ const INVERTED_BEYOND: Record<string, { over?: number; under?: number }> = {
   NZDCAD: { over: 1.2 },
   AUDCHF: { over: 1.3 },
   CADCHF: { over: 1.5 },
+  // حساب NZD على أزواج AUD (EURAUD، GBPAUD…): AUDNZD مباشر (غير معكوس) ⇒ المقلوب يضخّم اللوت. أدناه منذ التعويم ~1.0 (2015)،
+  // فـ«0.917» (NZD ⇒ AUD مقلوباً) كان يُقبل ⇒ EURAUD بحساب NZD وقف 30: **0.36 لوت بدل 0.30** (خسارة 118 NZD بمخاطرة 100).
+  AUDNZD: { under: 0.95 },
 };
 
 /**

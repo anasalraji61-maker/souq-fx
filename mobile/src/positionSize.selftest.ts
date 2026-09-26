@@ -1915,6 +1915,14 @@ console.log('positionSize centAccountSymbol selftest OK');
   // الحاسبة: 1% من 1000 بوقف 25 pip = 0.04 لوت عادي — كان يُعرض هذا لـ«EURUSD.c» (حساب السنت يحتاج 4.00)
   const std = instrumentSpec('EURUSD')!;
   assert.equal(positionSize({ balance: 1000, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(std, 1), contractSize: std.contractSize })!.lots, 0.04);
+  // لاحقة تشبه السنت/micro بلا عقد معروف: مرفوضة (كانت عقداً عادياً ⇒ 0.04 لوت حيث السنت 4.00، خطأ ×100) — لا تخمين
+  for (const raw of ['EURUSD.cents', 'EURUSD_USC', 'EURUSD-cnt', 'EURUSD.mic', 'EURUSD.cent1', 'GOLD.CENTS', 'XAUUSD.CENTS', 'EURUSD.mini2', 'EURUSD#micro1']) {
+    assert.equal(instrumentSpec(raw), null, raw);
+    assert.equal(centAccountSymbol(raw), null, raw);
+  }
+  // واللواحق العادية القريبة منها باقية عقداً عادياً
+  for (const raw of ['EURUSD.c1', 'EURUSD.cfd', 'EURUSD.m', 'EURUSD.ecn', 'EURUSD.i', 'EURUSD.r'])
+    assert.equal(instrumentSpec(raw)?.contractSize, 100000, raw);
 }
 console.log('positionSize smallContractPair selftest OK');
 
@@ -3006,6 +3014,10 @@ console.log('positionSize slPipsCarryOver selftest OK');
   }
   // فوق 1 لزوجٍ غير مصنّف ⇒ لا تخمين (EURUSD 1.08، AUDNZD 1.09)
   for (const [pair, r] of [['EURUSD', 1.08], ['AUDNZD', 1.09], ['USDJPY', 149.5]] as const) assert.equal(manualConvLooksInverted(pair, r), null, pair);
+  // AUDNZD (حساب NZD على EURAUD/GBPAUD): أدناه منذ التعويم ~1.0 ⇒ «0.917» مقلوب (كان يُقبل ⇒ 0.36 لوت بدل 0.30)؛ 0.96–1.0 سعرٌ ممكن
+  assert.ok(Math.abs(manualConvLooksInverted('AUDNZD', 0.917)! - 1 / 0.917) < 1e-12);
+  assert.ok(manualConvLooksInverted('AUDNZD', 0.5) != null);
+  for (const r of [0.96, 0.9955, 1.0, 1.09, 1.2]) assert.equal(manualConvLooksInverted('AUDNZD', r), null, String(r));
   {
     // AUDUSD وUSDCAD عَبَرا 1 تاريخياً لكن لكلٍّ حدّ لم يُبلغ: AUDUSD «1.515» وUSDCAD «0.735» مقلوبان يقيناً
     assert.ok(Math.abs(manualConvLooksInverted('AUDUSD', 1 / 0.66)! - 0.66) < 1e-12);
