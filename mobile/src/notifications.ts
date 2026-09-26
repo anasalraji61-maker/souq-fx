@@ -145,10 +145,15 @@ export async function registerPushToken(): Promise<void> {
   }
 }
 
+/** أقصى انتظار لـ`getExpoPushTokenAsync`: رحلة لخادم Expo ثم FCM، وقد **لا تعود أبداً** (شبكة متقطّعة،
+ * أندرويد بلا خدمات Google). بلا حدّ كان `registerPushToken` معلّقاً للأبد، ومعه زرّ «تفعيل الإشعارات»
+ * على «…» وسطر حالة الإذن بلوحة التنبيهات (كلاهما ينتظر التسجيل قبل قراءة الحالة). */
+export const PUSH_TOKEN_TIMEOUT_MS = 10_000;
+
 /**
  * رمز Push لهذا الجهاز إن كان الإذن ممنوحاً سلفاً (لا يسأل عنه)، وإلا `null`. يُستعمل للتسجيل وللخروج
  * (`api.logout` يفكّه من الحساب). `getPermissionsAsync` قد يرفض بحالات أندرويد/Expo Go، وExpo Go قد
- * يفتقد `projectId` — كلاهما `null` بلا استثناء طائر.
+ * يفتقد `projectId` — كلاهما `null` بلا استثناء طائر. وجلبٌ لا يعود خلال `PUSH_TOKEN_TIMEOUT_MS` ⇒ `null`.
  */
 export async function currentPushToken(): Promise<string | null> {
   if (Platform.OS === 'web') return null;
@@ -157,10 +162,14 @@ export async function currentPushToken(): Promise<string | null> {
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ??
       (Constants.expoConfig as { projectId?: string })?.projectId;
-    const tokenData = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined
-    );
-    return tokenData.data || null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tokenData = await Promise.race([
+      Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined),
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), PUSH_TOKEN_TIMEOUT_MS);
+      }),
+    ]).finally(() => clearTimeout(timer));
+    return tokenData?.data || null;
   } catch {
     return null;
   }

@@ -11,7 +11,15 @@ import Module from 'node:module';
 import { resolveLang, deviceLocaleTag } from './i18n/locales';
 
 type Perm = { status: string } | Error;
-const state: { get: Perm; req: Perm; os: string; channels: number; requests: number } = {
+const state: {
+  get: Perm;
+  req: Perm;
+  os: string;
+  channels: number;
+  requests: number;
+  token: () => Promise<{ data: string }>;
+} = {
+  token: () => Promise.resolve({ data: 'ExponentPushToken[x]' }),
   get: { status: 'undetermined' },
   req: { status: 'granted' },
   os: 'android',
@@ -27,6 +35,7 @@ const stubs: Record<string, unknown> = {
       state.requests += 1;
       return settle(state.req);
     },
+    getExpoPushTokenAsync: () => state.token(),
     setNotificationChannelAsync: () => {
       state.channels += 1;
       return Promise.resolve();
@@ -61,7 +70,17 @@ const origLoad = M._load;
 M._load = (req: string, ...rest: unknown[]) => (req in stubs ? stubs[req] : origLoad(req, ...rest));
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getNotificationPermissionState, ensureAlertNotifications, notifLang } = require('./notifications') as typeof import('./notifications');
+const { getNotificationPermissionState, ensureAlertNotifications, notifLang, currentPushToken, PUSH_TOKEN_TIMEOUT_MS } =
+  require('./notifications') as typeof import('./notifications');
+
+// وعدٌ لا يعود يُفرغ حلقة الأحداث فيخرج Node بصمت ورمز 0 — الاختبار يفشل إن لم يبلغ نهايته
+let finished = false;
+process.on('exit', () => {
+  if (!finished) {
+    console.error('notifications selftest did not finish (a promise never settled)');
+    process.exitCode = 1;
+  }
+});
 
 (async () => {
   // الحالات الثلاث كما هي
@@ -105,6 +124,23 @@ const { getNotificationPermissionState, ensureAlertNotifications, notifLang } = 
 
   console.log('notifications permission never-rejects selftest OK');
 
+  // رمز Push: يعود كما هو، ورفضٌ ⇒ null، و**جلبٌ لا يعود أبداً ⇒ null بعد الحدّ** (كان يعلّق زرّ «تفعيل الإشعارات» على «…» للأبد)
+  state.get = { status: 'granted' };
+  assert.equal(await currentPushToken(), 'ExponentPushToken[x]');
+  state.token = () => Promise.reject(new Error('fcm'));
+  assert.equal(await currentPushToken(), null);
+  state.token = () => new Promise(() => undefined);
+  const t0 = Date.now();
+  assert.equal(await currentPushToken(), null);
+  const waited = Date.now() - t0;
+  assert.ok(waited >= PUSH_TOKEN_TIMEOUT_MS - 50 && waited < PUSH_TOKEN_TIMEOUT_MS + 2000, `waited ${waited}ms`);
+  // إذن غير ممنوح ⇒ null بلا جلب
+  state.get = { status: 'denied' };
+  state.token = () => Promise.reject(new Error('must not fetch'));
+  assert.equal(await currentPushToken(), null);
+  state.token = () => Promise.resolve({ data: 'ExponentPushToken[x]' });
+  console.log('notifications push-token timeout selftest OK');
+
   // notifLang — المحفوظ إن كان مدعوماً، وإلا لغة الجهاز بقاعدة deviceLang (هاتف إنجليزي بلا اختيار كان يستقبل التنبيهات بالعربية)
   assert.equal(notifLang(null, 'en-US'), 'en-US');
   assert.equal(notifLang(undefined, 'en-AU'), 'en-US');
@@ -121,6 +157,7 @@ const { getNotificationPermissionState, ensureAlertNotifications, notifLang } = 
   // QA41: لا نسخة ثانية من القاعدة — الدالّة نفسها التي تقرأ بها الواجهة (`I18nContext`) لغتها
   assert.equal(notifLang, resolveLang);
   console.log('notifications notifLang selftest OK');
+  finished = true;
 })().catch((e) => {
   console.error(e);
   process.exit(1);
