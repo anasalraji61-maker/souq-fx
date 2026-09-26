@@ -3364,7 +3364,9 @@ console.log('positionSize profitAfterCosts-at-target selftest OK');
   // بلا أداة: كما كان
   assert.equal(parseSlPips('1.27'), 1.27);
   // المنزلة الواحدة (كل ما يكتبه الحساب من السعرين) والأصفار الزائدة والمسافات الأكبر تبقى نقاطاً
-  for (const [raw, v] of [['1.5', 1.5], ['1.20', 1.2], ['2.5', 2.5], ['12.25', 12.25], ['0.45', 0.45], ['25', 25]] as const) {
+  // «1.20» بمنزلتين مكتوبتين قرب سعر GBPUSD (~1.3) سعرٌ الآن — التطبيق يكتب النقاط بمنزلة واحدة، والوقف 1.2 pip لا يُكتب «1.20»
+  assert.equal(parseSlPips('1.20', gbp), null);
+  for (const [raw, v] of [['1.5', 1.5], ['1.2', 1.2], ['2.5', 2.5], ['12.25', 12.25], ['0.45', 0.45], ['25', 25]] as const) {
     assert.equal(parseSlPips(raw, gbp), v, raw);
     assert.equal(slPipsLooksLikePrice(raw, gbp), false, raw);
   }
@@ -3390,7 +3392,7 @@ console.log('positionSize two-decimal price in pips field selftest OK');
   // الخسارة الحقيقية: ما كان يُحسب لوتاً من «1.3000» لم يعد يصل للحساب
   assert.equal(parseSlPips('1.3000'), null);
   // ما دون أربع منازل كما كان: نقاط، أو مبهم (1.500)
-  for (const [raw, v] of [['1.3', 1.3], ['1.20', 1.2], ['0.500', 0.5], ['25', 25], ['250.5', 250.5], ['12.25', 12.25]] as const) {
+  for (const [raw, v] of [['1.3', 1.3], ['0.500', 0.5], ['25', 25], ['250.5', 250.5], ['12.25', 12.25]] as const) {
     assert.equal(parseSlPips(raw, gbp), v, raw);
     assert.equal(slPipsLooksLikePrice(raw, gbp), false, raw);
   }
@@ -4324,3 +4326,21 @@ console.log('positionSize fetchedConvPriceLooksWrong selftest OK');
   assert.equal(looks('25', jpy), false);
 }
 console.log('positionSize JPY/gold stop price in pips field selftest OK');
+{
+  // التقاطعات فوق 1.5: سعرٌ مستدير «2.20» (GBPNZD) أو فوق 2.5 («2.63») كان نقاطاً ⇒ 7.83 لوت بدل ~0.43 لوقف 40 pip
+  const nzd = instrumentSpec('GBPNZD')!;
+  for (const [sym, raw] of [['GBPNZD', '2.20'], ['GBPNZD', '2.63'], ['GBPAUD', '2.10'], ['EURNZD', '1.90'], ['GBPCAD', '1.90'], ['EURAUD', '1.70'], ['GBPUSD', '1.30']] as const) {
+    const sp = instrumentSpec(sym)!;
+    assert.equal(parseSlPips(raw, sp), null, `${sym} ${raw}`);
+    assert.equal(slPipsLooksLikePrice(raw, sp), true, `${sym} ${raw}`);
+  }
+  // منزلة واحدة، أو بعيدٌ عن السعر، أو عدد صحيح ⇒ نقاط كما كانت
+  for (const [raw, v] of [['2.2', 2.2], ['1.9', 1.9], ['12.25', 12.25], ['40', 40], ['4.50', 4.5], ['0.50', 0.5]] as const) {
+    assert.equal(parseSlPips(raw, nzd), v, raw);
+    assert.equal(slPipsLooksLikePrice(raw, nzd), false, raw);
+  }
+  // الوقف الحقيقي 40 pip على GBPNZD (NZDUSD 0.58) ⇒ ~0.43 لوت
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: parseSlPips('40', nzd)!, pipValuePerLot: pipValuePerLot(nzd, 0.58), contractSize: nzd.contractSize })!;
+  assert.equal(r.lots, 0.43);
+}
+console.log('positionSize 0.0001 cross stop price in pips field selftest OK');
