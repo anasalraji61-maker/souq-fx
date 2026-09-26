@@ -7506,6 +7506,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (!(indicators as readonly string[]).includes(id)) continue;
       const spec = PRICE_OVERLAYS[id]!;
       const multi = legendMulti[id];
+      // التمساح مرسوم في منطقة المستقبل (`alligatorLines`، مُزاح 8/5/3): وسمه حيث يلتقي كلّ خطّ بالمحور أو حيث
+      // ينتهي قبله — قيم آخر شمعة تقع 8/5/3 خانات يسار ذلك فكان الوسم بعيداً عن خطّه بنقاط في سوق متّجه.
+      if (id === 'alligator' && multi && alligatorLines) {
+        const axisSlot = Math.round(((chartPlotW - viewXPan) / Math.max(1, chartPlotW)) * Math.max(1, source.slots) - 0.5);
+        [alligatorLines.jaw, alligatorLines.teeth, alligatorLines.lips].forEach((line, k) => {
+          const v = legendValueAt(line, Math.min(line.length - 1, Math.max(at, axisSlot)));
+          if (v != null) items.push({ key: `${id}-${k}`, price: v, color: multi.colors[k]! });
+        });
+        continue;
+      }
       if (multi) {
         const vs = legendMultiAt(multi.lines, at);
         vs?.forEach((v, k) => items.push({ key: `${id}-${k}`, price: v, color: multi.colors[k]! }));
