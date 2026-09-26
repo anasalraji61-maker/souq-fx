@@ -21,6 +21,7 @@ import { type DrawTool } from '../chart/types';
 import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
 import { DRAW_MARK, LENS_MARK, type MatrixLensId } from './MatrixEdgeRails';
 import { useI18n } from '../i18n/I18nContext';
+import { SHOW_NEWS_FEED, SHOW_UNLICENSED_SIGNAL_PANELS } from '../featureFlags';
 
 export type DockTabId =
   | 'draw'
@@ -68,7 +69,7 @@ export function MatrixBottomDock({
   onLens,
 }: Props) {
   const { t, rtl } = useI18n();
-  const TABS: Tab[] = [
+  const ALL_TABS: Tab[] = [
     { id: 'draw', label: t.dockDrawTab, mark: '✏' },
     { id: 'signals', label: t.dockSignalsTab, mark: '✦' },
     { id: 'analysts', label: t.dockAnalystsTab, mark: '◎' },
@@ -84,6 +85,13 @@ export function MatrixBottomDock({
     { id: 'dom', label: t.depthWord, mark: '▥' },
     { id: 'reports', label: t.toolsTabReports, mark: '≡' },
   ];
+  // قرارا أنس ٥ و٦ (`featureFlags.ts`): لا مدخل للّوحات المخفية بنسخة المتجر. «إشارات» بدونهما
+  // = «توقّع المؤشرات» وحده ⇒ يُحذف أيضاً (DESIGN-PRO §5.1: لا مدخلين لشيء واحد).
+  const TABS = ALL_TABS.filter(
+    (tb) =>
+      (SHOW_UNLICENSED_SIGNAL_PANELS || (tb.id !== 'analysts' && tb.id !== 'social' && tb.id !== 'signals')) &&
+      (SHOW_NEWS_FEED || tb.id !== 'news'),
+  );
 
   /** DESIGN-PRO §5.4: خمسة مداخل بالشريط — أربعة أساسية و«المزيد» يفتح بقية اللوحات شبكةً. */
   const primary = TABS.filter((tb) => PRIMARY_TABS.includes(tb.id));
@@ -239,10 +247,10 @@ export function MatrixBottomDock({
               </View>
             ) : null}
             {tab === 'screener' ? <ScreenerMini /> : null}
-            {tab === 'signals' || tab === 'analysts' ? (
+            {SHOW_UNLICENSED_SIGNAL_PANELS && (tab === 'signals' || tab === 'analysts') ? (
               <AnalystsPanel symbol={symbol} timeframe={timeframe} />
             ) : null}
-            {tab === 'signals' || tab === 'social' ? (
+            {SHOW_UNLICENSED_SIGNAL_PANELS && (tab === 'signals' || tab === 'social') ? (
               <SocialConsensusPanel symbol={symbol} timeframe={timeframe} />
             ) : null}
             {tab === 'signals' || tab === 'indForecast' ? (
@@ -257,7 +265,7 @@ export function MatrixBottomDock({
                 <IndicatorAlertsPanel defaultSymbol={symbol} defaultTimeframe={timeframe} />
               </>
             ) : null}
-            {tab === 'news' ? <NewsPanel /> : null}
+            {SHOW_NEWS_FEED && tab === 'news' ? <NewsPanel /> : null}
             {tab === 'calendar' ? <CalendarPanel symbol={symbol} /> : null}
             {/* الرصيف مدمج تحت الشارت وشريط أخبار `symbol` ظاهر فوقه (`TerminalScreen` `<NewsRiskBanner symbol={symbol} />`)
                 ⇒ لا تكرار لتحذيره. **لا** تمرّرها بـ`MatrixSidePanel`: اللوح يغطّي الشريط */}

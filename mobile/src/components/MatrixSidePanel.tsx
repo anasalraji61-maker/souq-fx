@@ -14,6 +14,7 @@ import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
 import type { Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
+import { SHOW_NEWS_FEED } from '../featureFlags';
 
 export type EdgePanelId =
   | 'draw'
@@ -191,7 +192,7 @@ export function MatrixSidePanel({
             {panel === 'backtest' ? (
               <BacktestPanel defaultSymbol={symbol} defaultTimeframe={timeframe} />
             ) : null}
-            {panel === 'news' ? <NewsPanel /> : null}
+            {SHOW_NEWS_FEED && panel === 'news' ? <NewsPanel /> : null}
             {panel === 'dom' ? (
               <DomLitePanel symbol={symbol} />
             ) : null}

@@ -5,6 +5,7 @@ import { type DrawTool, type LensMode } from '../chart/types';
 import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
 import type { EdgePanelId } from './MatrixSidePanel';
 import { useI18n } from '../i18n/I18nContext';
+import { SHOW_NEWS_FEED } from '../featureFlags';
 
 export type MatrixLensId = LensMode;
 
@@ -320,7 +321,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
 
 export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
   const { t } = useI18n();
-  const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
+  const ALL_RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
     // DESIGN-PRO §1/§4: «⚡» يُرسم رمزاً تعبيرياً ملوّناً (أصفر) و«☢» إشعاعي — لون ثالث وعائلة ثانية.
     // «⚑»/«⚐» (علم مستوى سعر / علم مؤشّر) بلا صيغة تعبيرية في يونيكود فيبقيان أحاديي اللون كبقية الشريط.
     { id: 'alerts', mark: '⚑', tip: t.railTipAlert },
@@ -334,6 +335,8 @@ export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
     { id: 'journal', mark: '▤', tip: t.toolsTabJournal },
     { id: 'backtest', mark: '↺', tip: t.backtestWord },
   ];
+  // قرار أنس ٦ (`featureFlags.ts`): الأخبار النصية مخفية حتى مصدر مرخَّص؛ التقويم يبقى.
+  const RIGHT_ICONS = ALL_RIGHT_ICONS.filter((ic) => SHOW_NEWS_FEED || ic.id !== 'news');
 
   const railTip = useRailTip();
   return (
