@@ -96,7 +96,11 @@ def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, i
         # المنطقة مذكورة ومجهولة ⇒ لا وقت محسوب، كنصّ لا يُقرأ.
         if not dt.tzinfo and raw.strip().split()[-1].isalpha():
             return raw.strip()[:32] or default, None
-        # خلاصة بلا منطقة زمنية (أو -0000): تُقرأ UTC ولا تُخمَّن منطقة
+        # run 128: وقت بلا منطقة إطلاقاً كان يُقرأ UTC ويُرسَل «14:30 UTC» بـ`ts` — وهذا تخمين أيضاً (خلاصة
+        # بتوقيت نيويورك ⇒ فرق 4–5 ساعات والترتيب خاطئ). لا وقت محسوب كالمنطقة المجهولة وفرع XML للتقويم.
+        # «-0000» وحدها UTC بنصّ RFC 2822 (`parsedate_to_datetime` يعيدها بلا منطقة أيضاً).
+        if not dt.tzinfo and tail != "-0000":
+            return raw.strip()[:32] or default, None
         at = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
         return at.strftime("%Y-%m-%d %H:%M UTC"), int(at.timestamp())
     except (TypeError, ValueError, OverflowError):

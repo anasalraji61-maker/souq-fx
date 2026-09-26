@@ -121,7 +121,6 @@ def feed(monkeypatch):
         ("Tue, 23 Sep 2026 14:30:00 +0000", "2026-09-23 14:30 UTC"),
         # إزاحة المنطقة كانت تُقصّ مع الوقت: هذا الخبر عند 18:30 UTC لا 14:30
         ("Tue, 23 Sep 2026 14:30:00 -0400", "2026-09-23 18:30 UTC"),
-        ("Tue, 23 Sep 2026 14:30:00", "2026-09-23 14:30 UTC"),
     ],
 )
 def test_pubdate_becomes_utc_with_a_time_not_a_bare_date(raw, expected_when):

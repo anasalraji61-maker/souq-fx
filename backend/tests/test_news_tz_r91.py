@@ -20,9 +20,11 @@ def test_known_offsets(tail, utc):
     assert when_and_ts(f"{BASE} {tail}")[1] is not None
 
 
-def test_no_zone_is_utc():
-    text, ts = when_and_ts(BASE)
-    assert text == "2026-09-23 14:30 UTC" and ts is not None
+@pytest.mark.parametrize("raw", [BASE, "Tue, 23 Sep 2026 14:30"])
+def test_no_zone_has_no_time(raw):
+    """Run 128: a time with no zone was labelled UTC — a guess (4–5 h off for a New York feed)."""
+    text, ts = when_and_ts(raw)
+    assert ts is None and "UTC" not in text and text == raw
 
 
 @pytest.mark.parametrize("tail", ["GMT+1", "GMT-4", "UT+2", "GMT+0100", "EST5EDT", "+05", "BST"])
