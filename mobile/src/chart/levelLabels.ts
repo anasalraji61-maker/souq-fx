@@ -63,3 +63,45 @@ export function inLeftLabelLane(labelLeft: number, laneW: number = LEFT_LABEL_LA
   if (!Number.isFinite(labelLeft)) return true;
   return labelLeft < laneW;
 }
+
+/** عرض وسم خطّ بخطّ 11 عريض وحشوة 3+3 — تقدير بالزيادة (0.6em للحرف كـ`axisTagFont`). */
+export function levelLabelWidth(text: string, fontSize = 11): number {
+  return Math.ceil([...text].length * fontSize * 0.6) + 8;
+}
+
+export interface RayLabelFit {
+  /** يُطبع البُعد بالـpip بعد السعر؟ لا ⇒ السعر وحده (يُختصر بدل «1.32589 · +12.3 pi…»). */
+  showDist: boolean;
+  /** الوسم يسار بداية الشعاع (محاذى يميناً) لا داخله. */
+  flip: boolean;
+  /** عرض صندوق الوسم المقلوب بالبكسل. */
+  width: number;
+}
+
+/**
+ * أين يُطبع وسم الخطّ الأفقي/الشعاع وبأيّ طول (W8، أنس): خلية رباعي ضيّقة كانت تقصّ
+ * «1.32589 · +12.3 pip» إلى «…pi» لأن الوسم داخل عرض الشعاع (والقلب بعرض ثابت 150).
+ * الترتيب: كاملاً داخل الشعاع ⇒ كاملاً مقلوباً يساره ⇒ السعر وحده بالجهة الأوسع. السعر لا يُحذف أبداً.
+ * - `rayX`: بداية الشعاع (بكسل)، `null` للخطّ الأفقي الكامل (يبدأ الوسم عند 4).
+ */
+export function fitRayLabel(
+  priceText: string,
+  distText: string | null,
+  rayX: number | null,
+  plotW: number,
+  fontSize = 11
+): RayLabelFit {
+  const full = distText ? `${priceText} · ${distText}` : priceText;
+  const wFull = levelLabelWidth(full, fontSize);
+  const wPrice = levelLabelWidth(priceText, fontSize);
+  if (rayX == null || !Number.isFinite(rayX)) {
+    return { showDist: !!distText && wFull <= plotW - 4, flip: false, width: wFull };
+  }
+  const inside = plotW - rayX - 10; // `hRayLabel` يبدأ بعد مقبض البداية (left: 10)
+  const left = rayX - 8;
+  if (distText && wFull <= inside) return { showDist: true, flip: false, width: wFull };
+  if (distText && wFull <= left) return { showDist: true, flip: true, width: wFull };
+  if (wPrice <= inside) return { showDist: false, flip: false, width: wPrice };
+  // لا يتّسع داخل الشعاع: يساره إن كان أوسع (وإلا يبقى داخله كما كان — أفضل من لا شيء).
+  return { showDist: false, flip: left > inside, width: wPrice };
+}

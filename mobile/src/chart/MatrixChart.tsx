@@ -169,7 +169,7 @@ import {
   signedDistanceText,
   measureReadoutText,
 } from './measureReadout';
-import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
+import { fitRayLabel, inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
 import { isCryptoSymbol } from './newsRisk';
@@ -568,8 +568,6 @@ const ALERT_HANDLE_H = 28;
 /** أقلّ من هذا (بكسل) رأسياً ⇒ لمسة لا سحب — لا يُعدَّل التنبيه. */
 const ALERT_DRAG_SLOP = 4;
 const ALERT_NUDGE_ACTIONS = [{ name: 'increment' }, { name: 'decrement' }] as const;
-/** أضيق شعاع أفقي يتّسع لوسمه («150.123 · +123.4 pip») داخله؛ أضيق ⇒ الوسم يُقلب يسار بدايته. */
-const HRAY_LABEL_ROOM = 150;
 /** ألوان الجلسات (مؤشّر «Sessions»): ثابتة المعنى داخله وحده — لا ربح/خسارة ولا تنبيه. */
 const SESSION_COLOR: Record<SessionId, string> = {
   tokyo: '#A78BFA',
@@ -9261,9 +9259,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 {hlinePriceLabels.has(d.id) ? (() => {
                   // شعاع يبدأ قرب الشمعة الحيّة: الوسم داخل عرض الشعاع (أحياناً بضع بكسلات) فيُقصّ «1.0…»
                   // (أو يمرّ تحت المحور على الويب). حينها يُقلب يسار بداية الشعاع ويُحاذى يميناً — كـ`noteBox`.
-                  // (خلية رباعي ضيّقة لا يتّسع يسارها للوسم ⇒ يبقى كما كان.)
-                  const flip =
-                    d.tool === 'hray' && chartPlotW - rayX < HRAY_LABEL_ROOM && rayX >= HRAY_LABEL_ROOM + 8;
+                  // W8: الطول والجهة من عرض النصّ المقدَّر (`fitRayLabel`) — خلية رباعي ضيّقة كانت تقصّ
+                  // «1.32589 · +12.3 pi…»؛ الآن كاملاً، أو مقلوباً بعرضه، أو السعر وحده. لا نصّ مقصوص.
+                  const priceTxt = fmtPrice(d.a.price);
+                  const distTxt = Number.isFinite(currentPrice)
+                    ? signedDistanceText(series.symbol, currentPrice, d.a.price, lang, priceDecimalsRef)
+                    : null;
+                  const fit = fitRayLabel(priceTxt, distTxt, d.tool === 'hray' ? rayX : null, chartPlotW);
+                  const flip = fit.flip;
                   const below = yOf(d.a.price) < LEVEL_LABEL_H;
                   const label = (
                   <Text
@@ -9277,15 +9280,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ]}
                     numberOfLines={1}
                   >
-                    {fmtPrice(d.a.price)}
+                    {priceTxt}
                     {/* كم يبعد المستوى عن السعر الجاري بالـpip (+ فوقه، − تحته) — المتداول يرسم
                         الدعم ليعرف كم بقي للوصول إليه؛ الرقم نفسه الذي تعطيه أداة القياس. */}
-                    {(() => {
-                      const pips = Number.isFinite(currentPrice)
-                        ? signedDistanceText(series.symbol, currentPrice, d.a.price, lang, priceDecimalsRef)
-                        : null;
-                      return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
-                    })()}
+                    {fit.showDist && distTxt ? <Text style={styles.levelPipText}>{` · ${distTxt}`}</Text> : null}
                   </Text>
                   );
                   return flip ? (
@@ -9293,7 +9291,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       pointerEvents="none"
                       style={[
                         styles.hRayLabelBox,
-                        { left: -HRAY_LABEL_ROOM - 8 },
+                        { left: -fit.width - 8, width: fit.width },
                         below && styles.levelLabelBelow,
                       ]}
                     >
@@ -13868,7 +13866,7 @@ const styles = StyleSheet.create({
   /** بعد مقبض البداية (نصف قطره 6) لا فوقه. */
   hRayLabel: { left: 10 },
   /** وسم الشعاع المقلوب: صندوق بعرض ثابت ينتهي قبيل بداية الشعاع (بعد مقبضها) والنصّ محاذى يميناً داخله. */
-  hRayLabelBox: { position: 'absolute', top: -11, width: HRAY_LABEL_ROOM, alignItems: 'flex-end' },
+  hRayLabelBox: { position: 'absolute', top: -11, alignItems: 'flex-end' },
   hRayLabelFlipped: { position: 'relative', left: 0, top: 0 },
   vLine: {
     position: 'absolute',

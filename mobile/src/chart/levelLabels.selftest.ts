@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`levelLabels.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { inLeftLabelLane, thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
+import { fitRayLabel, inLeftLabelLane, levelLabelWidth, thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -106,9 +106,30 @@ ok('عند الحدّ ⇒ خارجها', !inLeftLabelLane(120));
 ok('غير محدود ⇒ محافظ', inLeftLabelLane(NaN) && inLeftLabelLane(Infinity));
 ok('عرض مخصّص', !inLeftLabelLane(60, 50) && inLeftLabelLane(40, 50));
 
+// W8: وسم الشعاع لا يُقصّ — كامل داخله، كامل يساره، أو السعر وحده.
+{
+  const wFull = levelLabelWidth('1.32589 · +12.3 pip');
+  ok('عرض الوسم الكامل معقول', wFull > 110 && wFull < 140);
+  const a = fitRayLabel('1.32589', '+12.3 pip', 20, 400);
+  ok('متّسع ⇒ كامل داخل الشعاع', a.showDist && !a.flip);
+  const b = fitRayLabel('1.32589', '+12.3 pip', 300, 400);
+  ok('قرب الحافّة ⇒ كامل مقلوب بعرضه', b.showDist && b.flip && b.width === wFull);
+  const c = fitRayLabel('1.32589', '+12.3 pip', 90, 200);
+  ok('خلية رباعي ضيّقة ⇒ السعر وحده بلا قصّ', !c.showDist && !c.flip);
+  const d = fitRayLabel('1.32589', '+12.3 pip', 130, 150);
+  ok('ضيّقة والشعاع قرب الحافّة ⇒ السعر يساره', !d.showDist && d.flip && d.width === levelLabelWidth('1.32589'));
+  const e = fitRayLabel('1.32589', '+12.3 pip', null, 110);
+  ok('خطّ أفقي بلوح ضيّق جداً ⇒ السعر وحده', !e.showDist && !e.flip);
+  const f = fitRayLabel('1.32589', '+12.3 pip', null, 300);
+  ok('خطّ أفقي عادي ⇒ كامل', f.showDist);
+  const g = fitRayLabel('1.32589', null, 300, 400);
+  ok('بلا بُعد ⇒ لا بُعد', !g.showDist);
+}
+
 if (failures) {
   console.error(`levelLabels.selftest: ${failures} FAILED`);
   process.exitCode = 1;
 } else {
   console.log('levelLabels.selftest: PASS');
 }
+
