@@ -8851,6 +8851,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             })()
           : null}
 
+        {/* طبقات المؤشرات والمقارنة فوق اللوح — على الهاتف لا تستقبل اللمس (`NATIVE_PASS_THROUGH`) كأعمدة الشموع:
+            لمسة أداة رسم داخل سحابة Ichimoku أو على خطّ SMA أو حزمة بولنجر كانت تُقرأ بـ`locationX/Y` نسبةً لقطعة الخطّ
+            (بضع بكسلات) ⇒ طرف الترند يقع عند زاوية الشارت. ومعها الارتكاز وخطوط التنبيه وملفّ الحجم/TPO/Footprint.
+            لا شيء هنا تفاعلي؛ الويب بلا تغيير. */}
+        <View pointerEvents={NATIVE_PASS_THROUGH ?? 'box-none'} style={StyleSheet.absoluteFill}>
         {/* compare symbol overlay — قطع `planLineSegments` كالطبقات: مركز الخطّ على القيمة (كان `top: y1` ⇒ 1px تحتها)،
             ونقطة مطابقة وحيدة بين فجوتين تبقى مرئية (كانت تسقط). */}
         {comparePrices &&
@@ -10057,6 +10062,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             })
           : null}
+        </View>
 
         {/* drawings — على الهاتف لا تستقبل اللمس (`NATIVE_PASS_THROUGH`): مستجيبا الرسم والتحديد يقرآن `locationX`
             نسبةً للّوح، وسحب مقبض بحجم 12px كان يُقرأ ~6px من يسار الشاشة. الويب `box-none`: الإطار لا يحجب ما تحته. */}
