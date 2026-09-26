@@ -352,7 +352,7 @@ function withinBar(
  * (جلسة الأربعاء) تُرسم على اليومي قرب حافّة شمعة الثلاثاء، ونقطة افتتاح الأحد على الأسبوعي بشمعة الأسبوع السابق.
  * الكريبتو (`false`) ويوم UTC كما هو، وأيّ ختم ليس منتصف ليل ⇒ الختم نفسه.
  */
-function barOpen(stamp: number, stepSec: number, weekendClosed: WeekendRule): number {
+export function barOpen(stamp: number, stepSec: number, weekendClosed: WeekendRule): number {
   if (!weekendClosed || (stepSec !== 86400 && stepSec !== WEEK_SEC) || stamp % 86400 !== 0) return stamp;
   return nyFivePmUtcSec(stamp - 86400);
 }

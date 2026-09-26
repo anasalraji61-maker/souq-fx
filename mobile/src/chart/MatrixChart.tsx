@@ -165,7 +165,7 @@ import {
   type PositionSide,
 } from './positionTool';
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
-import { anchorDrawings, anchorPoint, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
+import { anchorDrawings, anchorPoint, barOpen, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
 import { priceSpan } from './priceSpan';
@@ -2063,6 +2063,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossTimeSec = cross
     ? crossFutureSec ?? candleTimeSec(crossBar ? barTime(crossBar) : cross.time)
     : null;
+  // ما يُنشر للتابعين: افتتاح الشمعة لا ختمها — اليومية مختومة بتاريخ إغلاقها 00:00 UTC وتفتح 17:00 نيويورك قبله
+  // (`barOpen`)، فكان تقاطع يومي الخميس يضع تابع H1 على الخميس 00:00، بعد ثلاث ساعات من افتتاح الشمعة.
+  const crossPublishSec =
+    crossTimeSec != null && crossFutureSec == null && !isSyntheticKind(kind)
+      ? barOpen(crossTimeSec, timeframeStepSec(series.timeframe), weekendClosed)
+      : crossTimeSec;
   const crossTimeRef = useRef<number | null>(null);
   crossTimeRef.current = cross?.time ?? null;
   const crossAheadRef = useRef(0);
@@ -2091,8 +2097,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const publishesCross = onCrossTime != null;
   useEffect(() => {
     if (!publishesCross) return;
-    onCrossTimeRef.current?.(crossFromSync.current ? null : crossTimeSec);
-  }, [crossTimeSec, publishesCross]);
+    onCrossTimeRef.current?.(crossFromSync.current ? null : crossPublishSec);
+  }, [crossPublishSec, publishesCross]);
   useEffect(() => {
     if (syncCrossTime === undefined) {
       if (crossFromSync.current) {
@@ -2111,17 +2117,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // الشموع العادية: آخر شمعة سارية خطوة فريم واحدة لا «الفرق بين آخر شمعتين» — أول شمعة بعد عطلة الأسبوع
     // فرقها ~48س، فتابع لم يُحدَّث (آخر شمعته الأحد 21:00) كان يعرضها عند تقاطع القائد الاثنين 10:00 كأنها الحالية.
     const lastPlot = source.plot[source.plot.length - 1];
+    const tfStep = timeframeStepSec(series.timeframe);
+    // D/W: الشمعة تبدأ عند افتتاحها لا ختمها (`barOpen`: اليومية مختومة بتاريخ إغلاقها 00:00 UTC وتفتح 17:00
+    // نيويورك قبله، والأسبوعية بالاثنين وتفتح الأحد) — كان قائد H1 الأربعاء 22:30 UTC (جلسة الخميس) يضع تابع
+    // اليومي على شمعة الأربعاء، وقائد مساء الأحد تابعَ الأسبوعي على الأسبوع السابق. الكريبتو ويوم UTC كما هو.
+    const openSec = (t: number) =>
+      synthetic ? candleTimeSec(t) : barOpen(candleTimeSec(t), tfStep, weekendClosed);
     const endSec = synthetic
       ? atSeriesEnd && lastCandle
-        ? candleTimeSec(lastCandle.time) + timeframeStepSec(series.timeframe)
+        ? candleTimeSec(lastCandle.time) + tfStep
         : undefined
       : lastPlot
-        ? candleTimeSec(lastPlot.time) + timeframeStepSec(series.timeframe)
+        ? openSec(lastPlot.time) + tfStep
         : undefined;
     const i = indexAtOrBeforeTime(
       source.plot.map((b) => ({ time: barTime(b) })),
       syncCrossTime,
-      candleTimeSec,
+      openSec,
       endSec
     );
     let time = i != null ? source.plot[i]!.time : null;
@@ -2138,7 +2150,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       let k = 0;
       for (let t = candleTimeSec(lastCandle.time), j = 1; j <= CROSS_SYNC_MAX_AHEAD; j++) {
         t = projectBarTimeSec(series.symbol, t, step, 1);
-        if (t > syncCrossTime) break;
+        if (barOpen(t, step, weekendClosed) > syncCrossTime) break;
         k = j;
       }
       // أبعد من الحدّ ⇒ لا خطّ بالمستقبل (كما كان).

@@ -4,6 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
+import { barOpen } from './drawingAnchors';
 
 const bar = (time: number) => ({ time });
 
@@ -149,6 +150,23 @@ const bar = (time: number) => ({ time });
   const ha = { open: 1.0851, high: 1.0856, low: 1.0849, close: 1.0853475 };
   assert.equal(crossPriceAt(1.08534, ha, true, 5, 0.0002), 1.08535);
   assert.equal(crossPriceAt(1.08561, { open: 1.0851, high: 1.0856, low: 1.0849, close: 1.0853 }, true, 5, 0.0002), 1.0856);
+}
+
+// تابع يومي فوركس بافتتاح الشمعة (17:00 نيويورك قبل ختمها): قائد H1 الأربعاء 22:30 UTC = جلسة الخميس
+{
+  const d = (x: string) => Date.parse(x) / 1000;
+  const bars = ['2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25'].map((x) => ({ time: d(`${x}T00:00:00Z`) }));
+  const open = (t: number) => barOpen(t, 86400, 'EURUSD');
+  const end = open(bars[3]!.time) + 86400;
+  assert.equal(indexAtOrBeforeTime(bars, d('2026-09-23T22:30:00Z'), open, end), 2);
+  assert.equal(indexAtOrBeforeTime(bars, d('2026-09-23T20:30:00Z'), open, end), 1);
+  // الكريبتو: يوم UTC كما هو
+  const utc = (t: number) => barOpen(t, 86400, false);
+  assert.equal(indexAtOrBeforeTime(bars, d('2026-09-23T22:30:00Z'), utc), 1);
+  // أسبوعي: مساء الأحد 22:00 UTC على أسبوع الاثنين التالي
+  const wk = [d('2026-09-14T00:00:00Z'), d('2026-09-21T00:00:00Z')].map((time) => ({ time }));
+  const wOpen = (t: number) => barOpen(t, 604800, 'EURUSD');
+  assert.equal(indexAtOrBeforeTime(wk, d('2026-09-20T22:00:00Z'), wOpen, wOpen(wk[1]!.time) + 604800), 1);
 }
 
 console.log('crossAnchor.selftest: PASS');
