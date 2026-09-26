@@ -1078,3 +1078,4 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **قائمة قبول DESIGN-PRO (السابع عشر):** 0/12 فشل (diff منذ 90ff55f، 23 ملفّاً: مقاسات 13/15/18 و`...numeric`؛ خطّ Ask `textDim`؛ `SelMark accent={t.id !== 'none'}`؛ لا وزن ≥700/مسافة/ظلّ).
 **المراجعة (b — نصوص ثابتة):** العربي خارج `locales.ts` تعليقات/اختبارات + launch52. **QA97a → tools (منخفض)**: «lot» ثابتة بـ`PositionSizePanel.tsx:1044/1831/1858/1939` مقابل «لوت» بـ`riskCalcLots`.
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (1890f0d):** أخضر 0. backend r65 (`7d62607` تقاطع SMA من ضجيج الفاصلة، `024beb1` قفل نقل صفوف الجهاز و`ballot` لحساب محذوف) — لا يمسّ backend-r51(1) (صاحب الفكرة يصوّت) ⇒ يبقى لأنس؛ launch 162 توثيق فقط. لا طلب جديد.
