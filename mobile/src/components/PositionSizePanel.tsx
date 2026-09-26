@@ -17,6 +17,7 @@ import {
   miniAccountSymbol,
   costsForRisk,
   quoteAsOfMs,
+  marginQuoteUsable,
   reversedConversion,
   usdBridge,
   bridgedRate,
@@ -159,9 +160,6 @@ const QUICK_RISK = ['0.5', '1', '2'];
 /** سلسلة الخسائر بسطر المخاطرة: 5 عادية لنظام نجاحه 50% (والنصّ العربي «{n} خسائر» صحيح لـ3–10 فقط) */
 const LOSS_STREAK_N = 5;
 const STORE_KEY = 'matrix.tools.riskCalc.v1';
-
-/** أقدم سعر سوق يُبنى عليه سطر الهامش: دورتا تحديث (60 ث) — بعدها لا سطر بدل رقمٍ من سعرٍ قديم. */
-const MKT_QUOTE_MAX_AGE_MS = 120_000;
 
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
@@ -1143,8 +1141,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     ask?: number | null;
     /** قيمة `mktRefresh` حين جُلب — أقدم منها ⇒ يُعاد الجلب بصمت */
     refresh: number;
-    /** وقت الجلب (ms) — راجع `MKT_QUOTE_MAX_AGE_MS` */
+    /** وقت الجلب (ms) — راجع `marginQuoteUsable` */
     at: number;
+    /** عمر السعر نفسه (`as_of`، ms) — آخر إغلاق 15m عند تعثّر المزوّد أقدم من الجلب */
+    asOfMs: number;
+    /** `market_open: false` — يُوسَم «مغلق» بسطر الهامش */
+    closed: boolean;
   } | null>(null);
   const entryTyped = Number.isFinite(priceNum(entryPx)) && priceNum(entryPx) > 0;
   const needMarketPx = spec != null && !entryTyped && leverageNum != null && lots != null;
@@ -1178,7 +1180,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       api.marketQuote(mktSym).then(
         (q) => {
           if (!alive || !mountedRef.current || !isRealQuote(q)) return;
-          setMktQuote({ sym: mktSym, price: q.price, bid: q.bid, ask: q.ask, refresh, at: Date.now() });
+          const now = Date.now();
+          setMktQuote({
+            sym: mktSym,
+            price: q.price,
+            bid: q.bid,
+            ask: q.ask,
+            refresh,
+            at: now,
+            asOfMs: quoteAsOfMs((q as { as_of?: unknown }).as_of, now),
+            closed: quoteMarketOpen(q) === false,
+          });
         },
         () => {
           /* بلا سعر لا سطر هامش — كما قبل؛ وبالتحديث يبقى آخر سعر ناجح */
@@ -1210,7 +1222,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     entry: priceNum(entryPx),
     // وأثناء إعادة الجلب لا يُستعمل سعرٌ أقدم من دقيقتين (فشلٌ متكرّر، أو عودة بعد فترة بلا حاجة)
     quote:
-      spec && mktQuote && mktQuote.sym === spec.symbol && Date.now() - mktQuote.at <= MKT_QUOTE_MAX_AGE_MS ? mktQuote : null,
+      spec &&
+      mktQuote &&
+      mktQuote.sym === spec.symbol &&
+      marginQuoteUsable({ fetchedAt: mktQuote.at, asOfMs: mktQuote.asOfMs, closed: mktQuote.closed }, Date.now())
+        ? mktQuote
+        : null,
     side: planSide,
   });
   /** الأساس = عملة الحساب ⇒ الهامش بلا سعر (أمرٌ معلّق بعيد عن السوق كان ينحرف بنسبة الدخول/الحيّ) — `marginBaseToAccount` */
@@ -2106,7 +2123,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             >
               {marginOver ? '⚠ ' : ''}
               {t.riskCalcMargin} ({formatLots(lots!)} · 1:{leverageNum}
-              {marginPx?.live && spec ? ` @ ${formatPrice(marginPx.price, spec.symbol)}` : ''}): {money(margin)}
+              {marginPx?.live && spec
+                ? ` @ ${formatPrice(marginPx.price, spec.symbol)}${mktQuote?.closed ? ` · ${t.dsMarketClosed}` : ''}`
+                : ''}): {money(margin)}
               {marginPct != null ? ` (${formatRiskPct(marginPct)})` : ''}
             </Text>
             {marginMaxLots != null ? (

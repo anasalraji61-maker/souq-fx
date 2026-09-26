@@ -1509,6 +1509,20 @@ export function marginPrice(input: {
   return ok(q.price) ? { price: q.price, live: true } : null;
 }
 
+/** أقدم سعر سوق يُبنى عليه سطر الهامش: دورتا تحديث (60 ث) — بعدها لا سطر بدل رقمٍ من سعرٍ قديم. */
+export const MARGIN_QUOTE_MAX_AGE_MS = 120_000;
+
+/**
+ * سعر السوق المجلوب صالحٌ لسطر الهامش («@ السعر»)؟ العمر كان يُقاس من **لحظة الجلب** وحدها: الخادم يُرجع عند تعثّر المزوّد
+ * آخر إغلاق 15m (`ohlc_fallback`، عمره حتى ربع ساعة) فيُعرض «@» كأنه حيّ، بينما «الدخول = السعر الحالي» وسطر التحويل بالحاسبة
+ * نفسها يرفضانه قديماً. الآن: جُلب قبل ≤ دقيقتين **و**عمر السعر نفسه (`as_of`) ≤ دقيقتين — إلا والسوق مغلق (`closed`): آخر إغلاق
+ * هو السعر الصحيح حتى الافتتاح، ويُوسَم «مغلق» بالسطر.
+ */
+export function marginQuoteUsable(q: { fetchedAt: number; asOfMs: number; closed: boolean }, now: number): boolean {
+  if (!(now - q.fetchedAt <= MARGIN_QUOTE_MAX_AGE_MS)) return false;
+  return q.closed || now - q.asOfMs <= MARGIN_QUOTE_MAX_AGE_MS;
+}
+
 /**
  * أوسع سبريد يُقبل بخانته (بالنقاط). الغريبة (USDTRY/USDZAR) تتّسع لمئات النقاط عند الأخبار، وفوق 500
  * خطأ كتابة شبه مؤكّد: سعرٌ مكتوب بدل نقاط («1.0851»؟ لا — «10851») يُضخّم المخاطرة المعروضة ويُصغّر اللوت.

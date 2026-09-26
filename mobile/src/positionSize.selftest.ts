@@ -6,6 +6,7 @@ import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import { chartPipSpec } from './chart/pipSpec';
 import type { CommissionMode } from './positionSize';
+import { marginQuoteUsable, MARGIN_QUOTE_MAX_AGE_MS, quoteAsOfMs as quoteAsOfMsM } from './positionSize';
 import {
   formatLots,
   LOT_UNIT,
@@ -4130,3 +4131,20 @@ console.log('positionSize manualConvForPair selftest OK');
   assert.equal(room.breach, true);
 }
 console.log('positionSize parseLostToday selftest OK');
+
+{
+  // marginQuoteUsable: عمر السعر (as_of) لا لحظة الجلب وحدها
+  const now = 1_790_000_000_000;
+  assert.equal(marginQuoteUsable({ fetchedAt: now - 5_000, asOfMs: now - 6_000, closed: false }, now), true);
+  // ohlc_fallback: جُلب الآن، والسعر إغلاق 15m عمره 14 دقيقة ⇒ لا «@» كأنه حيّ
+  assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: now - 14 * 60_000, closed: false }, now), false);
+  // السوق مغلق (عطلة): إغلاق الجمعة هو السعر حتى الافتتاح ⇒ يُعرض (موسوماً «مغلق»)
+  assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: now - 30 * 3600_000, closed: true }, now), true);
+  // جلبٌ قديم (فشل التحديث) يبقى مرفوضاً حتى والسوق مغلق
+  assert.equal(marginQuoteUsable({ fetchedAt: now - MARGIN_QUOTE_MAX_AGE_MS - 1, asOfMs: now, closed: true }, now), false);
+  assert.equal(marginQuoteUsable({ fetchedAt: now - MARGIN_QUOTE_MAX_AGE_MS, asOfMs: now - MARGIN_QUOTE_MAX_AGE_MS, closed: false }, now), true);
+  // بلا as_of (خادم أقدم) ⇒ quoteAsOfMs = الآن ⇒ كما كان (عمر الجلب وحده)
+  assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: quoteAsOfMsM(undefined, now), closed: false }, now), true);
+  assert.equal(marginQuoteUsable({ fetchedAt: now, asOfMs: quoteAsOfMsM((now - 14 * 60_000) / 1000, now), closed: false }, now), false);
+  console.log('positionSize marginQuoteUsable selftest OK');
+}
