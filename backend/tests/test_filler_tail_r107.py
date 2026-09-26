@@ -99,8 +99,36 @@ def test_forming_bar_after_reopen_is_kept(monkeypatch):
     assert [c["time"] for c in candles] == [_ts("2026-01-09 16:00"), _ts("2026-01-11 20:00")]
 
 
-def test_forming_bar_opened_before_break_is_kept(monkeypatch):
-    # 4H ذهب 20:00 فيها ساعتا تداول قبل الكسر — لا تُحذف (بياناتها الأولى حقيقية)
+def test_forming_bar_opened_before_break_is_kept_after_the_break(monkeypatch):
+    # run 110: 4H ذهب 20:00 جُلبت 22:30 داخل الكسر = إغلاقها تيك 22:29 (ملء) ⇒ تُسقَط حتى الجلب بعد الكسر
     _serve(monkeypatch, "2026-01-13 22:30", ["2026-01-13 16:00", "2026-01-13 20:00"])
     candles = market.fetch_time_series("XAUUSD", "4H", 2)
+    assert candles[-1]["time"] == _ts("2026-01-13 16:00")
+    monkeypatch.setattr(market, "_cache", {})
+    _serve(monkeypatch, "2026-01-13 23:05", ["2026-01-13 16:00", "2026-01-13 20:00"])
+    candles = market.fetch_time_series("XAUUSD", "4H", 2)
     assert candles[-1]["time"] == _ts("2026-01-13 20:00")
+
+
+@pytest.mark.parametrize("sym,tf,now,bars,last", [
+    # D المؤرَّخة 30-09 تُفتح 17:00 نيويورك = بداية كسر الذهب صيفاً (21:00–22:00 UTC)
+    ("XAUUSD", "D", "2026-09-29 21:30", ["2026-09-29 00:00", "2026-09-30 00:00"], "2026-09-29 00:00"),
+    # الأحد 21:30 UTC: D الاثنين فُتحت 17:00 نيويورك وCME يفتح 18:00
+    ("XAUUSD", "D", "2026-09-27 21:30", ["2026-09-25 00:00", "2026-09-28 00:00"], "2026-09-25 00:00"),
+    # 4H برنت 20:00 جُلبت 23:30 صيفاً (الكسر 22:00–00:00 UTC)
+    ("UKOIL", "4H", "2026-09-29 23:30", ["2026-09-29 16:00", "2026-09-29 20:00"], "2026-09-29 16:00"),
+    # خارج الكسر تبقى الجارية
+    ("XAUUSD", "D", "2026-09-29 20:30", ["2026-09-28 00:00", "2026-09-29 00:00"], "2026-09-29 00:00"),
+    ("UKOIL", "4H", "2026-09-29 21:30", ["2026-09-29 16:00", "2026-09-29 20:00"], "2026-09-29 20:00"),
+])
+def test_forming_bar_during_daily_break_is_dropped(monkeypatch, sym, tf, now, bars, last):
+    _serve(monkeypatch, now, bars)
+    candles = market.fetch_time_series(sym, tf, 2)
+    assert candles[-1]["time"] == _ts(last)
+
+
+def test_friday_forming_bar_kept_over_the_weekend(monkeypatch):
+    # 4H اليورو 20:00 الجمعة جُلبت 21:30 بعد الإغلاق (صيفاً 21:00): بياناتها حقيقية حتى الإغلاق وتُخزَّن حتى الافتتاح
+    _serve(monkeypatch, "2026-09-25 21:30", ["2026-09-25 16:00", "2026-09-25 20:00"])
+    candles = market.fetch_time_series("EURUSD", "4H", 2)
+    assert candles[-1]["time"] == _ts("2026-09-25 20:00")

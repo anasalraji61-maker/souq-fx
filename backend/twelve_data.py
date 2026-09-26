@@ -285,6 +285,9 @@ def _filler_tail(matrix_symbol: str, open_ts: float, step: int, fetched_at: floa
     return _closed_window(matrix_symbol, min(float(fetched_at), end) - 1e-3) is not None
 
 
+# أطول كسر يومي (برنت ساعتان): فترة مغلقة أقصر من هذا كسرٌ داخل الجلسة لا عطلة.
+_SHORT_BREAK = 3 * 3600
+
 # مهلة بعد إغلاق الجمعة قبل أن تُعدّ شموع الجلب نهائية (آخر دقائق الجمعة قد تصل من المزوّد متأخرة).
 _CLOSE_SETTLE = 300
 
@@ -853,9 +856,16 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
             continue
         # شمعة جارية فُتحت داخل فترة مغلقة وما زالت داخلها عند الجلب (4H اليورو الأحد 20:00 جُلبت 21:00 والافتتاح
         # 22:00): `in_weekend_close` يبقيها لأنها ستعبر الافتتاح، لكنها الآن ملء المزوّد كلّها ⇒ «آخر سعر» مخترَع.
-        if step < _DAY and candle["time"] <= now < candle["time"] + step:
+        # وD كذلك (كانت مستثناة): D المؤرَّخة غداً تُفتح 17:00 نيويورك = بداية كسر الذهب/WTI، والأحد قبل افتتاح CME.
+        # وشمعة فُتحت قبل كسر يومي قصير وما زالت جارية داخله (4H ذهب 20:00 جُلبت 22:30 شتاءً، 4H برنت 20:00 جُلبت
+        # 23:30): إغلاقها تيك الكسر ⇒ كان يُرسَل «آخر سعر» `provider` والسوق مغلق، وتحسب عليه تنبيهات RSI. الجلب بعد
+        # الكسر يعيدها. العطلة الأسبوعية/جلسة العطلة لا: شمعة الجمعة الجارية وقت الإغلاق حقيقية حتى إغلاقها وتُخزَّن
+        # حتى الافتتاح (`_closed_until`) — إسقاطها يُخفيها العطلة كلها.
+        end = bar_end(sym, candle["time"], step) if step >= _DAY else candle["time"] + step
+        opened = end - step if step == _DAY else candle["time"]
+        if opened <= now < end:
             window = _closed_window(sym, now - 1e-3)
-            if window and candle["time"] >= window[0]:
+            if window and (opened >= window[0] or window[1] - window[0] <= _SHORT_BREAK):
                 continue
         candles.append(candle)
     if dropped:
