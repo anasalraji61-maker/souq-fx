@@ -4970,9 +4970,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }
             });
           },
+          // خروج الفأرة والأداة مسلَّحة: لوح السحب (بمسح التقاطع عند الخروج) غير مرسوم، فكان التقاطع ووسومه
+          // يتجمّدون عند آخر نقطة خارج اللوح. `crossHover` يُصفَّر معه وإلا أعاد Ctrl/⌘ التقاطع (أثر المغناطيس أدناه).
           onPointerLeave: () => {
             if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
             hoverRaf.current = null;
+            if (!crossPinned.current) setCross(null);
+            setCrossHover(false);
           },
         }
       : {};
@@ -6125,6 +6129,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
             hoverRaf.current = null;
             if (!crossPinned.current && !webChartPointer.current.active) setCross(null);
+            // وإلا بقي `crossHover` صحيحاً فأعاد ضغط Ctrl/⌘ لاحقاً (Ctrl+C بلوحة أخرى) تقاطعاً شبحاً عند آخر نقطة.
+            if (!webChartPointer.current.active) setCrossHover(false);
             if (hoverDrawingRef.current) {
               hoverDrawingRef.current = null;
               setHoverDrawingId(null);
