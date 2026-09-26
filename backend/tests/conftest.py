@@ -45,6 +45,7 @@ def _no_candle_disk(monkeypatch):
     monkeypatch.setattr(twelve_data, "CANDLE_DISK", None)
     monkeypatch.setattr(twelve_data, "_disk_checked", set())
     monkeypatch.setattr(twelve_data, "_base_at", {})
+    monkeypatch.setattr(twelve_data, "_quote_marks", {})
 
 
 @pytest.fixture(autouse=True)

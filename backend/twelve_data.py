@@ -579,6 +579,26 @@ def fetch_time_series_with_meta(
     return candles[-n:], meta
 
 
+# آخر اقتباس حقيقي من المزوّد لكل رمز (وقت السعر عند المزوّد، السعر) — يسجّله `/api/market/quote` بعد جلب ناجح
+# موقوت. `_with_newest_close` يعامله كجلب آخر: كان الاقتباس (الحاسبة/الدفتر) 1.1010 والشارت/القائمة من كاش
+# 15m قبل دقيقة 1.1000 في اللحظة نفسها (حتى 90ث، و10د لـD) — رقمان للرمز.
+_quote_marks: dict[str, tuple[float, float]] = {}
+
+
+def note_quote(matrix_symbol: str, price, quoted_at) -> None:
+    try:
+        p, at = float(price), float(quoted_at)
+    except (TypeError, ValueError):
+        return
+    if not (math.isfinite(p) and p > 0 and math.isfinite(at)) or at > time.time() + 60:
+        return
+    sym = matrix_symbol.upper()
+    with _cache_lock:
+        prev = _quote_marks.get(sym)
+        if prev is None or at >= prev[0]:
+            _quote_marks[sym] = (at, p)
+
+
 def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tuple[list[dict], dict]:
     """**سعر واحد بين الفريمات** (W1): كل فريم بكاشه وعمره (D ‏600ث، 15m ‏90ث، 1m ‏45ث) ⇒ رمز بلا تيك حيّ
     (14 رمزاً بأيام التداول، والرقمية بالعطلة) كانت قائمة المتابعة (D) تعرض إغلاقاً أقدم بحتى 10 دقائق من
@@ -603,6 +623,11 @@ def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tu
                 continue
             if newest is None or at > newest[0]:
                 newest = (at, rows[-1]["close"])
+        # الاقتباس بوقت سعره عند المزوّد (لا لحظة جلبه): بعد جلبنا وقبل نهاية شمعتنا ⇒ داخلها. `time` لا يصلح
+        # حدّاً أدنى: شمعة D موسومة 00:00 UTC لتاريخ إغلاقها وتبدأ 17:00 نيويورك من اليوم السابق.
+        mark = _quote_marks.get(sym)
+        if mark and as_of < mark[0] < end and (newest is None or mark[0] > newest[0]):
+            newest = mark
     if newest is None:
         return candles, meta
     at, close = newest

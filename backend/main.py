@@ -1748,6 +1748,7 @@ def market_quote(symbol: str):
     book["as_of"] = book.pop("quoted_at")
     book["fetched_at"] = now
     _QUOTE_CACHE[sym] = (now, dict(book))
+    market.note_quote(sym, book.get("price"), book["as_of"])
     return book
 
 
