@@ -928,6 +928,9 @@ function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, ty
   // **وقريبٌ من سعر الأداة** (نصفه حتى ضعفه، `pairBallpark`) = سعر؛ وقفٌ حقيقي بعُشر pip على الأكثر، و«150» أو «2400.5» تبقى نقاطاً.
   if ((spec?.quote === 'JPY' && spec.pipSize === 0.01) || spec?.base === 'XAU') {
     const ref = pairBallpark(spec);
+    // الين: المستدير («50.00») بمدى ±20% فقط كـ`ROUND_PRICE_MAX_RATIO` أدناه — بنصف السعر حتى ضعفه كان وقف «50.00» أو «60.00» pip
+    // على AUDJPY (~97) يُرفض «يبدو سعراً» فلا لوت. ±20% لا ±9%: المرجع ثابت وسعر الين يتحرّك أكثر (وخطأ الين يصغّر اللوت لا يكبّره)
+    if (spec.quote === 'JPY' && !hundredths && typed === 2) return Math.max(v / ref, ref / v) <= 1.2;
     return (hundredths || typed === 2) && v >= ref / 2 && v <= ref * 2;
   }
   if (spec?.pipSize !== 0.0001) return false;

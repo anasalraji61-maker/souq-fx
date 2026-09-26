@@ -3414,6 +3414,23 @@ console.log('positionSize profitAfterCosts-at-target selftest OK');
 }
 console.log('positionSize two-decimal price in pips field selftest OK');
 {
+  // الين: وقفٌ مستدير «50.00»/«60.00» pip على AUDJPY (~97) كان «يبدو سعراً» (نصف السعر حتى ضعفه) ⇒ لا لوت. المستدير سعرٌ بمدى ±20% فقط
+  for (const [raw, sym, v] of [
+    ['50.00', 'AUDJPY', 50], ['60.00', 'AUDJPY', 60], ['50.00', 'NZDJPY', 50], ['150.00', 'AUDJPY', 150],
+    ['100.00', 'USDJPY', 100], ['60.00 pip', 'CADJPY', 60], ['150.00', 'GBPJPY', 150],
+  ] as const) {
+    assert.equal(parseSlPips(raw, instrumentSpec(sym)), v, `${sym} ${raw}`);
+    assert.equal(slPipsLooksLikePrice(raw, instrumentSpec(sym)), false, `${sym} ${raw}`);
+  }
+  // السعر المستدير قرب سعر الأداة، والسعر بجزء من مئة بالمدى الواسع، يبقيان سعراً
+  for (const [raw, sym] of [['97.00', 'AUDJPY'], ['149.00', 'USDJPY'], ['150.00', 'USDJPY'], ['165.00', 'EURJPY'], ['120.25', 'USDJPY'], ['150.25', 'USDJPY']] as const) {
+    assert.equal(parseSlPips(raw, instrumentSpec(sym)), null, `${sym} ${raw}`);
+  }
+  // الذهب كما كان (المرجع أبعد عن السعر الحيّ): «2400.00» سعر
+  assert.equal(parseSlPips('2400.00', instrumentSpec('XAUUSD')), null);
+}
+console.log('positionSize JPY round stop not a price selftest OK');
+{
   // أصفار زائدة تُسقطها القراءة: «1.3000» (سعر وقف GBPUSD) كانت 1.3 pip ⇒ 7.69 لوت بدل 0.40 — المنازل المكتوبة تُعدّ
   const gbp = instrumentSpec('GBPUSD')!;
   for (const [raw, sym] of [
