@@ -380,6 +380,8 @@ export function QuadChartModal({
                     syncTimeOnly
                     syncCrossTime={following ? crossTime : undefined}
                     onCrossTime={syncTime && isLeader ? setCrossTime : undefined}
+                    // الويب: «15»/«4h» ثم Enter فوق أيّ خلية = شريط الفريمات المشترك أعلى النافذة.
+                    onTimeframeKey={setTfOverride}
                   />
                 ) : (
                   // chart-r47: الدوّار وحده كان لا يقول ماذا يُحمَّل — والخلايا الأربع تبدو متطابقة أثناء التحميل.
