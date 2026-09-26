@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, buttons, selectedMarkerWidth } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { FrameSizedGrid } from './FrameSizedGrid';
@@ -219,7 +219,6 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           key={k.id}
           style={({ pressed }) => [
             styles.card,
-            active === k.id && styles.cardOn,
             loading != null && loading !== k.id && styles.cardDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
@@ -231,6 +230,8 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           accessibilityState={{ disabled: loading != null, selected: active === k.id, busy: loading === k.id }}
           accessibilityLabel={k.title}
         >
+          {/* DESIGN-PRO §4/§1: الاختيار علامة 2px على الحافة الأمامية — كان حدّاً بلون التأكيد وحده. */}
+          {active === k.id ? <View style={[styles.cardMarker, rtl ? styles.cardMarkerRtl : null]} /> : null}
           <Text style={[styles.cardTitle, { textAlign: align }]}>{k.title}</Text>
           <Text style={[styles.cardHint, { textAlign: align }]}>{k.hint}</Text>
           {loading === k.id ? <ActivityIndicator color={colors.accent} /> : null}
@@ -278,9 +279,18 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     gap: spacing.xs,
+    overflow: 'hidden',
   },
   cardDisabled: { opacity: 0.4 },
-  cardOn: { borderColor: colors.accent },
+  cardMarker: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: selectedMarkerWidth,
+    backgroundColor: colors.accent,
+  },
+  cardMarkerRtl: { left: undefined, right: 0 },
   cardTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 14 },
   cardHint: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
   out: {
