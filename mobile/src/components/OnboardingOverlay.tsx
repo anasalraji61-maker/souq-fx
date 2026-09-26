@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AccessibilityInfo, Modal, View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
@@ -19,7 +19,8 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
     { title: t.onboardStep1Title, body: t.onboardStep1Body },
     { title: t.onboardStep2Title, body: t.onboardStep2Body },
     { title: t.onboardStep3Title, body: t.onboardStep3Body },
-    { title: t.onboardStep4Title, body: t.onboardStep4Body },
+    // المتصفّح لا يستقبل إشعارات (`pushPriceAlert`) — نصّ الويب يقول أين يظهر التنبيه بدل وعدٍ بإشعار.
+    { title: t.onboardStep4Title, body: Platform.OS === 'web' ? t.onboardStep4BodyWeb : t.onboardStep4Body },
     { title: t.onboardStep5Title, body: t.onboardStep5Body },
   ];
   const last = step === steps.length - 1;

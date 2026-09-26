@@ -96,6 +96,11 @@ export type Dict = {
   onboardStep3Body: string;
   onboardStep4Title: string;
   onboardStep4Body: string;
+  /**
+   * الويب (`OnboardingOverlay`، قرار ١٦): `pushPriceAlert` لا يعمل بالمتصفّح (`notifications.ts:170`) ⇒ لا يَعِد بإشعار هنا. التنبيه المتحقّق
+   * يُوسَم `alertsStatusTriggered` باللوح، والخادم يرسل الإشعار لهواتف **الحساب** (`db._push_owner_sql`) كـ`notifStatusUnsupported`.
+   */
+  onboardStep4BodyWeb: string;
   onboardStep5Title: string;
   onboardStep5Body: string;
   onboardRiskNote: string;
@@ -1714,6 +1719,8 @@ const ar: Dict = {
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'المس مستوىً على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام، وعلى اللابتوب انقر بالزرّ الأيمن عند السعر. يصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، ولنقله اسحب وسمه على حافة الشارت. تنبيهات المؤشرات وتفعيل الإشعارات في لوح التنبيهات.',
+  onboardStep4BodyWeb:
+    'المس مستوىً على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام، أو انقر بالزرّ الأيمن عند السعر. يُفحص السعر كل دقيقة تقريباً، والمتصفّح لا يستقبل إشعارات: التنبيه الذي تحقّق يظهر «انطلق ✓» في لوح التنبيهات، وليصلك إشعاره على هاتفك ادخل بالحساب نفسه هنا وعلى الهاتف. لنقله اسحب وسمه على حافة الشارت. تنبيهات المؤشرات في لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
     'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip (لا بنقاط MT4/MT5 — 250 نقطة عادةً 25 pip) لتعرف حجم اللوت المناسب، ثم «سجّل هذه الخطة بالدفتر» لتراجعها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
@@ -2985,6 +2992,8 @@ const enUS: Dict = {
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Tap a level on the chart, then the alert button showing its price — no typing; on a laptop, right-click at that price. You get a notification when price reaches it (checked about once a minute). To move it, drag its label at the edge of the chart. Indicator alerts and notification settings are in the alerts panel.',
+  onboardStep4BodyWeb:
+    'Tap a level on the chart, then the alert button showing its price — no typing — or right-click at that price. Price is checked about once a minute, and the browser can’t receive notifications: an alert that fires shows “Triggered ✓” in the alerts panel, and to get it as a notification on your phone, log in to the same account here and on the phone. To move it, drag its label at the edge of the chart. Indicator alerts are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
     'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss in pips (not MT4/MT5 points — 250 points is usually 25 pips) to get the right lot size, then “Log this plan to the journal” to review it later. Many traders risk no more than 1–2% per trade.',
@@ -4191,6 +4200,8 @@ const enGB: Dict = {
   regErrUsernameTaken: 'That username is already registered — pick another one, or sign in if it’s yours',
   login: 'Sign in',
   notifStatusUnsupported: 'Not available in the browser — sign in to the same account here and on your phone to get your alerts there',
+  onboardStep4BodyWeb:
+    'Tap a level on the chart, then the alert button showing its price — no typing — or right-click at that price. Price is checked about once a minute, and the browser can’t receive notifications: an alert that fires shows “Triggered ✓” in the alerts panel, and to get it as a notification on your phone, sign in to the same account here and on the phone. To move it, drag its label at the edge of the chart. Indicator alerts are in the alerts panel.',
   register: 'Register',
   enter: 'Sign in',
   createAccount: 'Create an account',
@@ -4297,6 +4308,8 @@ const ku: Dict = {
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'دەست لە ئاستێک بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە؛ لەسەر لاپتۆپ لەو نرخەدا کلیکی ڕاست بکە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت). بۆ گواستنەوەی، نیشانەکەی لە لێواری چارت ڕابکێشە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
+  onboardStep4BodyWeb:
+    'دەست لە ئاستێک بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە — یان لەو نرخەدا کلیکی ڕاست بکە. نرخ نزیکەی هەر خولەکێک دەپشکنرێت، و وێبگەڕ ئاگاداری وەرناگرێت: ئاگادارکردنەوەیەک کە هاتەدی لە پانێڵی ئاگادارکردنەوەکان «دەرچوو ✓» پیشان دەدات، و بۆ ئەوەی لەسەر مۆبایلەکەت ئاگاداری بگات، لێرە و لەسەر مۆبایل بە هەمان هەژمار بچۆ ژوورەوە. بۆ گواستنەوەی، نیشانەکەی لە لێواری چارت ڕابکێشە. ئاگادارکردنەوەی پێوەرەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
     'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و وەستانی زیان بە pip بنووسە (نەک بە خاڵی MT4/MT5 — 250 خاڵ زۆرجار 25 pipە) بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر پێیدا بچیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
