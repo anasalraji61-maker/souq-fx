@@ -201,8 +201,9 @@ def price_decimals(price: float | None, symbol: str | None = None) -> int:
     if abs(price) >= 1:
         dp = max(dp, 2)
     # أزواج الين تُسعَّر بثلاث منازل مهما كان السعر: AUDJPY ‏97 كان 4 منازل (6 أرقام معنوية) ⇒ هدف «99.9836» دون
-    # تسعيرة المزوّد 0.001، والزوج نفسه يغيّر دقّته حين يعبر 100
-    return min(dp, 3) if _jpy_quoted(symbol) else dp
+    # تسعيرة المزوّد 0.001، والزوج نفسه يغيّر دقّته حين يعبر 100. فوق 1 فقط: IDRJPY ‏0.009612 كان 3 منازل ⇒
+    # «0.010» (4% خطأ)، وATR ‏1.5e-5 (0.15% مدى حقيقي) «دون التسعيرة» ⇒ لا مستويات بحجّة سوق بلا حركة
+    return min(dp, 3) if abs(price) >= 1 and _jpy_quoted(symbol) else dp
 
 
 def _instrument_decimals(symbol: str | None) -> int | None:

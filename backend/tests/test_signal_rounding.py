@@ -257,3 +257,13 @@ def test_macd_vote_never_sends_negative_zero(monkeypatch):
     assert vote["detail_code"] == "macd_below"
     assert math.copysign(1, vote["detail_values"]["signal"]) == 1.0
     assert "-0.0" not in vote["detail"]
+
+
+@pytest.mark.parametrize("sym,price,dp", [
+    ("IDRJPY", 0.009612, 8), ("KRWJPY", 0.10734, 5), ("VNDJPY", 0.005874, 8),
+    ("INRJPY", 1.7234, 3), ("USDJPY", 157.123, 3), ("AUDJPY", 0.9, 3),
+])
+def test_jpy_three_decimals_only_at_or_above_one(sym, price, dp):
+    # run 102: سقف الين (3 منازل) كان يُطبَّق تحت 1 ⇒ IDRJPY ‏0.009612 يُقرَّب «0.01»
+    assert signal_hub.price_decimals(price, sym) == dp
+    assert signal_hub.level_round(0.009612, 0.009612, "IDRJPY") == 0.009612
