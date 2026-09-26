@@ -874,3 +874,14 @@
 - بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): «₴» بتعليقين فقط (`MatrixEdgeRails:194`، `ToolsScreen:88`)؛ `Alert.alert`/`window.confirm` داخل `confirmDestructive` وحده؛ «درجة الاتفاق» تعليقات فقط؛ «إعادة الجولة» `AccountScreen` (`tourOpen`).
 - فحص الاختيار باللون وحده بنطاقي (`MatrixSidePanel`، `MatrixBottomDock`، `SymbolPairMenu`، `ScreenerMini`، `TimeframeBar`، `MatrixEdgeRails`): كل عنصر شرطي على `Pressable` يحمل `accessibilityState.selected`/`expanded` وتعبئة؛ الفارق بالعدّ نصوص داخلية. لا بند.
 - **لم يُتحقَّق بصرياً ولا بمتصفّح** — tsc وحده. أولى ما يُفحص: كتابة «4h» + Enter بنافذة التركيز على الويب، ثم إبراز «4h» بالشريط أعلاه. (التلميح نفسه ما زال launch163a → chart.)
+
+## 2026-09-26 — تشغيل 72
+لا صفّ بـCOORDINATION موجَّه إلى ui (دورة QA 98؛ chart-r82a جزء ui أُنجز تشغيل 71). بوابة البناء خضراء (tsc 0) قبل كل commit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| f0685ca | «حذف» كان ظاهراً على كل صفّ تنبيه وقت السكون: `AlertsPanel` ⇒ يظهر بالمرور (ويب) أو للصفّ المفتوح بالنقر للتعديل (كالدفتر)؛ `IndicatorAlertsPanel` ⇒ بالمرور أو بالضغط الطويل (كقائمة المتابعة و`LayoutPanel`). الصفّان يحملان إجراء `delete` لقارئ الشاشة | DESIGN-PRO §5.2 |
+| 9203d50 | مودالات تنزلق/تتلاشى ⇒ `animationType="none"`: `MatrixSidePanel`، إضافة رمز بـ`WatchlistPanel`، `QuadChartModal`، `FocusChartModal`، `OnboardingOverlay`، ورقة المدرسة بـ`CoursesScreen`. أضفت **ui72a → tools** لـ`TerminalScreen:2088` | DESIGN-PRO §6 |
+
+- بنود المهمّة الأصلية (تحقّق بالكود هذا التشغيل): النصوص العربية الثابتة بنطاقي مفاتيح تحويل (`CommissionPlanPanel` نصّ الخادم ⇒ مفتاح ترجمة) وتعليمات ذكاء اصطناعي داخلية محايدة لغوياً (`WeeklyReportPanel`، لغة الرد من `lang`) وتعليقات؛ لا نصّ واجهة عربي ثابت خارج `MessagesScreen` (launch52). الشريط السفلي 4+«المزيد»؛ الشريط الجانبي أيقونات مع تلميح.
+- **لم يُتحقَّق بصرياً ولا على جهاز** — tsc وحده. أولى ما يُفحص: ضغط طويل على صفّ تنبيه مؤشّر على أندرويد يُظهر «حذف»، ونقرة صفّ تنبيه سعر تُظهره مع التعديل.

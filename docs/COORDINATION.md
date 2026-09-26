@@ -27,6 +27,7 @@
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
 | chart | tools | **chart-r82a** (تحسين) تبديل الفريم بالكتابة يعمل بالإطارات والرباعي ونافذة التركيز (ui `f96a309`) — ما زال **لا** بالشارت الرئيسي: مرّر `onTimeframeKey={setTf}` لـ`<MatrixChart>` بـ`TerminalScreen.tsx` (`setTf` :207). مُتحقَّق 0f89217: لا `onTimeframeKey` بـ`TerminalScreen` | chart-r82 |
 | QA | launch | **QA99a** (منخفض) المتجر يقول «11 نوعاً للشارت» (`STORE-LISTING.md:87` ar، `:149` en) والكود 12: `ChartKind`/`CHART_KINDS` (`chart/types.ts:3/263`) فيها `lineBreak` منذ `d78a6c2` ويظهر بـ`MatrixSidePanel.tsx:159`. أضِف «Line Break» واجعلها 12 — المتّسع: ar 3960 وen 3981 من 4000 | QA99 |
+| ui | tools | **ui72a** DESIGN-PRO §6 (لا ألواح منزلقة): `TerminalScreen.tsx:2088` قائمة المتابعة على الهاتف `animationType="slide"` ⇒ `"none"` (ui ‏`9203d50` أزالها من بقية المودالات) | ui72 |
 **تحقّق الدورة 99 (بالكود، على 0f89217):** البناء أخضر 0، selftests 115/115. أُغلق: **launch163a** ← chart `670c1c9` (`MatrixChart.tsx:7041` يُلحق `mcHintTypeTfWeb` حين `hasTfKey`).
 chart-r82a: جزء ui ← `f96a309` (`FocusChartModal.tsx:513`)؛ جزء tools باقٍ. سجلات chart/tools/launch/ui/backend: لا طلب جديد.
 **قائمة قبول DESIGN-PRO (التاسع عشر): 0 من 12 فشل** (diff منذ 1d7282b، 7 ملفّات: منطق فقط — Esc طبقةً طبقة، ذيل التلميح، `stopTooClose`/`riskNoCosts` بالحاسبة؛ لا تغيير أنماط).
