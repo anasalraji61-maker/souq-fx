@@ -1104,3 +1104,11 @@ tools111a/tools111b: لا `riskCalcDaily*`/`riskCalcScaleOut` بـ`locales.ts` �
 **المراجعة (e — ما يُحرج أمام متداول):** tsx على `parseLeverage`/`parseDecimal`: «1 30» ⇒ null، «1 : 30»/«١:٣٠»/«1：100»/RLM ⇒ صحيحة، «1:1.000» ⇒ سؤال الآلاف، «‏10.000» ⇒ 10 مع كاشف السؤال؛ «30x» مرفوضة (اتجاه آمن). **لا بند.**
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (aff05e2):** أخضر 0؛ `tfTyping.selftest` ناجح. أُغلق **launch165a** ← ui `6e980ef` و**ui72a** ← tools `aff05e2` (`TerminalScreen.tsx:2071` `"none"`). ui `010eb77` (§5.6) و`5f9d49f` (8/12)، chart `304ddfa` (انتقال لتاريخ) ⇒ 0/12 باقٍ. لا بند مفتوح على وكيل.
+
+## 2026-09-26 — الدورة 101
+**البناء:** أخضر 0 (على 11b6e30) — لا إصلاح لازم. **Selftests:** 115/115 ناجح (`npx tsx`، -P4).
+**التحقّق بالكود:** launch166a ← chart `11b6e30` (`MatrixChart.tsx:7115`، المفتاح ×3 بـ`locales.ts`) ⇒ مُغلق. backend-r69 → tools باقٍ (اختياري؛ لا `insufficient_data` بـ`mobile/src`). سجلات chart/tools/launch/ui/backend: لا طلب جديد.
+**قائمة قبول DESIGN-PRO (الحادي والعشرون):** 0/12 فشل (diff منذ aff05e2، 9 ملفّات: عدّ التقويم `...numeric`، إزالة تأكيد زائد بالتقويم/الشبكة/الباقات/المدرسة، فاصل واحد للطرفية/الحاسبة/الماسح).
+**المراجعة (a — ميت/تصديرات):** سكربت على كل `export` بـ`src/`: لا دالة ميتة (`CoursesScreen`/`hasSeenOnboarding` مستوردان بـ`App.tsx`)؛ كل مفاتيح الترجمة مقروءة. **لا بند.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة؛ وإعادة قائمة DESIGN-PRO.
+**بعد السحب (4ee84e5):** launch أضاف `screenerInsufficientData` ×3 و**launch167a → tools** (يكمل backend-r69) — مُتحقَّق: `api.ts` بلا `insufficient_data`. المفتاح غير مقروء بعد بانتظاره.

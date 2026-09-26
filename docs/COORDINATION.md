@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 100، على 52cdc2f) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 101، على 11b6e30) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -26,11 +26,11 @@
 | backend | أنس | **backend-r56** مفتاح Twelve Data (المشترك مع الروبوت) كان يُعاد بنصّ 502 من `/api/symbols/search` (بلا دخول) عند أيّ خطأ من المزوّد (429 مثلاً) — أُصلح `80e268a`. لا يمكن معرفة إن قرأه أحد من قبل ⇒ **دوّروا المفتاح** إن كان الخادم منشوراً للعموم | backend-r56 |
 | backend | أنس | **backend-r58b** `/api/auth/login` بلا حدّ محاولات ولا قفل؛ مع حدّ 4 أحرف (QA24) كلمة PIN تُخمَّن بنحو 10 آلاف طلب. حدّ لكل اسم/IP أم كما هو؟ | backend-r58 |
 | backend | tools | **backend-r69** (اختياري، لا كسر): `/api/screener/run` صار يعيد `insufficient_data: {رمز: [فلاتر]}` = فلاتر لم تكفِ شموع الرمز لتقييمها (تقاطع MA يحتاج `slow`+1 شمعة، MACD ‏35، الزخم 81). رمز كل فلاتره هنا يُعدّ ضمن `failed` (كان «مفحوصاً بلا تطابق» — `87e4b30`). يمكن لـ`ScreenerMini`/`ToolsScreen` أن يقول «شموع غير كافية» بدل «تعذّرت قراءته» لهذه الرموز | backend-r69 |
-| launch | chart | **launch166a** القفز لتاريخ بالكتابة (`304ddfa`) وHome/End (`07ae1df`) لا يذكرهما أيّ نصّ ⇒ لا يعرفهما أحد (طلبك بسجل chart 84). ألحِق `tr.mcHintTypeDateWeb` («· Home/End لأقدم شمعة وللحيّ · اكتب 2026-09-01 ثم Enter…»، ×3 لغات) بسطر `mcHintNavigateWeb` (`MatrixChart.tsx:7095`) حين `canPan && !replayOn` — بعد `mcHintTypeTfWeb` إن وُجد | launch166 |
 | launch | tools | **launch167a** (يكمل backend-r69): رمز لم تكفِ شموعه يقع في `failed` ⇒ `screenerScanPartial` يقول له «حدّ طلبات المزوّد غالباً» — سبب خاطئ. المفتاح `t.screenerInsufficientData` جاهز (`{tf}` `{list}`، ×3 لغات). أضف `insufficient_data?: Record<string, string[]>` لنوع `screenerRun` (`api.ts:581`)، واعرض السطر بـ`ToolsScreen`/`ScreenerMini` لرموزه، وأخرجها من `{list}` الحدّ | launch167 |
-**تحقّق الدورة 100 (بالكود، على 52cdc2f):** البناء أخضر 0، selftests 115/115. أُغلق **QA99a** ← launch `59f30b7` (`STORE-LISTING.md:87/149` «12 نوعاً»، وكسر الخطوط مذكور).
-launch165a: `LayoutPanel` ← `52cdc2f`؛ اللوحتان الأخريان بلا `rowDeleteLongPressHint` ⇒ باقٍ. ui72a باقٍ (`TerminalScreen.tsx:2071` `"slide"`). سجلات chart/tools/ui/backend: لا طلب جديد
-(ملاحظة chart الاختيارية: `mcHintNavigateWeb` لا يذكر Alt+B/C/M/N — ليس خطأً، لـlaunch إن شاء).
-**قائمة قبول DESIGN-PRO (العشرون): 0 من 12 فشل** (diff منذ 40054bc، 8 ملفّات: `longPressHint` ‏11px/`lineHeight` 16/`textMuted` بلا وزن؛ الباقي منطق تحليل الأرقام).
-**المراجعة (e — ما يُحرج أمام متداول):** الرافعة «1 30» مرفوضة و«1 : 30»/«١:٣٠»/«1：100»/علامة RLM ⇒ 30/100 صحيحة؛ «‏10.000» بالدفتر يُسأل عنه؛ mini فوق 10,000 يُنبَّه. «30x» مرفوضة (اتجاه آمن، الرسالة تُرى). **لا بند.**
-**بعد السحب (aff05e2):** أخضر 0؛ `tfTyping.selftest` ناجح. أُغلق **launch165a** ← ui `6e980ef` (`IndicatorAlertsPanel.tsx:492`، `WatchlistPanel.tsx:566`) و**ui72a** ← tools `aff05e2` (`TerminalScreen.tsx:2071` `"none"`). ui `010eb77` خفوت 40% بالتركيز/الأربعة (§5.6)، `5f9d49f` مسافات 8/12؛ chart `304ddfa` انتقال لتاريخ ⇒ 0/12 باقٍ. لا بند مفتوح على وكيل.
+**تحقّق الدورة 101 (بالكود، على 11b6e30):** البناء أخضر 0، selftests 115/115. أُغلق **launch166a** ← chart `11b6e30` (`MatrixChart.tsx:7115` يلحق
+`tr.mcHintTypeDateWeb` حين `canPan && !replayOn`؛ المفتاح ×3 بـ`locales.ts:2518/3753/5035`). backend-r69 باقٍ (لا `insufficient_data` بـ`mobile/src`).
+سجلات chart/tools/launch/ui/backend: جديد **launch167a → tools** مُتحقَّق (`api.ts` بلا `insufficient_data`؛ يكمل backend-r69) (طلب chart 84 لـlaunch/ui نُفِّذ).
+**قائمة قبول DESIGN-PRO (الحادي والعشرون): 0 من 12 فشل** (diff منذ aff05e2، 9 ملفّات: `rel` بالتقويم `...numeric` و«قريب» `colors.text`؛ الشبكة/الباقات/المدرسة
+بلا تأكيد؛ فاصل واحد للطرفية والحاسبة والماسح؛ مسافات `spacing.*`؛ لا وزن ≥700).
+**المراجعة (a — ميت/تصديرات):** مسح كل `export` بـ`mobile/src`: لا دالة غير مستعملة (المرشّحان `CoursesScreen`/`hasSeenOnboarding` مستوردان بـ`App.tsx`)؛
+كل مفاتيح `locales.ts` مقروءة عدا `screenerInsufficientData` (جديد، launch167a)؛ التكرار يلتقطه tsc (0). **لا بند.**
