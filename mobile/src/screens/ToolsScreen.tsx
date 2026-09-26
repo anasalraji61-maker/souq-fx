@@ -1023,7 +1023,7 @@ const styles = StyleSheet.create({
   hitCard: {
     flex: 1,
     height: '100%',
-    backgroundColor: colors.bgElevated,
+    // DESIGN-PRO 5.5: حدّ وحده بلا تعبئة `bgElevated`
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,

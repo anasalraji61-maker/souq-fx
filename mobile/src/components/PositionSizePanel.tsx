@@ -2058,8 +2058,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
 }
 
 const styles = StyleSheet.create({
+  // DESIGN-PRO 5.5: فاصل واحد — حدّ بلا تعبئة `bgElevated` (لون القوائم المنبثقة)، كلوح الدفتر
   wrap: {
-    backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
