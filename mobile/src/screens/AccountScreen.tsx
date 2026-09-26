@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -58,6 +58,8 @@ export function AccountScreen() {
   const [pwCurrent, setPwCurrent] = useState('');
   const [pwNew, setPwNew] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
+  // حارس متزامن: Enter بالحقل لا يمرّ بـ`disabled` الزرّ، و`pwBusy` لا يتحدّث قبل الضغطة الثانية.
+  const pwInFlight = useRef(false);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [net, setNet] = useState<{
     referral_code: string;
@@ -187,12 +189,14 @@ export function AccountScreen() {
   };
 
   const submitPasswordChange = async () => {
+    if (pwInFlight.current || !pwCurrent) return;
     setPwMsg(null);
     // قرار أنس ٧ (الخادم يفرض 8 أيضاً) — لا طلب يُعرف رفضه مسبقاً.
     if (pwNew.length < PASSWORD_MIN_LENGTH) {
       setPwMsg({ ok: false, text: t.regErrPasswordLength });
       return;
     }
+    pwInFlight.current = true;
     setPwBusy(true);
     try {
       await api.changePassword(pwCurrent, pwNew);
@@ -214,6 +218,7 @@ export function AccountScreen() {
                 : t.accPasswordChangeError,
       });
     } finally {
+      pwInFlight.current = false;
       setPwBusy(false);
     }
   };
