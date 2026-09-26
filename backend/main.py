@@ -241,8 +241,17 @@ class VoteBallot(BaseModel):
     choice: Literal["agree", "disagree"]
 
 
+def _not_blank(v: str) -> str:
+    # «   » يجتاز `min_length` ثم يُقصّ فارغاً: سؤال فارغ يذهب للنموذج المدفوع («بخصوص سؤالك «»»)، ونصّ
+    # صوت فارغ يرمي ValueError داخل `synthesize` فيُعاد 502 «خطأ المزوّد» لطلب لم يصل المزوّد أصلاً
+    if not v.strip():
+        raise ValueError("must not be blank")
+    return v
+
+
 class AiAsk(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
+    _q = field_validator("question")(_not_blank)
     # كان بلا حدّ: 100 ألف حرف تذهب لرابط المزوّد وموجّه النموذج المدفوع (حدّ `question` يُتجاوز به)
     symbol: str | None = Field(default=None, max_length=12)
     # لغة واجهة المتداول ('ar' | 'en-US' | 'en-GB' | 'ku'). اختياري: غيابه = عربي (عملاء أقدم).
@@ -254,6 +263,7 @@ class TeacherInterrupt(BaseModel):
     lecture_id: str
     segment_id: str | None = None
     question: str = Field(min_length=2, max_length=2000)
+    _q = field_validator("question")(_not_blank)
     # لغة واجهة المتعلّم (نفس قاعدة AiAsk). اختياري: غيابه = عربي (عملاء أقدم).
     lang: str | None = Field(default=None, max_length=10)
 
@@ -1858,6 +1868,7 @@ class AcademyTtsRequest(BaseModel):
     text: str = Field(min_length=1, max_length=5000)
     # يُلصق بمسار ElevenLabs: «../voices/add» كان يصل لنقاط أخرى بمفتاح الخادم (httpx يحلّ «..»)
     voice_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9]{10,40}$")
+    _t = field_validator("text")(_not_blank)
 
 
 @app.get("/api/academy/voice/status")
@@ -1867,8 +1878,11 @@ def academy_voice_status():
 
 @app.get("/api/academy/audio/{file_id}")
 def academy_audio_file(file_id: str):
-    safe = "".join(c for c in file_id if c.isalnum() or c in "-_")
-    path = tts.CACHE_DIR / f"{safe}.mp3"
+    # المعرّفات الحقيقية أول 32 من sha256 (`elevenlabs_tts.synthesize`). كان يُنقّى الحرف فقط: 300 حرف
+    # (أو 130 «ب» = 260 بايت) ⇒ `exists()` يرمي «File name too long» ⇒ 500 لأيّ مجهول
+    if not re.fullmatch(r"[0-9a-f]{32}", file_id):
+        raise HTTPException(status_code=404, detail="audio not found")
+    path = tts.CACHE_DIR / f"{file_id}.mp3"
     if not path.exists():
         raise HTTPException(status_code=404, detail="audio not found")
     return FileResponse(path, media_type="audio/mpeg", filename=path.name)
