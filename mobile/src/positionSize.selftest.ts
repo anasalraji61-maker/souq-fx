@@ -4390,3 +4390,16 @@ console.log('positionSize round scalper stop pips on majors selftest OK');
   assert.equal(r.lots, 0.4);
 }
 console.log('positionSize parseBalance currency-marked balance selftest OK');
+{
+  // اختصار الآلاف بخانة الرصيد: «10k» = 10,000
+  for (const [raw, v] of [['10k', 10_000], ['10K', 10_000], ['2.5k', 2500], ['2,3k', 2300], ['$10k', 10_000], ['١٠k', 10_000], ['10 k', 10_000], ['0.5k', 500]] as const) {
+    assert.equal(parseBalance(raw, 'USD'), v, raw);
+  }
+  // مبهم قبل k، أو عملة أخرى، أو حرف آخر ⇒ مرفوض
+  for (const raw of ['10.000k', '€10k', 'k', '10m', '10kk', '-5k']) assert.equal(parseBalance(raw, 'USD'), null, raw);
+  // اللوت نفسه: «10k» و«10000» ⇒ 0.40 (1%، 25 pip EURUSD)
+  const eu = instrumentSpec('EURUSD')!;
+  const r = positionSize({ balance: parseBalance('10k', 'USD')!, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 0.4);
+}
+console.log('positionSize parseBalance k shorthand selftest OK');

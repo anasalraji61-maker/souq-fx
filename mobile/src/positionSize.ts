@@ -1969,7 +1969,23 @@ export function parseBalance(raw: string, ccy: string): number | null {
     const text = moneyTextFor(raw, ccy);
     if (text != null) v = parseDecimal(text, { amount: true });
   }
+  if (v == null) v = thousandsShorthand(raw, ccy);
   return v != null && v >= 0 ? v : null;
+}
+
+/**
+ * «10k» / «2.5K» / «$10k» / «١٠k» — اختصار الآلاف كما يكتب المتداول رصيده (كان «رقماً غير مفهوم»). الرقم قبل k بقاعدة المبالغ نفسها
+ * («10.000k» مبهمة تبقى مرفوضة)، ×1000 مقرّباً لسنت كي لا يخرج 2300.0000000000005. حرف k وحده (لا «m»: مليون برصيد تجزئة نادر
+ * وخطؤه ×1000). `null` = بلا k أو ما قبلها غير مفهوم.
+ */
+function thousandsShorthand(raw: string, ccy: string): number | null {
+  const m = /^(.*?\d)\s*[kK]$/.exec(normalizeDigits(raw).trim());
+  if (!m) return null;
+  const n = parseDecimal(m[1], { amount: true }) ?? (() => {
+    const text = moneyTextFor(m[1], ccy);
+    return text != null ? parseDecimal(text, { amount: true }) : null;
+  })();
+  return n != null ? Math.round(n * 1000 * 100) / 100 : null;
 }
 
 export function parseCommission(raw: string, ccy?: string): number | null {
