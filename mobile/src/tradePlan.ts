@@ -724,6 +724,20 @@ export function journalEditSeen(row: {
   return out;
 }
 
+/**
+ * backend-r118: الصفّ كما كتبه الخادم من ردّ `PATCH /api/trades/{id}` (`{ok, trade}`) — أساس `seen_*` لتعديلٍ يبقى مفتوحاً بعد الحفظ.
+ * كان الأساس من `refresh()` اللاحق: جهازٌ آخر عدّل بينهما ⇒ الأساس صفّه والخانات ما زالت قيمنا ⇒ الحفظ التالي يمحو تعديله بلا 409؛
+ * وتحديثٌ فشل/أُسقط ⇒ صفّ ما قبل الحفظ ⇒ 409 كاذب. ردٌّ بلا صفّ صالح لهذا المعرّف (خادم قديم) ⇒ `null`: يرجع المستدعي للتحديث.
+ */
+export function journalSavedRow<T extends { id: string }>(res: unknown, id: string): T | null {
+  const tr = res && typeof res === 'object' ? (res as { trade?: unknown }).trade : null;
+  if (!tr || typeof tr !== 'object') return null;
+  const r = tr as Record<string, unknown>;
+  if (r.id !== id || (r.status !== 'open' && r.status !== 'closed')) return null;
+  if (typeof r.symbol !== 'string' || typeof r.entry !== 'number' || !Number.isFinite(r.entry)) return null;
+  return tr as T;
+}
+
 /** خانات نموذج تعديل الدفتر كنصوص — كما يملؤها «تعديل» (`journalEditForm`) */
 export type JournalEditForm = {
   symbol: string;

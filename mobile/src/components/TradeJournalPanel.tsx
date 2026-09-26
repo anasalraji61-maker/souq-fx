@@ -113,6 +113,7 @@ import {
   journalCloseSeen,
   journalEditForm,
   journalConflictForm,
+  journalSavedRow,
   type JournalEditForm,
   netLineIsWhole,
   noteWithTypedSize,
@@ -1453,7 +1454,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
           // صفقة أُعيد فتحها هنا ثم كُتب خروجها: وقت إغلاقها الأصلي لا «الآن» (backend-r91a). متغيّر كـ`seen_*`: `updateTrade` بلا الحقل
           ...(restoredClosedAt !== undefined ? { closed_at: restoredClosedAt } : null),
         };
-        await api.updateTrade(editing.id, body);
+        const res = await api.updateTrade(editing.id, body);
+        // backend-r118: الصفّ كما كتبه الخادم — أساس `seen_*` إن بقي التعديل مفتوحاً (لا `refresh()`: تعديلٌ من جهاز آخر بينهما
+        // يصير أساساً فيُمحى بالحفظ التالي بلا 409، وتحديثٌ فشل يعيد صفّ ما قبل الحفظ ⇒ 409 كاذب)
+        const saved = journalSavedRow<Trade>(res, editing.id);
         if (typeof exitSent === 'number') reopenedClosedAtRef.current.delete(editing.id);
         else if (exitSent === null && editing.closed_at_iso) reopenedClosedAtRef.current.set(editing.id, editing.closed_at_iso);
         if (!mountedRef.current) return;
@@ -1461,9 +1465,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
         // كُتب في النموذج أثناء الحفظ (وقفٌ صُحّح بعد الضغط): كان يُمسح بلا كلمة وتعود المسوّدة. يبقى التعديل مفتوحاً على الصفّ
         // المحفوظ (`seen_*` الجديدة) بما كُتب، فيحفظه المتداول ثانيةً — كالإضافة أدناه لا تمسح صفقةً بدأت كتابتها أثناء طلبها
         if (formKeyRef.current !== submittedKey) {
+          if (saved && editingRef.current?.id === saved.id) {
+            setEditing(saved);
+            if (!closeTimeTouchedRef.current) initCloseTime(saved);
+            setFormNotice(t.journalEditSavedTypedAfter);
+            await refresh();
+            return;
+          }
           await refresh();
           if (!mountedRef.current) return;
-          const fresh = tradesRef.current.find((tr) => tr.id === editing.id);
+          // خادمٌ قديم بلا `trade` بالردّ: الأساس من القائمة المحدَّثة كما كان
+          const fresh = saved ? null : tradesRef.current.find((tr) => tr.id === editing.id);
           if (fresh && editingRef.current?.id === fresh.id) {
             setEditing(fresh);
             if (!closeTimeTouchedRef.current) initCloseTime(fresh);

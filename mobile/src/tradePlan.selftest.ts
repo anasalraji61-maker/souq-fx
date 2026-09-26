@@ -4440,3 +4440,27 @@ console.log('tradePlan journalSizeOunces selftest OK');
   assert.ok(OPEN_QUOTES_POLL_MS < OPEN_QUOTES_SNAP_MAX_AGE_MS);
   console.log('tradePlan openQuotesSnapUsable selftest OK');
 }
+
+// ——— journalSavedRow: أساس التعديل المفتوح بعد الحفظ = ردّ الخادم لا refresh() (backend-r118) ———
+{
+  const { journalSavedRow, journalEditSeen } = require('./tradePlan') as typeof import('./tradePlan');
+  type Row = { id: string; symbol: string; side: string; entry: number; status: string; sl?: number | null };
+  const written: Row = { id: 't1', symbol: 'USDJPY', side: 'buy', entry: 150, status: 'open', sl: 149 };
+  const res = { ok: true, trade: written, stats: {} };
+  // جهاز B كتب الدخول 151 بعد حفظ A وقبل تحديثه: الأساس صفّ A المكتوب (150) ⇒ الحفظ التالي يُرسل seen_entry 150 فيلقى 409
+  const base = journalSavedRow<Row>(res, 't1');
+  assert.equal(base, written);
+  assert.equal(journalEditSeen(base!)!.seen_entry, 150);
+  // ردٌّ لصفقة أخرى / بلا trade (خادم قديم) / صفّ ناقص ⇒ null (يرجع المستدعي للتحديث)
+  assert.equal(journalSavedRow<Row>(res, 't2'), null);
+  assert.equal(journalSavedRow<Row>({ ok: true }, 't1'), null);
+  assert.equal(journalSavedRow<Row>(null, 't1'), null);
+  assert.equal(journalSavedRow<Row>(undefined, 't1'), null);
+  assert.equal(journalSavedRow<Row>({ ok: true, trade: { ...written, status: 'deleted' } }, 't1'), null);
+  assert.equal(journalSavedRow<Row>({ ok: true, trade: { ...written, entry: 'x' } }, 't1'), null);
+  assert.equal(journalSavedRow<Row>({ ok: true, trade: { ...written, entry: NaN } }, 't1'), null);
+  assert.equal(journalSavedRow<Row>({ ok: true, trade: { ...written, symbol: null } }, 't1'), null);
+  // مغلقة كتبها الحفظ نفسه ⇒ صالحة
+  assert.equal(journalSavedRow<Row>({ ok: true, trade: { ...written, status: 'closed' } }, 't1')?.status, 'closed');
+  console.log('tradePlan journalSavedRow selftest OK');
+}
