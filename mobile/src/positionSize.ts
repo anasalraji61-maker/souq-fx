@@ -894,10 +894,11 @@ function pipsLookLikePrice(raw: string, v: number, spec?: InstrumentSpec | null)
 /**
  * عدد المنازل **كما كُتبت** بعد آخر فاصل — الأصفار الزائدة تسقط بالتحليل: «1.3000» تُقرأ 1.3 فتمرّ فحص المنازل الثلاث، و1.3 pip
  * = **7.69 لوت** بدل 0.40 (1% من 10,000، GBPUSD). أربع منازل مكتوبة فأكثر بكسرٍ = سعر («SL 1.3000»، «USDZAR 18.2000»)؛
- * «25.0000» عددٌ صحيح فتبقى 25 pip. ثلاث منازل خارجها: «1.500» مبهمة (`ambiguousSlPips`) و«0.500» نصف pip؛ و«1.20» تبقى 1.2 pip كما كانت.
+ * «25.0000» عددٌ صحيح فتبقى 25 pip. والفاصلة العربية «،» فاصلٌ كغيرها (`parseDecimal` يقرؤها عشرية): «2،20» بخانة نقاط GBPNZD
+ * كانت 0 منازل ⇒ 2.2 pip = **7.70 لوت** بدل «يبدو سعراً»، بينما «2,20» و«2٫20» مرفوضة. ثلاث منازل خارجها: «1.500» مبهمة (`ambiguousSlPips`) و«0.500» نصف pip؛ و«1.20» تبقى 1.2 pip كما كانت.
  */
 function typedFractionDigits(raw: string): number {
-  const s = normalizeDigits(stripUnitWord(raw, 'pip')).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，]/g, '.');
+  const s = normalizeDigits(stripUnitWord(raw, 'pip')).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，،]/g, '.');
   const m = /[.,](\d+)$/.exec(s);
   return m ? m[1].length : 0;
 }
@@ -968,7 +969,7 @@ export function slPipsLooksLikePrice(raw: string, spec?: InstrumentSpec | null):
  * (مقصوص)، `whole` بلا الفاصل، `small` كسراً بلا أصفار زائدة — أرقام لاتينية. `null` = مقبول أو مرفوض لسبب آخر.
  */
 export function ambiguousSlPips(raw: string): { value: string; whole: string; small: string } | null {
-  const s = normalizeDigits(stripUnitWord(raw, 'pip')).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，]/g, (c) => (c === '٬' || c === '，' ? ',' : '.'));
+  const s = normalizeDigits(stripUnitWord(raw, 'pip')).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，،]/g, (c) => (c === '٬' || c === '，' || c === '،' ? ',' : '.'));
   const m = /^([1-9]\d{0,2})[.,](\d{3})$/.exec(s);
   if (!m) return null;
   return { value: raw.trim(), whole: m[1] + m[2], small: String(Number(`${m[1]}.${m[2]}`)) };

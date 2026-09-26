@@ -4425,3 +4425,20 @@ console.log('positionSize parseBalance currency-marked balance selftest OK');
   assert.equal(r.lots, 0.4);
 }
 console.log('positionSize parseBalance k shorthand selftest OK');
+{
+  // الفاصلة العربية «،» بخانة النقاط = الفاصلة و«٫»: سعرٌ بمنزلتين مرفوض، والمبهم يعرض القراءتين، والسبريد السعري مرفوض
+  for (const [sym, sep] of [['GBPNZD', '2?20'], ['USDZAR', '18?20'], ['ZARJPY', '8?40'], ['XAGUSD', '30?90'], ['USDJPY', '150?20'], ['XAUUSD', '2400?50']] as const) {
+    const spec = instrumentSpec(sym)!;
+    for (const c of [',', '٫', '،']) {
+      const raw = sep.replace('?', c);
+      assert.equal(parseSlPips(raw, spec), null, `${sym} ${raw}`);
+      assert.equal(slPipsLooksLikePrice(raw, spec), true, `${sym} ${raw}`);
+    }
+  }
+  assert.deepEqual(ambiguousSlPips('1،500'), { value: '1،500', whole: '1500', small: '1.5' });
+  const eu = instrumentSpec('EURUSD')!;
+  for (const raw of ['1,1000', '1٫1000', '1،1000']) assert.equal(parseSpreadPips(raw, eu), null, raw);
+  // مسافة حقيقية بفاصلة عربية ما زالت تُقرأ
+  assert.equal(parseSlPips('25،5', eu), 25.5);
+}
+console.log('positionSize Arabic comma stop/spread selftest OK');
