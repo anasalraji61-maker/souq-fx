@@ -7,7 +7,8 @@
  *
  * القاعدة الموحّدة:
  * - `offset = 0` (يتابع الحيّ) ⇒ الطرف الأيمن مثبَّت، الشمعة الجارية تبقى ظاهرة.
- * - غير ذلك ⇒ حول مركز النافذة، مقيَّداً بطرفَي السلسلة.
+ * - غير ذلك ⇒ حول مركز النافذة، مقيَّداً بطرفَي السلسلة — أو حول `focus` (0 يسار اللوح، 1 يمينه):
+ *   عجلة الفأرة تمرّر موضع المؤشّر فتبقى الشمعة تحته في مكانها، كالقرص (`pinchWindow`).
  * - كل ضغطة تغيّر العدد شمعةً على الأقلّ (عند نافذة صغيرة قد يُقرَّب العامل إلى لا شيء).
  * - العدد بين `min` و`max`، و`max` لا يتجاوز طول السلسلة: الخادم يعيد ~180 شمعة، فكان
  *   التصغير يصعد 195، 244… حتى 1000 بلا أيّ تغيير مرئيّ، ثم يلزم ~8 ضغطات + قبل أن يتحرّك
@@ -31,7 +32,8 @@ export function zoomWindow(
   offset: number,
   factor: number,
   min = 2,
-  max = 1000
+  max = 1000,
+  focus = 0.5
 ): ZoomWindow {
   if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
   const off = Math.max(0, Math.round(offset));
@@ -42,10 +44,11 @@ export function zoomWindow(
   next = Math.max(min, Math.min(max, next));
   if (next === cur) return { count: cur, offset: off };
   if (off === 0 || allLen <= 0) return { count: next, offset: off };
+  const f = Number.isFinite(focus) ? Math.max(0, Math.min(1, focus)) : 0.5;
   const oldEnd = allLen - off;
   const oldStart = Math.max(0, oldEnd - cur);
-  const center = (oldStart + oldEnd) / 2;
-  const newEnd = Math.min(allLen, Math.max(next, Math.round(center + next / 2)));
+  const focusBar = oldStart + f * (oldEnd - oldStart);
+  const newEnd = Math.min(allLen, Math.max(next, Math.round(focusBar + (1 - f) * next)));
   return { count: next, offset: Math.max(0, allLen - newEnd) };
 }
 

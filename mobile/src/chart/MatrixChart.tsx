@@ -5344,12 +5344,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     schedulePublishSync(true);
   }, [schedulePublishSync, foldGapNow]);
 
-  // حول المركز، إلا عند متابعة الحيّ (offset 0) فالطرف الأيمن مثبَّت — `zoomWindow.ts`.
+  // حول المركز (أو `focus` — موضع مؤشّر العجلة من 0 إلى 1)، إلا عند متابعة الحيّ (offset 0) فالطرف
+  // الأيمن مثبَّت — `zoomWindow.ts`.
   const zoomAroundCenter = useCallback(
-    (factor: number) => {
+    (factor: number, focus?: number) => {
       const current = windowCountRef.current;
       const z = replayZoomed(
-        zoomWindow(sourceRef.current.all.length, current, offsetRef.current, factor),
+        zoomWindow(sourceRef.current.all.length, current, offsetRef.current, factor, undefined, undefined, focus),
         current,
         offsetRef.current
       );
@@ -6253,7 +6254,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         schedulePublishSync(false);
         return;
       }
-      zoomAroundCenter(factor);
+      // فوق اللوح: الشمعة تحت المؤشّر تبقى تحته (كان حول مركز اللوح فتنزلق الشمعة التي يقرؤها المتداول
+      // بعيداً عن المؤشّر مع كل حزّة). عند متابعة الحيّ الطرف الأيمن مثبَّت كما كان.
+      const rect = plotEl?.getBoundingClientRect();
+      const focus =
+        rect && chartPlotW > 0 ? (event.clientX - rect.left - xPanRef.current) / chartPlotW : undefined;
+      zoomAroundCenter(factor, focus);
     };
 
     document.addEventListener('wheel', onWheel, { passive: false, capture: true });

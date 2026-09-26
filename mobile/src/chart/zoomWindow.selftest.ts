@@ -64,3 +64,19 @@ assert.equal(pinchSpread(200, 100), 100);
 assert.equal(pinchSpread(NaN, 1), 24);
 
 console.log('zoomWindow.selftest: PASS');
+
+// عجلة الفأرة حول المؤشّر: النافذة [300,400)، المؤشّر عند الربع (الشمعة 325) ⇒ بعد ×0.64 تبقى 325 عند الربع
+{
+  const z = zoomWindow(500, 100, 100, 0.64, undefined, undefined, 0.25);
+  assert.equal(z.count, 64);
+  const start = 500 - z.offset - z.count;
+  assert.ok(Math.abs(start + 0.25 * z.count - 325) <= 1, `bar under the cursor stays put: ${JSON.stringify(z)}`);
+  // البؤرة الافتراضية = المركز كما كان
+  assert.deepEqual(zoomWindow(500, 100, 100, 0.64, undefined, undefined, 0.5), { count: 64, offset: 118 });
+  // يتابع الحيّ: الطرف الأيمن مثبَّت أياً كان موضع المؤشّر
+  assert.deepEqual(zoomWindow(500, 80, 0, 0.8, undefined, undefined, 0.1), { count: 64, offset: 0 });
+  // بؤرة خارج اللوح أو NaN تُقيَّد
+  assert.deepEqual(zoomWindow(500, 100, 100, 0.64, undefined, undefined, NaN), { count: 64, offset: 118 });
+  const edge = zoomWindow(500, 100, 100, 0.64, undefined, undefined, 5);
+  assert.equal(500 - edge.offset, 400, `focus clamps to the right edge: ${JSON.stringify(edge)}`);
+}
