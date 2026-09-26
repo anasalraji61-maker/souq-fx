@@ -467,6 +467,12 @@ type Props = {
   onCrossTime?: (timeSec: number | null) => void;
   /** إغلاق شمعة الإعادة (`null` خارج الإعادة) — لرأس الإطار كي لا يطبع سعر اليوم فوق شموع الماضي. */
   onReplayPrice?: (price: number | null, timeSec?: number | null) => void;
+  /**
+   * بُعد سعر الطلب (Ask) عن سعر الشموع، من دفتر المزوّد (`ask − price` لاقتباسه نفسه) — خطّ Ask خافت فوق السعر الحيّ.
+   * الشموع سعر واحد (عرض أو وسط)، والشراء يُنفَّذ والبيع يُوقَف عند الطلب: وقف بيع فوق القمّة بـ0.5 pip يُضرب
+   * بسبريد 1.2 pip والشمعة لم تلمسه. `null`/غائب ⇒ لا دفتر صالح، لا خطّ (لا سبريد مقدَّر أبداً).
+   */
+  askOffset?: number | null;
 };
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
@@ -1460,6 +1466,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   syncCrossTime,
   onCrossTime,
   onReplayPrice,
+  askOffset,
 }: Props,
   ref
 ) {
@@ -6346,6 +6353,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // ui18: سلسلة فارغة و`last: null` ⇒ NaN (كل المستعملين يحرسون `Number.isFinite`، والشارت الفارغ يعود قبل الرسم).
     NaN;
   const currentPriceY = yOf(currentPrice);
+  // خطّ Ask: السعر الحيّ + بُعد الطلب من الاقتباس. لا بالإعادة (دفتر اليوم فوق شموع الماضي)، ولا بشارت بلا محور.
+  const askPrice =
+    !replayOn &&
+    !hidePriceLabels &&
+    askOffset != null &&
+    Number.isFinite(askOffset) &&
+    askOffset > 0 &&
+    Number.isFinite(currentPrice)
+      ? currentPrice + askOffset
+      : null;
+  const askY = askPrice != null ? yOf(askPrice) : null;
+  // أقلّ من 2px عن خطّ السعر ⇒ الخطّان واحد بالعين (تكبير بعيد)؛ لا يُرسم ما لا يُميَّز.
+  const showAskLine =
+    askY != null && offAxisSide(askY, chartPlotH) == null && Math.abs(currentPriceY - askY) >= 2;
   // سحب خطّ التنبيه: السعر من موضع الإصبع مقصوصاً للوح ومدوَّراً لمنازل الأداة (1.09250 لا 1.0925031…).
   // الاتجاه يتبع موضعه من السعر الحيّ: خطّ سُحب من فوق السعر إلى تحته صار تنبيه نزول — كما يفهمه المتداول.
   const alertDragPrice = (dy: number) =>
@@ -6521,6 +6542,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               : color,
       });
     }
+    // وسم Ask محايد (§1: لا أخضر/أحمر لما ليس اتجاهاً)، ويخضع لتكديس الوسوم نفسه فلا يغطّي السعر الحيّ.
+    if (showAskLine && askPrice != null) items.push({ key: 'ask', price: askPrice, color: colors.textDim });
     return placeOverlayTags(items, yOf, chartPlotH, PRICE_TAG_H, [
       ...(currentTagHidden ? [] : [{ top: currentTagTop, h: currentTagH }]),
       ...(crossTagTop != null ? [{ top: crossTagTop, h: crossTagH }] : []),
@@ -9690,6 +9713,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             })
           : null}
+
+        {showAskLine && askY != null ? (
+          <View pointerEvents="none" style={[styles.askPriceLine, { top: askY, right: PRICE_AXIS_WIDTH }]} />
+        ) : null}
 
         {!hidePriceLabels && !currentPriceOff ? (
           <View
@@ -13543,6 +13570,15 @@ const styles = StyleSheet.create({
     lineHeight: HILO_LABEL_H,
     fontWeight: '600',
     fontFamily: 'monospace',
+  },
+  askPriceLine: {
+    position: 'absolute',
+    left: 0,
+    borderTopWidth: 1,
+    borderTopColor: colors.textDim,
+    borderStyle: 'dotted',
+    opacity: 0.6,
+    zIndex: 9,
   },
   currentPriceLine: {
     position: 'absolute',

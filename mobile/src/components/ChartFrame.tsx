@@ -245,6 +245,7 @@ export function ChartFrame({
     forSymbol: string;
     bid?: number | null;
     ask?: number | null;
+    price?: number | null;
   } | null>(null);
   useEffect(() => {
     let alive = true;
@@ -252,7 +253,7 @@ export function ChartFrame({
     api
       .marketQuote(forSymbol)
       .then((q) => {
-        if (alive) setQuote({ forSymbol, bid: q?.bid ?? null, ask: q?.ask ?? null });
+        if (alive) setQuote({ forSymbol, bid: q?.bid ?? null, ask: q?.ask ?? null, price: q?.price ?? null });
       })
       .catch(() => {
         if (alive) setQuote(null);
@@ -284,6 +285,13 @@ export function ChartFrame({
         (headerPrice < liveQuote!.bid! - 3 * sp || headerPrice > liveQuote!.ask! + 3 * sp)
       );
     })();
+
+  // خطّ Ask بالشارت: بُعد الطلب عن سعر الاقتباس نفسه (لا عن التيك) فيصحّ أكانت الشموع عرضاً أم وسطاً. دفترٌ
+  // خرج السعر عنه (`quoteStale`) لا يُرسم — سبريد الخبر غير سبريد ما قبله.
+  const askOffset =
+    hasSpread && !quoteStale && liveQuote!.price != null && liveQuote!.price > 0
+      ? liveQuote!.ask! - liveQuote!.price
+      : null;
 
   const subtitle = useMemo(() => {
     if (interactive) return t.cfSubtitleInteractive;
@@ -574,6 +582,7 @@ export function ChartFrame({
             syncTimeOnly
             onReplayPrice={onReplayPrice}
             onChartInteract={onChartInteract}
+            askOffset={askOffset}
           />
         )}
       </View>
