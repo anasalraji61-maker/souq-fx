@@ -88,18 +88,22 @@ type RailButtonProps = {
   tip: string;
   a11yLabel: string;
   on?: boolean;
+  /** زرّ يفتح قائمة (العدسة) ⇒ قارئ الشاشة يسمع «موسَّع/مطويّ» لا «محدَّد». */
+  expanded?: boolean;
   /** العدسة دائماً مختارة بجانب أداة رسم ⇒ علامتها محايدة كي يبقى تأكيدٌ واحد بالشريط (DESIGN-PRO §1). */
   neutralMarker?: boolean;
   onPress: () => void;
   railTip: ReturnType<typeof useRailTip>;
 };
 
-function RailButton({ mark, tip, a11yLabel, on, neutralMarker, onPress, railTip }: RailButtonProps) {
+function RailButton({ mark, tip, a11yLabel, on, expanded, neutralMarker, onPress, railTip }: RailButtonProps) {
   const ref = useRef<View>(null);
   return (
     <Pressable
       ref={ref}
-      accessibilityState={on === undefined ? undefined : { selected: on }}
+      accessibilityState={
+        expanded !== undefined ? { expanded } : on === undefined ? undefined : { selected: on }
+      }
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
       style={({ pressed }) => [
@@ -140,21 +144,25 @@ function RailTipBubble({ tip, side }: { tip: RailTip; side: 'left' | 'right' }) 
 export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }: LeftProps) {
   const { t } = useI18n();
   const railTip = useRailTip();
+  // DESIGN-PRO §7: الشريط الأيسر ≤12 عنصراً وقت السكون — كانت العدسات الأربع أزراراً دائمة (20 عنصراً).
+  // الآن زرّ واحد يحمل رمز العدسة الفعّالة ويفتح قائمة بجانب الشريط.
+  const lenses = localizedLenses(t);
+  const current = lenses.find((l) => l.id === activeLens) ?? lenses[0];
+  const [lensMenuOpen, setLensMenuOpen] = useState(false);
+  const [lensMenuTop, setLensMenuTop] = useState(0);
   return (
     <View ref={railTip.railRef} style={styles.leftRail}>
       <Text style={styles.railTitle}>{t.lensSectionTitle}</Text>
-      {localizedLenses(t).map((l) => (
+      <View onLayout={(e) => setLensMenuTop(e.nativeEvent.layout.y)}>
         <RailButton
-          key={l.id}
-          mark={LENS_MARK[l.id]}
-          tip={l.label}
-          a11yLabel={`${t.lensA11yPrefix}${l.label}`}
-          on={activeLens === l.id}
-          neutralMarker
-          onPress={() => onLens(l.id)}
+          mark={LENS_MARK[current.id]}
+          tip={`${t.lensA11yPrefix}${current.label}`}
+          a11yLabel={`${t.lensA11yPrefix}${current.label}`}
+          expanded={lensMenuOpen}
+          onPress={() => setLensMenuOpen((o) => !o)}
           railTip={railTip}
         />
-      ))}
+      </View>
       <View style={styles.railSep} />
       <Text style={styles.railTitle}>{t.railDrawSectionTitle}</Text>
       <ScrollView
@@ -169,13 +177,47 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
             tip={tool.label}
             a11yLabel={`${t.drawToolA11yPrefix}${tool.label}`}
             on={activeTool === tool.id}
-            onPress={() => onTool(tool.id)}
+            onPress={() => {
+              setLensMenuOpen(false);
+              onTool(tool.id);
+            }}
             railTip={railTip}
           />
         ))}
         <View style={styles.railSep} />
         <RailButton mark="▦" tip="2×2" a11yLabel={t.railOpenQuadA11y} onPress={onQuad} railTip={railTip} />
       </ScrollView>
+      {lensMenuOpen ? (
+        <View accessibilityRole="menu" style={[styles.lensMenu, { top: lensMenuTop }]}>
+          {lenses.map((l) => {
+            const on = l.id === activeLens;
+            return (
+              <Pressable
+                key={l.id}
+                accessibilityRole="menuitem"
+                accessibilityLabel={`${t.lensA11yPrefix}${l.label} — ${l.hint}`}
+                accessibilityState={{ selected: on }}
+                style={({ pressed }) => [
+                  styles.lensItem,
+                  on && styles.railBtnOn,
+                  pressed && { opacity: buttons.pressedOpacity },
+                ]}
+                onPress={() => {
+                  setLensMenuOpen(false);
+                  onLens(l.id);
+                }}
+              >
+                {on ? <View style={[styles.railMarker, styles.railMarkerNeutral]} /> : null}
+                <Text style={[styles.railMark, on && styles.railMarkOn]}>{LENS_MARK[l.id]}</Text>
+                <View>
+                  <Text style={[styles.lensItemLabel, on && styles.railMarkOn]}>{l.label}</Text>
+                  <Text style={styles.lensItemHint}>{l.hint}</Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       <RailTipBubble tip={railTip.tip} side="left" />
     </View>
   );
@@ -295,6 +337,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
   },
+  // قائمة العدسة: حدّ وحده بلا ظلّ (§5.5)، وخلفية أعلى من الشريط كي تنفصل عنه.
+  lensMenu: {
+    position: 'absolute',
+    zIndex: 30,
+    left: '100%',
+    marginLeft: spacing.xs,
+    padding: spacing.xs,
+    gap: spacing.xs,
+    borderRadius: 6,
+    backgroundColor: colors.bgPanel,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  lensItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: 28,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.sm,
+  },
+  lensItemLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
+  lensItemHint: { color: colors.textDim, fontSize: 11 },
   tipBubbleLeftRail: { left: '100%', marginLeft: spacing.xs },
   tipBubbleRightRail: { right: '100%', marginRight: spacing.xs },
   tipText: { color: colors.text, fontSize: 12, fontWeight: '500' },
