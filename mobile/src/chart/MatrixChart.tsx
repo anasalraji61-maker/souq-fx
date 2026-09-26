@@ -2079,8 +2079,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     : null;
   // ما يُنشر للتابعين: افتتاح الشمعة لا ختمها — اليومية مختومة بتاريخ إغلاقها 00:00 UTC وتفتح 17:00 نيويورك قبله
   // (`barOpen`)، فكان تقاطع يومي الخميس يضع تابع H1 على الخميس 00:00، بعد ثلاث ساعات من افتتاح الشمعة.
+  // والخانة المستقبلية كذلك: `projectBarTimeSec` يُرجع ختم منتصف الليل ⇒ خانة الجمعة كانت تُنشر الجمعة 00:00 والتابع
+  // H1 بعد ثلاث شموع من افتتاحها (الخميس 21:00)، بينما التقاطع على الشمعة الحيّة نفسها ينشر افتتاحها.
   const crossPublishSec =
-    crossTimeSec != null && crossFutureSec == null && !isSyntheticKind(kind)
+    crossTimeSec != null && !isSyntheticKind(kind)
       ? barOpen(crossTimeSec, timeframeStepSec(series.timeframe), weekendClosed)
       : crossTimeSec;
   const crossTimeRef = useRef<number | null>(null);
