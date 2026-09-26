@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   sym: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  meta: { color: colors.textDim, fontSize: 11 },
+  meta: { ...numeric, color: colors.textDim, fontSize: 11 },
   cacheTag: { color: colors.warn, fontWeight: '500', fontSize: 11 },
   /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` المكتوم. */
   metaPct: { ...numeric, fontWeight: '500' },
