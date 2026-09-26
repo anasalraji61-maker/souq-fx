@@ -60,6 +60,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [clarification, setClarification] = useState<string | null>(null);
   /** قرار ١٢ (backend-r78a): التوضيح جاء بالعربية (`clarification_lang: "ar"`) ولغة الواجهة غيرها. */
   const [clarificationArabic, setClarificationArabic] = useState(false);
+  /** launch216a: التوضيح قالب ثابت (الخادم `source: "template"` أو فشل الطلب) لا جواب المدرّس عن السؤال. */
+  const [clarificationTemplate, setClarificationTemplate] = useState(false);
   const [loading, setLoading] = useState(true);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل المحاضرة الفعلية وأن ما يراه محتوى تجريبي عام
    * بدلاً منها (لا ادّعاء فشل قبل حدوثه). */
@@ -336,9 +338,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       });
       setClarification(res.clarification);
       setClarificationArabic(res.clarification_lang === 'ar' && lang !== 'ar');
+      setClarificationTemplate(res.source === 'template');
       setQuestion('');
     } catch {
       setClarificationArabic(false);
+      setClarificationTemplate(true);
       setClarification(
         `${t.lectureClarifyPausedLine}\n\n${t.lectureClarifyQuestionLabel} ${q}\n\n${t.lectureClarifyFocusLine}`
       );
@@ -504,6 +508,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       {clarification ? (
         <View style={styles.clarifyBox}>
           <Text style={[styles.clarifyTitle, { textAlign: align }]}>{t.lectureClarifyTitle}</Text>
+          {clarificationTemplate ? (
+            <Text style={[styles.clarifyLangNote, { textAlign: align }]}>{t.lectureTemplateNote}</Text>
+          ) : null}
           {clarificationArabic ? (
             <Text style={[styles.clarifyLangNote, { textAlign: align }]}>{t.aiReplyInArabicNote}</Text>
           ) : null}

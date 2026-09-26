@@ -988,6 +988,8 @@ export const api = {
       resume_segment_index: number;
       /** لغة التوضيح الفعلية (backend-r78a) — كـ`answer_lang`. */
       clarification_lang?: string;
+      /** launch216a: «template» = قالب ثابت (لا نموذج أو فشل)، لا جواب عن السؤال؛ «model» = جواب النموذج. */
+      source?: 'model' | 'template';
     }>('/api/academy/interrupt', payload),
   academyVoiceStatus: () =>
     getJson<{
