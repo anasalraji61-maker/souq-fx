@@ -32,6 +32,8 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
 
   useEffect(() => {
     let alive = true;
+    // لقطة الرمز/الفريم السابق تُمسح فوراً: كان RSI ونسبة EURUSD يبقيان تحت XAUUSD حتى يصل الردّ (وبلا حدّ إن علّق).
+    setSnap(null);
     api
       .indicatorSnapshot(symbol, timeframe)
       .then((s) => {
