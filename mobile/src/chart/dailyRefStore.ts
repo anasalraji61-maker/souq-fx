@@ -80,7 +80,16 @@ async function drain() {
           weekendMerge,
         });
       } catch {
-        cache.set(sym, { prevClose: null, prevBar: null, currOpen: null, at: Date.now(), ok: false, session: null, weekendMerge: true });
+        // تعثّر تحديث واحد (429، انقطاع، إعادة تشغيل الخادم) لا يمحو مرجعاً صحيحاً للجلسة نفسها: كان يُستبدل بـnull
+        // فتقفز نسبة الرأس دقيقتين إلى التغيّر من أول شمعة محمَّلة (+0.12% ⇒ −1.80% على 4H) وتختفي خطوط PDH/PDL
+        // والارتكاز. المرجع لا يتغيّر داخل الجلسة، فيُبقى ويُعاد المحاولة بعد `FAIL_TTL_MS`.
+        const now = Date.now();
+        const old = cache.get(sym);
+        if (old?.ok && old.session != null && sessionKeyAt(now / 1000, old.weekendMerge, sym) === old.session) {
+          cache.set(sym, { ...old, at: now - TTL_MS + FAIL_TTL_MS });
+        } else {
+          cache.set(sym, { prevClose: null, prevBar: null, currOpen: null, at: now, ok: false, session: null, weekendMerge: true });
+        }
       } finally {
         inflight.delete(sym);
       }
