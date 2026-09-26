@@ -167,7 +167,7 @@ export function AccountScreen() {
 
   const submitPasswordChange = async () => {
     setPwMsg(null);
-    // قرار أنس ٧ (الخادم ما زال <4 ⇒ 400 حتى يرفعه backend) — لا طلب يُعرف رفضه مسبقاً.
+    // قرار أنس ٧ (الخادم يفرض 8 أيضاً) — لا طلب يُعرف رفضه مسبقاً.
     if (pwNew.length < PASSWORD_MIN_LENGTH) {
       setPwMsg({ ok: false, text: t.regErrPasswordLength });
       return;
