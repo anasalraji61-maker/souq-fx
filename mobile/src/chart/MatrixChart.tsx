@@ -4335,7 +4335,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const cloneDrawingRef = useRef(cloneSelectedDrawing);
   cloneDrawingRef.current = cloneSelectedDrawing;
   // الويب: Ctrl/⌘+C ينسخ الرسم المحدَّد وCtrl/⌘+V يلصق نسخة بجانبه (كزرّ «نسخة») — ولصقات متتالية تتدرّج كلٌّ
-  // بجانب السابقة لا فوقها. النسخ لنفس الرمز والفريم فقط: مستوى 1.08500 من EURUSD لا معنى له على USDJPY.
+  // بجانب السابقة لا فوقها. النسخ لنفس الرمز فقط (مستوى 1.08500 من EURUSD لا معنى له على USDJPY)، وعلى أيّ فريم:
+  // قائمة الرسوم مشتركة بين فريمات الرمز، والنسخة تُرسى بزمنها — مستوى من 1H يُلصق على 15m. كان المفتاح يضمّ الفريم
+  // فيُهمَل Ctrl+V بصمت بعد تبديل الفريم.
   const copiedDrawing = useRef<{ d: Drawing; key: string } | null>(null);
 
   // قفل الرسم المحدَّد (كقفل TradingView): المقفول لا يُسحب ولا تتحرّك مقابضه بلمسة عابرة — مستوى وقف مدروس
@@ -5436,7 +5438,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && (letter === 'c' || letter === 'v')) {
-        const chartKey = `${series.symbol}|${series.timeframe}`;
+        const chartKey = series.symbol;
         if (letter === 'c') {
           // نصّ محدَّد بالصفحة يُنسخ كالعادة — لا نسرق Ctrl+C إلا لرسم.
           if (!selectedId || (typeof window !== 'undefined' && String(window.getSelection?.() ?? ''))) return;
