@@ -1183,8 +1183,11 @@ function PaneSpreadHead({
   tone = 'trend',
   lineColors,
   compact = false,
+  priceDec,
 }: {
   name: string;
+  /** اللوحة بوحدة السعر (Gator) ⇒ منازل الزوج حدّاً أدنى كـ`PaneValueHead` — الذهب «3.46» لا «3.5». */
+  priceDec?: number | null;
   upper: readonly (number | null)[];
   lower: readonly (number | null)[];
   /** شمعة التقاطع (فهرس داخل نافذة الرسم)، أو null فآخر شمعة. */
@@ -1211,11 +1214,11 @@ function PaneSpreadHead({
   // مقياس واحد للسلسلتين ⇒ الرقمان بالخانات واللاحقة ذاتها.
   const both = useMemo(() => [...upper, ...lower], [upper, lower]);
   const v = paneValueAt(spread, at);
-  const txt = formatPaneValueScaled(spread, v);
+  const txt = formatPaneValueScaled(spread, v, priceDec);
   const trend = tone === 'trend' ? paneValueTrend(spread, at) : null;
   if (lineColors) {
-    const u = formatPaneValueScaled(both, paneValueAt(upper, at));
-    const l = formatPaneValueScaled(both, paneValueAt(lower, at));
+    const u = formatPaneValueScaled(both, paneValueAt(upper, at), priceDec);
+    const l = formatPaneValueScaled(both, paneValueAt(lower, at), priceDec);
     if (u && l && (!compact || paneInlineFits(u, l))) {
       return (
         <View style={styles.paneHead}>
@@ -11323,7 +11326,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vwMacd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name={volName('VW-MACD')} values={vwMacd.hist} at={crossIndex} />
+          <PaneValueHead name={volName('VW-MACD')} priceDec={paneDec} values={vwMacd.hist} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -11648,7 +11651,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {tdi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="TDI" values={tdi.tdi} at={crossIndex} />
+          <PaneValueHead name="TDI" priceDec={paneDec} values={tdi.tdi} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -12190,7 +12193,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bbPower ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="BBP" values={bbPower} at={crossIndex} />
+          <PaneValueHead name="BBP" priceDec={paneDec} values={bbPower} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <View
@@ -13586,7 +13589,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {gator ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneSpreadHead name="Gator" upper={gator.upper} lower={gator.lower} at={crossIndex} />
+          <PaneSpreadHead name="Gator" priceDec={paneDec} upper={gator.upper} lower={gator.lower} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
