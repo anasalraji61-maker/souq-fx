@@ -450,6 +450,11 @@ export type Dict = {
    */
   levelLooksLikePointsHint: string;
   levelLooksLikePointsSaveBlocked: string;
+  /**
+   * tools102a: دخولٌ بالدفتر بلا فاصلة عشرية («10850» على EURUSD) بينما الوقف سعر صحيح (1.0820) ⇒ حارس النقاط كان يلوم الوقف.
+   * `{value}` الدخول كما كُتب، `{price}` السعر المقترح (فاصلة بمنازل الرمز) — بدالّة لا نصّ بديل. سؤالٌ لا يَعِد بنقرة.
+   */
+  journalEntryDecimalSlip: string;
   riskCalcPipValue: string;
   /** الأساس = عملة الحساب (USDJPY بحساب دولار…) ⇒ قيمة الـpip محسوبة بسعر الوقف لا الحيّ (`exitQuoteToAccount`) فتخالف المنصّة — {price} = الوقف */
   riskCalcPipValueAtStop: string;
@@ -1825,6 +1830,7 @@ const ar: Dict = {
   levelLooksLikePipsSaveBlocked: 'لم تُحفظ الصفقة: {field} «{value}» يبدو عدد pip لا سعراً — التصحيح في السطر أعلاه. لإبقاء {value} سعراً كما كتبته اضغط «{button}» مرّة ثانية.',
   levelLooksLikePointsHint: '⚠ {field} «{value}» عددُ نقاط على الأرجح لا سعر: {pips} نقطة تعني {price}. اضغط لكتابة {price}',
   levelLooksLikePointsSaveBlocked: 'لم تُحفظ الصفقة: {field} «{value}» يبدو عدد نقاط لا سعراً — التصحيح في السطر أعلاه. لإبقاء {value} سعراً كما كتبته اضغط «{button}» مرّة ثانية.',
+  journalEntryDecimalSlip: '⚠ الدخول «{value}» يبدو بلا فاصلة عشرية — هل تقصد {price}؟',
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
   riskCalcPipValueAtStopHint: 'منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً — لكن خسارتك إن ضُرب الوقف تُحوَّل إلى عملة حسابك بسعر الوقف، فحسبناها به',
@@ -3036,6 +3042,7 @@ const enUS: Dict = {
   levelLooksLikePipsSaveBlocked: 'Not saved: {field} “{value}” looks like pips, not a price — the fix is in the line above. To keep {value} as a price, press “{button}” again.',
   levelLooksLikePointsHint: '⚠ {field} “{value}” looks like points, not a price: {pips} points is {price}. Tap to use {price}',
   levelLooksLikePointsSaveBlocked: 'Not saved: {field} “{value}” looks like points, not a price — the fix is in the line above. To keep {value} as a price, press “{button}” again.',
+  journalEntryDecimalSlip: '⚠ Entry “{value}” looks like it’s missing the decimal point — did you mean {price}?',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
   riskCalcPipValueAtStopHint: 'Your platform shows it at the current price, so it may differ a little — but if your stop is hit the loss converts to your account currency at the stop price, so we used that',
@@ -4278,6 +4285,8 @@ const ku: Dict = {
   // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
   levelLooksLikePointsHint: '⚠ {field} «{value}» زۆرجار ژمارەی خاڵە نەک نرخ: {pips} خاڵ واتە {price}. دەست بنێ بۆ نووسینی {price}',
   levelLooksLikePointsSaveBlocked: 'مامەڵەکە پاشەکەوت نەکرا: {field} «{value}» وەک ژمارەی خاڵ دەردەکەوێت نەک نرخ — ڕاستکردنەوەکە لە دێڕی سەرەوەیە. بۆ هێشتنەوەی {value} وەک نرخ، جارێکی تر «{button}» دابگرە.',
+  // بحاجة مراجعة ناطق كردي
+  journalEntryDecimalSlip: '⚠ نرخی چوونەژوورەوە «{value}» وەک ئەوە دەردەکەوێت کە خاڵی دەیی تێدا نییە — مەبەستت {price}ە؟',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە وەستانەکەت {price}',
   riskCalcPipValueAtStopHint: 'پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت — بەڵام ئەگەر وەستانەکە لێدرا زیانەکە بە نرخی وەستان دەگۆڕدرێت بۆ دراوی هەژمارەکەت، بۆیە ئەومان بەکارهێنا',
