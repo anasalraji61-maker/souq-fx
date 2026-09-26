@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     // `docs/DESIGN-PRO.md` §5.5: فاصل واحد — التعبئة وحدها (تحجب الشارت خلف البطاقة فلا يُقرأ النصّ فوق الشموع)؛
     // الحدّ حُذف كما حُذف الظلّ قبله، والبطاقة الأفتح فوق الستارة الداكنة تكفي حافّةً.
   },
-  // بلا `gap`: التباعد صار من حشو هدف اللمس نفسه (5+5 = عشر بكسلات بين نقطتين).
+  // بلا `gap`: التباعد صار من حشو هدف اللمس نفسه (`spacing.xs` ×2 = ثماني بكسلات بين نقطتين).
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.xs },
   dotsRtl: { flexDirection: 'row-reverse' },
   dotHit: { paddingHorizontal: spacing.xs, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' },
