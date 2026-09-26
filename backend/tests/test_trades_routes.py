@@ -439,6 +439,28 @@ def test_a_breakeven_trade_is_not_a_loss(client):
     assert stats["avg_loss"] < 0, "متوسط الخسارة لا يخفّفه صفر التعادل"
 
 
+def test_a_slipped_breakeven_that_prints_0_00_is_not_a_loss(client):
+    """tools137a (قرار ٣ «بنفس التعريف»): وقفٌ نُقل للدخول 1.1000 وضُرب بانزلاق 0.1 نقطة (1.09999 = −0.0009%)
+    يُطبع «0.00%» فهو تعادل — ±1e-9 كان يعدّه خسارة فنسبة الفوز 33.3% والتطبيق يقول 50%."""
+    _open_trade(client, exit=1.1100)
+    _open_trade(client, exit=1.0900)
+    _open_trade(client, exit=1.09999)
+    _open_trade(client, exit=1.10001)
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert (stats["win_count"], stats["loss_count"], stats["breakeven_count"]) == (1, 1, 2)
+    assert stats["win_rate"] == 50.0
+    assert stats["avg_loss"] == pytest.approx(-0.91, abs=0.01), "الانزلاق لا يخفّف متوسّط الخسارة"
+    assert stats["avg_win"] == pytest.approx(0.91, abs=0.01)
+
+
+def test_journal_outcome_matches_the_printed_two_decimals():
+    import db
+
+    assert db.journal_outcome(-0.0009) == 0 and db.journal_outcome(0.004) == 0
+    assert db.journal_outcome(-0.006) == -1 and db.journal_outcome(0.006) == 1
+    assert db.journal_outcome(0.0) == 0
+
+
 def test_only_breakevens_give_no_win_rate_not_zero_percent_losses(client):
     _open_trade(client, exit=1.1000)
     stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
@@ -459,9 +481,9 @@ def test_trades_that_net_to_zero_total_zero_not_minus_zero(client):
 
 
 def test_a_sub_rounding_best_or_worst_is_not_minus_zero(client):
-    _open_trade(client, side="sell", exit=1.10001)  # −0.0009%: خسارة حقيقية لكنها تُقرَّب صفراً
+    _open_trade(client, side="sell", exit=1.10001)  # −0.0009%: يُطبع 0.00% ⇒ تعادل (tools137a)، والإشارة لا «-0»
     stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
-    assert stats["loss_count"] == 1
+    assert stats["loss_count"] == 0 and stats["breakeven_count"] == 1
     for k in ("best", "worst", "total_pnl_pct"):
         assert math.copysign(1, stats[k]) == 1, k
 
@@ -908,12 +930,14 @@ def test_closing_open_trade_by_patch_still_stamps_now(client):
 
 
 def test_journal_averages_are_never_negative_zero(client):
-    """run 55: خسارة 0.3 نقطة ⇒ avg_loss «-0.0» (best/worst كانا مصحَّحين، المتوسّطان لا)."""
+    """run 55: خسارة 0.3 نقطة ⇒ avg_loss «-0.0». منذ tools137a ما يُطبع 0.00% تعادل فلا يدخل المتوسّطين
+    أصلاً ⇒ None لا «-0.0»."""
     _open_trade(client, entry=1.08, exit=1.07997)
     _open_trade(client, entry=1.08, exit=1.08004)
     st = client.get("/api/trades", headers=_DEV1).json()["stats"]
-    assert st["win_count"] == 1 and st["loss_count"] == 1
-    assert repr(st["avg_loss"]) == "0.0" and repr(st["avg_win"]) == "0.0"
+    assert st["win_count"] == 0 and st["loss_count"] == 0 and st["breakeven_count"] == 2
+    assert st["avg_loss"] is None and st["avg_win"] is None
+    assert repr(st["best"]) == "0.0" and repr(st["worst"]) == "0.0"
 
 
 def test_closing_right_after_a_slightly_future_open_never_closes_before_opening(client):

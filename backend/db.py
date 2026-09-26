@@ -2450,8 +2450,12 @@ def delete_trade(trade_id: str, user_id: int | None = None, owner_key: str | Non
     return cur.rowcount > 0
 
 
-# |نتيجة| أقلّ من هذا = تعادل (خروج عند الدخول بالضبط، بعد تقريب الفاصلة العائمة).
-BREAKEVEN_EPS = 1e-9
+def journal_outcome(pnl: float) -> int:
+    """1 ربح، −1 خسارة، 0 تعادل — **بما يُطبع** «0.00%» (قرار ٣ «بنفس التعريف»، tools137a): كان ±1e-9 ⇒ وقفٌ
+    نُقل للدخول 1.0850 وضُرب بانزلاق 0.1 نقطة (1.08499، −0.0009%) يُعدّ خسارةً والسطر يقول 0.00%، فنسبة
+    الفوز 50% ⇒ 33.3%. مرآة التطبيق `tradePlan.ts` `journalOutcome` (round إلى منزلتين، نصف زوجي)."""
+    r = round(pnl, 2)
+    return 1 if r > 0 else -1 if r < 0 else 0
 
 
 def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dict:
@@ -2485,8 +2489,8 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
     }
     if not pnls:
         return empty
-    wins = [p for p in pnls if p > BREAKEVEN_EPS]
-    losses = [p for p in pnls if p < -BREAKEVEN_EPS]
+    wins = [p for p in pnls if journal_outcome(p) > 0]
+    losses = [p for p in pnls if journal_outcome(p) < 0]
     decided = len(wins) + len(losses)
     return {
         "trade_count": len(pnls),
