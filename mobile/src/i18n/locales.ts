@@ -1766,7 +1766,7 @@ const ar: Dict = {
     'أدوات الرسم في الشريط الجانبي بجوار الشارت (وعلى الهاتف: تبويب «رسم» بالشريط السفلي)، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. لتخطيط صفقة اختر «خطة شراء» أو «خطة بيع» واسحب من الدخول إلى الوقف لترى الهدف ونسبة العائد إلى المخاطرة. أخطأت؟ «تراجع» ↶ يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
-    'اختر من عشرات المؤشرات، أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD. بالفوركس الفوليوم وCVD تقدير من الشموع لا حجم حقيقي. وللفوركس أيضاً «Sessions» لجلسات طوكيو ولندن ونيويورك، و«PDH / PDL» لأعلى وأدنى الأمس.',
+    'اختر من عشرات المؤشرات، أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD. بالفوركس الفوليوم وCVD تقدير من الشموع لا حجم حقيقي. وللفوركس أيضاً «Sessions» لجلسات طوكيو ولندن ونيويورك، و«PDH / PDL» لأعلى وأدنى الأمس. لإطفاء مؤشّر واحد المس زرّه ولو أضافته العدسة، و«نظيف» يزيل مجموعة العدسة ويُبقي ما أضفته بيدك.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'المس مستوىً على الشارت ثم زرّ التنبيه الذي يظهر بسعره — بلا كتابة أرقام، وعلى اللابتوب انقر بالزرّ الأيمن عند السعر. يصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، ولنقله اسحب وسمه على حافة الشارت. تنبيهات المؤشرات وتفعيل الإشعارات في لوح التنبيهات.',
@@ -3065,7 +3065,7 @@ const enUS: Dict = {
     'Drawing tools sit in the side rail next to the chart (on a phone: the Draw tab in the bottom bar), and a line drawn on 4H stays when you drop to 1H. To plan a trade, pick Buy plan or Sell plan and drag from entry to stop to see the target and reward-to-risk. Drew something wrong? Undo ↶ reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
-    'Pick from dozens of indicators, or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD. On forex, volume and CVD are estimated from candles, not real volume. Also for forex: Sessions shades Tokyo, London and New York, and PDH / PDL marks yesterday’s high and low.',
+    'Pick from dozens of indicators, or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD. On forex, volume and CVD are estimated from candles, not real volume. Also for forex: Sessions shades Tokyo, London and New York, and PDH / PDL marks yesterday’s high and low. To switch one indicator off, tap its button — even if a lens added it; Clean removes the lens set and keeps the ones you added yourself.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Tap a level on the chart, then the alert button showing its price — no typing; on a laptop, right-click at that price. You get a notification when price reaches it (checked about once a minute). To move it, drag its label at the edge of the chart. Indicator alerts and notification settings are in the alerts panel.',
@@ -4412,7 +4412,7 @@ const ku: Dict = {
     'ئامرازەکانی وێنەکێشان لە شریتی لاتەنیشتی چارتن (لە مۆبایل: تابی «وێنەکێشان» لە شریتی خوارەوە)، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» هەڵبژێرە و لە چوونەژوورەوە بۆ وەستان ڕایبکێشە بۆ بینینی ئامانج و ڕێژەی قازانج بۆ مەترسی. هەڵەت کرد؟ «گەڕاندنەوە» ↶ دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
-    'لە دەیان پێوەر هەڵبژێرە، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD. لە فۆرێکس قەبارە و CVD لە مۆمەکانەوە خەمڵێنراون، نەک قەبارەی ڕاستەقینە. هەروەها بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک ڕەنگ دەکات، و «PDH / PDL» بەرزترین و نزمترینی دوێنێ نیشان دەدات.',
+    'لە دەیان پێوەر هەڵبژێرە، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD. لە فۆرێکس قەبارە و CVD لە مۆمەکانەوە خەمڵێنراون، نەک قەبارەی ڕاستەقینە. هەروەها بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک ڕەنگ دەکات، و «PDH / PDL» بەرزترین و نزمترینی دوێنێ نیشان دەدات. بۆ کوژاندنەوەی یەک پێوەر دەست لە دوگمەکەی بدە، تەنانەت ئەگەر لینزەکە زیادی کردبێت؛ «پاک» کۆمەڵەی لینزەکە لادەبات و ئەوانەی خۆت زیادت کردوون دەهێڵێتەوە.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'دەست لە ئاستێک بدە لەسەر چارت پاشان دوگمەی ئاگادارکردنەوە کە نرخەکەی پیشان دەدات — بێ نووسینی ژمارە؛ لەسەر لاپتۆپ لەو نرخەدا کلیکی ڕاست بکە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت). بۆ گواستنەوەی، نیشانەکەی لە لێواری چارت ڕابکێشە. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
