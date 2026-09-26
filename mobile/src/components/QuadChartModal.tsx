@@ -421,7 +421,8 @@ const styles = StyleSheet.create({
   close: { color: colors.textMuted, fontWeight: '500' },
   tfRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs },
   tfRowRtl: { flexDirection: 'row-reverse' },
-  title: { flex: 1, color: colors.text, fontWeight: '500', fontSize: 16 },
+  // DESIGN-PRO §2: 13px للعناصر والعناوين (16 خارج السلّم، وأعلى صوتاً من أسعار الخلايا 12px تحته).
+  title: { flex: 1, color: colors.text, fontWeight: '500', fontSize: 13 },
   grid: {
     flex: 1,
     flexDirection: 'row',
