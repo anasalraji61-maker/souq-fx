@@ -132,12 +132,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
       frameSizes: ['small', 'medium', 'large'],
     };
     await saveLayout(layout);
-    try {
-      // نفس المعرّف المحلي = نفس صف الخادم (كان كل حفظ يُنشئ صفاً جديداً بلا id)
-      await api.saveLayout({ id: layout.id, name: layout.name, payload: layout });
-    } catch {
-      /* local ok */
-    }
+    // التأكيد بعد الحفظ المحلي مباشرةً: انتظار الخادم (حتى 25ث على شبكة معلّقة) كان يترك «حفظ» بلا أثر
+    // وضغطاته التالية مبتلَعة (`savingRef`) رغم أن التخطيط محفوظ بالجهاز منذ أجزاء ثانية.
     playSoftClick();
     setLayouts((prev) => [
       DEFAULT_LAYOUT,
@@ -145,6 +141,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
       ...prev.filter((x) => x.id !== layout.id && x.id !== 'default'),
     ]);
     setSavedLayout(layout);
+    // نفس المعرّف المحلي = نفس صف الخادم (كان كل حفظ يُنشئ صفاً جديداً بلا id)
+    api.saveLayout({ id: layout.id, name: layout.name, payload: layout }).catch(() => {
+      /* local ok */
+    });
   };
 
   const askRemove = (l: TerminalLayout) =>
@@ -318,8 +318,9 @@ const styles = StyleSheet.create({
   rowSub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   // §1: الأحمر لاتجاه السعر وحده — الإجراء نصّ ثانويّ، والتأكيد (`confirmDestructive`) يحمل الخطر.
   del: { color: colors.textMuted, fontWeight: '500' },
+  // §1: الأحمر لاتجاه السعر وحده — تعذّر الحفظ حالة متدهورة ⇒ `warn`.
   saveError: {
-    color: colors.bear,
+    color: colors.warn,
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
