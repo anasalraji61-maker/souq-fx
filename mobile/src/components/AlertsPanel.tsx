@@ -479,7 +479,10 @@ export function AlertsPanel({
     // رفض `getPermissionsAsync` (حالات أندرويد/Expo Go) كان يخرج كـunhandled rejection:
     // `registerPushToken` يحمي داخله فقط، والانتظار هنا كان بلا catch.
     void ensureAlertNotifications()
-      .then(() => registerPushToken())
+      // التسجيل بالخلفية: لا يغيّر حالة الإذن، وانتظاره (حتى 10ث للرمز + 25ث لخادم بطيء) كان يؤخّر سطر الحالة
+      .then((ok) => {
+        if (ok) void registerPushToken();
+      })
       .catch(() => {
         /* الإشعارات تحسين اختياري — فشل الإذن لا يمنع التنبيهات داخل التطبيق */
       })
@@ -530,7 +533,8 @@ export function AlertsPanel({
         await Linking.openSettings();
       } else {
         const ok = await ensureAlertNotifications();
-        if (ok) await registerPushToken();
+        // بالخلفية — الزرّ لا يبقى على «…» حتى يردّ الخادم؛ الحالة تُقرأ فوراً أدناه
+        if (ok) void registerPushToken();
       }
     } catch {
       /* رفض النظام/بيئة بلا إعدادات — الحالة تُعاد قراءتها أدناه فيبقى المعروض صادقاً */

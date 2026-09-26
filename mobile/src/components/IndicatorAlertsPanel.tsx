@@ -245,7 +245,10 @@ export function IndicatorAlertsPanel({
   useEffect(() => {
     // القراءة بعد المحاولة **بكل المسارات** (نجحت أم رُفضت أم رمت) — هي ما يُعرض للمتداول
     void ensureAlertNotifications()
-      .then(() => registerPushToken())
+      // التسجيل بالخلفية: لا يغيّر حالة الإذن، وانتظاره (حتى 10ث للرمز + 25ث لخادم بطيء) كان يؤخّر سطر الحالة
+      .then((ok) => {
+        if (ok) void registerPushToken();
+      })
       .catch(() => {
         /* الإشعارات تحسين اختياري — فشل الإذن لا يمنع فحص اللوحة داخل التطبيق */
       })
@@ -268,7 +271,8 @@ export function IndicatorAlertsPanel({
         await Linking.openSettings();
       } else {
         const ok = await ensureAlertNotifications();
-        if (ok) await registerPushToken();
+        // بالخلفية — الزرّ لا يبقى على «…» حتى يردّ الخادم؛ الحالة تُقرأ فوراً أدناه
+        if (ok) void registerPushToken();
       }
     } catch {
       /* رفض النظام/بيئة بلا إعدادات — الحالة تُعاد قراءتها أدناه فيبقى المعروض صادقاً */

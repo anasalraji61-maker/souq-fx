@@ -141,7 +141,8 @@ export function AccountScreen() {
         await Linking.openSettings();
       } else {
         const ok = await ensureAlertNotifications();
-        if (ok) await registerPushToken();
+        // بالخلفية — التسجيل لا يغيّر الإذن، فالزرّ لا ينتظر ردّ الخادم
+        if (ok) void registerPushToken();
       }
     } catch {
       /* كلوحَي التنبيهات: `openSettings` يرفض بأندرويد بلا نشاط إعدادات ⇒ كان رفضاً غير معالَج؛ الحالة تُعاد قراءتها أدناه */
@@ -175,7 +176,8 @@ export function AccountScreen() {
           side: sponsorCode.trim() ? side : undefined,
         });
       }
-      await registerPushToken();
+      // بالخلفية — مؤشّر الدخول لا يبقى معلّقاً حتى 35ث على جلب الرمز وخادم بطيء (لا يرمي أبداً)
+      void registerPushToken();
       setPassword('');
     } catch (e) {
       setErr(mode === 'login' ? loginErrorText(t, e) : registerErrorText(t, e));
