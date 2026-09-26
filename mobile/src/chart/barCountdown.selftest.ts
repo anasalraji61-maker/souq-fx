@@ -91,6 +91,11 @@ assert.equal(barCloseCountdown(monW, 604800, utc(27, 22), 'EURUSD'), null);
   const w = Date.UTC(2026, 11, 21) / 1000;
   assert.equal(barCloseCountdown(w, 604800, Date.UTC(2026, 11, 24, 12), 'EURUSD'), '10:00:00');
   assert.equal(barCloseCountdown(Date.UTC(2026, 11, 28) / 1000, 604800, Date.UTC(2026, 11, 31, 12), 'EURUSD'), '10:00:00');
+  // من الاثنين إلى الأربعاء أيضاً (كان يوماً زائداً حتى إغلاق الأربعاء ثم يسقط 24 ساعة)
+  assert.equal(barCloseCountdown(w, 604800, Date.UTC(2026, 11, 21, 12), 'EURUSD'), '3d 10:00');
+  assert.equal(barCloseCountdown(w, 604800, Date.UTC(2026, 11, 23, 12), 'EURUSD'), '1d 10:00');
+  assert.equal(barCloseCountdown(w, 604800, Date.UTC(2026, 11, 23, 22, 1), 'EURUSD'), '23:59:00');
+  assert.equal(barCloseCountdown(w, 604800, Date.UTC(2026, 11, 22, 12), 'XAUUSD'), '2d 10:00');
   // عطلة الخميس (25/12/2025): الأسبوع يستمرّ للجمعة
   assert.equal(barCloseCountdown(Date.UTC(2025, 11, 22) / 1000, 604800, Date.UTC(2025, 11, 24, 12), 'EURUSD'), '2d 10:00');
 }

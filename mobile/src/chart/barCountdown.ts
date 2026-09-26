@@ -3,6 +3,7 @@ import {
   forexNextCloseSec,
   forexWeekCloseSec,
   iceBreakStartForCloseSec,
+  isForexHolidaySession,
   isForexMarketOpen,
   nyFivePmUtcSec,
 } from './marketHours';
@@ -46,8 +47,11 @@ export function barCloseCountdown(
     if (weekClose != null) closeSec = weekClose;
     // عطلة **الجمعة** (25/12 و1/1 عام 2026): آخر تداول الأسبوع الخميس 17:00 نيويورك — كانت الأسبوعية تعدّ «1d 10:00»
     // واليومية بجانبها «10:00:00»، ثم تختفي عند إغلاق الخميس والعدّاد عند يوم كامل. عطلة وسط الأسبوع لا تُغلقها.
-    const nc = forexNextCloseSec(symbol, nowMs);
-    if (nc != null && nc < closeSec && nyFivePmUtcSec(Math.floor(nc / 86400) * 86400 + 86400) >= closeSec) closeSec = nc;
+    // تُفحص جلسة جمعة الأسبوع نفسها لا الإغلاق التالي: `forexNextCloseSec` لا يرى العطلة قبل مساء الأربعاء، فكان
+    // العدّاد من الاثنين إلى الأربعاء يوماً زائداً («4d 10:00» بدل «3d 10:00») ثم يسقط 24 ساعة عند إغلاق الأربعاء.
+    if (weekClose != null && isForexHolidaySession(weekClose - 1)) {
+      closeSec = nyFivePmUtcSec(Math.floor((weekClose - 1) / 86400) * 86400 - 86400);
+    }
   } else if (symbol) {
     if (stepSec === 86400) closeSec = dailyBarCloseSec(symbol, openSec);
     if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;
