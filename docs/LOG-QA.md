@@ -1267,3 +1267,10 @@ backend `693b05f` (مجهول بلا معرّف تثبيت ⇒ 400): التطب�
 **المراجعة (d — أرقام متناقضة):** `symbolPriceDecimals` (بـ`npx tsx` على 20 رمزاً) مقابل `signal_hub.price_decimals`/`_instrument_decimals` بالقراءة (httpx غير مثبّت هنا): متطابقة للأزواج والين/HUF والذهب/الفضة/النفط؛ تقاطعات الذهب وDXY من الحجم بالخادم = النتيجة نفسها. نصّ الإشعار `_fmt_price` (`.10g`) يعيد عتبة المستخدم كما كتبها — مقبول. **لا بند.**
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ متابعة tools130a/b/c؛ وإعادة قائمة DESIGN-PRO.
 **بعد السحب (11b5086، تعارض COORDINATION حُلّ من نسخة upstream):** أخضر 0. أُغلقت tools130a ← backend `0c8d570` (`main.py:1772/1795`)، tools130b ← launch `d78b856`، tools130c ← backend `be61d19`. المفتوح لوكيل: **backend-r93 → tools** وحده (لا `*_iso` بـ`mobile/src`، `TradeJournalPanel.tsx:1488` `{exit}` وحده). diff الجديد خادم/نصوص/وثائق ⇒ قائمة القبول 0/12.
+
+## 2026-09-26 — الدورة 120
+**البناء:** أخضر 0 (على f47b9a7 ثم ed8c6f7 بعد السحب) — لا إصلاح لازم. **Selftests:** 123/123 ناجح (`npx tsx`).
+**التحقّق بالكود:** أُغلقت backend-r93 ← tools `2a22050` (`TradeJournalPanel.tsx:1236/1575`)؛ chart102a ← ui `b837f74` (`FULL_SERIES_MIN_CANDLES = 120`)؛ chart102b ← ui `6b3a0fa` (`liveMatches` رمز+فريم). tools131a: launch `f47b9a7` أضاف المفتاح ×3 ⇒ الصفّ نُقل إلى **tools** للربط (`closeTimeErrorText` `:572–575` ما زال يعرض التلميح، وتعليقا `:571`/`:1574` قديمان).
+**قائمة قبول DESIGN-PRO (الأربعون):** 0/12 فشل (diff منذ 11b5086: حقل «وقت الإغلاق» `styles.input`+`accessibilityLabel`+`planWarn`؛ الباقي منطق).
+**المراجعة (e — ما يُحرج أمام متداول):** **QA120a → tools** (منخفض): `journalLocalFieldToIso` يرفض الثواني ⇒ وقت منسوخ من سجلّ MT5 «2026.09.26 14:05:30» = null (بـ`npx tsx`، TZ=Asia/Baghdad). سليم: «2026.09.26 14:05»، الأرقام العربية الهندية، `T`، 24:00 مرفوض، سقف 100R، بادئة «OANDA:».
+**الدورة القادمة:** المراجعة (a) — ميت/تصديرات (`seriesTf`، `editClosedAtValue` المحذوف)؛ متابعة tools131a/QA120a؛ وإعادة قائمة DESIGN-PRO.
