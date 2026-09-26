@@ -149,14 +149,27 @@ async function migrateV1(symbol: string, timeframe: string): Promise<Drawing[]> 
   return out;
 }
 
+/**
+ * رموز تعذّرت قراءة مفتاحها (خطأ تخزين عابر). كانت القراءة الفاشلة تُعامل كـ«لا رسومات» وتُخبَّأ `[]` لبقية الجلسة،
+ * فأوّل خطّ يُرسم يكتب `[خط]` فوق كل رسومات الرمز المحفوظة. الآن لا تُخبَّأ، والكتابة تعيد القراءة أولاً وتدمج.
+ */
+const unread = new Set<string>();
+
 export async function loadDrawings(symbol: string, timeframe: string): Promise<Drawing[]> {
   const hit = cache.get(symbol);
   if (hit) return hit;
-  let list: Drawing[] | null = null;
+  let raw: string | null;
   try {
-    list = parseList(await AsyncStorage.getItem(keyV2(symbol)));
+    raw = await AsyncStorage.getItem(keyV2(symbol));
   } catch {
-    list = null;
+    unread.add(symbol);
+    return cache.get(symbol) ?? [];
+  }
+  unread.delete(symbol);
+  let list = parseList(raw);
+  if (!list && raw) {
+    // JSON تالف: نسخة احتياطية قبل أن تكتب أوّل كتابة فوقه.
+    AsyncStorage.setItem(`${keyV2(symbol)}.corrupt`, raw).catch(() => undefined);
   }
   if (!list) list = await migrateV1(symbol, timeframe);
   // كتابة وصلت أثناء القراءة أحدث من المقروء.
@@ -174,6 +187,17 @@ export async function saveDrawings(
 ): Promise<void> {
   publish(symbol, drawings, owner);
   try {
+    if (unread.has(symbol)) {
+      // لم تُقرأ المحفوظة قطّ ⇒ لم يرَها المتداول ولم يحذف منها شيئاً: تُضاف لما رسمه. قراءة فاشلة مجدداً ترمي ⇒ لا كتابة.
+      const stored = parseList(await AsyncStorage.getItem(keyV2(symbol))) ?? [];
+      unread.delete(symbol);
+      const ids = new Set(drawings.map((d) => d.id));
+      const kept = stored.filter((d) => d && !ids.has(d.id));
+      if (kept.length) {
+        drawings = [...drawings, ...kept];
+        publish(symbol, drawings, undefined);
+      }
+    }
     await AsyncStorage.setItem(keyV2(symbol), JSON.stringify(drawings));
     setSaveError(null);
   } catch {
@@ -184,6 +208,7 @@ export async function saveDrawings(
 /** مسح رسومات الرمز على **كل** فريماته — قائمة فارغة لا حذف مفتاح (راجع رأس القسم). */
 export async function clearDrawings(symbol: string, owner?: unknown): Promise<void> {
   publish(symbol, [], owner);
+  unread.delete(symbol);
   try {
     await AsyncStorage.setItem(keyV2(symbol), '[]');
     setSaveError(null);
