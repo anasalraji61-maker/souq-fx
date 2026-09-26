@@ -1247,6 +1247,28 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     setFormError(null);
   };
 
+  /**
+   * الويب (قرار ١٦، «Esc للإلغاء»): Esc يلغي التعديل الجاري كزرّ «إلغاء» — كان لا يفعل شيئاً فيبقى النموذج على صفقة قديمة
+   * والمسوّدة المحفوظة مخفيّة حتى النقر بالفأرة. **داخل اللوحة وحدها** (التركيز بإحدى خاناتها): اللوحة بجانب الشارت، وEsc خارجها
+   * يلغي رسماً جارياً هناك كما كان. `busy` (حفظ جارٍ) ⇒ لا شيء: الإلغاء أثناءه يعيد المسوّدة ثم يُفرغها الحفظ حين ينجح.
+   */
+  const panelRef = useRef<View>(null);
+  const cancelEditRef = useRef(cancelEdit);
+  cancelEditRef.current = cancelEdit;
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !editing || busy || typeof document === 'undefined') return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      const node = panelRef.current as unknown as { contains?: (n: unknown) => boolean } | null;
+      if (!node?.contains?.(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelEditRef.current();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [editing, busy]);
+
   /** «أضف»/«احفظ التعديل» جارٍ — متزامن: `busy` حالةٌ لا تصل لضغطة ثانية قبل إعادة الرسم ⇒ نقرٌ مزدوج سريع كان يرسل الصفقة مرّتين */
   const addInFlightRef = useRef(false);
   const add = async () => {
@@ -1805,7 +1827,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   );
 
   return (
-    <View style={styles.wrap}>
+    <View ref={panelRef} style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.journalTitle}</Text>
       <Text style={[styles.sub, { textAlign: align }]}>{t.journalSub}</Text>
 
