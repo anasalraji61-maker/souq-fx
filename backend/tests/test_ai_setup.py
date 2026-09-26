@@ -790,3 +790,32 @@ def test_guard_flags_run97_leaks(text):
 ])
 def test_guard_run97_education_left_alone(text):
     assert not openrouter_ai.has_trade_call(text)
+
+
+# run 101: صيغ «أقترح/أفضّل/اقتراحي الشراء»، «شراء على الارتدادات نحو 1.0850»، «Add to longs»، «Selling rallies toward 2350»
+RUN101_LEAKS = [
+    "أقترح الشراء على اليورو.", "شراء على الارتدادات نحو 1.0850.", "Add to longs on a pullback to 1.0850.",
+    "Selling rallies toward 2350 looks attractive.", "It makes sense to buy here.", "اقتراحي: شراء",
+    "يمكن الدخول بصفقة شراء", "أفضّل الشراء على اليورو.", "بيع الارتفاعات نحو 2350", "My suggestion is to buy.",
+    "The best move now is to sell EURUSD.", "نقترح البيع", "أقترح عليك الشراء", "Buy the dips.",
+    "It makes sense to short gold.", "Adding to shorts here is fine.", "The smartest move is to buy.",
+]
+
+
+@pytest.mark.parametrize("text", RUN101_LEAKS)
+def test_guard_flags_run101_leaks(text):
+    assert openrouter_ai.has_trade_call(text)
+    assert text not in openrouter_ai.guard_answer("RSI is 55.\n" + text, "en")
+
+
+@pytest.mark.parametrize("text", [
+    "Some traders buy the dips in an uptrend; others wait for confirmation.",
+    "Buying dips is a common strategy in trends.", "أقترح أن تقرأ عن مؤشر RSI.", "أقترح مراجعة إدارة المخاطر.",
+    "It makes sense to wait for a close before judging a breakout.",
+    "The best move for a beginner is to learn risk management.",
+    "Traders often add to longs when the trend is strong, which increases risk.",
+    "استراتيجية الشراء على الارتدادات شائعة في الاتجاه الصاعد.", "Selling rallies is a known approach in downtrends.",
+    "أفضّل شرح المؤشر أولاً.", "يمكن الدخول إلى إعدادات المؤشر.", "My suggestion is to review the lesson on RSI.",
+])
+def test_guard_run101_education_left_alone(text):
+    assert not openrouter_ai.has_trade_call(text)

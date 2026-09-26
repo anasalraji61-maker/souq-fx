@@ -430,7 +430,30 @@ _TRADE_CALL_RE = re.compile(
     + r"|(?<!\w)(?:كنت\s+)?(?:سا|سن)(?:شتري|بيع)(?!\w)"
     + r"|(?<!\w)(?:افتح|نفذ)\s+(?:ال)?(?:شراء|بيع)(?!\w)"
     + r"|(?:^\s*|[.!؟:\-–—•*]\s*)(?:ال)?(?:شراء|بيع)\s+(?:(?-i:[A-Z]{3,6}|[A-Z]{3}/[A-Z]{3})|الذهب|الفضة|الفضه|النفط"
-    r"|اليورو|الدولار|الين|الجنيه|الباوند|البيتكوين)\s*(?:الان|الآن|فورا|فوراً)?\s*[.!؟]?\s*$",
+    r"|اليورو|الدولار|الين|الجنيه|الباوند|البيتكوين)\s*(?:الان|الآن|فورا|فوراً)?\s*[.!؟]?\s*$"
+    # run 101: «أقترح الشراء»، «اقتراحي: شراء»، «أفضّل الشراء»، «يمكن الدخول بصفقة شراء»، «بيع الارتفاعات نحو 2350»،
+    # «Add to longs … 1.0850»، «Selling rallies toward 2350 looks attractive»، «It makes sense to buy here»،
+    # «My suggestion is to buy»، «The best move now is to sell» — «استراتيجية الشراء على الارتدادات شائعة»،
+    # «Traders often add to longs when …»، «Selling rallies is a known approach» شرح
+    + r"|(?<!لا )(?<!\w)(?:اقترح|نقترح|اقتراحي|اقتراحنا|افضل|نفضل)(?:\s+عليك|\s+عليكم)?\s*(?:هو\s+)?[:\-–—]?\s*"
+    r"(?:ب?ال)?(?:شراء|بيع|دخول)(?!\w)"
+    + r"|يمكن(?:ك|كم)?\s+(?:ال)?دخول\s+ب?(?:صفقة|صفقه)\s+(?:ال)?(?:شراء|بيع)"
+    + r"|(?:^\s*|[.!؟:\-–—•*]\s*)(?:ال)?(?:شراء|بيع)\s+(?:على\s+)?(?:ال)?(?:ارتداد|ارتفاع|انخفاض|تراجع|هبوط|صعود)"
+    + r"|(?:شراء|بيع)\s+(?:على\s+)?(?:ال)?(?:ارتداد|ارتفاع|انخفاض|تراجع|هبوط|صعود)\w*[^\n\d]{0,20}?"
+    r"(?:نحو|عند|قرب|من|فوق|تحت|حول)\s*\d"
+    + r"|(?:^\s*|[.!?]\s+|[-*•>,:;—–]\s*)(?:buy|sell|short)\s+(?:the\s+|any\s+|every\s+)?"
+    r"(?:dips?|rall(?:y|ies)|pullbacks?|bounces?|retests?|spikes?)\b"
+    + r"|\b(?:buying|selling|shorting)\s+(?:the\s+)?(?:dips?|rall(?:y|ies)|pullbacks?|bounces?|retests?)\b[^\n\d.]{0,25}?"
+    r"(?:\d|\b(?:here|now|looks|is\s+(?:\w+\s+)?(?:attractive|good|best|smart|wise|ideal|the\s+play)))"
+    + r"|\badd(?:ing)?\s+to\s+(?:(?:your|the|my)\s+)?(?:longs?|shorts?|(?:long|short)\s+positions?)\b"
+    r"(?:\s*(?:[.!]|$)|[^\n\d.]{0,25}?(?:\d|\b(?:here|now|today)\b))"
+    + r"|\b(?:my|our)\s+(?:suggestion|recommendation|advice|idea)\s+(?:is|would\s+be)\s+(?:to\s+)?(?:go\s+)?"
+    r"(?:buy|sell|short|long)(?![-‑\w])"
+    + r"|\b(?:best|smartest|smart|right|wisest)\s+(?:move|play|trade)\b[^\n.]{0,20}?\b(?:is|would\s+be)\s+(?:to\s+)?"
+    r"(?:buy|sell|short|go\s+(?:long|short))(?![-‑\w])"
+    + r"|\bmakes\s+sense\s+to\s+(?:buy|sell|short|go\s+(?:long|short))(?![-‑\w])\s*(?:[.!]|$|(?:now|here|it|this"
+    r"|gold|silver|oil|crude|bitcoin|btc|the\s+(?:pair|euro|dollar|yen|pound))\b"
+    r"|(?-i:[A-Z]{3,6}\b|[A-Z]{3}/[A-Z]{3}))",
     re.IGNORECASE | re.MULTILINE,
 )
 _TRADE_CALL_RE = re.compile(_TRADE_CALL_RE.pattern.translate(_ALEF), _TRADE_CALL_RE.flags)
