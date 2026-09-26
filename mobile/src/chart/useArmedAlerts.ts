@@ -1,5 +1,5 @@
 /** الاشتراك المشترك بـ`/api/alerts` لخطوط التنبيهات على الشارت — راجع `armedAlerts.ts`. */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { alertSeen, api, type PriceAlert } from '../api';
 import { armedAlertsFor, type ArmedAlert } from './armedAlerts';
 
@@ -115,24 +115,38 @@ export async function moveArmedAlert(id: string, price: number, condition: 'abov
   return ok;
 }
 
+const NO_ALERTS: ArmedAlert[] = [];
+
 /** تنبيهات `symbol` المُسلَّحة؛ `null` ⇒ لا اشتراك (شارت تجريبي/درس/غير تفاعلي). */
 export function useArmedAlerts(symbol: string | null): ArmedAlert[] {
-  const [list, setList] = useState<ArmedAlert[]>(() => (symbol ? armedAlertsFor(latest, symbol) : []));
+  // الحالة موسومة برمزها: عند التبديل تُقرأ قائمة الرمز الجديد في الرسم نفسه، لا خطوط الرمز السابق إطاراً حتى يعمل التأثير
+  const [state, setState] = useState<{ symbol: string | null; list: ArmedAlert[] }>(() => ({
+    symbol,
+    list: symbol ? armedAlertsFor(latest, symbol) : NO_ALERTS,
+  }));
   useEffect(() => {
     if (!symbol) {
-      setList([]);
+      setState((prev) => (prev.symbol === null && prev.list === NO_ALERTS ? prev : { symbol: null, list: NO_ALERTS }));
       return;
     }
     const update = () =>
-      setList((prev) => {
+      setState((prev) => {
         const next = armedAlertsFor(latest, symbol);
         const same =
-          prev.length === next.length &&
-          prev.every((p, i) => p.id === next[i]!.id && p.price === next[i]!.price && p.condition === next[i]!.condition);
-        return same ? prev : next;
+          prev.symbol === symbol &&
+          prev.list.length === next.length &&
+          prev.list.every(
+            (p, i) => p.id === next[i]!.id && p.price === next[i]!.price && p.condition === next[i]!.condition,
+          );
+        return same ? prev : { symbol, list: next };
       });
     update();
     return subscribe(update);
   }, [symbol]);
-  return list;
+  const stale = state.symbol !== symbol;
+  const fresh = useMemo(
+    () => (stale ? (symbol ? armedAlertsFor(latest, symbol) : NO_ALERTS) : null),
+    [stale, symbol],
+  );
+  return fresh ?? state.list;
 }
