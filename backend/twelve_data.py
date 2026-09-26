@@ -185,6 +185,40 @@ def _weekly_open_utc(sunday: datetime, sym: str = "") -> int:
     return int(sunday.replace(hour=hour, minute=0, second=0, microsecond=0).timestamp())
 
 
+# الكسر اليومي (كالتطبيق `marketHours.ts` `inMetalsDailyBreak`/`inIceDailyBreak`): المعادن وWTI (CME) 17:00–18:00
+# نيويورك، وبرنت (ICE) 23:00–01:00 لندن، ليالي الاثنين–الخميس (الجمعة إغلاق أسبوعي والأحد افتتاح). التطبيق يعدّ
+# السوق مغلقاً فيه ولا يرسم له خانات شموع، والخادم كان يعدّه جلسة ⇒ شمعة/اقتباس/تيك يملأ به المزوّد الساعة
+# كان يُعرض «آخر سعر» حيّاً ويُطلق التنبيهات، و`market_open: true` بجانب «مغلق» بالتطبيق.
+def _break_len(sym: str) -> int:
+    if sym == "UKOIL":
+        return 2 * 3600
+    return 3600 if sym == "USOIL" or sym[:3] in ("XAU", "XAG", "XPT", "XPD") else 0
+
+
+def _break_start(day: datetime, sym: str) -> int:
+    """بداية كسر يوم `day` (منتصف ليل UTC): 17:00 نيويورك، أو 23:00 لندن لبرنت. الاثنين–الخميس لا تحويل ساعة."""
+    if sym == "UKOIL":
+        y = day.year
+        bst = (3, _last_sunday(y, 3)) <= (day.month, day.day) < (10, _last_sunday(y, 10))
+        return int(day.replace(hour=22 if bst else 23).timestamp())
+    return _weekly_close_utc(day)
+
+
+def _daily_break(sym: str, ts: float) -> tuple[int, int] | None:
+    """(بداية، نهاية) الكسر اليومي الذي تقع فيه `ts` لرمز قانوني، وإلا None."""
+    length = _break_len(sym)
+    if not length:
+        return None
+    d = datetime.fromtimestamp(float(ts), tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    for day in (d, d - timedelta(days=1)):
+        if day.weekday() > 3:  # يبدأ الكسر الاثنين–الخميس فقط
+            continue
+        start = _break_start(day, sym)
+        if start <= ts < start + length:
+            return start, start + length
+    return None
+
+
 # مفتاح للاختبارات فقط: اختبارات قديمة تبني اقتباسات EURUSD بوقت «الآن» فتسقط يوم السبت (`tests/conftest.py`).
 WEEKEND_CLOSE_FILTER = True
 
@@ -195,7 +229,8 @@ def _session_now() -> float:
 
 
 def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
-    """شمعة تقع كلّها بين إغلاق الجمعة 17:00 وافتتاح الأحد 17:00 نيويورك لرمز له جلسة أسبوعية.
+    """شمعة تقع كلّها بين إغلاق الجمعة 17:00 وافتتاح الأحد 17:00 نيويورك لرمز له جلسة أسبوعية — أو داخل جلسة
+    عطلة، أو داخل الكسر اليومي للمعادن/النفط (`_daily_break`).
 
     المزوّد يملأ العطلة كلّها شموعاً (السبت 2026-09-26: 284 شمعة 1m لليورو دولار بعد 21:00 UTC، والأحد كل دقيقة؛ سيولة
     ما بعد الإغلاق بلا وسيط تجزئة يُنفّذ عليها) ⇒ كانت تُعرض «آخر سعر» بوقت السبت، وتُطلق عليها التنبيهات
@@ -212,6 +247,9 @@ def in_weekend_close(matrix_symbol: str, open_ts: float, step: int) -> bool:
         return opened.weekday() >= 5 or _is_holiday(opened)
     holiday = _holiday_session(open_ts)
     if holiday and open_ts + step <= holiday[1]:
+        return True
+    brk = _daily_break(sym, open_ts)
+    if brk and open_ts + step <= brk[1]:
         return True
     friday = opened - timedelta(days=(opened.weekday() - 4) % 7)
     close = _week_close(friday)
@@ -258,7 +296,9 @@ def _weekend_allowance(matrix_symbol: str, tf: str, n: int) -> int:
     if step >= 7 * _DAY or not _has_weekly_session(canonical_symbol(matrix_symbol)):
         return 0
     weekends = n * step // (5 * _DAY) + 1
-    return weekends * -(-49 * 3600 // step)
+    # والكسر اليومي (`_daily_break`) لكل يوم تداول تغطّيه النافذة
+    breaks = (n * step // _DAY + 1) * -(-brk // step) if (brk := _break_len(canonical_symbol(matrix_symbol))) and step < _DAY else 0
+    return weekends * -(-49 * 3600 // step) + breaks
 
 
 TF_MAP: dict[str, str] = {
@@ -315,7 +355,7 @@ CANDLE_DISK: Path | None = (
 _disk_checked: set[str] = set()
 # الجدول باسم نسخة: تغيير بمعالجة الشموع (فلتر العطلة، بناء W من D، `_candle`) لا يصل لسلسلة محفوظة قبله —
 # كانت تُحمَّل بعد النشر وتبقى. رفع الرقم مع أيّ تغيير كهذا ⇒ النشر يبدأ بقرص فارغ ويُجلب من المزوّد.
-_DISK_TABLE = "candles_v4"
+_DISK_TABLE = "candles_v5"
 
 # وقت آخر جلب **كامل** لكل مدخل (بحجمه هو). الدمج يُبقي شموع المدخل الأكبر الأقدم ويختم المدخل «الآن» ⇒ القائمة
 # (D/50 كل 90ث) كانت تُبقي أول ~130 شمعة من D/180 بلا جلب أبداً (والقرص يحفظها عبر إعادة التشغيل) — تصحيح
