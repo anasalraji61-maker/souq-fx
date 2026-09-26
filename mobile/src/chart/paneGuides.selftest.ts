@@ -307,10 +307,12 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(paneValueAt(v, 0), 10);
   assert.equal(paneValueAt(v, 2), 30);
   assert.equal(paneValueAt(v, 3), 40);
-  // بلا تقاطع ⇐ آخر قيمة صالحة (السلوك السابق كما هو)
+  // بلا تقاطع ⇐ الشمعة الأخيرة
   assert.equal(paneValueAt(v, null), 40);
   assert.equal(paneValueAt(v, undefined), 40);
-  assert.equal(paneValueAt([10, 20, null], null), 20, 'آخر صالحة لا آخر خانة');
+  // الشمعة الأخيرة بلا قيمة (BOP على شمعة جديدة O=H=L=C) ⇐ لا رقم من الشمعة السابقة
+  assert.equal(paneValueAt([10, 20, null], null), null, 'آخر خانة لا آخر صالحة');
+  assert.equal(paneValueAt([10, 20, Number.NaN], 7), null);
   // خارج المدى (النافذة تحرّكت والتقاطع قائم) ⇐ آخر قيمة، لا فراغ
   assert.equal(paneValueAt(v, 4), 40);
   assert.equal(paneValueAt(v, 99), 40);
