@@ -219,3 +219,14 @@ def test_progress_get_with_expired_token_is_401_not_empty(client):
     r = client.get("/api/academy/progress", headers=headers)
     assert r.status_code == 401, r.text
     assert client.get("/api/academy/progress").json() == {"progress": []}  # الزائر بلا توكن كما هو
+
+
+def test_interrupt_tutor_reply_goes_through_the_trade_call_guard(client, monkeypatch):
+    # قرار أنس ٤ يشمل مدرّس الأكاديمية — كان ردّ النموذج يُعاد كما هو
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "interrupt_answer",
+                        lambda *a, **k: "RSI measures momentum.\nBuy EURUSD at 1.0850, stop 1.0800.")
+    r = client.post("/api/academy/interrupt", json={
+        "school_id": "basics", "lecture_id": "basics-l1-01", "question": "what should I buy now?", "lang": "en"})
+    out = r.json()["clarification"]
+    assert "RSI measures momentum." in out and "1.0850" not in out and "was removed" in out

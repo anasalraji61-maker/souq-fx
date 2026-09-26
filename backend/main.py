@@ -2014,7 +2014,8 @@ def academy_interrupt(body: TeacherInterrupt):
     lang = openrouter_ai.normalize_lang(body.lang)
     if openrouter_ai.configured():
         try:
-            clarification = openrouter_ai.interrupt_answer(q, seg_title, seg_text, lang)
+            # قرار ٤ يشمل مدرّس الأكاديمية: الطالب قد يسأل «ماذا أشتري الآن؟» والتعليمة وحدها لا تضمن الامتثال
+            clarification = openrouter_ai.guard_answer(openrouter_ai.interrupt_answer(q, seg_title, seg_text, lang), lang)
             return {
                 "ok": True,
                 "paused": True,
