@@ -1499,8 +1499,6 @@ export type Dict = {
   sigLevelsUnavailableNoRange: string;
   /** backend `80d4193`: المدى (ATR) دون نصف تسعيرة (زوج مربوط كـUSDSAR على 1m) ⇒ الوقف/الهدف يُقرَّب على الدخول نفسه — صفقة بلا مخاطرة */
   sigLevelsUnavailableAtrBelowTick: string;
-  /** backend `368add6` `no_votes`: لا مؤشّر صوّت (كلّها امتنعت — بلا حركة أو سلسلة قصيرة، والسبب بالتنبيه) — كان `neutral` فيُقرأ «محايد» كأنه حُسب */
-  sigLevelsUnavailableNoVotes: string;
   journalStatBreakeven: string;
   journalShownOfTotal: string;
   journalLoadOlder: string;
@@ -2828,7 +2826,6 @@ const ar: Dict = {
   sigLevelsUnavailableNeutral: 'لا مستويات دخول ووقف وهدف — الاتجاه محايد',
   sigLevelsUnavailableNoRange: 'لا مستويات دخول ووقف وهدف — السعر لم يتحرّك في هذه الفترة، فلا مدى (ATR) يُقاس عليه',
   sigLevelsUnavailableAtrBelowTick: 'لا مستويات دخول ووقف وهدف — المدى (ATR) أصغر من أصغر خطوة للسعر، فالوقف سيقع على الدخول نفسه. جرّب فريماً أطول',
-  sigLevelsUnavailableNoVotes: 'لا مستويات دخول ووقف وهدف — لم يُعطِ أي مؤشّر قراءة على هذه الفترة، فلا اتجاه يُبنى عليه',
   journalStatBreakeven: 'تعادل: {n} (لا يدخل نسبة النجاح)',
   journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
   journalLoadOlder: 'تحميل الأقدم',
@@ -4092,7 +4089,6 @@ const enUS: Dict = {
   sigLevelsUnavailableNeutral: 'No entry, stop or target — direction is neutral',
   sigLevelsUnavailableNoRange: 'No entry, stop or target — the price hasn’t moved in this window, so there’s no range (ATR) to measure from',
   sigLevelsUnavailableAtrBelowTick: 'No entry, stop or target — the range (ATR) is smaller than the price’s smallest step, so the stop would sit on the entry itself. Try a longer timeframe',
-  sigLevelsUnavailableNoVotes: 'No entry, stop or target — none of the indicators gave a reading on this window, so there’s no direction to build on',
   journalStatBreakeven: 'Breakeven: {n} (not counted in win rate)',
   journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
   journalLoadOlder: 'Load older',
@@ -5407,8 +5403,6 @@ const ku: Dict = {
   sigLevelsUnavailableNoRange: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — نرخ لەم ماوەیەدا نەجووڵاوە، بۆیە هیچ مەودایەک (ATR) نییە بۆ پێوان',
   // بحاجة مراجعة ناطق كردي
   sigLevelsUnavailableAtrBelowTick: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مەودا (ATR) لە بچووکترین هەنگاوی نرخ بچووکترە، بۆیە وەستان دەکەوێتە سەر خودی چوونەژوورەوە. تایم‌فرەیمێکی درێژتر تاقی بکەرەوە',
-  // بحاجة مراجعة ناطق كردي
-  sigLevelsUnavailableNoVotes: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — هیچ نیشاندەرێک لەم ماوەیەدا خوێندنەوەی نەدا، بۆیە هیچ ئاڕاستەیەک نییە بۆ بنیادنان',
   journalStatBreakeven: 'بێ قازانج و زیان: {n} (لە ڕێژەی سەرکەوتندا ناژمێردرێت)',
   journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
   journalLoadOlder: 'بارکردنی کۆنترەکان',
