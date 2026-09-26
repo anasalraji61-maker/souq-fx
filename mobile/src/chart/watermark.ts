@@ -2,12 +2,17 @@
  * علامة الخلفية: الزوج والفريم بخطّ كبير خافت وسط لوح السعر — لقطة الشاشة المشتركة وخلايا الرباعي
  * الصغيرة تقول «أيّ زوج هذا؟» دون قراءة الرأس. صياغة MATRIX: الزوج بشرطة («EUR/USD») والفريم بسطر تحته.
  */
+import { isFiatCurrency } from './newsRisk';
 import { chartPipSpec } from './pipSpec';
 
 /** «EURUSD» ⇒ «EUR/USD»؛ لواحق الحساب («EURUSDc»، «USDJPY.pro») تبقى كما هي — الوسيط يسمّيها كذلك. */
 export function watermarkSymbol(symbol: string): string {
   const s = symbol.trim();
-  if (/^[A-Z]{6}$/.test(s) && chartPipSpec(s)) return `${s.slice(0, 3)}/${s.slice(3)}`;
+  if (!/^[A-Z]{6}$/.test(s)) return s;
+  // الغريبة بلا مواصفة pip («USDTHB»، «EURHUF») زوجٌ أيضاً ما دام شطراها عملتين ورقيتين.
+  if (chartPipSpec(s) || (isFiatCurrency(s.slice(0, 3)) && isFiatCurrency(s.slice(3)))) {
+    return `${s.slice(0, 3)}/${s.slice(3)}`;
+  }
   return s;
 }
 

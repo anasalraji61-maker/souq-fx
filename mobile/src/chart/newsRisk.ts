@@ -40,6 +40,11 @@ const FIAT = new Set([
   'NGN', 'ARS', 'PKR', 'KES', 'VND', 'ISK', 'UAH', 'PEN', 'GHS', 'MAD', 'TND', 'DZD', 'LKR', 'BDT', 'UYU', 'GEL',
   'AZN', 'UZS', 'IQD', 'LBP', 'BGN', 'RSD', 'UGX', 'TZS', 'ZMW', 'BWP', 'MUR', 'XOF', 'XAF', 'JMD', 'DOP', 'CRC',
 ]);
+
+/** كود ISO لعملة ورقية يعرفها التقويم (للشرطة بعلامة الخلفية: «USD/THB»). */
+export function isFiatCurrency(code: string): boolean {
+  return FIAT.has(code);
+}
 /**
  * معادن تُسعَّر عالمياً بالدولار: الذهب والفضة، و**البلاتين والبلاديوم والنحاس** بأسماء منصّات MT5
  * (XPTUSD، XPDUSD، XCUUSD). الثلاثة الأخيرة كانت تُرجع `[]` فيُسجَّل عقد بلاتين قبل الرواتب الأمريكية

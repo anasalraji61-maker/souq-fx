@@ -12,6 +12,10 @@ assert.equal(watermarkSymbol('XAUUSD'), 'XAU/USD');
 assert.equal(watermarkSymbol('EURUSDc'), 'EURUSDc');
 // ليست زوجاً معروفاً ⇒ كما هي (لا «BTC/USD» لرمز بلا مواصفة، لا «DXY/…»)
 assert.equal(watermarkSymbol('DXY'), 'DXY');
+// غريبة بلا مواصفة pip: شطران ورقيان ⇒ بشرطة كالبقية
+assert.equal(watermarkSymbol('USDTHB'), 'USD/THB');
+assert.equal(watermarkSymbol('EURHUF'), 'EUR/HUF');
+assert.equal(watermarkSymbol('ABCDEF'), 'ABCDEF');
 
 // هاتف: لوح 360×300 ⇒ خطّ مقروء بلا طغيان
 const phone = watermarkFontSize(360, 300, 'EUR/USD');
