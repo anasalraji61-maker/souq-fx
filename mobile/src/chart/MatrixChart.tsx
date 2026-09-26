@@ -645,6 +645,10 @@ function isContextClick(event: PointerEventLike): boolean {
   return WEB_MAC && ne?.button === 0 && !!ne.ctrlKey && ne.pointerType !== 'touch' && ne.pointerType !== 'pen';
 }
 
+/** حافظة رسم Ctrl/⌘+C واحدة للصفحة كلّها: نسخ خطّ بنافذة التركيز ثم لصقه على شارت الطرفية (أو من إطار رباعي
+ *  إلى آخر بنفس الرمز) — كانت لكل شارت حافظته فيُهمَل Ctrl+V بصمت بالشارت الآخر. المفتاح الرمز لا الفريم. */
+let copiedDrawing: { d: Drawing; key: string } | null = null;
+
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
 /** شارتات الويب المركّبة، ومالك المفاتيح لحظةَ تركيب كلٍّ منها — ليعود إليه حين يُفكّ (إغلاق نافذة التركيز/الرباعي). */
@@ -4432,8 +4436,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // الويب: Ctrl/⌘+C ينسخ الرسم المحدَّد وCtrl/⌘+V يلصق نسخة بجانبه (كزرّ «نسخة») — ولصقات متتالية تتدرّج كلٌّ
   // بجانب السابقة لا فوقها. النسخ لنفس الرمز فقط (مستوى 1.08500 من EURUSD لا معنى له على USDJPY)، وعلى أيّ فريم:
   // قائمة الرسوم مشتركة بين فريمات الرمز، والنسخة تُرسى بزمنها — مستوى من 1H يُلصق على 15m. كان المفتاح يضمّ الفريم
-  // فيُهمَل Ctrl+V بصمت بعد تبديل الفريم.
-  const copiedDrawing = useRef<{ d: Drawing; key: string } | null>(null);
+  // فيُهمَل Ctrl+V بصمت بعد تبديل الفريم. الحافظة `copiedDrawing` مشتركة بين شارتات الصفحة (أعلى الملف).
 
   // قفل الرسم المحدَّد (كقفل TradingView): المقفول لا يُسحب ولا تتحرّك مقابضه بلمسة عابرة — مستوى وقف مدروس
   // لا يزحف لأنّ الإصبع مرّ عليه أثناء التمرير. التحديد والحذف واللون والتنبيه تبقى. قابل للتراجع كأيّ تعديل.
@@ -5555,15 +5558,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           if (!selectedId || (typeof window !== 'undefined' && String(window.getSelection?.() ?? ''))) return;
           const d = drawingsRef.current.find((x) => x.id === selectedId);
           if (!d) return;
-          copiedDrawing.current = { d, key: chartKey };
+          copiedDrawing = { d, key: chartKey };
           event.preventDefault();
           return;
         }
-        const copied = copiedDrawing.current;
+        const copied = copiedDrawing;
         if (!copied || copied.key !== chartKey || pending) return;
         event.preventDefault();
         const pasted = cloneDrawingRef.current(copied.d);
-        if (pasted) copiedDrawing.current = { d: pasted, key: chartKey };
+        if (pasted) copiedDrawing = { d: pasted, key: chartKey };
         return;
       }
       if ((key === 'Delete' || key === 'Backspace') && selectedId) {
