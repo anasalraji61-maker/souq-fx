@@ -116,6 +116,13 @@ const SINGLE_CCY: Record<string, string> = {
    */
   WTIUSD: 'USD', BRENTUSD: 'USD', OILUSD: 'USD', CRUDEOIL: 'USD', USCRUDE: 'USD',
   SPOTGOLD: 'USD', SPOTSILVER: 'USD',
+  /**
+   * بقيّة أسماء مؤشرات التجزئة الشائعة التي بقيت `[]` (فلا تحذير قبل قرار البنك المركزي ولا «التقويم غير متاح»): أستراليا
+   * «SPI200» (عقد SPI الآجل عند IG/CMC)، نيوزيلندا «NZ50»/«NZX50»، سنغافورة «SG30»/«SGP30»/«SING30»، والراسل 2000 باسمه
+   * «RUSSELL2000»/«RUSSELL»/«US2K»/«RTY» (كان «US2000» وحده معروفاً) — بعملة تسعير كلٍّ.
+   */
+  SPI200: 'AUD', NZ50: 'NZD', NZX50: 'NZD', SG30: 'SGD', SGP30: 'SGD', SING30: 'SGD',
+  RUSSELL2000: 'USD', RUSSELL: 'USD', US2K: 'USD', RTY: 'USD',
 };
 
 /**

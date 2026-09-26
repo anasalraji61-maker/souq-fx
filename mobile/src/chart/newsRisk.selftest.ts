@@ -693,6 +693,26 @@ console.log('newsRisk CL-OIL selftest OK');
 }
 console.log('newsRisk more index names selftest OK');
 
+// SPI200/NZ50/SG30/Russell بأسمائها — كانت `[]` فلا تحذير قبل RBA/RBNZ/MAS/الرواتب
+{
+  const want: Record<string, string> = {
+    SPI200: 'AUD', NZ50: 'NZD', NZX50: 'NZD', SG30: 'SGD', SGP30: 'SGD', SING30: 'SGD',
+    RUSSELL2000: 'USD', RUSSELL: 'USD', US2K: 'USD', RTY: 'USD',
+  };
+  for (const [sym, ccy] of Object.entries(want)) {
+    assert.deepEqual(symbolCurrencies(sym), [ccy], sym);
+    assert.deepEqual(symbolCurrencies(`${sym}.cash`), [ccy], `${sym}.cash`);
+    assert.deepEqual(symbolCurrencies(`${sym}Cash`), [ccy], `${sym}Cash`);
+  }
+  // غير الدولارية يُضاف لها الدولار كسائر المؤشرات؛ والدولارية الدولار وحده
+  assert.deepEqual(newsCurrencies('SPI200'), ['AUD', 'USD']);
+  assert.deepEqual(newsCurrencies('NZ50'), ['NZD', 'USD']);
+  assert.deepEqual(newsCurrencies('RTY'), ['USD']);
+  // «DX» وحده مبهم (عقد آجل أو اختصار) — يبقى بلا تخمين
+  assert.deepEqual(symbolCurrencies('DX'), []);
+}
+console.log('newsRisk SPI200/NZ50/SG30/Russell selftest OK');
+
 // سلّة الدولار (FXCM)، النفط بأسماء أخرى، الغاز، عوائد السندات الأمريكية — كانت `[]`
 {
   for (const n of ['USDOLLAR', 'USOUSD', 'UKOUSD', 'NATURALGAS', 'US10Y', 'UST10Y', 'US10YR', 'US02Y', 'US2Y', 'UST02Y', 'US30Y', 'UST30Y']) {
