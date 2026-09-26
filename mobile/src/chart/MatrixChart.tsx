@@ -13335,7 +13335,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipOn: { backgroundColor: colors.selectedFill },
-  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  chipText: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chipTextOn: { color: colors.text },
   lens: {
     paddingHorizontal: 12,
@@ -13356,7 +13356,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   readoutText: { ...numeric, color: colors.text, fontSize: 11, fontFamily: 'monospace', flex: 1, textAlign: 'right' },
-  readoutMuted: { color: colors.textDim, fontSize: 11, flex: 1, textAlign: 'right' },
+  // ...numeric: عدّاد الإعادة «{n}/{total}» يتغيّر بكل خطوة فلا يهتزّ (DESIGN-PRO §2).
+  readoutMuted: { ...numeric, color: colors.textDim, fontSize: 11, flex: 1, textAlign: 'right' },
   drawingsSaveError: {
     color: colors.bear,
     fontSize: 11,
@@ -13432,6 +13433,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   sessionLabel: {
+    // مدى الجلسة بالـpip يكبر مع التيكات ⇒ أرقام بعرض ثابت.
+    ...numeric,
     position: 'absolute',
     bottom: 4,
     left: 4,
@@ -14032,6 +14035,6 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   indOn: { backgroundColor: colors.selectedFill },
-  indText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
+  indText: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500' },
   indTextOn: { color: colors.text },
 });
