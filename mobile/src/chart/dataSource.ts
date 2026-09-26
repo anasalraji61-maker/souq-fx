@@ -8,9 +8,9 @@ export type ProvenanceKind = DataOriginKind;
 export type ProvenanceKindLabels = Partial<Record<ProvenanceKind, string>>;
 
 const KIND_LABEL_AR: Record<ProvenanceKind, string> = {
-  provider: 'مزود',
+  provider: 'مزوّد',
   demo: 'تجريبي',
-  cache: 'مخزن',
+  cache: 'محفوظ',
   unknown: 'مصدر غير محدد',
   unavailable: 'غير متاح من المزوّد',
 };
