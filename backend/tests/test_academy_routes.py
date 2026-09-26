@@ -230,3 +230,13 @@ def test_interrupt_tutor_reply_goes_through_the_trade_call_guard(client, monkeyp
         "school_id": "basics", "lecture_id": "basics-l1-01", "question": "what should I buy now?", "lang": "en"})
     out = r.json()["clarification"]
     assert "RSI measures momentum." in out and "1.0850" not in out and "was removed" in out
+
+
+@pytest.mark.parametrize("lang, want", [("ku", "ar"), ("ar", "ar"), ("en", "en")])
+def test_interrupt_template_reports_its_language(client, monkeypatch, lang, want):
+    """قرار أنس ١٢: القالب عربي للكردي ⇒ `clarification_lang` «ar» ليقول التطبيق ذلك صراحةً."""
+    import main
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    r = client.post("/api/academy/interrupt", json={
+        "school_id": "basics", "lecture_id": "basics-l1-01", "question": "why?", "lang": lang})
+    assert r.status_code == 200 and r.json()["clarification_lang"] == want

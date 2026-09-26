@@ -587,3 +587,23 @@ def test_template_reply_does_not_quote_a_trade_call_question(monkeypatch):
     assert "1.0850" not in ans and "بالنسبة لسؤالك:" in ans
     ans = c.post("/api/ai/ask", json={"question": "ما هو RSI؟", "lang": "ar"}).json()["answer"]
     assert "«ما هو RSI؟»" in ans
+
+
+# قرار أنس ١٢: الكردي يُجاب بالقالب العربي عند غياب النموذج ⇒ الردّ يقول لغته ليقولها التطبيق صراحةً
+@pytest.mark.parametrize("lang, configured, want", [
+    ("ku", False, "ar"), ("ar", False, "ar"), ("en", False, "en"), ("ku", True, "ku"), ("en", True, "en"),
+])
+def test_ai_ask_reports_the_reply_language(monkeypatch, lang, configured, want):
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: configured)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "RSI measures momentum.")
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "RSI?", "lang": lang}).json()
+    assert body["answer_lang"] == want
+
+
+def test_ai_ask_kurdish_guard_refusal_is_arabic(monkeypatch):
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "کڕین لە 1.0850")
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "RSI?", "lang": "ku"}).json()
+    assert "1.0850" not in body["answer"] and body["answer_lang"] == "ar"

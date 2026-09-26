@@ -2021,6 +2021,7 @@ def academy_interrupt(body: TeacherInterrupt):
                 "paused": True,
                 "teacher": "شرح صوتي",
                 "clarification": clarification,
+                "clarification_lang": openrouter_ai.reply_lang(clarification, lang),
                 "resume_segment_index": resume_from,
             }
         except Exception:
@@ -2041,6 +2042,7 @@ def academy_interrupt(body: TeacherInterrupt):
             "paused": True,
             "teacher": "شرح صوتي",
             "clarification": clarification,
+            "clarification_lang": "en",
             "resume_segment_index": resume_from,
         }
 
@@ -2061,6 +2063,8 @@ def academy_interrupt(body: TeacherInterrupt):
         "paused": True,
         "teacher": "شرح صوتي",
         "clarification": clarification,
+        # قرار أنس ١٢: القالب عربي حتى للكردي (لا نصّ كردي مراجَع) ⇒ التطبيق يقول للمستخدم إن الردّ بالعربية
+        "clarification_lang": "ar",
         "resume_segment_index": resume_from,
     }
 
@@ -2181,7 +2185,10 @@ def ai_ask(body: AiAsk):
     if openrouter_ai.configured():
         try:
             answer = openrouter_ai.guard_answer(openrouter_ai.trading_answer(q, sym, context, lang), lang)
-            return {"answer": answer, "symbol": sym, "setup": setup, "live_price": live, "price_as_of": price_at}
+            return {
+                "answer": answer, "answer_lang": openrouter_ai.reply_lang(answer, lang), "symbol": sym,
+                "setup": setup, "live_price": live, "price_as_of": price_at,
+            }
         except Exception:
             pass
 
@@ -2245,6 +2252,8 @@ def ai_ask(body: AiAsk):
         )
     return {
         "answer": answer,
+        # قرار أنس ١٢: القالب الاحتياطي عربي للكردي أيضاً (لا نصّ كردي مراجَع) ⇒ «ar»، والتطبيق يقول ذلك صراحةً
+        "answer_lang": "en" if lang == "en" else "ar",
         "symbol": sym,
         "setup": setup,
         "live_price": live,

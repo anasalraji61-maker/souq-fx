@@ -374,3 +374,8 @@ def guard_answer(text: str, lang: str = "ar") -> str:
         return _GUARD_REFUSAL["en" if lang == "en" else "ar"]
     body = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
     return f"{body}\n\n{_GUARD_NOTE["en" if lang == "en" else "ar"]}"
+
+
+def reply_lang(text: str, lang: str) -> str:
+    """لغة ردّ النموذج بعد الحارس: الكردي يأخذ ردّاً كردياً، إلا اعتذار الحارس الكامل فهو عربي (لا نصّ كردي مراجَع)."""
+    return "ar" if lang == "ku" and text == _GUARD_REFUSAL["ar"] else lang
