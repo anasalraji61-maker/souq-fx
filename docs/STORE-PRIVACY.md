@@ -93,7 +93,7 @@ Expo Push مزوّد خدمة بالمعنى الواضح (أنبوب توصيل
 - **Contact Info → Email Address** — (1)
 - **Identifiers → User ID** — (2)
 - **Identifiers → Device ID** — (4) توكن الإشعارات و(14) معرّف التثبيت العشوائي (يُعلَنان احتياطاً؛ معرّفا جهاز بالمعنى الوظيفي)
-- **User Content → Other User Content** — (5)(6)(7)(9)(10)(11): الرسائل والملاحظات وأفكار الصفقات وأسئلة المساعد
+- **User Content → Other User Content** — (5)(6)(7)(9)(10)(11): الرسائل والملاحظات وأفكار الصفقات؛ وأسئلة المساعد (لا يحفظها خادمنا — `main.py` `ai_ask` بلا كتابة ولا سجلّ — لكنها تصل OpenRouter، فتُعلَن احتياطاً)
 - **Financial Info → Other Financial Info** — (6) دفتر الصفقات
   **تنبيه تصنيف**: أرقام يسجّلها المتداول بنفسه عن صفقاته، **لا** بيانات دفع ولا ربط بحساب
   وسيط ولا تنفيذ أوامر. الإعلان هنا اختيار محافظ مقصود.
@@ -112,7 +112,7 @@ Expo Push مزوّد خدمة بالمعنى الواضح (أنبوب توصيل
 - **التشفير أثناء النقل**: **نعم** — شرط مُلزم موثَّق بـ`docs/DEPLOYMENT.md` (الرابط العام
   https حصراً؛ ATS بـiOS وسياسة النصّ الصريح بأندرويد تمنعان http أصلاً بنسخة المتجر)
 - **حذف البيانات**: نعم، يُحذف الحساب من داخل التطبيق —
-  `DELETE /api/auth/account` (`backend/main.py:704`) → `db.delete_user_account`
+  `DELETE /api/auth/account` (`backend/main.py:928`) → `db.delete_user_account`
 - **Data collected is not shared for advertising**: لا مشارَكة إعلانية إطلاقاً
 
 ---
