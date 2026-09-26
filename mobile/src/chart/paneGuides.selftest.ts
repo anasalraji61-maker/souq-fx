@@ -131,6 +131,10 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(formatPaneValue(0), '0.0');
   // %R/CMO/%B قرب الصفر من تحت: لا «-0.0»
   assert.equal(formatPaneValue(-0.04), '0.0');
+  // حدّ ‎100‎ بعد التقريب: ‎99.96‎ و‎100.04‎ كلاهما «100»
+  assert.equal(formatPaneValue(99.96), '100');
+  assert.equal(formatPaneValue(-99.97), '-100');
+  assert.equal(formatPaneValue(99.94), '99.9');
   assert.equal(formatPaneValue(-0.003, 2), '0.00');
   assert.equal(formatPaneValue(-0.06), '-0.1');
   assert.equal(formatPaneValue(-80.25), '-80.3');

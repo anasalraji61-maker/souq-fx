@@ -350,9 +350,10 @@ export function paneBoundedDecimals(paneId: string): number {
 export function formatPaneValue(v: number | null, decimals = 1): string | null {
   if (v == null || !Number.isFinite(v)) return null;
   const d = Number.isInteger(decimals) && decimals >= 0 && decimals <= 8 ? decimals : 1;
-  if (Math.abs(v) >= 100) return String(Math.round(v));
-  // %R بقمّة الفترة وCMO حول الصفر: ‎-0.04‎ كانت «-0.0» برأس اللوحة (كـ`formatPaneValueScaled`: لا صفر سالب).
+  // الحدّ على القيمة **بعد** التقريب: ‎99.96‎ كانت «100.0» و‎100.04‎ «100» ⇒ الرقم يغيّر شكله عند سقف RSI/%R.
   const s = v.toFixed(d);
+  if (Math.abs(Number(s)) >= 100) return String(Math.round(v));
+  // %R بقمّة الفترة وCMO حول الصفر: ‎-0.04‎ كانت «-0.0» برأس اللوحة (كـ`formatPaneValueScaled`: لا صفر سالب).
   return Number(s) === 0 ? (0).toFixed(d) : s;
 }
 
