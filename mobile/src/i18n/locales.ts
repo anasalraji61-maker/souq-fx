@@ -1317,6 +1317,23 @@ export type Dict = {
   mcNudgeEarlierA11y: string;
   mcNudgeLaterA11y: string;
   mcColorNames: [string, string, string, string, string, string];
+  /**
+   * مُعَدّة لطلب chart run 97 (غير موصولة بعد): امتداد خطّ الاتجاه، عرض الخطّ ونمطه، عكس فيبو — أزرار دوّارة بشريط الرسم المحدَّد
+   * كزرّ اللون (`mcDrawColorWord`/`mcDrawColorA11y`). الامتداد «للماضي/للمستقبل» لا «يسار/يمين» كي لا يلتبس بالعربية والكردية (RTL)،
+   * كـ`mcNudgeEarlierA11y`. `mcExtendModes` بالترتيب: بلا امتداد، للماضي، للمستقبل، الاتجاهين؛ `{mode}`/`{next}` منها.
+   * `{px}`/`{next}` أرقام العرض بالبكسل؛ `{style}`/`{next}` من `mcLineStyleNames` (متّصل، متقطّع، منقّط) — فلا تبقى الحالة شكلية فقط.
+   */
+  mcExtendWord: string;
+  mcExtendModes: [string, string, string, string];
+  mcExtendA11y: string;
+  mcLineWidthWord: string;
+  mcLineWidthA11y: string;
+  mcLineStyleWord: string;
+  mcLineStyleNames: [string, string, string];
+  mcLineStyleA11y: string;
+  /** عكس فيبو: 0% و100% يتبادلان طرفي التأرجح (A↔B) — الرسم نفسه لا يتحرّك، المستويات وحدها تنقلب. */
+  mcFibReverse: string;
+  mcFibReverseA11y: string;
   /** عنوان نافذة المشاركة (`Sharing.shareAsync` dialogTitle) — كان `chartLocalLabels(lang).shareDialogTitle` */
   mcShareDialogTitle: string;
   /** أسماء الجلسات فوق تظليل مؤشّر «Sessions» — كانت `chartLocalLabels(lang).sessions` */
@@ -2633,6 +2650,16 @@ const ar: Dict = {
   mcNudgeEarlierA11y: 'أزِح الرسم المحدَّد شمعة واحدة نحو الأقدم. اضغط مطوّلاً للتكرار',
   mcNudgeLaterA11y: 'أزِح الرسم المحدَّد شمعة واحدة نحو الأحدث. اضغط مطوّلاً للتكرار',
   mcColorNames: ['لون الإطار', 'أخضر', 'أحمر', 'برتقالي', 'أزرق', 'أبيض'],
+  mcExtendWord: 'امتداد',
+  mcExtendModes: ['بلا امتداد', 'نحو الماضي', 'نحو المستقبل', 'بالاتجاهين'],
+  mcExtendA11y: 'امتداد الخطّ: {mode} — اضغط للتبديل إلى {next}',
+  mcLineWidthWord: 'سُمك',
+  mcLineWidthA11y: 'سُمك الخطّ {px} بكسل — اضغط للتبديل إلى {next} بكسل',
+  mcLineStyleWord: 'نمط',
+  mcLineStyleNames: ['متّصل', 'متقطّع', 'منقّط'],
+  mcLineStyleA11y: 'نمط الخطّ: {style} — اضغط للتبديل إلى {next}',
+  mcFibReverse: 'عكس',
+  mcFibReverseA11y: 'اعكس مستويات فيبوناتشي: يتبادل 0% و100% طرفَي التأرجح، والرسم في مكانه',
   mcShareDialogTitle: 'شارت MATRIX',
   mcSessTokyo: 'طوكيو',
   mcSessLondon: 'لندن',
@@ -3879,6 +3906,16 @@ const enUS: Dict = {
   mcNudgeEarlierA11y: 'Move the selected drawing one candle earlier. Hold to repeat',
   mcNudgeLaterA11y: 'Move the selected drawing one candle later. Hold to repeat',
   mcColorNames: ['Frame color', 'Green', 'Red', 'Amber', 'Blue', 'White'],
+  mcExtendWord: 'Extend',
+  mcExtendModes: ['No extension', 'Into the past', 'Into the future', 'Both ways'],
+  mcExtendA11y: 'Line extension: {mode} — tap to switch to {next}',
+  mcLineWidthWord: 'Width',
+  mcLineWidthA11y: 'Line width {px} px — tap to switch to {next} px',
+  mcLineStyleWord: 'Style',
+  mcLineStyleNames: ['Solid', 'Dashed', 'Dotted'],
+  mcLineStyleA11y: 'Line style: {style} — tap to switch to {next}',
+  mcFibReverse: 'Reverse',
+  mcFibReverseA11y: 'Reverse the Fibonacci levels: 0% and 100% swap swing ends, the drawing stays where it is',
   mcShareDialogTitle: 'MATRIX chart',
   mcSessTokyo: 'Tokyo',
   mcSessLondon: 'London',
@@ -5173,6 +5210,16 @@ const ku: Dict = {
   mcNudgeEarlierA11y: 'وێنە هەڵبژێردراوەکە یەک مۆم بەرەو کۆنتر ببە. ڕایبگرە بۆ دووبارەکردنەوە',
   mcNudgeLaterA11y: 'وێنە هەڵبژێردراوەکە یەک مۆم بەرەو نوێتر ببە. ڕایبگرە بۆ دووبارەکردنەوە',
   mcColorNames: ['ڕەنگی چوارچێوە', 'سەوز', 'سوور', 'پرتەقاڵی', 'شین', 'سپی'],
+  mcExtendWord: 'درێژکردنەوە',
+  mcExtendModes: ['بێ درێژکردنەوە', 'بەرەو ڕابردوو', 'بەرەو داهاتوو', 'هەردوو لا'],
+  mcExtendA11y: 'درێژکردنەوەی هێڵ: {mode} — دایبگرە بۆ گۆڕین بۆ {next}',
+  mcLineWidthWord: 'ئەستووری',
+  mcLineWidthA11y: 'ئەستووری هێڵ {px} پیکسڵ — دایبگرە بۆ گۆڕین بۆ {next} پیکسڵ',
+  mcLineStyleWord: 'شێواز',
+  mcLineStyleNames: ['پەیوەست', 'پچڕپچڕ', 'خاڵخاڵ'],
+  mcLineStyleA11y: 'شێوازی هێڵ: {style} — دایبگرە بۆ گۆڕین بۆ {next}',
+  mcFibReverse: 'پێچەوانە',
+  mcFibReverseA11y: 'ئاستەکانی فیبۆناچی پێچەوانە بکەرەوە: 0% و 100% شوێنی دوو سەری جوولەکە دەگۆڕنەوە، وێنەکە لە شوێنی خۆیدا دەمێنێتەوە',
   mcShareDialogTitle: 'چارتی MATRIX',
   mcSessTokyo: 'تۆکیۆ',
   mcSessLondon: 'لەندەن',
