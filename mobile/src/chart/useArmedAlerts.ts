@@ -111,7 +111,7 @@ export function useArmedAlerts(symbol: string | null): ArmedAlert[] {
         const next = armedAlertsFor(latest, symbol);
         const same =
           prev.length === next.length &&
-          prev.every((p, i) => p.price === next[i]!.price && p.condition === next[i]!.condition);
+          prev.every((p, i) => p.id === next[i]!.id && p.price === next[i]!.price && p.condition === next[i]!.condition);
         return same ? prev : next;
       });
     update();
