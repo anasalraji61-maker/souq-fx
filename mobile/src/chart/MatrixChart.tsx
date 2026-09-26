@@ -528,7 +528,8 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 };
 
 /** DESIGN-PRO §4 — علامة الاختيار الداخلية 2px أسفل الزرّ: الاختيار لا يُقال باللون وحده.
- * `accent` للاختيار الأساسي الوحيد بالمنطقة (§1)، وإلا محايدة. */
+ * `accent` للاختيار الأساسي الوحيد بالمنطقة (§1)، وإلا محايدة. أداة `none` (المؤشّر، مختارة دائماً وقت السكون) محايدة:
+ * التأكيد بشريط الرسم يظهر فقط حين يختار المتداول أداة رسم فعلاً. */
 function SelMark({ accent }: { accent?: boolean }) {
   return <View pointerEvents="none" style={[styles.selMark, !accent && styles.selMarkNeutral]} />;
 }
@@ -6608,7 +6609,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolIcon, tool === t.id && styles.compactToolTextOn]}>
                   {COMPACT_TOOL_ICONS[t.id]}
                 </Text>
-                {tool === t.id ? <SelMark accent /> : null}
+                {tool === t.id ? <SelMark accent={t.id !== 'none'} /> : null}
               </Pressable>
             ))}
             {/* حذف العنصر المحدَّد كان بالرصيف الكامل وحده، فبالواجهة المدمجة (الهاتف)
@@ -12895,7 +12896,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolIcon, tool === t.id && styles.compactToolTextOn]}>
                   {COMPACT_TOOL_ICONS[t.id]}
                 </Text>
-                {tool === t.id ? <SelMark accent /> : null}
+                {tool === t.id ? <SelMark accent={t.id !== 'none'} /> : null}
               </Pressable>
             ))}
             {drawings.length ? (
@@ -13353,7 +13354,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radii.sm,
-    backgroundColor: '#0A1524',
+    backgroundColor: colors.controlBg,
     minWidth: 78,
   },
   lensOn: { backgroundColor: colors.selectedFill },
