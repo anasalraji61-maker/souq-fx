@@ -2002,7 +2002,7 @@ const ar: Dict = {
   riskCalcMicroModeNote:
     '«{symbol}» رمز حساب micro: الرصيد بعملة حسابك كما هو، واللوت أدناه بلوتات micro (1,000 وحدة) — اكتبه كما هو بحساب micro',
   appCrashTitle: 'حدث خطأ غير متوقع',
-  appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
+  appCrashBody: 'تعذّر عرض هذه الشاشة. كل ما حفظتَه، ومنه رسوماتك، باقٍ — اضغط «إعادة المحاولة» للمتابعة. ما كتبتَه ولم تحفظه بعد (صفقة بالدفتر مثلاً) قد تحتاج إلى إعادته.',
   appCrashRepeatBody:
     'ما زالت الشاشة تتعثّر. أغلق MATRIX كلياً (اسحبه من قائمة التطبيقات المفتوحة) ثم افتحه من جديد — رسوماتك محفوظة.',
   appCrashRepeatBodyWeb: 'ما زالت الشاشة تتعثّر. أعد تحميل الصفحة (زرّ ↻ بالمتصفّح، أو F5، أو ⌘R على الماك) — رسوماتك محفوظة.',
@@ -3286,7 +3286,7 @@ const enUS: Dict = {
   riskCalcMicroModeNote:
     '“{symbol}” is a micro-account symbol: the balance stays in your account currency, and the lot below is in micro lots (1,000 units) — type it as-is on the micro account',
   appCrashTitle: 'Something went wrong',
-  appCrashBody: 'This screen couldn’t be displayed. Your data and drawings are safe — select “Try again” to continue.',
+  appCrashBody: 'This screen couldn’t be displayed. Your drawings and everything you saved are safe — select “Try again” to continue. Anything typed but not yet saved (a journal entry, say) may need re-entering.',
   appCrashRepeatBody:
     'Still not working. Fully close MATRIX (swipe it away from your recent apps) and open it again — your drawings are safe.',
   appCrashRepeatBodyWeb: 'Still not working. Reload the page (the browser’s ↻ button, F5, or ⌘R on a Mac) — your drawings are safe.',
@@ -4621,7 +4621,7 @@ const ku: Dict = {
   riskCalcMicroModeNote:
     '«{symbol}» هێمای هەژماری مایکرۆیە: باڵانس بە دراوی هەژمارەکەت دەمێنێتەوە، و لۆتی خوارەوە لۆتی مایکرۆیە (1,000 یەکە) — وەک خۆی لە هەژماری مایکرۆ بنووسە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
-  appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
+  appCrashBody: 'ئەم شاشەیە نیشان نەدرا. کێشانەکانت و هەرچی پاشەکەوتت کردووە پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە. ئەوەی نووسیوتە و هێشتا پاشەکەوتت نەکردووە (مامەڵەیەک لە دەفتەر بۆ نموونە) لەوانەیە پێویست بێت دووبارە بینووسیتەوە.',
   appCrashRepeatBody:
     'هێشتا کار ناکات. MATRIX بە تەواوی دابخە (لە لیستی ئەپە کراوەکان لایبەرە) و دووبارە بیکەرەوە — کێشانەکانت پارێزراون.',
   appCrashRepeatBodyWeb: 'هێشتا کار ناکات. پەڕەکە نوێ بکەرەوە (دوگمەی ↻ی وێبگەڕ، یان F5، یان ⌘R لەسەر ماک) — کێشانەکانت پارێزراون.',
