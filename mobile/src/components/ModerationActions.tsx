@@ -31,6 +31,8 @@ export function ModerationActions({
   const { user } = useAuth();
   const showBlock = canBlockAuthor(author, user?.username);
   const [busy, setBusy] = useState(false);
+  /** متزامن: `busy` حالةٌ لا تصل لضغطة ثانية قبل إعادة الرسم ⇒ نقرٌ مزدوج كان يمرّ الحارس فيُظهر الإشعار مرّتين */
+  const busyRef = useRef(false);
   const align = rtl ? ('right' as const) : ('left' as const);
 
   /**
@@ -47,7 +49,8 @@ export function ModerationActions({
   }, []);
 
   const report = async (reason: ReportReason) => {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const r = await api.report(kind, targetId, reason);
@@ -60,6 +63,7 @@ export function ModerationActions({
     } catch {
       onResult(t.modReportError, false);
     } finally {
+      busyRef.current = false;
       if (mountedRef.current) setBusy(false);
     }
   };
@@ -72,12 +76,14 @@ export function ModerationActions({
    * والزرّ يُعطَّل الآن كرقاقات البلاغ حرفياً، فالحالة تصل قارئ الشاشة أيضاً.
    */
   const doBlock = async () => {
-    if (!author || busy) return;
+    if (!author || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await block(author);
       onResult(t.modBlocked.replace('{user}', () => author), false);
     } finally {
+      busyRef.current = false;
       if (mountedRef.current) setBusy(false);
     }
   };
