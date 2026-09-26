@@ -143,7 +143,7 @@ import {
   levelLooksLikeDecimalSlip,
   type TradeSide,
   QUICK_SYMBOLS,
-  minStopPips,
+  calcMinStopPips,
   stopTooClose,
   atrStopPips,
   ATR_STOP_TF,
@@ -831,8 +831,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * القيمة مقرَّبة لعُشر pip أصلاً (`slPipsFromPrices`) فلا حاجة لهامش عائم.
    * والحدّ الأكبر من 1 pip و0.002% من السعر (`minStopPips`): XAUJPY بوقف 0.5 ين كان 300 لوت فوق «1 pip» = 0.1 ين.
    */
-  const slFloorPx = Number.isFinite(priceNum(entryPx)) ? priceNum(entryPx) : priceNum(stopPx);
-  const slFloor = spec ? minStopPips(spec.symbol, slFloorPx) ?? 1 : 1;
+  // بلا سعر مكتوب (النقاط وحدها) ⇒ سعر الأداة التقريبي لا «1 pip» — `calcMinStopPips`
+  const slFloor = calcMinStopPips(spec, priceNum(entryPx), priceNum(stopPx));
   // النقاط من السعرين مقرَّبة لعُشر pip **للأعلى** ⇒ 3.61 pip حقيقية على USDZAR تُقرأ 3.7 فتمرّ فوق الحدّ 3.698، والدفتر يرفضها
   // بالسعرين أنفسهما (`stopTooClose`). حين تأتي النقاط من السعرين يُفحص السعران بحدّ الدفتر نفسه.
   const priceStopTooClose =

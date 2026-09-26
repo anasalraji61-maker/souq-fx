@@ -823,6 +823,23 @@ export function minStopPips(symbol: string | null | undefined, price?: number | 
   return Math.max(1, Math.ceil(Math.round(((price * R_MIN_RISK_FRACTION) / pip) * 10 * 1e6) / 1e6) / 10);
 }
 
+/**
+ * حدّ الوقف **للحاسبة**: `minStopPips` بسعر الدخول المكتوب، وإلا الوقف المكتوب، وإلا — **النقاط وحدها** — سعر الأداة التقريبي
+ * (`pairBallpark`). كان السعر المجهول ⇒ 1 pip، فالحارس الذي وُجد لـXAUJPY يسقط بالضبط حيث يكتب أغلب المتداولين النقاط:
+ * XAUJPY وقف «60» pip (6 ين، داخل السبريد) بحساب 10,000 USD و1% ⇒ **25 لوت** بلا تحذير، والوقف نفسه بالسعرين مرفوض (الحدّ 119.4).
+ * المرجع بمعامل 2 تقريباً من السعر الحقيقي، والحدّ 0.002% منه — ما يحجبه زائداً وقفٌ أضيق من 0.004% من السعر، أضيق من أي سبريد.
+ * الأزواج المعتادة 1 pip كما كانت.
+ */
+export function calcMinStopPips(
+  spec: { symbol: string; base: string; quote: string; pipSize: number } | null,
+  entryPx: number,
+  stopPx: number
+): number {
+  if (!spec) return 1;
+  const px = finitePos(entryPx) ? entryPx : finitePos(stopPx) ? stopPx : pairBallpark(spec);
+  return minStopPips(spec.symbol, px) ?? 1;
+}
+
 function exactR(input: {
   symbol?: string;
   side: TradeSide;

@@ -11,6 +11,7 @@ import {
   ATR_STOP_TF_SEC,
   analyzePlan,
   minStopPips,
+  calcMinStopPips,
   computedPriceText,
   openQuotesRefreshDue,
   OPEN_QUOTES_REFRESH_AFTER_MS,
@@ -3540,6 +3541,20 @@ console.log('tradePlan formatSignedPct selftest OK');
   assert.equal(minStopPips('XAUJPY', 525000), 105);
   assert.equal(minStopPips('XAUJPY', null), 1);
   assert.equal(minStopPips('BTCUSD', 60000), null);
+  // الحاسبة بالنقاط وحدها (بلا دخول ولا وقف): الحدّ من سعر الأداة التقريبي لا 1 pip — XAUJPY وقف 60 pip كان 25 لوت بلا تحذير
+  const xj = instrumentSpec('XAUJPY')!;
+  assert.ok(calcMinStopPips(xj, NaN, NaN) > 60, `XAUJPY pips-only floor ${calcMinStopPips(xj, NaN, NaN)}`);
+  assert.equal(calcMinStopPips(xj, 525000, NaN), 105);
+  assert.equal(calcMinStopPips(xj, NaN, 525000), 105);
+  assert.equal(calcMinStopPips(xj, 525000, 600000), 105, 'الدخول أولاً');
+  const xt = instrumentSpec('XAUTRY')!;
+  assert.ok(calcMinStopPips(xt, NaN, NaN) > 20, `XAUTRY pips-only floor ${calcMinStopPips(xt, NaN, NaN)}`);
+  for (const sym of ['EURUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'XAGUSD', 'EURNZD']) {
+    assert.equal(calcMinStopPips(instrumentSpec(sym)!, NaN, NaN), 1, sym);
+  }
+  assert.equal(calcMinStopPips(null, NaN, NaN), 1);
+  // USDTRY ~40 بالمرجع ⇒ 8 pip كما بالسعر (8.2 عند 41) — لا 1
+  assert.equal(calcMinStopPips(instrumentSpec('USDTRY')!, NaN, NaN), 8);
   for (const [sym, px] of [['EURUSD', 1.085], ['USDJPY', 150], ['XAUUSD', 3500], ['GBPJPY', 200], ['XAGUSD', 40], ['EURUSDc', 1.1]] as const) {
     assert.equal(minStopPips(sym, px), 1, sym);
   }
