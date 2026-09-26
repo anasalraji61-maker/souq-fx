@@ -749,7 +749,7 @@ export type Dict = {
   /** «إغلاق بالسعر الحالي» على صفقة أُغلقت بجهاز آخر: القائمة تتحدّث بلا كتابة خروج (`closedElsewhere`) — هذا يشرح السبب. */
   journalClosedElsewhereTitle: string;
   journalClosedElsewhereBody: string;
-  /** 409 `trade_changed_concurrently` على الإغلاق: عُدِّلت (لا أُغلقت) من جهاز آخر أثناء الإغلاق. */
+  /** الإغلاق لم يُسجَّل لأن الصفقة عُدِّلت (لا أُغلقت) من جهاز آخر: 409 `trade_changed_concurrently`، أو فحص `closeTermsChangedElsewhere` قبل الإرسال (`5b5d620`) — فالنصّ «بعد أن فتحتَها» لا «في اللحظة نفسها». */
   journalCloseConflictTitle: string;
   journalCloseConflictBody: string;
   backtestSub: string;
@@ -2140,7 +2140,7 @@ const ar: Dict = {
   journalClosedElsewhereTitle: 'الصفقة مغلقة من قبل',
   journalClosedElsewhereBody: 'أُغلقت هذه الصفقة من جهاز آخر، فلم نسجّل خروجاً ثانياً فوقها. القائمة محدَّثة الآن بسعر خروجها ونتيجتها المسجَّلين.',
   journalCloseConflictTitle: 'لم يُسجَّل الإغلاق',
-  journalCloseConflictBody: 'عُدِّلت هذه الصفقة من جهاز آخر في اللحظة نفسها، فلم نسجّل خروجك فوق ذلك التعديل. القائمة محدَّثة الآن — راجع الصفقة ثم أغلقها من جديد إن لزم.',
+  journalCloseConflictBody: 'عُدِّلت هذه الصفقة من جهاز آخر بعد أن فتحتَها هنا، فلم نسجّل خروجك لأن نتيجته محسوبة من القيم القديمة. القائمة محدَّثة الآن — راجع الصفقة ثم أغلقها من جديد إن لزم.',
   backtestSub: 'MA · RSI · MACD · BB · منحنى رأس المال',
   backtestSymbolA11y: 'رمز الأداة للاختبار الخلفي',
   backtestStrategyA11yPrefix: 'استراتيجية',
@@ -3382,7 +3382,7 @@ const enUS: Dict = {
   journalClosedElsewhereTitle: 'Already closed',
   journalClosedElsewhereBody: 'This trade was closed on another device, so no second exit was recorded over it. The list now shows its recorded exit price and result.',
   journalCloseConflictTitle: 'Close not recorded',
-  journalCloseConflictBody: 'This trade was edited on another device at the same moment, so your exit was not recorded over that change. The list is up to date now — check the trade, then close it again if needed.',
+  journalCloseConflictBody: 'This trade was edited on another device after you opened it here, so your exit was not recorded — its result was worked out from the old values. The list is up to date now — check the trade, then close it again if needed.',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
   backtestSymbolA11y: 'Instrument symbol for the backtest',
   backtestStrategyA11yPrefix: 'Strategy',
@@ -4673,7 +4673,7 @@ const ku: Dict = {
   journalClosedElsewhereTitle: 'مامەڵەکە پێشتر داخراوە',
   journalClosedElsewhereBody: 'ئەم مامەڵەیە لە ئامێرێکی ترەوە داخراوە، بۆیە دەرچوونی دووەممان لەسەری تۆمار نەکرد. لیستەکە ئێستا نرخی دەرچوون و ئەنجامە تۆمارکراوەکەی پیشان دەدات.',
   journalCloseConflictTitle: 'داخستنەکە تۆمار نەکرا',
-  journalCloseConflictBody: 'ئەم مامەڵەیە لە هەمان کاتدا لە ئامێرێکی ترەوە دەستکاری کرا، بۆیە دەرچوونەکەت لەسەر ئەو گۆڕانکارییە تۆمار نەکرا. لیستەکە ئێستا نوێکراوەتەوە — مامەڵەکە بپشکنە و ئەگەر پێویست بوو دووبارە دایبخە.',
+  journalCloseConflictBody: 'ئەم مامەڵەیە لە ئامێرێکی ترەوە دەستکاری کرا دوای ئەوەی لێرە کردتەوە، بۆیە دەرچوونەکەت تۆمار نەکرا — ئەنجامەکەی لە بەها کۆنەکانەوە هەژمار کرابوو. لیستەکە ئێستا نوێکراوەتەوە — مامەڵەکە بپشکنە و ئەگەر پێویست بوو دووبارە دایبخە.',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی سەرمایە',
   backtestSymbolA11y: 'هێمای ئامراز بۆ تاقیکردنەوەی دواوە',
   backtestStrategyA11yPrefix: 'ستراتیژی',
