@@ -3028,6 +3028,29 @@ console.log('positionSize costsForRisk selftest OK');
   assert.equal(typedExitQuoteToAccount(uj, 'USD', NaN, NaN, 150), null);
   assert.equal(typedExitQuoteToAccount(uj, 'USD', NaN, 150, NaN), null);
   assert.equal(typedExitQuoteToAccount(uj, 'USD', 0, 150, 20000), null);
+  // خطأ منزلة بلا سعر حيّ: USDJPY وقف «1500» (بدل 150.0)، نقاط 20 بخانتها والدخول فارغ ⇒ كان 1/1500 ⇒ 7.50 لوت (10% من 10,000
+  // عند الوقف) بدل 0.75 ⇒ null (لا لوت). والدخول «1500» بالنقاط وحدها كذلك، و«15» (÷10) و«15000».
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', 1500, NaN, 20), null);
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', 15, NaN, 20), null);
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', 15000, NaN, 20), null);
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', NaN, 1500, 20), null);
+  assert.equal(typedExitQuoteToAccount(instrumentSpec('GBPUSD')!, 'GBP', 12.65, NaN, 50), null);
+  assert.equal(typedExitQuoteToAccount(instrumentSpec('USDCHF')!, 'USD', 8.8, NaN, 50), null);
+  {
+    const ok = typedExitQuoteToAccount(uj, 'USD', 150, NaN, 20)!;
+    const lots = positionSize({ balance: 10000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(uj, ok.rate), contractSize: uj.contractSize })!.lots;
+    assert.equal(lots, 0.75);
+  }
+  // أسعار حقيقية (2024–2026) بعيدة عن المرجع تبقى مقبولة، بكل عملة حساب أساسها
+  for (const [sym, acct, px] of [
+    ['USDJPY', 'USD', 140], ['USDJPY', 'USD', 161], ['USDTRY', 'USD', 41], ['USDZAR', 'USD', 18.5], ['USDMXN', 'USD', 20.5],
+    ['USDCHF', 'USD', 0.79], ['USDCAD', 'USD', 1.44], ['USDSEK', 'USD', 11], ['USDHKD', 'USD', 7.8], ['USDCNH', 'USD', 7.3],
+    ['USDILS', 'USD', 3.6], ['USDSGD', 'USD', 1.29], ['USDPLN', 'USD', 4.1], ['EURUSD', 'EUR', 1.02], ['EURJPY', 'EUR', 175],
+    ['EURTRY', 'EUR', 48], ['EURCHF', 'EUR', 0.93], ['GBPUSD', 'GBP', 1.21], ['GBPJPY', 'GBP', 208], ['AUDUSD', 'AUD', 0.6],
+    ['AUDJPY', 'AUD', 90], ['NZDUSD', 'NZD', 0.55], ['CADJPY', 'CAD', 105], ['CHFJPY', 'CHF', 185],
+  ] as const) {
+    assert.equal(typedExitQuoteToAccount(instrumentSpec(sym)!, acct, px, NaN, 20)?.rate, 1 / px, `${sym} ${px}`);
+  }
   assert.equal(typedExitQuoteToAccount(null, 'USD', 148.5, 150, 150), null);
 }
 console.log('positionSize typedExitQuoteToAccount selftest OK');

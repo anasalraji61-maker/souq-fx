@@ -597,6 +597,26 @@ export function pipsOnlyExitPrice(
 }
 
 /**
+ * قيمة تقريبية بالدولار لكل عملة/معدن تقبله `instrumentSpec` (2026، بمعامل 2 تقريباً) — لقرار «أيّ القراءتين سعر هذه الأداة» فقط
+ * (`entryLooksLikeDecimalSlip`): القراءتان تختلفان ×10 فيكفي أن يقع التقدير ضمن √10 ≈ 3.2 من السعر الحقيقي. **ليست سعر تحويل**
+ * ولا تدخل أيّ حساب مال (وحارسٌ لسعر مكتوب بلا سعر حيّ: `typedExitQuoteToAccount`). كان المرجع EURUSD وحده (1.10 لكل pip 0.0001) ⇒ ZARJPY (8.5، pip 0.01) بدخول «85» ووقف 8.40 يُقرأ 85
+ * «أقرب» ⇒ لا سطر، وحارس النقاط يقترح وقفاً عند 84.916 (−90% بالضغطة الثانية) — الخطأ الذي أصلحه tools102a، على هذه الأزواج.
+ */
+const USD_BALLPARK: Record<string, number> = {
+  EUR: 1.1, GBP: 1.3, AUD: 0.65, NZD: 0.6, USD: 1, CAD: 0.73, CHF: 1.2, JPY: 0.0067,
+  SEK: 0.1, NOK: 0.095, DKK: 0.15, PLN: 0.27, TRY: 0.025, ZAR: 0.055, MXN: 0.053, SGD: 0.77,
+  HKD: 0.128, CNH: 0.14, ILS: 0.28, SAR: 0.267, AED: 0.272, XAU: 3500, XAG: 40,
+};
+
+/** سعر الأداة التقريبي (أساس ÷ تسعير بـ`USD_BALLPARK`)؛ عملة غائبة ⇒ مرجع pip القديم (EURUSD 1.10 لكل 0.0001). */
+export function pairBallpark(spec: { base: string; quote: string; pipSize: number }): number {
+  const b = USD_BALLPARK[spec.base];
+  const q = USD_BALLPARK[spec.quote];
+  if (b && q) return b / q;
+  return spec.pipSize * (spec.base === 'XAU' ? 25000 : spec.base === 'XAG' ? 3000 : 11000);
+}
+
+/**
  * سعر التحويل **بلا سعر حيّ** حين العملة الأساس = عملة الحساب (USDJPY/USDCHF/USDCAD بحساب دولار، GBPUSD بحساب إسترليني):
  * الخسارة عند الوقف = النقاط بعملة التسعير ÷ سعر الوقف نفسه، فسعر التحويل **هو** 1 ÷ الوقف المكتوب ولا يحتاج شيئاً من المزوّد.
  * كانت الحاسبة حين يفشل جلب USDJPY (شبكة، مزوّد متوقّف) تقف عند «تعذّر سعر التحويل — اكتبه» مع أن الوقف 148.50 مكتوب
@@ -604,8 +624,14 @@ export function pipsOnlyExitPrice(
  *
  * الوقف المكتوب أولاً؛ وإلا (النقاط وحدها) الدخول المكتوب − النقاط، كـ`pipsOnlyExitPrice` (الخروج الأسوأ تحت الدخول ⇒
  * أغلى pip ⇒ لا تتجاوز الخسارة المخاطرة أيّاً كان الاتجاه). بلا حيّ لا حارس «> 20% عن الحيّ»، ولا حاجة له هنا: الرقم هو
- * الخسارة الحقيقية عند السعر المكتوب نفسه — «1500» بدل «150» يعطي وقفاً ألوف النقاط فيظهر الخطأ بخانة النقاط.
- * `null` = أساسٌ ليس عملة الحساب (التحويل مجهول فعلاً)، أو لا وقف ولا دخول صالح.
+ * الخسارة الحقيقية عند السعر المكتوب نفسه.
+ *
+ * **لكن سعرٌ بخطأ منزلة** («1500» بدل «150.0» على USDJPY) كان يُقبل: نقاط الوقف مكتوبة بخانتها (20) والدخول فارغ، فلا حارس
+ * يرى الوقف — 1 ÷ 1500 ⇒ قيمة pip ‏0.67 USD بدل 6.67 ⇒ **7.50 لوت بدل 0.75** لـ1% من 10,000 (خسارة 1,000 USD عند الوقف = 10%).
+ * بالسعر الحيّ يحميه حارس «> 20% عن الحيّ» (`exitQuoteToAccount`)؛ هنا لا حيّ، فالمرجع سعر الأداة التقريبي (`pairBallpark`،
+ * بمعامل 2 تقريباً): سعرٌ يبعد عنه أكثر من √10 ⇒ `null` (لا لوت — تُطلب كتابة سعر التحويل) بدل لوتٍ أكبر بعشر مرّات. خطأ المنزلة ×10
+ * بالضبط فيقع خارج √10 دائماً، والسعر الحقيقي داخلها (USDTRY 41 مقابل مرجع 40، USDJPY 150 مقابل 149).
+ * `null` = أساسٌ ليس عملة الحساب (التحويل مجهول فعلاً)، أو لا وقف ولا دخول صالح، أو سعرٌ بعيد عن سعر الأداة.
  */
 export function typedExitQuoteToAccount(
   spec: InstrumentSpec | null,
@@ -615,11 +641,17 @@ export function typedExitQuoteToAccount(
   slPips: number
 ): { rate: number; price: number; fromStop: boolean } | null {
   if (!spec || spec.base !== convAccount) return null;
-  if (Number.isFinite(stopPrice) && stopPrice > 0) return { rate: 1 / stopPrice, price: stopPrice, fromStop: true };
+  const plausible = (px: number) => Math.abs(Math.log(px / pairBallpark(spec))) <= TYPED_EXIT_MAX_LOG_OFF;
+  if (Number.isFinite(stopPrice) && stopPrice > 0) {
+    return plausible(stopPrice) ? { rate: 1 / stopPrice, price: stopPrice, fromStop: true } : null;
+  }
   if (!Number.isFinite(entryPrice) || entryPrice <= 0 || !Number.isFinite(slPips) || slPips <= 0) return null;
   const exit = entryPrice - slPips * spec.pipSize;
-  return exit > 0 ? { rate: 1 / exit, price: exit, fromStop: false } : null;
+  return exit > 0 && plausible(exit) ? { rate: 1 / exit, price: exit, fromStop: false } : null;
 }
+
+/** √10: خطأ منزلة واحدة (×10) خارجها دائماً، ومرجع `pairBallpark` (بمعامل 2) داخلها. */
+const TYPED_EXIT_MAX_LOG_OFF = Math.log(10) / 2;
 
 /**
  * نقاط وقفٍ مكتوبة يدوياً تبقى عند تبديل الأداة **ضمن الصنف نفسه** فقط: فوركس ⇄ فوركس (EURUSD ⇒ GBPUSD ⇒ USDJPY: «20 pip»
