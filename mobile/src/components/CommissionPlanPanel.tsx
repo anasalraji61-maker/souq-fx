@@ -110,6 +110,8 @@ export function CommissionPlanPanel() {
   const [loading, setLoading] = useState(false);
   /** وضوح الحالة: يعلم المستخدم أن الجداول المعروضة تقريبية (fallbackCommission) لا حيّة، بدل صمت كامل */
   const [error, setError] = useState(false);
+  /** تقرير الأرباح فشل لسبب غير «غير مسجَّل» (401) — لا يُقال «لا أرباح مسجّلة» لمن له أرباح لم تُحمَّل. */
+  const [reportFailed, setReportFailed] = useState(false);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (طي/فتح قبل اكتمال
   // الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
@@ -123,18 +125,25 @@ export function CommissionPlanPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      let rFailed = false;
       const [p, r] = await Promise.all([
         api.commissionPlan(),
-        api.commissionReport().catch(() => null),
+        api.commissionReport().catch((e: unknown) => {
+          // الزائر يأخذ 401 (`main.py` `commissions_report`) — حالة طبيعية لا فشل.
+          rFailed = !(e instanceof Error && e.message === 'HTTP 401');
+          return null;
+        }),
       ]);
       if (!mountedRef.current) return;
       setPlan(p);
       setReport(r);
+      setReportFailed(rFailed);
       setError(false);
     } catch {
       if (mountedRef.current) {
         setPlan(null);
         setReport(null);
+        setReportFailed(false);
         setError(true);
       }
     } finally {
@@ -146,12 +155,21 @@ export function CommissionPlanPanel() {
     if (open && !plan) void load();
   }, [open, plan, load]);
 
-  const commissionRows = report?.commission_table?.length
-    ? report.commission_table
-    : plan?.commission_table?.map((r) => ({
-        ...r,
-        points_per_member: r.rate_pct,
-      })) ?? fallbackCommission(t);
+  // الأمثلة التقريبية (`fallback*`) فقط تحت ملاحظة `cppLiveError` التي تقول إنها أمثلة: كانت تظهر أثناء
+  // التحميل وحين يُسقط الخادم `commission_table` (اختياري) بلا أي وسم فتُقرأ نسبك الفعلية. وعمود النقاط
+  // من الخطة كان نسخة من النسبة (5% ⇒ «5 نقاط») — الخطة لا ترسل نقاطاً، فـ«—».
+  const commissionRows: { type: string; rate_pct: number; condition: string; points_per_member: number | null }[] =
+    report?.commission_table?.length
+      ? report.commission_table
+      : plan?.commission_table?.map((r) => ({ ...r, points_per_member: null })) ??
+        (error ? fallbackCommission(t) : []);
+  const levelRows =
+    report?.levels_table.map((r) => ({ role: localizedRole(t, r.role), levels: r.levels })) ??
+    plan?.roles.map((r) => ({
+      role: isRoleId(r.id) ? t[r.id] : localizedRole(t, r.label),
+      levels: r.levels,
+    })) ??
+    (error ? fallbackLevels(t) : []);
 
   return (
     <View style={[styles.wrap, !open && styles.wrapCollapsed]}>
@@ -216,7 +234,7 @@ export function CommissionPlanPanel() {
                   {localized(t, SERVER_COND_KEYS, row.condition)}
                 </Text>
                 <Text style={[styles.td, styles.colPts]}>
-                  {row.points_per_member ?? row.rate_pct}
+                  {row.points_per_member ?? '—'}
                 </Text>
               </View>
             ))}
@@ -228,13 +246,7 @@ export function CommissionPlanPanel() {
               <Text style={[styles.th, styles.colRole, al]}>{t.cppColRole}</Text>
               <Text style={[styles.th, styles.colLevels, al]}>{t.cppColLevels}</Text>
             </View>
-            {(report?.levels_table.map((r) => ({ role: localizedRole(t, r.role), levels: r.levels })) ??
-              plan?.roles.map((r) => ({
-                role: isRoleId(r.id) ? t[r.id] : localizedRole(t, r.label),
-                levels: r.levels,
-              })) ??
-              fallbackLevels(t)
-            ).map((row) => (
+            {levelRows.map((row) => (
               <View key={row.role} style={[styles.tr, rowDir]}>
                 <Text style={[styles.td, styles.colRole, al]}>{row.role}</Text>
                 <Text style={[styles.td, styles.colLevels, styles.accent, al]}>
@@ -261,7 +273,7 @@ export function CommissionPlanPanel() {
               </View>
             )) ?? (
               <View style={[styles.tr, rowDir]}>
-                <Text style={[styles.td, styles.emptyHint, al]}>{t.cppNoEarnings}</Text>
+                <Text style={[styles.td, styles.emptyHint, al]}>{loading || error || reportFailed ? '—' : t.cppNoEarnings}</Text>
               </View>
             )}
           </View>
