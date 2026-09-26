@@ -355,3 +355,19 @@ def test_empty_model_reply_is_an_error_not_the_answer_none(monkeypatch, content)
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
     out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟"}).json()
     assert out["answer"] and out["answer"] not in ("None", "")
+
+
+def test_no_card_levels_when_atr_rounds_onto_the_entry(monkeypatch):
+    """run 55: صعود 1e-5 على 60 شمعة مداها 2e-6 (حركة > ATR) لكن ATR دون نصف تسعيرة (5e-6) ⇒ الوقف
+    3.75001 − 2e-6 يُقرَّب على الدخول 3.75001 ⇒ لا مستويات."""
+    closes = [3.75 + 1e-5 * i / 59 for i in range(60)]
+    cs = [main.Candle(time=1_700_000_000 + i * 900, open=c, high=c + 1e-6, low=c - 1e-6, close=c, volume=0)
+          for i, c in enumerate(closes)]
+    series = main.ChartSeries(symbol="USDSAR", timeframe="15m", candles=cs, change_pct=0.0003, last=closes[-1],
+                              data_source=main.DataProvenance(kind="provider", as_of=1.0, channel="twelvedata"))
+    monkeypatch.setattr(main, "build_series", lambda *a, **k: series)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "سيناريو شراء")
+    s = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "USDSAR"}).json()["setup"]
+    assert s["direction"] == "buy"
+    assert s["entry"] is None and s["sl"] is None and s["tp"] is None

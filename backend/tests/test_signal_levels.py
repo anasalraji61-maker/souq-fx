@@ -184,3 +184,11 @@ def test_no_levels_when_the_target_would_be_a_negative_price():
     """سعر 0.05 وATR 0.06 ⇒ هدف البيع 0.05 − 2.2×0.06 = −0.082: سعر مستحيل."""
     levels, basis = signal_hub._trade_levels(0.05, "sell", _candles(40, 0.06, base=0.05))
     assert levels is None and basis["unavailable"] == "atr_exceeds_price"
+
+
+def test_no_levels_when_atr_is_below_half_a_tick():
+    """run 55: USDSAR ‏3.75 وATR ‏2.5e-6 ⇒ الوقف يُقرَّب على الدخول (5 منازل) — صفقة «بلا مخاطرة»."""
+    levels, basis = signal_hub._trade_levels(3.75006, "sell", _candles(40, 0.0000025, base=3.75006))
+    assert levels is None and basis["unavailable"] == "atr_below_tick"
+    levels, _ = signal_hub._trade_levels(3.75006, "sell", _candles(40, 0.0002, base=3.75006))
+    assert levels["sl"] != levels["entry"] != levels["tp"]

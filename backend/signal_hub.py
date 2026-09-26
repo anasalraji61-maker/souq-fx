@@ -85,7 +85,12 @@ def _trade_levels(
     # مدى أوسع من السعر (عملة منهارة على W) ⇒ هدف/وقف ≤ 0: سعر مستحيل كان يُعرض هدفاً
     if not (sl > 0 and tp > 0):
         return None, {**basis, "unavailable": "atr_exceeds_price"}
-    return {"entry": level_round(last, last), "sl": sl, "tp": tp}, basis
+    entry = level_round(last, last)
+    # مدى أصغر من نصف تسعيرة (زوج مربوط كـUSDSAR على 1m) ⇒ الوقف أو الهدف يُقرَّب على الدخول نفسه:
+    # كانت «بيع 3.75006 وقف 3.75006» — صفقة بلا مخاطرة تُعرض خطّةً
+    if sl == entry or tp == entry:
+        return None, {**basis, "unavailable": "atr_below_tick"}
+    return {"entry": entry, "sl": sl, "tp": tp}, basis
 
 
 def level_round(x: float, ref: float) -> float:
