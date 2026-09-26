@@ -2164,6 +2164,7 @@ def ai_ask(body: AiAsk):
             if not (sl > 0 and tp > 0) or signal_hub.level_round(entry, entry, sym) in (sl, tp):
                 entry = sl = tp = None
 
+    # «close» كان يصف شمعة 15m لم تُغلق بعد (`at` = وقت الجلب) بأنها إغلاق ⇒ «latest price» الآن.
     # وقت `last` ومصدره: كان السياق `last=` وحده ⇒ النموذج يقول «السعر الحالي» عن سلسلة مخزَّنة (حتى 15د
     # عند حدّ المزوّد) أو عن إغلاق الجمعة يوم السبت، والدخول بالسيناريو بلا وقت بالردّ.
     price_at = _series_price_at(series) if live else None
@@ -2173,7 +2174,8 @@ def ai_ask(body: AiAsk):
             if price_at is not None else "unknown"
         )
         context = (
-            f"last={series.last} (last candle close at {at}, source={series.data_source.kind}; "
+            f"last={series.last} (latest price of the last candle at {at} — that candle may still be forming, "
+            f"source={series.data_source.kind}; "
             f"not a live tick — if it is not recent, say so and do not call it the current price), "
             + (f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
                if series.change_pct is not None else "change_pct=unavailable (single candle), ")
