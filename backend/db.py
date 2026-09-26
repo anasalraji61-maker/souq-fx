@@ -1252,6 +1252,7 @@ def _alert_row(r: sqlite3.Row) -> dict:
 
 def create_alert(data: dict, user_id: int | None = None, owner_key: str | None = None) -> dict:
     with _conn() as c:
+        _lock_owner(c, user_id)
         c.execute(
             """INSERT INTO alerts(id,user_id,owner_key,symbol,condition,price,note,active,triggered,ts)
                VALUES(?,?,?,?,?,?,?,1,0,?)""",
@@ -1450,6 +1451,15 @@ def _lock_author(c: sqlite3.Connection, user_id: int | None, name: str | None) -
         raise PermissionError("account gone")
 
 
+def _lock_owner(c: sqlite3.Connection, user_id: int | None) -> None:
+    """قفل كتابة ثم تحقّق أن للحساب جلسة بعد: المسار يصادق ثم يكتب، وحذف حساب يُلتزم بينهما (يمحو كل
+    جلساته وبياناته) كان يترك صفقة/تنبيهاً/تخطيطاً باسم `user_id` المحذوف — بيانات شخصية لا يراها أحد
+    ولا يمحوها حذف لاحق (شرط أبل 5.1.1(v)). المجهول (بلا حساب) يأخذ القفل وحده. PermissionError."""
+    c.execute("BEGIN IMMEDIATE")
+    if user_id is not None and c.execute("SELECT 1 FROM sessions WHERE user_id=?", (user_id,)).fetchone() is None:
+        raise PermissionError("account gone")
+
+
 def add_group_message(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         _lock_author(c, user_id, item["user"])
@@ -1615,6 +1625,7 @@ def save_push_token(
     owner_key: str | None = None,
 ) -> None:
     with _conn() as c:
+        _lock_owner(c, user_id)
         c.execute(
             """INSERT OR REPLACE INTO push_tokens(token,user_id,platform,updated_at,lang,owner_key)
                VALUES(?,?,?,?,?,?)""",
@@ -1739,6 +1750,7 @@ def save_layout(
     فلا فقدان بيانات ولا اختطاف ملكية — ولا يكتب مجهول فوق تخطيط مجهول آخر بعد الآن.
     """
     with _conn() as c:
+        _lock_owner(c, user_id)
         if layout_id:
             row = c.execute("SELECT 1 FROM layouts WHERE id=?", (layout_id,)).fetchone()
             if row is not None:
@@ -1806,6 +1818,7 @@ def add_watchlist_symbol(
     sym = symbol.strip().upper()
     sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
+        _lock_owner(c, user_id)
         exists = c.execute(
             f"SELECT 1 FROM watchlist WHERE symbol=? AND {sql}", (sym, *args)
         ).fetchone()
@@ -1848,6 +1861,7 @@ def save_progress(
     completed: bool = False,
 ) -> dict:
     with _conn() as c:
+        _lock_owner(c, user_id)
         # `completed` **يُثبَّت ولا يُخفَّض**: كان `INSERT OR REPLACE` يكتب الصفّ كاملاً، فمحاضرة
         # أنهاها المتداول ثم أعاد فتحها لمراجعة المقدّمة تُكتب فوراً `completed=0` — أي أن إعادة
         # المشاهدة تمحو الإنجاز. الموضع (`segment_index`) يتبع آخر مكان فعلاً (يصحّ أن يرجع
@@ -1934,6 +1948,7 @@ def create_indicator_alert(
     data: dict, user_id: int | None = None, owner_key: str | None = None
 ) -> dict:
     with _conn() as c:
+        _lock_owner(c, user_id)
         c.execute(
             """INSERT INTO indicator_alerts
                (id,user_id,owner_key,symbol,timeframe,alert_type,condition,value,fast_period,slow_period,note,active,triggered,ts)
@@ -2132,6 +2147,7 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
         if not row["closed_at"] and not data.get("opened_at"):
             row["closed_at"] = time.strftime("%Y-%m-%d %H:%M")
     with _conn() as c:
+        _lock_owner(c, user_id)
         c.execute(
             """INSERT INTO trades
                (id,user_id,owner_key,symbol,side,entry,exit,size,pnl,note,sl,tp,opened_at,closed_at,status)

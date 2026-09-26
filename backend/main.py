@@ -120,6 +120,12 @@ def _json_safe(v):
     return v
 
 
+@app.exception_handler(PermissionError)
+async def _account_gone_is_401(request: Request, exc: PermissionError):
+    """`db._lock_owner`: الحساب حُذف (أو خرج) بين المصادقة والكتابة ⇒ 401 لا 500 ولا صفّ يتيم."""
+    return JSONResponse(status_code=401, content={"detail": "login_required"})
+
+
 @app.exception_handler(RequestValidationError)
 async def _validation_error_stays_422(request: Request, exc: RequestValidationError):
     """**خطأ تصديق برقم غير منتهٍ كان يخرج 500 لا 422** — بكل مسارات الخادم لا بالصفقات وحدها.
