@@ -1362,3 +1362,27 @@ console.log('newsRisk server clock selftest OK');
   assert.equal(unannouncedEndMs(Date.parse('2026-01-12T05:00:00Z') / 1000), Date.parse('2026-01-13T05:00:00Z'));
 }
 console.log('newsRisk unannounced DST day length selftest OK');
+
+// ---- عطلة يومَ تحويل الساعة ببلدها: تنتهي عند منتصف ليلها التالي لا بعد 24س ثابتة ----
+{
+  const { bankHolidayToday, holidayDayStartMs, holidayDayEndMs } = require('./newsRisk') as typeof import('./newsRisk');
+  // أحد الفصح 2026-04-05 بسيدني = نهاية التوقيت الصيفي (+11 ⇒ +10) ⇒ يوم 25 ساعة. ForexFactory يؤرّخه بمنتصف ليل نيويورك (04:00Z)
+  const ts = Date.parse('2026-04-05T04:00:00Z') / 1000;
+  const aud = [{ ts, currency: 'AUD', impact: 'holiday', title: 'Bank Holiday' }] as never;
+  assert.equal(holidayDayStartMs('AUD', ts), Date.parse('2026-04-04T13:00:00Z')); // 00:00 AEDT
+  assert.equal(holidayDayEndMs('AUD', ts), Date.parse('2026-04-05T14:00:00Z')); // 00:00 AEST الاثنين
+  // 23:30 AEST الأحد — ما زال يوم العطلة (كان ينتهي عند 13:00Z)
+  assert.ok(bankHolidayToday(aud, ['AUD'], Date.parse('2026-04-05T13:30:00Z')));
+  assert.equal(bankHolidayToday(aud, ['AUD'], Date.parse('2026-04-05T14:00:00Z')), null);
+  // أحد 2027-03-28 (الفصح، وبداية الصيفي بأوروبا +1 ⇒ +2) ⇒ 23 ساعة: الاثنين 00:30 بفرانكفورت ليس العطلة
+  const ts2 = Date.parse('2027-03-28T04:00:00Z') / 1000;
+  const eur = [{ ts: ts2, currency: 'EUR', impact: 'holiday', title: 'Easter' }] as never;
+  assert.equal(holidayDayEndMs('EUR', ts2), Date.parse('2027-03-28T22:00:00Z'));
+  assert.equal(bankHolidayToday(eur, ['EUR'], Date.parse('2027-03-28T22:30:00Z')), null);
+  assert.ok(bankHolidayToday(eur, ['EUR'], Date.parse('2027-03-28T21:30:00Z')));
+  // يوم عادي 24 ساعة، وعملة بلا منطقة (ZAR) كما كان
+  const tj = Date.parse('2026-09-21T04:00:00Z') / 1000;
+  assert.equal(holidayDayEndMs('JPY', tj) - holidayDayStartMs('JPY', tj), 24 * 3_600_000);
+  assert.equal(holidayDayEndMs('ZAR', tj), tj * 1000 + 24 * 3_600_000);
+}
+console.log('newsRisk holiday DST day length selftest OK');

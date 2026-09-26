@@ -561,6 +561,18 @@ export function holidayDayStartMs(ccy: string, tsSec: number): number {
 }
 
 /**
+ * نهاية يوم العطلة (ms) = منتصف الليل التالي **بتوقيت بلد العملة**. كانت البداية + 24س ثابتة: يوم الأحد الذي تتغيّر فيه الساعة
+ * طوله 23 أو 25 ساعة (أحد الفصح 2026-04-05 = نهاية التوقيت الصيفي بسيدني ⇒ 25س) فينتهي التنبيه قبل آخر ساعة من يومه أو يبقى
+ * ساعةً في اليوم التالي. عملة بلا منطقة معروفة ⇒ البداية + 24س كما كان.
+ */
+export function holidayDayEndMs(ccy: string, tsSec: number): number {
+  const d = new Date(tsSec * 1000 + 12 * 3_600_000);
+  const next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + 86_400_000;
+  const off = holidayZoneOffsetH(ccy, next);
+  return off == null ? holidayDayStartMs(ccy, tsSec) + HOLIDAY_SPAN_MS : next - off * 3_600_000;
+}
+
+/**
  * **عطلة بنوك اليوم** لعملات الزوج — للشريط حين لا خبر قوي. الخادم كان يسمّي عطلة ForexFactory «منخفض التأثير» (QA30) وصار
  * يرسلها `impact: "holiday"` (backend-r3): عطلة طوكيو أو عيد الشكر الأمريكي ليست خبراً ضعيفاً بل سيولة رقيقة — سبريد أوسع،
  * وقف ينزلق، فجوات — وهي لحظة يدخل فيها المتداول مطمئناً لأن «لا أخبار اليوم».
@@ -581,7 +593,7 @@ export function bankHolidayToday(
     const c = String(e.currency).toUpperCase();
     if (!currencies.includes(c) || byCcy.has(c)) continue;
     const start = holidayDayStartMs(c, e.ts);
-    if (nowMs < start || nowMs >= start + HOLIDAY_SPAN_MS) continue;
+    if (nowMs < start || nowMs >= holidayDayEndMs(c, e.ts)) continue;
     byCcy.set(c, String(e.title ?? '').trim());
   }
   const ccys = currencies.filter((c) => byCcy.has(c));
