@@ -184,7 +184,8 @@ const styles = StyleSheet.create({
   dotDone: { width: 6, opacity: 0.55 },
   scroll: { flexGrow: 0, flexShrink: 1 },
   scrollContent: { gap: spacing.sm },
-  title: { color: colors.text, fontWeight: '500', fontSize: 18 },
+  // DESIGN-PRO §2: 18px لآخر سعر وقيمة التقاطع وحدهما — البطاقة فوق الشارت الخافت، فعنوانها بمقاس قراءات السعر 15.
+  title: { color: colors.text, fontWeight: '500', fontSize: 15 },
   body: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   riskNote: {
     color: colors.textDim,
