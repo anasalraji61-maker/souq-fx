@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    border-color: #243049;
+  }
+}
+
+:root {
+  --bg-base: #0B1220;
+  --bg-elevated: #121A2B;
+  --bg-panel: #162033;
+  --border-main: #243049;
+  --accent-teal: #2DD4BF;
+  --bull-green: #22C55E;
+  --bear-red: #EF4444;
+}
+
+/* Tabular numbers for all financial figures */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animations for price flash */
+@keyframes flash-green {
+  0% { background-color: rgba(34, 197, 94, 0.35); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+  0% { background-color: rgba(239, 68, 68, 0.35); }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: flash-green 0.7s ease-out;
+}
+
+.flash-down {
+  animation: flash-red 0.7s ease-out;
+}

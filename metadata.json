@@ -1,0 +1,9 @@
+{
+  "name": "MATRIX - Forex Technical Analysis Terminal",
+  "description": "Professional forex and commodities technical analysis terminal featuring interactive multi-timeframe candlestick charts, position calculator, trade journal, market screener, economic calendar, and structured trading academy.",
+  "requestFrame": true,
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
