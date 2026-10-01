@@ -34,7 +34,6 @@ export interface Dict {
   forex: string;
   metals: string;
   indices: string;
-  crypto: string;
 
   // Tools
   toolsTitle: string;
@@ -173,7 +172,6 @@ export const DICTS: Record<LangId, Dict> = {
     forex: 'فوركس',
     metals: 'معادن وسلع',
     indices: 'مؤشرات',
-    crypto: 'عملات رقمية',
 
     toolsTitle: 'مجموعة أدوات المتداول',
     toolPositionCalc: 'حاسبة حجم اللوت والمخاطرة',
@@ -301,7 +299,6 @@ export const DICTS: Record<LangId, Dict> = {
     forex: 'Forex',
     metals: 'Metals & Energy',
     indices: 'Indices',
-    crypto: 'Crypto',
 
     toolsTitle: 'Trader Technical Suite',
     toolPositionCalc: 'Position Size & Risk Calculator',
@@ -429,7 +426,6 @@ export const DICTS: Record<LangId, Dict> = {
     forex: 'فۆرێکس',
     metals: 'کانزاکان',
     indices: 'پێوەرەکان',
-    crypto: 'دراوی دیجیتاڵی',
 
     toolsTitle: 'کۆمەڵەی ئامرازەکانی بازرگان',
     toolPositionCalc: 'حیسابکەری لۆت و مەترسی',

@@ -7,7 +7,7 @@ interface ChatMessage {
   badge: 'VIP Member' | 'Pro Analyst' | 'Community' | 'AI Sentinel';
   avatarBg: string;
   time: string;
-  room: 'forex' | 'gold' | 'crypto';
+  room: 'forex' | 'gold' | 'indices';
   content: string;
   sentiment?: 'bullish' | 'bearish' | 'neutral';
   likes: number;
@@ -56,16 +56,16 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     badge: 'Community',
     avatarBg: 'bg-blue-600',
     time: 'منذ 18 دقيقة',
-    room: 'crypto',
-    content: 'البيتكوين BTCUSD يتماسك فوق 68,000$، في انتظار تأكيد الإغلاق اليومي لتحديد الاتجاه الأسبوعي القادم.',
+    room: 'indices',
+    content: 'مؤشر داو جونز US30 يتماسك فوق 42,000 نقطة، في انتظار افتتاح وول ستريت لتأكيد استمرار الزخم الصاعد.',
     sentiment: 'neutral',
     likes: 8,
-    symbolTag: 'BTCUSD',
+    symbolTag: 'US30',
   },
 ];
 
 export const CommunityScreen: React.FC = () => {
-  const [activeRoom, setActiveRoom] = useState<'forex' | 'gold' | 'crypto'>('forex');
+  const [activeRoom, setActiveRoom] = useState<'forex' | 'gold' | 'indices'>('forex');
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
   const [userSentiment, setUserSentiment] = useState<'bullish' | 'bearish' | 'neutral'>('bullish');
@@ -158,18 +158,18 @@ export const CommunityScreen: React.FC = () => {
 
           <button
             onClick={() => {
-              setActiveRoom('crypto');
-              setSelectedTag('BTCUSD');
+              setActiveRoom('indices');
+              setSelectedTag('US30');
             }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
-              activeRoom === 'crypto'
+              activeRoom === 'indices'
                 ? 'bg-[#2DD4BF]/15 text-[#2DD4BF] border border-[#2DD4BF]/40 font-bold'
                 : 'text-[#94A3B8] hover:bg-[#132038] hover:text-white'
             }`}
           >
             <div className="flex items-center gap-2.5">
               <Hash className="w-4 h-4" />
-              <span>غرفة الكريبتو والمؤشرات</span>
+              <span>غرفة المؤشرات العالمية والأسهم</span>
             </div>
             <span className="text-[10px] bg-[#1E293B] px-1.5 py-0.5 rounded text-[#94A3B8]">
               95 متصل
@@ -198,7 +198,7 @@ export const CommunityScreen: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               {activeRoom === 'forex' && 'غرفة الفوركس والعملات الرئيسية (EUR, GBP, JPY)'}
               {activeRoom === 'gold' && 'غرفة تداولات الذهب والنفط (XAUUSD, USOIL)'}
-              {activeRoom === 'crypto' && 'غرفة العملات المشفرة والمؤشرات (BTC, US30)'}
+              {activeRoom === 'indices' && 'غرفة المؤشرات العالمية الرئيسية (US30, NAS100, DAX)'}
             </h3>
           </div>
 
@@ -333,7 +333,8 @@ export const CommunityScreen: React.FC = () => {
                 <option value="GBPUSD">GBPUSD</option>
                 <option value="USDJPY">USDJPY</option>
                 <option value="XAUUSD">XAUUSD</option>
-                <option value="BTCUSD">BTCUSD</option>
+                <option value="US30">US30 (Dow Jones)</option>
+                <option value="NAS100">NAS100 (Nasdaq)</option>
               </select>
             </div>
           </div>

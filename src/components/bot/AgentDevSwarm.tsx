@@ -62,7 +62,7 @@ const AGENTS_LIST: AgentInfo[] = [
     id: 5,
     name: 'Agent Epsilon (Community Engine)',
     role: 'نظام غرف الدردشة والنقاش',
-    specialty: 'تنظيم قنوات تداول الفوركس، الذهب، والكريبتو وحماية جودة المنشورات التحليلية',
+    specialty: 'تنظيم قنوات تداول الفوركس، الذهب، والمعادن والمؤشرات وحماية جودة المنشورات التحليلية',
     status: 'ACTIVE',
     lastAction: 'تفعيل فلترة المشاعر (Bullish/Bearish) وربط كل رسالة برمز العملة المعنية',
     commitsCount: 22,

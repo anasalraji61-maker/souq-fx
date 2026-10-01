@@ -1,11 +1,11 @@
 export type Timeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1D';
 
-export type SymbolCategory = 'all' | 'forex' | 'metals' | 'indices' | 'crypto';
+export type SymbolCategory = 'all' | 'forex' | 'metals' | 'indices';
 
 export interface MarketSymbol {
   symbol: string;
   name: string;
-  category: 'forex' | 'metals' | 'indices' | 'crypto';
+  category: 'forex' | 'metals' | 'indices';
   price: number;
   bid: number;
   ask: number;

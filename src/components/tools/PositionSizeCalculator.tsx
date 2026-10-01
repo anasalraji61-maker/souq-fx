@@ -36,8 +36,6 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
     standardLotPipValue = 1000 / (selectedSymbol.price || 150);
   } else if (selectedSymbol.symbol === 'XAUUSD') {
     standardLotPipValue = 10;
-  } else if (selectedSymbol.symbol === 'BTCUSD') {
-    standardLotPipValue = 1;
   } else if (selectedSymbol.symbol === 'US30' || selectedSymbol.symbol === 'NAS100') {
     standardLotPipValue = 1;
   }
