@@ -200,9 +200,9 @@ def test_alerts_of_one_account_are_invisible_to_another(client):
 def test_alert_level_below_five_decimals_is_kept_as_typed(client):
     """`round(price, 5)` كان يحفظ 0.0000123 ⇒ 0.00001، و0.000004 ⇒ **0** («فوق 0» يُطلق فوراً)."""
     h = _auth(_register(client, "tinyalert"))
-    a = client.post("/api/alerts", json={**_ALERT, "symbol": "SHIBUSD", "price": 0.0000123}, headers=h).json()["alert"]
+    a = client.post("/api/alerts", json={**_ALERT, "symbol": "TINYCO", "price": 0.0000123}, headers=h).json()["alert"]
     assert a["price"] == 0.0000123
-    b = client.patch(f"/api/alerts/{a['id']}", json={**_ALERT, "symbol": "SHIBUSD", "price": 0.000004}, headers=h)
+    b = client.patch(f"/api/alerts/{a['id']}", json={**_ALERT, "symbol": "TINYCO", "price": 0.000004}, headers=h)
     assert b.json()["alert"]["price"] == 0.000004
     stored = client.get("/api/alerts", headers=h).json()["alerts"]
     assert [x["price"] for x in stored] == [0.000004]

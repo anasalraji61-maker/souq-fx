@@ -83,7 +83,7 @@ def test_week_volume_is_summed_when_present():
 
 def test_crypto_week_still_from_provider_week(provider):  # noqa: F811
     provider["payload"] = {"values": [{"datetime": "2026-08-24", "open": "1", "high": "2", "low": "0.5", "close": "1.5"}]}
-    weeks, _ = market.fetch_time_series_with_meta("BTCUSD", "W", 2)
+    weeks, _ = market.fetch_time_series_with_meta("AAPL", "W", 2)
     assert provider["sink"]["params"]["interval"] == "1week"
     assert len(weeks) == 1
 
@@ -100,7 +100,7 @@ def test_daily_bar_ends_at_new_york_five_pm(day, end):
 
 
 def test_crypto_daily_bar_end_unchanged():
-    assert market.bar_end("BTCUSD", _ts(2026, 9, 24), 86400) == _ts(2026, 9, 25)
+    assert market.bar_end("AAPL", _ts(2026, 9, 24), 86400) == _ts(2026, 9, 25)
 
 
 def test_week_volume_is_none_when_any_day_lacks_volume():

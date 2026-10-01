@@ -218,26 +218,28 @@ def test_quote_currency_travels_with_the_listing(monkeypatch):
     ok, ambiguous = _search(monkeypatch, SHEL)
     assert ok[0]["currency"] == "EUR"
     assert {r["currency"] for r in ambiguous if r["exchange"] == "LSE"} == {"GBp"}
-    ok, _ = _search(monkeypatch, BTC_EUR)
-    assert ok[0]["currency"] is None, "الكريبتو بلا عملة معلنة ⇒ None لا نصّ فارغ"
+    ok, _ = _search(monkeypatch, [_row("USD/TRY", "PHYSICAL CURRENCY", "Physical Currency")])
+    assert ok[0]["currency"] is None, "العملات بلا عملة معلنة ⇒ None لا نصّ فارغ"
 
 
-def test_one_crypto_pair_on_several_venues_is_one_row_without_a_venue(monkeypatch):
-    """المزوّد يختار المنصّة لـ`BTCEUR` — «Kraken» على الصفّ كان ادّعاءً."""
-    ok, ambiguous = _search(monkeypatch, BTC_EUR)
+def test_crypto_listings_are_not_returned(monkeypatch):
+    """لا عملات رقمية (قرار أنس، امتثال عراقي): «BTC/EUR» على أربع منصّات كان صفّاً قابلاً للرسم والتنبيه.
+    الآن لا نتيجة ولا ملتبس — بنوع المزوّد «Digital Currency» أو بالاسم (سهم «BTCUSD» يرسم لا شيء آمناً)."""
+    rows = BTC_EUR + [_row("ETH/BTC", "Binance", "Digital Currency"),
+                      _row("BTCUSD", "OTC", "Common Stock", "USD", "Some BTCUSD stock"),
+                      _row("EUR/USD", "PHYSICAL CURRENCY", "Physical Currency")]
+    ok, ambiguous = _search(monkeypatch, rows)
     assert ambiguous == []
-    assert len(ok) == 1
-    assert ok[0]["symbol"] == "BTCEUR" and ok[0]["exchange"] == ""
-    assert ok[0]["exchanges"] == ["Binance", "Coinbase Pro", "Kraken", "BitStamp"]
+    assert [r["symbol"] for r in ok] == ["EURUSD"]
 
 
 def test_mapped_symbol_keeps_only_the_instrument_the_chart_draws(monkeypatch):
-    """`BTCUSD` مُسنَد لـ`BTC/USD`: سهمٌ اسمه «BTCUSD» يُرسم زوج البتكوين ⇒ ملتبس لا نتيجة."""
-    rows = [_row("BTC/USD", "Binance", "Digital Currency"), _row("BTC/USD", "Kraken", "Digital Currency"),
-            _row("BTCUSD", "OTC", "Common Stock", "USD", "Some BTCUSD stock")]
+    """`XAUUSD` مُسنَد لـ`XAU/USD`: سهمٌ اسمه «XAUUSD» يُرسم الذهب ⇒ ملتبس لا نتيجة."""
+    rows = [_row("XAU/USD", "PHYSICAL CURRENCY", "Physical Currency"),
+            _row("XAUUSD", "OTC", "Common Stock", "USD", "Some XAUUSD stock")]
     ok, ambiguous = _search(monkeypatch, rows)
-    assert [(r["symbol"], r["td_symbol"]) for r in ok] == [("BTCUSD", "BTC/USD")]
-    assert [r["td_symbol"] for r in ambiguous] == ["BTCUSD"]
+    assert [(r["symbol"], r["td_symbol"]) for r in ok] == [("XAUUSD", "XAU/USD")]
+    assert [r["td_symbol"] for r in ambiguous] == ["XAUUSD"]
 
 
 def test_single_listing_and_physical_currency_pass_unchanged(monkeypatch):
@@ -251,18 +253,18 @@ def test_single_listing_and_physical_currency_pass_unchanged(monkeypatch):
 
 
 def test_symbols_colliding_after_slash_removal_are_ambiguous(monkeypatch):
-    """«ETH/BTC» و«ETHBTC» يصيران الرمز نفسه للتطبيق — أيّهما يُرسم غير معروف."""
-    rows = [_row("ETH/BTC", "Binance", "Digital Currency"), _row("ETHBTC", "NYSE", "ETF", "USD")]
+    """«BRK/A» و«BRKA» يصيران الرمز نفسه للتطبيق — أيّهما يُرسم غير معروف."""
+    rows = [_row("BRK/A", "NYSE"), _row("BRKA", "OTC", "ETF", "USD")]
     ok, ambiguous = _search(monkeypatch, rows)
     assert ok == [] and len(ambiguous) == 2
 
 
-def test_limit_applies_after_grouping(monkeypatch):
-    """أربع منصّات BTC/EUR صفّ واحد ⇒ `limit=2` يعطي رمزين مختلفين لا البتكوين مرّتين."""
+def test_limit_applies_after_dropping_crypto(monkeypatch):
+    """صفوف الكريبتو المُسقطة لا تأكل من `limit`."""
     rows = BTC_EUR + [_row("EUR/USD", "PHYSICAL CURRENCY", "Physical Currency"),
                       _row("GBP/USD", "PHYSICAL CURRENCY", "Physical Currency")]
     ok, _ = _search(monkeypatch, rows, limit=2)
-    assert [r["symbol"] for r in ok] == ["BTCEUR", "EURUSD"]
+    assert [r["symbol"] for r in ok] == ["EURUSD", "GBPUSD"]
 
 
 def test_route_returns_ambiguous_listings_apart(client, monkeypatch):

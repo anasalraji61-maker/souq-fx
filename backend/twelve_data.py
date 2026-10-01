@@ -39,8 +39,8 @@ SYMBOL_MAP: dict[str, str] = {
     # برنت عند Twelve Data اسمه `XBR/USD` (قائمة /commodities). `BRENT/USD` لا يوجد ⇒ كان كل طلب
     # يفشل فيُعرض برنت بسلسلة تجريبية دائماً.
     "UKOIL": "XBR/USD",
-    "BTCUSD": "BTC/USD",
-    "ETHUSD": "ETH/USD",
+    # لا عملات رقمية (BTCUSD/ETHUSD أُزيلا): قرار أنس — امتثال لتنظيمات العراق المالية (`fa3fe80`،
+    # README، `.agents/agent-4-backend.md` «Strictly zero crypto symbols»). انظر `is_crypto`.
 }
 
 _TD_TO_MATRIX: dict[str, str] = {v.upper(): k for k, v in SYMBOL_MAP.items() if v.replace("/", "") != k}
@@ -62,15 +62,37 @@ class SymbolUnavailable(RuntimeError):
         self.reason = reason
 
 
+# MATRIX لا يعرض عملات رقمية إطلاقاً (قرار أنس، انظر `SYMBOL_MAP`). كان BTCUSD/ETHUSD بالخريطة وبالماسح،
+# والبحث يعيد أزواج «Digital Currency» قابلة للرسم والتنبيه. الآن لا طلب للمزوّد ولا سعر، والسبب صريح.
+CRYPTO_NOT_SUPPORTED = "crypto_not_supported"
+_CRYPTO_ASSETS = frozenset(
+    "BTC XBT ETH XRP SOL LTC BCH DOGE ADA BNB DOT TRX AVAX LINK MATIC POL SHIB XLM XMR ETC USDT USDC "
+    "DAI BUSD TON ATOM UNI PEPE NEAR APT ARB OP SUI FIL ICP HBAR ALGO AAVE".split()
+)
+_CRYPTO_TYPE = "digital currency"
+
+
+def is_crypto(matrix_symbol: str) -> bool:
+    """زوج طرفه الأول عملة رقمية معروفة والثاني عملة (ISO أو رقمية): «BTCUSD»، «BTC/EUR»، «ETHBTC»،
+    «BTCUSDT». رمز مجرّد («SOL»، «OP») قد يكون سهماً فلا يُعدّ — البحث يُسقط ما يعلنه المزوّد رقمياً."""
+    sym = canonical_symbol(matrix_symbol)
+    quotes = _ISO_CURRENCIES | _CRYPTO_ASSETS
+    if sym.count("/") == 1:
+        base, quote = sym.split("/")
+        return base in _CRYPTO_ASSETS and quote in quotes
+    return any(sym.startswith(a) and sym[len(a):] in quotes for a in _CRYPTO_ASSETS)
+
+
 def unavailable_reason(matrix_symbol: str) -> str | None:
     # بالاسم القانوني كـ`td_symbol`: « DXY» (مسافة) كان يجتاز الحارس ويُطلب «DXY» من المزوّد (حدّ مشترك
     # مع الروبوت) بسبب `provider_unavailable` بدل `not_offered_by_provider`.
+    if is_crypto(matrix_symbol):
+        return CRYPTO_NOT_SUPPORTED
     return UNAVAILABLE_AT_PROVIDER.get(canonical_symbol(matrix_symbol))
 
 
-# رموز تتداول بعطلة الأسبوع — لا إغلاق أسبوعي لها. الباقي بـ`SYMBOL_MAP` (فوركس، معادن، نفط) يُغلق
-# الجمعة 17:00 نيويورك، وكذلك أزواج ISO من البحث. غيرها خارج الخريطة (أسهم…) مجهول الجلسة ⇒ لا قصّ.
-WEEKEND_TRADED = frozenset({"BTCUSD", "ETHUSD"})
+# بـ`SYMBOL_MAP` (فوركس، معادن، نفط) وأزواج ISO من البحث: إغلاق الجمعة 17:00 نيويورك. غيرها خارج
+# الخريطة (أسهم…) مجهول الجلسة ⇒ لا قصّ.
 _DAY = 86400
 
 
@@ -90,7 +112,7 @@ def _weekly_close_utc(friday: datetime) -> int:
 
 def _has_weekly_session(sym: str) -> bool:
     """فوركس/معادن/نفط `SYMBOL_MAP` وأزواج ISO: تُغلق الجمعة 17:00 وتفتح الأحد 17:00 نيويورك."""
-    return (sym in SYMBOL_MAP or _is_iso_pair(sym)) and sym not in WEEKEND_TRADED
+    return sym in SYMBOL_MAP or _is_iso_pair(sym)
 
 
 # جلسة عطلة الفوركس (كالتطبيق `marketHours.ts` `isForexHolidaySession`): 25 ديسمبر و1 يناير، الجلسة من 17:00
@@ -1076,7 +1098,6 @@ def symbol_search(query: str, limit: int = 20) -> list[dict]:
 # صفوف يطلبها البحث من المزوّد (حدّه الأعلى لـ`symbol_search`) — لا يكلّف أكثر من طلب واحد، ويكشف كل
 # بورصات الرمز الواحد: بـ`limit` وحده قد تسقط قائمة SHEL الثانية خارج الصفحة فيبدو الرمز فريداً.
 _SEARCH_FETCH = 120
-_CRYPTO_TYPE = "digital currency"
 AMBIGUOUS_LISTING = "ambiguous_listing"
 
 
@@ -1087,9 +1108,7 @@ def _listings(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     شل البريطانية بنيويورك. سعر حقيقي لأداة غير التي اختارها المتداول = رقم مخترَع بالنسبة إليه.
 
     - رمز بإدراج واحد ⇒ كما هو.
-    - زوج عملة رقمية واحد على عدّة منصّات (BTC/EUR: Binance، Kraken…) ⇒ صفّ واحد بلا منصّة
-      (`exchange: ""`؛ المزوّد يختارها) ومعه `exchanges`. الفارق بين المنصّات أجزاء من المئة.
-    - رمز بـ`SYMBOL_MAP` ⇒ صفّ الأداة المُسنَدة وحدها؛ ما سواه باسمها المجرّد (سهم «BTCUSD») ملتبس.
+    - رمز بـ`SYMBOL_MAP` ⇒ صفّ الأداة المُسنَدة وحدها؛ ما سواه باسمها المجرّد (سهم «XAUUSD») ملتبس.
     - غير ذلك (سهم بعدّة بورصات/عملات، أو رمزان يتطابقان بعد حذف «/») ⇒ `ambiguous` بسببه، لا يُعرض
       للاختيار حتى يحمل الرمز بورصته (طلب للتطبيق بـCOORDINATION)."""
     groups: dict[str, list[dict]] = {}
@@ -1108,10 +1127,6 @@ def _listings(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                 continue
         if len(group) == 1:
             ok.append(group[0])
-        elif len({r["td_symbol"] for r in group}) == 1 and all(
-            r["type"].strip().lower() == _CRYPTO_TYPE for r in group
-        ):
-            ok.append({**group[0], "exchange": "", "exchanges": [r["exchange"] for r in group]})
         elif mapped is not None and len({r["td_symbol"] for r in group}) == 1:
             # أداة الخريطة نفسها مكرّرة (نادر) — ما يُرسَم هو المُسنَد، فصفّ واحد بلا بورصة
             ok.append({**group[0], "exchange": "", "exchanges": [r["exchange"] for r in group]})
@@ -1154,6 +1169,10 @@ def search_listings(query: str, limit: int = 20) -> tuple[list[dict], list[dict]
             continue
         sym = str(row.get("symbol") or "").strip()
         if not sym:
+            continue
+        # لا عملات رقمية (قرار أنس): لا تُعرض ولا كملتبسة
+        itype = str(row.get("instrument_type") or row.get("type") or "")
+        if itype.strip().lower() == _CRYPTO_TYPE or is_crypto(sym):
             continue
         out.append(
             {

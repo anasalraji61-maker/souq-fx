@@ -17,7 +17,7 @@ def test_duplicate_provider_timestamp_is_one_candle(provider):  # noqa: F811
     provider["payload"] = {"values": [
         _row("2026-09-23 10:01:00", "1.15"), _row("2026-09-23 10:01:00", "1.19"), _row("2026-09-23 10:00:00", "1.14"),
     ]}
-    candles, _ = market.fetch_time_series_with_meta("BTCUSD", "1m", 3)
+    candles, _ = market.fetch_time_series_with_meta("AAPL", "1m", 3)
     times = [c["time"] for c in candles]
     assert times == sorted(set(times)) and len(times) == 2
     assert candles[-1]["close"] == pytest.approx(1.15)  # أوّل صفّ بترتيب المزوّد
@@ -85,5 +85,5 @@ def test_quote_impossible_day_range_is_none(routes, hi, lo, want):  # noqa: F811
     import time
 
     routes["/quote"] = _Resp({"close": "1.1", "high": hi, "low": lo, "open": "-1", "last_quote_at": time.time() - 5})
-    q = market.fetch_quote_book("BTCUSD")
+    q = market.fetch_quote_book("AAPL")
     assert (q["high"], q["low"]) == want and q["open"] is None

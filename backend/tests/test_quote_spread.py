@@ -154,9 +154,9 @@ def _fallback_series(monkeypatch, candle_time: int, fetched: float):
         )
 
     monkeypatch.setattr(main, "build_series", build)
-    # BTCUSD (24/7، بلا قصّ `bar_end` عند إغلاق الجمعة): موضوع هذه الاختبارات الشمعة الجارية/وقت الجلب لا العطلة —
+    # AAPL (بلا جلسة أسبوعية معروفة ⇒ بلا قصّ `bar_end` عند إغلاق الجمعة): موضوع هذه الاختبارات الشمعة الجارية/وقت الجلب لا العطلة —
     # بزوج فوركس كانت تفشل بعد الجمعة 17:00 نيويورك (الشمعة «انتهت» فعلاً بالإغلاق). العطلة: `test_weekly_close.py`.
-    return TestClient(main.app).get("/api/market/quote/BTCUSD").json()
+    return TestClient(main.app).get("/api/market/quote/AAPL").json()
 
 
 def test_weekend_candle_fallback_is_dated_friday_not_now(monkeypatch):
@@ -290,7 +290,7 @@ def test_quote_network_error_falls_back_to_the_real_candle_not_500(monkeypatch):
         )
 
     monkeypatch.setattr(main, "build_series", build)
-    r = TestClient(main.app).get("/api/market/quote/BTCUSD")  # 24/7: راجع `_fallback_series`
+    r = TestClient(main.app).get("/api/market/quote/AAPL")  # بلا جلسة أسبوعية: راجع `_fallback_series`
     assert r.status_code == 200
     body = r.json()
     assert body["price"] == pytest.approx(1.1) and body["data_kind"] == "cache"
@@ -301,12 +301,12 @@ def test_quote_network_error_falls_back_to_the_real_candle_not_500(monkeypatch):
 def test_close_null_string_falls_back_to_the_provider_price(routes):
     """`close: "null"` نصّاً كان يحجب `price` الصالح فيسقط الاقتباس كلّه."""
     routes["/quote"] = _Resp({"close": "null", "price": "1.10000"})
-    assert market.fetch_quote_book("BTCUSD")["price"] == pytest.approx(1.1)
+    assert market.fetch_quote_book("AAPL")["price"] == pytest.approx(1.1)
 
 
 def test_negative_zero_percent_change_is_sent_as_zero(routes):
     routes["/quote"] = _Resp({"close": "1.10000", "percent_change": "-0.00000"})
-    pc = market.fetch_quote_book("BTCUSD")["percent_change"]
+    pc = market.fetch_quote_book("AAPL")["percent_change"]
     assert pc == 0 and str(pc) == "0.0"
 
 

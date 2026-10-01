@@ -19,7 +19,7 @@ def _ts(*a) -> int:
 
 @pytest.mark.parametrize("raw,want", [
     ("EUR/USD", "EURUSD"), (" eurusd ", "EURUSD"), ("usd/mxn", "USDMXN"), ("XBR/USD", "UKOIL"),
-    ("WTI/USD", "USOIL"), ("ETH/USD", "ETHUSD"), ("BRK/A", "BRK/A"), ("AAPL", "AAPL"),
+    ("WTI/USD", "USOIL"), ("ETH/USD", "ETH/USD"), ("BRK/A", "BRK/A"), ("AAPL", "AAPL"),
 ])
 def test_canonical_symbol(raw, want):
     assert market.canonical_symbol(raw) == want

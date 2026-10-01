@@ -423,6 +423,8 @@ class WatchlistAdd(BaseModel):
         v = market.canonical_symbol(v)
         if len(v) < 3:
             raise ValueError("symbol too short")
+        if market.is_crypto(v):  # لا عملات رقمية (قرار أنس) — DXY يُقبل ويُعرض «غير متاح» بسببه
+            raise ValueError("crypto not supported")
         return _symbol_chars(v)
 
 

@@ -37,7 +37,7 @@ def _ts(s: str) -> float:
     ("EURUSD", "2026-09-28 00:00", 86400, False),
     ("USDMXN", "2026-09-26 03:00", 60, True),      # زوج ISO
     ("XAUUSD", "2026-09-26 03:00", 60, True),
-    ("BTCUSD", "2026-09-26 03:00", 60, False),     # يتداول بالعطلة
+    ("AAPL", "2026-09-26 03:00", 60, False),     # يتداول بالعطلة
     ("AAPL", "2026-09-26 03:00", 60, False),       # جلسة مجهولة ⇒ لا إسقاط
     ("EURUSD", "2026-09-21 00:00", 604800, False),
     # run 96: المعادن والنفط تفتح الأحد 18:00 نيويورك (22:00 UTC صيفاً، 23:00 شتاءً) لا 17:00
@@ -80,7 +80,7 @@ def test_weekend_minutes_are_not_served(provider):  # noqa: F811
 
 def test_crypto_weekend_minutes_kept(provider):  # noqa: F811
     provider["payload"] = {"values": _minutes("2026-09-25 20:50", 300)}
-    candles, _ = market.fetch_time_series_with_meta("BTCUSD", "1m", 300)
+    candles, _ = market.fetch_time_series_with_meta("AAPL", "1m", 300)
     assert len(candles) == 300
     assert provider["sink"]["params"]["outputsize"] == "300"
 
@@ -105,7 +105,7 @@ def test_weekend_quote_is_no_quote(routes):  # noqa: F811
     routes["/quote"] = _Resp({"close": "1.13916", "last_quote_at": int(_ts(WED))})
     assert market.fetch_quote_book("EURUSD")["price"] == pytest.approx(1.13916)
     routes["/quote"] = _Resp({"close": "65000", "last_quote_at": int(_ts(SAT))})
-    assert market.fetch_quote_book("BTCUSD")["price"] == pytest.approx(65000)
+    assert market.fetch_quote_book("AAPL")["price"] == pytest.approx(65000)
 
 
 @pytest.mark.parametrize("when,served", [(SAT, False), (WED, True)])
@@ -127,11 +127,11 @@ def test_ws_ticks_drop_weekend_forex(monkeypatch):
     from fastapi.testclient import TestClient
 
     import main
-    monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.139, "BTCUSD": 65000.0}, _ts(SAT)))
+    monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.139, "AAPL": 65000.0}, _ts(SAT)))
     monkeypatch.setattr(main.td_ws, "received_at", lambda syms: {s: _ts(SAT) for s in syms})
     with TestClient(main.app).websocket_connect("/ws/ticks") as ws:
         msg = ws.receive_json()
-    assert msg["ticks"] == {"BTCUSD": 65000.0}
+    assert msg["ticks"] == {"AAPL": 65000.0}
 
 
 def test_ws_ticks_as_of_is_newest_sent_tick(monkeypatch):
@@ -139,12 +139,12 @@ def test_ws_ticks_as_of_is_newest_sent_tick(monkeypatch):
     from fastapi.testclient import TestClient
 
     import main
-    at = {"EURUSD": _ts(SAT), "BTCUSD": _ts(SAT) - 90}
-    monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.139, "BTCUSD": 65000.0}, _ts(SAT)))
+    at = {"EURUSD": _ts(SAT), "AAPL": _ts(SAT) - 90}
+    monkeypatch.setattr(main.td_ws, "recent_snapshot", lambda: ({"EURUSD": 1.139, "AAPL": 65000.0}, _ts(SAT)))
     monkeypatch.setattr(main.td_ws, "received_at", lambda syms: {s: at[s] for s in syms})
     with TestClient(main.app).websocket_connect("/ws/ticks") as ws:
         msg = ws.receive_json()
-    assert msg["ticks"] == {"BTCUSD": 65000.0}
+    assert msg["ticks"] == {"AAPL": 65000.0}
     assert msg["data_source"]["as_of"] == _ts(SAT) - 90
 
 
@@ -157,7 +157,7 @@ FRI_LAST = "2026-09-25 20:59"  # آخر دقيقة قبل إغلاق الجمع�
     ("EURUSD", WED, True, True),
     ("EURUSD", WED, False, False),
     ("EURUSD", WED, None, None),      # لا يقول ⇒ لا تخمين خارج العطلة
-    ("BTCUSD", SAT, True, True),      # الكريبتو بلا عطلة
+    ("AAPL", SAT, True, True),      # بلا جلسة أسبوعية معروفة (سهم) ⇒ لا قصّ عطلة
 ])
 def test_friday_quote_served_on_saturday_is_not_market_open(routes, monkeypatch, sym, now, says, expected):  # noqa: F811
     monkeypatch.setattr(market, "_session_now", lambda: _ts(now))
@@ -172,7 +172,7 @@ def test_friday_quote_served_on_saturday_is_not_market_open(routes, monkeypatch,
 # run 88: المزوّد يختم تيك السبت بوقت السبت (حيّاً: last_quote_at Sat 10:05، is_market_open true) ⇒ الاقتباس
 # يُرفض ويخدم المسار إغلاق الجمعة من الشموع — كان بلا `market_open` فتقرؤه الحاسبة «متوقّفاً» لا «مغلقاً».
 @pytest.mark.parametrize("sym,now,expected", [
-    ("EURUSD", SAT, False), ("EURUSD", WED, None), ("BTCUSD", SAT, None),
+    ("EURUSD", SAT, False), ("EURUSD", WED, None), ("AAPL", SAT, None),
 ])
 def test_weekend_fallback_quote_says_market_closed(routes, monkeypatch, sym, now, expected):  # noqa: F811
     from fastapi.testclient import TestClient
@@ -184,7 +184,7 @@ def test_weekend_fallback_quote_says_market_closed(routes, monkeypatch, sym, now
     monkeypatch.setattr(main, "build_series", _provider_series(0.001, sym))
     monkeypatch.setattr(main, "_QUOTE_CACHE", {})
     routes["/quote"] = _Resp({"close": "1.13913", "last_quote_at": int(_ts(SAT)), "is_market_open": True})
-    if now == WED or sym == "BTCUSD":  # لا اقتباس ⇒ فرع الشموع أيضاً
+    if now == WED or sym == "AAPL":  # لا اقتباس ⇒ فرع الشموع أيضاً
         routes["/quote"] = _Resp({}, 429)
     body = TestClient(main.app).get(f"/api/market/quote/{sym}").json()
     assert body["source"] == "ohlc_fallback"

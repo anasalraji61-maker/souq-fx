@@ -95,7 +95,7 @@ def _ts(s: str) -> float:
     ("EURUSD", "2026-09-27 21:00", None),                 # بعد الافتتاح
     ("EURUSD", "2026-11-28 09:00", "2026-11-29 22:00"),   # شتاءً
     ("XAUUSD", "2026-09-26 09:00", "2026-09-27 22:00"),  # run 96: المعادن تفتح 18:00 نيويورك
-    ("BTCUSD", "2026-09-26 09:00", None),                 # يتداول بالعطلة
+    ("AAPL", "2026-09-26 09:00", None),                 # يتداول بالعطلة
     ("AAPL", "2026-09-26 09:00", None),                   # جلسة مجهولة
 ])
 def test_closed_until(sym, fetched, until):
@@ -153,9 +153,9 @@ def _age_cache(seconds: float) -> None:
 
 def test_watchlist_and_chart_sizes_give_one_last_price(provider):  # noqa: F811
     provider["payload"] = {"values": _rows_until(200, "1.1000")}
-    chart, _ = market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    chart, _ = market.fetch_time_series_with_meta("AAPL", "15m", 180)
     provider["payload"] = {"values": _rows_until(201, "1.1050")}  # السعر تحرّك بعد جلب الشارت
-    watch, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 50)
+    watch, meta = market.fetch_time_series_with_meta("AAPL", "15m", 50)
     assert watch[-1]["close"] == chart[-1]["close"] == pytest.approx(1.1)
     assert meta["kind"] == "cache"
 
@@ -163,21 +163,21 @@ def test_watchlist_and_chart_sizes_give_one_last_price(provider):  # noqa: F811
 def test_provider_error_serves_the_other_size_instead_of_nothing(provider):  # noqa: F811
     """429/خطأ والقائمة لم تُخزَّن بعد ⇒ كانت «—» بجانب سعر الشارت الحقيقي."""
     provider["payload"] = {"values": _rows_until(200, "1.1000")}
-    market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    market.fetch_time_series_with_meta("AAPL", "15m", 180)
     _age_cache(market.CACHE_TTL["15m"] + 1)
     provider["payload"] = {"status": "error", "code": 429, "message": "limit"}
-    watch, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 50)
+    watch, meta = market.fetch_time_series_with_meta("AAPL", "15m", 50)
     assert watch[-1]["close"] == pytest.approx(1.1) and meta["kind"] == "cache"
 
 
 def test_a_fresh_small_fetch_updates_the_larger_cached_series(provider):  # noqa: F811
     provider["payload"] = {"values": _rows_until(320, "1.1000")}
-    market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    market.fetch_time_series_with_meta("AAPL", "15m", 300)
     _age_cache(market.CACHE_TTL["15m"] + 1)
     provider["payload"] = {"values": _rows_until(321, "1.1050")}  # شمعة جديدة
-    small, _ = market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    small, _ = market.fetch_time_series_with_meta("AAPL", "15m", 180)
     before = market._stats["api_calls"]
-    big, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    big, meta = market.fetch_time_series_with_meta("AAPL", "15m", 300)
     assert market._stats["api_calls"] == before and meta["kind"] == "cache"
     assert big[-1] == small[-1] and big[-1]["close"] == pytest.approx(1.105)
     assert len(big) == 300 and [c["time"] for c in big] == sorted({c["time"] for c in big})
@@ -186,14 +186,14 @@ def test_a_fresh_small_fetch_updates_the_larger_cached_series(provider):  # noqa
 def test_a_small_fetch_never_glues_onto_an_old_larger_series_with_a_gap(provider):  # noqa: F811
     """D/180 جُلب قبل أسابيع ثم D/50 الآن: الدمج كان يُنتج سلسلة بثغرة بينهما موسومة بوقت جلب «الآن»."""
     provider["payload"] = {"values": _rows_until(320, "1.1000")}
-    market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    market.fetch_time_series_with_meta("AAPL", "15m", 300)
     _age_cache(30 * 86400)
     later = _rows_until(2000, "1.1050")[-200:]  # تبدأ بعد نهاية المدخل القديم بأيام
     provider["payload"] = {"values": later}
-    market.fetch_time_series_with_meta("BTCUSD", "15m", 180)
+    market.fetch_time_series_with_meta("AAPL", "15m", 180)
     provider["payload"] = {"values": _rows_until(2000, "1.1050")[-320:]}
     before = market._stats["api_calls"]
-    big, meta = market.fetch_time_series_with_meta("BTCUSD", "15m", 300)
+    big, meta = market.fetch_time_series_with_meta("AAPL", "15m", 300)
     assert market._stats["api_calls"] == before + 1 and meta["kind"] == "provider"
     gaps = {b["time"] - a["time"] for a, b in zip(big, big[1:])}
     assert gaps == {900}
