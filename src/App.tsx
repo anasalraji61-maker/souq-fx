@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LangId, DICTS } from './i18n/locales';
-import { MarketSymbol, Candle, Timeframe, ChartType, IndicatorSettings } from './types/market';
+import { MarketSymbol, Candle, Timeframe, ChartType, IndicatorSettings, PriceAlertItem } from './types/market';
 import { INITIAL_SYMBOLS } from './data/symbols';
 import { generateCandles, updateLastCandleWithTick } from './data/candleGenerator';
 import { Header } from './components/common/Header';
@@ -9,10 +9,16 @@ import { ToolsScreen } from './components/tools/ToolsScreen';
 import { AcademyScreen } from './components/academy/AcademyScreen';
 import { AccountScreen } from './components/account/AccountScreen';
 import { OnboardingOverlay } from './components/common/OnboardingOverlay';
+import { PriceAlertNotificationBanner } from './components/common/PriceAlertNotificationBanner';
+import { PriceAlertsModal } from './components/common/PriceAlertsModal';
+import { GeminiChatDrawer } from './components/chat/GeminiChatDrawer';
+import { playAlertChime } from './utils/sound';
+import { Sparkles } from 'lucide-react';
+import { BotCommandCenter } from './components/bot/BotCommandCenter';
 
 export default function App() {
   // Navigation & Language
-  const [currentTab, setCurrentTab] = useState<'home' | 'tools' | 'academy' | 'account'>('home');
+  const [currentTab, setCurrentTab] = useState<'home' | 'tools' | 'academy' | 'account' | 'bot'>('home');
   const [currentLang, setCurrentLang] = useState<LangId>(() => {
     return (localStorage.getItem('matrix_lang') as LangId) || 'ar';
   });
@@ -35,6 +41,52 @@ export default function App() {
   // Preferences
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
+
+  // Price Alerts State
+  const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => {
+    const saved = localStorage.getItem('matrix_price_alerts');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // fallback
+      }
+    }
+    return [
+      {
+        id: 'alt-1',
+        symbol: 'EURUSD',
+        targetPrice: 1.0900,
+        condition: 'above',
+        note: 'اختراق المقاومة اليومية 1.0900',
+        active: true,
+        triggered: false,
+      },
+      {
+        id: 'alt-2',
+        symbol: 'XAUUSD',
+        targetPrice: 2750.0,
+        condition: 'above',
+        note: 'قمة تاريخية جديدة للذهب',
+        active: true,
+        triggered: false,
+      },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('matrix_price_alerts', JSON.stringify(alerts));
+  }, [alerts]);
+
+  // Alert Modals and Notifications
+  const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
+  const [activeNotificationAlert, setActiveNotificationAlert] = useState<{
+    alert: PriceAlertItem;
+    currentPrice: number;
+  } | null>(null);
+
+  // Gemini AI Chatbot Drawer
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   // Indicators State
   const [indicators, setIndicators] = useState<IndicatorSettings>({
@@ -74,7 +126,7 @@ export default function App() {
     setCandles(generated);
   }, [activeSymbol, timeframe]);
 
-  // Real-time simulated price ticks
+  // Real-time simulated price ticks + Threshold Alert Evaluation
   useEffect(() => {
     const interval = setInterval(() => {
       setSymbols((prevSymbols) => {
@@ -108,6 +160,47 @@ export default function App() {
 
         setPriceFlashMap(nextFlash);
 
+        // Check active price alerts against updated market prices
+        setAlerts((prevAlerts) => {
+          let hasTriggered = false;
+          const nextAlerts = prevAlerts.map((alert) => {
+            if (!alert.active || alert.triggered) return alert;
+
+            const matchedSym = updated.find((s) => s.symbol === alert.symbol);
+            if (!matchedSym) return alert;
+
+            const isHit =
+              (alert.condition === 'above' && matchedSym.price >= alert.targetPrice) ||
+              (alert.condition === 'below' && matchedSym.price <= alert.targetPrice);
+
+            if (isHit) {
+              hasTriggered = true;
+              const triggeredTime = new Date().toTimeString().split(' ')[0] + ' GMT';
+              const triggeredAlert: PriceAlertItem = {
+                ...alert,
+                triggered: true,
+                triggeredAt: triggeredTime,
+              };
+
+              // Trigger visual notification banner
+              setActiveNotificationAlert({
+                alert: triggeredAlert,
+                currentPrice: matchedSym.price,
+              });
+
+              if (soundEnabled) {
+                playAlertChime();
+              }
+
+              return triggeredAlert;
+            }
+
+            return alert;
+          });
+
+          return hasTriggered ? nextAlerts : prevAlerts;
+        });
+
         // Clear flashes after animation
         setTimeout(() => {
           setPriceFlashMap({});
@@ -118,7 +211,7 @@ export default function App() {
     }, 1400);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [soundEnabled]);
 
   // Update active candle with latest tick
   useEffect(() => {
@@ -130,6 +223,30 @@ export default function App() {
     });
   }, [symbols, activeSymbol, timeframe]);
 
+  // Alert actions
+  const handleAddAlert = (newAlert: Omit<PriceAlertItem, 'id' | 'triggered' | 'active'>) => {
+    const item: PriceAlertItem = {
+      ...newAlert,
+      id: `alt-${Date.now()}`,
+      active: true,
+      triggered: false,
+    };
+    setAlerts((prev) => [item, ...prev]);
+  };
+
+  const handleDeleteAlert = (id: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleToggleAlert = (id: string) => {
+    setAlerts((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, active: !a.active, triggered: false } : a))
+    );
+  };
+
+  const activeAlertsCount = alerts.filter((a) => a.active && !a.triggered).length;
+  const activeSymbolObj = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
+
   // Determine current active market session
   const nowUtcHour = new Date().getUTCHours();
   const isTokyoOpen = nowUtcHour >= 0 && nowUtcHour < 9;
@@ -138,16 +255,34 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0B1220] text-[#E8EEF9]">
-      {/* Top Header */}
-      <Header
-        currentTab={currentTab}
-        onTabChange={setCurrentTab}
-        currentLang={currentLang}
-        onLanguageChange={setCurrentLang}
-        symbols={symbols}
-        activeSymbol={activeSymbol}
-        onSelectSymbol={setActiveSymbol}
-      />
+      {/* Visual Price Alert Notification Banner */}
+      {activeNotificationAlert && (
+        <PriceAlertNotificationBanner
+          alert={activeNotificationAlert.alert}
+          currentPrice={activeNotificationAlert.currentPrice}
+          onDismiss={() => setActiveNotificationAlert(null)}
+          onNavigateToChart={(sym) => {
+            setActiveSymbol(sym);
+            setCurrentTab('home');
+          }}
+        />
+      )}
+
+      {/* Top Header shown only on non-terminal tabs */}
+      {currentTab !== 'home' && (
+        <Header
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          currentLang={currentLang}
+          onLanguageChange={setCurrentLang}
+          symbols={symbols}
+          activeSymbol={activeSymbol}
+          onSelectSymbol={setActiveSymbol}
+          activeAlertsCount={activeAlertsCount}
+          onOpenAlerts={() => setIsAlertsModalOpen(true)}
+          onOpenAiChat={() => setIsAiChatOpen(true)}
+        />
+      )}
 
       {/* Main View Area */}
       <main className="flex-1 overflow-hidden relative">
@@ -165,6 +300,8 @@ export default function App() {
             onUpdateIndicators={setIndicators}
             priceFlashMap={priceFlashMap}
             showGrid={showGrid}
+            onTabChange={setCurrentTab}
+            currentTab={currentTab}
           />
         )}
 
@@ -176,10 +313,16 @@ export default function App() {
               setActiveSymbol(sym);
               setCurrentTab('home');
             }}
+            alerts={alerts}
+            onAddAlert={handleAddAlert}
+            onDeleteAlert={handleDeleteAlert}
+            onToggleAlert={handleToggleAlert}
           />
         )}
 
         {currentTab === 'academy' && <AcademyScreen />}
+
+        {currentTab === 'bot' && <BotCommandCenter />}
 
         {currentTab === 'account' && (
           <AccountScreen
@@ -198,6 +341,42 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Floating MATRIX AI Trigger Button */}
+      <button
+        onClick={() => setIsAiChatOpen(true)}
+        title="فتح المساعد الذكي MATRIX AI"
+        className="fixed bottom-9 left-4 z-40 flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-[#0E2038] to-[#122A4A] hover:from-[#132A4B] hover:to-[#18365E] border-2 border-[#2DD4BF]/60 text-[#E8EEF9] shadow-[0_4px_20px_rgba(45,212,191,0.25)] hover:scale-105 transition-all group select-none cursor-pointer"
+      >
+        <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#2DD4BF] to-[#38BDF8] flex items-center justify-center text-[#042F2E]">
+          <Sparkles className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+        </div>
+        <span className="font-extrabold text-xs">MATRIX AI</span>
+        <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-ping" />
+      </button>
+
+      {/* Price Alerts Modal */}
+      <PriceAlertsModal
+        isOpen={isAlertsModalOpen}
+        onClose={() => setIsAlertsModalOpen(false)}
+        symbols={symbols}
+        activeSymbol={activeSymbol}
+        alerts={alerts}
+        onAddAlert={handleAddAlert}
+        onDeleteAlert={handleDeleteAlert}
+        onToggleAlert={handleToggleAlert}
+        onSelectSymbolForChart={(sym) => {
+          setActiveSymbol(sym);
+          setCurrentTab('home');
+        }}
+      />
+
+      {/* Gemini AI Multi-turn Chat Drawer */}
+      <GeminiChatDrawer
+        isOpen={isAiChatOpen}
+        onClose={() => setIsAiChatOpen(false)}
+        activeSymbol={activeSymbolObj}
+      />
 
       {/* Bottom Status Bar */}
       <footer className="h-6 bg-[#0E1728] border-t border-[#243049] px-4 flex items-center justify-between text-[11px] font-mono text-[#7B8DA8] select-none z-20">
@@ -238,3 +417,4 @@ export default function App() {
     </div>
   );
 }
+

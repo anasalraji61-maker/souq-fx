@@ -10,16 +10,21 @@ import {
   Sparkles,
   ChevronDown,
   Globe,
+  Bell,
+  Bot,
 } from 'lucide-react';
 
 interface HeaderProps {
-  currentTab: 'home' | 'tools' | 'academy' | 'account';
-  onTabChange: (tab: 'home' | 'tools' | 'academy' | 'account') => void;
+  currentTab: 'home' | 'tools' | 'academy' | 'account' | 'bot';
+  onTabChange: (tab: 'home' | 'tools' | 'academy' | 'account' | 'bot') => void;
   currentLang: LangId;
   onLanguageChange: (lang: LangId) => void;
   symbols: MarketSymbol[];
   activeSymbol: string;
   onSelectSymbol: (symbol: string) => void;
+  activeAlertsCount?: number;
+  onOpenAlerts?: () => void;
+  onOpenAiChat?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,6 +35,9 @@ export const Header: React.FC<HeaderProps> = ({
   symbols,
   activeSymbol,
   onSelectSymbol,
+  activeAlertsCount = 0,
+  onOpenAlerts,
+  onOpenAiChat,
 }) => {
   const dict = DICTS[currentLang];
   const [timeStr, setTimeStr] = useState('');
@@ -51,9 +59,9 @@ export const Header: React.FC<HeaderProps> = ({
   const activeSymbolObj = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
 
   return (
-    <header className="h-12 bg-[#0E1728] border-b border-[#243049] px-4 flex items-center justify-between select-none text-xs z-30">
+    <header className="h-12 bg-[#0E1728] border-b border-[#243049] px-4 flex items-center justify-between select-none text-xs z-30 gap-2">
       {/* Left: Brand & Symbol Quick Switcher */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 shrink-0">
         {/* Brand */}
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#2DD4BF] to-[#38BDF8] flex items-center justify-center text-[#042F2E] font-black text-xs shadow-md">
@@ -103,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Center: Main Navigation Tabs */}
-      <nav className="flex items-center gap-1 bg-[#0B1220] p-1 rounded-lg border border-[#243049]">
+      <nav className="hidden md:flex items-center gap-1 bg-[#0B1220] p-1 rounded-lg border border-[#243049]">
         <button
           onClick={() => onTabChange('home')}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
@@ -141,6 +149,21 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         <button
+          onClick={() => onTabChange('bot')}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
+            currentTab === 'bot'
+              ? 'bg-[#2DD4BF] text-[#042F2E] font-bold shadow-xs'
+              : 'text-[#A3B4D0] hover:text-[#2DD4BF]'
+          }`}
+        >
+          <Bot className="w-3.5 h-3.5" />
+          <span className="font-bold flex items-center gap-1">
+            <span>الروبوت (10 وكلاء)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-ping" />
+          </span>
+        </button>
+
+        <button
           onClick={() => onTabChange('account')}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
             currentTab === 'account'
@@ -153,10 +176,38 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </nav>
 
-      {/* Right: Clock & Quick Lang Switcher */}
-      <div className="flex items-center gap-3">
+      {/* Right: Price Alerts, AI Assistant, Clock & Language */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Price Alerts Trigger Button */}
+        {onOpenAlerts && (
+          <button
+            onClick={onOpenAlerts}
+            title="إدارة تنبيهات الأسعار (Price Alerts)"
+            className="relative p-1.5 rounded-md bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#A3B4D0] hover:text-[#2DD4BF] transition-colors"
+          >
+            <Bell className="w-4 h-4" />
+            {activeAlertsCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#2DD4BF] text-[#042F2E] text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                {activeAlertsCount}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* MATRIX AI Assistant Button */}
+        {onOpenAiChat && (
+          <button
+            onClick={onOpenAiChat}
+            title="فتح المساعد الذكي MATRIX AI"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-[#162033] to-[#1a2d48] hover:from-[#1E293B] hover:to-[#223d63] border border-[#2DD4BF]/40 text-[#E8EEF9] font-bold shadow-xs transition-all hover:scale-102"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#2DD4BF] animate-pulse" />
+            <span className="hidden sm:inline">MATRIX AI</span>
+          </button>
+        )}
+
         {/* Market GMT Clock */}
-        <div className="hidden md:flex items-center gap-1.5 font-mono text-[#7B8DA8] text-[11px] bg-[#162033] px-2.5 py-1 rounded border border-[#243049]/60">
+        <div className="hidden lg:flex items-center gap-1.5 font-mono text-[#7B8DA8] text-[11px] bg-[#162033] px-2.5 py-1 rounded border border-[#243049]/60">
           <Clock className="w-3.5 h-3.5 text-[#2DD4BF]" />
           <span>{timeStr}</span>
         </div>

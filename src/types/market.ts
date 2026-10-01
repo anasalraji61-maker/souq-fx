@@ -48,7 +48,7 @@ export interface IndicatorSettings {
 
 export type ChartType = 'candles' | 'line' | 'area';
 
-export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'fibonacci' | 'position_long' | 'position_short';
+export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'fibonacci' | 'box' | 'measure' | 'position_long' | 'position_short';
 
 export interface DrawingItem {
   id: string;

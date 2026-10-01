@@ -1,0 +1,274 @@
+"""`/api/alerts/check` — التنبيه المُطلَق للتوّ يُعاد موسوماً «مُطلَق»، ولمرة واحدة.
+
+**بلا شبكة**: `alert_worker._recent_minutes` مُستبدَل بسعر ثابت، فلا مزوّد ولا WebSocket.
+"""
+from __future__ import annotations
+
+import time
+import pytest
+from fastapi.testclient import TestClient
+
+import alert_worker
+import db
+import main
+from core import db_conn
+
+
+@pytest.fixture()
+def client(tmp_path, monkeypatch):
+    path = tmp_path / "test_alert_check.db"
+    assert "souq-fx" not in str(path), f"قاعدة الاختبار يجب أن تكون خارج المستودع: {path}"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "DB_PATH", path)
+    monkeypatch.setattr(db, "_PBKDF2_ITERATIONS", 1_000)
+    db.init_db()
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], None))
+    return TestClient(main.app, raise_server_exceptions=False)
+
+
+# 16 حرفاً على الأقل وإلا رفضه `_install_key` وصار الصفّ بلا مالك (يراه كل جهاز قديم).
+_DEVICE = {"X-Install-Id": "install-check-device-1"}
+_OTHER_DEVICE = {"X-Install-Id": "install-check-device-2"}
+
+
+def _create(client, price: float, condition: str = "above"):
+    r = client.post(
+        "/api/alerts",
+        json={"symbol": "EURUSD", "condition": condition, "price": price},
+        headers=_DEVICE,
+    )
+    assert r.status_code == 200, r.text
+    return r.json()["alert"]["id"]
+
+
+def test_just_fired_alert_is_returned_marked_triggered(client):
+    """كان الصفّ يُلقَّط **قبل** القلب فيُسلَّم تنبيهٌ أُطلق للتوّ موسوماً «يراقب»."""
+    aid = _create(client, 1.1000)
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    fired = [a for a in res["triggered"] if a["id"] == aid]
+    assert len(fired) == 1, res
+    assert fired[0]["triggered"] is True
+    assert fired[0]["current"] == 1.2000
+    # والقائمة الكاملة تقول الشيء نفسه — المصدران لا يتناقضان
+    assert [a for a in res["alerts"] if a["id"] == aid][0]["triggered"] is True
+
+
+def test_alert_fires_once_only(client):
+    """الفحص الثاني لا يُعيد إشعاراً — `mark_alert_triggered` ذرّي وهو ما يمنع التكرار."""
+    _create(client, 1.1000)
+    assert len(client.post("/api/alerts/check", headers=_DEVICE).json()["triggered"]) == 1
+    assert client.post("/api/alerts/check", headers=_DEVICE).json()["triggered"] == []
+
+
+def test_unmet_condition_does_not_fire(client):
+    """الحارس المعاكس: بلا هذا الاختبار يمرّ «كل تنبيه يُطلق دائماً»."""
+    aid = _create(client, 1.3000)
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert res["triggered"] == []
+    assert [a for a in res["alerts"] if a["id"] == aid][0]["triggered"] is False
+
+
+def test_another_device_alert_is_not_checked_or_returned(client):
+    """عزل الجهاز المجهول: تنبيه جهازٍ آخر لا يُطلق ولا يُسلَّم — ويبقى سليماً بعد المحاولة.
+
+    ومعرّف التثبيت هنا 16 حرفاً فأكثر عمداً: `_install_key` يرفض الأقصر فيصير الصفّ بلا
+    مالك، وهو ما يجعل اختباراً بمعرّف قصير يبدو كأنه كشف تسريب ملكية وهو لم يُرسل معرّفاً.
+    """
+    other = _create(client, 1.1000)
+    res = client.post("/api/alerts/check", headers=_OTHER_DEVICE).json()
+    assert res["triggered"] == [] and res["alerts"] == []
+    mine = client.get("/api/alerts", headers=_DEVICE).json()["alerts"]
+    assert [a for a in mine if a["id"] == other][0]["triggered"] is False
+
+
+def test_alert_edited_during_the_price_fetch_is_not_fired_at_the_old_level(client, monkeypatch):
+    """القائمة تُقرأ قبل طلب المزوّد؛ تعديل بينهما (1.1000 ⇒ 1.3000) كان يُوسِم التنبيه **الجديد**
+    مُطلَقاً بالمستوى القديم — فلا يُطلق عند 1.3000 أبداً."""
+    aid = _create(client, 1.1000)
+
+    def fetch_while_user_edits(sym):
+        r = client.patch(f"/api/alerts/{aid}", json={"symbol": "EURUSD", "condition": "above",
+                                                      "price": 1.3000}, headers=_DEVICE)
+        assert r.status_code == 200, r.text
+        return 1.2000, [], None
+
+    monkeypatch.setattr(alert_worker, "_recent_minutes", fetch_while_user_edits)
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert res["triggered"] == []
+    row = [a for a in res["alerts"] if a["id"] == aid][0]
+    assert row["price"] == 1.3000 and row["triggered"] is False
+
+
+def test_worker_does_not_fire_an_alert_edited_during_its_fetch(client, monkeypatch):
+    aid = _create(client, 1.1000)
+    pushed: list = []
+    monkeypatch.setattr(alert_worker.expo_push, "send_push", lambda t, ti, b, d: pushed.append(b) or {})
+
+    def fetch_while_user_edits(sym):
+        client.patch(f"/api/alerts/{aid}", json={"symbol": "EURUSD", "condition": "above",
+                                                  "price": 1.3000}, headers=_DEVICE)
+        return 1.2000, [], None
+
+    monkeypatch.setattr(alert_worker, "_recent_minutes", fetch_while_user_edits)
+    alert_worker._check_once()
+    row = [a for a in db.list_alerts(all_users=True) if a["id"] == aid][0]
+    assert row["triggered"] is False and row["price"] == 1.3000
+    assert pushed == []
+
+
+# ------------------------- اقتباس قديم بوقته لا يُطلق تنبيهاً
+
+def _book(price: float, age: float | None):
+    import time as _time
+
+    return {"price": price, "quoted_at": None if age is None else _time.time() - age}
+
+
+def test_worker_quote_older_than_three_minutes_is_not_the_price(monkeypatch):
+    """1m قديمة ⇒ `_price`: اقتباس بوقت قبل ساعة كان يُعاد سعراً حالياً فيُطلق «فوق» سُلِّح بعد الهبوط."""
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, 3600))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
+    assert alert_worker._price("EURUSD") is None
+
+
+def test_worker_old_quote_falls_back_to_a_recent_ws_tick(monkeypatch):
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, 3600))
+    monkeypatch.setattr(alert_worker.td_ws, "tick", lambda sym, max_age=180: (1.0950, time.time() - 5))
+    assert alert_worker._price("EURUSD") == pytest.approx(1.0950)
+
+
+@pytest.mark.parametrize("age", [5, None])
+def test_worker_fresh_or_untimed_quote_is_still_used(monkeypatch, age):
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, age))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
+    assert alert_worker._price("EURUSD") == pytest.approx(1.1050)
+
+
+@pytest.mark.parametrize("lang, cond, words", [
+    ("en", "above", "▲ at or above 1.1"), ("en", "below", "▼ at or below 1.1"),
+    ("ar", "above", "▲ عند 1.1 أو فوقه"), ("ar", "below", "▼ عند 1.1 أو تحته"),
+])
+def test_price_push_states_the_condition_not_a_crossing(lang, cond, words):
+    """الشرط ≥/≤: تنبيه يُسلَّح والسعر وراء مستواه يُطلق فوراً — «rose above/تجاوز» كانت تروي حركة لم تحدث."""
+    _, body = alert_worker._compose({"kind": "price", "symbol": "EURUSD", "condition": cond, "price": 1.1}, lang)
+    assert body == f"EURUSD {words}"
+    assert "rose" not in body and "fell" not in body and "تجاوز" not in body and "نزل" not in body
+
+
+def test_a_cached_close_fetched_before_arming_does_not_fire(client, monkeypatch):
+    """إغلاق 1m مخزّن (1.2000) جُلب قبل إنشاء «فوق 1.1000» ليس سعراً بعده: كان يُطلقه فوراً."""
+    import time as _time
+
+    fetched = _time.time() - 30
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], fetched))
+    aid = _create(client, 1.1000)
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert res["triggered"] == []
+    # الجلب التالي بعد التسليح يُطلقه كالمعتاد
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], _time.time() + 1))
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert [a["id"] for a in res["triggered"]] == [aid]
+
+
+def test_recent_minutes_reports_when_its_close_was_fetched(monkeypatch):
+    import time as _time
+
+    now = int(_time.time())
+    candles = [{"time": now - 60, "open": 1.1, "high": 1.1, "low": 1.1, "close": 1.1}]
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
+                        lambda *a, **k: (candles, {"kind": "cache", "as_of": now - 40}))
+    assert alert_worker._recent_minutes("BTCUSD") == (1.1, candles, now - 40)
+
+
+def test_close_of_a_bar_that_ended_before_arming_does_not_fire(monkeypatch):
+    """آخر شمعة 1m منشورة بدأت قبل 150ث (لا أحدث بعد) وأغلقت 1.1003؛ سُلِّح «فوق 1.1000» قبل 60ث والسعر
+    1.0995؛ جلب جديد بعده ⇒ كان الإغلاق يُوسَم بلحظة الجلب فيُطلق على سعر سبق التسليح."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    now = int(_time.time())
+    candles = [{"time": now - 150, "open": 1.1, "high": 1.1003, "low": 1.1, "close": 1.1003}]
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
+                        lambda *a, **k: (candles, {"kind": "provider", "as_of": now}))
+    q, cs, q_at = alert_worker._recent_minutes("BTCUSD")
+    assert q == 1.1003 and q_at == now - 90
+    armed = datetime.fromtimestamp(now - 60, timezone.utc).isoformat()
+    assert alert_worker._price_hit({"price": 1.1, "condition": "above", "ts": armed}, q, cs, q_at) is False
+    # تنبيه سُلِّح قبل تلك الشمعة يُطلق عليها كما كان
+    older = datetime.fromtimestamp(now - 600, timezone.utc).isoformat()
+    assert alert_worker._price_hit({"price": 1.1, "condition": "above", "ts": older}, q, cs, q_at) is True
+
+
+def test_fallback_quote_carries_its_provider_time_so_a_pre_arming_quote_does_not_fire(monkeypatch):
+    """1m متعذّرة ⇒ اقتباس بعمر 90ث (مقبول ≤3د) كان يُعاد بلا وقته ⇒ «فوق 1.1000» سُلِّح قبل 30ث يُطلق عليه."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+
+    def _boom(*a, **k):
+        raise RuntimeError("series down")
+
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta", _boom)
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1003, 90))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
+    q, candles, q_at = alert_worker._recent_minutes("BTCUSD")
+    assert q == pytest.approx(1.1003) and q_at == pytest.approx(_time.time() - 90, abs=2)
+    armed = datetime.fromtimestamp(_time.time() - 30, timezone.utc).isoformat()
+    alert = {"price": 1.1, "condition": "above", "ts": armed}
+    assert alert_worker._price_hit(alert, q, candles, q_at) is False
+    older = datetime.fromtimestamp(_time.time() - 600, timezone.utc).isoformat()
+    assert alert_worker._price_hit({**alert, "ts": older}, q, candles, q_at) is True
+
+
+def test_fallback_ws_tick_carries_its_receive_time(monkeypatch):
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: None)
+    monkeypatch.setattr(alert_worker.td_ws, "tick", lambda sym, max_age=180: (1.0950, 1234.0))
+    assert alert_worker._price_at("EURUSD") == (pytest.approx(1.0950), 1234.0)
+
+
+def test_wick_window_covers_the_whole_stale_cache_gap(monkeypatch):
+    """5 شموع فقط ⇒ ذيل لمس المستوى أثناء 429 (كاش حتى 15د) يسقط من أول جلب حيّ بعده."""
+    asked = {}
+
+    def _series(sym, tf, outputsize):
+        asked["n"] = outputsize
+        return [], {}
+
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta", _series)
+    monkeypatch.setattr(alert_worker, "_price_at", lambda s: (None, None))
+    alert_worker._recent_minutes("BTCUSD")
+    assert asked["n"] * 60 > alert_worker.market.STALE_MAX_SEC
+
+
+# ------------------------- فحص أحد الأجهزة يدفع إشعار بقية أجهزة المالك
+
+def test_alert_fired_by_one_devices_check_is_pushed_to_the_owners_other_devices(client, monkeypatch):
+    """كان `/check` يَسِم التنبيه مُطلَقاً (فيتخطّاه الـworker) بلا دفع ⇒ تنبيه أطلقه فحص نسخة سطح
+    المكتب (ويب) لا يصل الهاتف أبداً. الجهاز الفاحص نفسه يُظهره محلياً فلا يُدفع إليه."""
+    r = client.post("/api/auth/register", json={"username": "twodev", "email": "twodev@x.co", "password": "pass1234"})
+    auth = {"Authorization": f"Bearer {r.json()['token']}"}
+    phone, desk = {**auth, **_DEVICE}, {**auth, **_OTHER_DEVICE}
+    for h, tok in ((phone, "ExponentPushToken[phone]"), (desk, "ExponentPushToken[desk]")):
+        assert client.post("/api/push/register", json={"token": tok, "platform": "ios"}, headers=h).status_code == 200
+    assert client.post("/api/alerts", json={"symbol": "EURUSD", "condition": "above", "price": 1.1},
+                       headers=phone).status_code == 200
+    sent: list = []
+    monkeypatch.setattr(alert_worker.expo_push, "send_push", lambda t, ti, b, d: sent.append((list(t), b)) or {})
+    assert len(client.post("/api/alerts/check", headers=desk).json()["triggered"]) == 1
+    assert sent == [(["ExponentPushToken[phone]"], sent[0][1])] and "EURUSD" in sent[0][1]
+    alert_worker._check_once()  # والـworker لا يكرّره
+    assert len(sent) == 1
+
+
+def test_fired_alert_carries_the_time_of_its_current_price(client, monkeypatch):
+    """`current` قد يكون إغلاق 1m عمره دقائق: كان بلا وقت فيُقرأ سعراً لحظياً."""
+    import time
+    at = float(int(time.time()) + 60)  # بعد دقيقة التسليح وإلا يُرفض كسعر أقدم من التنبيه
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], at))
+    aid = _create(client, 1.1000)
+    fired = [a for a in client.post("/api/alerts/check", headers=_DEVICE).json()["triggered"] if a["id"] == aid]
+    assert fired[0]["current"] == 1.2000 and fired[0]["current_at"] == at

@@ -1,0 +1,97 @@
+{
+  "expo": {
+    "name": "MATRIX",
+    "slug": "matrix",
+    "description": "MATRIX Charts — شارتات وتحليل فني للمتداول الفردي: مؤشرات معروفة، أدوات رسم، تنبيهات أسعار، تقويم اقتصادي وأكاديمية صوتية. تطبيق تحليل وتعليم فقط؛ لا ينفّذ صفقات ولا يقدّم نصيحة استثمارية.",
+    "primaryColor": "#2DD4BF",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B1220",
+    "locales": {
+      "ar": {
+        "ios": {
+          "CFBundleDisplayName": "MATRIX"
+        },
+        "android": {
+          "app_name": "MATRIX"
+        }
+      },
+      "en": {
+        "ios": {
+          "CFBundleDisplayName": "MATRIX"
+        },
+        "android": {
+          "app_name": "MATRIX"
+        }
+      },
+      "ckb": {
+        "ios": {
+          "CFBundleDisplayName": "MATRIX"
+        },
+        "android": {
+          "app_name": "MATRIX"
+        }
+      }
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.matrix.charts",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B1220",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.matrix.charts",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "MATRIX Charts",
+      "shortName": "MATRIX",
+      "lang": "ar",
+      "themeColor": "#0B1220",
+      "backgroundColor": "#0B1220",
+      "description": "MATRIX Charts — شارتات وتحليل فني للمتداول الفردي: مؤشرات معروفة، أدوات رسم، تنبيهات أسعار، تقويم اقتصادي وأكاديمية صوتية. تطبيق تحليل وتعليم فقط؛ لا ينفّذ صفقات ولا يقدّم نصيحة استثمارية."
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 360,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1220"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2DD4BF"
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ],
+      "expo-sharing",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "appName": "MATRIX"
+    }
+  }
+}

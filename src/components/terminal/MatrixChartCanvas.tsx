@@ -24,9 +24,11 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
   candles,
   timeframe,
   precision,
+  pipScale,
   chartType,
   indicators,
   activeDrawingTool,
+  onDrawingComplete,
   drawings,
   showGrid = true,
 }) => {
@@ -42,26 +44,46 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartOffsetRef = useRef(0);
+  const priceRangeRef = useRef<{ minPrice: number; adjustedRange: number; mainChartHeight: number; maxPrice: number }>({
+    minPrice: 0,
+    adjustedRange: 1,
+    mainChartHeight: 400,
+    maxPrice: 1,
+  });
 
   // Drawing state
   const [tempDrawing, setTempDrawing] = useState<{ startX: number; startY: number; currX: number; currY: number } | null>(null);
 
-  // Handle Resize
-  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  // Handle Resize with ResizeObserver for exact container tracking
+  const [dimensions, setDimensions] = useState({ width: 400, height: 350 });
 
   useEffect(() => {
-    const updateSize = () => {
-      if (containerRef.current) {
-        const { clientWidth, clientHeight } = containerRef.current;
-        setDimensions({
-          width: clientWidth || 800,
-          height: clientHeight || 500,
-        });
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDimensions({
+            width: Math.floor(width),
+            height: Math.floor(height),
+          });
+        }
       }
-    };
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    });
+
+    observer.observe(el);
+
+    // Initial check
+    if (el.clientWidth > 0 && el.clientHeight > 0) {
+      setDimensions({
+        width: Math.floor(el.clientWidth),
+        height: Math.floor(el.clientHeight),
+      });
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   // Main Render Loop
@@ -115,6 +137,7 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
     minPrice -= pricePadding;
     maxPrice += pricePadding;
     const adjustedRange = maxPrice - minPrice;
+    priceRangeRef.current = { minPrice, adjustedRange, mainChartHeight, maxPrice };
 
     // Coordinate conversion helpers
     const candleWidth = chartWidth / displayedCandles.length;
@@ -172,6 +195,15 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
       }
       ctx.setLineDash([]);
     }
+
+    // Watermark in center of chart (as in Claude handoff shots: e.g. USDJPY 4H, EURUSD 15m)
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.045)';
+    ctx.font = 'bold 40px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${symbol} ${timeframe}`, chartWidth / 2, mainChartHeight / 2);
+    ctx.restore();
 
     // 2. Volume Bars at Bottom of Main Chart
     if (indicators.showVolume) {
@@ -287,7 +319,7 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
       // Glowing Badge on price scale
       ctx.fillStyle = themeColor;
       ctx.fillRect(chartWidth + 1, currentY - 10, priceScaleWidth - 2, 20);
-      ctx.fillStyle = '#051329';
+      ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(latestCandle.close.toFixed(precision), chartWidth + priceScaleWidth / 2, currentY + 3.5);
@@ -574,7 +606,70 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
       ctx.lineTo(dimensions.width - 68, y);
       ctx.stroke();
       ctx.fillStyle = drawing.color || colors.accent;
+      ctx.font = '10px monospace';
       ctx.fillText(`L: ${drawing.points[0].price.toFixed(precision)}`, 10, y - 4);
+    } else if (drawing.type === 'trendline' && drawing.points.length >= 2) {
+      const y1 = getY(drawing.points[0].price);
+      const y2 = getY(drawing.points[1].price);
+      // approximate X from time
+      const chartWidth = dimensions.width - 68;
+      const x1 = Math.max(0, Math.min(chartWidth, (drawing.points[0] as any).screenX || 50));
+      const x2 = Math.max(0, Math.min(chartWidth, (drawing.points[1] as any).screenX || chartWidth - 50));
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    } else if (drawing.type === 'box' && drawing.points.length >= 2) {
+      const y1 = getY(drawing.points[0].price);
+      const y2 = getY(drawing.points[1].price);
+      const chartWidth = dimensions.width - 68;
+      const x1 = Math.min((drawing.points[0] as any).screenX || 50, (drawing.points[1] as any).screenX || chartWidth - 50);
+      const x2 = Math.max((drawing.points[0] as any).screenX || 50, (drawing.points[1] as any).screenX || chartWidth - 50);
+      const topY = Math.min(y1, y2);
+      const boxH = Math.abs(y2 - y1);
+      ctx.fillStyle = 'rgba(45, 212, 191, 0.12)';
+      ctx.fillRect(x1, topY, x2 - x1, boxH);
+      ctx.strokeRect(x1, topY, x2 - x1, boxH);
+    } else if (drawing.type === 'fibonacci' && drawing.points.length >= 2) {
+      const p1 = drawing.points[0].price;
+      const p2 = drawing.points[1].price;
+      const diff = p2 - p1;
+      const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0];
+      const chartWidth = dimensions.width - 68;
+
+      levels.forEach((lvl) => {
+        const lvlPrice = p1 + diff * lvl;
+        const y = getY(lvlPrice);
+        ctx.strokeStyle = lvl === 0.5 || lvl === 0.618 ? '#F59E0B' : 'rgba(163, 180, 208, 0.6)';
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(chartWidth, y);
+        ctx.stroke();
+        ctx.fillStyle = lvl === 0.5 || lvl === 0.618 ? '#F59E0B' : '#A3B4D0';
+        ctx.font = '9px monospace';
+        ctx.fillText(`FIB ${(lvl * 100).toFixed(1)}% (${lvlPrice.toFixed(precision)})`, 10, y - 3);
+      });
+      ctx.setLineDash([]);
+    } else if (drawing.type === 'measure' && drawing.points.length >= 2) {
+      const p1 = drawing.points[0].price;
+      const p2 = drawing.points[1].price;
+      const pips = Math.abs(p2 - p1) / (pipScale || 0.0001);
+      const pct = p1 ? ((p2 - p1) / p1) * 100 : 0;
+      const y1 = getY(p1);
+      const y2 = getY(p2);
+      const chartWidth = dimensions.width - 68;
+      const x1 = (drawing.points[0] as any).screenX || 50;
+      const x2 = (drawing.points[1] as any).screenX || chartWidth - 50;
+
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+      ctx.fillRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+      ctx.strokeStyle = '#38BDF8';
+      ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+      
+      ctx.fillStyle = '#38BDF8';
+      ctx.font = 'bold 10px monospace';
+      ctx.fillText(`Δ ${pips.toFixed(1)} Pips | ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`, Math.min(x1, x2) + 6, Math.min(y1, y2) + 14);
     }
   };
 
@@ -630,7 +725,23 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
 
   const handleMouseUp = () => {
     isDraggingRef.current = false;
-    if (tempDrawing) {
+    if (tempDrawing && activeDrawingTool !== 'none') {
+      const { adjustedRange, mainChartHeight, maxPrice } = priceRangeRef.current;
+      const getPrice = (y: number) => maxPrice - (y / (mainChartHeight || 1)) * adjustedRange;
+      const price1 = getPrice(tempDrawing.startY);
+      const price2 = getPrice(tempDrawing.currY);
+      const newDrawing: DrawingItem = {
+        id: `draw-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        type: activeDrawingTool,
+        points: [
+          { time: Date.now(), price: price1, screenX: tempDrawing.startX } as any,
+          { time: Date.now(), price: price2, screenX: tempDrawing.currX } as any,
+        ],
+        color: activeDrawingTool === 'box' ? '#2DD4BF' : activeDrawingTool === 'measure' ? '#38BDF8' : colors.accent,
+      };
+      if (onDrawingComplete) {
+        onDrawingComplete(newDrawing);
+      }
       setTempDrawing(null);
     }
   };

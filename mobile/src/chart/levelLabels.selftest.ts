@@ -1,0 +1,146 @@
+/** فحص ذاتي لـ`levelLabels.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
+import { fitRayLabel, inLeftLabelLane, levelLabelKey, levelLabelWidth, thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
+
+let failures = 0;
+function ok(name: string, cond: boolean) {
+  if (!cond) {
+    failures += 1;
+    console.error('FAIL', name);
+  }
+}
+
+type L = { id: string; y: number; rank: number };
+const y = (l: L) => l.y;
+const r = (l: L) => l.rank;
+
+ok('الحدّ الافتراضي 13', LEVEL_LABEL_GAP === 13);
+
+// متباعدة ⇒ كلّها تبقى، وبترتيبها الأصلي لا بترتيب الأهمية.
+const wide: L[] = [
+  { id: 'a', y: 10, rank: 3 },
+  { id: 'b', y: 40, rank: 1 },
+  { id: 'c', y: 70, rank: 2 },
+];
+ok('متباعدة ⇒ الكل', thinByGap(wide, y, r, 13).length === 3);
+ok('الناتج بالترتيب الأصلي',
+  thinByGap(wide, y, r, 13).map((l) => l.id).join('') === 'abc');
+
+// متلاصقة ⇒ الأهمّ يبقى (rank أصغر) والأقلّ يُسقَط، أيّاً كان موضعه بالمصفوفة.
+const tight: L[] = [
+  { id: 'low', y: 20, rank: 5 },
+  { id: 'high', y: 24, rank: 1 },
+];
+ok('متلاصقة ⇒ واحد', thinByGap(tight, y, r, 13).length === 1);
+ok('الأهمّ هو الباقي', thinByGap(tight, y, r, 13)[0]!.id === 'high');
+// وبالعكس بترتيب المصفوفة: النتيجة نفسها (الأهمية لا الموضع).
+ok('الترتيب بالمصفوفة لا يغيّر النتيجة',
+  thinByGap([...tight].reverse(), y, r, 13)[0]!.id === 'high');
+
+// التباعد بالضبط عند الحدّ يُقبَل (< لا ≤).
+ok('التباعد = الحدّ يُقبَل',
+  thinByGap([{ id: 'a', y: 0, rank: 1 }, { id: 'b', y: 13, rank: 2 }], y, r, 13).length === 2);
+ok('التباعد أقلّ بواحد يُسقَط',
+  thinByGap([{ id: 'a', y: 0, rank: 1 }, { id: 'b', y: 12, rank: 2 }], y, r, 13).length === 1);
+
+// سلسلة متلاصقة: القبول يقيس ضدّ كل مقبول لا ضدّ السابق وحده.
+const chain: L[] = [
+  { id: 'p0', y: 0, rank: 0 },
+  { id: 'p1', y: 8, rank: 1 },
+  { id: 'p2', y: 16, rank: 2 },
+  { id: 'p3', y: 26, rank: 3 },
+];
+const chainKept = thinByGap(chain, y, r, 13);
+ok('سلسلة: p1 يُسقَط لقربه من p0', !chainKept.some((l) => l.id === 'p1'));
+ok('سلسلة: p2 يبقى (16 ≥ 13 عن p0)', chainKept.some((l) => l.id === 'p2'));
+ok('سلسلة: p3 يُسقَط (10 عن p2)', !chainKept.some((l) => l.id === 'p3'));
+
+// مقياس مقلوب: التباعد بالمطلق.
+ok('مقياس مقلوب',
+  thinByGap([{ id: 'a', y: 100, rank: 1 }, { id: 'b', y: 96, rank: 2 }], y, r, 13).length === 1);
+
+// موضع غير محدود يُسقَط ولا يمنع غيره.
+const bad: L[] = [
+  { id: 'nan', y: NaN, rank: 0 },
+  { id: 'ok', y: 50, rank: 1 },
+  { id: 'inf', y: Infinity, rank: 2 },
+];
+ok('NaN/Infinity تُسقَط', thinByGap(bad, y, r, 13).map((l) => l.id).join('') === 'ok');
+
+// رتبة متساوية ⇒ الأسبق بالمصفوفة يبقى (ثبات).
+const ties: L[] = [
+  { id: 'first', y: 10, rank: 1 },
+  { id: 'second', y: 12, rank: 1 },
+];
+ok('رتبة متساوية ⇒ الأسبق', thinByGap(ties, y, r, 13)[0]!.id === 'first');
+
+// حدّ فاسد ⇒ الافتراض لا تعطيل الفحص.
+ok('حدّ سالب ⇒ الافتراض',
+  thinByGap([{ id: 'a', y: 0, rank: 1 }, { id: 'b', y: 5, rank: 2 }], y, r, -3).length === 1);
+ok('حدّ NaN ⇒ الافتراض',
+  thinByGap([{ id: 'a', y: 0, rank: 1 }, { id: 'b', y: 5, rank: 2 }], y, r, NaN).length === 1);
+ok('قائمة فارغة', thinByGap([], y, r, 13).length === 0);
+// لا تعديل على المصفوفة الممرَّرة.
+const src: L[] = [{ id: 'b', y: 40, rank: 2 }, { id: 'a', y: 10, rank: 1 }];
+thinByGap(src, y, r, 13);
+ok('المصفوفة الأصلية لم تُرتَّب بالمكان', src[0]!.id === 'b');
+
+// `taken`: مواضع وسوم أهمّ من مجموعة أخرى — لا يُقبل وسمٌ بقربها، والبعيد يبقى.
+const beside: L[] = [
+  { id: 'pp', y: 50, rank: 1 },
+  { id: 'r1', y: 20, rank: 2 },
+];
+ok('taken يحجب القريب فقط',
+  thinByGap(beside, y, r, 13, [52]).map((l) => l.id).join('') === 'r1');
+ok('taken بعيد ⇒ لا أثر', thinByGap(beside, y, r, 13, [90]).length === 2);
+ok('taken غير محدود يُتجاهل', thinByGap(beside, y, r, 13, [NaN, Infinity]).length === 2);
+// محجوب الأهمّ لا يُسقط جاره الأقلّ أهمية: r1 بعيد عن الحجز فيبقى رغم قربه من pp المحجوب.
+ok('المحجوب لا يحجز مكاناً',
+  thinByGap([{ id: 'pp', y: 50, rank: 1 }, { id: 'r1', y: 60, rank: 2 }], y, r, 13, [40])
+    .map((l) => l.id).join('') === 'r1');
+
+// حارة الحافّة اليسرى: وسم الارتكاز عند الحافّة يتنافس، ووسط اللوح لا.
+ok('الحافّة ⇒ داخل الحارة', inLeftLabelLane(4));
+ok('ما دون العرض ⇒ داخلها', inLeftLabelLane(119));
+ok('وسط اللوح ⇒ خارجها', !inLeftLabelLane(300));
+ok('عند الحدّ ⇒ خارجها', !inLeftLabelLane(120));
+ok('غير محدود ⇒ محافظ', inLeftLabelLane(NaN) && inLeftLabelLane(Infinity));
+ok('عرض مخصّص', !inLeftLabelLane(60, 50) && inLeftLabelLane(40, 50));
+
+// W8: وسم الشعاع لا يُقصّ — كامل داخله، كامل يساره، أو السعر وحده.
+{
+  const wFull = levelLabelWidth('1.32589 · +12.3 pip');
+  ok('عرض الوسم الكامل معقول', wFull > 110 && wFull < 140);
+  const a = fitRayLabel('1.32589', '+12.3 pip', 20, 400);
+  ok('متّسع ⇒ كامل داخل الشعاع', a.showDist && !a.flip);
+  const b = fitRayLabel('1.32589', '+12.3 pip', 300, 400);
+  ok('قرب الحافّة ⇒ كامل مقلوب بعرضه', b.showDist && b.flip && b.width === wFull);
+  const c = fitRayLabel('1.32589', '+12.3 pip', 90, 200);
+  ok('خلية رباعي ضيّقة ⇒ السعر وحده بلا قصّ', !c.showDist && !c.flip);
+  const d = fitRayLabel('1.32589', '+12.3 pip', 130, 150);
+  ok('ضيّقة والشعاع قرب الحافّة ⇒ السعر يساره', !d.showDist && d.flip && d.width === levelLabelWidth('1.32589'));
+  const e = fitRayLabel('1.32589', '+12.3 pip', null, 110);
+  ok('خطّ أفقي بلوح ضيّق جداً ⇒ السعر وحده', !e.showDist && !e.flip);
+  const f = fitRayLabel('1.32589', '+12.3 pip', null, 300);
+  ok('خطّ أفقي عادي ⇒ كامل', f.showDist);
+  const g = fitRayLabel('1.32589', null, 300, 400);
+  ok('بلا بُعد ⇒ لا بُعد', !g.showDist);
+}
+
+// قرب أعلى اللوح الوسم يُقلب تحت خطّه ⇒ التنقية بموضع الوسم: خطّان عند 4 و20 وسماهما عند 7 و8 ⇒ واحد فقط.
+{
+  const top: L[] = [
+    { id: 'a', y: 4, rank: 1 },
+    { id: 'b', y: 20, rank: 2 },
+  ];
+  ok('خطّ الموضع وحده كان يُبقيهما', thinByGap(top, y, r).length === 2);
+  const kept = thinByGap(top, (l) => levelLabelKey(l.y), r);
+  ok('بموضع الوسم ⇒ الأهمّ وحده', kept.length === 1 && kept[0].id === 'a');
+  ok('بعيد عن الأعلى ⇒ بلا إزاحة', levelLabelKey(100) === 100);
+}
+
+if (failures) {
+  console.error(`levelLabels.selftest: ${failures} FAILED`);
+  process.exitCode = 1;
+} else {
+  console.log('levelLabels.selftest: PASS');
+}

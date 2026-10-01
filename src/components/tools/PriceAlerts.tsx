@@ -5,10 +5,21 @@ import { Bell, BellRing, Plus, Trash2, CheckCircle2, Volume2 } from 'lucide-reac
 interface PriceAlertsProps {
   symbols: MarketSymbol[];
   activeSymbol: string;
+  alerts?: PriceAlertItem[];
+  onAddAlert?: (newAlert: Omit<PriceAlertItem, 'id' | 'triggered' | 'active'>) => void;
+  onDeleteAlert?: (id: string) => void;
+  onToggleAlert?: (id: string) => void;
 }
 
-export const PriceAlerts: React.FC<PriceAlertsProps> = ({ symbols, activeSymbol }) => {
-  const [alerts, setAlerts] = useState<PriceAlertItem[]>(() => {
+export const PriceAlerts: React.FC<PriceAlertsProps> = ({
+  symbols,
+  activeSymbol,
+  alerts: propAlerts,
+  onAddAlert: propOnAddAlert,
+  onDeleteAlert: propOnDeleteAlert,
+  onToggleAlert: propOnToggleAlert,
+}) => {
+  const [localAlerts, setLocalAlerts] = useState<PriceAlertItem[]>(() => {
     const saved = localStorage.getItem('matrix_price_alerts');
     if (saved) {
       try {
@@ -36,22 +47,16 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({ symbols, activeSymbol 
         active: true,
         triggered: false,
       },
-      {
-        id: 'alt-3',
-        symbol: 'USDJPY',
-        targetPrice: 151.50,
-        condition: 'below',
-        note: 'كسر مستوى الدعم النفسي',
-        active: false,
-        triggered: true,
-        triggeredAt: 'اليوم 10:14 GMT',
-      },
     ];
   });
 
+  const alerts = propAlerts || localAlerts;
+
   useEffect(() => {
-    localStorage.setItem('matrix_price_alerts', JSON.stringify(alerts));
-  }, [alerts]);
+    if (!propAlerts) {
+      localStorage.setItem('matrix_price_alerts', JSON.stringify(localAlerts));
+    }
+  }, [localAlerts, propAlerts]);
 
   const [formSymbol, setFormSymbol] = useState(activeSymbol);
   const [formPrice, setFormPrice] = useState('');
@@ -66,23 +71,36 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({ symbols, activeSymbol 
     const price = parseFloat(formPrice);
     if (!price || isNaN(price)) return;
 
-    const newAlert: PriceAlertItem = {
-      id: `alt-${Date.now()}`,
-      symbol: formSymbol,
-      targetPrice: price,
-      condition: formCondition,
-      note: formNote || `تنبيه عند وصول السعر إلى ${price}`,
-      active: true,
-      triggered: false,
-    };
+    if (propOnAddAlert) {
+      propOnAddAlert({
+        symbol: formSymbol,
+        targetPrice: price,
+        condition: formCondition,
+        note: formNote || `تنبيه عند وصول السعر إلى ${price}`,
+      });
+    } else {
+      const newAlert: PriceAlertItem = {
+        id: `alt-${Date.now()}`,
+        symbol: formSymbol,
+        targetPrice: price,
+        condition: formCondition,
+        note: formNote || `تنبيه عند وصول السعر إلى ${price}`,
+        active: true,
+        triggered: false,
+      };
+      setLocalAlerts([newAlert, ...localAlerts]);
+    }
 
-    setAlerts([newAlert, ...alerts]);
     setFormPrice('');
     setFormNote('');
   };
 
   const handleDeleteAlert = (id: string) => {
-    setAlerts(alerts.filter((a) => a.id !== id));
+    if (propOnDeleteAlert) {
+      propOnDeleteAlert(id);
+    } else {
+      setLocalAlerts(localAlerts.filter((a) => a.id !== id));
+    }
   };
 
   const handleTriggerTest = () => {

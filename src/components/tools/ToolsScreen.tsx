@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MarketSymbol } from '../../types/market';
+import { MarketSymbol, PriceAlertItem } from '../../types/market';
 import { PositionSizeCalculator } from './PositionSizeCalculator';
 import { TradeJournal } from './TradeJournal';
 import { EconomicCalendar } from './EconomicCalendar';
@@ -19,12 +19,20 @@ interface ToolsScreenProps {
   symbols: MarketSymbol[];
   activeSymbol: string;
   onSelectSymbolForChart: (sym: string) => void;
+  alerts?: PriceAlertItem[];
+  onAddAlert?: (newAlert: Omit<PriceAlertItem, 'id' | 'triggered' | 'active'>) => void;
+  onDeleteAlert?: (id: string) => void;
+  onToggleAlert?: (id: string) => void;
 }
 
 export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   symbols,
   activeSymbol,
   onSelectSymbolForChart,
+  alerts,
+  onAddAlert,
+  onDeleteAlert,
+  onToggleAlert,
 }) => {
   const [activeTool, setActiveTool] = useState<
     'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest'
@@ -69,7 +77,16 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
         {activeTool === 'screener' && (
           <MarketScreener symbols={symbols} onSelectSymbolForChart={onSelectSymbolForChart} />
         )}
-        {activeTool === 'alerts' && <PriceAlerts symbols={symbols} activeSymbol={activeSymbol} />}
+        {activeTool === 'alerts' && (
+          <PriceAlerts
+            symbols={symbols}
+            activeSymbol={activeSymbol}
+            alerts={alerts}
+            onAddAlert={onAddAlert}
+            onDeleteAlert={onDeleteAlert}
+            onToggleAlert={onToggleAlert}
+          />
+        )}
         {activeTool === 'backtest' && <BacktestPanel symbols={symbols} />}
       </div>
     </div>

@@ -1,0 +1,233 @@
+/**
+ * مخزن "إغلاق الأمس" لكل رمز (مرجع تغيّر اليوم بقائمة المتابعة).
+ *
+ * - يجلب شموع D من `api.chart` مرة واحدة لكل رمز، ويخزّنها بالذاكرة 10 دقائق (المرجع لا يتغيّر
+ *   خلال اليوم) — كل لوحات المتابعة المفتوحة تتشارك نفس المخزن فلا طلبات مكرّرة.
+ * - **إلا عند تبدّل الجلسة**: المخزَّن قبل منتصف ليل UTC (أو قبل افتتاح الأحد) يصير قديماً فوراً
+ *   لا بعد انتهاء عمره — كان التغيّر اليومي يُحسب على إغلاق ما قبل الأمس حتى 10 دقائق بعد التدوير
+ *   (يَظهر مثلاً +0.8% وهو فعلياً +0.1% اليوم). الفحص كل دقيقة، ولا جلب ما دامت الجلسة نفسها.
+ * - طلبات متتالية (لا متوازية) كي لا تُغرق الباك-إند/حدود المزوّد عند فتح اللوحة.
+ * - بيانات مصدرها `demo` لا تُستخدم مرجعاً: تغيّر محسوب من سلسلة وهمية مقابل سعر حيّ سيكون مضلِّلاً،
+ *   فالأصدق ألا نعرض نسبة إطلاقاً.
+ */
+import { useEffect, useState } from 'react';
+import { api } from '../api';
+import type { Candle } from '../api';
+import { prevSessionFromDaily, sessionKeyAt, validSessionBar, weekendMergeOf } from './dailyChange';
+import { currentSessionOpenAfter } from './pivotBase';
+import { serverNowSec } from './dataSource';
+
+const TTL_MS = 10 * 60 * 1000;
+const FAIL_TTL_MS = 2 * 60 * 1000;
+/** فحص تبدّل الجلسة — رخيص (`fresh` بلا شبكة)، فالتأخير بعد التدوير ≤ دقيقة لا ≤ 10. */
+const CHECK_MS = 60 * 1000;
+// الجلسة («أمس» = 17:00 نيويورك) بساعة الخادم `serverNowSec` كرأس الشارت: هاتف متقدّم 10 دقائق قبل الإغلاق كان يأخذ شمعة D
+// الجارية «أمساً» ⇒ القائمة 0.00% والشارت +0.43%. `at`/العمر بساعة الجهاز (مدّة لا لحظة).
+
+// `prevBar`: شمعة الجلسة السابقة كاملة — أساس نقاط الارتكاز بالشارت (`pivotBase.ts`).
+// `currOpen`: افتتاح الجلسة الجارية (شمعة D1 التالية لـ`prevBar`) — محور Woodie على فريم D/W.
+// `session`/`weekendMerge`: الجلسة الجارية وقت الجلب وقاعدة حسابها لهذا الرمز (`sessionKeyAt`).
+type Entry = {
+  prevClose: number | null;
+  prevBar: Candle | null;
+  currOpen: number | null;
+  at: number;
+  ok: boolean;
+  session: number | null;
+  weekendMerge: boolean;
+};
+
+const cache = new Map<string, Entry>();
+const inflight = new Set<string>();
+const listeners = new Set<() => void>();
+let queue: string[] = [];
+let running = false;
+
+function fresh(sym: string, now: number): boolean {
+  const e = cache.get(sym);
+  if (!e) return false;
+  if (e.session != null && sessionKeyAt(serverNowSec(now), e.weekendMerge, sym) !== e.session) return false;
+  return now - e.at < (e.ok ? TTL_MS : FAIL_TTL_MS);
+}
+
+/**
+ * المخزَّن فقط إن كان لجلسة الآن. عند افتتاح الأحد كان إغلاق الخميس يبقى معروضاً حتى الفحص التالي وانتهاء الجلب
+ * (دقيقة أو أكثر): كل صفوف المتابعة تعرض حركة الجمعة ضمن «تغيّر اليوم» في اللحظة التي يُقرأ فيها فجوة العطلة،
+ * وPDH/PDL على اليوم السابق. غياب المرجع («—») أصدق من مرجع جلسة منتهية.
+ */
+function current(sym: string): Entry | undefined {
+  const e = cache.get(sym);
+  if (e && e.session != null && sessionKeyAt(serverNowSec(), e.weekendMerge, sym) !== e.session) return undefined;
+  return e;
+}
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+async function drain() {
+  if (running) return;
+  running = true;
+  try {
+    while (queue.length) {
+      const sym = queue.shift()!;
+      if (fresh(sym, Date.now())) {
+        inflight.delete(sym);
+        continue;
+      }
+      try {
+        const s = await api.chart(sym, 'D', 50);
+        const demo = s?.data_source?.kind === 'demo';
+        const candles = s?.candles ?? [];
+        const now = Date.now();
+        const bar = demo ? null : prevSessionFromDaily(candles, serverNowSec(now), sym);
+        const c = bar?.close;
+        const prev = typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
+        const weekendMerge = weekendMergeOf(candles);
+        cache.set(sym, {
+          prevClose: prev,
+          prevBar: validSessionBar(bar),
+          currOpen: demo ? null : currentSessionOpenAfter(candles, bar),
+          at: now,
+          ok: true,
+          session: sessionKeyAt(serverNowSec(now), weekendMerge, sym),
+          weekendMerge,
+        });
+      } catch {
+        // تعثّر تحديث واحد (429، انقطاع، إعادة تشغيل الخادم) لا يمحو مرجعاً صحيحاً للجلسة نفسها: كان يُستبدل بـnull
+        // فتقفز نسبة الرأس دقيقتين إلى التغيّر من أول شمعة محمَّلة (+0.12% ⇒ −1.80% على 4H) وتختفي خطوط PDH/PDL
+        // والارتكاز. المرجع لا يتغيّر داخل الجلسة، فيُبقى ويُعاد المحاولة بعد `FAIL_TTL_MS`.
+        const now = Date.now();
+        const old = cache.get(sym);
+        if (old?.ok && old.session != null && sessionKeyAt(serverNowSec(now), old.weekendMerge, sym) === old.session) {
+          cache.set(sym, { ...old, at: now - TTL_MS + FAIL_TTL_MS });
+        } else {
+          cache.set(sym, { prevClose: null, prevBar: null, currOpen: null, at: now, ok: false, session: null, weekendMerge: true });
+        }
+      } finally {
+        inflight.delete(sym);
+      }
+      emit();
+    }
+  } finally {
+    running = false;
+  }
+}
+
+function request(symbols: readonly string[]) {
+  const now = Date.now();
+  for (const raw of symbols) {
+    const sym = raw.toUpperCase();
+    if (fresh(sym, now) || inflight.has(sym)) continue;
+    inflight.add(sym);
+    queue.push(sym);
+  }
+  void drain();
+}
+
+function snapshot(symbols: readonly string[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const raw of symbols) {
+    const sym = raw.toUpperCase();
+    const p = current(sym)?.prevClose;
+    if (typeof p === 'number') out[sym] = p;
+  }
+  return out;
+}
+
+/** إغلاق الأمس لكل رمز معروف مرجعه؛ الرموز بلا مرجع (تحميل/فشل/بيانات تجريبية) غائبة عن الكائن. */
+export function useDailyRefs(symbols: readonly string[]): Record<string, number> {
+  const key = symbols.map((s) => s.toUpperCase()).join(',');
+  const [refs, setRefs] = useState<Record<string, number>>(() => snapshot(symbols));
+
+  useEffect(() => {
+    const list = key ? key.split(',') : [];
+    const update = () =>
+      setRefs((prev) => {
+        const next = snapshot(list);
+        const keys = Object.keys(next);
+        const same = keys.length === Object.keys(prev).length && keys.every((k) => prev[k] === next[k]);
+        return same ? prev : next;
+      });
+    listeners.add(update);
+    update();
+    request(list);
+    // تجديد دوري: `fresh` يُسقط المخزَّن عند بدء جلسة جديدة أو انتهاء عمره، وإلا لا طلب
+    const timer = setInterval(() => {
+      update();
+      request(list);
+    }, CHECK_MS);
+    return () => {
+      listeners.delete(update);
+      clearInterval(timer);
+    };
+  }, [key]);
+
+  return refs;
+}
+
+/**
+ * شمعة الجلسة السابقة لرمز واحد من شموع D1 (نفس المخزن والطلب المشترك مع قائمة المتابعة).
+ * `null` رمز ⇒ لا جلب (المؤشّر مطفأ). `undefined` = لم يصل بعد أو فشل أو بيانات تجريبية.
+ */
+export function useDailyPrevBar(symbol: string | null): Candle | undefined {
+  const sym = symbol ? symbol.toUpperCase() : '';
+  // الحالة موسومة برمزها: بعد التبديل كان أوّل رسم يحسب المحاور/PDH-PDL من شمعة الرمز **السابق** حتى يعمل التأثير.
+  const [state, setState] = useState<{ sym: string; bar: Candle | undefined }>(() => ({
+    sym,
+    bar: sym ? current(sym)?.prevBar ?? undefined : undefined,
+  }));
+
+  useEffect(() => {
+    if (!sym) {
+      setState({ sym, bar: undefined });
+      return;
+    }
+    const update = () => {
+      const bar = current(sym)?.prevBar ?? undefined;
+      setState((prev) => (prev.sym === sym && prev.bar === bar ? prev : { sym, bar }));
+    };
+    listeners.add(update);
+    update();
+    request([sym]);
+    const timer = setInterval(() => {
+      update();
+      request([sym]);
+    }, CHECK_MS);
+    return () => {
+      listeners.delete(update);
+      clearInterval(timer);
+    };
+  }, [sym]);
+
+  if (state.sym !== sym) return sym ? current(sym)?.prevBar ?? undefined : undefined;
+  return state.bar;
+}
+
+/** افتتاح الجلسة الجارية من شموع D1 (نفس مخزن `useDailyPrevBar`)؛ null = غير معروف. */
+export function useDailyCurrOpen(symbol: string | null): number | null {
+  const sym = symbol ? symbol.toUpperCase() : '';
+  // موسومة برمزها كـ`useDailyPrevBar`: افتتاح Woodie للرمز السابق لا يُرسم إطاراً بعد التبديل.
+  const [state, setState] = useState<{ sym: string; open: number | null }>(() => ({
+    sym,
+    open: sym ? current(sym)?.currOpen ?? null : null,
+  }));
+  useEffect(() => {
+    if (!sym) {
+      setState({ sym, open: null });
+      return;
+    }
+    const update = () => {
+      const open = current(sym)?.currOpen ?? null;
+      setState((prev) => (prev.sym === sym && prev.open === open ? prev : { sym, open }));
+    };
+    listeners.add(update);
+    update();
+    request([sym]);
+    return () => {
+      listeners.delete(update);
+    };
+  }, [sym]);
+  if (state.sym !== sym) return sym ? current(sym)?.currOpen ?? null : null;
+  return state.open;
+}

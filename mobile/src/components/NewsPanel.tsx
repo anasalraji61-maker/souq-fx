@@ -1,0 +1,200 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, numeric } from '../theme';
+import { api, type NewsItem } from '../api';
+import { useI18n } from '../i18n/I18nContext';
+import { formatLocalStamp } from '../localStamp';
+
+/**
+ * لون شارة التأثير — **ثلاث درجات لا اثنتان** («منخفض» لا يلبس لون «متوسط»)، وبدرجات التقويم نفسها
+ * (`CalendarPanel` `IMPACT_COLOR`) كي لا تقول شاشتان عن الدرجة نفسها شيئين مختلفين.
+ *
+ * DESIGN-PRO §1: كان «عالي» ‏`highImpact` الوردي (لون ثالث لميزة واحدة) و«متوسط» ‏`warn` (محجوز للبيانات
+ * المتأخّرة) ⇒ درجات سطوع محايدة، الأعلى أسطع، والكلمة داخل الشارة تحمل المعنى. نصّ الشارة `onWarnFill`
+ * الداكن: تباينه فوق أخفت الدرجات `textDim` (‎#7B8DA8‎) يفوق 5:1.
+ *
+ * `unknown` (backend-r18: عنوان بلا كلمة مفتاحية) وأي قيمة أخرى ⇒ **بلا شارة**: كانت تسقط على «منخفض»،
+ * فخبرُ «BoE hikes by 50bp» يُعرض «≈ منخفض» — درجةٌ لم يقدّرها أحد.
+ */
+const IMPACT_FILL: Record<Exclude<NewsItem['impact'], 'unknown'>, string> = {
+  high: colors.text,
+  medium: colors.textMuted,
+  low: colors.textDim,
+};
+
+export function NewsPanel({ embedded }: { embedded?: boolean }) {
+  const { t, rtl, lang } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  // تبدأ فارغة: كانت تبدأ بأخبار وهمية («قرار الفائدة الفيدرالي — اليوم 21:00»، «CPI غداً») تبقى
+  // ظاهرة إن فشل الطلب تحت «بيانات محفوظة» — حدث مختلَق قد يبني عليه متداول قراره.
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  /** فشل الطلب (لا بيانات محفوظة تُعرض) — لا تُفعَّل قبل أول محاولة فعلية. */
+  const [failed, setFailed] = useState(false);
+  /** backend-r33: الخادم أجاب والمصدر لم يُجب — ليس «لا أخبار» (سوق هادئ) ولا عطل اتصالك. */
+  const [sourceDown, setSourceDown] = useState(false);
+  /** `as_of` حين `stale: true` — العناوين المعروضة من جلب سابق؛ null ⇒ لا سطر. */
+  const [staleAsOf, setStaleAsOf] = useState<number | null>(null);
+
+  useEffect(() => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مثلاً تبديل قسم hub قبل اكتمال
+    // الطلب) — نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
+    api
+      .news()
+      .then((r) => {
+        if (alive) {
+          setNews(r.news);
+          setSourceDown(r.status === 'unavailable' && r.news.length === 0);
+          setStaleAsOf(r.stale && typeof r.as_of === 'number' && r.news.length > 0 ? r.as_of : null);
+          setFailed(false);
+          setLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setFailed(true);
+          setLoaded(true);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return (
+    <View style={[styles.panel, embedded && styles.panelInFrame]}>
+      {embedded ? (
+        <View style={frameEmbedHead}>
+          <View style={frameEmbedHeadTail} />
+          <View style={frameEmbedTitleBlock}>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle, { textAlign: align }]}>
+              {t.newsTitle}
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={[styles.title, { textAlign: align }]}>{t.newsTitle}</Text>
+      )}
+      {failed ? <Text style={[styles.staleNote, { textAlign: align }]}>{t.newsLoadError}</Text> : null}
+      {!loaded ? <ActivityIndicator color={colors.accent} style={{ paddingVertical: spacing.lg }} /> : null}
+      {loaded && !failed && sourceDown ? (
+        <Text style={[styles.staleNote, { textAlign: align }]}>{t.newsSourceUnavailable}</Text>
+      ) : null}
+      {staleAsOf != null ? (
+        <Text style={[styles.staleNote, { textAlign: align }]}>
+          {t.newsStaleAsOf.replace('{time}', formatLocalStamp(staleAsOf, lang))}
+        </Text>
+      ) : null}
+      {loaded && !failed && !sourceDown && news.length === 0 ? (
+        <Text style={styles.empty}>{t.newsEmpty}</Text>
+      ) : null}
+      {/* التأثير مخمَّن من كلمات العنوان (fed/cpi…) بألوان تأثير التقويم نفسها — يُقرأ تصنيفاً مؤكَّداً.
+          سطرٌ واحد فوق القائمة لا تحت كل خبر، و«≈» على الشارة نفسها. */}
+      {news.some((n) => n.impact_basis === 'headline_keywords') ? (
+        <Text style={[styles.basisNote, { textAlign: align }]}>{t.newsImpactFromHeadline}</Text>
+      ) : null}
+      <ScrollView contentContainerStyle={{ gap: spacing.sm }}>
+        {news.map((n) => {
+          const impactWord =
+            n.impact === 'high' ? t.impactHigh : n.impact === 'medium' ? t.impactMedium : n.impact === 'low' ? t.impactLow : null;
+          const estimated = n.impact_basis === 'headline_keywords';
+          return (
+          <View key={n.id} style={styles.card}>
+            <View style={[styles.row, rtl && styles.rowRtl]}>
+              {/* فراغ مكان الشارة يُبقي الوقت بطرفه (`space-between`). */}
+              {impactWord == null || n.impact === 'unknown' ? <View /> : (
+              <View
+                // launch107: بلا اسم يقرأ قارئ الشاشة «≈» حرفياً («يساوي تقريباً عالي») لا «تقدير».
+                accessible={estimated}
+                accessibilityLabel={estimated ? t.newsImpactEstimatedA11y.replace('{impact}', impactWord) : undefined}
+                style={[
+                  styles.impact,
+                  { backgroundColor: IMPACT_FILL[n.impact] },
+                ]}
+              >
+                <Text style={styles.impactText}>
+                  {estimated ? '≈ ' : ''}
+                  {impactWord}
+                </Text>
+              </View>
+              )}
+              {/* `when` من الخادم «2026-09-26 14:30 UTC» — بتوقيت غرينتش والتقويم والشارت بتوقيت الجهاز ⇒ خبرُ
+                  الساعة 17:30 محلياً كان يُقرأ «14:30». `ts` موجود ⇒ طابع محلي كرسائل المجموعة. */}
+              <Text style={styles.when}>
+                {typeof n.ts === 'number' && Number.isFinite(n.ts) ? formatLocalStamp(n.ts, lang) : n.when}
+              </Text>
+            </View>
+            <Text style={[styles.headline, { textAlign: align }]}>{n.title}</Text>
+          </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  panel: {
+    flex: 1,
+    height: '100%',
+    backgroundColor: colors.bgPanel,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.sm,
+    overflow: 'hidden',
+  },
+  panelInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
+  title: {
+    color: colors.text,
+    fontWeight: '500',
+    fontSize: 13,
+    marginBottom: spacing.sm,
+  },
+  titleInHead: { marginBottom: 0 },
+  staleNote: {
+    ...numeric,
+    color: colors.warn,
+    fontSize: 11,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  basisNote: { color: colors.textDim, fontSize: 11, marginBottom: spacing.xs },
+  empty: {
+    color: colors.textDim,
+    fontSize: 11,
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
+  },
+  card: {
+    backgroundColor: colors.bgElevated,
+    borderRadius: radii.sm,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rowRtl: { flexDirection: 'row-reverse' },
+  impact: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 4 },
+  impactText: { color: colors.onWarnFill, fontWeight: '500', fontSize: 11 },
+  when: { ...numeric, color: colors.textDim, fontSize: 11 },
+  headline: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 4,
+    lineHeight: 20,
+  },
+});

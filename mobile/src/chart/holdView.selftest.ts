@@ -1,0 +1,79 @@
+/** فحص ذاتي لـ`holdView.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
+import assert from 'node:assert/strict';
+import { appendedAfter, offsetAtTime, reanchorAhead, removedAtTail, shiftAheadSlot } from './holdView';
+
+// تيك داخل الشمعة نفسها ⇒ لا إضافة
+assert.equal(appendedAfter(300, [0, 100, 200, 300]), 0);
+// شمعة جديدة واحدة
+assert.equal(appendedAfter(300, [0, 100, 200, 300, 400]), 1);
+// جلب أضاف ثلاثاً (والسلسلة قُصّت من أوّلها — لا يهمّ)
+assert.equal(appendedAfter(300, [200, 300, 400, 500, 600]), 3);
+// الشمعة السابقة غير موجودة (رمز/فريم آخر، أو Renko أُعيد بناؤه) ⇒ 0
+assert.equal(appendedAfter(350, [0, 100, 200, 300, 400]), 0);
+assert.equal(appendedAfter(900, [0, 100]), 0);
+// مدخل غير صالح
+assert.equal(appendedAfter(null, [0, 100]), 0);
+assert.equal(appendedAfter(NaN, [0, 100]), 0);
+assert.equal(appendedAfter(100, []), 0);
+// Renko: لبنتان من شمعة واحدة تحملان الزمن نفسه — تُعدّ من آخر ظهور
+assert.equal(appendedAfter(300, [100, 200, 300, 300, 400]), 1);
+// بالطول: لبنة جديدة من الشمعة نفسها (الزمن مكرَّر) تُعدّ
+assert.equal(appendedAfter(300, [100, 200, 300, 300], 3), 1);
+assert.equal(appendedAfter(300, [100, 200, 300, 300, 300], 3), 2);
+// الطول لا يطابق (قُصّ من الأوّل) ⇒ البحث بالزمن
+assert.equal(appendedAfter(300, [200, 300, 400], 4), 1);
+assert.equal(appendedAfter(300, [200, 300, 400], 99), 1);
+
+// تبديل النوع: الطرف الأيمن على الزمن نفسه. 30 شمعة كل 100ث، الطرف عند 1500 ⇒ 14 خانة بعده.
+const candleTimes = Array.from({ length: 30 }, (_, i) => i * 100);
+assert.equal(offsetAtTime(candleTimes, 1500), 14);
+// Renko: لبنات أقلّ وأزمنة مكرّرة — آخر لبنة ≤ الطرف
+const bricks = [0, 300, 300, 700, 1200, 1600, 2100, 2500, 2900];
+assert.equal(offsetAtTime(bricks, 1500, 2), 4);
+assert.equal(offsetAtTime(bricks, 2900, 2), 0);
+// أقدم من السلسلة ⇒ أقصى إزاحة مسموحة؛ والقصّ يُبقي آخر `keep`
+assert.equal(offsetAtTime(bricks, -5, 2), 7);
+assert.equal(offsetAtTime(bricks, 300, 5), 4);
+assert.equal(offsetAtTime([], 100), 0);
+assert.equal(offsetAtTime(bricks, null), 0);
+// تقاطع بالمستقبل: 3 خانات بعد الأخيرة (فهرس 9 من 10) ثم شمعة جديدة ⇒ الخانة نفسها = الأخيرة الجديدة + 2
+assert.deepEqual(reanchorAhead(3, 1, 11), { index: 10, ahead: 2 });
+// خانة +1 صارت الشمعة الجديدة نفسها ⇒ عليها بلا ahead
+assert.deepEqual(reanchorAhead(1, 1, 11), { index: 10, ahead: 0 });
+// جلب أضاف 3 شموع والتقاطع +2 ⇒ الشمعة الثانية من المضافة (فهرس 9+2)
+assert.deepEqual(reanchorAhead(2, 3, 13), { index: 11, ahead: 0 });
+assert.equal(reanchorAhead(0, 1, 11), null);
+assert.equal(reanchorAhead(3, 0, 11), null);
+assert.equal(reanchorAhead(3, 5, 5), null);
+// الإعادة: +3 بعد الأخيرة المكشوفة (فهرس 20)، خطوة +1 ⇒ الأخيرة الجديدة (21) + 2
+assert.deepEqual(shiftAheadSlot(3, 20, 21), { index: 21, ahead: 2 });
+// الخانة كُشفت ⇒ عليها بلا ahead
+assert.deepEqual(shiftAheadSlot(1, 20, 21), { index: 21, ahead: 0 });
+assert.deepEqual(shiftAheadSlot(2, 20, 25), { index: 22, ahead: 0 });
+// خطوة −1 ⇒ الخانة نفسها تبعد خانة أخرى
+assert.deepEqual(shiftAheadSlot(3, 20, 19), { index: 19, ahead: 4 });
+assert.equal(shiftAheadSlot(0, 20, 21), null);
+assert.equal(shiftAheadSlot(3, 20, 20), null);
+assert.equal(shiftAheadSlot(3, -1, 20), null);
+// الشمعة المحلّية سقطت (تيك متقادم) ⇒ خانة واحدة من الطرف
+assert.equal(removedAtTail([100, 200, 300, 400], 300), 1);
+assert.equal(removedAtTail([100, 200, 300, 400], 200), 2);
+assert.equal(removedAtTail([100, 200, 300, 400], 400), 0);
+// زمن جديد أحدث، أو غير موجود بالقديمة ⇒ 0
+assert.equal(removedAtTail([100, 200, 300, 400], 500), 0);
+assert.equal(removedAtTail([100, 200, 300, 400], 250), 0);
+assert.equal(removedAtTail([], 100), 0);
+assert.equal(removedAtTail([100], null), 0);
+// Renko: لبنتان بالزمن نفسه تبقيان، والثالثة بعدهما سقطت
+assert.equal(removedAtTail([100, 300, 300, 400], 300), 1);
+// Renko: لبنة حيّة سقطت من ثلاث بزمن واحد — الطول الجديد يعدّها (بالزمن وحده 0 ⇒ انجراف لبنة بكل تذبذب).
+assert.equal(removedAtTail([100, 200, 300, 300], 300, 3), 1);
+assert.equal(removedAtTail([100, 200, 300, 300, 300], 300, 3), 2);
+assert.equal(appendedAfter(300, [100, 200, 300, 300], 3) - removedAtTail([100, 200, 300, 300], 300, 3), 0);
+// طول لا يطابق (سلسلة أُعيد بناؤها) ⇒ البحث بالزمن كما كان.
+assert.equal(removedAtTail([100, 200, 300, 400], 300, 2), 1);
+// سقوط ثم عودة = صفر انجراف: الإزاحة −1 ثم +1
+const dropped = removedAtTail([100, 200, 300, 400], 300);
+const back = appendedAfter(300, [100, 200, 300, 400], 3);
+assert.equal(dropped - back, 0);
+console.log('holdView.selftest: PASS');
