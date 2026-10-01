@@ -12,11 +12,17 @@ import {
   Globe,
   Bell,
   Bot,
+  MessageSquare,
+  Award,
+  CreditCard,
+  Layers,
 } from 'lucide-react';
 
+export type AppTab = 'home' | 'bot' | 'community' | 'academy' | 'pricing' | 'tools' | 'account';
+
 interface HeaderProps {
-  currentTab: 'home' | 'tools' | 'academy' | 'account' | 'bot';
-  onTabChange: (tab: 'home' | 'tools' | 'academy' | 'account' | 'bot') => void;
+  currentTab: AppTab;
+  onTabChange: (tab: AppTab) => void;
   currentLang: LangId;
   onLanguageChange: (lang: LangId) => void;
   symbols: MarketSymbol[];
@@ -59,169 +65,127 @@ export const Header: React.FC<HeaderProps> = ({
   const activeSymbolObj = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
 
   return (
-    <header className="h-12 bg-[#0E1728] border-b border-[#243049] px-4 flex items-center justify-between select-none text-xs z-30 gap-2">
-      {/* Left: Brand & Symbol Quick Switcher */}
-      <div className="flex items-center gap-4 shrink-0">
+    <header className="h-12 bg-[#0A1222] border-b border-[#1E293B] px-3 lg:px-4 flex items-center justify-between select-none text-xs z-30 gap-2 shrink-0">
+      {/* Brand & Left Navigation */}
+      <div className="flex items-center gap-4 lg:gap-6">
         {/* Brand */}
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#2DD4BF] to-[#38BDF8] flex items-center justify-center text-[#042F2E] font-black text-xs shadow-md">
+        <div
+          onClick={() => onTabChange('home')}
+          className="flex items-center gap-2 cursor-pointer group"
+        >
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#2DD4BF] to-[#0284C7] flex items-center justify-center text-[#042F2E] font-black text-xs shadow-md group-hover:scale-105 transition-transform">
             M
           </div>
           <div>
-            <span className="font-extrabold text-sm tracking-wider text-[#E8EEF9]">MATRIX</span>
-            <span className="text-[10px] text-[#2DD4BF] font-mono mr-1.5 px-1 py-0.2 bg-[#2DD4BF]/10 rounded">
-              TERMINAL
+            <span className="font-extrabold text-sm tracking-wider text-white">MATRIX</span>
+            <span className="text-[10px] text-[#2DD4BF] font-mono mr-1.5 px-1.5 py-0.2 bg-[#2DD4BF]/10 rounded border border-[#2DD4BF]/20">
+              PRO
             </span>
           </div>
         </div>
 
-        <div className="w-[1px] h-5 bg-[#243049] hidden sm:block" />
+        <div className="w-[1px] h-5 bg-[#1E293B] hidden md:block" />
 
-        {/* Quick Symbol Dropdown */}
-        <div className="relative">
+        {/* Main Clean Navigation Tabs */}
+        <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar">
           <button
-            onClick={() => setIsSymbolDropdownOpen(!isSymbolDropdownOpen)}
-            className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#E8EEF9] font-mono transition-colors"
+            onClick={() => onTabChange('home')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'home'
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+            }`}
           >
-            <span className="font-bold text-[#2DD4BF]">{activeSymbolObj?.symbol}</span>
-            <span className="text-[#A3B4D0]">{activeSymbolObj?.price.toFixed(activeSymbolObj?.precision)}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#7B8DA8]" />
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>الشارت الفني</span>
           </button>
 
-          {isSymbolDropdownOpen && (
-            <div className="absolute top-8 right-0 w-48 bg-[#121A2B] border border-[#243049] rounded-lg shadow-xl py-1 z-50 max-h-60 overflow-y-auto font-mono">
-              {symbols.map((s) => (
-                <div
-                  key={s.symbol}
-                  onClick={() => {
-                    onSelectSymbol(s.symbol);
-                    setIsSymbolDropdownOpen(false);
-                  }}
-                  className={`px-3 py-1.5 flex items-center justify-between cursor-pointer hover:bg-[#1C2740] ${
-                    s.symbol === activeSymbol ? 'bg-[#162033] text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
-                  }`}
-                >
-                  <span>{s.symbol}</span>
-                  <span className="text-xs text-[#A3B4D0]">{s.price.toFixed(s.precision)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          <button
+            onClick={() => onTabChange('bot')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'bot'
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5 text-[#2DD4BF]" />
+            <span>الوكلاء الـ 8 (Cloud Swarm)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping hidden sm:inline-block" />
+          </button>
+
+          <button
+            onClick={() => onTabChange('community')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'community'
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>غرف النقاش</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('academy')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'academy'
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>الأكاديمية</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('pricing')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'pricing'
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+            }`}
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            <span>الباقات والترقية</span>
+          </button>
+        </nav>
       </div>
 
-      {/* Center: Main Navigation Tabs */}
-      <nav className="hidden md:flex items-center gap-1 bg-[#0B1220] p-1 rounded-lg border border-[#243049]">
-        <button
-          onClick={() => onTabChange('home')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
-            currentTab === 'home'
-              ? 'bg-[#2DD4BF] text-[#042F2E] font-bold shadow-xs'
-              : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-          }`}
-        >
-          <TrendingUp className="w-3.5 h-3.5" />
-          <span>{dict.tabHome}</span>
-        </button>
+      {/* Right Controls */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* GMT Clock */}
+        <div className="hidden lg:flex items-center gap-1.5 font-mono text-[11px] text-[#64748B] bg-[#070D18] px-2.5 py-1 rounded border border-[#16233B]">
+          <Clock className="w-3 h-3 text-[#2DD4BF]" />
+          <span>{timeStr}</span>
+        </div>
 
-        <button
-          onClick={() => onTabChange('tools')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
-            currentTab === 'tools'
-              ? 'bg-[#2DD4BF] text-[#042F2E] font-bold shadow-xs'
-              : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-          }`}
-        >
-          <Sliders className="w-3.5 h-3.5" />
-          <span>{dict.tabTools}</span>
-        </button>
-
-        <button
-          onClick={() => onTabChange('academy')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
-            currentTab === 'academy'
-              ? 'bg-[#2DD4BF] text-[#042F2E] font-bold shadow-xs'
-              : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-          }`}
-        >
-          <GraduationCap className="w-3.5 h-3.5" />
-          <span>{dict.tabAcademy}</span>
-        </button>
-
-        <button
-          onClick={() => onTabChange('bot')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
-            currentTab === 'bot'
-              ? 'bg-[#2DD4BF] text-[#042F2E] font-bold shadow-xs'
-              : 'text-[#A3B4D0] hover:text-[#2DD4BF]'
-          }`}
-        >
-          <Bot className="w-3.5 h-3.5" />
-          <span className="font-bold flex items-center gap-1">
-            <span>الروبوت (10 وكلاء)</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-ping" />
-          </span>
-        </button>
-
-        <button
-          onClick={() => onTabChange('account')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-colors ${
-            currentTab === 'account'
-              ? 'bg-[#2DD4BF] text-[#042F2E] font-bold shadow-xs'
-              : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-          }`}
-        >
-          <User className="w-3.5 h-3.5" />
-          <span>{dict.tabAccount}</span>
-        </button>
-      </nav>
-
-      {/* Right: Price Alerts, AI Assistant, Clock & Language */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Price Alerts Trigger Button */}
+        {/* Price Alerts Bell */}
         {onOpenAlerts && (
           <button
             onClick={onOpenAlerts}
-            title="إدارة تنبيهات الأسعار (Price Alerts)"
-            className="relative p-1.5 rounded-md bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#A3B4D0] hover:text-[#2DD4BF] transition-colors"
+            title="التنبيهات السعرية"
+            className="p-1.5 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white relative transition-colors"
           >
             <Bell className="w-4 h-4" />
             {activeAlertsCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#2DD4BF] text-[#042F2E] text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
                 {activeAlertsCount}
               </span>
             )}
           </button>
         )}
 
-        {/* MATRIX AI Assistant Button */}
-        {onOpenAiChat && (
-          <button
-            onClick={onOpenAiChat}
-            title="فتح المساعد الذكي MATRIX AI"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-[#162033] to-[#1a2d48] hover:from-[#1E293B] hover:to-[#223d63] border border-[#2DD4BF]/40 text-[#E8EEF9] font-bold shadow-xs transition-all hover:scale-102"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#2DD4BF] animate-pulse" />
-            <span className="hidden sm:inline">MATRIX AI</span>
-          </button>
-        )}
-
-        {/* Market GMT Clock */}
-        <div className="hidden lg:flex items-center gap-1.5 font-mono text-[#7B8DA8] text-[11px] bg-[#162033] px-2.5 py-1 rounded border border-[#243049]/60">
-          <Clock className="w-3.5 h-3.5 text-[#2DD4BF]" />
-          <span>{timeStr}</span>
-        </div>
-
-        {/* Language Pill */}
+        {/* Account / Settings Tab Button */}
         <button
-          onClick={() => {
-            const nextLang = currentLang === 'ar' ? 'en-US' : currentLang === 'en-US' ? 'ku' : 'ar';
-            onLanguageChange(nextLang);
-          }}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#A3B4D0] hover:text-[#E8EEF9] font-medium"
+          onClick={() => onTabChange('account')}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            currentTab === 'account'
+              ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+              : 'bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white'
+          }`}
         >
-          <Globe className="w-3.5 h-3.5 text-[#2DD4BF]" />
-          <span>{currentLang === 'ar' ? 'العربية' : currentLang === 'en-US' ? 'EN' : 'کوردی'}</span>
+          <User className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">حسابي</span>
         </button>
       </div>
     </header>

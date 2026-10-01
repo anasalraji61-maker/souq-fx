@@ -1,24 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LangId, DICTS } from './i18n/locales';
 import { MarketSymbol, Candle, Timeframe, ChartType, IndicatorSettings, PriceAlertItem } from './types/market';
 import { INITIAL_SYMBOLS } from './data/symbols';
 import { generateCandles, updateLastCandleWithTick } from './data/candleGenerator';
-import { Header } from './components/common/Header';
+import { Header, AppTab } from './components/common/Header';
 import { TerminalScreen } from './components/terminal/TerminalScreen';
 import { ToolsScreen } from './components/tools/ToolsScreen';
 import { AcademyScreen } from './components/academy/AcademyScreen';
 import { AccountScreen } from './components/account/AccountScreen';
+import { CommunityScreen } from './components/community/CommunityScreen';
+import { SubscriptionPlansScreen } from './components/pricing/SubscriptionPlansScreen';
+import { AgentDevSwarm } from './components/bot/AgentDevSwarm';
+import { BotCommandCenter } from './components/bot/BotCommandCenter';
 import { OnboardingOverlay } from './components/common/OnboardingOverlay';
 import { PriceAlertNotificationBanner } from './components/common/PriceAlertNotificationBanner';
 import { PriceAlertsModal } from './components/common/PriceAlertsModal';
 import { GeminiChatDrawer } from './components/chat/GeminiChatDrawer';
 import { playAlertChime } from './utils/sound';
-import { Sparkles } from 'lucide-react';
-import { BotCommandCenter } from './components/bot/BotCommandCenter';
+import { Sparkles, Bot, Shield, Terminal as TerminalIcon } from 'lucide-react';
 
 export default function App() {
   // Navigation & Language
-  const [currentTab, setCurrentTab] = useState<'home' | 'tools' | 'academy' | 'account' | 'bot'>('home');
+  const [currentTab, setCurrentTab] = useState<AppTab>('home');
+  const [botSubTab, setBotSubTab] = useState<'swarm' | 'mt5'>('swarm');
   const [currentLang, setCurrentLang] = useState<LangId>(() => {
     return (localStorage.getItem('matrix_lang') as LangId) || 'ar';
   });
@@ -119,73 +123,52 @@ export default function App() {
     localStorage.setItem('matrix_onboarding_seen', 'true');
   };
 
-  // Generate candles whenever activeSymbol or timeframe changes
+  // Generate initial candles
   useEffect(() => {
-    const symObj = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
-    const generated = generateCandles(symObj.price, timeframe, 160);
-    setCandles(generated);
+    const sym = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
+    const initialCandles = generateCandles(sym.price, timeframe, 150);
+    setCandles(initialCandles);
   }, [activeSymbol, timeframe]);
 
-  // Real-time simulated price ticks + Threshold Alert Evaluation
+  // Live market price simulation ticks
   useEffect(() => {
     const interval = setInterval(() => {
       setSymbols((prevSymbols) => {
-        const nextFlash: Record<string, 'up' | 'down'> = {};
+        let hasTriggered = false;
+        const flashes: Record<string, 'up' | 'down'> = {};
 
         const updated = prevSymbols.map((sym) => {
-          // 40% probability of tick per interval
-          if (Math.random() > 0.4) return sym;
-
-          const isJpyOrGold = sym.price > 100;
-          const isIndicesOrCrypto = sym.price > 1000;
-          const stepMagnitude = isIndicesOrCrypto ? 2.5 : isJpyOrGold ? 0.04 : 0.00015;
-          const delta = (Math.random() - 0.49) * stepMagnitude;
-          const newPrice = Math.max(0.0001, parseFloat((sym.price + delta).toFixed(sym.precision)));
+          const delta = (Math.random() - 0.495) * (sym.price * 0.0003);
+          const newPrice = +(sym.price + delta).toFixed(sym.precision);
           const direction = delta >= 0 ? 'up' : 'down';
-          nextFlash[sym.symbol] = direction;
-
-          const spreadHalf = (sym.spread * sym.pipScale) / 2;
-          const newBid = parseFloat((newPrice - spreadHalf).toFixed(sym.precision));
-          const newAsk = parseFloat((newPrice + spreadHalf).toFixed(sym.precision));
+          flashes[sym.symbol] = direction;
 
           return {
             ...sym,
             price: newPrice,
-            bid: newBid,
-            ask: newAsk,
-            high24h: Math.max(sym.high24h, newPrice),
-            low24h: Math.min(sym.low24h, newPrice),
+            change24h: +(sym.change24h + (delta / sym.price) * 100).toFixed(2),
           };
         });
 
-        setPriceFlashMap(nextFlash);
+        setPriceFlashMap(flashes);
 
-        // Check active price alerts against updated market prices
+        // Check alerts
         setAlerts((prevAlerts) => {
-          let hasTriggered = false;
           const nextAlerts = prevAlerts.map((alert) => {
             if (!alert.active || alert.triggered) return alert;
+            const sym = updated.find((s) => s.symbol === alert.symbol);
+            if (!sym) return alert;
 
-            const matchedSym = updated.find((s) => s.symbol === alert.symbol);
-            if (!matchedSym) return alert;
+            const isTriggered =
+              (alert.condition === 'above' && sym.price >= alert.targetPrice) ||
+              (alert.condition === 'below' && sym.price <= alert.targetPrice);
 
-            const isHit =
-              (alert.condition === 'above' && matchedSym.price >= alert.targetPrice) ||
-              (alert.condition === 'below' && matchedSym.price <= alert.targetPrice);
-
-            if (isHit) {
+            if (isTriggered) {
               hasTriggered = true;
-              const triggeredTime = new Date().toTimeString().split(' ')[0] + ' GMT';
-              const triggeredAlert: PriceAlertItem = {
-                ...alert,
-                triggered: true,
-                triggeredAt: triggeredTime,
-              };
-
-              // Trigger visual notification banner
+              const triggeredAlert = { ...alert, triggered: true };
               setActiveNotificationAlert({
                 alert: triggeredAlert,
-                currentPrice: matchedSym.price,
+                currentPrice: sym.price,
               });
 
               if (soundEnabled) {
@@ -201,7 +184,6 @@ export default function App() {
           return hasTriggered ? nextAlerts : prevAlerts;
         });
 
-        // Clear flashes after animation
         setTimeout(() => {
           setPriceFlashMap({});
         }, 700);
@@ -247,15 +229,15 @@ export default function App() {
   const activeAlertsCount = alerts.filter((a) => a.active && !a.triggered).length;
   const activeSymbolObj = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
 
-  // Determine current active market session
+  // Market session hours
   const nowUtcHour = new Date().getUTCHours();
   const isTokyoOpen = nowUtcHour >= 0 && nowUtcHour < 9;
   const isLondonOpen = nowUtcHour >= 8 && nowUtcHour < 16;
   const isNewYorkOpen = nowUtcHour >= 13 && nowUtcHour < 21;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0B1220] text-[#E8EEF9]">
-      {/* Visual Price Alert Notification Banner */}
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#070D18] text-[#E8EEF9]">
+      {/* Visual Price Alert Banner */}
       {activeNotificationAlert && (
         <PriceAlertNotificationBanner
           alert={activeNotificationAlert.alert}
@@ -268,21 +250,19 @@ export default function App() {
         />
       )}
 
-      {/* Top Header shown only on non-terminal tabs */}
-      {currentTab !== 'home' && (
-        <Header
-          currentTab={currentTab}
-          onTabChange={setCurrentTab}
-          currentLang={currentLang}
-          onLanguageChange={setCurrentLang}
-          symbols={symbols}
-          activeSymbol={activeSymbol}
-          onSelectSymbol={setActiveSymbol}
-          activeAlertsCount={activeAlertsCount}
-          onOpenAlerts={() => setIsAlertsModalOpen(true)}
-          onOpenAiChat={() => setIsAiChatOpen(true)}
-        />
-      )}
+      {/* Unified Top Header Bar */}
+      <Header
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        currentLang={currentLang}
+        onLanguageChange={setCurrentLang}
+        symbols={symbols}
+        activeSymbol={activeSymbol}
+        onSelectSymbol={setActiveSymbol}
+        activeAlertsCount={activeAlertsCount}
+        onOpenAlerts={() => setIsAlertsModalOpen(true)}
+        onOpenAiChat={() => setIsAiChatOpen(true)}
+      />
 
       {/* Main View Area */}
       <main className="flex-1 overflow-hidden relative">
@@ -305,6 +285,47 @@ export default function App() {
           />
         )}
 
+        {currentTab === 'bot' && (
+          <div className="h-full flex flex-col bg-[#070E1A]">
+            {/* Bot Sub-Tab Switcher */}
+            <div className="h-10 bg-[#0B1424] border-b border-[#1E293B] px-4 flex items-center gap-3 shrink-0 text-xs">
+              <button
+                onClick={() => setBotSubTab('swarm')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold transition-all ${
+                  botSubTab === 'swarm'
+                    ? 'bg-[#2DD4BF] text-[#042F2E]'
+                    : 'text-[#94A3B8] hover:text-white hover:bg-[#131E33]'
+                }`}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>الوكلاء السحابيون الـ 8 (Cloud Swarm & GitHub)</span>
+              </button>
+
+              <button
+                onClick={() => setBotSubTab('mt5')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold transition-all ${
+                  botSubTab === 'mt5'
+                    ? 'bg-[#2DD4BF] text-[#042F2E]'
+                    : 'text-[#94A3B8] hover:text-white hover:bg-[#131E33]'
+                }`}
+              >
+                <TerminalIcon className="w-3.5 h-3.5" />
+                <span>جسر MetaTrader 5 وسيرفر التداول (VPS Bridge)</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              {botSubTab === 'swarm' ? <AgentDevSwarm /> : <BotCommandCenter />}
+            </div>
+          </div>
+        )}
+
+        {currentTab === 'community' && <CommunityScreen />}
+
+        {currentTab === 'academy' && <AcademyScreen />}
+
+        {currentTab === 'pricing' && <SubscriptionPlansScreen />}
+
         {currentTab === 'tools' && (
           <ToolsScreen
             symbols={symbols}
@@ -319,10 +340,6 @@ export default function App() {
             onToggleAlert={handleToggleAlert}
           />
         )}
-
-        {currentTab === 'academy' && <AcademyScreen />}
-
-        {currentTab === 'bot' && <BotCommandCenter />}
 
         {currentTab === 'account' && (
           <AccountScreen
@@ -341,19 +358,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* Floating MATRIX AI Trigger Button */}
-      <button
-        onClick={() => setIsAiChatOpen(true)}
-        title="فتح المساعد الذكي MATRIX AI"
-        className="fixed bottom-9 left-4 z-40 flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-[#0E2038] to-[#122A4A] hover:from-[#132A4B] hover:to-[#18365E] border-2 border-[#2DD4BF]/60 text-[#E8EEF9] shadow-[0_4px_20px_rgba(45,212,191,0.25)] hover:scale-105 transition-all group select-none cursor-pointer"
-      >
-        <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#2DD4BF] to-[#38BDF8] flex items-center justify-center text-[#042F2E]">
-          <Sparkles className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-        </div>
-        <span className="font-extrabold text-xs">MATRIX AI</span>
-        <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-ping" />
-      </button>
 
       {/* Price Alerts Modal */}
       <PriceAlertsModal
@@ -378,43 +382,42 @@ export default function App() {
         activeSymbol={activeSymbolObj}
       />
 
-      {/* Bottom Status Bar */}
-      <footer className="h-6 bg-[#0E1728] border-t border-[#243049] px-4 flex items-center justify-between text-[11px] font-mono text-[#7B8DA8] select-none z-20">
+      {/* Clean TradingView-grade Status Bar */}
+      <footer className="h-6 bg-[#08101E] border-t border-[#1C283E] px-4 flex items-center justify-between text-[11px] font-mono text-[#64748B] select-none z-20 shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-            <span className="text-[#2DD4BF] font-semibold">MATRIX FEED: LIVE</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[#2DD4BF] font-semibold text-[10px]">MATRIX CLOUD: ACTIVE</span>
           </div>
 
-          <div className="w-[1px] h-3 bg-[#243049]" />
+          <div className="w-[1px] h-3 bg-[#1C283E]" />
 
-          {/* Market Sessions status */}
-          <div className="hidden sm:flex items-center gap-3">
-            <span className={isTokyoOpen ? 'text-[#22C55E]' : 'text-[#7B8DA8]'}>
+          {/* Sessions status */}
+          <div className="hidden sm:flex items-center gap-3 text-[10px]">
+            <span className={isTokyoOpen ? 'text-emerald-400 font-medium' : 'text-[#475569]'}>
               طوكيو {isTokyoOpen ? '● مفتوح' : '○ مغلق'}
             </span>
-            <span className={isLondonOpen ? 'text-[#22C55E]' : 'text-[#7B8DA8]'}>
+            <span className={isLondonOpen ? 'text-emerald-400 font-medium' : 'text-[#475569]'}>
               لندن {isLondonOpen ? '● مفتوح' : '○ مغلق'}
             </span>
-            <span className={isNewYorkOpen ? 'text-[#22C55E]' : 'text-[#7B8DA8]'}>
+            <span className={isNewYorkOpen ? 'text-emerald-400 font-medium' : 'text-[#475569]'}>
               نيويورك {isNewYorkOpen ? '● مفتوح' : '○ مغلق'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-[#A3B4D0]">
-            الرمز النشط: <strong className="text-[#E8EEF9]">{activeSymbol}</strong> ({timeframe})
+          <span className="text-[#94A3B8]">
+            الرمز: <strong className="text-white">{activeSymbol}</strong> ({timeframe})
           </span>
-          <span className="text-[10px] text-[#7B8DA8]">
-            أداة تحليلية فنية • غير قابلة لتنفيذ الأوامر
+          <span className="text-[10px] text-amber-500/80 hidden md:inline">
+            خدمة تحليل فني تعليمية • ليست نصيحة استثمارية
           </span>
         </div>
       </footer>
 
-      {/* Welcome Onboarding Tour */}
+      {/* Onboarding Tour */}
       <OnboardingOverlay isOpen={showOnboarding} onClose={handleCloseOnboarding} />
     </div>
   );
 }
-
