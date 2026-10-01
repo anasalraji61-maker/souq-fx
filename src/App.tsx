@@ -285,41 +285,6 @@ export default function App() {
           />
         )}
 
-        {currentTab === 'bot' && (
-          <div className="h-full flex flex-col bg-[#070E1A]">
-            {/* Bot Sub-Tab Switcher */}
-            <div className="h-10 bg-[#0B1424] border-b border-[#1E293B] px-4 flex items-center gap-3 shrink-0 text-xs">
-              <button
-                onClick={() => setBotSubTab('swarm')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold transition-all ${
-                  botSubTab === 'swarm'
-                    ? 'bg-[#2DD4BF] text-[#042F2E]'
-                    : 'text-[#94A3B8] hover:text-white hover:bg-[#131E33]'
-                }`}
-              >
-                <Bot className="w-3.5 h-3.5" />
-                <span>الوكلاء السحابيون الـ 8 (Cloud Swarm & GitHub)</span>
-              </button>
-
-              <button
-                onClick={() => setBotSubTab('mt5')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold transition-all ${
-                  botSubTab === 'mt5'
-                    ? 'bg-[#2DD4BF] text-[#042F2E]'
-                    : 'text-[#94A3B8] hover:text-white hover:bg-[#131E33]'
-                }`}
-              >
-                <TerminalIcon className="w-3.5 h-3.5" />
-                <span>جسر MetaTrader 5 وسيرفر التداول (VPS Bridge)</span>
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-hidden">
-              {botSubTab === 'swarm' ? <AgentDevSwarm /> : <BotCommandCenter />}
-            </div>
-          </div>
-        )}
-
         {currentTab === 'community' && <CommunityScreen />}
 
         {currentTab === 'academy' && <AcademyScreen />}

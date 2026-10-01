@@ -11,14 +11,13 @@ import {
   ChevronDown,
   Globe,
   Bell,
-  Bot,
   MessageSquare,
   Award,
   CreditCard,
-  Layers,
+  Wrench,
 } from 'lucide-react';
 
-export type AppTab = 'home' | 'bot' | 'community' | 'academy' | 'pricing' | 'tools' | 'account';
+export type AppTab = 'home' | 'community' | 'academy' | 'pricing' | 'tools' | 'account';
 
 interface HeaderProps {
   currentTab: AppTab;
@@ -47,7 +46,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const dict = DICTS[currentLang];
   const [timeStr, setTimeStr] = useState('');
-  const [isSymbolDropdownOpen, setIsSymbolDropdownOpen] = useState(false);
 
   useEffect(() => {
     const updateClock = () => {
@@ -86,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="w-[1px] h-5 bg-[#1E293B] hidden md:block" />
 
-        {/* Main Clean Navigation Tabs */}
+        {/* Commercial End-User Navigation Tabs */}
         <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar">
           <button
             onClick={() => onTabChange('home')}
@@ -101,19 +99,6 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
-            onClick={() => onTabChange('bot')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              currentTab === 'bot'
-                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
-                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
-            }`}
-          >
-            <Bot className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span>الوكلاء الـ 8 (Cloud Swarm)</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping hidden sm:inline-block" />
-          </button>
-
-          <button
             onClick={() => onTabChange('community')}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               currentTab === 'community'
@@ -122,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>غرف النقاش</span>
+            <span>مجتمع المتداولين</span>
           </button>
 
           <button
@@ -134,7 +119,19 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" />
-            <span>الأكاديمية</span>
+            <span>الأكاديمية والدروس</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('tools')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentTab === 'tools'
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+            }`}
+          >
+            <Wrench className="w-3.5 h-3.5" />
+            <span>أدوات التحليل والتقويم</span>
           </button>
 
           <button

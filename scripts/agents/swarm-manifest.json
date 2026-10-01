@@ -1,0 +1,69 @@
+{
+  "name": "souq-fx Autonomous 8-Agent Dev Swarm",
+  "version": "1.0.0",
+  "repository": "https://github.com/anasalraji61-maker/souq-fx.git",
+  "branch": "main",
+  "compliance": {
+    "jurisdiction": "Iraq / Global FX Regulations",
+    "prohibitedCategories": ["crypto", "bitcoin", "cfd_crypto"],
+    "permittedCategories": ["forex", "metals", "commodities", "indices"]
+  },
+  "agents": [
+    {
+      "id": 1,
+      "codename": "UI_ARCHITECT",
+      "name": "Agent 1: UI/UX & TradingView Architect",
+      "description": "Enforces clean TradingView-grade financial terminal aesthetics, eliminates visual clutter and overlapping bars.",
+      "targets": ["src/components/terminal/TerminalScreen.tsx", "src/components/common/Header.tsx"]
+    },
+    {
+      "id": 2,
+      "codename": "CHART_MASTER",
+      "name": "Agent 2: Canvas & Indicator Engine",
+      "description": "Maintains high-performance HTML5 canvas rendering for candlesticks, volume panes, RSI, and Bollinger bands.",
+      "targets": ["src/components/terminal/MatrixChartCanvas.tsx", "src/data/candleGenerator.ts"]
+    },
+    {
+      "id": 3,
+      "codename": "FEED_STREAMER",
+      "name": "Agent 3: Market Data Feeds & WebSocket",
+      "description": "Feeds live bid/ask spreads, price flashes, and multi-symbol ticks across active screens.",
+      "targets": ["src/data/symbols.ts", "src/types/market.ts"]
+    },
+    {
+      "id": 4,
+      "codename": "TA_COPILOT",
+      "name": "Agent 4: Quantitative Technical Analysis",
+      "description": "Calculates real-time Support/Resistance pivots (S1, S2, R1, R2) and 1% risk position sizing.",
+      "targets": ["src/components/terminal/AiCopilotPanel.tsx", "src/components/tools/PositionSizeCalculator.tsx"]
+    },
+    {
+      "id": 5,
+      "codename": "COMMUNITY_HUB",
+      "name": "Agent 5: Live Group Chatrooms & Sentiment",
+      "description": "Manages Forex, Gold & Indices chat channels with sentiment voting (Bullish/Bearish) and trader badges.",
+      "targets": ["src/components/community/CommunityScreen.tsx"]
+    },
+    {
+      "id": 6,
+      "codename": "ACADEMY_CURRICULUM",
+      "name": "Agent 6: Trading Academy & Education",
+      "description": "Curates structured technical analysis courses, interactive schematics, and quiz progress tracking.",
+      "targets": ["src/components/academy/AcademyScreen.tsx", "src/data/academyData.ts"]
+    },
+    {
+      "id": 7,
+      "codename": "LEGAL_BILLING",
+      "name": "Agent 7: Subscriptions & Iraqi Compliance",
+      "description": "Maintains subscription tiers, enforces non-financial-advice legal disclaimers, and prevents crypto assets.",
+      "targets": ["src/components/pricing/SubscriptionPlansScreen.tsx", "src/i18n/locales.ts"]
+    },
+    {
+      "id": 8,
+      "codename": "QA_GIT_GUARDIAN",
+      "name": "Agent 8: QA Build Guardian & GitHub Auto-Sync",
+      "description": "Runs TypeScript compilation verification and maintains continuous push synchronization to GitHub main branch.",
+      "targets": ["scripts/qa-build-check.sh", ".github/workflows/agent-swarm-sync.yml"]
+    }
+  ]
+}

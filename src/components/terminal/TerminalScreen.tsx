@@ -59,7 +59,7 @@ interface TerminalScreenProps {
   onUpdateIndicators: (updated: IndicatorSettings) => void;
   priceFlashMap: Record<string, 'up' | 'down'>;
   showGrid: boolean;
-  onTabChange?: (tab: 'home' | 'bot' | 'community' | 'academy' | 'pricing' | 'tools' | 'account') => void;
+  onTabChange?: (tab: 'home' | 'community' | 'academy' | 'pricing' | 'tools' | 'account') => void;
   currentTab?: string;
 }
 
