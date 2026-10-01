@@ -1625,6 +1625,9 @@ export type Dict = {
    *   `{n}` = `ruined_at_trade` (يساوي `trade_count`). يُعرض تحت «صفقات» حين الرقم موجود؛ `final_equity` حينها 0.
    * `backtestTradesTruncated` — `trades_truncated: true` ⇒ قائمة الصفقات آخر 40 فقط و`trade_count` على كلّها. `{shown}` = طول
    *   `trades`، `{n}` = `trade_count`. سطر فوق القائمة.
+   * `backtestDataAsOf` — ui143a/backend-r127 (`72c8725`): `as_of` (ث UTC) = وقت **جلب** الشموع لا إغلاق شمعة ⇒ `{time}` = `formatLocalStamp(as_of, lang)`.
+   *   لا يُعرض حين `as_of` null.
+   * `backtestDataCached` — `data_kind: 'cache'`: الشموع من كاش الخادم (`STALE_MAX_SEC` 900 والسوق مفتوح). سطر ثانٍ بعد `backtestDataAsOf`؛ لا متغيّرات.
    */
   impactHoliday: string;
   newsHolidayToday: string;
@@ -1632,6 +1635,8 @@ export type Dict = {
   backtestNotEnoughCandles: string;
   backtestRuined: string;
   backtestTradesTruncated: string;
+  backtestDataAsOf: string;
+  backtestDataCached: string;
   forecastDetail: {
     rsi_overbought: string;
     rsi_oversold: string;
@@ -2969,6 +2974,8 @@ const ar: Dict = {
   backtestNotEnoughCandles: 'لا يوجد تاريخ كافٍ لهذا الرمز على هذا الفريم لتشغيل الاختبار — جرّب فريماً أصغر أو رمزاً آخر.',
   backtestRuined: 'الحساب صُفِّر عند الصفقة {n}: خسرت 100% أو أكثر، فتوقّف الاختبار عندها. الأرقام أعلاه حتى تلك الصفقة.',
   backtestTradesTruncated: 'تظهر آخر {shown} صفقة من {n}.',
+  backtestDataAsOf: 'النتيجة على شموع جُلبت {time} بتوقيتك.',
+  backtestDataCached: 'من كاش الخادم — قد تتأخّر عن السعر الحالي حتى 15 دقيقة.',
   forecastDetail: {
     rsi_overbought: 'تشبّع شراء ({rsi})',
     rsi_oversold: 'تشبّع بيع ({rsi})',
@@ -4271,6 +4278,8 @@ const enUS: Dict = {
   backtestNotEnoughCandles: 'Not enough history for this symbol on this timeframe to run the test — try a shorter timeframe or another symbol.',
   backtestRuined: 'Account wiped out at trade {n}: it lost 100% or more, so the test stops there. The figures above run up to that trade.',
   backtestTradesTruncated: 'Showing the last {shown} of {n} trades.',
+  backtestDataAsOf: 'Based on candles fetched at {time}, your time.',
+  backtestDataCached: 'From the server cache — may lag the live price by up to 15 minutes.',
   forecastDetail: {
     rsi_overbought: 'Overbought ({rsi})',
     rsi_oversold: 'Oversold ({rsi})',
@@ -5636,6 +5645,8 @@ const ku: Dict = {
   backtestNotEnoughCandles: 'مێژووی پێویست بۆ ئەم هێمایە لەسەر ئەم کاتە نییە بۆ ئەنجامدانی تاقیکردنەوەکە — کاتێکی بچووکتر یان هێمایەکی تر تاقی بکەرەوە.',
   backtestRuined: 'هەژمارەکە لە مامەڵەی {n} سفر بوو: 100% یان زیاتری دۆڕاند، بۆیە تاقیکردنەوەکە لەوێ ڕاوەستا. ژمارەکانی سەرەوە تا ئەو مامەڵەیەن.',
   backtestTradesTruncated: 'دوایین {shown} مامەڵە لە {n} پیشان دەدرێت.',
+  backtestDataAsOf: 'ئەنجامەکە لەسەر ئەو مۆمانەیە کە لە {time} بە کاتی تۆ وەرگیراون.',
+  backtestDataCached: 'لە کاشی ڕاژەکارەوە — لەوانەیە تا 15 خولەک لە نرخی ئێستا دواکەوێت.',
   forecastDetail: {
     rsi_overbought: 'زۆر کڕدراو ({rsi})',
     rsi_oversold: 'زۆر فرۆشراو ({rsi})',
