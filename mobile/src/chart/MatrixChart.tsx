@@ -7651,6 +7651,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       : fmtPrice(currentPrice)
   );
   const crossTagLabel = crossPrice != null ? offMark(crossPriceOff, fmtPrice(crossPrice)) : '';
+  // وسوم المؤشّرات والرسم المحدَّد على المحور تتبع المقياس كالعلامات ووسم السعر الحيّ: «1.08432» بين «+0.20%» و«+0.40%»
+  // رقمٌ بوحدة أخرى على المحور نفسه. وسم التقاطع وحده يبقى سعراً (سطر النسبة تحته).
+  const axisTagText = (p: number) =>
+    percentBase != null && percentBase > 0 ? formatScalePercent((p / percentBase - 1) * 100, percentPlaces) : fmtPrice(p);
 
   // سلسلة بلا شموع (`candles: []` — DXY بعد backend-r19): المدى Infinity/−Infinity ⇒ المحور يطبع «NaN» مكرَّراً،
   // ووسم السعر 0.000، ونقرة أداة الخطّ الأفقي تحفظ رسماً بسعر null. لا شارت يُرسم: إشعار المزوّد إن كانت السلسلة
@@ -11294,8 +11298,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerEvents="none"
               style={[styles.selectionPriceTag, styles.overlayPriceTag, { top: t.top, backgroundColor: t.color }]}
             >
-              <Text style={[styles.crossTagText, { color: tagTextColor(t.color) }, tagFont(fmtPrice(t.price))]}>
-                {fmtPrice(t.price)}
+              <Text style={[styles.crossTagText, { color: tagTextColor(t.color) }, tagFont(axisTagText(t.price))]}>
+                {axisTagText(t.price)}
               </Text>
             </View>
           ))}
@@ -11316,8 +11320,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   { top: t.top, borderColor: selectedDrawing?.color ?? accent },
                 ]}
               >
-                <Text style={[styles.crossTagText, { color: selectedDrawing?.color ?? accent }, tagFont(fmtPrice(t.price))]}>
-                  {fmtPrice(t.price)}
+                <Text style={[styles.crossTagText, { color: selectedDrawing?.color ?? accent }, tagFont(axisTagText(t.price))]}>
+                  {axisTagText(t.price)}
                 </Text>
               </View>
             ) : (
@@ -11333,7 +11337,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   },
                 ]}
               >
-                <Text style={[styles.crossTagText, tagFont(fmtPrice(t.price))]}>{fmtPrice(t.price)}</Text>
+                <Text style={[styles.crossTagText, tagFont(axisTagText(t.price))]}>{axisTagText(t.price)}</Text>
               </View>
             )
           )}
