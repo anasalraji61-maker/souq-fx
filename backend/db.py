@@ -305,6 +305,7 @@ def init_db() -> None:
         _migrate_ichimoku(c)
         _migrate_volume_profile(c)
         _migrate_harmonic_patterns(c)
+        _migrate_smc(c)
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
@@ -3148,6 +3149,81 @@ def get_harmonic_patterns(symbol: str, timeframe: str = '1h', limit: int = 10) -
                 'created_at': str(r[20])
             })
         return results
+
+
+
+def _migrate_smc(c: sqlite3.Connection) -> None:
+    """إنشاء جداول مفاهيم الأموال الذكية SMC وفجوات القيمة العادلة واقتناص السيولة."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS smc_analysis_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            timeframe TEXT NOT NULL,
+            current_price REAL NOT NULL,
+            market_bias TEXT NOT NULL,
+            active_fvg_count INTEGER NOT NULL DEFAULT 0,
+            active_ob_count INTEGER NOT NULL DEFAULT 0,
+            sweeps_count INTEGER NOT NULL DEFAULT 0,
+            payload_json TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_smc_sym_tf ON smc_analysis_log(symbol, timeframe, id DESC)")
+
+
+def log_smc_analysis(
+    symbol: str,
+    timeframe: str,
+    current_price: float,
+    market_bias: str,
+    active_fvg_count: int,
+    active_ob_count: int,
+    sweeps_count: int,
+    payload_json: str = "{}"
+) -> int:
+    with get_db() as c:
+        cur = c.execute(
+            """INSERT INTO smc_analysis_log
+               (symbol, timeframe, current_price, market_bias, active_fvg_count, active_ob_count, sweeps_count, payload_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                symbol.upper(),
+                timeframe,
+                float(current_price),
+                market_bias,
+                int(active_fvg_count),
+                int(active_ob_count),
+                int(sweeps_count),
+                payload_json
+            )
+        )
+        return int(cur.lastrowid)
+
+
+def get_latest_smc_analysis(symbol: str, timeframe: str = "1h") -> dict[str, Any] | None:
+    with get_db() as c:
+        row = c.execute(
+            """SELECT id, symbol, timeframe, current_price, market_bias,
+                      active_fvg_count, active_ob_count, sweeps_count, payload_json, created_at
+               FROM smc_analysis_log
+               WHERE symbol = ? AND timeframe = ?
+               ORDER BY id DESC LIMIT 1""",
+            (symbol.upper(), timeframe)
+        ).fetchone()
+        if not row:
+            return None
+        return {
+            "id": row[0],
+            "symbol": row[1],
+            "timeframe": row[2],
+            "current_price": row[3],
+            "market_bias": row[4],
+            "active_fvg_count": row[5],
+            "active_ob_count": row[6],
+            "sweeps_count": row[7],
+            "payload_json": row[8],
+            "created_at": str(row[9])
+        }
 
 
 def log_volume_profile_analysis(

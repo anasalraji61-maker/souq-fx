@@ -10,9 +10,32 @@
   - ✅ **Task 16: Ichimoku Cloud Indicator (Kinko Hyo Engine)** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
   - ✅ **Task 17: Volume Profile & Order Flow Engine (POC, VAH/VAL 70%, Delta CVD)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
   - ✅ **Task 18: Harmonic Pattern Recognition Engine (Gartley, Bat, Butterfly, Crab, Deep Crab, Cypher, Shark + PRZ + SL/TP)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18):** **142/142 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+  - ✅ **Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine - FVG, Order Blocks, BOS/CHoCH, Liquidity Sweeps)** مكتملة ومختبرة بنسبة 100% (16/16 اختباراً).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19):** **158/158 اختباراً ناجحاً بنسبة 100% (Green Build)**.
 * **الخطوة التالية المجدولة لكابتن Claude:**
-  **Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine - FVG, Order Blocks, Liquidity Pools)**.
+  **Task 20: Divergence Detection Engine (RSI, MACD, Stochastic Regular & Hidden Divergences)**.
+
+---
+
+#### ✅ Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine) [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك مفاهيم الأموال الذكية المؤسسية (`backend/smc_engine.py`):**
+  - كشف فجوات القيمة العادلة (Bullish & Bearish FVG) وتتبع حالة التغطية والتخفيف (Mitigation Tracking).
+  - تحديد كتل الأوامر المؤسسية (Order Blocks) الصاعدة والهابطة مع التحقق من قوة التوسع والسيولة.
+  - تحليل هيكل السوق ورصد كسر الهيكل (BOS) وتغير الشخصية والاتجاه (CHoCH).
+  - اكتشاف عمليات اقتناص السيولة (BSL & SSL Liquidity Sweeps / Turtle Soup) مع أهداف الانعكاس.
+  - حساب نطاق التداول المؤسسي والتوازن (Equilibrium 50%) ومنطقتي الغلاء (Premium) والخصم (Discount).
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):**
+  - جدول `smc_analysis_log` مع فهارس `idx_smc_sym_tf`.
+  - دوال التسجيل والاستعلام اللحظي `log_smc_analysis` و `get_latest_smc_analysis`.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):**
+  - مسار `GET /api/smc/analyze/{symbol}` مع تحديد الفريم الزمني.
+  - مسار `GET /api/smc/latest/{symbol}` لجلب آخر مسح مؤسسي محفوظ.
+- [x] **عميل الويب ولوحة التحكم التفاعلية (`src/api/smc.ts` & `src/components/dashboard/SMCDashboard.tsx`):**
+  - شريط مرئي لنطاق التداول والتوازن المؤسسي (Premium vs Discount Visualizer).
+  - شارات الاتجاه المؤسسي (Strong Bullish / Bearish / Neutral).
+  - تبويبات تفصيلية لفجوات FVG النشطة، كتل الأوامر OB مع نسب القوة، وإشارات اقتناص السيولة.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_smc_task19.py`):**
+  - 16/16 اختباراً شاملاً ناجحاً بنسبة 100% في 0.011s.
 
 ---
 
