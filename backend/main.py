@@ -2315,6 +2315,75 @@ def get_ichimoku_backtest_route(symbol: str, timeframe: str = "1h"):
 
 
 # ==============================================================================
+# Task 23: Sentiment & Order Book Depth Aggregator Engine
+# ==============================================================================
+try:
+    import sentiment_engine
+except ImportError:
+    from backend import sentiment_engine
+
+
+@app.get("/api/sentiment/analyze/{symbol}")
+def analyze_sentiment_route(symbol: str, levels: int = 10):
+    """تحليل معنويات المتداولين (Long/Short Ratio)، إشارات التداول العكسي، وعمق دفتر الأوامر L2."""
+    current_price = 1.0850
+    try:
+        quote = twelve_data.get_quote(symbol.upper())
+        if quote and quote.get("price"):
+            current_price = float(quote["price"])
+    except Exception:
+        pass
+
+    res = sentiment_engine.analyze_sentiment(symbol.upper(), current_price=current_price, levels_count=levels)
+    from dataclasses import asdict
+    import json
+    d = asdict(res)
+
+    try:
+        db.log_sentiment_depth(
+            symbol=res.symbol,
+            current_price=res.current_price,
+            long_pct=res.long_percentage,
+            short_pct=res.short_percentage,
+            sentiment_index=res.sentiment_index,
+            contrarian_bias=res.contrarian_bias,
+            retail_mood=res.retail_mood,
+            total_bid_depth=res.total_bid_depth,
+            total_ask_depth=res.total_ask_depth,
+            depth_json=json.dumps([asdict(lvl) for lvl in res.order_book])
+        )
+    except Exception:
+        pass
+
+    return d
+
+
+@app.get("/api/sentiment/latest/{symbol}")
+def get_latest_sentiment_route(symbol: str):
+    """جلب آخر معنويات وعمق دفتر الأوامر محفوظ للرمز."""
+    record = db.get_latest_sentiment(symbol.upper())
+    if not record:
+        return {"symbol": symbol.upper(), "data": None}
+    import json
+    try:
+        depth = json.loads(record.get("depth_json") or "[]")
+    except Exception:
+        depth = []
+    return {
+        "symbol": record["symbol"],
+        "current_price": record["current_price"],
+        "long_pct": record["long_pct"],
+        "short_pct": record["short_pct"],
+        "sentiment_index": record["sentiment_index"],
+        "contrarian_bias": record["contrarian_bias"],
+        "retail_mood": record["retail_mood"],
+        "total_bid_depth": record["total_bid_depth"],
+        "total_ask_depth": record["total_ask_depth"],
+        "order_book": depth,
+        "created_at": record["created_at"]
+    }
+
+
 # Task 21: Auto-Fibonacci Retracement & Extension Zones Engine
 # ==============================================================================
 try:

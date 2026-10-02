@@ -13,9 +13,31 @@
   - ✅ **Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine - FVG, Order Blocks, BOS/CHoCH, Liquidity Sweeps)** مكتملة ومختبرة بنسبة 100% (16/16 اختباراً).
   - ✅ **Task 20: Divergence Detection Engine (RSI, MACD, Stochastic Regular & Hidden Divergences)** مكتملة ومختبرة بنسبة 100% (14/14 اختباراً).
   - ✅ **Task 21: Auto-Fibonacci Retracement & Extension Zones Engine (Golden Pocket 0.618 - 0.65, Multi-Swing High/Low)** مكتملة ومختبرة بنسبة 100% (10/10 اختبارات).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20 + 21):** **182/182 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+  - ✅ **Task 23: Sentiment & Order Book Depth Aggregator (Long/Short Ratios, Contrarian Signals, L2 Depth Ladder)** مكتملة ومختبرة بنسبة 100% (10/10 اختبارات).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20 + 21 + 23):** **192/192 اختباراً ناجحاً بنسبة 100% (Green Build)**.
 * **الخطوة التالية المجدولة لكابتن Claude:**
-  **Task 23: Sentiment & Order Book Depth Aggregator (Long/Short Ratios, Retail Sentiment, Heatmap Depth)**.
+  **Task 24: News Impact & High-Volatility Pre-Alert Engine (Economic Calendar Countdown, Impact Scoring, Volatility Guard)**.
+
+---
+
+#### ✅ Task 23: Sentiment & Order Book Depth Aggregator Engine [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك معنويات الأسواق وعمق دفتر الأوامر (`backend/sentiment_engine.py`):**
+  - تجميع نسب تموضع المتداولين الأفراد (Retail Long vs Short) وحساب مؤشر المعنويات الصافي (-100 إلى +100).
+  - توليد إشارات التداول العكسي الذكية (Smart Money Contrarian Signals): شراء عند الخوف الشديد، وبيع عند الطمع الشديد.
+  - محاكاة وتجميع سلم عمق دفتر الأوامر من المستوى الثاني (Level 2 Order Book Depth) مع كميات الطلبات والعروض والفروقات اللحظية (Imbalances).
+  - حساب السيولة الإجمالية ونسبة عمق الطلب إلى العرض (Bid/Ask Depth Ratio).
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):**
+  - جدول `sentiment_depth_log` وفهرس `idx_sentiment_sym`.
+  - دوال التسجيل والاستعلام `log_sentiment_depth` و `get_latest_sentiment`.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):**
+  - مسار `GET /api/sentiment/analyze/{symbol}` مع خيار تحديد عمق المستويات `levels`.
+  - مسار `GET /api/sentiment/latest/{symbol}` لجلب آخر بيانات معنويات محفوظة.
+- [x] **عميل الويب ولوحة التحكم التفاعلية (`src/api/sentiment.ts` & `src/components/dashboard/SentimentDepthPanel.tsx`):**
+  - شريط معنويات المتداولين المقسم مع نسب الشراء/البيع ومؤشر الانحراف وحالة السوق (Greed / Fear).
+  - شارة الإشارة العكسية اللحظية (Contrarian Strong Buy / Strong Sell).
+  - سلم عمق دفتر الأوامر المعلقة L2 مع أشرطة أحجام الطلبات الخضراء وأحجام العروض الحمراء ونسب الخلل.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_sentiment_task23.py`):**
+  - 10/10 اختبارات شاملة ناجحة بنسبة 100% في 0.010s.
 
 ---
 
