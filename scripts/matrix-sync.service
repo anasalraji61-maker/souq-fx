@@ -1,0 +1,19 @@
+[Unit]
+Description=MATRIX 24/7 Git-Backed Sync Daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%I
+WorkingDirectory=%h/souq-fx
+ExecStart=/usr/bin/python3 %h/souq-fx/continuous_sync.py %h/souq-fx
+Restart=always
+RestartSec=10
+
+# حماية موارد النظام
+CPUQuota=25%
+MemoryLimit=250M
+
+[Install]
+WantedBy=multi-user.target
