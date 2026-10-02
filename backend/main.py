@@ -2315,6 +2315,80 @@ def get_ichimoku_backtest_route(symbol: str, timeframe: str = "1h"):
 
 
 # ==============================================================================
+# Task 24: News Impact & High-Volatility Pre-Alert Engine
+# ==============================================================================
+try:
+    import news_impact_engine
+except ImportError:
+    from backend import news_impact_engine
+
+
+@app.get("/api/news-impact/upcoming")
+def get_upcoming_news_impact_route(minutes: int = 120):
+    """رصد الأحداث الاقتصادية عالية التأثير القادمة وتوليد تنبيهات التقلبات المسبقة."""
+    events = []
+    try:
+        if hasattr(econ_calendar, 'get_events'):
+            events = econ_calendar.get_events()
+    except Exception:
+        pass
+
+    res = news_impact_engine.scan_upcoming_volatility(events, alert_window_minutes=minutes)
+    import json
+    for a in res.get("alerts", []):
+        try:
+            db.log_volatility_alert(
+                event_id=a["id"],
+                event_title=a["event_title"],
+                currency=a["currency"],
+                impact_level=a["impact_level"],
+                scheduled_time=a["scheduled_time"],
+                minutes_remaining=a["minutes_remaining"],
+                risk_score=a["risk_score"],
+                guard_mode_active=a["guard_mode_active"],
+                advisory=a["advisory"],
+                affected_pairs_json=json.dumps(a["affected_pairs"])
+            )
+        except Exception:
+            pass
+
+    return res
+
+
+@app.get("/api/news-impact/guard-status/{symbol}")
+def get_symbol_guard_status_route(symbol: str):
+    """فحص ما إذا كان الرمز خاضعاً لوضع حماية التقلبات حالياً بسبب أخبار قادمة."""
+    sym = symbol.upper()
+    alerts = db.get_active_volatility_alerts(limit=10)
+    import json
+
+    matched_alerts = []
+    is_guarded = False
+    max_risk = 0.0
+
+    for alt in alerts:
+        affected = []
+        try:
+            affected = json.loads(alt.get("affected_pairs_json") or "[]")
+        except Exception:
+            pass
+
+        if sym in affected or any(c in sym for c in [alt["currency"]]):
+            matched_alerts.append(alt)
+            if alt.get("guard_mode_active"):
+                is_guarded = True
+            if alt.get("risk_score", 0) > max_risk:
+                max_risk = alt.get("risk_score", 0)
+
+    return {
+        "symbol": sym,
+        "guard_mode_active": is_guarded,
+        "max_risk_score": max_risk,
+        "recommendation": "FREEZE_PENDING_ORDERS" if is_guarded else "NORMAL",
+        "active_alerts": matched_alerts
+    }
+
+
 # Task 23: Sentiment & Order Book Depth Aggregator Engine
 # ==============================================================================
 try:

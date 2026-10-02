@@ -309,6 +309,7 @@ def init_db() -> None:
         _migrate_divergence(c)
         _migrate_fibonacci(c)
         _migrate_sentiment(c)
+        _migrate_news_impact(c)
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
@@ -3506,6 +3507,95 @@ def get_latest_sentiment(symbol: str) -> dict[str, Any] | None:
             'depth_json': row[10],
             'created_at': str(row[11])
         }
+
+
+
+def _migrate_news_impact(c: sqlite3.Connection) -> None:
+    """إنشاء جداول تنبيهات الأخبار عالية التأثير ووضع حماية التقلبات Volatility Guard."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS news_volatility_alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id TEXT NOT NULL,
+            event_title TEXT NOT NULL,
+            currency TEXT NOT NULL,
+            impact_level TEXT NOT NULL,
+            scheduled_time TEXT NOT NULL,
+            minutes_remaining INTEGER NOT NULL,
+            risk_score REAL NOT NULL,
+            guard_mode_active INTEGER NOT NULL DEFAULT 0,
+            advisory TEXT NOT NULL,
+            affected_pairs_json TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_news_vol_risk ON news_volatility_alerts(currency, risk_score DESC)")
+
+
+def log_volatility_alert(
+    event_id: str,
+    event_title: str,
+    currency: str,
+    impact_level: str,
+    scheduled_time: str,
+    minutes_remaining: int,
+    risk_score: float,
+    guard_mode_active: bool,
+    advisory: str,
+    affected_pairs_json: str = "[]"
+) -> int:
+    with get_db() as c:
+        cur = c.execute(
+            """INSERT INTO news_volatility_alerts
+               (event_id, event_title, currency, impact_level, scheduled_time,
+                minutes_remaining, risk_score, guard_mode_active, advisory, affected_pairs_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                event_id,
+                event_title,
+                currency.upper(),
+                impact_level.upper(),
+                scheduled_time,
+                int(minutes_remaining),
+                float(risk_score),
+                1 if guard_mode_active else 0,
+                advisory,
+                affected_pairs_json
+            )
+        )
+        return int(cur.lastrowid)
+
+
+def get_active_volatility_alerts(currency: Optional[str] = None, limit: int = 10) -> list[dict[str, Any]]:
+    with get_db() as c:
+        query = """SELECT id, event_id, event_title, currency, impact_level,
+                           scheduled_time, minutes_remaining, risk_score,
+                           guard_mode_active, advisory, affected_pairs_json, created_at
+                    FROM news_volatility_alerts """
+        params = []
+        if currency:
+            query += "WHERE currency = ? "
+            params.append(currency.upper())
+        query += "ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+
+        rows = c.execute(query, tuple(params)).fetchall()
+        results = []
+        for r in rows:
+            results.append({
+                'id': r[0],
+                'event_id': r[1],
+                'event_title': r[2],
+                'currency': r[3],
+                'impact_level': r[4],
+                'scheduled_time': r[5],
+                'minutes_remaining': r[6],
+                'risk_score': r[7],
+                'guard_mode_active': bool(r[8]),
+                'advisory': r[9],
+                'affected_pairs_json': r[10],
+                'created_at': str(r[11])
+            })
+        return results
 
 
 def log_volume_profile_analysis(

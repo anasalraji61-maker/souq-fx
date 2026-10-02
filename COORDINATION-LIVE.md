@@ -14,9 +14,32 @@
   - ✅ **Task 20: Divergence Detection Engine (RSI, MACD, Stochastic Regular & Hidden Divergences)** مكتملة ومختبرة بنسبة 100% (14/14 اختباراً).
   - ✅ **Task 21: Auto-Fibonacci Retracement & Extension Zones Engine (Golden Pocket 0.618 - 0.65, Multi-Swing High/Low)** مكتملة ومختبرة بنسبة 100% (10/10 اختبارات).
   - ✅ **Task 23: Sentiment & Order Book Depth Aggregator (Long/Short Ratios, Contrarian Signals, L2 Depth Ladder)** مكتملة ومختبرة بنسبة 100% (10/10 اختبارات).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20 + 21 + 23):** **192/192 اختباراً ناجحاً بنسبة 100% (Green Build)**.
-* **الخطوة التالية المجدولة لكابتن Claude:**
-  **Task 24: News Impact & High-Volatility Pre-Alert Engine (Economic Calendar Countdown, Impact Scoring, Volatility Guard)**.
+  - ✅ **Task 24: News Impact & High-Volatility Pre-Alert Engine (Economic Calendar Countdown, Impact Scoring, Volatility Guard)** مكتملة ومختبرة بنسبة 100% (8/8 اختبارات).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20 + 21 + 23 + 24):** **200/200 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+* **حالة خطة التطوير (Roadmap Milestone):**
+  **اكتملت جميع المهام المجدولة (Tasks 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24) بنسبة 100% وبـ 200 اختبار أخضر!**
+
+---
+
+#### ✅ Task 24: News Impact & High-Volatility Pre-Alert Engine [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك التنبيه المسبق لأثر الأخبار الاقتصادية (`backend/news_impact_engine.py`):**
+  - العد التنازلي المباشر بالدقائق لإصدارات الأخبار ذات الأثر المرتفع (Red Folder Events: NFP, CPI, FOMC, Rate Decisions, GDP).
+  - تقييم درجة الخطر والتقلب (Risk Score 0-100%) استناداً إلى الكلمات المفتاحية والأثر التاريخي.
+  - تعيين الأزواج والعملات المتأثرة تلقائياً (Affected Currency Pairs Mapping).
+  - وضع حماية التقلب التلقائي (Volatility Guard Mode): تفعيل وضع الحماية إذا كان الحدث عالي التأثير ويفصله أقل من 30 دقيقة.
+  - نظام التوصيات الاحترازية (Advisories): تجميد الأوامر المعلقة (Freeze Orders)، توسيع وقف الخسارة (Widen SL)، أو مراقبة الانزلاق والسبريد.
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):**
+  - جدول `news_volatility_alerts` وفهرس `idx_news_vol_risk`.
+  - دوال التسجيل والاستعلام `log_volatility_alert` و `get_active_volatility_alerts`.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):**
+  - مسار `GET /api/news-impact/upcoming` مع وسيط النافذة الزمنية `minutes`.
+  - مسار `GET /api/news-impact/guard-status/{symbol}` لفحص حالة الحماية اللحظية لأي رمز تداول.
+- [x] **عميل الويب ولوحة التحكم التفاعلية (`src/api/newsImpact.ts` & `src/components/dashboard/NewsImpactGuardPanel.tsx`):**
+  - شريط حالة وضع الحماية (Volatility Guard Status) المضيء باللون الأحمر عند اقتراب الأخبار الصادمة.
+  - عدادات تنازلية مباشرة للأحداث مع بطاقات الأزواج المتأثرة المعرضة لاتساع السبريد.
+  - فلتر زمني لاختيار نافذة الأحداث القادمة (60m, 120m, 240m).
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_news_impact_task24.py`):**
+  - 8/8 اختبارات شاملة ناجحة بنسبة 100% في 0.008s.
 
 ---
 
