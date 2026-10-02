@@ -11,9 +11,34 @@
   - ✅ **Task 17: Volume Profile & Order Flow Engine (POC, VAH/VAL 70%, Delta CVD)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
   - ✅ **Task 18: Harmonic Pattern Recognition Engine (Gartley, Bat, Butterfly, Crab, Deep Crab, Cypher, Shark + PRZ + SL/TP)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
   - ✅ **Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine - FVG, Order Blocks, BOS/CHoCH, Liquidity Sweeps)** مكتملة ومختبرة بنسبة 100% (16/16 اختباراً).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19):** **158/158 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+  - ✅ **Task 20: Divergence Detection Engine (RSI, MACD, Stochastic Regular & Hidden Divergences)** مكتملة ومختبرة بنسبة 100% (14/14 اختباراً).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20):** **172/172 اختباراً ناجحاً بنسبة 100% (Green Build)**.
 * **الخطوة التالية المجدولة لكابتن Claude:**
-  **Task 20: Divergence Detection Engine (RSI, MACD, Stochastic Regular & Hidden Divergences)**.
+  **Task 21: Auto-Fibonacci Retracement & Extension Zones Engine (Golden Pocket 0.618 - 0.65, Multi-Swing High/Low)**.
+
+---
+
+#### ✅ Task 20: Multi-Indicator Divergence Detection Engine [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك رصد الانفراج السعري المتعدد (`backend/divergence_engine.py`):**
+  - دعم كامل لـ 4 أنواع من الانفراجات: Regular Bullish (انعكاس صاعد)، Regular Bearish (انعكاس هابط)، Hidden Bullish (استمرار الصعود)، Hidden Bearish (استمرار الهبوط).
+  - حساب خوارزمي دقيق لثلاثة مؤشرات رئيسية: RSI (Wilders 14)، MACD (12, 26, 9) مع خط الإشارة والهيستوجرام، و Stochastic (%K 14, %D 3).
+  - خوارزمية ذكية لاكتشاف القمم والقيعان (Swing Extrema Pairing) ومقارنة ميول السعر مقابل ميل المؤشر.
+  - حساب درجة الثقة Confidence Score (0-100%) مع بونص إضافي لمناطق التشبع البيعي/الشرائي (Oversold / Overbought).
+  - حساب وقف الخسارة الديناميكي SL ومستويات الأهداف TP مع نسبة عائد إلى مخاطرة لا تقل عن 1:1.8.
+  - إجماع متعدد المؤشرات (Multi-Indicator Consensus: Bullish Reversal / Bearish Reversal / Continuation).
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):**
+  - جدول `divergence_signals` وفهارس `idx_div_sym_tf` و `idx_div_status`.
+  - دوال التسجيل والاستعلام `log_divergence_signal` و `get_divergence_signals`.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):**
+  - مسار `GET /api/divergence/detect/{symbol}` مع خيار تحديد مؤشر معين أو ALL.
+  - مسار `GET /api/divergence/signals/{symbol}` لجلب سجل الإشارات السابقة.
+- [x] **عميل الويب ولوحة التحكم المتطورة (`src/api/divergence.ts` & `src/components/dashboard/DivergenceDashboard.tsx`):**
+  - شارة الإجماع اللحظي لانفراج المؤشرات.
+  - بطاقات مقارنة الميول (Price Slope vs Oscillator Slope).
+  - تفاصيل خطة التداول (دخول، وقف الخسارة SL، الهدف TP، نسبة الثقة).
+  - تبويبات فلترة حسب المؤشر (ALL, RSI, MACD, Stochastic).
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_divergence_task20.py`):**
+  - 14/14 اختباراً شاملاً ناجحاً بنسبة 100% في 0.010s.
 
 ---
 

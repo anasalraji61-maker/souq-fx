@@ -306,6 +306,7 @@ def init_db() -> None:
         _migrate_volume_profile(c)
         _migrate_harmonic_patterns(c)
         _migrate_smc(c)
+        _migrate_divergence(c)
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
@@ -3224,6 +3225,111 @@ def get_latest_smc_analysis(symbol: str, timeframe: str = "1h") -> dict[str, Any
             "payload_json": row[8],
             "created_at": str(row[9])
         }
+
+
+
+def _migrate_divergence(c: sqlite3.Connection) -> None:
+    """إنشاء جداول إشارات الانفراج السعري والمؤشرات (RSI, MACD, Stochastic)."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS divergence_signals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            timeframe TEXT NOT NULL,
+            indicator TEXT NOT NULL,
+            divergence_type TEXT NOT NULL,
+            direction TEXT NOT NULL,
+            price_point1 REAL NOT NULL,
+            price_point2 REAL NOT NULL,
+            osc_point1 REAL NOT NULL,
+            osc_point2 REAL NOT NULL,
+            current_price REAL NOT NULL,
+            target_price REAL NOT NULL,
+            stop_loss REAL NOT NULL,
+            confidence_score REAL NOT NULL,
+            status TEXT NOT NULL DEFAULT 'ACTIVE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_div_sym_tf ON divergence_signals(symbol, timeframe, id DESC)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_div_status ON divergence_signals(status)")
+
+
+def log_divergence_signal(
+    symbol: str,
+    timeframe: str,
+    indicator: str,
+    divergence_type: str,
+    direction: str,
+    price_point1: float,
+    price_point2: float,
+    osc_point1: float,
+    osc_point2: float,
+    current_price: float,
+    target_price: float,
+    stop_loss: float,
+    confidence_score: float,
+    status: str = 'ACTIVE'
+) -> int:
+    with get_db() as c:
+        cur = c.execute(
+            """INSERT INTO divergence_signals
+               (symbol, timeframe, indicator, divergence_type, direction,
+                price_point1, price_point2, osc_point1, osc_point2,
+                current_price, target_price, stop_loss, confidence_score, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                symbol.upper(),
+                timeframe,
+                indicator.upper(),
+                divergence_type.upper(),
+                direction.upper(),
+                float(price_point1),
+                float(price_point2),
+                float(osc_point1),
+                float(osc_point2),
+                float(current_price),
+                float(target_price),
+                float(stop_loss),
+                float(confidence_score),
+                status
+            )
+        )
+        return int(cur.lastrowid)
+
+
+def get_divergence_signals(symbol: str, timeframe: str = '1h', limit: int = 15) -> list[dict[str, Any]]:
+    with get_db() as c:
+        rows = c.execute(
+            """SELECT id, symbol, timeframe, indicator, divergence_type, direction,
+                      price_point1, price_point2, osc_point1, osc_point2,
+                      current_price, target_price, stop_loss, confidence_score, status, created_at
+               FROM divergence_signals
+               WHERE symbol = ? AND timeframe = ?
+               ORDER BY id DESC LIMIT ?""",
+            (symbol.upper(), timeframe, limit)
+        ).fetchall()
+
+        results = []
+        for r in rows:
+            results.append({
+                'id': r[0],
+                'symbol': r[1],
+                'timeframe': r[2],
+                'indicator': r[3],
+                'divergence_type': r[4],
+                'direction': r[5],
+                'price_point1': r[6],
+                'price_point2': r[7],
+                'osc_point1': r[8],
+                'osc_point2': r[9],
+                'current_price': r[10],
+                'target_price': r[11],
+                'stop_loss': r[12],
+                'confidence_score': r[13],
+                'status': r[14],
+                'created_at': str(r[15])
+            })
+        return results
 
 
 def log_volume_profile_analysis(
