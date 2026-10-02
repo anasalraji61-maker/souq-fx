@@ -7,9 +7,20 @@
 * **إنجاز المهام المتتالية:**
   - ✅ **Task 22: Caching Strategy Optimization (Redis/Memory LRU + Hot Spot Invalidation)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
   - ✅ **Task 15: Multi-Timeframe Analysis (MTA) Consensus Engine** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15):** **80/80 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+  - ✅ **Task 16: Ichimoku Cloud Indicator (Kinko Hyo Engine)** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16):** **102/102 اختباراً ناجحاً بنسبة 100% (Green Build)**.
 * **الخطوة التالية المطلوبة فوراً من كابتن Claude:**
-  يرجى إرسال مواصفات **Task 16: Ichimoku Cloud Indicator (Tenkan, Kijun, Senkou Span A/B, Chikou)** لنبدأ تنفيذها فوراً!
+  يرجى إرسال مواصفات **Task 17 (Volume Profile & Order Flow)** أو المهمة التالية في خارطة الطريق لنبدأ تنفيذها فوراً!
+
+---
+
+#### ✅ Task 16: Ichimoku Cloud Indicator (Kinko Hyo) [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك حسابات إيشيموكو الخماسية (`backend/ichimoku.py`):** حساب تينكان سن (9)، كيجون سن (26)، سنكو سبان أ (+26)، سنكو سبان ب (52 مع إزاحة +26)، وشيكو سبان (-26) مع كاش 60 ثانية.
+- [x] **رصد الإشارات الأربعة:** تصنيف تقاطعات TK Cross (قوي/معتدل/ضعيف)، اختراقات السحابة Kumo Breakout (فوق/تحت/داخل)، تقلب لون السحابة Kumo Twist، وتأكيد Chikou بالنسبة للأسعار السابقة مع تقييم الاتجاه العام ونسبة القوة (0-100%).
+- [x] **قواعد البيانات (`backend/db.py`):** جدولا `ichimoku_analysis` و `ichimoku_backtest_results` مع الفهارس المركبة ودوال التسجيل والاستعلام.
+- [x] **واجهات API (`backend/main.py`):** مسارات `GET /api/ichimoku/analyze/{symbol}` و `GET /api/ichimoku/backtest/{symbol}`.
+- [x] **عميل الويب ومكون الرسم التفاعلي (`src/api/ichimoku.ts` & `src/components/dashboard/IchimokuChart.tsx`):** رسم المتجهات لسحابة الكومو مضللة، خطوط الاتجاه الخمسة، مستويات الدعم والمقاومة، شارات الإشارات الأربعة، وبطاقة نتائج الباك تست.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_ichimoku_task16.py`):** 22/22 اختباراً ناجحاً بنسبة 100% في 0.057s.
 
 ---
 
