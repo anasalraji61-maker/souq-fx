@@ -31,6 +31,11 @@ class OrderType(str, Enum):
     TAKE_PROFIT = "take_profit"
 
 
+class OrderSide(str, Enum):
+    BUY = "buy"
+    SELL = "sell"
+
+
 class OrderStatus(str, Enum):
     PENDING = "pending"
     ACTIVE = "active"

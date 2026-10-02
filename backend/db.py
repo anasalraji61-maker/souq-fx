@@ -281,6 +281,26 @@ def init_db() -> None:
                 closed_at TEXT,
                 status TEXT NOT NULL DEFAULT 'open'
             );
+            CREATE TABLE IF NOT EXISTS divergence_signals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                symbol TEXT NOT NULL,
+                timeframe TEXT NOT NULL,
+                indicator TEXT NOT NULL,
+                divergence_type TEXT NOT NULL,
+                direction TEXT NOT NULL,
+                price_point1 REAL NOT NULL,
+                price_point2 REAL NOT NULL,
+                osc_point1 REAL NOT NULL,
+                osc_point2 REAL NOT NULL,
+                current_price REAL NOT NULL,
+                target_price REAL,
+                stop_loss REAL,
+                confidence_score REAL NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS divergence_signals_symbol_timeframe ON divergence_signals (symbol, timeframe);
+            CREATE INDEX IF NOT EXISTS divergence_signals_status ON divergence_signals (status);
             CREATE TABLE IF NOT EXISTS network_members (
                 user_id INTEGER PRIMARY KEY,
                 role TEXT NOT NULL DEFAULT 'trader',
@@ -3233,27 +3253,6 @@ def get_latest_smc_analysis(symbol: str, timeframe: str = "1h") -> dict[str, Any
 
 def _migrate_divergence(c: sqlite3.Connection) -> None:
     """إنشاء جداول إشارات الانفراج السعري والمؤشرات (RSI, MACD, Stochastic)."""
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS divergence_signals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            timeframe TEXT NOT NULL,
-            indicator TEXT NOT NULL,
-            divergence_type TEXT NOT NULL,
-            direction TEXT NOT NULL,
-            price_point1 REAL NOT NULL,
-            price_point2 REAL NOT NULL,
-            osc_point1 REAL NOT NULL,
-            osc_point2 REAL NOT NULL,
-            current_price REAL NOT NULL,
-            target_price REAL NOT NULL,
-            stop_loss REAL NOT NULL,
-            confidence_score REAL NOT NULL,
-            status TEXT NOT NULL DEFAULT 'ACTIVE',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_div_sym_tf ON divergence_signals(symbol, timeframe, id DESC)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_div_status ON divergence_signals(status)")
 
 
