@@ -19,6 +19,16 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Fix Windows console UnicodeEncodeError for emojis
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
+
 
 class GitBackedSyncDaemon:
     def __init__(self, repo_path: str, coordination_file: str = "COORDINATION-LIVE.md"):
