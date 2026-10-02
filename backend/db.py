@@ -17,6 +17,12 @@ from typing import Any
 from core.db_conn import DB_PATH, _conn
 
 
+def get_db():
+    """الحصول على اتصال بقاعدة البيانات (متوافق مع مواصفات المهام والمعماري)."""
+    return _conn()
+
+
+
 def _username_key(username: str) -> str:
     """مفتاح التفرّد: NFKC + casefold. `COLLATE NOCASE` بـSQLite يطوي a–z فقط ⇒ «Şêrko» و«şêrko»
     و«Émile» و«émile» (وكل سيريلي/يوناني) كانا حسابين يُعرضان متطابقين — انتحال (البند 9)."""
@@ -2697,11 +2703,14 @@ def _migrate_orders(c: sqlite3.Connection) -> None:
             status TEXT NOT NULL DEFAULT 'pending',
             created_at TEXT NOT NULL,
             filled_at TEXT,
+            filled_price REAL,
             cancelled_at TEXT,
             note TEXT
         )"""
     )
     cols = {r[1] for r in c.execute("PRAGMA table_info(orders)").fetchall()}
+    if "filled_price" not in cols:
+        c.execute("ALTER TABLE orders ADD COLUMN filled_price REAL")
     if "trailing_stop_pct" not in cols:
         c.execute("ALTER TABLE orders ADD COLUMN trailing_stop_pct REAL")
     if "is_oco_group" not in cols:

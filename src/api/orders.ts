@@ -234,3 +234,59 @@ export async function cancelOrder(orderId: string): Promise<boolean> {
   }
   return false;
 }
+
+export interface CreateOrderRequest {
+  symbol: string;
+  orderType: 'market' | 'limit' | 'stop' | 'trailing_stop' | 'take_profit';
+  side: 'buy' | 'sell';
+  qty: number;
+  price: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  trailingStopPct?: number;
+}
+
+export const ordersAPI = {
+  async createOrder(request: CreateOrderRequest): Promise<{ orderId: string }> {
+    const res = await createOrder({
+      symbol: request.symbol,
+      order_type: request.orderType,
+      side: request.side,
+      qty: request.qty,
+      price: request.price,
+      stop_loss: request.stopLoss,
+      take_profit: request.takeProfit,
+      trailing_stop_pct: request.trailingStopPct,
+    });
+    return { orderId: res.id };
+  },
+
+  async getOrders(status?: string): Promise<Order[]> {
+    return fetchOrders(status as OrderStatus | undefined);
+  },
+
+  async cancelOrder(orderId: string): Promise<{ message: string }> {
+    const success = await cancelOrder(orderId);
+    return { message: success ? 'Order cancelled' : 'Failed to cancel' };
+  },
+
+  calculateRiskReward(entry: number, stopLoss: number, takeProfit: number): number {
+    if (stopLoss >= entry) return 0;
+    const risk = entry - stopLoss;
+    const reward = takeProfit - entry;
+    return risk > 0 ? reward / risk : 0;
+  },
+
+  calculatePositionSize(
+    accountBalance: number,
+    riskPct: number,
+    entry: number,
+    stopLoss: number
+  ): number {
+    if (stopLoss >= entry) return 0;
+    const riskAmount = accountBalance * (riskPct / 100);
+    const riskPerUnit = entry - stopLoss;
+    return riskPerUnit > 0 ? Math.floor(riskAmount / riskPerUnit) : 0;
+  },
+};
+
