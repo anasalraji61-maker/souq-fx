@@ -2166,6 +2166,46 @@ async def get_account_stats_route(request: Request):
     )
 
 
+# ==============================================================================
+# Task 22: Caching Strategy Optimization (Redis/Memory LRU + Hot Spot Caching)
+# ==============================================================================
+
+try:
+    import cache as cache_engine
+except ImportError:
+    from backend import cache as cache_engine
+
+
+@app.post("/api/cache/invalidate/{symbol}")
+async def invalidate_cache_route(symbol: str, timeframe: str = "*", reason: str = "candle_close"):
+    """إبطال كاش الشموع للرمز عند إغلاق الشمعة أو التحديث اليدوي."""
+    cache = cache_engine.get_cache()
+    if cache and cache.invalidate_candle(symbol.upper(), timeframe, reason):
+        return {"status": "invalidated", "symbol": symbol.upper(), "timeframe": timeframe}
+    return JSONResponse(status_code=500, content={"status": "failed"})
+
+
+@app.post("/api/cache/hot-symbols")
+async def update_hot_symbols_route(request: Request):
+    """تحديث قائمة الرموز العشرين الأكثر تداولاً لحفظها بالذاكرة الساخنة."""
+    data = await request.json()
+    symbols = data if isinstance(data, list) else data.get("symbols", [])
+    cache = cache_engine.get_cache()
+    if cache and cache.update_top_symbols(symbols):
+        return {"status": "updated", "count": min(len(symbols), 20)}
+    return JSONResponse(status_code=500, content={"status": "failed"})
+
+
+@app.get("/api/cache/stats")
+async def get_cache_stats_route(symbol: Optional[str] = None):
+    """إحصائيات استجابة الكاش ومعدل الإصابة (Hit/Miss Rate)."""
+    cache = cache_engine.get_cache()
+    if cache:
+        return cache.get_stats(symbol.upper() if symbol else None)
+    return JSONResponse(status_code=503, content={"status": "cache_unavailable"})
+
+
+
 
 
 @app.get("/api/chat/group")

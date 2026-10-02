@@ -71,10 +71,19 @@
 
 ---
 
+#### ✅ Task 22: Caching Strategy Optimization [مكتملة ومختبرة بنسبة 100%]:
+- [x] **طبقة الكاش L2 بالذاكرة السريعة (`backend/cache.py`):** دعم كامل لـ Redis مع Fallback فوري فائق السرعة، كاش الشموع الساخنة (5 ثوانٍ)، كاش أسعار الاقتباسات السريعة (500ms TTL)، وقائمة الرموز العشرين الأكثر نشاطاً (Top 20 Hot Spots).
+- [x] **إبطال الكاش التلقائي (Cache Invalidation):** مسح الكاش التلقائي للرمز عند إغلاق الشمعة (Candle Close) مع تسجيل كامل لسبب الإبطال.
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):** جدولا `cache_stats` و `cache_invalidation_log` مع فهارس البحث اليومية والرمزية.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):** مسارات `/api/cache/invalidate/{symbol}`, `/api/cache/hot-symbols`, `/api/cache/stats`.
+- [x] **عميل الويب ومكون لوحة الإحصائيات (`src/api/cache.ts` & `src/components/dashboard/CacheStatsPanel.tsx`):** مؤشرات لحظية لمعدل الإصابة (Hit Rate)، زمن الاستجابة، عدد الطلبات، وزر إفراغ الكاش اليدوي.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_cache_task22.py`):** 20/20 اختباراً ناجحاً بنسبة 100% في 0.613s.
+
+---
+
 ### 🎯 المهام التالية في خطة المعماري Claude:
-1. [ ] **Task 22:** Caching Strategy Optimization (Redis/Memory Candle Caching & LRU).
-2. [ ] **Task 15:** Multi-Timeframe Analysis (MTA) Consensus Engine (1m, 5m, 15m, 1h, 4h).
-3. [ ] **Task 16:** Ichimoku Cloud Indicator (Tenkan, Kijun, Senkou Span A/B, Chikou). 
+1. [ ] **Task 15:** Multi-Timeframe Analysis (MTA) Consensus Engine (1m, 5m, 15m, 1h, 4h).
+2. [ ] **Task 16:** Ichimoku Cloud Indicator (Tenkan, Kijun, Senkou Span A/B, Chikou). 
 
 ---
 
