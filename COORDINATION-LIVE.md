@@ -57,14 +57,24 @@
 - [x] **واجهات برمجة التطبيقات (`backend/main.py`):** مسارات `/api/orders`, `/api/orders/{id}/cancel`, `/api/orders/calc-risk-reward`, `/api/orders/check-triggers`.
 - [x] **حاسبة المخاطرة للعائد (R:R Calculator):** حساب لحظي لنسبة المخاطرة إلى العائد، مسافة النقاط، نسبة التعادل المطلوبة (Breakeven Winrate).
 - [x] **واجهة المستخدم (`OrderPanel.tsx` & `TerminalScreen.tsx`):** لوحة تداول كاملة مع أزرار اللوت السريعة، حاسبة R:R المرئية، وتبويب الأوامر المعلقة مع إلغاء بنقرة واحدة.
-- [x] **حزمة الاختبارات الآلية (`backend/tests/test_orders.py`):** 12/12 اختباراً ناجحاً بنسبة 100% (Math, DB, Triggers, OCO, Trailing).
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_orders_task13.py`):** 19/19 اختباراً ناجحاً بنسبة 100% (Math, DB, Triggers, OCO, Trailing).
+
+#### ✅ Task 14: Position Management & Real-Time P&L Tracking [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك إدارة المراكز (`backend/positions.py`):** دعم كامل لدورة حياة المركز (Create, Open, Close, Pyramiding, Liquidation).
+- [x] **حساب الأرباح والخسائر اللحظية:** Floating P&L و Realized P&L بدقة متناهية مع معيار العقود (1,000 Contract Multiplier).
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):** جدول `positions` بـ 16 عموداً مع فهارس `idx_positions_user_status`, `idx_positions_symbol_status`, `idx_positions_open_time`.
+- [x] **متطلبات الهامش والتصفية:** مراقبة الهامش المطلوب ونظام التنبيه والتصفية عند كسر عتبة الخسارة (30% Liquidation Threshold).
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):** مسارات `/api/positions` (إنشاء)، `/api/positions/open` (مفتوحة)، `/api/positions/history` (تاريخ)، `/api/positions/{id}/close` (إغلاق)، `/api/positions/{id}/add` (تعزيز)، `/api/positions/stats` (إحصائيات الحساب ومعدل الفوز).
+- [x] **عميل API والعمل دون اتصال (`src/api/positions.ts`):** كائن `positionsAPI` متكامل مع Offline Fallback ودوال الحساب اللحظية.
+- [x] **واجهات المستخدم (`PositionPanel.tsx` & `PositionDetailModal.tsx`):** جدول تفاعلي للمراكز، تحديث تلقائي كل 4 ثوانٍ، نافذة إغلاق سريع، نافذة تفاصيل وتعزيز هرمي، مدمجة في شريط التيرمينال `TerminalScreen.tsx`.
+- [x] **حزمة الاختبارات الشاملة (`backend/tests/test_positions_task14.py`):** 19/19 اختباراً ناجحاً بنسبة 100% في 0.058s.
 
 ---
 
-### 🎯 المهام التالية في خطة المعماري Claude (Block A & Block D):
+### 🎯 المهام التالية في خطة المعماري Claude:
 1. [ ] **Task 22:** Caching Strategy Optimization (Redis/Memory Candle Caching & LRU).
-2. [ ] **Task 14:** Position Management & Real-Time P&L Tracking (Kelly Criterion Sizing).
-3. [ ] **Task 15:** Multi-Timeframe Analysis (MTA) Consensus Engine (1m, 5m, 15m, 1h, 4h). 
+2. [ ] **Task 15:** Multi-Timeframe Analysis (MTA) Consensus Engine (1m, 5m, 15m, 1h, 4h).
+3. [ ] **Task 16:** Ichimoku Cloud Indicator (Tenkan, Kijun, Senkou Span A/B, Chikou). 
 
 ---
 

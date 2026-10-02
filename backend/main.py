@@ -2087,6 +2087,86 @@ def orders_check_triggers(body: TriggerCheckRequest):
     return {"ok": True, "triggered_count": len(events), "events": events}
 
 
+# ==============================================================================
+# Task 14: Position Management & Real-Time P&L Tracking API Routes
+# ==============================================================================
+
+try:
+    import positions as pos_engine
+except ImportError:
+    from backend import positions as pos_engine
+
+
+@app.post("/api/positions")
+async def create_position_route(request: Request):
+    """إنشاء مركز تداول جديد من أمر منفذ."""
+    data = await request.json()
+    user_id = request.headers.get("X-User-ID") or "user_123"
+    return pos_engine.create_position(
+        user_id=user_id,
+        symbol=data['symbol'],
+        side=data['side'],
+        qty=int(data['qty']),
+        entry_price=float(data['entry_price']),
+        entry_order_id=data.get('entry_order_id', f"ord_{int(time.time())}"),
+        stop_loss_order_id=data.get('stop_loss_order_id'),
+        take_profit_order_id=data.get('take_profit_order_id'),
+        notes=data.get('notes')
+    )
+
+
+@app.get("/api/positions/open")
+async def get_open_positions_route(request: Request, symbol: Optional[str] = None):
+    """جلب المراكز المفتوحة للمستخدم."""
+    user_id = request.headers.get("X-User-ID") or "user_123"
+    return pos_engine.get_open_positions(user_id, symbol)
+
+
+@app.get("/api/positions/history")
+async def get_position_history_route(request: Request, symbol: Optional[str] = None, limit: int = 100):
+    """جلب سجل المراكز المغلقة والمصفاة."""
+    user_id = request.headers.get("X-User-ID") or "user_123"
+    return pos_engine.get_position_history(user_id, symbol, limit)
+
+
+@app.post("/api/positions/{position_id}/close")
+async def close_position_route(position_id: str, request: Request):
+    """إغلاق المركز بالسعر المحدد وحساب الأرباح/الخسائر المحققة."""
+    data = await request.json()
+    user_id = request.headers.get("X-User-ID") or "user_123"
+    return pos_engine.close_position(
+        user_id=user_id,
+        position_id=position_id,
+        close_price=float(data['close_price']),
+        close_reason=data.get('close_reason', 'manual')
+    )
+
+
+@app.post("/api/positions/{position_id}/add")
+async def add_to_position_route(position_id: str, request: Request):
+    """التعزيز/الهرمية (Pyramiding) وإعادة حساب متوسط سعر الدخول."""
+    data = await request.json()
+    user_id = request.headers.get("X-User-ID") or "user_123"
+    return pos_engine.add_to_position(
+        user_id=user_id,
+        position_id=position_id,
+        qty=int(data['qty']),
+        entry_price=float(data['entry_price'])
+    )
+
+
+@app.post("/api/positions/stats")
+async def get_account_stats_route(request: Request):
+    """إحصائيات الحساب اللحظية (عائم ومحقق ومعدل الفوز)."""
+    data = await request.json()
+    user_id = request.headers.get("X-User-ID") or "user_123"
+    return pos_engine.calculate_account_stats(
+        user_id=user_id,
+        current_prices=data.get('current_prices', {})
+    )
+
+
+
 
 @app.get("/api/chat/group")
 def group_chat(user: dict | None = Depends(_auth_user)):

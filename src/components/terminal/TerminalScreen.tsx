@@ -13,6 +13,7 @@ import { WatchlistPanel } from './WatchlistPanel';
 import { IndicatorModal } from './IndicatorModal';
 import { AiCopilotPanel } from './AiCopilotPanel';
 import { OrderPanel } from '../trading/OrderPanel';
+import { PositionPanel } from '../trading/PositionPanel';
 import { generateCandles, updateLastCandleWithTick } from '../../data/candleGenerator';
 import {
   Maximize2,
@@ -86,6 +87,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
+  const [tradingDrawerTab, setTradingDrawerTab] = useState<'orders' | 'positions'>('orders');
   const [maximizedCellId, setMaximizedCellId] = useState<string | null>(null);
   const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState(false);
 
@@ -522,11 +524,32 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </div>
         </div>
 
-        {/* Right Order Panel (Task 13) */}
+        {/* Right Trading & Position Panel (Task 13 & 14) */}
         {isOrderPanelOpen && (
-          <div className="w-84 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-y-auto z-20 shadow-2xl">
+          <div className="w-96 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-y-auto z-20 shadow-2xl flex flex-col">
             <div className="p-2 flex justify-between items-center bg-[#0d1424] border-b border-[#1E283D]">
-              <span className="text-xs font-bold text-emerald-400">لوحة الأوامر المباشرة</span>
+              <div className="flex items-center gap-1.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                <button
+                  onClick={() => setTradingDrawerTab('orders')}
+                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+                    tradingDrawerTab === 'orders'
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  ⚡ الأوامر (Orders)
+                </button>
+                <button
+                  onClick={() => setTradingDrawerTab('positions')}
+                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+                    tradingDrawerTab === 'positions'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  📊 المراكز (Positions)
+                </button>
+              </div>
               <button
                 onClick={() => setIsOrderPanelOpen(false)}
                 className="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded bg-[#182030]"
@@ -534,11 +557,20 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                 ✕ إغلاق
               </button>
             </div>
-            <div className="p-2">
-              <OrderPanel
-                currentSymbol={activeSymbol}
-                currentPrice={activeSymbolObj ? activeSymbolObj.price : 1.0855}
-              />
+            <div className="p-2 flex-1 overflow-y-auto">
+              {tradingDrawerTab === 'orders' ? (
+                <OrderPanel
+                  currentSymbol={activeSymbol}
+                  currentPrice={activeSymbolObj ? activeSymbolObj.price : 1.0855}
+                />
+              ) : (
+                <PositionPanel
+                  currentPrices={{
+                    [activeSymbol]: activeSymbolObj ? activeSymbolObj.price : 1.0855,
+                    ...Object.fromEntries(symbols.map((s) => [s.symbol, s.price])),
+                  }}
+                />
+              )}
             </div>
           </div>
         )}

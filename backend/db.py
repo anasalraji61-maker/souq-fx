@@ -299,6 +299,7 @@ def init_db() -> None:
         _migrate_indicator_alerts(c)
         _migrate_trades(c)
         _migrate_orders(c)
+        _migrate_positions(c)
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
@@ -2725,6 +2726,39 @@ def _migrate_orders(c: sqlite3.Connection) -> None:
     c.execute("CREATE INDEX IF NOT EXISTS idx_orders_symbol_status ON orders(symbol, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at DESC)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_orders_oco_group ON orders(is_oco_group)")
+
+
+# ==============================================================================
+# Task 14: Position Management & Real-Time P&L Tracking
+# ==============================================================================
+
+def _migrate_positions(c: sqlite3.Connection) -> None:
+    """إنشاء وتحديث جدول المراكز المفتوحة والمغلقة ومتابعة الأرباح والخسائر اللحظية والهامش."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS positions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            side TEXT NOT NULL,
+            qty INTEGER NOT NULL,
+            avg_entry_price REAL NOT NULL,
+            open_time TIMESTAMP NOT NULL,
+            status TEXT NOT NULL,
+            close_price REAL,
+            close_time TIMESTAMP,
+            close_reason TEXT,
+            realized_pnl REAL,
+            realized_pnl_pct REAL,
+            entry_order_id TEXT,
+            stop_loss_order_id TEXT,
+            take_profit_order_id TEXT,
+            notes TEXT
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_positions_user_status ON positions(user_id, status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_positions_symbol_status ON positions(symbol, status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_positions_open_time ON positions(open_time DESC)")
+
 
 
 def add_order(
