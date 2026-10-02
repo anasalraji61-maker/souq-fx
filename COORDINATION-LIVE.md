@@ -9,9 +9,33 @@
   - ✅ **Task 15: Multi-Timeframe Analysis (MTA) Consensus Engine** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
   - ✅ **Task 16: Ichimoku Cloud Indicator (Kinko Hyo Engine)** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
   - ✅ **Task 17: Volume Profile & Order Flow Engine (POC, VAH/VAL 70%, Delta CVD)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17):** **122/122 اختباراً ناجحاً بنسبة 100% (Green Build)**.
-* **الخطوة التالية المطلوبة فوراً من كابتن Claude:**
-  يرجى إرسال مواصفات **Task 18 (Harmonic Pattern Recognition)** أو المهمة التالية في خارطة الطريق لنبدأ تنفيذها فوراً!
+  - ✅ **Task 18: Harmonic Pattern Recognition Engine (Gartley, Bat, Butterfly, Crab, Deep Crab, Cypher, Shark + PRZ + SL/TP)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18):** **142/142 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+* **الخطوة التالية المجدولة لكابتن Claude:**
+  **Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine - FVG, Order Blocks, Liquidity Pools)**.
+
+---
+
+#### ✅ Task 18: Harmonic Pattern Recognition Engine [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك التعرف على نماذج الهارمونيك (`backend/harmonic_engine.py`):**
+  - دعم كامل لـ 7 نماذج كلاسيكية ومتقدمة: Gartley, Bat, Butterfly, Crab, Deep Crab, Cypher, Shark.
+  - خوارزمية استخراج قمم وقيعان متقدمة (ZigZag Extrema Filtering) مع تفادي القمم المتتالية.
+  - حساب نسب الفيبوناتشي بدقة 4 أرقام عشرية: XB Retracement, AC Retracement, BD Extension, XD Overall.
+  - حساب منطقة الانعكاس المحتملة PRZ (Potential Reversal Zone) بدقة مع هوامش سعرية ديناميكية.
+  - حساب وقف الخسارة SL وأهداف جني الأرباح الثلاثية: TP1 (0.382), TP2 (0.618), TP3 (1.000).
+  - حساب درجة جودة ومطابقة النموذج Confidence Score (0-100%).
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):**
+  - جدول `harmonic_patterns` مع فهارس `idx_harmonic_sym_tf` و `idx_harmonic_status`.
+  - دوال التسجيل والاسترجاع `log_harmonic_pattern` و `get_harmonic_patterns`.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):**
+  - مسار `GET /api/harmonic/detect/{symbol}` مع وسائط `timeframe`, `tolerance`, `pivot_order`.
+  - مسار `GET /api/harmonic/patterns/{symbol}` لجلب سجل النماذج السابقة.
+- [x] **عميل الويب والواجهة التفاعلية المتطورة (`src/api/harmonic.ts` & `src/components/dashboard/HarmonicPatternChart.tsx`):**
+  - رسم بياني متجهي SVG يرسم هندسة أجنحة الهارمونيك المضللة (XAB و BCD)، خطوط الفيبوناتشي، صندوق PRZ المظلل، وخطوط SL و TP1/TP2/TP3.
+  - لوحة مطابقة نسب الفيبوناتشي الحقيقية مقابل النسب المثالية.
+  - بطاقة خطة التداول المباشرة (BUY/SELL @ PRZ مع نسب وقف الخسارة والأهداف).
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_harmonic_task18.py`):**
+  - 20/20 اختباراً ناجحاً بنسبة 100% في 0.012s.
 
 ---
 
