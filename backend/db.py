@@ -8,6 +8,7 @@ import math
 import re
 import secrets
 import sqlite3
+import threading
 import time
 import unicodedata
 from datetime import datetime, timezone
@@ -291,6 +292,7 @@ def init_db() -> None:
         _purge_demo_seed(c)
         _migrate_indicator_alerts(c)
         _migrate_trades(c)
+        _migrate_orders(c)
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
@@ -2668,3 +2670,184 @@ def mark_indicator_alert_triggered(
     with _conn() as c:
         cur = c.execute(sql, args)
     return cur.rowcount == 1
+
+
+# ==============================================================================
+# Task 13: Advanced Order Types & OCO Database Support
+# ==============================================================================
+
+def _migrate_orders(c: sqlite3.Connection) -> None:
+    """إنشاء وتحديث جدول الأوامر المتقدمة (Market, Limit, Stop, Trailing Stop, OCO)."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS orders (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER,
+            owner_key TEXT,
+            symbol TEXT NOT NULL,
+            side TEXT NOT NULL,
+            order_type TEXT NOT NULL,
+            price REAL NOT NULL,
+            qty REAL NOT NULL DEFAULT 1.0,
+            stop_loss_price REAL,
+            take_profit_price REAL,
+            trailing_stop_pct REAL,
+            highest_price REAL,
+            lowest_price REAL,
+            is_oco_group TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TEXT NOT NULL,
+            filled_at TEXT,
+            cancelled_at TEXT,
+            note TEXT
+        )"""
+    )
+    cols = {r[1] for r in c.execute("PRAGMA table_info(orders)").fetchall()}
+    if "trailing_stop_pct" not in cols:
+        c.execute("ALTER TABLE orders ADD COLUMN trailing_stop_pct REAL")
+    if "is_oco_group" not in cols:
+        c.execute("ALTER TABLE orders ADD COLUMN is_oco_group TEXT")
+    if "highest_price" not in cols:
+        c.execute("ALTER TABLE orders ADD COLUMN highest_price REAL")
+    if "lowest_price" not in cols:
+        c.execute("ALTER TABLE orders ADD COLUMN lowest_price REAL")
+    if "owner_key" not in cols:
+        c.execute("ALTER TABLE orders ADD COLUMN owner_key TEXT")
+    
+    c.execute("CREATE INDEX IF NOT EXISTS idx_orders_symbol_status ON orders(symbol, status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at DESC)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_orders_oco_group ON orders(is_oco_group)")
+
+
+def add_order(
+    order_id: str,
+    symbol: str,
+    side: str,
+    order_type: str,
+    price: float,
+    qty: float = 1.0,
+    stop_loss_price: float | None = None,
+    take_profit_price: float | None = None,
+    trailing_stop_pct: float | None = None,
+    is_oco_group: str | None = None,
+    user_id: int | None = None,
+    owner_key: str | None = None,
+    note: str | None = None,
+) -> dict:
+    now_iso = datetime.now(timezone.utc).isoformat()
+    with _conn() as c:
+        c.execute(
+            """INSERT INTO orders (
+                id, user_id, owner_key, symbol, side, order_type, price, qty,
+                stop_loss_price, take_profit_price, trailing_stop_pct,
+                highest_price, lowest_price, is_oco_group, status, created_at, note
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)""",
+            (
+                order_id, user_id, owner_key, symbol.upper(), side.lower(), order_type.lower(),
+                float(price), float(qty),
+                stop_loss_price, take_profit_price, trailing_stop_pct,
+                float(price), float(price), is_oco_group, now_iso, note
+            ),
+        )
+    return get_order(order_id) or {}
+
+
+def get_order(order_id: str) -> dict | None:
+    with _conn() as c:
+        row = c.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d.pop("owner_key", None)
+    return d
+
+
+def list_orders(
+    user_id: int | None = None,
+    owner_key: str | None = None,
+    status: str | None = None,
+    symbol: str | None = None,
+    limit: int = 100,
+) -> list[dict]:
+    sql_parts = []
+    args = []
+    
+    owner_sql, owner_args = _owner_clause(user_id, owner_key)
+    sql_parts.append(f"({owner_sql})")
+    args.extend(owner_args)
+    
+    if status:
+        sql_parts.append("status = ?")
+        args.append(status.lower())
+    if symbol:
+        sql_parts.append("symbol = ?")
+        args.append(symbol.upper())
+        
+    where = " AND ".join(sql_parts)
+    query = f"SELECT * FROM orders WHERE {where} ORDER BY created_at DESC LIMIT ?"
+    args.append(max(1, min(limit, 200)))
+    
+    with _conn() as c:
+        rows = c.execute(query, tuple(args)).fetchall()
+        
+    out = []
+    for r in rows:
+        d = dict(r)
+        d.pop("owner_key", None)
+        out.append(d)
+    return out
+
+
+def update_order_status(
+    order_id: str,
+    status: str,
+    filled_at: str | None = None,
+    cancelled_at: str | None = None,
+) -> bool:
+    with _conn() as c:
+        cur = c.execute(
+            """UPDATE orders 
+               SET status = ?,
+                   filled_at = COALESCE(?, filled_at),
+                   cancelled_at = COALESCE(?, cancelled_at)
+               WHERE id = ?""",
+            (status.lower(), filled_at, cancelled_at, order_id),
+        )
+    return cur.rowcount > 0
+
+
+def update_order_trailing(
+    order_id: str,
+    highest_price: float | None = None,
+    lowest_price: float | None = None,
+    stop_loss_price: float | None = None,
+) -> bool:
+    with _conn() as c:
+        cur = c.execute(
+            """UPDATE orders 
+               SET highest_price = COALESCE(?, highest_price),
+                   lowest_price = COALESCE(?, lowest_price),
+                   stop_loss_price = COALESCE(?, stop_loss_price)
+               WHERE id = ? AND status = 'pending'""",
+            (highest_price, lowest_price, stop_loss_price, order_id),
+        )
+    return cur.rowcount > 0
+
+
+def cancel_oco_group(oco_group: str, triggered_order_id: str) -> list[str]:
+    """إلغاء كل الأوامر في مجموعة OCO باستثناء الأمر الذي تفعل (One-Cancels-Other)."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    cancelled_ids = []
+    with _conn() as c:
+        rows = c.execute(
+            "SELECT id FROM orders WHERE is_oco_group = ? AND id != ? AND status = 'pending'",
+            (oco_group, triggered_order_id),
+        ).fetchall()
+        for r in rows:
+            oid = r[0]
+            c.execute(
+                "UPDATE orders SET status = 'cancelled', cancelled_at = ? WHERE id = ?",
+                (now_iso, oid),
+            )
+            cancelled_ids.append(oid)
+    return cancelled_ids
+

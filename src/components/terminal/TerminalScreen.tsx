@@ -12,6 +12,7 @@ import { MatrixChartCanvas } from './MatrixChartCanvas';
 import { WatchlistPanel } from './WatchlistPanel';
 import { IndicatorModal } from './IndicatorModal';
 import { AiCopilotPanel } from './AiCopilotPanel';
+import { OrderPanel } from '../trading/OrderPanel';
 import { generateCandles, updateLastCandleWithTick } from '../../data/candleGenerator';
 import {
   Maximize2,
@@ -84,6 +85,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [activeTool, setActiveTool] = useState<DrawingTool>('none');
   const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
+  const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
   const [maximizedCellId, setMaximizedCellId] = useState<string | null>(null);
   const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState(false);
 
@@ -300,6 +302,20 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             <span>المساعد الذكي (AI Copilot)</span>
           </button>
 
+          {/* Advanced Orders Button (Task 13) */}
+          <button
+            onClick={() => setIsOrderPanelOpen(!isOrderPanelOpen)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+              isOrderPanelOpen
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950/50'
+                : 'bg-[#131E33] border-[#233554] text-emerald-400 hover:border-emerald-500'
+            }`}
+            title="لوحة الأوامر المتقدمة وإدارة المخاطر (Task 13)"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>أمر تداول (Orders)</span>
+          </button>
+
           {/* Multi-Chart Layout Selector */}
           <div className="flex items-center gap-1 bg-[#101827] p-1 rounded-lg border border-[#1E283D]">
             <button
@@ -505,6 +521,27 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             })}
           </div>
         </div>
+
+        {/* Right Order Panel (Task 13) */}
+        {isOrderPanelOpen && (
+          <div className="w-84 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-y-auto z-20 shadow-2xl">
+            <div className="p-2 flex justify-between items-center bg-[#0d1424] border-b border-[#1E283D]">
+              <span className="text-xs font-bold text-emerald-400">لوحة الأوامر المباشرة</span>
+              <button
+                onClick={() => setIsOrderPanelOpen(false)}
+                className="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded bg-[#182030]"
+              >
+                ✕ إغلاق
+              </button>
+            </div>
+            <div className="p-2">
+              <OrderPanel
+                currentSymbol={activeSymbol}
+                currentPrice={activeSymbolObj ? activeSymbolObj.price : 1.0855}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Right Watchlist Panel */}
         {!isWatchlistCollapsed && (

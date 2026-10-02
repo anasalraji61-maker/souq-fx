@@ -42,6 +42,7 @@ import screener as screener_engine
 import indicators as ind_engine
 import signal_hub
 import commissions as commissions_mod
+import orders as orders_engine
 
 _ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(_ROOT / ".env")
@@ -1974,6 +1975,117 @@ def trades_delete(
     if not ok:
         raise HTTPException(404, "trade not found")
     return {"ok": True, "stats": db.trade_stats(uid, owner_key=key)}
+
+
+# ==============================================================================
+# Task 13: Advanced Order Types API (Market, Limit, Stop, Trailing Stop, OCO)
+# ==============================================================================
+
+class OrderCreateRequest(BaseModel):
+    symbol: str
+    side: Literal["buy", "sell"]
+    order_type: Literal["market", "limit", "stop", "trailing_stop", "take_profit"]
+    price: float
+    qty: float = 1.0
+    stop_loss: float | None = None
+    take_profit: float | None = None
+    trailing_stop_pct: float | None = None
+    is_oco_group: str | None = None
+    note: str | None = None
+
+
+class RiskRewardCalcRequest(BaseModel):
+    entry_price: float
+    stop_loss: float
+    take_profit: float
+    side: Literal["buy", "sell"] = "buy"
+
+
+class TriggerCheckRequest(BaseModel):
+    prices: dict[str, float]
+
+
+@app.get("/api/orders")
+def orders_list(
+    status: str | None = None,
+    symbol: str | None = None,
+    limit: int = 100,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_owner_key),
+):
+    """قائمة الأوامر المعلقة أو المكتملة للمستخدم أو الجهاز."""
+    uid = user["user_id"] if user else None
+    orders_data = db.list_orders(user_id=uid, owner_key=key, status=status, symbol=symbol, limit=limit)
+    return {"ok": True, "orders": orders_data, "count": len(orders_data)}
+
+
+@app.post("/api/orders")
+def orders_create(
+    body: OrderCreateRequest,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_owner_key),
+):
+    """إنشاء أمر متقدم جديد والتحقق من صحة إدارة المخاطر."""
+    uid = user["user_id"] if user else None
+    try:
+        order = orders_engine.create_order(
+            symbol=body.symbol,
+            side=body.side,
+            order_type=body.order_type,
+            price=body.price,
+            qty=body.qty,
+            stop_loss=body.stop_loss,
+            take_profit=body.take_profit,
+            trailing_stop_pct=body.trailing_stop_pct,
+            is_oco_group=body.is_oco_group,
+            user_id=uid,
+            owner_key=key,
+            note=body.note,
+        )
+        return {"ok": True, "order": order}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/orders/{order_id}")
+def orders_get(order_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)):
+    """استرجاع تفاصيل أمر محدد."""
+    order = db.get_order(order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"ok": True, "order": order}
+
+
+@app.post("/api/orders/{order_id}/cancel")
+def orders_cancel(order_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_owner_key)):
+    """إلغاء أمر معلق."""
+    uid = user["user_id"] if user else None
+    success = orders_engine.cancel_order(order_id, user_id=uid, owner_key=key)
+    if not success:
+        raise HTTPException(status_code=400, detail="Cannot cancel order or order already executed")
+    return {"ok": True, "message": "Order cancelled successfully"}
+
+
+@app.post("/api/orders/calc-risk-reward")
+def orders_calc_rr(body: RiskRewardCalcRequest):
+    """حاسبة نسبة المخاطرة للعائد ومعدل الفوز المطلوب للتعادل."""
+    res = orders_engine.calculate_risk_reward(
+        entry_price=body.entry_price,
+        stop_loss=body.stop_loss,
+        take_profit=body.take_profit,
+        side=body.side,
+    )
+    if not res.get("valid"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Invalid calculation params"))
+    return {"ok": True, "data": res}
+
+
+@app.post("/api/orders/check-triggers")
+def orders_check_triggers(body: TriggerCheckRequest):
+    """فحص تفعيل الأوامر المعلقة وإلغاء أطراف OCO المرتبطة."""
+    events = orders_engine.check_order_triggers(body.prices)
+    return {"ok": True, "triggered_count": len(events), "events": events}
+
 
 
 @app.get("/api/chat/group")

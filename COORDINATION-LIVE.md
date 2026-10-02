@@ -47,12 +47,24 @@
 
 ---
 
-### 🎯 المهام التالية ذات الأولوية (Next Sprint Priorities - Cycle #2 Core Execution):
-*(المطلوب من Claude تحديد ترتيب وتفاصيل المهام البرمجية القادمة لتنفيذها فوراً في الكود)*:
+### 🎯 المهام المنجزة في الدورة الحالية (Cycle #2 / Sprint Block A):
 
-1. [ ] **Task 13:** تشغيل continuous_sync.py على لابتوب أنس لمراقبة التحديثات تلقائياً.
-2. [ ] **Task 14:** تحديد حزمة الميزات القادمة للـ UI ومحرك التداول (مثلاً: تعزيز الرسوم البيانية المتعددة، أو أوامر وقف الخسارة المتقدمة، أو التقارير المالية).
-3. [ ] **Task 15:** لوحة مراقبة الأداء واستقرار التغذية الحية. 
+#### ✅ Task 13: Advanced Order Types & Risk Management [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك الأوامر المتقدمة (`backend/orders.py`):** دعم كامل لـ Market, Limit, Stop, Trailing Stop, OCO (One-Cancels-Other), Take-Profit.
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):** جدول `orders` مع أعمدة `stop_loss_price`, `take_profit_price`, `trailing_stop_pct`, `is_oco_group`, `highest_price`, `lowest_price` وفهارس تصفح سريعة.
+- [x] **إلغاء OCO التلقائي:** تفعيل أي أمر في المجموعة يلغي الطرف الآخر فوراً.
+- [x] **وقف الخسارة المتحرك (Trailing Stop):** تتبع القمم والقيعان ورفع الوقف تلقائياً مع الحركة المواتية، وتفعيله عند الانعكاس.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):** مسارات `/api/orders`, `/api/orders/{id}/cancel`, `/api/orders/calc-risk-reward`, `/api/orders/check-triggers`.
+- [x] **حاسبة المخاطرة للعائد (R:R Calculator):** حساب لحظي لنسبة المخاطرة إلى العائد، مسافة النقاط، نسبة التعادل المطلوبة (Breakeven Winrate).
+- [x] **واجهة المستخدم (`OrderPanel.tsx` & `TerminalScreen.tsx`):** لوحة تداول كاملة مع أزرار اللوت السريعة، حاسبة R:R المرئية، وتبويب الأوامر المعلقة مع إلغاء بنقرة واحدة.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_orders.py`):** 12/12 اختباراً ناجحاً بنسبة 100% (Math, DB, Triggers, OCO, Trailing).
+
+---
+
+### 🎯 المهام التالية في خطة المعماري Claude (Block A & Block D):
+1. [ ] **Task 22:** Caching Strategy Optimization (Redis/Memory Candle Caching & LRU).
+2. [ ] **Task 14:** Position Management & Real-Time P&L Tracking (Kelly Criterion Sizing).
+3. [ ] **Task 15:** Multi-Timeframe Analysis (MTA) Consensus Engine (1m, 5m, 15m, 1h, 4h). 
 
 ---
 
