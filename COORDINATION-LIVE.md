@@ -8,9 +8,19 @@
   - ✅ **Task 22: Caching Strategy Optimization (Redis/Memory LRU + Hot Spot Invalidation)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
   - ✅ **Task 15: Multi-Timeframe Analysis (MTA) Consensus Engine** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
   - ✅ **Task 16: Ichimoku Cloud Indicator (Kinko Hyo Engine)** مكتملة ومختبرة بنسبة 100% (22/22 اختباراً).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16):** **102/102 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+  - ✅ **Task 17: Volume Profile & Order Flow Engine (POC, VAH/VAL 70%, Delta CVD)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17):** **122/122 اختباراً ناجحاً بنسبة 100% (Green Build)**.
 * **الخطوة التالية المطلوبة فوراً من كابتن Claude:**
-  يرجى إرسال مواصفات **Task 17 (Volume Profile & Order Flow)** أو المهمة التالية في خارطة الطريق لنبدأ تنفيذها فوراً!
+  يرجى إرسال مواصفات **Task 18 (Harmonic Pattern Recognition)** أو المهمة التالية في خارطة الطريق لنبدأ تنفيذها فوراً!
+
+---
+
+#### ✅ Task 17: Volume Profile & Order Flow Engine [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك بروفايل السيولة الحجمية وتدفق الأوامر (`backend/volume_profile.py`):** حساب Bins السيولة الأفقية، استخراج نقطة التحكم POC، حساب منطقة القيمة 70% (VAH و VAL)، عقد السيولة العالية HVN والمنخفضة LVN، وصافي تدفق الأوامر Delta والـ Cumulative Volume Delta (CVD) ورصد اختلالات الشراء/البيع (Imbalances).
+- [x] **قواعد البيانات (`backend/db.py`):** جدولا `volume_profile_analysis` و `order_flow_imbalances` مع الفهارس المركبة ودوال التسجيل `log_volume_profile_analysis` و `log_order_flow_imbalance` والاستعلام `get_latest_volume_profile`.
+- [x] **واجهات API (`backend/main.py`):** مسارات `GET /api/volume-profile/analyze/{symbol}` و `GET /api/volume-profile/order-flow/{symbol}`.
+- [x] **عميل الويب ومكون الرسم التفاعلي (`src/api/volumeProfile.ts` & `src/components/dashboard/VolumeProfileChart.tsx`):** رسم بياني أفقي متقدم لـ Bins السيولة مفرز بين الشراء (أخضر) والبيع (أحمر)، تحديد سطر الـ POC الذهبي، خطوط VAH و VAL، بطاقات المقاييس الأربعة، وإشارات اختراق القيمة واختلال الأوامر مع TP و SL.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_volume_profile_task17.py`):** 20/20 اختباراً ناجحاً بنسبة 100% في 0.013s.
 
 ---
 

@@ -2314,10 +2314,39 @@ def get_ichimoku_backtest_route(symbol: str, timeframe: str = "1h"):
     }
 
 
+# ==============================================================================
+# Task 17: Volume Profile & Order Flow Engine
+# ==============================================================================
+
+try:
+    import volume_profile
+except ImportError:
+    from backend import volume_profile
 
 
+@app.get("/api/volume-profile/analyze/{symbol}")
+def get_volume_profile_analysis_route(symbol: str, timeframe: str = "1h", bins: int = 30):
+    """تحليل بروفايل السيولة الحجمية POC و VAH و VAL وتدفق الأوامر Delta."""
+    res = volume_profile.analyze_symbol(symbol.upper(), timeframe=timeframe, num_bins=bins)
+    from dataclasses import asdict
+    return asdict(res)
 
 
+@app.get("/api/volume-profile/order-flow/{symbol}")
+def get_order_flow_route(symbol: str, timeframe: str = "1h"):
+    """جلب تفاصيل تدفق الأوامر اللحظي ومستويات الخلل الشرائي والبيعي (Imbalances)."""
+    res = volume_profile.analyze_symbol(symbol.upper(), timeframe=timeframe)
+    from dataclasses import asdict
+    d = asdict(res)
+    return {
+        "symbol": d["symbol"],
+        "timeframe": d["timeframe"],
+        "current_price": d["current_price"],
+        "order_flow_summary": d["order_flow_summary"],
+        "trading_signals": [s for s in d["trading_signals"] if "ORDER_FLOW" in s["type"] or "BREAK" in s["type"]],
+        "hvn_levels": d["hvn_levels"],
+        "lvn_levels": d["lvn_levels"],
+    }
 
 @app.get("/api/chat/group")
 def group_chat(user: dict | None = Depends(_auth_user)):
