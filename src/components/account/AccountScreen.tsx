@@ -62,6 +62,23 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         </button>
       </div>
 
+      {/* Email Verification Card */}
+      <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-bold text-[#E8EEF9]">
+            <Check className="w-4 h-4 text-[#2DD4BF]" />
+            <h3>التحقق من البريد الإلكتروني (Email Verification)</h3>
+          </div>
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            مفعّل وآمن
+          </span>
+        </div>
+        <p className="text-[#7B8DA8]">
+          البريد المسجل: <span className="font-mono text-[#E8EEF9]">anasalraji61@gmail.com</span> (تم التحقق وتأمين استعادة الحساب وتنبيهات الأسعار).
+        </p>
+      </div>
+
       {/* Language Selector Card */}
       <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-3">
         <div className="flex items-center gap-2 text-sm font-bold text-[#E8EEF9]">

@@ -921,6 +921,30 @@ def auth_login(body: AuthLogin):
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
+class VerifyEmailRequest(BaseModel):
+    code: str = Field(..., min_length=4, max_length=10)
+
+
+@app.post("/api/auth/verify-email")
+def auth_verify_email(body: VerifyEmailRequest, user: dict | None = Depends(_auth_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="login_required")
+    ok = db.verify_email(user["user_id"], body.code)
+    if not ok:
+        raise HTTPException(status_code=400, detail="رمز التحقق غير صحيح أو منتهي الصلاحية")
+    return {"ok": True, "message": "تم التحقق من البريد الإلكتروني بنجاح"}
+
+
+@app.post("/api/auth/resend-verification")
+def auth_resend_verification(user: dict | None = Depends(_auth_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="login_required")
+    vcode = db.resend_verification_code(user["user_id"])
+    if not vcode:
+        return {"ok": True, "message": "البريد الإلكتروني مفعل مسبقاً أو غير موجود"}
+    return {"ok": True, "message": "تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني"}
+
+
 class AuthLogout(BaseModel):
     push_token: str | None = Field(default=None, max_length=256)
 
@@ -1289,6 +1313,12 @@ def create_alert(
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     uid = user["user_id"] if user else None
+    existing_alerts = db.list_alerts(uid, owner_key=key)
+    if len(existing_alerts) >= 50:
+        raise HTTPException(
+            status_code=400,
+            detail="limit_exceeded: maximum 50 price alerts allowed per device/account (حد 50 تنبيه لكل جهاز)",
+        )
     db.create_alert(alert, uid, owner_key=key)
     return {"ok": True, "alert": alert}
 
@@ -1446,6 +1476,12 @@ def create_indicator_alert(
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     uid = user["user_id"] if user else None
+    existing = db.list_indicator_alerts(uid, owner_key=key)
+    if len(existing) >= 50:
+        raise HTTPException(
+            status_code=400,
+            detail="limit_exceeded: maximum 50 indicator alerts allowed per device/account (حد 50 تنبيه لكل جهاز)",
+        )
     db.create_indicator_alert(alert, uid, owner_key=key)
     return {"ok": True, "alert": alert}
 

@@ -535,8 +535,59 @@ _stats: dict[str, int | float | None] = {
 }
 
 
+_key_lock = threading.Lock()
+_key_cooldowns: dict[str, float] = {}
+_current_key_idx: int = 0
+
+
+def _all_api_keys() -> list[str]:
+    raw = (
+        os.getenv("TWELVE_DATA_API_KEYS")
+        or os.getenv("TWELVE_DATA_API_KEY")
+        or os.getenv("TWELVEDATA_API_KEY")
+        or ""
+    ).strip()
+    if not raw:
+        return []
+    # Support comma-separated, semicolon, or newline-separated keys
+    keys = [k.strip() for k in re.split(r"[,;\n\s]+", raw) if k.strip()]
+    return keys
+
+
 def _api_key() -> str:
-    return (os.getenv("TWELVE_DATA_API_KEY") or os.getenv("TWELVEDATA_API_KEY") or "").strip()
+    """إرجاع المفتاح النشط مع تدوير تلقائي في حال استهلاك حد الطلبات (Rate Limit Rotation)."""
+    keys = _all_api_keys()
+    if not keys:
+        return ""
+    if len(keys) == 1:
+        return keys[0]
+
+    now = time.time()
+    with _key_lock:
+        global _current_key_idx
+        # فحص المفاتيح ابتداءً من المؤشر الحالي
+        for i in range(len(keys)):
+            idx = (_current_key_idx + i) % len(keys)
+            k = keys[idx]
+            cooldown_until = _key_cooldowns.get(k, 0.0)
+            if now >= cooldown_until:
+                _current_key_idx = idx
+                return k
+        # إن كانت كل المفاتيح في فترة تهدئة، نستخدم أقربها انتهاءً
+        return min(keys, key=lambda k: _key_cooldowns.get(k, 0.0))
+
+
+def mark_key_rate_limited(key: str, cooldown_seconds: float = 65.0) -> None:
+    """وسم المفتاح كـ Rate Limited وتدوير المؤشر فوراً إلى المفتاح التالي."""
+    if not key:
+        return
+    now = time.time()
+    with _key_lock:
+        global _current_key_idx
+        _key_cooldowns[key] = now + cooldown_seconds
+        keys = _all_api_keys()
+        if keys and key in keys:
+            _current_key_idx = (keys.index(key) + 1) % len(keys)
 
 
 def configured() -> bool:
@@ -547,11 +598,12 @@ _APIKEY_PARAM = re.compile(r"(apikey=)[^&\s'\"]+", re.I)
 
 
 def redact(text: str) -> str:
-    """نصّ خطأ بلا المفتاح: `HTTPStatusError` يحمل الرابط كاملاً (`…&apikey=<المفتاح>`) وكان يصل
-    العميل بـ502 البحث (مسار بلا دخول) وسجلّات الخادم وحالة الـWS العامة. المفتاح مشترك مع الروبوت."""
-    key = _api_key()
+    """نصّ خطأ بلا أي مفتاح من قائمة المفاتيح المشتركة لضمان عدم تسريبها باللوجات."""
     out = _APIKEY_PARAM.sub(r"\1***", str(text))
-    return out.replace(key, "***") if key else out
+    for k in _all_api_keys():
+        if k:
+            out = out.replace(k, "***")
+    return out
 
 
 # رموز ISO 4217 لعملات ومعادن يسعّرها المزوّد أزواجاً «AAA/BBB» (`Physical Currency`). البحث يعيد
@@ -860,6 +912,7 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         with httpx.Client(timeout=25.0) as client:
             r = client.get(f"{API_BASE}/time_series", params=params)
             if r.status_code == 429:
+                mark_key_rate_limited(key)
                 _stats["rate_limited"] = int(_stats["rate_limited"] or 0) + 1
                 _stats["last_rate_limit_at"] = now
                 stale = _serve_stale(cache_key, now)
@@ -992,6 +1045,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
     with httpx.Client(timeout=15.0) as client:
         r = client.get(f"{API_BASE}/quote", params={"symbol": td_sym, "apikey": key})
         if r.status_code == 429:
+            mark_key_rate_limited(key)
             _stats["rate_limited"] = int(_stats["rate_limited"] or 0) + 1
             # fallback to /price
             p = None

@@ -426,6 +426,10 @@ def _migrate_user_email(c: sqlite3.Connection) -> None:
     cols = {r[1] for r in c.execute("PRAGMA table_info(users)").fetchall()}
     if "email" not in cols:
         c.execute("ALTER TABLE users ADD COLUMN email TEXT")
+    if "email_verified" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+    if "verification_code" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN verification_code TEXT")
     c.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL AND email != ''"
     )
@@ -638,10 +642,11 @@ def register_user(
             raise ValueError("email taken")
         if _username_taken(c, username):
             raise ValueError("username or email taken")
+        vcode = "".join(secrets.choice("0123456789") for _ in range(6))
         try:
             c.execute(
-                "INSERT INTO users(username,username_key,password_hash,created_at,email) VALUES(?,?,?,?,?)",
-                (username, _username_key(username), stored, now, email_norm),
+                "INSERT INTO users(username,username_key,password_hash,created_at,email,email_verified,verification_code) VALUES(?,?,?,?,?,0,?)",
+                (username, _username_key(username), stored, now, email_norm, vcode),
             )
             uid = int(c.execute("SELECT last_insert_rowid()").fetchone()[0])
         except sqlite3.IntegrityError as exc:
@@ -662,7 +667,32 @@ def register_user(
     session = create_session(uid, username, email_norm)
     session["referral_code"] = code
     session["role"] = role
+    session["email_verified"] = False
+    session["verification_code"] = vcode
     return session
+
+
+def verify_email(user_id: int, code: str) -> bool:
+    code_clean = (code or "").strip()
+    with _conn() as c:
+        row = c.execute("SELECT verification_code FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row:
+            return False
+        stored = str(row["verification_code"] or "").strip()
+        if stored and hmac.compare_digest(stored, code_clean):
+            c.execute("UPDATE users SET email_verified=1 WHERE id=?", (user_id,))
+            return True
+        return False
+
+
+def resend_verification_code(user_id: int) -> str | None:
+    vcode = "".join(secrets.choice("0123456789") for _ in range(6))
+    with _conn() as c:
+        row = c.execute("SELECT email, email_verified FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row or row["email_verified"]:
+            return None
+        c.execute("UPDATE users SET verification_code=? WHERE id=?", (vcode, user_id))
+        return vcode
 
 
 # رمز إحالة الحساب المحذوف. `_make_referral_code` يأخذ 6 محارف من الاسم أقصى ⇒ لا رمز حيّ يبدأ بـ7 محارف هذه
@@ -1103,8 +1133,44 @@ def ensure_network_for_user(user_id: int, username: str) -> dict[str, Any]:
     return get_network_member(user_id) or {}
 
 
+_login_failures: dict[str, list[float]] = {}
+_login_lock = threading.Lock()
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = 15 * 60  # 15 دقيقة بالثواني
+
+
+def _check_login_rate_limit(ident: str) -> None:
+    now = time.time()
+    key = ident.lower()
+    with _login_lock:
+        attempts = [t for t in _login_failures.get(key, []) if now - t < LOCKOUT_DURATION]
+        _login_failures[key] = attempts
+        if len(attempts) >= MAX_LOGIN_ATTEMPTS:
+            oldest = attempts[0]
+            remaining = int(math.ceil((LOCKOUT_DURATION - (now - oldest)) / 60))
+            raise ValueError(
+                f"حسابك مقفل مؤقتاً لتجاوز {MAX_LOGIN_ATTEMPTS} محاولات دخول خاطئة. يُرجى المحاولة بعد {max(1, remaining)} دقيقة."
+            )
+
+
+def _record_login_failure(ident: str) -> None:
+    now = time.time()
+    key = ident.lower()
+    with _login_lock:
+        attempts = [t for t in _login_failures.get(key, []) if now - t < LOCKOUT_DURATION]
+        attempts.append(now)
+        _login_failures[key] = attempts
+
+
+def _clear_login_failures(ident: str) -> None:
+    key = ident.lower()
+    with _login_lock:
+        _login_failures.pop(key, None)
+
+
 def login_user(username_or_email: str, password: str) -> dict[str, Any]:
     ident = _clean_username(username_or_email)
+    _check_login_rate_limit(ident)
     with _conn() as c:
         if "@" in ident:
             row = c.execute(
@@ -1124,6 +1190,7 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
                 ).fetchall()
                 row = rows[0] if len(rows) == 1 else None
     if not row:
+        _record_login_failure(ident)
         # تجزئة وهمية بالجولات نفسها: بلاها يُجاب الاسم غير الموجود فوراً والموجود بعد PBKDF2 (~60ms)
         # ⇒ زمن الردّ يكشف وجود الحساب.
         _verify_password(password, f"{_PBKDF2_ALGO}${_PBKDF2_ITERATIONS}${'0' * 32}${'0' * 64}")
@@ -1131,6 +1198,7 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
     stored = str(row["password_hash"])
     ok, needs_rehash = _verify_password(password, stored)
     if not ok:
+        _record_login_failure(ident)
         raise ValueError("invalid credentials")
     # ترقية كسولة: الدخول نجح فكلمة المرور بين أيدينا الآن وحدها هذه اللحظة (تُحسب خارج القفل).
     new_hash = _encode_password(password) if needs_rehash else None
@@ -1142,10 +1210,12 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
         c.execute("BEGIN IMMEDIATE")
         cur = c.execute("SELECT username, email, password_hash FROM users WHERE id=?", (uid,)).fetchone()
         if not cur or str(cur["password_hash"]) != stored:
+            _record_login_failure(ident)
             raise ValueError("invalid credentials")
         if new_hash:
             c.execute("UPDATE users SET password_hash=? WHERE id=?", (new_hash, uid))
         token = _insert_session(c, uid)
+    _clear_login_failures(ident)
     return {"token": token, "user_id": uid, "username": str(cur["username"]), "email": str(cur["email"] or "") or None}
 
 

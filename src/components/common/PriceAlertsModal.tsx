@@ -33,11 +33,19 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
   if (!isOpen) return null;
 
   const currentSymObj = symbols.find((s) => s.symbol === formSymbol) || symbols[0];
+  const [modalLimitNotice, setModalLimitNotice] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const price = parseFloat(formPrice);
     if (!price || isNaN(price)) return;
+
+    if (alerts.length >= 50) {
+      setModalLimitNotice('تم الوصول للحد الأقصى (50 تنبيهاً لكل جهاز). يُرجى حذف بعض التنبيهات لإضافة تنبيه جديد.');
+      setTimeout(() => setModalLimitNotice(null), 5000);
+      return;
+    }
+    setModalLimitNotice(null);
 
     onAddAlert({
       symbol: formSymbol,
@@ -74,6 +82,15 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {modalLimitNotice && (
+            <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between">
+              <span>{modalLimitNotice}</span>
+              <button onClick={() => setModalLimitNotice(null)} className="text-amber-400 underline text-[11px]">
+                إغلاق
+              </button>
+            </div>
+          )}
+
           {/* New Alert Form */}
           <form onSubmit={handleSubmit} className="p-3.5 rounded-xl bg-[#121A2B] border border-[#243049] space-y-3">
             <div className="font-bold text-[#E8EEF9] flex items-center gap-1.5">

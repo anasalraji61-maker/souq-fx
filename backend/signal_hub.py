@@ -285,12 +285,24 @@ def indicator_forecast(
     candles: list[dict[str, Any]],
     enabled: list[str] | None = None,
     lang: str | None = None,
+    require_closed: bool = True,
 ) -> dict[str, Any]:
+    """حساب توقعات وإشارات المؤشرات الفنية.
+    
+    قاعدة كمية صارمة: تُحسب الإشارات عند إغلاق الشمعة فقط (Closed Candles) لمنع
+    إشارات الخداع والتلوين المتغير (Repainting) أثناء حركة الشمعة الحالية.
+    """
     sym = symbol.upper()
     tl = _text_lang(lang)
-    snap = ind_engine.snapshot(candles) if candles else {}
-    closes = [float(c["close"]) for c in candles] if candles else []
-    last = float(snap.get("last") or closes[-1]) if closes else None
+    
+    # استبعاد الشمعة الحالية الجارية إن وُجدت علامة forming أو كانت جارية
+    eval_candles = candles
+    if require_closed and candles and (candles[-1].get("is_forming") or candles[-1].get("forming")):
+        eval_candles = candles[:-1]
+
+    snap = ind_engine.snapshot(eval_candles) if eval_candles else {}
+    closes = [float(c["close"]) for c in eval_candles] if eval_candles else []
+    last = float(snap.get("last") or (closes[-1] if closes else 0)) if closes else None
     dp = price_decimals(last, sym)
 
     want = set(enabled or FORECAST_INDICATOR_IDS)

@@ -10,26 +10,49 @@ export const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
   '1D': 86400,
 };
 
-/** Generate realistic candlestick history for a given base price and timeframe */
+/**
+ * Checks if a UTC timestamp falls within forex weekend closure
+ * (Friday 21:00 UTC / 5 PM NY until Sunday 21:00 UTC / 5 PM NY).
+ */
+export function isWeekendTimestamp(unixSeconds: number): boolean {
+  const d = new Date(unixSeconds * 1000);
+  const day = d.getUTCDay(); // 0 = Sun, 6 = Sat
+  const hour = d.getUTCHours();
+  if (day === 6) return true; // Saturday all day
+  if (day === 5 && hour >= 21) return true; // Friday after close
+  if (day === 0 && hour < 21) return true; // Sunday before open
+  return false;
+}
+
+/** Generate realistic candlestick history for a given base price and timeframe (Monday - Friday only) */
 export function generateCandles(basePrice: number, timeframe: Timeframe, count = 180): Candle[] {
   const candles: Candle[] = [];
   const interval = TIMEFRAME_SECONDS[timeframe];
   const now = Math.floor(Date.now() / 1000);
-  const startTime = now - count * interval;
+
+  // Collect valid trading timestamps skipping weekend closure
+  const timestamps: number[] = [];
+  let curTime = now;
+  while (timestamps.length < count) {
+    if (!isWeekendTimestamp(curTime)) {
+      timestamps.unshift(curTime);
+    }
+    curTime -= interval;
+  }
 
   // Volatility scale based on price magnitude
   const isJpyOrGold = basePrice > 100;
-  const isIndicesOrCrypto = basePrice > 1000;
+  const isIndicesOrMetals = basePrice > 1000;
   
   let volatility = 0.0008; // 0.08% for fx
   if (isJpyOrGold) volatility = 0.0025;
-  if (isIndicesOrCrypto) volatility = 0.004;
+  if (isIndicesOrMetals) volatility = 0.004;
 
   let currentPrice = basePrice * (1 - 0.02 + Math.random() * 0.04);
   let trend = (Math.random() - 0.48) * 0.0003;
 
   for (let i = 0; i < count; i++) {
-    const time = startTime + i * interval;
+    const time = timestamps[i];
     
     // Wave drift
     if (i % 25 === 0) {
@@ -54,10 +77,10 @@ export function generateCandles(basePrice: number, timeframe: Timeframe, count =
 
     candles.push({
       time,
-      open: parseFloat(open.toFixed(isIndicesOrCrypto ? 1 : isJpyOrGold ? 3 : 5)),
-      high: parseFloat(high.toFixed(isIndicesOrCrypto ? 1 : isJpyOrGold ? 3 : 5)),
-      low: parseFloat(low.toFixed(isIndicesOrCrypto ? 1 : isJpyOrGold ? 3 : 5)),
-      close: parseFloat(close.toFixed(isIndicesOrCrypto ? 1 : isJpyOrGold ? 3 : 5)),
+      open: parseFloat(open.toFixed(isIndicesOrMetals ? 1 : isJpyOrGold ? 3 : 5)),
+      high: parseFloat(high.toFixed(isIndicesOrMetals ? 1 : isJpyOrGold ? 3 : 5)),
+      low: parseFloat(low.toFixed(isIndicesOrMetals ? 1 : isJpyOrGold ? 3 : 5)),
+      close: parseFloat(close.toFixed(isIndicesOrMetals ? 1 : isJpyOrGold ? 3 : 5)),
       volume,
     });
 

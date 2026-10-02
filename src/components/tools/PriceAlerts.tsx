@@ -63,6 +63,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
   const [formCondition, setFormCondition] = useState<'above' | 'below'>('above');
   const [formNote, setFormNote] = useState('');
   const [testBanner, setTestBanner] = useState<string | null>(null);
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   const selectedSymObj = symbols.find((s) => s.symbol === formSymbol) || symbols[0];
 
@@ -70,6 +71,13 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
     e.preventDefault();
     const price = parseFloat(formPrice);
     if (!price || isNaN(price)) return;
+
+    if (alerts.length >= 50) {
+      setLimitNotice('تم الوصول للحد الأقصى (50 تنبيهاً لكل جهاز). يُرجى حذف بعض التنبيهات لإضافة تنبيه جديد.');
+      setTimeout(() => setLimitNotice(null), 5000);
+      return;
+    }
+    setLimitNotice(null);
 
     if (propOnAddAlert) {
       propOnAddAlert({
@@ -125,6 +133,19 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
         </div>
       )}
 
+      {/* Limit Notice Banner */}
+      {limitNotice && (
+        <div className="p-3.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 font-bold flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-2">
+            <Bell className="w-5 h-5 text-amber-400" />
+            <span>{limitNotice}</span>
+          </div>
+          <button onClick={() => setLimitNotice(null)} className="text-xs text-amber-400 hover:text-white">
+            إغلاق
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-[#243049]">
         <div className="flex items-center gap-3">
@@ -132,7 +153,12 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
             <Bell className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#E8EEF9]">تنبيهات الأسعار (Price Alerts)</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-[#E8EEF9]">تنبيهات الأسعار (Price Alerts)</h2>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${alerts.length >= 50 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-[#162033] text-[#7B8DA8] border border-[#243049]'}`}>
+                {alerts.length} / 50 تنبيه
+              </span>
+            </div>
             <p className="text-[#7B8DA8]">عيّن تنبيهات فورية عند وصول الأسعار إلى مستويات الدعم والمقاومة المستهدفة.</p>
           </div>
         </div>
