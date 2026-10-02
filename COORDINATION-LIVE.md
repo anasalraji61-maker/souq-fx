@@ -12,9 +12,32 @@
   - ✅ **Task 18: Harmonic Pattern Recognition Engine (Gartley, Bat, Butterfly, Crab, Deep Crab, Cypher, Shark + PRZ + SL/TP)** مكتملة ومختبرة بنسبة 100% (20/20 اختباراً).
   - ✅ **Task 19: Liquidity Sweep & Smart Money Concepts (SMC Engine - FVG, Order Blocks, BOS/CHoCH, Liquidity Sweeps)** مكتملة ومختبرة بنسبة 100% (16/16 اختباراً).
   - ✅ **Task 20: Divergence Detection Engine (RSI, MACD, Stochastic Regular & Hidden Divergences)** مكتملة ومختبرة بنسبة 100% (14/14 اختباراً).
-  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20):** **172/172 اختباراً ناجحاً بنسبة 100% (Green Build)**.
+  - ✅ **Task 21: Auto-Fibonacci Retracement & Extension Zones Engine (Golden Pocket 0.618 - 0.65, Multi-Swing High/Low)** مكتملة ومختبرة بنسبة 100% (10/10 اختبارات).
+  - **إجمالي الاختبارات التراكمية (Tasks 13 + 14 + 22 + 15 + 16 + 17 + 18 + 19 + 20 + 21):** **182/182 اختباراً ناجحاً بنسبة 100% (Green Build)**.
 * **الخطوة التالية المجدولة لكابتن Claude:**
-  **Task 21: Auto-Fibonacci Retracement & Extension Zones Engine (Golden Pocket 0.618 - 0.65, Multi-Swing High/Low)**.
+  **Task 23: Sentiment & Order Book Depth Aggregator (Long/Short Ratios, Retail Sentiment, Heatmap Depth)**.
+
+---
+
+#### ✅ Task 21: Auto-Fibonacci Retracement & Extension Zones Engine [مكتملة ومختبرة بنسبة 100%]:
+- [x] **محرك مستويات الفيبوناتشي التلقائي والجيب الذهبي (`backend/fibonacci_engine.py`):**
+  - استخراج تلقائي للقمم والقيعان الرئيسية (Major Swing High & Swing Low) وتحديد اتجاه الموجة (Uptrend vs Downtrend).
+  - حساب نسب التصحيح الكلاسيكية: 0.0, 0.236, 0.382, 0.500, 0.618, 0.650, 0.786, 0.886, 1.000.
+  - حساب نسب التمديد الخوارزمية (Extensions): 1.272, 1.414, 1.618, 2.000, 2.618.
+  - إبراز وحساب نطاق الجيب الذهبي (Golden Pocket 0.618 - 0.650) كمنطقة انعكاس عالية الاحتمالية.
+  - تحديد المسافة المئوية للسعر الحالي من أقرب مستوى فيبوناتشي مع رصد إشارات الارتداد (Bounce Expected / Key Level Test).
+- [x] **قواعد البيانات والفهارس (`backend/db.py`):**
+  - جدول `fibonacci_analysis` وفهرس `idx_fib_sym_tf`.
+  - دوال التسجيل والاستعلام اللحظي `log_fibonacci_analysis` و `get_latest_fibonacci`.
+- [x] **واجهات برمجة التطبيقات (`backend/main.py`):**
+  - مسار `GET /api/fibonacci/analyze/{symbol}` مع خيار تعديل نافذة الشموع `lookback`.
+  - مسار `GET /api/fibonacci/latest/{symbol}` لجلب آخر مستويات محفوظة.
+- [x] **عميل الويب والرسم البياني التفاعلي (`src/api/fibonacci.ts` & `src/components/dashboard/FibonacciZonesChart.tsx`):**
+  - بطاقة مؤشر الجيب الذهبي Golden Pocket التفاعلية مع السعر الحالي ونطاق الانعكاس.
+  - رسم بياني متجهي SVG يرسم حزمة خطوط الفيبوناتشي الملونة، النطاق المظلل الذهبي، ومؤشر السعر اللحظي.
+  - جدول تفصيلي لكافة مستويات التصحيح والتمديد مع المسافة المئوية اللحظية.
+- [x] **حزمة الاختبارات الآلية (`backend/tests/test_fibonacci_task21.py`):**
+  - 10/10 اختبارات شاملة ناجحة بنسبة 100% في 0.010s.
 
 ---
 

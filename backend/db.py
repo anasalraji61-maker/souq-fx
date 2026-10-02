@@ -307,6 +307,7 @@ def init_db() -> None:
         _migrate_harmonic_patterns(c)
         _migrate_smc(c)
         _migrate_divergence(c)
+        _migrate_fibonacci(c)
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
@@ -3330,6 +3331,95 @@ def get_divergence_signals(symbol: str, timeframe: str = '1h', limit: int = 15) 
                 'created_at': str(r[15])
             })
         return results
+
+
+
+def _migrate_fibonacci(c: sqlite3.Connection) -> None:
+    """إنشاء جداول تحليلات الفيبوناتشي التلقائي ومستويات الجيب الذهبي Golden Pocket."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS fibonacci_analysis (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            timeframe TEXT NOT NULL,
+            trend TEXT NOT NULL,
+            swing_low REAL NOT NULL,
+            swing_high REAL NOT NULL,
+            current_price REAL NOT NULL,
+            golden_pocket_min REAL NOT NULL,
+            golden_pocket_max REAL NOT NULL,
+            nearest_level_ratio REAL NOT NULL,
+            nearest_level_price REAL NOT NULL,
+            levels_json TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_fib_sym_tf ON fibonacci_analysis(symbol, timeframe, id DESC)")
+
+
+def log_fibonacci_analysis(
+    symbol: str,
+    timeframe: str,
+    trend: str,
+    swing_low: float,
+    swing_high: float,
+    current_price: float,
+    golden_pocket_min: float,
+    golden_pocket_max: float,
+    nearest_level_ratio: float,
+    nearest_level_price: float,
+    levels_json: str = "{}"
+) -> int:
+    with get_db() as c:
+        cur = c.execute(
+            """INSERT INTO fibonacci_analysis
+               (symbol, timeframe, trend, swing_low, swing_high, current_price,
+                golden_pocket_min, golden_pocket_max, nearest_level_ratio, nearest_level_price, levels_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                symbol.upper(),
+                timeframe,
+                trend.upper(),
+                float(swing_low),
+                float(swing_high),
+                float(current_price),
+                float(golden_pocket_min),
+                float(golden_pocket_max),
+                float(nearest_level_ratio),
+                float(nearest_level_price),
+                levels_json
+            )
+        )
+        return int(cur.lastrowid)
+
+
+def get_latest_fibonacci(symbol: str, timeframe: str = '1h') -> dict[str, Any] | None:
+    with get_db() as c:
+        row = c.execute(
+            """SELECT id, symbol, timeframe, trend, swing_low, swing_high, current_price,
+                      golden_pocket_min, golden_pocket_max, nearest_level_ratio, nearest_level_price,
+                      levels_json, created_at
+               FROM fibonacci_analysis
+               WHERE symbol = ? AND timeframe = ?
+               ORDER BY id DESC LIMIT 1""",
+            (symbol.upper(), timeframe)
+        ).fetchone()
+        if not row:
+            return None
+        return {
+            'id': row[0],
+            'symbol': row[1],
+            'timeframe': row[2],
+            'trend': row[3],
+            'swing_low': row[4],
+            'swing_high': row[5],
+            'current_price': row[6],
+            'golden_pocket_min': row[7],
+            'golden_pocket_max': row[8],
+            'nearest_level_ratio': row[9],
+            'nearest_level_price': row[10],
+            'levels_json': row[11],
+            'created_at': str(row[12])
+        }
 
 
 def log_volume_profile_analysis(
