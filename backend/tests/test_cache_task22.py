@@ -9,7 +9,7 @@ import time
 import unittest
 import asyncio
 from unittest.mock import Mock, AsyncMock
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -170,7 +170,7 @@ class TestCacheManager(unittest.TestCase):
             'high': 1.0870,
             'low': 1.0840,
             'volume': 1234567,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'signals': {'rsi': 65.5, 'macd': 0.0025}
         }
 

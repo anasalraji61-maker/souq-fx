@@ -21,7 +21,7 @@ Features:
 import math
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -339,7 +339,7 @@ def detect_harmonic_patterns(
                     tp3=targets["tp3"],
                     confidence_score=confidence,
                     status="COMPLETED",
-                    created_at=datetime.utcnow().isoformat()
+                    created_at=datetime.now(timezone.utc).isoformat()
                 )
                 patterns.append(pattern)
 
