@@ -15,6 +15,7 @@ Computes:
 3. Profit factor
 4. Sharpe ratio (non-annualised)
 5. Maximum drawdown (absolute and percent)
+6. P&L grouped by symbol / timeframe
 """
 
 from __future__ import annotations
@@ -151,6 +152,71 @@ def max_drawdown(trades: list[dict], starting_equity: float = 0.0) -> dict:
     return result
 
 
+def _group_pnl(trades: list[dict], key: str, default: str = "UNKNOWN") -> dict[str, dict]:
+    """
+    Group trades by the value of *key* (falling back to *default* when the
+    key is missing or falsy) and compute aggregated P&L metrics per group.
+
+    Each group returns:
+        {"trades": int, "total_pnl": float, "win_rate": float,
+         "profit_factor": float | None}
+
+    An infinite profit_factor is mapped to None for JSON-safety.
+
+    Groups are returned in a dict ordered by key, sorted alphabetically.
+    """
+    groups: dict[str, list[dict]] = {}
+    for trade in trades:
+        group_key = trade.get(key) or default
+        groups.setdefault(group_key, []).append(trade)
+
+    result: dict[str, dict] = {}
+    for group_key in sorted(groups):
+        group_trades = groups[group_key]
+        pnls = _pnls(group_trades)
+        total_pnl = sum(pnls) if pnls else 0.0
+        p_factor = profit_factor(group_trades)
+        if p_factor == float("inf"):
+            p_factor = None
+        result[group_key] = {
+            "trades": len(group_trades),
+            "total_pnl": total_pnl,
+            "win_rate": win_rate(group_trades),
+            "profit_factor": p_factor,
+        }
+    return result
+
+
+def pnl_by_symbol(trades: list[dict]) -> dict[str, dict]:
+    """
+    Calculate P&L metrics grouped by trade symbol.
+
+    Args:
+        trades: List of closed-trade dicts
+
+    Returns:
+        Dict mapping each symbol to {"trades", "total_pnl", "win_rate",
+        "profit_factor"}, sorted alphabetically by symbol. An infinite
+        profit_factor is replaced with None. Empty input returns {}.
+    """
+    return _group_pnl(trades, "symbol")
+
+
+def pnl_by_timeframe(trades: list[dict]) -> dict[str, dict]:
+    """
+    Calculate P&L metrics grouped by trade timeframe.
+
+    Args:
+        trades: List of closed-trade dicts
+
+    Returns:
+        Dict mapping each timeframe to {"trades", "total_pnl", "win_rate",
+        "profit_factor"}, sorted alphabetically by timeframe. An infinite
+        profit_factor is replaced with None. Empty input returns {}.
+    """
+    return _group_pnl(trades, "timeframe")
+
+
 def summary(trades: list[dict], starting_equity: float = 0.0) -> dict:
     """
     Calculate the full performance summary for a list of closed trades.
@@ -161,7 +227,8 @@ def summary(trades: list[dict], starting_equity: float = 0.0) -> dict:
 
     Returns:
         Dict with keys: total_trades, total_pnl, win_rate, profit_factor,
-        sharpe, max_drawdown, max_drawdown_pct, equity_curve, estimated.
+        sharpe, max_drawdown, max_drawdown_pct, equity_curve, by_symbol,
+        by_timeframe, estimated.
         An infinite profit_factor is replaced with None so the result
         stays JSON-safe.
     """
@@ -180,5 +247,7 @@ def summary(trades: list[dict], starting_equity: float = 0.0) -> dict:
         "max_drawdown": dd["max_drawdown"],
         "max_drawdown_pct": dd["max_drawdown_pct"],
         "equity_curve": equity_curve(trades, starting_equity),
+        "by_symbol": pnl_by_symbol(trades),
+        "by_timeframe": pnl_by_timeframe(trades),
         "estimated": False,
     }
