@@ -129,6 +129,7 @@ class TestDivergenceDatabase(unittest.TestCase):
         self.assertAlmostEqual(r["confidence_score"], 92.0, delta=0.1)
 
     def test_divergence_db_empty_result(self):
+        db.init_db()
         records = db.get_divergence_signals("UNKNOWN_PAIR_99", "1h")
         self.assertEqual(records, [])
 

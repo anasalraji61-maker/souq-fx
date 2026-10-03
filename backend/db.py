@@ -297,7 +297,7 @@ def init_db() -> None:
                 stop_loss REAL,
                 confidence_score REAL NOT NULL,
                 status TEXT NOT NULL,
-                created_at TEXT NOT NULL
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX IF NOT EXISTS divergence_signals_symbol_timeframe ON divergence_signals (symbol, timeframe);
             CREATE INDEX IF NOT EXISTS divergence_signals_status ON divergence_signals (status);
