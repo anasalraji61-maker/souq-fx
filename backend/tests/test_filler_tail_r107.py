@@ -45,16 +45,16 @@ def test_close_fetched_inside_closed_window_is_not_copied(sym, tf, target, as_of
 
 def test_close_fetched_after_break_is_still_copied():
     # الكسر نفسه لكن جُلبت 23:30 بعد نهايته ⇒ آخر تيك حقيقي
-    market._cache["XAUUSD|15m|120"] = (_ts("2026-01-13 23:30"), [_bar("2026-01-13 23:15", 99.0)])
+    market._cache["XAUUSD|15m|120"] = (_ts("2026-01-13 23:30"), [_bar("2026-01-13 23:15", 1.001)])
     rows, meta = market._with_newest_close("XAUUSD", "W", [_bar("2026-01-12", 1.0)], {"as_of": _ts("2026-01-13 21:00")})
-    assert rows[-1]["close"] == 99.0 and meta["as_of"] == _ts("2026-01-13 23:30")
+    assert rows[-1]["close"] == 1.001 and meta["as_of"] == _ts("2026-01-13 23:30")
 
 
 def test_bar_ending_before_break_fetched_inside_it_is_copied_at_its_end():
     # 1H ذهب 21:00 انتهت 22:00 مع بداية الكسر ⇒ إغلاقها حقيقي، مختوم 22:00
-    market._cache["XAUUSD|1H|120"] = (_ts("2026-01-13 22:30"), [_bar("2026-01-13 21:00", 99.0)])
+    market._cache["XAUUSD|1H|120"] = (_ts("2026-01-13 22:30"), [_bar("2026-01-13 21:00", 1.001)])
     rows, meta = market._with_newest_close("XAUUSD", "W", [_bar("2026-01-12", 1.0)], {"as_of": _ts("2026-01-13 21:00")})
-    assert rows[-1]["close"] == 99.0 and meta["as_of"] == _ts("2026-01-13 22:00")
+    assert rows[-1]["close"] == 1.001 and meta["as_of"] == _ts("2026-01-13 22:00")
 
 
 def _serve(monkeypatch, now: str, rows: list[str]):

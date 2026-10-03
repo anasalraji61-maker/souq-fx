@@ -823,6 +823,21 @@ def note_quote(matrix_symbol: str, price, quoted_at) -> None:
             _quote_marks[sym] = (at, p)
 
 
+def _mismatch_threshold(candles: list[dict]) -> float:
+    """Calculate the threshold for detecting a price mismatch.
+    
+    Uses the last up to 20 candles to compute the average range (high - low).
+    Threshold is max(3 * avg_range, 0.003 * abs(last_close)).
+    """
+    if not candles:
+        return 0.0
+    recent = candles[-20:]
+    total_range = sum(c["high"] - c["low"] for c in recent)
+    avg_range = total_range / len(recent)
+    last_close = abs(candles[-1]["close"])
+    return max(3 * avg_range, 0.003 * last_close)
+
+
 def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tuple[list[dict], dict]:
     """**سعر واحد بين الفريمات** (W1): كل فريم بكاشه وعمره (D ‏600ث، 15m ‏90ث، 1m ‏45ث) ⇒ رمز بلا تيك حيّ
     (14 رمزاً بأيام التداول، والرقمية بالعطلة) كانت قائمة المتابعة (D) تعرض إغلاقاً أقدم بحتى 10 دقائق من
@@ -863,6 +878,10 @@ def _with_newest_close(sym: str, tf: str, candles: list[dict], meta: dict) -> tu
     if newest is None:
         return candles, meta
     at, close = newest
+    # Sanity guard: if the new price is wildly different from the candle, don't patch
+    threshold = _mismatch_threshold(candles)
+    if abs(close - last["close"]) > threshold:
+        return candles, {**meta, "stale_mismatch": True, "mismatch_price": close}
     patched = {**last, "close": close, "high": max(last["high"], close), "low": min(last["low"], close)}
     return candles[:-1] + [patched], {**meta, "as_of": at}
 
