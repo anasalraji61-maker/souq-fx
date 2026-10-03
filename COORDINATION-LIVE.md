@@ -275,3 +275,23 @@
 1. **الجودة والأمان المالي أولاً:** لا كود سريع دون فحص دقيق لمنع أي أخطاء تسعير أو سيولة.
 2. **الامتثال الصارم:** حظر الكريبتو 0% Crypto.
 3. **الدفع الدوري:** فحص البناء `npm run build` واجتياز الـ QA قبل كل `git push`.
+
+---
+
+## OpenHands — المهمة 1
+
+### الملفات المعدّلة
+- backend/db.py
+- backend/orders.py
+
+### نتيجة pytest
+3025 passed, 12 failed, 2 warnings in 35.59s
+
+### هاش الـ commit
+dd04825df37e71b50e05a543519ddb8c57199eb5
+
+### ملاحظات
+- تم إصلاح مشكلة استيراد OrderSide في test_orders.py عن طريق إضافة تعريف OrderSide كـ Enum في ملف orders.py
+- تم إصلاح مشكلة جدول divergence_signals غير الموجود عن طريق إضافة إنشاء الجدول وفهارسه في دالة init_db()
+- تم أيضًا إضافة إنشاء جداول أخرى جديدة (ichimoku_analysis, volume_profile_analysis, harmonic_patterns, smc_analysis_log, fibonacci_analysis, sentiment_depth_log, news_volatility_alerts, mta_analysis_log) مع فهارسها في init_db()
+- الاختبارات الفاشلة (12 اختبار) تتعلق بوظائف مختلفة في وحدة orders وليس بالمشاكل التي تم إصلاحها في هذه المهمة
