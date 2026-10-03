@@ -9,17 +9,16 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Use dedicated test database
-TEST_DB = "/tmp/matrix_task13_test.db"
+TEST_DB = "/tmp/matrix_task13_test_orders.db"
 if os.path.exists(TEST_DB):
     try:
         os.remove(TEST_DB)
     except OSError:
         pass
 
-os.environ["MATRIX_DB_PATH"] = TEST_DB
-
 import core.db_conn
 core.db_conn.DB_PATH = core.db_conn.Path(TEST_DB)
+os.environ["MATRIX_DB_PATH"] = TEST_DB
 
 import db
 import orders
@@ -35,7 +34,14 @@ from orders import (
 class TestOrderTask13(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        core.db_conn.DB_PATH = core.db_conn.Path(TEST_DB)
+        os.environ["MATRIX_DB_PATH"] = TEST_DB
         db.init_db()
+
+    def setUp(self):
+        with db._conn() as conn:
+            conn.execute("DELETE FROM orders")
+            conn.commit()
 
     @classmethod
     def tearDownClass(cls):

@@ -16,10 +16,9 @@ if os.path.exists(TEST_DB):
     except OSError:
         pass
 
-os.environ["MATRIX_DB_PATH"] = TEST_DB
-
 import core.db_conn
 core.db_conn.DB_PATH = core.db_conn.Path(TEST_DB)
+os.environ["MATRIX_DB_PATH"] = TEST_DB
 
 import db
 import orders
@@ -34,7 +33,14 @@ from orders import (
 class TestOrderSides(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        core.db_conn.DB_PATH = core.db_conn.Path(TEST_DB)
+        os.environ["MATRIX_DB_PATH"] = TEST_DB
         db.init_db()
+
+    def setUp(self):
+        with db._conn() as conn:
+            conn.execute("DELETE FROM orders")
+            conn.commit()
 
     @classmethod
     def tearDownClass(cls):
