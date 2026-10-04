@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   MarketSymbol,
   Candle,
@@ -7,14 +7,23 @@ import {
   DrawingTool,
   DrawingItem,
   IndicatorSettings,
+  IndicatorInstance,
+  PriceAlertItem,
 } from '../../types/market';
 import { MatrixChartCanvas } from './MatrixChartCanvas';
 import { WatchlistPanel } from './WatchlistPanel';
 import { IndicatorModal } from './IndicatorModal';
+import { IndicatorSettingsModal } from './IndicatorSettingsModal';
+import { ObjectTreePanel } from './chart/ObjectTreePanel';
+import { AlertsPanel } from './AlertsPanel';
+import { SymbolSearchModal } from './SymbolSearchModal';
 import { AiCopilotPanel } from './AiCopilotPanel';
 import { OrderPanel } from '../trading/OrderPanel';
 import { PositionPanel } from '../trading/PositionPanel';
 import { generateCandles, updateLastCandleWithTick } from '../../data/candleGenerator';
+import { loadDrawings, saveDrawings } from '../../api/drawings';
+import { loadAlerts, saveAlerts } from '../../api/alerts';
+import { playAlertChime } from '../../utils/sound';
 import {
   Maximize2,
   Minimize2,
@@ -25,17 +34,26 @@ import {
   Square,
   Columns,
   LayoutGrid,
-  TrendingUp,
-  BarChart2,
-  MessageSquare,
-  GraduationCap,
-  Award,
   Layers,
-  Activity,
-  Zap,
+  Trash2,
+  Ruler,
+  Magnet,
+  Bell,
+  Undo2,
+  Redo2,
+  HelpCircle,
+  Save,
+  FolderOpen,
+  ArrowRight,
+  Move,
+  Type,
+  Check,
+  SplitSquareVertical,
+  SplitSquareHorizontal,
+  Search,
 } from 'lucide-react';
 
-export type FrameCount = 1 | 2 | 4;
+export type LayoutType = '1' | '2-side' | '2-stack' | '3' | '4';
 
 interface ChartCellState {
   id: string;
@@ -44,8 +62,23 @@ interface ChartCellState {
   chartType: ChartType;
   candles: Candle[];
   drawings: DrawingItem[];
+  indicators: IndicatorInstance[];
   providerStatus: 'Cached' | 'Provider' | 'Unavailable';
   marketStatus: 'Closed' | 'Open';
+}
+
+interface SavedLayout {
+  id: string;
+  name: string;
+  createdAt: string;
+  layoutType: LayoutType;
+  cells: {
+    id: string;
+    symbol: string;
+    timeframe: Timeframe;
+    chartType: ChartType;
+    indicators: IndicatorInstance[];
+  }[];
 }
 
 interface TerminalScreenProps {
@@ -65,6 +98,52 @@ interface TerminalScreenProps {
   currentTab?: string;
 }
 
+// 1.7 Default indicators per new cell: EMA 20, EMA 50, RSI 14
+function loadCellIndicators(cellId: string): IndicatorInstance[] {
+  try {
+    const raw = localStorage.getItem(`matrix.indicators.${cellId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('Failed to load indicators for cell', cellId, e);
+  }
+
+  return [
+    {
+      id: `${cellId}-ema-20`,
+      type: 'ema',
+      name: 'EMA (20)',
+      nameAr: 'المتوسط الأسي (EMA 20)',
+      params: { period: 20 },
+      color: '#2DD4BF',
+      visible: true,
+      pane: 'main',
+    },
+    {
+      id: `${cellId}-ema-50`,
+      type: 'ema',
+      name: 'EMA (50)',
+      nameAr: 'المتوسط الأسي (EMA 50)',
+      params: { period: 50 },
+      color: '#F59E0B',
+      visible: true,
+      pane: 'main',
+    },
+    {
+      id: `${cellId}-rsi-14`,
+      type: 'rsi',
+      name: 'RSI (14)',
+      nameAr: 'مؤشر القوة النسبية (RSI 14)',
+      params: { period: 14 },
+      color: '#A78BFA',
+      visible: true,
+      pane: 'sub',
+    },
+  ];
+}
+
 export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   symbols,
   activeSymbol,
@@ -81,82 +160,293 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   onTabChange,
   currentTab = 'home',
 }) => {
-  // Layout state: Default 1 (Single Full Screen Chart for optimal TradingView clarity)
-  const [layoutCount, setLayoutCount] = useState<FrameCount>(1);
+  // Multi-Chart Layout State (Part 4)
+  const [layoutType, setLayoutType] = useState<LayoutType>('1');
+  const [activeCellId, setActiveCellId] = useState<string>('cell-1');
+  const [maximizedCellId, setMaximizedCellId] = useState<string | null>(null);
+
+  // Sync Toggles (Part 4.3)
+  const [syncSymbol, setSyncSymbol] = useState(false);
+  const [syncTimeframe, setSyncTimeframe] = useState(false);
+  const [syncCrosshair, setSyncCrosshair] = useState(false);
+  const [syncedCrosshairTime, setSyncedCrosshairTime] = useState<number | null>(null);
+
+  // Layout Management (Part 4.4)
+  const [savedLayouts, setSavedLayouts] = useState<SavedLayout[]>(() => {
+    try {
+      const raw = localStorage.getItem('matrix.layouts');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false);
+
+  // Active Drawing Tool & Magnet
   const [activeTool, setActiveTool] = useState<DrawingTool>('none');
+  const [isMagnetOn, setIsMagnetOn] = useState(false);
+
+  // Modals & Panels
   const [isIndicatorsModalOpen, setIsIndicatorsModalOpen] = useState(false);
+  const [editingIndicator, setEditingIndicator] = useState<IndicatorInstance | null>(null);
+  const [isObjectTreeOpen, setIsObjectTreeOpen] = useState(false);
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [alertModalInitialPrice, setAlertModalInitialPrice] = useState<number | undefined>(undefined);
+  const [isSymbolSearchOpen, setIsSymbolSearchOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
   const [tradingDrawerTab, setTradingDrawerTab] = useState<'orders' | 'positions'>('orders');
-  const [maximizedCellId, setMaximizedCellId] = useState<string | null>(null);
   const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState(false);
+  const [isChartTypeMenuOpen, setIsChartTypeMenuOpen] = useState(false);
 
-  // Initialize cells
-  const [cells, setCells] = useState<ChartCellState[]>(() => {
-    return [
-      {
-        id: 'cell-1',
-        symbol: 'EURUSD',
-        timeframe: '15m',
-        chartType: 'candles',
-        candles: generateCandles(1.08538, '15m', 150),
-        drawings: [],
-        providerStatus: 'Provider',
-        marketStatus: 'Open',
-      },
-      {
-        id: 'cell-2',
-        symbol: 'XAUUSD',
-        timeframe: '15m',
-        chartType: 'candles',
-        candles: generateCandles(2745.5, '15m', 150),
-        drawings: [],
-        providerStatus: 'Provider',
-        marketStatus: 'Open',
-      },
-      {
-        id: 'cell-3',
-        symbol: 'GBPUSD',
-        timeframe: '1h',
-        chartType: 'candles',
-        candles: generateCandles(1.3025, '1h', 150),
-        drawings: [],
-        providerStatus: 'Provider',
-        marketStatus: 'Open',
-      },
-      {
-        id: 'cell-4',
-        symbol: 'USDJPY',
-        timeframe: '4h',
-        chartType: 'candles',
-        candles: generateCandles(152.4, '4h', 150),
-        drawings: [],
-        providerStatus: 'Provider',
-        marketStatus: 'Open',
-      },
-    ];
-  });
+  // Price Alerts State (Part 5)
+  const [alerts, setAlerts] = useState<PriceAlertItem[]>([]);
+  const [activeNotification, setActiveNotification] = useState<{
+    alert: PriceAlertItem;
+    price: number;
+  } | null>(null);
 
-  // Keep cell-1 synced with activeSymbol and masterCandles
+  // Initialize cells (Part 4.2)
+  const [cells, setCells] = useState<ChartCellState[]>(() => [
+    {
+      id: 'cell-1',
+      symbol: 'EURUSD',
+      timeframe: '15m',
+      chartType: 'candles',
+      candles: generateCandles(1.08538, '15m', 150),
+      drawings: [],
+      indicators: loadCellIndicators('cell-1'),
+      providerStatus: 'Provider',
+      marketStatus: 'Open',
+    },
+    {
+      id: 'cell-2',
+      symbol: 'XAUUSD',
+      timeframe: '15m',
+      chartType: 'candles',
+      candles: generateCandles(2745.5, '15m', 150),
+      drawings: [],
+      indicators: loadCellIndicators('cell-2'),
+      providerStatus: 'Provider',
+      marketStatus: 'Open',
+    },
+    {
+      id: 'cell-3',
+      symbol: 'GBPUSD',
+      timeframe: '1h',
+      chartType: 'candles',
+      candles: generateCandles(1.3025, '1h', 150),
+      drawings: [],
+      indicators: loadCellIndicators('cell-3'),
+      providerStatus: 'Provider',
+      marketStatus: 'Open',
+    },
+    {
+      id: 'cell-4',
+      symbol: 'USDJPY',
+      timeframe: '4h',
+      chartType: 'candles',
+      candles: generateCandles(152.4, '4h', 150),
+      drawings: [],
+      indicators: loadCellIndicators('cell-4'),
+      providerStatus: 'Provider',
+      marketStatus: 'Open',
+    },
+  ]);
+
+  // Load alerts on mount
   useEffect(() => {
-    setCells((prev) => {
-      const next = [...prev];
-      next[0] = {
-        ...next[0],
-        symbol: activeSymbol,
-        timeframe: masterTimeframe,
-        chartType: masterChartType,
-        candles: masterCandles.length > 0 ? masterCandles : next[0].candles,
-      };
-      return next;
+    loadAlerts().then((loaded) => setAlerts(loaded));
+  }, []);
+
+  // Price Alert Trigger Check (Part 5.3) on every price change in frontend
+  useEffect(() => {
+    if (alerts.length === 0) return;
+
+    let hasTriggered = false;
+    let updatedAlerts = false;
+
+    const nextAlerts = alerts.map((alert) => {
+      if (!alert.active || alert.triggered) return alert;
+
+      const sym = symbols.find((s) => s.symbol === alert.symbol);
+      if (!sym) return alert;
+
+      let isTriggered = false;
+      switch (alert.condition) {
+        case 'greater_than':
+        case 'above':
+          isTriggered = sym.price >= alert.targetPrice;
+          break;
+        case 'less_than':
+        case 'below':
+          isTriggered = sym.price <= alert.targetPrice;
+          break;
+        case 'crosses':
+          isTriggered = Math.abs(sym.price - alert.targetPrice) <= (sym.spread || 0.0002) * 1.5;
+          break;
+        case 'crosses_up':
+          isTriggered = sym.price >= alert.targetPrice;
+          break;
+        case 'crosses_down':
+          isTriggered = sym.price <= alert.targetPrice;
+          break;
+      }
+
+      if (isTriggered) {
+        hasTriggered = true;
+        updatedAlerts = true;
+        const triggeredItem: PriceAlertItem = {
+          ...alert,
+          triggered: true,
+          triggeredAt: new Date().toISOString(),
+        };
+
+        setActiveNotification({ alert: triggeredItem, price: sym.price });
+        playAlertChime();
+        return triggeredItem;
+      }
+
+      return alert;
     });
-  }, [activeSymbol, masterCandles, masterTimeframe, masterChartType]);
+
+    if (updatedAlerts) {
+      setAlerts(nextAlerts);
+      saveAlerts(nextAlerts);
+    }
+  }, [symbols, alerts]);
+
+  // Track loaded drawings per cell (cellId -> symbol:timeframe)
+  const loadedMapRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    cells.forEach((cell) => {
+      const key = `${cell.symbol.toUpperCase()}:${cell.timeframe.toLowerCase()}`;
+      if (loadedMapRef.current.get(cell.id) !== key) {
+        loadedMapRef.current.set(cell.id, key);
+        loadDrawings(cell.symbol, cell.timeframe).then((loaded) => {
+          setCells((prev) =>
+            prev.map((c) => (c.id === cell.id ? { ...c, drawings: loaded } : c))
+          );
+        });
+      }
+    });
+  }, [cells]);
+
+  // Debounced save drawings helper (500 ms)
+  const saveTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  const debouncedSaveDrawings = useCallback((symbol: string, timeframe: string, drawingsToSave: DrawingItem[]) => {
+    const key = `${symbol.toUpperCase()}.${timeframe.toLowerCase()}`;
+    const existing = saveTimersRef.current.get(key);
+    if (existing) clearTimeout(existing);
+
+    const timer = setTimeout(() => {
+      saveDrawings(symbol, timeframe, drawingsToSave);
+      saveTimersRef.current.delete(key);
+    }, 500);
+
+    saveTimersRef.current.set(key, timer);
+  }, []);
+
+  // Update cell candles on tick
+  useEffect(() => {
+    setCells((prev) =>
+      prev.map((c) => {
+        const symObj = symbols.find((s) => s.symbol === c.symbol);
+        if (!symObj) return c;
+        const updated = updateLastCandleWithTick(c.candles, symObj.price, c.timeframe);
+        return { ...c, candles: updated };
+      })
+    );
+  }, [symbols]);
+
+  // Keyboard Shortcuts (Part 7.1)
+  useEffect(() => {
+    const handleShortcuts = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+
+      // Ctrl+K -> Symbol Search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSymbolSearchOpen(true);
+        return;
+      }
+
+      // Alt+T -> Trendline
+      if (e.altKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        setActiveTool((prev) => (prev === 'trendline' ? 'none' : 'trendline'));
+        return;
+      }
+
+      // Alt+H -> Horizontal line
+      if (e.altKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setActiveTool((prev) => (prev === 'horizontal' ? 'none' : 'horizontal'));
+        return;
+      }
+
+      // Alt+F -> Fibonacci
+      if (e.altKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setActiveTool((prev) => (prev === 'fibonacci' ? 'none' : 'fibonacci'));
+        return;
+      }
+
+      // Esc -> Cancel tool
+      if (e.key === 'Escape') {
+        setActiveTool('none');
+        setIsLayoutMenuOpen(false);
+        setIsChartTypeMenuOpen(false);
+        return;
+      }
+
+      // 1-6 -> Timeframes
+      const tfMap: Record<string, Timeframe> = {
+        '1': '1m',
+        '2': '5m',
+        '3': '15m',
+        '4': '1h',
+        '5': '4h',
+        '6': '1D',
+      };
+      if (tfMap[e.key] && !e.ctrlKey && !e.altKey) {
+        handleTimeframeChange(tfMap[e.key]);
+        return;
+      }
+
+      // ? -> Shortcut modal
+      if (e.key === '?') {
+        setIsShortcutsModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcuts);
+    return () => window.removeEventListener('keydown', handleShortcuts);
+  }, [syncTimeframe]);
+
+  // Active cell reference
+  const activeCell = cells.find((c) => c.id === activeCellId) || cells[0];
 
   // Handle cell timeframe change
   const handleCellTimeframeChange = (cellId: string, tf: Timeframe) => {
-    if (cellId === 'cell-1') {
+    if (syncTimeframe) {
+      setCells((prev) =>
+        prev.map((c) => {
+          const symObj = symbols.find((s) => s.symbol === c.symbol) || symbols[0];
+          return {
+            ...c,
+            timeframe: tf,
+            candles: generateCandles(symObj.price, tf, 150),
+          };
+        })
+      );
       onTimeframeChange(tf);
+      return;
     }
+
     setCells((prev) =>
       prev.map((c) => {
         if (c.id !== cellId) return c;
@@ -170,12 +460,27 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
     );
   };
 
-  // Handle cell symbol change
+  const handleTimeframeChange = (tf: Timeframe) => {
+    handleCellTimeframeChange(activeCell.id, tf);
+  };
+
+  // Handle symbol change
   const handleCellSymbolChange = (cellId: string, sym: string) => {
-    if (cellId === 'cell-1') {
+    if (syncSymbol) {
+      setCells((prev) =>
+        prev.map((c) => {
+          const symObj = symbols.find((s) => s.symbol === sym) || symbols[0];
+          return {
+            ...c,
+            symbol: sym,
+            candles: generateCandles(symObj.price, c.timeframe, 150),
+          };
+        })
+      );
       onSelectSymbol(sym);
       return;
     }
+
     const symObj = symbols.find((s) => s.symbol === sym) || symbols[0];
     setCells((prev) =>
       prev.map((c) => {
@@ -187,66 +492,254 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         };
       })
     );
+    if (cellId === activeCellId) {
+      onSelectSymbol(sym);
+    }
   };
 
-  const handleAddDrawing = (cellId: string, drawing: DrawingItem) => {
+  const handleSelectSymbol = (sym: string) => {
+    handleCellSymbolChange(activeCell.id, sym);
+  };
+
+  // Handle chart type change
+  const handleChartTypeChange = (type: ChartType) => {
     setCells((prev) =>
-      prev.map((c) => (c.id === cellId ? { ...c, drawings: [...c.drawings, drawing] } : c))
+      prev.map((c) => (c.id === activeCell.id ? { ...c, chartType: type } : c))
+    );
+    onChartTypeChange(type);
+    setIsChartTypeMenuOpen(false);
+  };
+
+  // Drawings Handlers
+  const handleAddDrawing = (cellId: string, drawing: DrawingItem) => {
+    setActiveTool('none');
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        const nextDrawings = [...c.drawings, drawing];
+        debouncedSaveDrawings(c.symbol, c.timeframe, nextDrawings);
+        return { ...c, drawings: nextDrawings };
+      })
     );
   };
 
+  const handleUpdateDrawing = (cellId: string, updated: DrawingItem) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        const next = c.drawings.map((d) => (d.id === updated.id ? updated : d));
+        debouncedSaveDrawings(c.symbol, c.timeframe, next);
+        return { ...c, drawings: next };
+      })
+    );
+  };
+
+  const handleDeleteDrawing = (cellId: string, id: string) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        const next = c.drawings.filter((d) => d.id !== id);
+        debouncedSaveDrawings(c.symbol, c.timeframe, next);
+        return { ...c, drawings: next };
+      })
+    );
+  };
+
+  const handleClearDrawings = (cellId: string) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        debouncedSaveDrawings(c.symbol, c.timeframe, []);
+        return { ...c, drawings: [] };
+      })
+    );
+  };
+
+  // Indicator Handlers (Part 1.7)
+  const handleAddIndicator = (cellId: string, inst: IndicatorInstance) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        const next = [...c.indicators, inst];
+        localStorage.setItem(`matrix.indicators.${cellId}`, JSON.stringify(next));
+        return { ...c, indicators: next };
+      })
+    );
+  };
+
+  const handleUpdateIndicator = (cellId: string, updated: IndicatorInstance) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        const next = c.indicators.map((i) => (i.id === updated.id ? updated : i));
+        localStorage.setItem(`matrix.indicators.${cellId}`, JSON.stringify(next));
+        return { ...c, indicators: next };
+      })
+    );
+  };
+
+  const handleRemoveIndicator = (cellId: string, id: string) => {
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id !== cellId) return c;
+        const next = c.indicators.filter((i) => i.id !== id);
+        localStorage.setItem(`matrix.indicators.${cellId}`, JSON.stringify(next));
+        return { ...c, indicators: next };
+      })
+    );
+  };
+
+  // Price Alert Handlers (Part 5)
+  const handleAddAlert = (item: PriceAlertItem) => {
+    const next = [...alerts, item];
+    setAlerts(next);
+    saveAlerts(next);
+  };
+
+  const handleToggleAlert = (id: string) => {
+    const next = alerts.map((a) => (a.id === id ? { ...a, active: !a.active } : a));
+    setAlerts(next);
+    saveAlerts(next);
+  };
+
+  const handleDeleteAlert = (id: string) => {
+    const next = alerts.filter((a) => a.id !== id);
+    setAlerts(next);
+    saveAlerts(next);
+  };
+
+  // Layout Management (Part 4.4)
+  const handleSaveCurrentLayout = () => {
+    const name = prompt('أدخل اسم التخطيط لحفظه (Enter layout name):', `تخطيط ${new Date().toLocaleDateString('ar-EG')}`);
+    if (!name?.trim()) return;
+
+    const newLayout: SavedLayout = {
+      id: `layout-${Date.now()}`,
+      name: name.trim(),
+      createdAt: new Date().toISOString(),
+      layoutType,
+      cells: cells.map((c) => ({
+        id: c.id,
+        symbol: c.symbol,
+        timeframe: c.timeframe,
+        chartType: c.chartType,
+        indicators: c.indicators,
+      })),
+    };
+
+    const next = [...savedLayouts, newLayout];
+    setSavedLayouts(next);
+    try {
+      localStorage.setItem('matrix.layouts', JSON.stringify(next));
+    } catch {}
+    setIsLayoutMenuOpen(false);
+  };
+
+  const handleLoadLayout = (layout: SavedLayout) => {
+    setLayoutType(layout.layoutType);
+    setCells((prev) =>
+      prev.map((c, i) => {
+        const savedCell = layout.cells[i];
+        if (!savedCell) return c;
+        const symObj = symbols.find((s) => s.symbol === savedCell.symbol) || symbols[0];
+        return {
+          ...c,
+          symbol: savedCell.symbol,
+          timeframe: savedCell.timeframe,
+          chartType: savedCell.chartType,
+          candles: generateCandles(symObj.price, savedCell.timeframe, 150),
+          indicators: savedCell.indicators || loadCellIndicators(c.id),
+        };
+      })
+    );
+    setIsLayoutMenuOpen(false);
+  };
+
+  const handleDeleteLayout = (id: string) => {
+    const next = savedLayouts.filter((l) => l.id !== id);
+    setSavedLayouts(next);
+    try {
+      localStorage.setItem('matrix.layouts', JSON.stringify(next));
+    } catch {}
+  };
+
+  // Visible cells calculation based on layout (Part 4.1)
   const visibleCells = useMemo(() => {
     if (maximizedCellId) {
       return cells.filter((c) => c.id === maximizedCellId);
     }
-    return cells.slice(0, layoutCount);
-  }, [cells, layoutCount, maximizedCellId]);
+    const count =
+      layoutType === '1'
+        ? 1
+        : layoutType === '2-side' || layoutType === '2-stack'
+        ? 2
+        : layoutType === '3'
+        ? 3
+        : 4;
+    return cells.slice(0, count);
+  }, [cells, layoutType, maximizedCellId]);
 
-  // CSS Grid class
   const getGridClass = () => {
-    if (maximizedCellId || layoutCount === 1) return 'grid-cols-1 grid-rows-1';
-    if (layoutCount === 2) return 'grid-cols-1 md:grid-cols-2 grid-rows-1';
-    return 'grid-cols-1 md:grid-cols-2 grid-rows-2'; // 2x2 square grid, never squished
+    if (maximizedCellId || layoutType === '1') return 'grid-cols-1 grid-rows-1';
+    if (layoutType === '2-side') return 'grid-cols-1 md:grid-cols-2 grid-rows-1';
+    if (layoutType === '2-stack') return 'grid-cols-1 grid-rows-2';
+    if (layoutType === '3') return 'grid-cols-1 md:grid-cols-2 grid-rows-2';
+    return 'grid-cols-1 md:grid-cols-2 grid-rows-2'; // 4 quad
   };
 
-  const activeSymbolObj = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
+  const activeSymbolObj = symbols.find((s) => s.symbol === activeCell.symbol) || symbols[0];
+  const activeAlertsCount = alerts.filter((a) => a.active && !a.triggered).length;
 
   return (
     <div className="flex flex-col h-full w-full bg-[#08111E] text-[#E8EEF9] select-none overflow-hidden font-sans">
-      {/* 1. TOP HEADER & TIMEFRAME BAR (TradingView Pro Standard) */}
-      <div className="h-11 bg-[#0A101D] border-b border-[#1E283D] px-3 flex items-center justify-between text-xs shrink-0 gap-2 z-20">
-        {/* Left Side: Symbol selector + Timeframes + Chart Type */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {/* Symbol Quick Select Dropdown */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#131E33] border border-[#233554]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <select
-              value={activeSymbol}
-              onChange={(e) => onSelectSymbol(e.target.value)}
-              className="bg-transparent text-white font-bold text-xs cursor-pointer outline-none border-none pr-1"
-            >
-              {symbols.map((s) => (
-                <option key={s.symbol} value={s.symbol} className="bg-[#0B1220] text-white">
-                  {s.symbol} ({s.name})
-                </option>
-              ))}
-            </select>
+      {/* Price Alert Banner Notification (Part 5.3) */}
+      {activeNotification && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#0F172A]/95 border border-amber-500/70 text-amber-300 px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4">
+          <Bell className="w-5 h-5 text-amber-400 animate-bounce" />
+          <div className="flex flex-col text-xs">
+            <span className="font-bold text-white text-sm">
+              تنبيه سعر! {activeNotification.alert.symbol} وصل إلى {activeNotification.price}
+            </span>
+            <span className="text-[#94A3B8]">{activeNotification.alert.note}</span>
           </div>
+          <button
+            onClick={() => setActiveNotification(null)}
+            className="p-1 rounded text-[#94A3B8] hover:text-white transition-colors ml-2"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* 1. TOP TOOLBAR (TradingView Pro Standard) */}
+      <div className="h-11 bg-[#0A101D] border-b border-[#1E283D] px-3 flex items-center justify-between text-xs shrink-0 gap-2 z-20">
+        {/* Left Side: Symbol search, Timeframes, Chart Type, Indicators */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {/* Symbol Search Trigger (Part 6.1) */}
+          <button
+            onClick={() => setIsSymbolSearchOpen(true)}
+            title="بحث عن رمز (Ctrl+K)"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131E33] hover:bg-[#1A2A44] border border-[#233554] text-[#E8EEF9] font-bold font-mono transition-colors"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+            <span className="text-sm tracking-wide">{activeCell.symbol}</span>
+            <Search className="w-3 h-3 text-[#7B8DA8] ml-1" />
+          </button>
 
           <div className="w-[1px] h-4 bg-[#1E283D]" />
 
-          {/* Timeframe Buttons */}
-          <div className="flex items-center gap-0.5">
+          {/* Timeframe Bar */}
+          <div className="flex items-center gap-0.5 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
             {(['1m', '5m', '15m', '1h', '4h', '1D'] as Timeframe[]).map((tf) => {
-              const isActive = masterTimeframe === tf;
+              const isTfActive = activeCell.timeframe === tf;
               return (
                 <button
                   key={tf}
-                  onClick={() => onTimeframeChange(tf)}
-                  className={`px-2 py-1 rounded text-xs font-mono font-medium transition-all ${
-                    isActive
-                      ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold border border-[#2DD4BF]/40'
-                      : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#111A2C]'
+                  onClick={() => handleTimeframeChange(tf)}
+                  className={`px-2 py-0.8 rounded text-xs font-mono transition-colors ${
+                    isTfActive
+                      ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold shadow-xs'
+                      : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
                   }`}
                 >
                   {tf.replace('1D', 'D').replace('1h', '1H').replace('4h', '4H')}
@@ -257,28 +750,48 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
           <div className="w-[1px] h-4 bg-[#1E283D]" />
 
-          {/* Chart Type Selector */}
-          <div className="flex items-center gap-0.5">
+          {/* Chart Type Selector Dropdown (Part 2.1) */}
+          <div className="relative">
             <button
-              onClick={() => onChartTypeChange('candles')}
-              className={`px-2 py-1 rounded text-xs transition-colors ${
-                masterChartType === 'candles'
-                  ? 'bg-[#1C2E4A] text-[#2DD4BF] font-semibold'
-                  : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
-              }`}
+              onClick={() => setIsChartTypeMenuOpen(!isChartTypeMenuOpen)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#101827] border border-[#1E283D] text-[#A3B4D0] hover:text-white transition-colors"
             >
-              شموع
+              <span>
+                {activeCell.chartType === 'candles' && 'الشموع اليابانية'}
+                {activeCell.chartType === 'hollow' && 'الشموع المفرغة'}
+                {activeCell.chartType === 'heikin_ashi' && 'هيكين آشي'}
+                {activeCell.chartType === 'bars' && 'أعمدة السعر'}
+                {activeCell.chartType === 'line' && 'خطي'}
+                {activeCell.chartType === 'area' && 'مساحي'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-[#7B8DA8]" />
             </button>
-            <button
-              onClick={() => onChartTypeChange('line')}
-              className={`px-2 py-1 rounded text-xs transition-colors ${
-                masterChartType === 'line'
-                  ? 'bg-[#1C2E4A] text-[#2DD4BF] font-semibold'
-                  : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
-              }`}
-            >
-              خطي
-            </button>
+
+            {isChartTypeMenuOpen && (
+              <div className="absolute top-8 left-0 z-50 w-44 bg-[#0E1626] border border-[#243049] rounded-lg shadow-2xl py-1 text-xs">
+                {(
+                  [
+                    { id: 'candles', label: 'الشموع اليابانية' },
+                    { id: 'hollow', label: 'الشموع المفرغة (Hollow)' },
+                    { id: 'heikin_ashi', label: 'هيكين آشي (Heikin Ashi)' },
+                    { id: 'bars', label: 'أعمدة السعر (OHLC Bars)' },
+                    { id: 'line', label: 'خطي (Line)' },
+                    { id: 'area', label: 'مساحي (Area)' },
+                  ] as { id: ChartType; label: string }[]
+                ).map((ct) => (
+                  <button
+                    key={ct.id}
+                    onClick={() => handleChartTypeChange(ct.id)}
+                    className={`w-full text-right px-3 py-1.5 hover:bg-[#1C2740] flex items-center justify-between transition-colors ${
+                      activeCell.chartType === ct.id ? 'text-[#2DD4BF] font-bold bg-[#152338]' : 'text-[#E8EEF9]'
+                    }`}
+                  >
+                    <span>{ct.label}</span>
+                    {activeCell.chartType === ct.id && <Check className="w-3.5 h-3.5 text-[#2DD4BF]" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="w-[1px] h-4 bg-[#1E283D]" />
@@ -289,22 +802,186 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131E33] hover:bg-[#1A2A44] border border-[#233554] text-[#A3B4D0] hover:text-white transition-colors"
           >
             <Sliders className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span>المؤشرات</span>
+            <span>المؤشرات ({activeCell.indicators.length})</span>
           </button>
         </div>
 
-        {/* Right Side: AI Copilot Trigger + Layout Buttons */}
+        {/* Right Side: Alerts, Layout selector, Syncs, AI Copilot, Orders */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Price Alerts Trigger Button (Part 5) */}
+          <button
+            onClick={() => {
+              setAlertModalInitialPrice(activeSymbolObj.price);
+              setIsAlertsOpen(true);
+            }}
+            title="التنبيهات السعرية"
+            className="relative p-1.5 rounded-lg bg-[#101827] border border-[#1E283D] text-[#A3B4D0] hover:text-white transition-colors"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            {activeAlertsCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-[#0F172A] font-bold text-[9px] flex items-center justify-center">
+                {activeAlertsCount}
+              </span>
+            )}
+          </button>
+
+          {/* Sync Controls Dropdown (Part 4.3) */}
+          <div className="hidden sm:flex items-center gap-1 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
+            <button
+              onClick={() => setSyncSymbol(!syncSymbol)}
+              title="مزامنة الرمز عبر جميع الشاشات"
+              className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                syncSymbol ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
+              }`}
+            >
+              مزامنة الرمز
+            </button>
+            <button
+              onClick={() => setSyncTimeframe(!syncTimeframe)}
+              title="مزامنة الفاصل الزمني عبر جميع الشاشات"
+              className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                syncTimeframe ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
+              }`}
+            >
+              مزامنة الإطار
+            </button>
+            <button
+              onClick={() => setSyncCrosshair(!syncCrosshair)}
+              title="مزامنة مؤشر الفأرة (Crosshair)"
+              className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                syncCrosshair ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
+              }`}
+            >
+              مزامنة الفأرة
+            </button>
+          </div>
+
+          {/* Layout Selector (Part 4.1) */}
+          <div className="relative">
+            <div className="flex items-center gap-0.5 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
+              <button
+                onClick={() => {
+                  setLayoutType('1');
+                  setMaximizedCellId(null);
+                }}
+                title="شارت مفرد (Single 1)"
+                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
+                  layoutType === '1' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
+                }`}
+              >
+                1
+              </button>
+              <button
+                onClick={() => {
+                  setLayoutType('2-side');
+                  setMaximizedCellId(null);
+                }}
+                title="شاشتان جنباً إلى جنب (2 Side-by-side)"
+                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
+                  layoutType === '2-side' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
+                }`}
+              >
+                2H
+              </button>
+              <button
+                onClick={() => {
+                  setLayoutType('2-stack');
+                  setMaximizedCellId(null);
+                }}
+                title="شاشتان رأسيتان (2 Stacked)"
+                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
+                  layoutType === '2-stack' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
+                }`}
+              >
+                2V
+              </button>
+              <button
+                onClick={() => {
+                  setLayoutType('3');
+                  setMaximizedCellId(null);
+                }}
+                title="3 شاشات متزامنة"
+                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
+                  layoutType === '3' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
+                }`}
+              >
+                3
+              </button>
+              <button
+                onClick={() => {
+                  setLayoutType('4');
+                  setMaximizedCellId(null);
+                }}
+                title="شبكة 4 شاشات (4 Quad)"
+                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
+                  layoutType === '4' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
+                }`}
+              >
+                4
+              </button>
+
+              {/* Layout Save/Load Dropdown trigger */}
+              <button
+                onClick={() => setIsLayoutMenuOpen(!isLayoutMenuOpen)}
+                title="إدارة التخطيطات المحفوظة (Layouts)"
+                className="p-1 rounded text-[#7B8DA8] hover:text-white transition-colors"
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Layout Management Menu (Part 4.4) */}
+            {isLayoutMenuOpen && (
+              <div className="absolute top-8 right-0 z-50 w-52 bg-[#0E1626] border border-[#243049] rounded-lg shadow-2xl p-2 text-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-[#1E283D] mb-2 font-bold text-[#E8EEF9]">
+                  <span>التخطيطات (Layouts)</span>
+                  <button
+                    onClick={handleSaveCurrentLayout}
+                    className="flex items-center gap-1 text-[10px] text-[#2DD4BF] hover:underline"
+                  >
+                    <Save className="w-3 h-3" />
+                    <span>حفظ كـ</span>
+                  </button>
+                </div>
+                {savedLayouts.length === 0 ? (
+                  <div className="text-[#64748B] text-center py-2 text-[11px]">لا توجد تخطيطات محفوظة</div>
+                ) : (
+                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+                    {savedLayouts.map((sl) => (
+                      <div
+                        key={sl.id}
+                        className="flex items-center justify-between p-1.5 rounded hover:bg-[#162238] transition-colors"
+                      >
+                        <button
+                          onClick={() => handleLoadLayout(sl)}
+                          className="text-right text-[#E2E8F0] font-semibold hover:text-[#2DD4BF]"
+                        >
+                          {sl.name} ({sl.layoutType})
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLayout(sl.id)}
+                          className="text-[#94A3B8] hover:text-rose-400 p-0.5"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* AI Copilot Button */}
           <button
             onClick={() => setIsAiCopilotOpen(!isAiCopilotOpen)}
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-teal-950 to-blue-950 border border-teal-500/50 text-[#2DD4BF] hover:border-teal-400 font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-teal-400 animate-pulse" />
-            <span>المساعد الذكي (AI Copilot)</span>
+            <span className="hidden sm:inline">المساعد الذكي (AI Copilot)</span>
           </button>
 
-          {/* Advanced Orders Button (Task 13) */}
+          {/* Order Panel Button */}
           <button
             onClick={() => setIsOrderPanelOpen(!isOrderPanelOpen)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
@@ -312,51 +989,20 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950/50'
                 : 'bg-[#131E33] border-[#233554] text-emerald-400 hover:border-emerald-500'
             }`}
-            title="لوحة الأوامر المتقدمة وإدارة المخاطر (Task 13)"
+            title="لوحة الأوامر المتقدمة وإدارة المخاطر"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>أمر تداول (Orders)</span>
+            <span className="hidden sm:inline">أمر تداول</span>
           </button>
 
-          {/* Multi-Chart Layout Selector */}
-          <div className="flex items-center gap-1 bg-[#101827] p-1 rounded-lg border border-[#1E283D]">
-            <button
-              onClick={() => {
-                setLayoutCount(1);
-                setMaximizedCellId(null);
-              }}
-              title="شارت مفرد واسع (1 Single)"
-              className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                layoutCount === 1 ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-              }`}
-            >
-              1
-            </button>
-            <button
-              onClick={() => {
-                setLayoutCount(2);
-                setMaximizedCellId(null);
-              }}
-              title="شاشتان منقسمتان (2 Split)"
-              className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                layoutCount === 2 ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-              }`}
-            >
-              2
-            </button>
-            <button
-              onClick={() => {
-                setLayoutCount(4);
-                setMaximizedCellId(null);
-              }}
-              title="شبكة رباعية 2x2 (4 Quad Grid)"
-              className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                layoutCount === 4 ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-              }`}
-            >
-              4
-            </button>
-          </div>
+          {/* Shortcut Help Button (Part 7.1) */}
+          <button
+            onClick={() => setIsShortcutsModalOpen(true)}
+            title="اختصارات لوحة المفاتيح (?)"
+            className="p-1 rounded bg-[#101827] border border-[#1E283D] text-[#7B8DA8] hover:text-white transition-colors"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+          </button>
 
           {/* Toggle Watchlist button */}
           <button
@@ -369,62 +1015,192 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
       </div>
 
-      {/* 2. MAIN WORKSPACE: Left Tools Rail + Center Charts Canvas + Right Watchlist */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Drawing Rail (TradingView standard) */}
-        <div className="w-10 bg-[#0B1220] border-r border-[#1E283D] flex flex-col items-center py-2 gap-2 shrink-0 z-10 text-xs select-none">
+      {/* 2. MAIN WORKSPACE: Left Tools Rail + Center Charts Grid + Right Watchlist */}
+      <div className="flex-1 flex w-full h-[calc(100%-44px)] overflow-hidden relative">
+        {/* Left Drawing Rail (Part 3) */}
+        <div className="w-10 bg-[#0B1220] border-r border-[#1E283D] flex flex-col items-center py-2 gap-1.5 shrink-0 z-10 text-xs select-none">
+          {/* Trendline */}
           <button
             onClick={() => setActiveTool(activeTool === 'trendline' ? 'none' : 'trendline')}
-            title="خط الاتجاه (Trendline)"
+            title="خط اتجاه (Trendline - Alt+T)"
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'trendline' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
           >
             ╱
           </button>
+
+          {/* Horizontal Line */}
           <button
             onClick={() => setActiveTool(activeTool === 'horizontal' ? 'none' : 'horizontal')}
-            title="خط أفقي / دعم ومقاومة (Horizontal Line)"
+            title="خط أفقي (Horizontal - Alt+H)"
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'horizontal' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
           >
             ―
           </button>
+
+          {/* Vertical Line */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'vertical' ? 'none' : 'vertical')}
+            title="خط رأسي (Vertical Line)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'vertical' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            │
+          </button>
+
+          {/* Ray Line */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'ray' ? 'none' : 'ray')}
+            title="شعاع (Ray Line)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'ray' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            ⟶
+          </button>
+
+          {/* Extended Line */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'extended' ? 'none' : 'extended')}
+            title="خط ممتد للطرفين (Extended Line)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'extended' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            ⟷
+          </button>
+
+          {/* Parallel Channel */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'channel' ? 'none' : 'channel')}
+            title="قناة سعرية متوازية (Parallel Channel)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'channel' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            ∥
+          </button>
+
+          {/* Arrow */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'arrow' ? 'none' : 'arrow')}
+            title="سهم إشارة (Arrow)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'arrow' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            ↗
+          </button>
+
+          {/* Box / Rectangle */}
           <button
             onClick={() => setActiveTool(activeTool === 'box' ? 'none' : 'box')}
-            title="منطقة سعرية / مستطيل (Rectangle Box)"
+            title="مستطيل منطقة دعم/مقاومة (Box/Zone)"
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'box' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
           >
             ▭
           </button>
+
+          {/* Text Annotation */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'text' ? 'none' : 'text')}
+            title="نص توضيحي على الشارت (Text Label)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'text' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            <Type className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Fibonacci */}
           <button
             onClick={() => setActiveTool(activeTool === 'fibonacci' ? 'none' : 'fibonacci')}
-            title="مستويات فيبوناتشي (Fibonacci)"
+            title="مستويات فيبوناتشي (Fibonacci - Alt+F)"
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'fibonacci' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
           >
             ≡
           </button>
+
+          {/* Measure Tool */}
+          <button
+            onClick={() => setActiveTool(activeTool === 'measure' ? 'none' : 'measure')}
+            title="أداة قياس النقاط والنسبة (Measure Tool)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'measure' ? 'bg-[#1C2E4A] text-[#38BDF8]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            <Ruler className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Long Position Tool (3.1) */}
           <button
             onClick={() => setActiveTool(activeTool === 'position_long' ? 'none' : 'position_long')}
-            title="حساب نسبة العائد للمخاطرة (Risk/Reward)"
+            title="صفقة شراء محسوبة العائد للمخاطرة (Long Position)"
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
-              activeTool === 'position_long' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+              activeTool === 'position_long' ? 'bg-[#1C2E4A] text-[#22C55E]' : 'text-[#7B8DA8] hover:text-[#22C55E]'
             }`}
           >
             ⤒
           </button>
+
+          {/* Short Position Tool (3.1) */}
           <button
-            onClick={() => setActiveTool('none')}
-            title="مسح التحديد (Clear Selection)"
-            className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-rose-400 transition-colors mt-auto text-xs"
+            onClick={() => setActiveTool(activeTool === 'position_short' ? 'none' : 'position_short')}
+            title="صفقة بيع محسوبة العائد للمخاطرة (Short Position)"
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              activeTool === 'position_short' ? 'bg-[#1C2E4A] text-[#EF4444]' : 'text-[#7B8DA8] hover:text-[#EF4444]'
+            }`}
           >
-            ✕
+            ⤓
           </button>
+
+          <div className="w-5 h-[1px] bg-[#1E283D] my-0.5" />
+
+          {/* Magnet Mode Toggle (Part 3.3) */}
+          <button
+            onClick={() => setIsMagnetOn(!isMagnetOn)}
+            title={isMagnetOn ? 'إلغاء وضع المغناطيس (Magnet ON)' : 'تفعيل وضع المغناطيس للمحاذاة التلقائية (Magnet OFF)'}
+            className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+              isMagnetOn ? 'bg-[#1C2E4A] text-[#2DD4BF] ring-1 ring-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+            }`}
+          >
+            <Magnet className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Object Tree Panel Trigger (Part 3.5) */}
+          <button
+            onClick={() => setIsObjectTreeOpen(true)}
+            title="شجرة الكائنات والمؤشرات (Object Tree)"
+            className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-[#38BDF8] hover:bg-[#1C2740] transition-colors"
+          >
+            <Layers className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Bottom Actions: Clear all & Deselect */}
+          <div className="mt-auto flex flex-col items-center gap-1.5 pt-2 border-t border-[#182338]">
+            <button
+              onClick={() => handleClearDrawings(activeCell.id)}
+              title="مسح جميع رسومات الشارت النشط (Clear Drawings)"
+              className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-rose-400 hover:bg-[#1C2740] transition-colors cursor-pointer text-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setActiveTool('none')}
+              title="إلغاء تفعيل الأداة (Esc)"
+              className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-white hover:bg-[#1C2740] transition-colors cursor-pointer text-xs"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Center: Chart Grid */}
@@ -433,15 +1209,19 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             {visibleCells.map((cell) => {
               const symObj = symbols.find((s) => s.symbol === cell.symbol) || symbols[0];
               const isMax = maximizedCellId === cell.id;
+              const isActive = activeCellId === cell.id;
 
               return (
                 <div
                   key={cell.id}
-                  className="flex flex-col h-full w-full overflow-hidden bg-[#0A101D] border border-[#1E283D] rounded-xs relative group"
+                  onClick={() => setActiveCellId(cell.id)}
+                  className={`flex flex-col h-full w-full overflow-hidden bg-[#0A101D] border ${
+                    isActive ? 'border-[#2DD4BF]/60 shadow-[0_0_12px_rgba(45,212,191,0.08)]' : 'border-[#1E283D]'
+                  } rounded-xs relative group transition-colors`}
                 >
                   {/* Cell Top Header */}
                   <div className="h-7 bg-[#0C1220] border-b border-[#1E283D] px-2.5 flex items-center justify-between text-xs z-10 shrink-0 select-none">
-                    {/* Symbol with dot, Status, Price */}
+                    {/* Symbol with dot, Price, Change */}
                     <div className="flex items-center gap-2">
                       <select
                         value={cell.symbol}
@@ -456,9 +1236,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       </select>
 
                       <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                        <span className="text-[#E8EEF9] font-bold">
-                          {symObj.price.toFixed(symObj.precision)}
-                        </span>
+                        <span className="text-[#E8EEF9] font-bold">{symObj.price.toFixed(symObj.precision)}</span>
                         <span
                           className={`font-semibold ${
                             symObj.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
@@ -470,7 +1248,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       </div>
                     </div>
 
-                    {/* Timeframe buttons for cell & Maximize */}
+                    {/* Cell Timeframes, Clear, Maximize */}
                     <div className="flex items-center gap-1">
                       {(['15m', '1h', '4h', '1D'] as Timeframe[]).map((tf) => {
                         const isTfActive = cell.timeframe === tf;
@@ -489,7 +1267,20 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                         );
                       })}
 
-                      {layoutCount > 1 && (
+                      {/* Trash button for cell drawings */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleClearDrawings(cell.id);
+                        }}
+                        title="مسح رسومات هذا الشارت"
+                        className="text-[#64748B] hover:text-rose-400 text-xs transition-colors pl-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+
+                      {/* Maximize / Restore Toggle */}
+                      {layoutType !== '1' && (
                         <button
                           onClick={() => setMaximizedCellId(isMax ? null : cell.id)}
                           title={isMax ? 'استعادة الشبكة' : 'تكبير الشارت'}
@@ -511,11 +1302,28 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       pipScale={symObj ? symObj.pipScale : 0.0001}
                       chartType={cell.chartType}
                       indicators={indicators}
+                      indicatorInstances={cell.indicators}
+                      onUpdateIndicatorInstance={(ind) => handleUpdateIndicator(cell.id, ind)}
+                      onRemoveIndicatorInstance={(indId) => handleRemoveIndicator(cell.id, indId)}
+                      onOpenIndicatorSettings={(ind) => setEditingIndicator(ind)}
                       activeDrawingTool={activeTool}
                       drawings={cell.drawings}
                       onDrawingComplete={(d) => handleAddDrawing(cell.id, d)}
-                      onClearDrawings={() => {}}
+                      onUpdateDrawing={(d) => handleUpdateDrawing(cell.id, d)}
+                      onDeleteDrawing={(dId) => handleDeleteDrawing(cell.id, dId)}
+                      onClearDrawings={() => handleClearDrawings(cell.id)}
+                      onResetActiveTool={() => setActiveTool('none')}
+                      onFocusCell={() => setActiveCellId(cell.id)}
                       showGrid={showGrid}
+                      magnetMode={isMagnetOn}
+                      onOpenAlertModal={(targetPrice) => {
+                        setAlertModalInitialPrice(targetPrice);
+                        setIsAlertsOpen(true);
+                      }}
+                      syncedCrosshairTime={syncCrosshair ? syncedCrosshairTime : null}
+                      onCrosshairTimeChange={(time) => {
+                        if (syncCrosshair) setSyncedCrosshairTime(time);
+                      }}
                     />
                   </div>
                 </div>
@@ -524,7 +1332,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </div>
         </div>
 
-        {/* Right Trading & Position Panel (Task 13 & 14) */}
+        {/* Right Trading & Position Panel */}
         {isOrderPanelOpen && (
           <div className="w-96 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-y-auto z-20 shadow-2xl flex flex-col">
             <div className="p-2 flex justify-between items-center bg-[#0d1424] border-b border-[#1E283D]">
@@ -537,54 +1345,52 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  ⚡ الأوامر (Orders)
+                  أمر جديد
                 </button>
                 <button
                   onClick={() => setTradingDrawerTab('positions')}
                   className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
                     tradingDrawerTab === 'positions'
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  📊 المراكز (Positions)
+                  المراكز والصفقات
                 </button>
               </div>
               <button
                 onClick={() => setIsOrderPanelOpen(false)}
-                className="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded bg-[#182030]"
+                className="text-slate-400 hover:text-white p-1"
               >
-                ✕ إغلاق
+                ✕
               </button>
             </div>
-            <div className="p-2 flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
               {tradingDrawerTab === 'orders' ? (
-                <OrderPanel
-                  currentSymbol={activeSymbol}
-                  currentPrice={activeSymbolObj ? activeSymbolObj.price : 1.0855}
-                />
+                <OrderPanel currentSymbol={activeSymbolObj.symbol} currentPrice={activeSymbolObj.price} />
               ) : (
-                <PositionPanel
-                  currentPrices={{
-                    [activeSymbol]: activeSymbolObj ? activeSymbolObj.price : 1.0855,
-                    ...Object.fromEntries(symbols.map((s) => [s.symbol, s.price])),
-                  }}
-                />
+                <PositionPanel />
               )}
             </div>
           </div>
         )}
 
-        {/* Right Watchlist Panel */}
+        {/* Right Watchlist Panel (Part 6 & Part 7.2) */}
         {!isWatchlistCollapsed && (
-          <div className="w-64 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-hidden hidden lg:block">
-            <WatchlistPanel
-              symbols={symbols}
-              activeSymbol={activeSymbol}
-              onSelectSymbol={onSelectSymbol}
-              priceFlashMap={priceFlashMap}
+          <>
+            <div
+              className="md:hidden fixed inset-0 bg-black/50 z-20 backdrop-blur-xs"
+              onClick={() => setIsWatchlistCollapsed(true)}
             />
-          </div>
+            <div className="fixed md:relative inset-y-0 right-0 z-30 md:z-10 w-72 md:w-64 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-hidden flex flex-col shadow-2xl md:shadow-none">
+              <WatchlistPanel
+                symbols={symbols}
+                activeSymbol={activeCell.symbol}
+                onSelectSymbol={handleSelectSymbol}
+                priceFlashMap={priceFlashMap}
+              />
+            </div>
+          </>
         )}
       </div>
 
@@ -596,13 +1402,129 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         timeframe={masterTimeframe}
       />
 
-      {/* Indicators Modal */}
+      {/* Indicators Catalog Modal (Part 1.3) */}
       <IndicatorModal
         isOpen={isIndicatorsModalOpen}
+        onClose={() => setIsIndicatorsModalOpen(false)}
+        instances={activeCell.indicators}
+        onAddInstance={(inst) => handleAddIndicator(activeCell.id, inst)}
+        onUpdateInstance={(inst) => handleUpdateIndicator(activeCell.id, inst)}
+        onRemoveInstance={(id) => handleRemoveIndicator(activeCell.id, id)}
         indicators={indicators}
         onChange={onUpdateIndicators}
-        onClose={() => setIsIndicatorsModalOpen(false)}
       />
+
+      {/* Indicator Settings Modal (Part 1.5) */}
+      <IndicatorSettingsModal
+        isOpen={editingIndicator !== null}
+        indicator={editingIndicator}
+        onClose={() => setEditingIndicator(null)}
+        onSave={(updated) => {
+          handleUpdateIndicator(activeCell.id, updated);
+          setEditingIndicator(null);
+        }}
+      />
+
+      {/* Object Tree Panel (Part 3.5) */}
+      <ObjectTreePanel
+        isOpen={isObjectTreeOpen}
+        onClose={() => setIsObjectTreeOpen(false)}
+        indicators={activeCell.indicators}
+        drawings={activeCell.drawings}
+        onUpdateIndicator={(ind) => handleUpdateIndicator(activeCell.id, ind)}
+        onDeleteIndicator={(id) => handleRemoveIndicator(activeCell.id, id)}
+        onUpdateDrawing={(d) => handleUpdateDrawing(activeCell.id, d)}
+        onDeleteDrawing={(id) => handleDeleteDrawing(activeCell.id, id)}
+        onClearAllDrawings={() => handleClearDrawings(activeCell.id)}
+        onOpenIndicatorSettings={(ind) => setEditingIndicator(ind)}
+      />
+
+      {/* Price Alerts Panel (Part 5.2) */}
+      <AlertsPanel
+        isOpen={isAlertsOpen}
+        onClose={() => setIsAlertsOpen(false)}
+        alerts={alerts}
+        symbols={symbols}
+        activeSymbol={activeCell.symbol}
+        onAddAlert={handleAddAlert}
+        onToggleAlert={handleToggleAlert}
+        onDeleteAlert={handleDeleteAlert}
+        initialPrice={alertModalInitialPrice}
+      />
+
+      {/* Symbol Search Modal (Part 6.1) */}
+      <SymbolSearchModal
+        isOpen={isSymbolSearchOpen}
+        onClose={() => setIsSymbolSearchOpen(false)}
+        symbols={symbols}
+        currentSymbol={activeCell.symbol}
+        onSelectSymbol={(sym) => {
+          handleSelectSymbol(sym);
+          setIsSymbolSearchOpen(false);
+        }}
+      />
+
+      {/* Keyboard Shortcuts Help Dialog (Part 7.1) */}
+      {isShortcutsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs select-none">
+          <div className="w-[420px] max-w-[95vw] bg-[#0E1626] border border-[#243049] rounded-xl shadow-2xl overflow-hidden p-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-[#1E283D] mb-3">
+              <div className="flex items-center gap-2 text-sm font-bold text-white">
+                <HelpCircle className="w-4 h-4 text-[#2DD4BF]" />
+                <span>اختصارات لوحة المفاتيح (Shortcuts)</span>
+              </div>
+              <button
+                onClick={() => setIsShortcutsModalOpen(false)}
+                className="text-[#7B8DA8] hover:text-white p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2 font-mono">
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">خط اتجاه (Trendline)</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Alt + T</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">خط أفقي (Horizontal)</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Alt + H</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">مستويات فيبوناتشي (Fibonacci)</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Alt + F</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">إلغاء تفعيل الأداة</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#E8EEF9]">Esc</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">حذف الرسم المحدد</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-rose-400">Delete / Backspace</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">تراجع / إعادة (Undo / Redo)</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#38BDF8]">Ctrl + Z / Ctrl + Y</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">تبديل الأطر الزمنية</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#E8EEF9]">1 - 6 (1m to 1D)</kbd>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
+                <span className="text-[#A3B4D0]">بحث عن رمز</span>
+                <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Ctrl + K</kbd>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsShortcutsModalOpen(false)}
+              className="mt-4 w-full py-1.5 rounded-lg bg-[#1C2E4A] hover:bg-[#253D63] text-[#2DD4BF] font-bold text-center transition-colors"
+            >
+              تم
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -87,11 +87,20 @@ export function generateCandles(basePrice: number, timeframe: Timeframe, count =
     currentPrice = close;
   }
 
-  // Adjust last candle close to match current market basePrice
-  const last = candles[candles.length - 1];
-  last.close = basePrice;
-  last.high = Math.max(last.high, basePrice);
-  last.low = Math.min(last.low, basePrice);
+  if (candles.length > 0) {
+    const decimals = isIndicesOrMetals ? 1 : isJpyOrGold ? 3 : 5;
+    const minPositive = parseFloat((1 / Math.pow(10, decimals)).toFixed(decimals));
+    const lastCandle = candles[candles.length - 1];
+    const offset = basePrice - lastCandle.close;
+
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i];
+      c.open = parseFloat((c.open + offset).toFixed(decimals));
+      c.high = parseFloat((c.high + offset).toFixed(decimals));
+      c.low = Math.max(minPositive, parseFloat((c.low + offset).toFixed(decimals)));
+      c.close = parseFloat((c.close + offset).toFixed(decimals));
+    }
+  }
 
   return candles;
 }

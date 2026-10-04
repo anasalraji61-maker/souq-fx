@@ -1,23 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { LangId, DICTS } from './i18n/locales';
 import { MarketSymbol, Candle, Timeframe, ChartType, IndicatorSettings, PriceAlertItem } from './types/market';
 import { INITIAL_SYMBOLS } from './data/symbols';
 import { generateCandles, updateLastCandleWithTick } from './data/candleGenerator';
 import { Header, AppTab } from './components/common/Header';
 import { TerminalScreen } from './components/terminal/TerminalScreen';
-import { ToolsScreen } from './components/tools/ToolsScreen';
-import { AcademyScreen } from './components/academy/AcademyScreen';
-import { AccountScreen } from './components/account/AccountScreen';
-import { CommunityScreen } from './components/community/CommunityScreen';
-import { SubscriptionPlansScreen } from './components/pricing/SubscriptionPlansScreen';
-import { AgentDevSwarm } from './components/bot/AgentDevSwarm';
-import { BotCommandCenter } from './components/bot/BotCommandCenter';
 import { OnboardingOverlay } from './components/common/OnboardingOverlay';
 import { PriceAlertNotificationBanner } from './components/common/PriceAlertNotificationBanner';
 import { PriceAlertsModal } from './components/common/PriceAlertsModal';
 import { GeminiChatDrawer } from './components/chat/GeminiChatDrawer';
 import { playAlertChime } from './utils/sound';
 import { Sparkles, Bot, Shield, Terminal as TerminalIcon } from 'lucide-react';
+
+// Code-splitting lazy loading for subpages to reduce initial bundle for mobile performance
+const ToolsScreen = lazy(() => import('./components/tools/ToolsScreen').then(m => ({ default: m.ToolsScreen })));
+const AcademyScreen = lazy(() => import('./components/academy/AcademyScreen').then(m => ({ default: m.AcademyScreen })));
+const AccountScreen = lazy(() => import('./components/account/AccountScreen').then(m => ({ default: m.AccountScreen })));
+const CommunityScreen = lazy(() => import('./components/community/CommunityScreen').then(m => ({ default: m.CommunityScreen })));
+const SubscriptionPlansScreen = lazy(() => import('./components/pricing/SubscriptionPlansScreen').then(m => ({ default: m.SubscriptionPlansScreen })));
+
+const ScreenFallback = () => (
+  <div className="h-full w-full flex items-center justify-center bg-[#050B14]">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      <span className="text-xs text-slate-400 font-mono">تحميل المحتوى...</span>
+    </div>
+  </div>
+);
 
 export default function App() {
   // Navigation & Language
@@ -285,43 +294,45 @@ export default function App() {
           />
         )}
 
-        {currentTab === 'community' && <CommunityScreen />}
+        <Suspense fallback={<ScreenFallback />}>
+          {currentTab === 'community' && <CommunityScreen />}
 
-        {currentTab === 'academy' && <AcademyScreen />}
+          {currentTab === 'academy' && <AcademyScreen />}
 
-        {currentTab === 'pricing' && <SubscriptionPlansScreen />}
+          {currentTab === 'pricing' && <SubscriptionPlansScreen />}
 
-        {currentTab === 'tools' && (
-          <ToolsScreen
-            symbols={symbols}
-            activeSymbol={activeSymbol}
-            onSelectSymbolForChart={(sym) => {
-              setActiveSymbol(sym);
-              setCurrentTab('home');
-            }}
-            alerts={alerts}
-            onAddAlert={handleAddAlert}
-            onDeleteAlert={handleDeleteAlert}
-            onToggleAlert={handleToggleAlert}
-          />
-        )}
+          {currentTab === 'tools' && (
+            <ToolsScreen
+              symbols={symbols}
+              activeSymbol={activeSymbol}
+              onSelectSymbolForChart={(sym) => {
+                setActiveSymbol(sym);
+                setCurrentTab('home');
+              }}
+              alerts={alerts}
+              onAddAlert={handleAddAlert}
+              onDeleteAlert={handleDeleteAlert}
+              onToggleAlert={handleToggleAlert}
+            />
+          )}
 
-        {currentTab === 'account' && (
-          <AccountScreen
-            currentLang={currentLang}
-            onLanguageChange={setCurrentLang}
-            symbols={symbols}
-            defaultSymbol={activeSymbol}
-            onDefaultSymbolChange={setActiveSymbol}
-            defaultTimeframe={timeframe}
-            onDefaultTimeframeChange={setTimeframe}
-            soundEnabled={soundEnabled}
-            onSoundEnabledToggle={() => setSoundEnabled(!soundEnabled)}
-            showGrid={showGrid}
-            onShowGridToggle={() => setShowGrid(!showGrid)}
-            onRestartOnboarding={() => setShowOnboarding(true)}
-          />
-        )}
+          {currentTab === 'account' && (
+            <AccountScreen
+              currentLang={currentLang}
+              onLanguageChange={setCurrentLang}
+              symbols={symbols}
+              defaultSymbol={activeSymbol}
+              onDefaultSymbolChange={setActiveSymbol}
+              defaultTimeframe={timeframe}
+              onDefaultTimeframeChange={setTimeframe}
+              soundEnabled={soundEnabled}
+              onSoundEnabledToggle={() => setSoundEnabled(!soundEnabled)}
+              showGrid={showGrid}
+              onShowGridToggle={() => setShowGrid(!showGrid)}
+              onRestartOnboarding={() => setShowOnboarding(true)}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* Price Alerts Modal */}

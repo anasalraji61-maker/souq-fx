@@ -22,7 +22,7 @@ export const VolumeProfileChart: React.FC<VolumeProfileChartProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<VolumeProfileResponse | null>(null);
 
-  const symbolsList = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'BTCUSD'];
+  const symbolsList = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'XAUUSD'];
   const timeframesList = ['5m', '15m', '1h', '4h', '1d'];
 
   const loadData = async () => {
@@ -157,8 +157,13 @@ export const VolumeProfileChart: React.FC<VolumeProfileChartProps> = ({
 
             {/* Order Flow Net Delta */}
             <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3 relative overflow-hidden">
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                صافي تدفق الأوامر (Net Delta)
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  تدفق الأوامر (Delta)
+                </span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30">
+                  تقدير
+                </span>
               </div>
               <div
                 className={`text-lg md:text-xl font-mono font-extrabold mt-1 ${
@@ -168,8 +173,9 @@ export const VolumeProfileChart: React.FC<VolumeProfileChartProps> = ({
                 {data.order_flow_summary.net_delta >= 0 ? '+' : ''}
                 {data.order_flow_summary.net_delta.toLocaleString()}
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                CVD: {data.order_flow_summary.cvd.toLocaleString()}
+              <div className="text-[11px] text-slate-400 mt-0.5 flex justify-between">
+                <span>CVD: {data.order_flow_summary.cvd.toLocaleString()}</span>
+                <span className="text-[10px] text-slate-500">حجم الشموع (تقدير)</span>
               </div>
               <div className="absolute top-1 right-2 text-2xl opacity-10">🌊</div>
             </div>

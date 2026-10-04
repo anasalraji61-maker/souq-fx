@@ -1,11 +1,11 @@
 export type Timeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1D';
 
-export type SymbolCategory = 'all' | 'forex' | 'metals' | 'indices';
+export type SymbolCategory = 'all' | 'forex' | 'metals' | 'indices' | 'energy';
 
 export interface MarketSymbol {
   symbol: string;
   name: string;
-  category: 'forex' | 'metals' | 'indices';
+  category: 'forex' | 'metals' | 'indices' | 'energy';
   price: number;
   bid: number;
   ask: number;
@@ -46,15 +46,64 @@ export interface IndicatorSettings {
   showVolume: boolean;
 }
 
-export type ChartType = 'candles' | 'line' | 'area';
+export type IndicatorType =
+  | 'sma'
+  | 'ema'
+  | 'wma'
+  | 'bb'
+  | 'vwap'
+  | 'ichimoku'
+  | 'psar'
+  | 'rsi'
+  | 'macd'
+  | 'stoch'
+  | 'atr'
+  | 'adx'
+  | 'cci'
+  | 'obv';
 
-export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'fibonacci' | 'box' | 'measure' | 'position_long' | 'position_short';
+export interface IndicatorInstance {
+  id: string;
+  type: IndicatorType;
+  name: string;
+  nameAr?: string;
+  params: Record<string, number>;
+  color: string;
+  visible: boolean;
+  pane: 'main' | 'sub';
+}
+
+export type ChartType = 'candles' | 'hollow' | 'heikin_ashi' | 'bars' | 'line' | 'area';
+
+export type DrawingTool =
+  | 'none'
+  | 'trendline'
+  | 'horizontal'
+  | 'vertical'
+  | 'ray'
+  | 'extended'
+  | 'channel'
+  | 'arrow'
+  | 'text'
+  | 'price_range'
+  | 'date_range'
+  | 'fibonacci'
+  | 'box'
+  | 'measure'
+  | 'position_long'
+  | 'position_short';
 
 export interface DrawingItem {
   id: string;
   type: DrawingTool;
   points: { time: number; price: number }[];
   color?: string;
+  lineWidth?: number;
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
+  locked?: boolean;
+  hidden?: boolean;
+  text?: string;
+  extra?: Record<string, any>;
 }
 
 export interface TradeRecord {
@@ -97,15 +146,25 @@ export interface ScreenerItem {
   signal: 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell';
 }
 
+export type AlertCondition =
+  | 'crosses'
+  | 'crosses_up'
+  | 'crosses_down'
+  | 'greater_than'
+  | 'less_than'
+  | 'above'
+  | 'below';
+
 export interface PriceAlertItem {
   id: string;
   symbol: string;
   targetPrice: number;
-  condition: 'above' | 'below';
+  condition: AlertCondition;
   note: string;
   active: boolean;
   triggered: boolean;
   triggeredAt?: string;
+  createdAt?: string;
 }
 
 export interface BacktestResult {

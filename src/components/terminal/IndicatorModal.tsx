@@ -1,163 +1,314 @@
-import React from 'react';
-import { IndicatorSettings } from '../../types/market';
-import { X, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { IndicatorInstance, IndicatorType } from '../../types/market';
+import { INDICATOR_CATALOG, IndicatorDefinition } from '../../data/indicators';
+import { IndicatorSettingsModal } from './IndicatorSettingsModal';
+import { X, Search, Plus, Eye, EyeOff, Settings, Trash2, Layers, BarChart2 } from 'lucide-react';
 
 interface IndicatorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  indicators: IndicatorSettings;
-  onChange: (updated: IndicatorSettings) => void;
+  instances?: IndicatorInstance[];
+  onAddInstance?: (instance: IndicatorInstance) => void;
+  onUpdateInstance?: (instance: IndicatorInstance) => void;
+  onRemoveInstance?: (instanceId: string) => void;
+  indicators?: any;
+  onChange?: (updated: any) => void;
 }
 
 export const IndicatorModal: React.FC<IndicatorModalProps> = ({
   isOpen,
   onClose,
-  indicators,
-  onChange,
+  instances = [],
+  onAddInstance = () => {},
+  onUpdateInstance = () => {},
+  onRemoveInstance = () => {},
 }) => {
+  const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'overlay' | 'oscillator' | 'active'>('all');
+  const [editingIndicator, setEditingIndicator] = useState<IndicatorInstance | null>(null);
+
+  const filteredCatalog = useMemo(() => {
+    return INDICATOR_CATALOG.filter((item) => {
+      // Tab filter
+      if (activeTab === 'overlay' && item.pane !== 'main') return false;
+      if (activeTab === 'oscillator' && item.pane !== 'sub') return false;
+
+      // Text search (Arabic + English + Type)
+      if (!search.trim()) return true;
+      const q = search.toLowerCase().trim();
+      return (
+        item.name.toLowerCase().includes(q) ||
+        item.nameAr.toLowerCase().includes(q) ||
+        item.type.toLowerCase().includes(q)
+      );
+    });
+  }, [search, activeTab]);
+
   if (!isOpen) return null;
 
-  const toggle = (key: keyof IndicatorSettings) => {
-    onChange({
-      ...indicators,
-      [key]: !indicators[key],
-    });
+  const handleAdd = (def: IndicatorDefinition) => {
+    // Check sub-pane limit: maximum 3 visible sub-pane oscillators
+    if (def.pane === 'sub') {
+      const activeSubPanes = instances.filter((i) => i.pane === 'sub' && i.visible);
+      if (activeSubPanes.length >= 3) {
+        alert('الحد الأقصى للوحات السفلية النشطة معاً هو 3 مؤشرات لتوفير وضوح تام للشارت.');
+        return;
+      }
+    }
+
+    // Generate unique ID and appropriate default name
+    const existingCount = instances.filter((i) => i.type === def.type).length;
+    let labelParams = '';
+    if (def.type === 'ema' || def.type === 'sma' || def.type === 'wma' || def.type === 'rsi') {
+      const p = def.defaultParams.period || 20;
+      labelParams = ` ${p}`;
+    }
+
+    const newInst: IndicatorInstance = {
+      id: `ind-${def.type}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      type: def.type,
+      name: `${def.name.split(' ')[0]}${labelParams}`,
+      nameAr: def.nameAr,
+      params: { ...def.defaultParams },
+      color: existingCount === 1 && def.type === 'ema' ? '#F59E0B' : def.defaultColor,
+      visible: true,
+      pane: def.pane,
+    };
+
+    onAddInstance(newInst);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs select-none">
-      <div className="w-[420px] bg-[#121A2B] border border-[#243049] rounded-xl shadow-2xl overflow-hidden text-xs">
+      <div className="w-[520px] max-w-[95vw] bg-[#0E1626] border border-[#243049] rounded-xl shadow-2xl overflow-hidden flex flex-col text-xs max-h-[85vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#243049] bg-[#0E1728]">
-          <h3 className="font-bold text-sm text-[#E8EEF9]">إعدادات المؤشرات الفنية (Indicators)</h3>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E283D] bg-[#0A101D]">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#2DD4BF]" />
+            <h3 className="font-bold text-sm text-[#E8EEF9]">المؤشرات الفنية (Technical Indicators)</h3>
+          </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740]"
+            className="p-1 rounded text-[#7B8DA8] hover:text-white hover:bg-[#1C2740] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-4 space-y-3 max-h-[440px] overflow-y-auto">
-          {/* Overlays */}
-          <div className="text-[11px] font-semibold text-[#7B8DA8] uppercase tracking-wider">
-            المؤشرات المتراكبة على السعر (Overlays)
+        {/* Search Bar & Filter Tabs */}
+        <div className="p-3 border-b border-[#1E283D] bg-[#0B1322] space-y-2.5">
+          <div className="relative">
+            <Search className="w-4 h-4 text-[#64748B] absolute right-3 top-2.5" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث بالاسم العربي أو الإنجليزي (EMA, RSI, بولينجر, إيشيموكو...)"
+              className="w-full pr-9 pl-3 py-2 bg-[#121A2B] border border-[#243049] rounded-lg text-xs text-[#E8EEF9] placeholder-[#64748B] focus:outline-none focus:border-[#2DD4BF]"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute left-2.5 top-2.5 text-[#7B8DA8] hover:text-white"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#2DD4BF]" />
-              <span className="font-medium text-[#E8EEF9]">متوسط متحرك 20 (SMA 20)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showSma20}
-              onChange={() => toggle('showSma20')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
-
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#F59E0B]" />
-              <span className="font-medium text-[#E8EEF9]">متوسط متحرك 50 (SMA 50)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showSma50}
-              onChange={() => toggle('showSma50')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
-
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#A78BFA]" />
-              <span className="font-medium text-[#E8EEF9]">متوسط متحرك 200 (SMA 200)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showSma200}
-              onChange={() => toggle('showSma200')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
-
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#38BDF8]" />
-              <span className="font-medium text-[#E8EEF9]">بولينجر باندز (Bollinger Bands 20, 2)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showBollinger}
-              onChange={() => toggle('showBollinger')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
-
-          {/* Sub-pane Oscillators */}
-          <div className="text-[11px] font-semibold text-[#7B8DA8] uppercase tracking-wider pt-2">
-            المذبذبات واللوحات السفلية (Oscillators)
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                activeTab === 'all'
+                  ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold border border-[#2DD4BF]/40'
+                  : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
+              }`}
+            >
+              الكل ({INDICATOR_CATALOG.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('overlay')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                activeTab === 'overlay'
+                  ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold border border-[#2DD4BF]/40'
+                  : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
+              }`}
+            >
+              متراكبة على السعر (Overlays)
+            </button>
+            <button
+              onClick={() => setActiveTab('oscillator')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                activeTab === 'oscillator'
+                  ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold border border-[#2DD4BF]/40'
+                  : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
+              }`}
+            >
+              مذبذبات سفلية (Oscillators)
+            </button>
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ml-auto ${
+                activeTab === 'active'
+                  ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold border border-[#2DD4BF]/40'
+                  : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
+              }`}
+            >
+              المؤشرات النشطة ({instances.length})
+            </button>
           </div>
+        </div>
 
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#A78BFA]" />
-              <div>
-                <div className="font-medium text-[#E8EEF9]">مؤشر القوة النسبية (RSI 14)</div>
-                <div className="text-[10px] text-[#7B8DA8]">مستويات التشبع 70 و 30</div>
+        {/* Content Body */}
+        <div className="p-3 flex-1 overflow-y-auto space-y-2 min-h-[300px] max-h-[480px]">
+          {activeTab === 'active' ? (
+            /* Active Indicators Tab */
+            instances.length === 0 ? (
+              <div className="text-center py-12 text-[#64748B]">
+                لا توجد مؤشرات مضافة حالياً. يمكنك إضافة مؤشرات من تبويب "الكل".
               </div>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showRsi}
-              onChange={() => toggle('showRsi')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-[11px] text-[#7B8DA8] px-1 font-semibold">
+                  المؤشرات المطبقة على هذا الشارت (اضغط على المسنن لتغيير الإعدادات والألوان):
+                </div>
+                {instances.map((inst) => {
+                  const paramStr = Object.entries(inst.params)
+                    .map(([_, v]) => v)
+                    .join(', ');
+                  return (
+                    <div
+                      key={inst.id}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#141E30] border border-[#243049] hover:border-[#334155] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: inst.color }}
+                        />
+                        <div>
+                          <div className="font-bold text-[#E8EEF9] text-xs">
+                            {inst.nameAr || inst.name}
+                            {paramStr ? ` (${paramStr})` : ''}
+                          </div>
+                          <div className="text-[10px] text-[#64748B]">
+                            {inst.pane === 'main' ? 'متراكب على الشارت الرئيسي' : 'لوحة سفلية منفصلة'}
+                          </div>
+                        </div>
+                      </div>
 
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#38BDF8]" />
-              <div>
-                <div className="font-medium text-[#E8EEF9]">مؤشر الماكد (MACD 12, 26, 9)</div>
-                <div className="text-[10px] text-[#7B8DA8]">الهيستوجرام وخط الإشارة</div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => onUpdateInstance({ ...inst, visible: !inst.visible })}
+                          title={inst.visible ? 'إخفاء' : 'إظهار'}
+                          className="p-1.5 rounded hover:bg-[#1E293B] text-[#7B8DA8] hover:text-white transition-colors"
+                        >
+                          {inst.visible ? (
+                            <Eye className="w-3.5 h-3.5 text-[#2DD4BF]" />
+                          ) : (
+                            <EyeOff className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setEditingIndicator(inst)}
+                          title="الإعدادات"
+                          className="p-1.5 rounded hover:bg-[#1E293B] text-[#7B8DA8] hover:text-white transition-colors"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onRemoveInstance(inst.id)}
+                          title="حذف المؤشر"
+                          className="p-1.5 rounded hover:bg-[#1E293B] text-[#7B8DA8] hover:text-rose-400 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showMacd}
-              onChange={() => toggle('showMacd')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
+            )
+          ) : (
+            /* Catalog List */
+            filteredCatalog.length === 0 ? (
+              <div className="text-center py-12 text-[#64748B]">
+                لم يتم العثور على مؤشرات تطابق البحث.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2">
+                {filteredCatalog.map((def) => {
+                  const addedCount = instances.filter((i) => i.type === def.type).length;
+                  return (
+                    <div
+                      key={def.type}
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#141E30] border border-[#243049]/60 hover:border-[#2DD4BF]/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: def.defaultColor }}
+                        />
+                        <div>
+                          <div className="font-bold text-[#E8EEF9] text-xs group-hover:text-[#2DD4BF] transition-colors">
+                            {def.nameAr}
+                          </div>
+                          <div className="text-[10px] text-[#64748B] font-mono">
+                            {def.name} ({def.pane === 'main' ? 'Overlay' : 'Oscillator'})
+                          </div>
+                        </div>
+                      </div>
 
-          <label className="flex items-center justify-between p-2.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] cursor-pointer transition-colors border border-[#243049]/50">
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-[#22C55E]" />
-              <span className="font-medium text-[#E8EEF9]">أعمدة حجم التداول (Volume)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={indicators.showVolume}
-              onChange={() => toggle('showVolume')}
-              className="accent-[#2DD4BF] w-4 h-4 cursor-pointer"
-            />
-          </label>
+                      <div className="flex items-center gap-2">
+                        {addedCount > 0 && (
+                          <span className="text-[10px] font-mono bg-[#1E293B] text-[#2DD4BF] px-1.5 py-0.5 rounded">
+                            مفعل ({addedCount})
+                          </span>
+                        )}
+                        <button
+                          onClick={() => handleAdd(def)}
+                          title="إضافة إلى الشارت"
+                          className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#1C2E4A] hover:bg-[#2DD4BF] text-[#2DD4BF] hover:text-[#042F2E] font-bold text-xs transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          إضافة
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-[#243049] bg-[#0E1728] flex justify-end">
+        <div className="p-3 border-t border-[#1E283D] bg-[#0A101D] flex items-center justify-between">
+          <span className="text-[11px] text-[#64748B]">
+            يمكن إضافة نفس المؤشر أكثر من مرة بفترات مختلفة (مثل EMA 20 و EMA 50).
+          </span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold transition-colors"
+            className="px-4 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-colors"
           >
-            تطبيق وحفظ
+            إغلاق
           </button>
         </div>
       </div>
+
+      {/* Editing Dialog for an indicator */}
+      {editingIndicator && (
+        <IndicatorSettingsModal
+          isOpen={Boolean(editingIndicator)}
+          indicator={editingIndicator}
+          onClose={() => setEditingIndicator(null)}
+          onSave={(updated) => {
+            onUpdateInstance(updated);
+            setEditingIndicator(null);
+          }}
+        />
+      )}
     </div>
   );
 };
