@@ -1,0 +1,89 @@
+"""
+Community chat routes.
+"""
+from __future__ import annotations
+
+import sqlite3
+import time
+
+import community_chat
+from core import db_conn
+from core.auth import _auth_user
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/api/community", tags=["community"])
+
+
+def _db_path() -> str:
+    """Return the database path. Read at call time for test monkeypatching."""
+    return str(db_conn.DB_PATH)
+
+
+def _conn() -> sqlite3.Connection:
+    """Open a connection and ensure the community tables exist."""
+    conn = sqlite3.connect(_db_path())
+    community_chat.init_db(conn)
+    return conn
+
+
+def _require(user: dict | None) -> None:
+    """Raise 401 if user is not authenticated."""
+    if not user:
+        raise HTTPException(status_code=401, detail="not authenticated")
+
+
+class PostBody(BaseModel):
+    text: str
+
+
+@router.get("/channels")
+def channels(user: dict | None = Depends(_auth_user)):
+    """List channels."""
+    _require(user)
+    return {"channels": community_chat.list_channels()}
+
+
+@router.get("/channels/{channel}/messages")
+def get_messages(
+    channel: str,
+    limit: int = Query(50),
+    before_id: int | None = None,
+    user: dict | None = Depends(_auth_user),
+):
+    """List messages in a channel, newest first."""
+    _require(user)
+    conn = _conn()
+    try:
+        try:
+            messages = community_chat.list_messages(conn, channel, limit, before_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail="unknown channel")
+        return {"channel": channel, "messages": messages}
+    finally:
+        conn.close()
+
+
+@router.post("/channels/{channel}/messages", status_code=200)
+def post_message(channel: str, body: PostBody, user: dict | None = Depends(_auth_user)):
+    """Post a message to a channel."""
+    _require(user)
+    conn = _conn()
+    try:
+        try:
+            rec = community_chat.post_message(
+                conn, channel, str(user["user_id"]), body.text, time.time()
+            )
+        except ValueError as e:
+            if "unknown channel" in str(e):
+                raise HTTPException(status_code=404, detail="unknown channel")
+            raise HTTPException(status_code=400, detail=str(e))
+        except community_chat.RateLimitError as e:
+            raise HTTPException(
+                status_code=429,
+                detail="rate_limited",
+                headers={"Retry-After": str(int(e.retry_after) + 1)},
+            )
+        return {"message": rec}
+    finally:
+        conn.close()

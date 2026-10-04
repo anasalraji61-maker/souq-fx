@@ -75,6 +75,9 @@ app.include_router(analysis_router)
 from routers_academy_progress import router as academy_progress_router
 app.include_router(academy_progress_router)
 
+from routers_community import router as community_router
+app.include_router(community_router)
+
 _LONE_SURROGATE_ESC = re.compile(rb"\\u[dD][89a-fA-F][0-9a-fA-F]{2}")
 
 
