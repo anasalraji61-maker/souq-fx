@@ -69,6 +69,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=APP_NAME, version="0.1.0", lifespan=lifespan)
 
+from routers_analysis import router as analysis_router
+app.include_router(analysis_router)
+
 _LONE_SURROGATE_ESC = re.compile(rb"\\u[dD][89a-fA-F][0-9a-fA-F]{2}")
 
 
