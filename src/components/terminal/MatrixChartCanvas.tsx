@@ -1252,7 +1252,13 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
         <div className="absolute top-11 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[80%]">
           {indicatorInstances.map((ind) => {
             const val = legendIndicatorValues.get(ind.id);
-            const paramText = Object.values(ind.params).join(', ');
+            // Build the indicator label cleanly once (Bug 0.3)
+            const baseType = ind.type.toUpperCase();
+            const paramValues = Object.values(ind.params || {}).filter(
+              (v) => v !== undefined && v !== null
+            );
+            const paramText = paramValues.length > 0 ? `(${paramValues.join(', ')})` : '';
+            const label = `${baseType} ${paramText}`.trim();
 
             return (
               <div
@@ -1264,7 +1270,7 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
 
                 {/* Name & Params */}
                 <span className="font-semibold text-[#E2E8F0]">
-                  {ind.name || ind.type.toUpperCase()}{paramText ? ` (${paramText})` : ''}
+                  {label}
                 </span>
 
                 {/* Closed-candle value */}

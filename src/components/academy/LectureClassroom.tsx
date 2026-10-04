@@ -128,14 +128,14 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
 
         <button
           onClick={() => onToggleComplete(lecture.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-colors ${
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 cursor-pointer shadow-md ${
             isCompleted
-              ? 'bg-[#22C55E]/15 text-[#22C55E] border border-[#22C55E]/30'
+              ? 'bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/40 hover:bg-[#22C55E]/30'
               : 'bg-[#2DD4BF] text-[#042F2E] hover:bg-[#26bba8]'
           }`}
         >
           <CheckCircle2 className="w-4 h-4" />
-          <span>{isCompleted ? 'الدرس مكتمل' : 'وضع علامة إتمام'}</span>
+          <span>{isCompleted ? 'أكملت الدرس ✓' : 'أكملت الدرس'}</span>
         </button>
       </div>
 

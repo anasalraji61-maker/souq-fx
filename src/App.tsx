@@ -9,6 +9,7 @@ import { OnboardingOverlay } from './components/common/OnboardingOverlay';
 import { PriceAlertNotificationBanner } from './components/common/PriceAlertNotificationBanner';
 import { PriceAlertsModal } from './components/common/PriceAlertsModal';
 import { GeminiChatDrawer } from './components/chat/GeminiChatDrawer';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { playAlertChime } from './utils/sound';
 import { Sparkles, Bot, Shield, Terminal as TerminalIcon } from 'lucide-react';
 
@@ -152,9 +153,17 @@ export default function App() {
           const direction = delta >= 0 ? 'up' : 'down';
           flashes[sym.symbol] = direction;
 
+          const pipScale = sym.pipScale || (sym.symbol.includes('JPY') ? 0.01 : sym.symbol.includes('XAU') ? 0.1 : 0.0001);
+          const spreadPips = sym.spread > 0 && sym.spread < 100 ? sym.spread : 1.0;
+          const halfSpread = (spreadPips * pipScale) / 2;
+          const newBid = +(newPrice - halfSpread).toFixed(sym.precision);
+          const newAsk = +(newPrice + halfSpread).toFixed(sym.precision);
+
           return {
             ...sym,
             price: newPrice,
+            bid: newBid,
+            ask: newAsk,
             change24h: +(sym.change24h + (delta / sym.price) * 100).toFixed(2),
           };
         });
@@ -273,66 +282,68 @@ export default function App() {
         onOpenAiChat={() => setIsAiChatOpen(true)}
       />
 
-      {/* Main View Area */}
+      {/* Main View Area with Global Error Boundary (Part 5.3) */}
       <main className="flex-1 overflow-hidden relative">
-        {currentTab === 'home' && (
-          <TerminalScreen
-            symbols={symbols}
-            activeSymbol={activeSymbol}
-            onSelectSymbol={setActiveSymbol}
-            candles={candles}
-            timeframe={timeframe}
-            onTimeframeChange={setTimeframe}
-            chartType={chartType}
-            onChartTypeChange={setChartType}
-            indicators={indicators}
-            onUpdateIndicators={setIndicators}
-            priceFlashMap={priceFlashMap}
-            showGrid={showGrid}
-            onTabChange={setCurrentTab}
-            currentTab={currentTab}
-          />
-        )}
-
-        <Suspense fallback={<ScreenFallback />}>
-          {currentTab === 'community' && <CommunityScreen />}
-
-          {currentTab === 'academy' && <AcademyScreen />}
-
-          {currentTab === 'pricing' && <SubscriptionPlansScreen />}
-
-          {currentTab === 'tools' && (
-            <ToolsScreen
+        <ErrorBoundary>
+          {currentTab === 'home' && (
+            <TerminalScreen
               symbols={symbols}
               activeSymbol={activeSymbol}
-              onSelectSymbolForChart={(sym) => {
-                setActiveSymbol(sym);
-                setCurrentTab('home');
-              }}
-              alerts={alerts}
-              onAddAlert={handleAddAlert}
-              onDeleteAlert={handleDeleteAlert}
-              onToggleAlert={handleToggleAlert}
+              onSelectSymbol={setActiveSymbol}
+              candles={candles}
+              timeframe={timeframe}
+              onTimeframeChange={setTimeframe}
+              chartType={chartType}
+              onChartTypeChange={setChartType}
+              indicators={indicators}
+              onUpdateIndicators={setIndicators}
+              priceFlashMap={priceFlashMap}
+              showGrid={showGrid}
+              onTabChange={setCurrentTab}
+              currentTab={currentTab}
             />
           )}
 
-          {currentTab === 'account' && (
-            <AccountScreen
-              currentLang={currentLang}
-              onLanguageChange={setCurrentLang}
-              symbols={symbols}
-              defaultSymbol={activeSymbol}
-              onDefaultSymbolChange={setActiveSymbol}
-              defaultTimeframe={timeframe}
-              onDefaultTimeframeChange={setTimeframe}
-              soundEnabled={soundEnabled}
-              onSoundEnabledToggle={() => setSoundEnabled(!soundEnabled)}
-              showGrid={showGrid}
-              onShowGridToggle={() => setShowGrid(!showGrid)}
-              onRestartOnboarding={() => setShowOnboarding(true)}
-            />
-          )}
-        </Suspense>
+          <Suspense fallback={<ScreenFallback />}>
+            {currentTab === 'community' && <CommunityScreen />}
+
+            {currentTab === 'academy' && <AcademyScreen />}
+
+            {currentTab === 'pricing' && <SubscriptionPlansScreen />}
+
+            {currentTab === 'tools' && (
+              <ToolsScreen
+                symbols={symbols}
+                activeSymbol={activeSymbol}
+                onSelectSymbolForChart={(sym) => {
+                  setActiveSymbol(sym);
+                  setCurrentTab('home');
+                }}
+                alerts={alerts}
+                onAddAlert={handleAddAlert}
+                onDeleteAlert={handleDeleteAlert}
+                onToggleAlert={handleToggleAlert}
+              />
+            )}
+
+            {currentTab === 'account' && (
+              <AccountScreen
+                currentLang={currentLang}
+                onLanguageChange={setCurrentLang}
+                symbols={symbols}
+                defaultSymbol={activeSymbol}
+                onDefaultSymbolChange={setActiveSymbol}
+                defaultTimeframe={timeframe}
+                onDefaultTimeframeChange={setTimeframe}
+                soundEnabled={soundEnabled}
+                onSoundEnabledToggle={() => setSoundEnabled(!soundEnabled)}
+                showGrid={showGrid}
+                onShowGridToggle={() => setShowGrid(!showGrid)}
+                onRestartOnboarding={() => setShowOnboarding(true)}
+              />
+            )}
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       {/* Price Alerts Modal */}

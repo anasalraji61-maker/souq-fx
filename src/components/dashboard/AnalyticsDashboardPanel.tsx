@@ -1,63 +1,46 @@
-import React, { useEffect, useState } from 'react';
-
-interface EquityPoint {
-  trade_num: number;
-  symbol?: string;
-  pnl: number;
-  equity: number;
-  drawdown_pct: number;
-  time?: string;
-}
-
-interface PerformanceBreakdown {
-  trades: number;
-  wins: number;
-  win_rate_pct: number;
-  total_pnl: number;
-}
-
-interface AnalyticsData {
-  initial_balance: number;
-  current_equity: number;
-  total_net_profit: number;
-  net_roi_pct: number;
-  total_trades: number;
-  winning_trades: number;
-  losing_trades: number;
-  break_even_trades: number;
-  win_rate_pct: number;
-  gross_profit: number;
-  gross_loss: number;
-  profit_factor: number;
-  sharpe_ratio: number;
-  max_drawdown_pct: number;
-  max_drawdown_usd: number;
-  equity_curve: EquityPoint[];
-  distribution_by_pair: Record<string, PerformanceBreakdown>;
-  distribution_by_timeframe: Record<string, PerformanceBreakdown>;
-}
+import React, { useEffect, useState, useRef } from 'react';
+import { fetchJournalEntries, JournalEntry } from '../../api/journal';
+import { fetchPerformanceAnalysis, PerformanceResult } from '../../api/analysis';
+import { OfflineBadge } from '../common/OfflineBadge';
+import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  PieChart,
+  Activity,
+  Award,
+  Shield,
+  RotateCcw,
+  Zap,
+} from 'lucide-react';
 
 export const AnalyticsDashboardPanel: React.FC = () => {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'pairs' | 'timeframes'>('pairs');
+  const [trades, setTrades] = useState<JournalEntry[]>([]);
+  const [data, setData] = useState<PerformanceResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [activeTab, setActiveTab] = useState<'symbol' | 'timeframe'>('symbol');
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const loadData = async () => {
-    setLoading(true);
-    setError(null);
+    setIsLoading(true);
+    setIsError(false);
     try {
-      const res = await fetch('/api/analytics/dashboard');
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-      } else {
-        throw new Error('فشل جلب بيانات سجل الأداء');
+      const { entries, isOffline: offlineEntries } = await fetchJournalEntries();
+      setTrades(entries);
+
+      if (entries.length > 0) {
+        const perfRes = await fetchPerformanceAnalysis(entries, 10000);
+        setData(perfRes.data);
+        setIsOffline(offlineEntries || perfRes.isOffline);
       }
-    } catch (err: any) {
-      setError(err?.message || 'تعذر تحميل تحليلات المحفظة');
+    } catch {
+      setIsError(true);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -65,279 +48,378 @@ export const AnalyticsDashboardPanel: React.FC = () => {
     loadData();
   }, []);
 
-  return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-6 text-slate-100 shadow-2xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
-              لوحة تحليلات الأداء ومنحنى رأس المال (Performance Analytics)
-            </h2>
+  // 4.2 Render Canvas Line for Equity Curve
+  useEffect(() => {
+    if (!data || !data.equity_curve || data.equity_curve.length === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, width, height);
+
+    const points = data.equity_curve;
+    const values = points.map((p) => p.equity);
+    const minVal = Math.min(...values) * 0.995;
+    const maxVal = Math.max(...values) * 1.005;
+    const range = maxVal - minVal || 1;
+
+    const paddingX = 40;
+    const paddingY = 24;
+    const chartW = width - paddingX * 2;
+    const chartH = height - paddingY * 2;
+
+    // Draw grid lines
+    ctx.strokeStyle = '#1E283D';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    for (let i = 0; i <= 4; i++) {
+      const y = paddingY + (chartH / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(paddingX, y);
+      ctx.lineTo(width - paddingX, y);
+      ctx.stroke();
+
+      // Price label on right
+      const priceVal = maxVal - (range / 4) * i;
+      ctx.fillStyle = '#64748B';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`$${priceVal.toFixed(0)}`, width - 6, y + 3);
+    }
+    ctx.setLineDash([]);
+
+    // Compute pixel coordinates
+    const coords = points.map((p, i) => {
+      const x = paddingX + (i / (points.length - 1 || 1)) * chartW;
+      const y = paddingY + chartH - ((p.equity - minVal) / range) * chartH;
+      return { x, y, p };
+    });
+
+    // Draw gradient fill under curve
+    const gradient = ctx.createLinearGradient(0, paddingY, 0, paddingY + chartH);
+    gradient.addColorStop(0, 'rgba(45, 212, 191, 0.25)');
+    gradient.addColorStop(1, 'rgba(45, 212, 191, 0.0)');
+
+    ctx.beginPath();
+    ctx.moveTo(coords[0].x, paddingY + chartH);
+    coords.forEach((c) => ctx.lineTo(c.x, c.y));
+    ctx.lineTo(coords[coords.length - 1].x, paddingY + chartH);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Draw main line
+    ctx.beginPath();
+    ctx.strokeStyle = '#2DD4BF';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    coords.forEach((c, i) => {
+      if (i === 0) ctx.moveTo(c.x, c.y);
+      else ctx.lineTo(c.x, c.y);
+    });
+    ctx.stroke();
+
+    // Draw dots at points
+    coords.forEach((c) => {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#0B1220';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#2DD4BF';
+      ctx.stroke();
+    });
+  }, [data]);
+
+  // 4.4 If no closed trades, show empty state - never fake numbers
+  if (!isLoading && !isError && trades.length === 0) {
+    return (
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 select-none text-xs text-[#E8EEF9]">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#243049]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#2DD4BF]/10 text-[#2DD4BF] border border-[#2DD4BF]/20 shadow-xs">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold text-white">
+                  لوحة تحليلات الأداء ومنحنى رأس المال (Performance Analytics)
+                </h1>
+                {isOffline && <OfflineBadge forceShow />}
+              </div>
+              <p className="text-[#7B8DA8]">
+                تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع Drawdown، وتوزيع الأرباح.
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            متابعة منحنى رأس المال (Equity Curve)، نسبة الفوز، معامل الربحية، Sharpe Ratio، وأقصى تراجع
-          </p>
+
+          <button
+            onClick={loadData}
+            className="p-2 rounded-lg bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>تحديث</span>
+          </button>
+        </div>
+
+        <div className="p-6 max-w-2xl mx-auto">
+          <EmptyState
+            icon={<BarChart3 className="w-10 h-10 text-[#2DD4BF]" />}
+            title="لا توجد بيانات صفقات مغلقة للتحليل"
+            message="سجل صفقاتك المكتملة في دفتر الصفقات لتوليد منحنى رأس المال (Equity Curve) وحساب نسبة النجاح ومعامل Sharpe الحقيقي دون أي بيانات وهمية أو افتراضية."
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 select-none text-xs text-[#E8EEF9]">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#243049]">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-[#2DD4BF]/10 text-[#2DD4BF] border border-[#2DD4BF]/20 shadow-xs">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-bold text-white">
+                لوحة تحليلات الأداء ومنحنى رأس المال (Performance Analytics)
+              </h1>
+              {isOffline && <OfflineBadge forceShow />}
+            </div>
+            <p className="text-[#7B8DA8]">
+              تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع Drawdown، وتوزيع الأرباح.
+            </p>
+          </div>
         </div>
 
         <button
           onClick={loadData}
-          disabled={loading}
-          className="p-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition"
+          className="p-2 rounded-lg bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
         >
-          🔄
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>تحديث</span>
         </button>
       </div>
 
-      {loading && (
-        <div className="h-48 flex flex-col items-center justify-center space-y-3">
-          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-slate-400">جاري احتساب منحنى النمو ومقاييس الأداء...</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-lg text-xs text-red-300">
-          ⚠️ {error}
-        </div>
-      )}
-
-      {!loading && data && (
+      {isLoading ? (
+        <LoadingSkeleton rows={5} />
+      ) : isError ? (
+        <ErrorState onRetry={loadData} />
+      ) : data ? (
         <>
-          {/* Main KPI Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-            {/* Net ROI */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                العائد الصافي (ROI)
-              </span>
+          {/* 4.2 KPI Cards: Win Rate, Profit Factor, Sharpe, Max Drawdown */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* Win Rate */}
+            <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">معدل الفوز (Win Rate)</span>
               <div
-                className={`text-lg md:text-xl font-mono font-extrabold mt-1 ${
-                  data.total_net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                className={`text-2xl font-bold font-mono ${
+                  data.win_rate >= 50 ? 'text-[#22C55E]' : 'text-[#EF4444]'
                 }`}
               >
-                {data.total_net_profit >= 0 ? '+' : ''}${data.total_net_profit.toFixed(2)}
+                {data.win_rate}%
               </div>
-              <span className="text-[11px] text-slate-400">{data.net_roi_pct}% نمو</span>
-            </div>
-
-            {/* Win Rate */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                نسبة الفوز (Win Rate)
-              </span>
-              <div className="text-lg md:text-xl font-mono font-extrabold text-white mt-1">
-                {data.win_rate_pct}%
-              </div>
-              <span className="text-[11px] text-slate-400">
-                {data.winning_trades} رابحة / {data.total_trades}
+              <span className="text-[10px] text-[#64748B]">
+                {data.winning_trades} رابحة من {data.total_trades} صفقة
               </span>
             </div>
 
             {/* Profit Factor */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                معامل الربح (Profit Factor)
+            <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">
+                معامل الربحية (Profit Factor)
               </span>
-              <div className="text-lg md:text-xl font-mono font-extrabold text-cyan-300 mt-1">
-                {data.profit_factor.toFixed(2)}
+              <div className="text-2xl font-bold font-mono text-[#38BDF8]">
+                {data.profit_factor}
               </div>
-              <span className="text-[11px] text-slate-400">
-                ${data.gross_profit.toFixed(0)} / ${data.gross_loss.toFixed(0)}
-              </span>
+              <span className="text-[10px] text-[#64748B]">إجمالي الأرباح ÷ الخسائر</span>
             </div>
 
             {/* Sharpe Ratio */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                نسبة شارب (Sharpe)
-              </span>
-              <div className="text-lg md:text-xl font-mono font-extrabold text-amber-300 mt-1">
-                {data.sharpe_ratio.toFixed(2)}
+            <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">مؤشر شارب (Sharpe Ratio)</span>
+              <div
+                className={`text-2xl font-bold font-mono ${
+                  data.sharpe_ratio >= 1.0 ? 'text-[#22C55E]' : 'text-amber-400'
+                }`}
+              >
+                {data.sharpe_ratio}
               </div>
-              <span className="text-[11px] text-slate-400">
-                {data.sharpe_ratio >= 1.5 ? 'ممتاز' : 'معتدل'}
+              <span className="text-[10px] text-[#64748B]">
+                {data.sharpe_ratio >= 1.5 ? 'أداء متفوق ومستقر' : 'مخاطرة مقبولة'}
               </span>
             </div>
 
             {/* Max Drawdown */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">
                 أقصى تراجع (Max Drawdown)
               </span>
-              <div className="text-lg md:text-xl font-mono font-extrabold text-rose-400 mt-1">
+              <div className="text-2xl font-bold font-mono text-rose-400">
                 {data.max_drawdown_pct}%
               </div>
-              <span className="text-[11px] text-slate-400">
-                -${data.max_drawdown_usd.toFixed(2)}
-              </span>
-            </div>
-
-            {/* Current Balance */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                رأس المال الحالي
-              </span>
-              <div className="text-lg md:text-xl font-mono font-extrabold text-white mt-1">
-                ${data.current_equity.toFixed(2)}
-              </div>
-              <span className="text-[11px] text-slate-400">
-                البداية: ${data.initial_balance.toFixed(0)}
+              <span className="text-[10px] text-[#64748B] font-mono">
+                -${data.max_drawdown_usd.toFixed(2)} أقصى هبوط من القمة
               </span>
             </div>
           </div>
 
-          {/* Equity Curve SVG Chart */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-800">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>📈</span> مسار نمو رأس المال (Equity Progression)
-              </h3>
-              <span className="text-xs text-slate-400 font-mono">
-                {data.equity_curve.length - 1} صفقات منفذة
-              </span>
+          {/* 4.2 Equity Curve Canvas Line */}
+          <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-3 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-white">
+                  منحنى نمو رأس المال (Portfolio Equity Curve)
+                </h3>
+                <p className="text-[11px] text-[#7B8DA8]">
+                  تطور رصيد الحساب مع كل صفقة مغلقة مبني على نتائج الدفتر الفعلية
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 font-mono text-xs">
+                <span className="text-[#A3B4D0]">
+                  الرصيد الابتدائي: <strong>${data.initial_balance}</strong>
+                </span>
+                <span className="text-emerald-400 font-bold">
+                  الرصيد الحالي: ${data.current_equity}
+                </span>
+              </div>
             </div>
 
-            <div className="h-44 w-full relative">
-              {data.equity_curve.length >= 2 ? (
-                <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 500 160">
-                  {/* Grid Lines */}
-                  <line x1="0" y1="40" x2="500" y2="40" stroke="#334155" strokeDasharray="3,3" strokeWidth="0.8" />
-                  <line x1="0" y1="80" x2="500" y2="80" stroke="#334155" strokeDasharray="3,3" strokeWidth="0.8" />
-                  <line x1="0" y1="120" x2="500" y2="120" stroke="#334155" strokeDasharray="3,3" strokeWidth="0.8" />
+            <div className="w-full h-56 bg-[#08111E] rounded-xl p-2 border border-[#1E283D] relative overflow-hidden">
+              <canvas ref={canvasRef} className="w-full h-full block" />
+            </div>
+          </div>
 
-                  {/* Polyline Curve */}
-                  {(() => {
-                    const equities = data.equity_curve.map((p) => p.equity);
-                    const minEq = Math.min(...equities) * 0.98;
-                    const maxEq = Math.max(...equities) * 1.02;
-                    const range = Math.max(1, maxEq - minEq);
+          {/* 4.2 Distribution by Symbol and by Timeframe (Bars) */}
+          <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#1E283D] pb-3">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-[#2DD4BF]" />
+                <h3 className="font-bold text-sm text-white">توزيع الأرباح والصفقات (P&L Breakdown)</h3>
+              </div>
 
-                    const points = data.equity_curve
-                      .map((p, idx) => {
-                        const x = (idx / (data.equity_curve.length - 1)) * 500;
-                        const y = 150 - ((p.equity - minEq) / range) * 130;
-                        return `${x},${y}`;
-                      })
-                      .join(' ');
+              <div className="flex items-center gap-1.5 bg-[#0B1220] p-1 rounded-lg border border-[#243049]">
+                <button
+                  onClick={() => setActiveTab('symbol')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                    activeTab === 'symbol'
+                      ? 'bg-[#2DD4BF] text-[#042F2E]'
+                      : 'text-[#7B8DA8] hover:text-white'
+                  }`}
+                >
+                  حسب الرمز (By Symbol)
+                </button>
+                <button
+                  onClick={() => setActiveTab('timeframe')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                    activeTab === 'timeframe'
+                      ? 'bg-[#2DD4BF] text-[#042F2E]'
+                      : 'text-[#7B8DA8] hover:text-white'
+                  }`}
+                >
+                  حسب الفريم (By Timeframe)
+                </button>
+              </div>
+            </div>
 
+            {/* Bars List */}
+            <div className="space-y-3">
+              {activeTab === 'symbol' ? (
+                Object.keys(data.by_symbol).length === 0 ? (
+                  <div className="text-center py-6 text-[#64748B]">لا توجد بيانات رموز مسجلة</div>
+                ) : (
+                  Object.entries(data.by_symbol).map(([sym, item]) => {
+                    const isProfit = item.pnl >= 0;
                     return (
-                      <>
-                        <polygon
-                          points={`0,150 ${points} 500,150`}
-                          fill="url(#equityGrad)"
-                          opacity="0.25"
-                        />
-                        <polyline
-                          fill="none"
-                          stroke="#10b981"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          points={points}
-                        />
-                        <defs>
-                          <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                      </>
+                      <div key={sym} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-mono">
+                          <span className="font-bold text-white">{sym}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[#7B8DA8] font-sans">
+                              {item.trades} صفقات • {item.win_rate}% فوز
+                            </span>
+                            <span
+                              className={`font-bold ${
+                                isProfit ? 'text-[#22C55E]' : 'text-[#EF4444]'
+                              }`}
+                            >
+                              {isProfit ? '+' : ''}${item.pnl}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bar */}
+                        <div className="w-full h-2 bg-[#0B1220] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              isProfit ? 'bg-[#22C55E]' : 'bg-[#EF4444]'
+                            }`}
+                            style={{
+                              width: `${Math.min(100, Math.max(10, item.win_rate))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
                     );
-                  })()}
-                </svg>
+                  })
+                )
+              ) : Object.keys(data.by_timeframe).length === 0 ? (
+                <div className="text-center py-6 text-[#64748B]">لا توجد بيانات فريمات مسجلة</div>
               ) : (
-                <div className="h-full flex items-center justify-center text-xs text-slate-500">
-                  لا توجد صفقات مغلقة كافية لرسم المنحنى البياني حتى الآن.
-                </div>
+                Object.entries(data.by_timeframe).map(([tf, item]) => {
+                  const isProfit = item.pnl >= 0;
+                  return (
+                    <div key={tf} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="font-bold text-white">{tf}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[#7B8DA8] font-sans">
+                            {item.trades} صفقات • {item.win_rate}% فوز
+                          </span>
+                          <span
+                            className={`font-bold ${
+                              isProfit ? 'text-[#22C55E]' : 'text-[#EF4444]'
+                            }`}
+                          >
+                            {isProfit ? '+' : ''}${item.pnl}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bar */}
+                      <div className="w-full h-2 bg-[#0B1220] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            isProfit ? 'bg-[#38BDF8]' : 'bg-[#EF4444]'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, Math.max(10, item.win_rate))}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
-
-          {/* Breakdown Tabs: Pairs vs Timeframes */}
-          <div className="bg-slate-800/40 rounded-lg p-4 border border-slate-800 space-y-3">
-            <div className="flex items-center gap-2 border-b border-slate-700/60 pb-2">
-              <button
-                onClick={() => setActiveTab('pairs')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
-                  activeTab === 'pairs'
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                توزيع الأرباح حسب الزوج (Pairs)
-              </button>
-              <button
-                onClick={() => setActiveTab('timeframes')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
-                  activeTab === 'timeframes'
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                توزيع الأرباح حسب الفريم (Timeframes)
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-right">
-                <thead>
-                  <tr className="text-slate-400 border-b border-slate-700/40 pb-1">
-                    <th className="py-2 px-2">الفئة</th>
-                    <th className="py-2 px-2">عدد الصفقات</th>
-                    <th className="py-2 px-2">الصفقات الرابحة</th>
-                    <th className="py-2 px-2">نسبة الفوز</th>
-                    <th className="py-2 px-2">صافي الربح / الخسارة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeTab === 'pairs' &&
-                    Object.entries(data.distribution_by_pair).map(([pair, stats]) => (
-                      <tr key={pair} className="border-b border-slate-800/40 hover:bg-slate-800/30">
-                        <td className="py-2 px-2 font-mono font-bold text-white">{pair}</td>
-                        <td className="py-2 px-2 font-mono">{stats.trades}</td>
-                        <td className="py-2 px-2 font-mono">{stats.wins}</td>
-                        <td className="py-2 px-2 font-mono">{stats.win_rate_pct}%</td>
-                        <td
-                          className={`py-2 px-2 font-mono font-bold ${
-                            stats.total_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}
-                        >
-                          {stats.total_pnl >= 0 ? `+$${stats.total_pnl.toFixed(2)}` : `-$${Math.abs(stats.total_pnl).toFixed(2)}`}
-                        </td>
-                      </tr>
-                    ))}
-
-                  {activeTab === 'timeframes' &&
-                    Object.entries(data.distribution_by_timeframe).map(([tf, stats]) => (
-                      <tr key={tf} className="border-b border-slate-800/40 hover:bg-slate-800/30">
-                        <td className="py-2 px-2 font-mono font-bold text-white">{tf}</td>
-                        <td className="py-2 px-2 font-mono">{stats.trades}</td>
-                        <td className="py-2 px-2 font-mono">{stats.wins}</td>
-                        <td className="py-2 px-2 font-mono">{stats.win_rate_pct}%</td>
-                        <td
-                          className={`py-2 px-2 font-mono font-bold ${
-                            stats.total_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}
-                        >
-                          {stats.total_pnl >= 0 ? `+$${stats.total_pnl.toFixed(2)}` : `-$${Math.abs(stats.total_pnl).toFixed(2)}`}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Educational Disclaimer */}
-          <div className="pt-2 border-t border-slate-800 text-center">
-            <span className="text-[11px] text-slate-500">
-              خدمة تحليل فني تعليمية • ليست نصيحة استثمارية • الحسابات مبنية على الشموع المغلقة دون إعادة رسم
-            </span>
-          </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 };

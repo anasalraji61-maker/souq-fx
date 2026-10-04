@@ -15,6 +15,39 @@ interface NamedWatchlist {
   symbols: string[];
 }
 
+export function getPipSize(symbol: string): number {
+  const s = symbol.toUpperCase();
+  if (s.includes('JPY')) return 0.01;
+  if (s === 'XAUUSD' || s === 'GOLD') return 0.1;
+  if (s === 'XAGUSD' || s === 'SILVER') return 0.01;
+  if (s.includes('OIL')) return 0.01;
+  if (
+    s.includes('SPX') ||
+    s.includes('NAS') ||
+    s.includes('US30') ||
+    s.includes('GER') ||
+    s.includes('DXY') ||
+    s.includes('INDEX')
+  ) {
+    return 1.0;
+  }
+  return 0.0001; // standard FX
+}
+
+export function formatSpread(item: MarketSymbol): string {
+  const pipSize = getPipSize(item.symbol);
+  if (item.ask !== undefined && item.bid !== undefined && item.ask > item.bid) {
+    const pips = (item.ask - item.bid) / pipSize;
+    if (pips > 0 && pips < 500) {
+      return `${pips.toFixed(1)}p`;
+    }
+  }
+  if (item.spread !== undefined && item.spread > 0 && item.spread < 100) {
+    return `${item.spread.toFixed(1)}p`;
+  }
+  return '0.8p';
+}
+
 export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
   symbols,
   activeSymbol,
@@ -233,7 +266,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
       </div>
 
       {/* Column Headers (6.2: last, change, change%, spread, sparkline) */}
-      <div className="grid grid-cols-[1fr_56px_52px_42px] px-2 py-1 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
+      <div className="grid grid-cols-[minmax(115px,1fr)_56px_52px_42px] px-2 py-1 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
         <span className="text-right">الرمز / خط</span>
         <span className="text-left font-mono">السعر</span>
         <span className="text-left font-mono">التغير</span>
@@ -255,26 +288,32 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
               onDragOver={(e) => handleDragOver(e, item.symbol)}
               onDragEnd={handleDragEnd}
               onClick={() => onSelectSymbol(item.symbol)}
-              className={`group grid grid-cols-[1fr_56px_52px_42px] items-center px-1.5 py-1.5 rounded cursor-pointer transition-all ${
+              className={`group grid grid-cols-[minmax(115px,1fr)_56px_52px_42px] items-center px-1.5 py-1.5 rounded cursor-pointer transition-all ${
                 isSelected
                   ? 'bg-[#131F33] border border-[#2DD4BF]/80 shadow-[0_0_8px_rgba(45,212,191,0.12)]'
                   : 'hover:bg-[#121A2B]/70 border border-transparent'
               } ${flash === 'up' ? 'bg-[#22C55E]/15' : flash === 'down' ? 'bg-[#EF4444]/15' : ''}`}
             >
               {/* Symbol Name & Mini Sparkline */}
-              <div className="flex items-center gap-1.5 overflow-hidden">
+              <div className="flex items-center gap-1.5 min-w-0 pr-0.5 overflow-hidden">
                 <GripVertical className="w-3 h-3 text-[#334155] opacity-0 group-hover:opacity-100 shrink-0 cursor-grab" />
-                <div className="flex flex-col truncate">
+                <div className="flex flex-col min-w-0 shrink">
                   <span
-                    className={`font-bold text-xs tracking-tight ${
+                    dir="ltr"
+                    className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap shrink-0 text-right ${
                       isSelected ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'
                     }`}
                   >
                     {item.symbol}
                   </span>
-                  <span className="text-[9px] text-[#7B8DA8] truncate">{item.name}</span>
+                  <span
+                    className="text-[9px] text-[#7B8DA8] truncate max-w-[85px] text-right block"
+                    title={item.name}
+                  >
+                    {item.name}
+                  </span>
                 </div>
-                {renderSparkline(item)}
+                <div className="mr-auto shrink-0 pl-1">{renderSparkline(item)}</div>
               </div>
 
               {/* Price */}
@@ -290,7 +329,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
               {/* Spread */}
               <div className="text-left font-mono text-[10px] text-[#7B8DA8] flex items-center justify-between">
-                <span>{(item.spread / (item.pipScale || 0.0001)).toFixed(1)}p</span>
+                <span>{formatSpread(item)}</span>
                 <button
                   onClick={(e) => handleRemoveSymbolFromList(item.symbol, e)}
                   title="إزالة من القائمة"

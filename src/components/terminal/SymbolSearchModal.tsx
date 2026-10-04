@@ -32,11 +32,6 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
 
   const filteredSymbols = useMemo(() => {
     return symbols.filter((s) => {
-      // 0% Crypto safety: strictly ignore any accidental crypto
-      if ((s as any).category === 'crypto' || s.symbol.includes('BTC') || s.symbol.includes('ETH')) {
-        return false;
-      }
-
       if (category !== 'all' && s.category !== category) return false;
 
       if (!query.trim()) return true;
@@ -194,7 +189,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
         {/* Footer shortcuts info */}
         <div className="p-2.5 border-t border-[#1E283D] bg-[#0A101D] flex items-center justify-between text-[11px] text-[#64748B]">
           <span>استخدم الأسهم ↑ ↓ للتنقل و Enter للاختيار</span>
-          <span className="font-mono text-[#2DD4BF]">0% Crypto Verified</span>
+          <span className="font-sans text-[#2DD4BF]">فوركس • معادن • طاقة • مؤشرات</span>
         </div>
       </div>
     </div>

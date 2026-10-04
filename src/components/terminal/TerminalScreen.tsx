@@ -20,6 +20,7 @@ import { SymbolSearchModal } from './SymbolSearchModal';
 import { AiCopilotPanel } from './AiCopilotPanel';
 import { OrderPanel } from '../trading/OrderPanel';
 import { PositionPanel } from '../trading/PositionPanel';
+import { OrderFlowPanel } from './OrderFlowPanel';
 import { generateCandles, updateLastCandleWithTick } from '../../data/candleGenerator';
 import { loadDrawings, saveDrawings } from '../../api/drawings';
 import { loadAlerts, saveAlerts } from '../../api/alerts';
@@ -51,6 +52,7 @@ import {
   SplitSquareVertical,
   SplitSquareHorizontal,
   Search,
+  Activity,
 } from 'lucide-react';
 
 export type LayoutType = '1' | '2-side' | '2-stack' | '3' | '4';
@@ -199,6 +201,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [tradingDrawerTab, setTradingDrawerTab] = useState<'orders' | 'positions'>('orders');
   const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState(false);
   const [isChartTypeMenuOpen, setIsChartTypeMenuOpen] = useState(false);
+  const [isOrderFlowOpen, setIsOrderFlowOpen] = useState(false);
 
   // Price Alerts State (Part 5)
   const [alerts, setAlerts] = useState<PriceAlertItem[]>([]);
@@ -806,8 +809,22 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </button>
         </div>
 
-        {/* Right Side: Alerts, Layout selector, Syncs, AI Copilot, Orders */}
+        {/* Right Side: Alerts, Order Flow, Layout selector, Syncs, AI Copilot, Orders */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Order Flow Toggle Button (Part 4.3) */}
+          <button
+            onClick={() => setIsOrderFlowOpen(!isOrderFlowOpen)}
+            title="لوحة تدفق الأوامر التقديرية (Order Flow)"
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+              isOrderFlowOpen
+                ? 'bg-[#1C2E4A] text-[#2DD4BF] border-[#2DD4BF]/40'
+                : 'bg-[#101827] text-[#A3B4D0] border-[#1E283D] hover:text-white'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 text-[#2DD4BF]" />
+            <span className="hidden sm:inline">تدفق الأوامر</span>
+          </button>
+
           {/* Price Alerts Trigger Button (Part 5) */}
           <button
             onClick={() => {
@@ -1525,6 +1542,15 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </div>
         </div>
       )}
+
+      {/* 4.3 Order-Flow Panel under the chart (toggle) */}
+      <OrderFlowPanel
+        isOpen={isOrderFlowOpen}
+        onToggle={() => setIsOrderFlowOpen(!isOrderFlowOpen)}
+        candles={activeCell.candles}
+        symbol={activeCell.symbol}
+        timeframe={activeCell.timeframe}
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, BarChart2, Calculator, GraduationCap, ShieldCheck, Check } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, BarChart2, ListFilter, Layers, GraduationCap, Bell, Check } from 'lucide-react';
 
 interface OnboardingOverlayProps {
   isOpen: boolean;
@@ -11,31 +11,32 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
 
   if (!isOpen) return null;
 
+  // 1.5: 5 steps highlighting chart, watchlist, indicators, academy, alerts. Skip / next / back.
   const steps = [
     {
-      title: 'مرحباً بك في منصة MATRIX للتحليل الفني',
-      desc: 'المنصة المتقدمة لتحليل أسواق الفوركس والمعادن والمؤشرات عبر شارتات الشموع الحية متعددة الفريمات وبأعلى سرعة استجابة.',
+      title: 'شارت التحليل الفني الاحترافي (Chart)',
+      desc: 'استمتع بشارت شموع يابانية فائق الاستجابة مع دعم 6 أنواع مختلفة من الشارتات (شموع، مفرغة، هيكين آشي، بارات، خط، مساحة) وفريمات متعددة من 1m إلى 1D.',
       icon: <BarChart2 className="w-8 h-8 text-[#2DD4BF]" />,
     },
     {
-      title: 'شارت احترافي ومؤشرات فنية دقيقة',
-      desc: 'تنقل بين الفريمات من الدقيقة إلى اليومي، وطبق مؤشرات RSI و MACD وبولينجر باندز والمتوسطات المتحركة، واستخدم أدوات الرسم وفيبوناتشي بحرية.',
-      icon: <BarChart2 className="w-8 h-8 text-[#38BDF8]" />,
+      title: 'قائمة مراقبة الأسعار (Watchlist)',
+      desc: 'تابع أسعار أزواج الفوركس، الذهب، الفضة، النفط والمؤشرات العالمية مع حساب دقيق للفارق السعري (Spread) ومنحنى بياني مصغر وإعادة ترتيب بالسحب.',
+      icon: <ListFilter className="w-8 h-8 text-[#38BDF8]" />,
     },
     {
-      title: 'حاسبة حجم اللوت وإدارة المخاطر',
-      desc: 'لا تخاطر برأس مالك عشوائياً؛ حاسبة اللوت تحسب لك الحجم الدقيق للعقد وفق مسافة وقف الخسارة ونسبة المخاطرة التي تختارها لحمايتك.',
-      icon: <Calculator className="w-8 h-8 text-[#22C55E]" />,
+      title: 'المؤشرات الفنية وأدوات الرسم (Indicators)',
+      desc: 'أكثر من 15 مؤشراً فنياً من المتوسطات EMA وSMA وبولينجر باندز إلى RSI والماكد وVWAP، بالإضافة إلى حزمة أدوات رسم متكاملة وتصحيحات فيبوناتشي.',
+      icon: <Layers className="w-8 h-8 text-[#A78BFA]" />,
     },
     {
-      title: 'دفتر الصفقات والماسح والتقويم الاقتصادي',
-      desc: 'سجل صفقاتك وراقب نسبة نجاحك، وتابع بيانات التقويم الاقتصادي المؤثرة، وافحص فرص التشبع البيعي والشرائي عبر الماسح الفني المتزامن.',
-      icon: <ShieldCheck className="w-8 h-8 text-[#F59E0B]" />,
+      title: 'أكاديمية MATRIX للتداول والشهادات (Academy)',
+      desc: 'مسارات تعليمية متكاملة لمدارس التحليل الفني (الكلاسيكي، كتل الأوامر والسيولة SMC، موجات إليوت) مع اختبارات فهم وشهادات إتمام معتمدة قابلة للطباعة.',
+      icon: <GraduationCap className="w-8 h-8 text-[#E8B86D]" />,
     },
     {
-      title: 'أكاديمية MATRIX للتداول الشامل',
-      desc: 'دروس تعليمية مرتبة من الصفر وحتى مدارس السيولة المؤسسية وكتل الأوامر وموجات إليوت، مع قاعات شرح صوتية واختبارات فهم فورية.',
-      icon: <GraduationCap className="w-8 h-8 text-[#A78BFA]" />,
+      title: 'تنبيهات الأسعار اللحظية (Alerts)',
+      desc: 'عيّن تنبيهات فورية عند وصول السعر إلى مستويات محددة أو اختراقها للأعلى أو للأسفل مع إشعارات مرئية وصوتية مسموعة لحماية فرصك الاستثمارية.',
+      icon: <Bell className="w-8 h-8 text-[#EF4444]" />,
     },
   ];
 
@@ -44,7 +45,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs select-none">
       <div className="w-[460px] bg-[#121A2B] border border-[#243049] rounded-2xl shadow-2xl overflow-hidden p-6 space-y-6 text-xs text-right">
-        {/* Header */}
+        {/* Header with Step Counter & Skip */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#7B8DA8]">
             <span>الخطوة {step + 1}</span>
@@ -52,12 +53,20 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
             <span>{steps.length}</span>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1 rounded text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740]"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="text-[11px] text-[#7B8DA8] hover:text-[#2DD4BF] transition-colors"
+            >
+              تخطي الجولة (Skip)
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 rounded text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Step Content */}
@@ -81,7 +90,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
           ))}
         </div>
 
-        {/* Footer Buttons */}
+        {/* Footer Buttons (Back / Next / Finish) */}
         <div className="flex items-center justify-between pt-2 border-t border-[#243049]/60">
           <button
             disabled={step === 0}
@@ -95,7 +104,7 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
           {step < steps.length - 1 ? (
             <button
               onClick={() => setStep(step + 1)}
-              className="px-5 py-2 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold flex items-center gap-1 shadow-md"
+              className="px-5 py-2 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold flex items-center gap-1 shadow-md cursor-pointer"
             >
               <span>التالي</span>
               <ChevronLeft className="w-4 h-4" />
@@ -103,10 +112,10 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
           ) : (
             <button
               onClick={onClose}
-              className="px-5 py-2 rounded-lg bg-[#22C55E] hover:bg-[#1eb354] text-[#051329] font-bold flex items-center gap-1 shadow-md"
+              className="px-5 py-2 rounded-lg bg-[#22C55E] hover:bg-[#1eb354] text-[#051329] font-bold flex items-center gap-1 shadow-md cursor-pointer"
             >
               <Check className="w-4 h-4" />
-              <span>بدء استخدام MATRIX</span>
+              <span>بدء استخدام المنصة</span>
             </button>
           )}
         </div>
