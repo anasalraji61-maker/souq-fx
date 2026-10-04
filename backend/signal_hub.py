@@ -400,8 +400,8 @@ def indicator_forecast(
                 add("bb", "bb", (50 - pos) * 0.006, "bb_position", pos=pos)
 
     # Stochastic approx from last 14 highs/lows if available
-    if len(candles) >= 15:
-        recent = candles[-14:]
+    if len(eval_candles) >= 15:
+        recent = eval_candles[-14:]
         hi = max(float(c["high"]) for c in recent)
         lo = min(float(c["low"]) for c in recent)
         # مدى صفري (14 شمعة بلا حركة) ⇒ لا %K: كان `or 1e-9` يعطي %K=0 ⇒ «تشبّع بيعي» وصوت شراء +0.6 من لا حركة
@@ -424,8 +424,8 @@ def indicator_forecast(
     # 8 نقاط (+0.07%) «محايد» دائماً، وعلى D حركة 2.5% عادية أقصى صوت (1.0) ⇒ صوت الاتجاه ميّت على الفريمات
     # الصغيرة ومُشبَع على الكبيرة. الآن 3×ATR صافية على 10 شموع = أقصى صوت. بلا ATR14 (شموع قليلة أو بلا
     # مدى) لا مقياس ⇒ لا صوت، كالمساعد.
-    trend_atr = _atr_last(candles) if len(closes) >= 11 else None
-    if trend_atr is None and len(closes) >= 11 and _atr_raw(candles) == 0:
+    trend_atr = _atr_last(eval_candles) if len(closes) >= 11 else None
+    if trend_atr is None and len(closes) >= 11 and _atr_raw(eval_candles) == 0:
         no_move.add("trend")
     if trend_atr is not None:
         move = closes[-1] - closes[-11]
@@ -452,14 +452,14 @@ def indicator_forecast(
         # السبب: مؤشّر مفعّل امتنع لغياب الحركة بنافذته ⇒ «بلا حركة» (كان «بيانات ناقصة» مع 180 شمعة حقيقية
         # حين تتساوى آخر 20 إغلاقاً وBB وحده مفعّل)؛ وإلا فالسلسلة أقصر من المؤشّرات المفعّلة.
         # `snapshot` بشكل الردّ العادي: الخام كان يحمل `ma_cross_up: false` لتقاطع لم يُحسب أصلاً (سلسلة قصيرة).
-        moved = not (_atr_raw(candles) == 0 or flat_closes or (no_move & want))
+        moved = not (_atr_raw(eval_candles) == 0 or flat_closes or (no_move & want))
         return {
             "symbol": sym,
             "mode": "indicators",
             "direction": None,
             "avg_score": None,
             "levels": None,
-            "levels_basis": _no_vote_basis(_trade_levels(last, "neutral", candles)[1]),
+            "levels_basis": _no_vote_basis(_trade_levels(last, "neutral", eval_candles)[1]),
             "votes": [],
             "snapshot": snapshot,
             "price_decimals": dp,
@@ -470,7 +470,7 @@ def indicator_forecast(
 
     avg = round(sum(v["score"] for v in votes) / len(votes), 3) + 0.0  # يُصنَّف كما يُرسَل
     direction = _direction(avg)
-    levels, levels_basis = _trade_levels(last, direction, candles, sym)
+    levels, levels_basis = _trade_levels(last, direction, eval_candles, sym)
 
     return {
         "symbol": sym,
