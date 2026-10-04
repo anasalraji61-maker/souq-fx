@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
-from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile  # noqa: F401
+from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile, _migrate_smc, log_smc_analysis, get_latest_smc_analysis  # noqa: F401
 
 
 def get_db():
@@ -2789,83 +2789,6 @@ def _migrate_positions(c: sqlite3.Connection) -> None:
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_user_status ON positions(user_id, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_symbol_status ON positions(symbol, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_open_time ON positions(open_time DESC)")
-
-
-
-
-def _migrate_smc(c: sqlite3.Connection) -> None:
-    """إنشاء جداول مفاهيم الأموال الذكية SMC وفجوات القيمة العادلة واقتناص السيولة."""
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS smc_analysis_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            timeframe TEXT NOT NULL,
-            current_price REAL NOT NULL,
-            market_bias TEXT NOT NULL,
-            active_fvg_count INTEGER NOT NULL DEFAULT 0,
-            active_ob_count INTEGER NOT NULL DEFAULT 0,
-            sweeps_count INTEGER NOT NULL DEFAULT 0,
-            payload_json TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_smc_sym_tf ON smc_analysis_log(symbol, timeframe, id DESC)")
-
-
-def log_smc_analysis(
-    symbol: str,
-    timeframe: str,
-    current_price: float,
-    market_bias: str,
-    active_fvg_count: int,
-    active_ob_count: int,
-    sweeps_count: int,
-    payload_json: str = "{}"
-) -> int:
-    with get_db() as c:
-        cur = c.execute(
-            """INSERT INTO smc_analysis_log
-               (symbol, timeframe, current_price, market_bias, active_fvg_count, active_ob_count, sweeps_count, payload_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                symbol.upper(),
-                timeframe,
-                float(current_price),
-                market_bias,
-                int(active_fvg_count),
-                int(active_ob_count),
-                int(sweeps_count),
-                payload_json
-            )
-        )
-        return int(cur.lastrowid)
-
-
-def get_latest_smc_analysis(symbol: str, timeframe: str = "1h") -> dict[str, Any] | None:
-    with get_db() as c:
-        row = c.execute(
-            """SELECT id, symbol, timeframe, current_price, market_bias,
-                      active_fvg_count, active_ob_count, sweeps_count, payload_json, created_at
-               FROM smc_analysis_log
-               WHERE symbol = ? AND timeframe = ?
-               ORDER BY id DESC LIMIT 1""",
-            (symbol.upper(), timeframe)
-        ).fetchone()
-        if not row:
-            return None
-        return {
-            "id": row[0],
-            "symbol": row[1],
-            "timeframe": row[2],
-            "current_price": row[3],
-            "market_bias": row[4],
-            "active_fvg_count": row[5],
-            "active_ob_count": row[6],
-            "sweeps_count": row[7],
-            "payload_json": row[8],
-            "created_at": str(row[9])
-        }
-
 
 
 def _migrate_divergence(c: sqlite3.Connection) -> None:
