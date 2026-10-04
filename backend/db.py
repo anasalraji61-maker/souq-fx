@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
-from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest  # noqa: F401
+from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache  # noqa: F401
 
 
 def get_db():
@@ -2789,41 +2789,6 @@ def _migrate_positions(c: sqlite3.Connection) -> None:
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_user_status ON positions(user_id, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_symbol_status ON positions(symbol, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_open_time ON positions(open_time DESC)")
-
-
-# ==============================================================================
-# Task 22: Caching Strategy Optimization (Redis/Memory LRU + Hot Spot Caching)
-# ==============================================================================
-
-def _migrate_cache(c: sqlite3.Connection) -> None:
-    """إنشاء وتحديث جداول إحصائيات الكاش وسجل إبطال الشموع."""
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS cache_stats (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT DEFAULT (DATE('now')),
-            symbol TEXT,
-            hits INTEGER DEFAULT 0,
-            misses INTEGER DEFAULT 0,
-            avg_hit_latency_ms REAL DEFAULT 0,
-            avg_miss_latency_ms REAL DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(date, symbol)
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_cache_stats_date ON cache_stats(date)")
-    c.execute("CREATE INDEX IF NOT EXISTS idx_cache_stats_symbol ON cache_stats(symbol)")
-
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS cache_invalidation_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            timeframe TEXT,
-            invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            reason TEXT
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_invalidation_symbol_time ON cache_invalidation_log(symbol, invalidated_at)")
 
 
 # ==============================================================================

@@ -199,3 +199,38 @@ def get_ichimoku_backtest(symbol: str, timeframe: str = "1h") -> dict[str, Any] 
 
 
 # ==============================================================================
+
+
+# ==============================================================================
+# Task 22: Caching Strategy Optimization (Redis/Memory LRU + Hot Spot Caching)
+# ==============================================================================
+
+def _migrate_cache(c: sqlite3.Connection) -> None:
+    """إنشاء وتحديث جداول إحصائيات الكاش وسجل إبطال الشموع."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS cache_stats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT DEFAULT (DATE('now')),
+            symbol TEXT,
+            hits INTEGER DEFAULT 0,
+            misses INTEGER DEFAULT 0,
+            avg_hit_latency_ms REAL DEFAULT 0,
+            avg_miss_latency_ms REAL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(date, symbol)
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_cache_stats_date ON cache_stats(date)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_cache_stats_symbol ON cache_stats(symbol)")
+
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS cache_invalidation_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            timeframe TEXT,
+            invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            reason TEXT
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_invalidation_symbol_time ON cache_invalidation_log(symbol, invalidated_at)")
