@@ -78,6 +78,10 @@ app.include_router(academy_progress_router)
 from routers_community import router as community_router
 app.include_router(community_router)
 
+from api_hardening import RateLimiter, RateLimitMiddleware, health_payload, limit_from_env
+_RATE_LIMITER = RateLimiter(limit_from_env())
+app.add_middleware(RateLimitMiddleware, limiter=_RATE_LIMITER)
+
 _LONE_SURROGATE_ESC = re.compile(rb"\\u[dD][89a-fA-F][0-9a-fA-F]{2}")
 
 
@@ -893,6 +897,11 @@ def health():
         "note": "MATRIX charts app — isolated from trading robot/MT5 bridge and Souq-Iraq",
         "ts": datetime.now(timezone.utc).isoformat(),
     }
+
+
+@app.get("/api/health")
+def api_health():
+    return health_payload("0.1.0")
 
 
 @app.get("/api/market/status")
