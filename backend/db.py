@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
-from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile, _migrate_smc, log_smc_analysis, get_latest_smc_analysis, _migrate_fibonacci, log_fibonacci_analysis, get_latest_fibonacci, _migrate_divergence, log_divergence_signal, get_divergence_signals  # noqa: F401
+from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile, _migrate_smc, log_smc_analysis, get_latest_smc_analysis, _migrate_fibonacci, log_fibonacci_analysis, get_latest_fibonacci, _migrate_divergence, log_divergence_signal, get_divergence_signals, _migrate_sentiment, log_sentiment_depth, get_latest_sentiment  # noqa: F401
 
 
 def get_db():
@@ -2789,91 +2789,6 @@ def _migrate_positions(c: sqlite3.Connection) -> None:
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_user_status ON positions(user_id, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_symbol_status ON positions(symbol, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_open_time ON positions(open_time DESC)")
-
-
-def _migrate_sentiment(c: sqlite3.Connection) -> None:
-    """إنشاء جداول معنويات السوق (Sentiment) وعمق دفتر الأوامر (Order Book Depth)."""
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS sentiment_depth_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            current_price REAL NOT NULL,
-            long_pct REAL NOT NULL,
-            short_pct REAL NOT NULL,
-            sentiment_index REAL NOT NULL,
-            contrarian_bias TEXT NOT NULL,
-            retail_mood TEXT NOT NULL,
-            total_bid_depth REAL NOT NULL,
-            total_ask_depth REAL NOT NULL,
-            depth_json TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_sentiment_sym ON sentiment_depth_log(symbol, id DESC)")
-
-
-def log_sentiment_depth(
-    symbol: str,
-    current_price: float,
-    long_pct: float,
-    short_pct: float,
-    sentiment_index: float,
-    contrarian_bias: str,
-    retail_mood: str,
-    total_bid_depth: float,
-    total_ask_depth: float,
-    depth_json: str = "{}"
-) -> int:
-    with get_db() as c:
-        cur = c.execute(
-            """INSERT INTO sentiment_depth_log
-               (symbol, current_price, long_pct, short_pct, sentiment_index,
-                contrarian_bias, retail_mood, total_bid_depth, total_ask_depth, depth_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                symbol.upper(),
-                float(current_price),
-                float(long_pct),
-                float(short_pct),
-                float(sentiment_index),
-                contrarian_bias,
-                retail_mood,
-                float(total_bid_depth),
-                float(total_ask_depth),
-                depth_json
-            )
-        )
-        return int(cur.lastrowid)
-
-
-def get_latest_sentiment(symbol: str) -> dict[str, Any] | None:
-    with get_db() as c:
-        row = c.execute(
-            """SELECT id, symbol, current_price, long_pct, short_pct,
-                      sentiment_index, contrarian_bias, retail_mood,
-                      total_bid_depth, total_ask_depth, depth_json, created_at
-               FROM sentiment_depth_log
-               WHERE symbol = ?
-               ORDER BY id DESC LIMIT 1""",
-            (symbol.upper(),)
-        ).fetchone()
-        if not row:
-            return None
-        return {
-            'id': row[0],
-            'symbol': row[1],
-            'current_price': row[2],
-            'long_pct': row[3],
-            'short_pct': row[4],
-            'sentiment_index': row[5],
-            'contrarian_bias': row[6],
-            'retail_mood': row[7],
-            'total_bid_depth': row[8],
-            'total_ask_depth': row[9],
-            'depth_json': row[10],
-            'created_at': str(row[11])
-        }
-
 
 
 def _migrate_news_impact(c: sqlite3.Connection) -> None:
