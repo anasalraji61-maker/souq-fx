@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
-from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache  # noqa: F401
+from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns  # noqa: F401
 
 
 def get_db():
@@ -2830,130 +2830,6 @@ def _migrate_volume_profile(c: sqlite3.Connection) -> None:
     )
     c.execute("CREATE INDEX IF NOT EXISTS idx_of_sym_tf ON order_flow_imbalances(symbol, timeframe, timestamp DESC)")
 
-
-
-def _migrate_harmonic_patterns(c: sqlite3.Connection) -> None:
-    """إنشاء جدول أنماط الهارمونيك ومناطق الانعكاس المحتملة PRZ."""
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS harmonic_patterns (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            timeframe TEXT NOT NULL,
-            pattern_type TEXT NOT NULL,
-            direction TEXT NOT NULL,
-            x_price REAL NOT NULL,
-            a_price REAL NOT NULL,
-            b_price REAL NOT NULL,
-            c_price REAL NOT NULL,
-            d_price REAL NOT NULL,
-            prz_min REAL NOT NULL,
-            prz_max REAL NOT NULL,
-            stop_loss REAL NOT NULL,
-            tp1 REAL NOT NULL,
-            tp2 REAL NOT NULL,
-            tp3 REAL NOT NULL,
-            confidence_score REAL NOT NULL,
-            status TEXT NOT NULL DEFAULT 'COMPLETED',
-            points_json TEXT,
-            ratios_json TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_harmonic_sym_tf ON harmonic_patterns(symbol, timeframe, id DESC)")
-    c.execute("CREATE INDEX IF NOT EXISTS idx_harmonic_status ON harmonic_patterns(status)")
-
-
-def log_harmonic_pattern(
-    symbol: str,
-    timeframe: str,
-    pattern_type: str,
-    direction: str,
-    x_price: float,
-    a_price: float,
-    b_price: float,
-    c_price: float,
-    d_price: float,
-    prz_min: float,
-    prz_max: float,
-    stop_loss: float,
-    tp1: float,
-    tp2: float,
-    tp3: float,
-    confidence_score: float,
-    status: str = 'COMPLETED',
-    points_json: str = '{}',
-    ratios_json: str = '{}'
-) -> int:
-    with get_db() as c:
-        cur = c.execute(
-            """INSERT INTO harmonic_patterns
-               (symbol, timeframe, pattern_type, direction, x_price, a_price, b_price, c_price, d_price,
-                prz_min, prz_max, stop_loss, tp1, tp2, tp3, confidence_score, status, points_json, ratios_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                symbol.upper(),
-                timeframe,
-                pattern_type,
-                direction.upper(),
-                float(x_price),
-                float(a_price),
-                float(b_price),
-                float(c_price),
-                float(d_price),
-                float(prz_min),
-                float(prz_max),
-                float(stop_loss),
-                float(tp1),
-                float(tp2),
-                float(tp3),
-                float(confidence_score),
-                status,
-                points_json,
-                ratios_json
-            )
-        )
-        return int(cur.lastrowid)
-
-
-def get_harmonic_patterns(symbol: str, timeframe: str = '1h', limit: int = 10) -> list[dict[str, Any]]:
-    with get_db() as c:
-        rows = c.execute(
-            """SELECT id, symbol, timeframe, pattern_type, direction,
-                      x_price, a_price, b_price, c_price, d_price,
-                      prz_min, prz_max, stop_loss, tp1, tp2, tp3,
-                      confidence_score, status, points_json, ratios_json, created_at
-               FROM harmonic_patterns
-               WHERE symbol = ? AND timeframe = ?
-               ORDER BY id DESC LIMIT ?""",
-            (symbol.upper(), timeframe, limit)
-        ).fetchall()
-        
-        results = []
-        for r in rows:
-            results.append({
-                'id': r[0],
-                'symbol': r[1],
-                'timeframe': r[2],
-                'pattern_type': r[3],
-                'direction': r[4],
-                'x_price': r[5],
-                'a_price': r[6],
-                'b_price': r[7],
-                'c_price': r[8],
-                'd_price': r[9],
-                'prz_min': r[10],
-                'prz_max': r[11],
-                'stop_loss': r[12],
-                'tp1': r[13],
-                'tp2': r[14],
-                'tp3': r[15],
-                'confidence_score': r[16],
-                'status': r[17],
-                'points_json': r[18],
-                'ratios_json': r[19],
-                'created_at': str(r[20])
-            })
-        return results
 
 
 
