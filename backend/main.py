@@ -79,6 +79,9 @@ from routers_community import router as community_router
 app.include_router(community_router)
 
 from api_hardening import RateLimiter, RateLimitMiddleware, health_payload, limit_from_env
+
+from routers_journal import router as journal_router
+app.include_router(journal_router)
 _RATE_LIMITER = RateLimiter(limit_from_env())
 app.add_middleware(RateLimitMiddleware, limiter=_RATE_LIMITER)
 
