@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
-from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile, _migrate_smc, log_smc_analysis, get_latest_smc_analysis, _migrate_fibonacci, log_fibonacci_analysis, get_latest_fibonacci  # noqa: F401
+from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile, _migrate_smc, log_smc_analysis, get_latest_smc_analysis, _migrate_fibonacci, log_fibonacci_analysis, get_latest_fibonacci, _migrate_divergence, log_divergence_signal, get_divergence_signals  # noqa: F401
 
 
 def get_db():
@@ -2789,91 +2789,6 @@ def _migrate_positions(c: sqlite3.Connection) -> None:
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_user_status ON positions(user_id, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_symbol_status ON positions(symbol, status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_open_time ON positions(open_time DESC)")
-
-
-def _migrate_divergence(c: sqlite3.Connection) -> None:
-    """إنشاء جداول إشارات الانفراج السعري والمؤشرات (RSI, MACD, Stochastic)."""
-    c.execute("CREATE INDEX IF NOT EXISTS idx_div_status ON divergence_signals(status)")
-
-
-def log_divergence_signal(
-    symbol: str,
-    timeframe: str,
-    indicator: str,
-    divergence_type: str,
-    direction: str,
-    price_point1: float,
-    price_point2: float,
-    osc_point1: float,
-    osc_point2: float,
-    current_price: float,
-    target_price: float,
-    stop_loss: float,
-    confidence_score: float,
-    status: str = 'ACTIVE'
-) -> int:
-    with get_db() as c:
-        cur = c.execute(
-            """INSERT INTO divergence_signals
-               (symbol, timeframe, indicator, divergence_type, direction,
-                price_point1, price_point2, osc_point1, osc_point2,
-                current_price, target_price, stop_loss, confidence_score, status)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                symbol.upper(),
-                timeframe,
-                indicator.upper(),
-                divergence_type.upper(),
-                direction.upper(),
-                float(price_point1),
-                float(price_point2),
-                float(osc_point1),
-                float(osc_point2),
-                float(current_price),
-                float(target_price),
-                float(stop_loss),
-                float(confidence_score),
-                status
-            )
-        )
-        return int(cur.lastrowid)
-
-
-def get_divergence_signals(symbol: str, timeframe: str = '1h', limit: int = 15) -> list[dict[str, Any]]:
-    with get_db() as c:
-        rows = c.execute(
-            """SELECT id, symbol, timeframe, indicator, divergence_type, direction,
-                      price_point1, price_point2, osc_point1, osc_point2,
-                      current_price, target_price, stop_loss, confidence_score, status, created_at
-               FROM divergence_signals
-               WHERE symbol = ? AND timeframe = ?
-               ORDER BY id DESC LIMIT ?""",
-            (symbol.upper(), timeframe, limit)
-        ).fetchall()
-
-        results = []
-        for r in rows:
-            results.append({
-                'id': r[0],
-                'symbol': r[1],
-                'timeframe': r[2],
-                'indicator': r[3],
-                'divergence_type': r[4],
-                'direction': r[5],
-                'price_point1': r[6],
-                'price_point2': r[7],
-                'osc_point1': r[8],
-                'osc_point2': r[9],
-                'current_price': r[10],
-                'target_price': r[11],
-                'stop_loss': r[12],
-                'confidence_score': r[13],
-                'status': r[14],
-                'created_at': str(r[15])
-            })
-        return results
-
-
 
 
 def _migrate_sentiment(c: sqlite3.Connection) -> None:
