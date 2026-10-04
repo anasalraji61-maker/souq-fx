@@ -132,3 +132,14 @@ async def performance_endpoint(req: PerformanceRequest):
     """Calculate performance summary from closed trades."""
     trades = [t.model_dump() for t in req.trades]
     return analytics_metrics.summary(trades, req.starting_equity)
+
+
+@router.post("/pnl-groups")
+@_catch_value_error
+async def pnl_groups_endpoint(req: PerformanceRequest):
+    """P&L grouped by symbol and by timeframe."""
+    trades = [t.model_dump() for t in req.trades]
+    return {
+        "by_symbol": analytics_metrics.pnl_by_symbol(trades),
+        "by_timeframe": analytics_metrics.pnl_by_timeframe(trades),
+    }
