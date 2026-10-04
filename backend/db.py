@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
-from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns  # noqa: F401
+from db_analysis import _migrate_mta, log_mta_analysis, get_mta_backtest, _migrate_ichimoku, log_ichimoku_analysis, get_ichimoku_backtest, _migrate_cache, _migrate_harmonic_patterns, log_harmonic_pattern, get_harmonic_patterns, _migrate_volume_profile, log_volume_profile_analysis, get_latest_volume_profile  # noqa: F401
 
 
 def get_db():
@@ -2791,46 +2791,6 @@ def _migrate_positions(c: sqlite3.Connection) -> None:
     c.execute("CREATE INDEX IF NOT EXISTS idx_positions_open_time ON positions(open_time DESC)")
 
 
-# ==============================================================================
-# Task 17: Volume Profile & Order Flow Schema & Helpers
-# ==============================================================================
-
-def _migrate_volume_profile(c: sqlite3.Connection) -> None:
-    """إنشاء جداول تحليلات Volume Profile وتدفق الأوامر Order Flow."""
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS volume_profile_analysis (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            timeframe TEXT NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            current_price REAL NOT NULL,
-            poc_price REAL NOT NULL,
-            vah_price REAL NOT NULL,
-            val_price REAL NOT NULL,
-            total_volume REAL NOT NULL,
-            sentiment TEXT NOT NULL,
-            bins_json TEXT,
-            signals_json TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_vp_sym_tf ON volume_profile_analysis(symbol, timeframe, timestamp DESC)")
-
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS order_flow_imbalances (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            symbol TEXT NOT NULL,
-            timeframe TEXT NOT NULL,
-            imbalance_type TEXT NOT NULL,
-            delta REAL NOT NULL,
-            ratio REAL NOT NULL,
-            price REAL NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""
-    )
-    c.execute("CREATE INDEX IF NOT EXISTS idx_of_sym_tf ON order_flow_imbalances(symbol, timeframe, timestamp DESC)")
-
-
 
 
 def _migrate_smc(c: sqlite3.Connection) -> None:
@@ -3254,40 +3214,6 @@ def get_active_volatility_alerts(currency: Optional[str] = None, limit: int = 10
         return results
 
 
-def log_volume_profile_analysis(
-    symbol: str,
-    timeframe: str,
-    current_price: float,
-    poc_price: float,
-    vah_price: float,
-    val_price: float,
-    total_volume: float,
-    sentiment: str,
-    bins_json: str = "[]",
-    signals_json: str = "[]",
-) -> int:
-    with get_db() as c:
-        cur = c.execute(
-            """INSERT INTO volume_profile_analysis
-               (symbol, timeframe, current_price, poc_price, vah_price, val_price,
-                total_volume, sentiment, bins_json, signals_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                symbol.upper(),
-                timeframe,
-                float(current_price),
-                float(poc_price),
-                float(vah_price),
-                float(val_price),
-                float(total_volume),
-                sentiment,
-                bins_json,
-                signals_json,
-            ),
-        )
-        return int(cur.lastrowid)
-
-
 def log_order_flow_imbalance(
     symbol: str,
     timeframe: str,
@@ -3304,33 +3230,6 @@ def log_order_flow_imbalance(
             (symbol.upper(), timeframe, imbalance_type, float(delta), float(ratio), float(price)),
         )
         return int(cur.lastrowid)
-
-
-def get_latest_volume_profile(symbol: str, timeframe: str = "1h") -> dict[str, Any] | None:
-    with get_db() as c:
-        row = c.execute(
-            """SELECT symbol, timeframe, current_price, poc_price, vah_price, val_price,
-                      total_volume, sentiment, bins_json, signals_json, created_at
-               FROM volume_profile_analysis
-               WHERE symbol = ? AND timeframe = ?
-               ORDER BY id DESC LIMIT 1""",
-            (symbol.upper(), timeframe),
-        ).fetchone()
-        if not row:
-            return None
-        return {
-            "symbol": row[0],
-            "timeframe": row[1],
-            "current_price": float(row[2]),
-            "poc_price": float(row[3]),
-            "vah_price": float(row[4]),
-            "val_price": float(row[5]),
-            "total_volume": float(row[6]),
-            "sentiment": row[7],
-            "bins": json.loads(row[8]) if row[8] else [],
-            "signals": json.loads(row[9]) if row[9] else [],
-            "created_at": row[10],
-        }
 
 
 
