@@ -330,7 +330,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
       </div>
 
       {/* Desktop Column Headers (> 1100px): strictly aligned with the 5 items in the compact row */}
-      <div className="hidden min-[1101px]:grid grid-cols-[1fr_38px_60px_52px_36px] gap-1.5 px-2.5 py-1.5 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
+      <div className="hidden min-[1101px]:grid grid-cols-[minmax(84px,1fr)_34px_60px_52px_36px] gap-1.5 px-2.5 py-1.5 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
         <span className="text-right">الرمز / الاسم</span>
         <span className="text-center">خط</span>
         <span className="text-left font-mono">السعر</span>
@@ -358,7 +358,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                 onDragOver={(e) => handleDragOver(e, item.symbol)}
                 onDragEnd={handleDragEnd}
                 onClick={() => onSelectSymbol(item.symbol)}
-                className={`hidden min-[1101px]:grid grid-cols-[1fr_38px_60px_52px_36px] gap-1.5 items-center px-2.5 h-12 min-h-[48px] max-h-[48px] rounded-lg cursor-pointer transition-all active:scale-[0.99] select-none group ${
+                className={`hidden min-[1101px]:grid grid-cols-[minmax(84px,1fr)_34px_60px_52px_36px] gap-1.5 items-center px-2.5 h-12 min-h-[48px] max-h-[48px] rounded-lg cursor-pointer transition-all active:scale-[0.99] select-none group ${
                   isClosed ? 'opacity-55 saturate-50' : ''
                 } ${
                   isSelected
@@ -368,13 +368,13 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                 title={isClosed ? 'السوق مغلق حالياً' : undefined}
               >
                 {/* 1. Code + Sub-name */}
-                <div className="flex items-center gap-1.5 min-w-0 pr-0.5 overflow-hidden">
+                <div className="flex items-center gap-1.5 min-w-0 pr-0.5">
                   <GripVertical className="w-3 h-3 text-[#334155] opacity-0 group-hover:opacity-100 shrink-0 cursor-grab" />
                   <div className="flex flex-col min-w-0 justify-center">
                     <div className="flex items-center gap-1">
                       <span
                         dir="ltr"
-                        className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap text-right ${
+                        className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap text-right shrink-0 min-w-[56px] pl-0.5 ${
                           isSelected ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'
                         }`}
                       >
