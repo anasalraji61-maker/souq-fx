@@ -70,15 +70,23 @@ class StressTestRequest(BaseModel):
 
 
 class Trade(BaseModel):
+    model_config = {"extra": "allow"}
+
     symbol: str = "UNKNOWN"
     timeframe: str = "UNKNOWN"
     pnl: float
     closed_at: str = ""
+    date: str = ""
+    tags: list[str] = Field(default_factory=list)
+    direction: str = ""
 
 
 class PerformanceRequest(BaseModel):
+    model_config = {"extra": "allow"}
+
     trades: list[Trade] = Field(default_factory=list, max_length=10000)
     starting_equity: float = 0.0
+    initialBalance: float | None = None
 
 
 # ─── Helper ──────────────────────────────────────────────────────────────────
@@ -170,7 +178,16 @@ async def stress_test_endpoint(req: StressTestRequest):
 @router.post("/performance")
 @_catch_value_error
 async def performance_endpoint(req: PerformanceRequest):
-    """Calculate performance summary from closed trades."""
+    """Calculate performance summary from closed trades.
+
+    Frontend calls send ``initialBalance`` and journal-shaped trades and get
+    the ``PerformanceResult`` contract back. Legacy calls (``starting_equity``
+    only) keep the old ``analytics_metrics.summary`` shape.
+    """
+    if req.initialBalance is not None:
+        return analysis_contract.performance_response(
+            [t.model_dump() for t in req.trades], req.initialBalance
+        )
     trades = [t.model_dump() for t in req.trades]
     return analytics_metrics.summary(trades, req.starting_equity)
 

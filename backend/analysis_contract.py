@@ -34,6 +34,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import analytics_metrics
+
 ESTIMATED_LABEL = "تقديري"
 
 
@@ -219,6 +221,111 @@ def stress_test_response(equity: float, raw: dict) -> list[dict]:
             "status": status,
         })
     return out
+
+
+# ─── Performance ─────────────────────────────────────────────────────────────
+
+_TIMEFRAME_TAGS = ("1m", "5m", "15m", "1h", "4h", "1D")
+
+
+def _timeframe_of(trade: dict) -> str:
+    """First tag in the known timeframe list, else the default '1h'."""
+    tags = trade.get("tags") or []
+    for tag in tags:
+        if tag in _TIMEFRAME_TAGS:
+            return tag
+    return "1h"
+
+
+def performance_response(trades: list[dict], initial_balance: float) -> dict:
+    """Build the frontend ``PerformanceResult`` from journal-shaped trades.
+
+    Trades are dicts with ``pnl`` required and optional ``date`` / ``tags`` /
+    ``symbol`` (default "UNKNOWN"). Trades are sorted by ``date`` ascending
+    (stable) before building the equity curve.
+    """
+    sorted_trades = sorted(trades, key=lambda t: t.get("date") or "")
+    pnls = [float(t.get("pnl", 0.0)) for t in sorted_trades]
+
+    current_equity = initial_balance + sum(pnls)
+    winning = sum(1 for p in pnls if p > 0)
+    losing = sum(1 for p in pnls if p < 0)
+    total = len(pnls)
+
+    if total == 0:
+        win_rate = 0.0
+        profit_factor = 99.9
+        sharpe = 0.0
+    else:
+        win_rate = round(winning / total * 100, 1)
+        gross_profit = sum(p for p in pnls if p > 0)
+        gross_loss = abs(sum(p for p in pnls if p < 0))
+        profit_factor = round(gross_profit / gross_loss, 2) if gross_loss > 0 else 99.9
+
+    if len(pnls) >= 2:
+        mean_pnl = sum(pnls) / len(pnls)
+        variance = sum((p - mean_pnl) ** 2 for p in pnls) / len(pnls)
+        pstdev = variance ** 0.5
+        divisor = pstdev if pstdev > 0 else 1.0
+        sharpe = round(mean_pnl / divisor * (252 ** 0.5), 2)
+    else:
+        sharpe = 0.0
+
+    # max_drawdown: reuse the legacy peak-to-trough computation, but feed it
+    # the ``date`` field so the curve follows the frontend sort order.
+    dd_input = [{**t, "closed_at": t.get("date") or ""} for t in sorted_trades]
+    dd = analytics_metrics.max_drawdown(dd_input, initial_balance)
+    max_drawdown_usd = round(float(dd.get("max_drawdown", 0.0)), 2)
+    max_drawdown_pct = round(float(dd.get("max_drawdown_pct", 0.0)), 2)
+
+    first_date = sorted_trades[0].get("date") or "" if sorted_trades else ""
+    equity_curve: list[dict] = [
+        {"trade_num": 0, "equity": round(initial_balance, 2), "pnl": 0, "date": first_date}
+    ]
+    equity = initial_balance
+    for i, (t, pnl) in enumerate(zip(sorted_trades, pnls), start=1):
+        equity += pnl
+        equity_curve.append({
+            "trade_num": i,
+            "equity": round(equity, 2),
+            "pnl": pnl,
+            "date": t.get("date") or "",
+        })
+
+    def group_by(key_fn):
+        groups: dict[str, dict] = {}
+        for t in sorted_trades:
+            key = key_fn(t)
+            g = groups.setdefault(key, {"trades": 0, "pnl": 0.0, "wins": 0})
+            g["trades"] += 1
+            g["pnl"] += float(t.get("pnl", 0.0))
+            if float(t.get("pnl", 0.0)) > 0:
+                g["wins"] += 1
+        result: dict[str, dict] = {}
+        for key in sorted(groups):
+            g = groups[key]
+            result[key] = {
+                "trades": g["trades"],
+                "pnl": round(g["pnl"], 2),
+                "win_rate": round(g["wins"] / g["trades"] * 100) if g["trades"] else 0,
+            }
+        return result
+
+    return {
+        "initial_balance": initial_balance,
+        "current_equity": round(current_equity, 2),
+        "total_trades": total,
+        "winning_trades": winning,
+        "losing_trades": losing,
+        "win_rate": win_rate,
+        "profit_factor": profit_factor,
+        "sharpe_ratio": sharpe,
+        "max_drawdown_pct": max_drawdown_pct,
+        "max_drawdown_usd": max_drawdown_usd,
+        "equity_curve": equity_curve,
+        "by_symbol": group_by(lambda t: t.get("symbol") or "UNKNOWN"),
+        "by_timeframe": group_by(_timeframe_of),
+    }
 
 
 # ─── Correlation ─────────────────────────────────────────────────────────────
