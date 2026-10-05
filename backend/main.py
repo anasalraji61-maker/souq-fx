@@ -79,6 +79,7 @@ from routers_community import router as community_router
 app.include_router(community_router)
 
 from api_hardening import RateLimiter, RateLimitMiddleware, health_payload, limit_from_env
+from cors_config import get_cors_origins
 
 from routers_journal import router as journal_router
 app.include_router(journal_router)
@@ -125,7 +126,7 @@ async def _reject_lone_surrogates(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
