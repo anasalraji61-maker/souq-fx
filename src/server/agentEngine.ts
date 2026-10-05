@@ -89,6 +89,13 @@ export interface BotState {
   }>;
 }
 
+export class LiveTradingForbiddenError extends Error {
+  constructor() {
+    super('Live trading is disabled. The system operates in paper trading mode only.');
+    this.name = 'LiveTradingForbiddenError';
+  }
+}
+
 // Initial 10 Autonomous Agents
 const INITIAL_AGENTS: AgentInfo[] = [
   {
@@ -463,23 +470,6 @@ class AgentTradingEngine {
 
       this.state.openPositions.push(newPosition);
 
-      // Queue for MT5 Signal Bridge
-      this.state.pendingMt5Signals.push({
-        id: newPosition.id,
-        symbol: newPosition.symbol,
-        cmd: newPosition.type,
-        lot: newPosition.lot,
-        price: newPosition.entryPrice,
-        sl: newPosition.sl,
-        tp: newPosition.tp,
-        magic: 888999,
-        comment: `MATRIX-AI:${newPosition.consensusScore}%`,
-        timestamp: Date.now(),
-      });
-
-      this.state.mt5Bridge.totalSignalsSent++;
-      this.state.mt5Bridge.lastCommand = `${newPosition.type} ${newPosition.symbol} (${newPosition.lot} lot)`;
-
       this.addLog(
         'consensus_engine',
         'Executive Consensus',
@@ -511,7 +501,12 @@ class AgentTradingEngine {
   }
 
   public updateConfig(newConfig: Partial<BotConfig>): BotConfig {
-    this.state.config = { ...this.state.config, ...newConfig };
+    // Sanitize input: reject any attempt to enable live trading
+    if (newConfig.tradingMode !== undefined && newConfig.tradingMode !== 'PAPER') {
+      throw new LiveTradingForbiddenError();
+    }
+    // Always force PAPER mode in the merged result
+    this.state.config = { ...this.state.config, ...newConfig, tradingMode: 'PAPER' };
     this.addLog(
       'risk_guardian',
       'Risk Guardian',
@@ -560,10 +555,9 @@ class AgentTradingEngine {
   }
 
   // Consumes pending signals for MT5 Expert Advisor
+  // MT5 order bridge disabled: paper trading only
   public popPendingSignals() {
-    const signals = [...this.state.pendingMt5Signals];
-    this.state.pendingMt5Signals = [];
-    return signals;
+    return [];
   }
 
   public clearTradeHistory(): void {
@@ -609,22 +603,6 @@ class AgentTradingEngine {
     };
 
     this.state.openPositions.unshift(newPosition);
-
-    this.state.pendingMt5Signals.push({
-      id: newPosition.id,
-      symbol: newPosition.symbol,
-      cmd: newPosition.type,
-      lot: newPosition.lot,
-      price: newPosition.entryPrice,
-      sl: newPosition.sl,
-      tp: newPosition.tp,
-      magic: 888999,
-      comment: `MATRIX-AI:${newPosition.consensusScore}%`,
-      timestamp: Date.now(),
-    });
-
-    this.state.mt5Bridge.totalSignalsSent++;
-    this.state.mt5Bridge.lastCommand = `${newPosition.type} ${newPosition.symbol} (${newPosition.lot} lot)`;
 
     this.addLog(
       'consensus_engine',

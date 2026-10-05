@@ -3,7 +3,7 @@ import cors from 'cors';
 import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { globalAgentEngine } from './src/server/agentEngine.js';
+import { globalAgentEngine, LiveTradingForbiddenError } from './src/server/agentEngine.js';
 import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,8 +73,18 @@ app.get('/api/bot/state', (_req, res) => {
 
 // Update robot configuration (Auto-Trading ON/OFF, Risk%, etc.)
 app.post('/api/bot/config', (req, res) => {
-  const updated = globalAgentEngine.updateConfig(req.body);
-  return res.json({ success: true, config: updated });
+  try {
+    const updated = globalAgentEngine.updateConfig(req.body);
+    return res.json({ success: true, config: updated });
+  } catch (err: any) {
+    if (err instanceof LiveTradingForbiddenError) {
+      return res.status(403).json({
+        success: false,
+        error: 'التداول الحقيقي معطّل. النظام يعمل في وضع التداول التجريبي فقط.',
+      });
+    }
+    throw err;
+  }
 });
 
 // Close a single position
@@ -122,10 +132,7 @@ app.get('/api/bot/signals', (req, res) => {
     );
   }
 
-  const pending = globalAgentEngine.popPendingSignals();
-  if (pending.length > 0) {
-    return res.json(pending[0]); // Return signal for EA
-  }
+  globalAgentEngine.popPendingSignals(); // Always returns [] (MT5 bridge disabled)
   return res.json({
     status: 'idle',
     count: 0,

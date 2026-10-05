@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
-    "start": "tsx server.ts"
+    "start": "tsx server.ts",
+    "test:safety": "tsx src/server/agentEngine.safety.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
