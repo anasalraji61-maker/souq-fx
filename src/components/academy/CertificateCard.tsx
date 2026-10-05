@@ -1,6 +1,6 @@
 import React from 'react';
 import { CertificateItem } from '../../api/academy';
-import { Award, Printer, X, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Award, Printer, X } from 'lucide-react';
 
 interface CertificateCardProps {
   certificate: CertificateItem;

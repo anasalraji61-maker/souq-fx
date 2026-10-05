@@ -19,11 +19,9 @@ import {
   CheckCircle,
   ChevronLeft,
   Award,
-  Sparkles,
   Layers,
   Printer,
   Calendar,
-  CheckCircle2,
 } from 'lucide-react';
 
 export const AcademyScreen: React.FC = () => {
