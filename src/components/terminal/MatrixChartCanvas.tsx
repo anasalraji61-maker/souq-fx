@@ -226,6 +226,19 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     startIndex: 0,
   });
 
+  // Part 1.2: Legend collapsed state
+  const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+
+  // Part 2: Touch Gestures states & refs
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressActiveRef = useRef(false);
+  const lastTapTimeRef = useRef(0);
+  const lastTapPosRef = useRef({ x: 0, y: 0 });
+  const touchStartPosRef = useRef({ x: 0, y: 0 });
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartVisibleRef = useRef(60);
+  const pinchStartOffsetRef = useRef(0);
+
   // Handle Resize with ResizeObserver
   const [dimensions, setDimensions] = useState({ width: 400, height: 350 });
 
@@ -409,8 +422,8 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       const height = dimensions.height;
       if (width <= 0 || height <= 0) return;
 
-      // Handle high DPI displays
-      const dpr = window.devicePixelRatio || 1;
+      // 4.1 Cap device pixel ratio at 2 for performance on mobile / weak devices
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       ctx.scale(dpr, dpr);
@@ -887,7 +900,8 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
           const pt = sel.points[i];
           const hx = sel.type === 'horizontal' ? (pt.time ? getTimeX(pt.time) : chartWidth / 2) : getTimeX(pt.time);
           const hy = getY(pt.price);
-          if (Math.hypot(x - hx, y - hy) <= 9) {
+          // 2.2 Handles at least 24px for touch (radius 14px gives 28px diameter target)
+          if (Math.hypot(x - hx, y - hy) <= 14) {
             return { drawing: sel, handleIndex: i };
           }
         }
@@ -1171,6 +1185,272 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     dragBodyRef.current = null;
   };
 
+  // Touch Start (Part 2.1 & 2.2: Touch Gestures on Mobile)
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    onFocusCell?.();
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    // 2.1 Double Tap: Reset View (< 320ms, < 35px)
+    if (e.touches.length === 1) {
+      const now = Date.now();
+      const t = e.touches[0];
+      const x = t.clientX - rect.left;
+      const y = t.clientY - rect.top;
+
+      if (
+        now - lastTapTimeRef.current < 320 &&
+        Math.hypot(x - lastTapPosRef.current.x, y - lastTapPosRef.current.y) < 35
+      ) {
+        setPanOffset(0);
+        setVisibleCount(60);
+        setPriceScaleStretch(1.0);
+        setCrosshair(null);
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        lastTapTimeRef.current = 0;
+        return;
+      }
+      lastTapTimeRef.current = now;
+      lastTapPosRef.current = { x, y };
+      touchStartPosRef.current = { x, y };
+      isLongPressActiveRef.current = false;
+
+      // 2.1 Long Press: Crosshair with OHLC tooltip after 500ms
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      if (activeDrawingTool === 'none') {
+        longPressTimerRef.current = setTimeout(() => {
+          isLongPressActiveRef.current = true;
+          const { chartWidth, mainChartHeight, displayedCandles, candleWidth, adjustedMin, adjustedRange } =
+            transformRef.current;
+          if (x < chartWidth && y < dimensions.height - 24) {
+            const candleIdx = Math.max(0, Math.min(displayedCandles.length - 1, Math.floor(x / candleWidth)));
+            const hoverCandle = displayedCandles[candleIdx] || null;
+            const hoverPrice = yToPrice(y, adjustedMin, adjustedRange, mainChartHeight);
+            setCrosshair({ x, y, candle: hoverCandle, price: hoverPrice });
+            if (hoverCandle && onCrosshairTimeChange) {
+              onCrosshairTimeChange(hoverCandle.time);
+            }
+          }
+        }, 500);
+      }
+
+      // Check price scale stretch drag
+      const { chartWidth } = transformRef.current;
+      if (x >= chartWidth) {
+        setIsDraggingPriceScale(true);
+        priceDragStartYRef.current = y;
+        priceDragStartStretchRef.current = priceScaleStretch;
+        return;
+      }
+
+      // 2.2 Drawing on touch: tap tool, then tap-drag
+      if (activeDrawingTool !== 'none') {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        setTempDrawing({ startX: x, startY: y, currX: x, currY: y });
+        setSelectedDrawingId(null);
+        return;
+      }
+
+      // Normal mode: check hit test
+      const hit = hitTestDrawing(x, y);
+      if (hit) {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        setSelectedDrawingId(hit.drawing.id);
+        if (hit.handleIndex !== null) {
+          dragHandleRef.current = { drawingId: hit.drawing.id, handleIndex: hit.handleIndex };
+        } else {
+          dragBodyRef.current = {
+            drawingId: hit.drawing.id,
+            startX: x,
+            startY: y,
+            initialPoints: hit.drawing.points.map((pt) => ({ ...pt })),
+          };
+        }
+        return;
+      }
+
+      // No hit -> start 2.1 One finger drag = pan
+      setSelectedDrawingId(null);
+      isDraggingRef.current = true;
+      dragStartXRef.current = x;
+      dragStartOffsetRef.current = panOffset;
+      return;
+    }
+
+    // 2.1 Two-Finger Pinch: Zoom centered between fingers
+    if (e.touches.length === 2) {
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      isLongPressActiveRef.current = false;
+      isDraggingRef.current = false;
+      setTempDrawing(null);
+
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      pinchStartDistRef.current = dist;
+      pinchStartVisibleRef.current = visibleCount;
+      pinchStartOffsetRef.current = panOffset;
+    }
+  };
+
+  // Touch Move (Part 2.1 & 2.2)
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    // 2.1 Two-finger Pinch Zoom (centered between fingers)
+    if (e.touches.length === 2 && pinchStartDistRef.current !== null) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const ratio = dist / pinchStartDistRef.current;
+      if (ratio > 0.05) {
+        const newVisible = Math.max(15, Math.min(candles.length, Math.round(pinchStartVisibleRef.current / ratio)));
+        const countDiff = newVisible - pinchStartVisibleRef.current;
+        const centerX = (t1.clientX + t2.clientX) / 2 - rect.left;
+        const { chartWidth } = transformRef.current;
+        const centerRatio = Math.max(0, Math.min(1, centerX / chartWidth));
+        const offsetAdj = Math.round(countDiff * (1 - centerRatio));
+        setVisibleCount(newVisible);
+        setPanOffset(Math.max(0, Math.min(candles.length - newVisible, pinchStartOffsetRef.current - offsetAdj)));
+      }
+      return;
+    }
+
+    // Single finger
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      const x = t.clientX - rect.left;
+      const y = t.clientY - rect.top;
+
+      // Cancel long press if moved > 8px before timer fired
+      if (
+        !isLongPressActiveRef.current &&
+        Math.hypot(x - touchStartPosRef.current.x, y - touchStartPosRef.current.y) > 8
+      ) {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      }
+
+      const {
+        chartWidth,
+        mainChartHeight,
+        displayedCandles,
+        candleWidth,
+        adjustedMin,
+        adjustedRange,
+        intervalSeconds,
+      } = transformRef.current;
+
+      // If Long Press crosshair mode active: update crosshair & tooltip
+      if (isLongPressActiveRef.current) {
+        if (x < chartWidth && y < dimensions.height - 24) {
+          const candleIdx = Math.max(0, Math.min(displayedCandles.length - 1, Math.floor(x / candleWidth)));
+          const hoverCandle = displayedCandles[candleIdx] || null;
+          const hoverPrice = yToPrice(y, adjustedMin, adjustedRange, mainChartHeight);
+          setCrosshair({ x, y, candle: hoverCandle, price: hoverPrice });
+          if (hoverCandle && onCrosshairTimeChange) {
+            onCrosshairTimeChange(hoverCandle.time);
+          }
+        }
+        return;
+      }
+
+      // Dragging price scale
+      if (isDraggingPriceScale) {
+        const dy = y - priceDragStartYRef.current;
+        const stretchDelta = dy / 150;
+        const newStretch = Math.max(0.2, Math.min(5.0, priceDragStartStretchRef.current - stretchDelta));
+        setPriceScaleStretch(newStretch);
+        return;
+      }
+
+      // Drawing preview
+      if (tempDrawing && activeDrawingTool !== 'none') {
+        setTempDrawing((prev) => (prev ? { ...prev, currX: x, currY: y } : null));
+        return;
+      }
+
+      // Dragging drawing handle
+      if (dragHandleRef.current && onUpdateDrawing) {
+        const { drawingId, handleIndex } = dragHandleRef.current;
+        const d = drawings.find((item) => item.id === drawingId);
+        if (d) {
+          const snapped = applyMagnetSnapping(x, y, displayedCandles, candleWidth, adjustedMin, adjustedRange, mainChartHeight);
+          const updatedPoints = [...d.points];
+          updatedPoints[handleIndex] = snapped;
+          onUpdateDrawing({ ...d, points: updatedPoints });
+        }
+        return;
+      }
+
+      // Dragging drawing body
+      if (dragBodyRef.current && onUpdateDrawing) {
+        const { drawingId, startX, startY, initialPoints } = dragBodyRef.current;
+        const d = drawings.find((item) => item.id === drawingId);
+        if (d) {
+          const dx = x - startX;
+          const dy = y - startY;
+          const timeShift = (dx / candleWidth) * intervalSeconds;
+          const priceShift = -(dy / mainChartHeight) * adjustedRange;
+          const updatedPoints = initialPoints.map((pt) => ({
+            time: Math.round(pt.time + timeShift),
+            price: pt.price + priceShift,
+          }));
+          onUpdateDrawing({ ...d, points: updatedPoints });
+        }
+        return;
+      }
+
+      // 2.1 One finger drag = pan
+      if (isDraggingRef.current) {
+        const dx = x - dragStartXRef.current;
+        const candleShift = Math.round(dx / candleWidth);
+        const newOffset = Math.max(0, Math.min(candles.length - visibleCount, dragStartOffsetRef.current + candleShift));
+        setPanOffset(newOffset);
+        return;
+      }
+    }
+  };
+
+  // Touch End (Part 2.1 & 2.2)
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    pinchStartDistRef.current = null;
+
+    if (isDraggingPriceScale) {
+      setIsDraggingPriceScale(false);
+      return;
+    }
+
+    // Complete drawing if one was in-progress
+    if (tempDrawing && activeDrawingTool !== 'none' && onDrawingComplete) {
+      const dx = Math.abs(tempDrawing.currX - tempDrawing.startX);
+      const dy = Math.abs(tempDrawing.currY - tempDrawing.startY);
+
+      if (dx >= 8 || dy >= 8) {
+        const { displayedCandles, candleWidth, adjustedMin, adjustedRange, mainChartHeight } = transformRef.current;
+        const p1 = applyMagnetSnapping(tempDrawing.startX, tempDrawing.startY, displayedCandles, candleWidth, adjustedMin, adjustedRange, mainChartHeight);
+        const p2 = applyMagnetSnapping(tempDrawing.currX, tempDrawing.currY, displayedCandles, candleWidth, adjustedMin, adjustedRange, mainChartHeight);
+
+        const newDrawing: DrawingItem = {
+          id: `draw-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          type: activeDrawingTool,
+          points: [p1, p2],
+          color: activeDrawingTool === 'position_long' ? '#22C55E' : '#2DD4BF',
+          lineWidth: 1.5,
+          lineStyle: 'solid',
+        };
+        onDrawingComplete(newDrawing);
+        setSelectedDrawingId(newDrawing.id);
+      }
+
+      setTempDrawing(null);
+      onResetActiveTool?.();
+    }
+
+    isDraggingRef.current = false;
+    dragHandleRef.current = null;
+    dragBodyRef.current = null;
+  };
+
   // Double Click on Price Axis -> Reset price scale stretch (2.2)
   const handleDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -1231,43 +1511,61 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
         onCrosshairTimeChange?.(null);
       }}
     >
-      {/* 1. HUD Header (Symbol, Timeframe, OHLC, Change%) */}
-      <div className="absolute top-2 left-3 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono bg-[#121A2B]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#243049] shadow-md pointer-events-none">
-        <span className="font-bold text-[#2DD4BF] tracking-wide text-sm">{symbol}</span>
-        <span className="text-[#7B8DA8] uppercase">{timeframe}</span>
-        {isDemo && (
-          <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 font-bold font-sans text-[11px] flex items-center gap-1 shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            بيانات تجريبية
-          </span>
-        )}
+      {/* 1. HUD Header (Symbol, Timeframe, Demo Badge, OHLC/C+Change% wrapped to two clean lines) */}
+      <div className="absolute top-2 left-3 z-10 flex flex-col gap-1 max-w-[calc(100%-165px)] text-xs font-mono pointer-events-none">
+        {/* Line 1: Symbol, Timeframe, Demo Badge */}
+        <div className="flex items-center gap-2 bg-[#121A2B]/90 backdrop-blur-md px-2.5 py-1 rounded-md border border-[#243049] shadow-md w-fit shrink-0">
+          <span className="font-bold text-[#2DD4BF] tracking-wide text-xs sm:text-sm">{symbol}</span>
+          <span className="text-[#7B8DA8] uppercase text-[11px]">{timeframe}</span>
+          {isDemo && (
+            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 font-bold font-sans text-[10px] flex items-center gap-1 shadow-xs shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              بيانات تجريبية
+            </span>
+          )}
+        </div>
+
+        {/* Line 2: OHLC values (on narrow widths show only C and change%) */}
         {hudCandle && (
-          <>
-            <span className="text-[#A3B4D0]">
-              O: <strong className="text-[#E8EEF9]">{hudCandle.open.toFixed(precision)}</strong>
-            </span>
-            <span className="text-[#A3B4D0]">
-              H: <strong className="text-[#22C55E]">{hudCandle.high.toFixed(precision)}</strong>
-            </span>
-            <span className="text-[#A3B4D0]">
-              L: <strong className="text-[#EF4444]">{hudCandle.low.toFixed(precision)}</strong>
-            </span>
-            <span className="text-[#A3B4D0]">
-              C: <strong className="text-[#E8EEF9]">{hudCandle.close.toFixed(precision)}</strong>
-            </span>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] bg-[#121A2B]/85 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-[#243049] shadow-xs w-fit">
+            {dimensions.width >= 720 ? (
+              <>
+                <span className="text-[#A3B4D0]">
+                  O: <strong className="text-[#E8EEF9]">{hudCandle.open.toFixed(precision)}</strong>
+                </span>
+                <span className="text-[#A3B4D0]">
+                  H: <strong className="text-[#22C55E]">{hudCandle.high.toFixed(precision)}</strong>
+                </span>
+                <span className="text-[#A3B4D0]">
+                  L: <strong className="text-[#EF4444]">{hudCandle.low.toFixed(precision)}</strong>
+                </span>
+                <span className="text-[#A3B4D0]">
+                  C: <strong className="text-[#E8EEF9]">{hudCandle.close.toFixed(precision)}</strong>
+                </span>
+              </>
+            ) : (
+              <span className="text-[#A3B4D0]">
+                C: <strong className="text-[#E8EEF9]">{hudCandle.close.toFixed(precision)}</strong>
+              </span>
+            )}
             <span className={`font-semibold ${priceChange >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
               {priceChange >= 0 ? '+' : ''}
               {priceChange.toFixed(precision)} ({priceChangePct.toFixed(2)}%)
             </span>
-            <span className="text-[#7B8DA8]">V: {hudCandle.volume.toLocaleString()}</span>
-          </>
+            {dimensions.width >= 720 && (
+              <span className="text-[#7B8DA8]">V: {hudCandle.volume.toLocaleString()}</span>
+            )}
+          </div>
         )}
       </div>
 
-      {/* 2. Interactive Indicator Legend (1.4: top-left, name, params, last closed value, eye, gear, x) */}
+      {/* 2. Interactive Indicator Legend (1.2: collapses to one line with a "+N" chip on mobile) */}
       {indicatorInstances && indicatorInstances.length > 0 && (
-        <div className="absolute top-11 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[80%]">
-          {indicatorInstances.map((ind) => {
+        <div className="absolute top-16 left-2.5 md:left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[85%]">
+          {(!isLegendExpanded && dimensions.width < 640 && indicatorInstances.length > 1
+            ? indicatorInstances.slice(0, 1)
+            : indicatorInstances
+          ).map((ind) => {
             const val = legendIndicatorValues.get(ind.id);
             // Build the indicator label cleanly once (Bug 0.3)
             const baseType = ind.type.toUpperCase();
@@ -1280,7 +1578,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
             return (
               <div
                 key={ind.id}
-                className="group flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#0F172A]/85 backdrop-blur-sm border border-[#243049] text-[11px] shadow-sm hover:border-[#38BDF8]/40 transition-colors"
+                className="group flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#0F172A]/85 backdrop-blur-sm border border-[#243049] text-[10px] md:text-[11px] shadow-sm hover:border-[#38BDF8]/40 transition-colors"
               >
                 {/* Colored indicator dot */}
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ind.color }} />
@@ -1301,7 +1599,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                       onUpdateIndicatorInstance?.({ ...ind, visible: !ind.visible });
                     }}
                     title={ind.visible ? 'إخفاء المؤشر' : 'إظهار المؤشر'}
-                    className="text-[#94A3B8] hover:text-white transition-colors"
+                    className="text-[#94A3B8] hover:text-white transition-colors cursor-pointer"
                   >
                     {ind.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3 text-[#64748B]" />}
                   </button>
@@ -1311,7 +1609,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                       onOpenIndicatorSettings?.(ind);
                     }}
                     title="إعدادات المؤشر"
-                    className="text-[#94A3B8] hover:text-[#38BDF8] transition-colors"
+                    className="text-[#94A3B8] hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     <Settings className="w-3 h-3" />
                   </button>
@@ -1321,7 +1619,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                       onRemoveIndicatorInstance?.(ind.id);
                     }}
                     title="حذف المؤشر"
-                    className="text-[#94A3B8] hover:text-rose-400 transition-colors"
+                    className="text-[#94A3B8] hover:text-rose-400 transition-colors cursor-pointer"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -1329,6 +1627,34 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
               </div>
             );
           })}
+
+          {/* 1.2 "+N" Chip on phone when collapsed */}
+          {!isLegendExpanded && dimensions.width < 640 && indicatorInstances.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLegendExpanded(true);
+              }}
+              title="عرض باقي المؤشرات"
+              className="px-2 py-0.5 rounded-md bg-[#16293D] border border-[#2DD4BF]/40 text-[#2DD4BF] text-[10px] font-mono font-bold hover:bg-[#1E3A5A] active:scale-95 transition-all cursor-pointer shadow-xs"
+            >
+              +{indicatorInstances.length - 1}
+            </button>
+          )}
+
+          {/* Collapse button when expanded */}
+          {isLegendExpanded && dimensions.width < 640 && indicatorInstances.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLegendExpanded(false);
+              }}
+              title="طي قائمة المؤشرات"
+              className="px-1.5 py-0.5 rounded-md bg-[#1E293B] border border-[#334155] text-[#94A3B8] text-[10px] hover:text-white active:scale-95 transition-all cursor-pointer"
+            >
+              ▲
+            </button>
+          )}
         </div>
       )}
 

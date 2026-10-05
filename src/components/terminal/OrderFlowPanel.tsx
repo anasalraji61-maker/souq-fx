@@ -130,7 +130,7 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
     return (
       <button
         onClick={onToggle}
-        className="fixed bottom-8 left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A]/90 hover:bg-[#1E293B] border border-[#2DD4BF]/40 text-[#2DD4BF] text-xs font-bold shadow-lg backdrop-blur-sm transition-all"
+        className="fixed bottom-16 md:bottom-8 left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A]/90 hover:bg-[#1E293B] border border-[#2DD4BF]/40 text-[#2DD4BF] text-xs font-bold shadow-lg backdrop-blur-sm transition-all"
         title="فتح لوحة تدفق الأوامر التقديرية"
       >
         <Activity className="w-3.5 h-3.5" />
@@ -265,7 +265,8 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
             {/* Order Flow Bars Table */}
             <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-right divide-y divide-[#243049]/60">
+                {/* Desktop Table View */}
+                <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
                   <thead className="bg-[#0B1220] text-[#7B8DA8] text-[10px] font-semibold">
                     <tr>
                       <th className="py-2 px-3">الوقت</th>
@@ -316,6 +317,49 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
                     })}
                   </tbody>
                 </table>
+
+                {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
+                <div className="md:hidden space-y-2 p-2">
+                  {data.slice(-8).reverse().map((b, idx) => {
+                    const isPositiveDelta = b.delta >= 0;
+                    const dateStr = new Date(b.time * 1000).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+                    return (
+                      <div
+                        key={idx}
+                        className="p-2.5 rounded-lg bg-[#08101E] border border-[#1E283D] space-y-1.5 text-xs font-mono"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#7B8DA8] text-[10px]">{dateStr}</span>
+                          <span className="text-white font-bold">{b.close}</span>
+                          <span
+                            className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                              isPositiveDelta ? 'bg-emerald-500/15 text-[#22C55E]' : 'bg-rose-500/15 text-[#EF4444]'
+                            }`}
+                          >
+                            Δ {isPositiveDelta ? '+' : ''}{b.delta}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 text-[10px] text-center bg-[#050B14] p-1.5 rounded">
+                          <div>
+                            <span className="text-emerald-400 block font-bold">{b.buy_volume}</span>
+                            <span className="text-[#64748B] text-[8px]">شراء</span>
+                          </div>
+                          <div>
+                            <span className="text-rose-400 block font-bold">{b.sell_volume}</span>
+                            <span className="text-[#64748B] text-[8px]">بيع</span>
+                          </div>
+                          <div>
+                            <span className="text-amber-400 block font-bold">{b.cumulative_delta}</span>
+                            <span className="text-[#64748B] text-[8px]">CVD</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </>

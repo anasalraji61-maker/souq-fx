@@ -8,11 +8,30 @@ interface OfflineBadgeProps {
 }
 
 export const OfflineBadge: React.FC<OfflineBadgeProps> = ({ className = '', forceShow = false }) => {
-  const [isOffline, setIsOffline] = useState(forceShow);
+  const [isOffline, setIsOffline] = useState(() => {
+    if (forceShow) return true;
+    return typeof navigator !== 'undefined' ? !navigator.onLine : false;
+  });
 
   useEffect(() => {
     if (forceShow) return;
-    return subscribeBackendStatus((offline) => setIsOffline(offline));
+
+    const handleWindowOffline = () => setIsOffline(true);
+    const handleWindowOnline = () => setIsOffline(false);
+    const handleCustomOffline = () => setIsOffline(true);
+
+    window.addEventListener('offline', handleWindowOffline);
+    window.addEventListener('online', handleWindowOnline);
+    window.addEventListener('matrix:offline', handleCustomOffline);
+
+    const unsubBackend = subscribeBackendStatus((offline) => setIsOffline(offline));
+
+    return () => {
+      window.removeEventListener('offline', handleWindowOffline);
+      window.removeEventListener('online', handleWindowOnline);
+      window.removeEventListener('matrix:offline', handleCustomOffline);
+      unsubBackend();
+    };
   }, [forceShow]);
 
   if (!isOffline && !forceShow) return null;

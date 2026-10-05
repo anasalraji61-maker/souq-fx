@@ -242,7 +242,8 @@ export const EconomicCalendar: React.FC = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-right divide-y divide-[#243049]/60">
+                {/* Desktop Table View */}
+                <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
                   <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
                     <tr>
                       <th className="py-3 px-4">الوقت والتاريخ</th>
@@ -282,6 +283,43 @@ export const EconomicCalendar: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
+                <div className="md:hidden space-y-2.5 p-3">
+                  {filteredEvents.map((ev) => (
+                    <div
+                      key={ev.id}
+                      className="p-3 rounded-xl bg-[#0E1626] border border-[#1E2E4A] space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-[#0B1220] border border-[#243049] text-white font-mono font-bold text-xs">
+                            {ev.currency}
+                          </span>
+                          <span className="text-[11px] text-[#A3B4D0] font-mono">{ev.time}</span>
+                        </div>
+                        <div>{getImpactBadge(ev.impact)}</div>
+                      </div>
+
+                      <div className="font-bold text-white text-xs leading-snug">{ev.title}</div>
+
+                      <div className="grid grid-cols-3 gap-1.5 text-[11px] font-mono bg-[#070D18] p-2 rounded-lg border border-[#16233B]">
+                        <div>
+                          <span className="text-[#64748B] block text-[9px]">الفعلي</span>
+                          <span className="font-bold text-[#2DD4BF]">{ev.actual || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[#64748B] block text-[9px]">المتوقع</span>
+                          <span className="text-[#A3B4D0]">{ev.forecast || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[#64748B] block text-[9px]">السابق</span>
+                          <span className="text-[#64748B]">{ev.previous || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

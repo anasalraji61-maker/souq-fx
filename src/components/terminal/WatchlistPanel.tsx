@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MarketSymbol } from '../../types/market';
 import { getQuote, MarketQuote, getMarketStatus, MarketStatus } from '../../api/market';
-import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock, X } from 'lucide-react';
 
 interface WatchlistPanelProps {
   symbols: MarketSymbol[];
   activeSymbol: string;
   onSelectSymbol: (symbol: string) => void;
   priceFlashMap?: Record<string, 'up' | 'down'>;
+  isMobileMode?: boolean;
+  onCloseMobile?: () => void;
 }
 
 interface NamedWatchlist {
@@ -60,6 +62,8 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
   activeSymbol,
   onSelectSymbol,
   priceFlashMap = {},
+  isMobileMode = false,
+  onCloseMobile,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -115,6 +119,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
   useEffect(() => {
     getMarketStatus().then(setMarketStatus);
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       getMarketStatus().then(setMarketStatus);
     }, 30000);
     return () => clearInterval(interval);
@@ -266,13 +271,13 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
   return (
     <div className="flex flex-col h-full bg-[#0B1220] border-l border-[#1E283D] select-none text-xs w-full">
       {/* Top Header: Watchlist Switcher Dropdown */}
-      <div className="p-2 border-b border-[#1E283D] bg-[#0A101D] flex flex-col gap-2">
+      <div className="p-2.5 sm:p-2 border-b border-[#1E283D] bg-[#0A101D] flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <select
               value={activeListId}
               onChange={(e) => setActiveListId(e.target.value)}
-              className="bg-[#121A2B] text-[#E8EEF9] font-bold text-xs px-2 py-1 rounded border border-[#243049] cursor-pointer outline-none font-sans"
+              className="bg-[#121A2B] text-[#E8EEF9] font-bold text-xs px-2.5 py-1.5 rounded-lg border border-[#243049] cursor-pointer outline-none font-sans max-w-[170px] truncate"
             >
               {watchlists.map((w) => (
                 <option key={w.id} value={w.id}>
@@ -283,45 +288,58 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
             <button
               onClick={handleCreateNewList}
               title="إضافة قائمة مراقبة جديدة"
-              className="p-1 rounded bg-[#162033] hover:bg-[#1E293B] text-[#2DD4BF] border border-[#243049]"
+              className="p-1.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] text-[#2DD4BF] border border-[#243049] cursor-pointer"
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-3.5 h-3.5" />
             </button>
             {watchlists.length > 1 && (
               <button
                 onClick={handleDeleteCurrentList}
                 title="حذف هذه القائمة"
-                className="p-1 rounded bg-[#162033] hover:bg-[#1E293B] text-[#7B8DA8] hover:text-rose-400 border border-[#243049]"
+                className="p-1.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] text-[#7B8DA8] hover:text-rose-400 border border-[#243049] cursor-pointer"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
-          <span className="text-[10px] text-[#7B8DA8] font-mono">{filteredSymbols.length} رمز</span>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] text-[#7B8DA8] font-mono">{filteredSymbols.length} رمز</span>
+            {isMobileMode && onCloseMobile && (
+              <button
+                onClick={onCloseMobile}
+                className="p-1.5 rounded-lg bg-[#162033] text-[#A3B4D0] hover:text-white cursor-pointer"
+                title="إغلاق القائمة"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Search input */}
         <div className="relative">
           <input
             type="text"
-            placeholder="تصفية الرموز..."
+            placeholder="بحث وتصفية الرموز..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#08111E] border border-[#243049] rounded px-2 py-1 text-xs text-[#E8EEF9] placeholder-[#7B8DA8] focus:outline-hidden focus:border-[#2DD4BF]"
+            className="w-full bg-[#08111E] border border-[#243049] rounded-lg px-3 py-2 text-xs text-[#E8EEF9] placeholder-[#7B8DA8] focus:outline-hidden focus:border-[#2DD4BF]"
           />
         </div>
       </div>
 
-      {/* Column Headers (6.2: last, change, change%, spread, sparkline) */}
-      <div className="grid grid-cols-[minmax(115px,1fr)_56px_52px_42px] px-2 py-1 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
-        <span className="text-right">الرمز / خط</span>
+      {/* Desktop Column Headers (> 1100px): strictly aligned with the 5 items in the compact row */}
+      <div className="hidden min-[1101px]:grid grid-cols-[1fr_38px_60px_52px_36px] gap-1.5 px-2.5 py-1.5 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
+        <span className="text-right">الرمز / الاسم</span>
+        <span className="text-center">خط</span>
         <span className="text-left font-mono">السعر</span>
         <span className="text-left font-mono">التغير</span>
         <span className="text-left font-mono">الفارق</span>
       </div>
 
       {/* Symbol List with sparkline and drag reorder */}
-      <div className="flex-1 overflow-y-auto px-1 py-0.5 space-y-0.5">
+      <div className="flex-1 overflow-y-auto px-1 py-0.5 space-y-1 pb-20 md:pb-2">
         {filteredSymbols.map((item) => {
           const isSelected = item.symbol === activeSymbol;
           const flash = priceFlashMap[item.symbol];
@@ -332,74 +350,133 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
           const isClosed = quote?.marketOpen === false || (marketStatus && !marketStatus.isOpen);
 
           return (
-            <div
-              key={item.symbol}
-              draggable
-              onDragStart={() => handleDragStart(item.symbol)}
-              onDragOver={(e) => handleDragOver(e, item.symbol)}
-              onDragEnd={handleDragEnd}
-              onClick={() => onSelectSymbol(item.symbol)}
-              className={`group grid grid-cols-[minmax(115px,1fr)_56px_52px_42px] items-center px-1.5 py-1.5 rounded cursor-pointer transition-all ${
-                isClosed ? 'opacity-55 saturate-50' : ''
-              } ${
-                isSelected
-                  ? 'bg-[#131F33] border border-[#2DD4BF]/80 shadow-[0_0_8px_rgba(45,212,191,0.12)]'
-                  : 'hover:bg-[#121A2B]/70 border border-transparent'
-              } ${flash === 'up' ? 'bg-[#22C55E]/15' : flash === 'down' ? 'bg-[#EF4444]/15' : ''}`}
-              title={isClosed ? 'السوق مغلق حالياً' : undefined}
-            >
-              {/* Symbol Name & Mini Sparkline */}
-              <div className="flex items-center gap-1.5 min-w-0 pr-0.5 overflow-hidden">
-                <GripVertical className="w-3 h-3 text-[#334155] opacity-0 group-hover:opacity-100 shrink-0 cursor-grab" />
-                <div className="flex flex-col min-w-0 shrink">
-                  <div className="flex items-center gap-1">
+            <React.Fragment key={item.symbol}>
+              {/* Desktop compact one-line row (> 1100px): code + sub-name | sparkline | price | change% | spread on ONE row, ~48px tall */}
+              <div
+                draggable
+                onDragStart={() => handleDragStart(item.symbol)}
+                onDragOver={(e) => handleDragOver(e, item.symbol)}
+                onDragEnd={handleDragEnd}
+                onClick={() => onSelectSymbol(item.symbol)}
+                className={`hidden min-[1101px]:grid grid-cols-[1fr_38px_60px_52px_36px] gap-1.5 items-center px-2.5 h-12 min-h-[48px] max-h-[48px] rounded-lg cursor-pointer transition-all active:scale-[0.99] select-none group ${
+                  isClosed ? 'opacity-55 saturate-50' : ''
+                } ${
+                  isSelected
+                    ? 'bg-[#131F33] border border-[#2DD4BF]/80 shadow-[0_0_8px_rgba(45,212,191,0.12)]'
+                    : 'hover:bg-[#121A2B]/70 border border-transparent active:bg-[#162033]'
+                } ${flash === 'up' ? 'bg-[#22C55E]/15' : flash === 'down' ? 'bg-[#EF4444]/15' : ''}`}
+                title={isClosed ? 'السوق مغلق حالياً' : undefined}
+              >
+                {/* 1. Code + Sub-name */}
+                <div className="flex items-center gap-1.5 min-w-0 pr-0.5 overflow-hidden">
+                  <GripVertical className="w-3 h-3 text-[#334155] opacity-0 group-hover:opacity-100 shrink-0 cursor-grab" />
+                  <div className="flex flex-col min-w-0 justify-center">
+                    <div className="flex items-center gap-1">
+                      <span
+                        dir="ltr"
+                        className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap text-right ${
+                          isSelected ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'
+                        }`}
+                      >
+                        {item.symbol}
+                      </span>
+                      {isClosed && (
+                        <span className="text-[8px] px-1 rounded bg-[#1E293B] text-[#94A3B8] font-sans">
+                          مغلق
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className="text-[10px] text-[#7B8DA8] truncate max-w-[110px] text-right block leading-tight"
+                      title={item.name}
+                    >
+                      {item.name}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Sparkline */}
+                <div className="flex items-center justify-center shrink-0">
+                  {renderSparkline(item)}
+                </div>
+
+                {/* 3. Price */}
+                <div className="text-left font-mono text-xs font-semibold text-[#E8EEF9] whitespace-nowrap">
+                  {displayPrice.toFixed(item.precision)}
+                </div>
+
+                {/* 4. Change % */}
+                <div className={`text-left font-mono text-[11px] font-bold whitespace-nowrap ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                  {isUp ? '+' : ''}
+                  {item.change24h}%
+                </div>
+
+                {/* 5. Spread */}
+                <div className="text-left font-mono text-[10px] text-[#7B8DA8] flex items-center justify-between whitespace-nowrap">
+                  <span>{displaySpread}</span>
+                  <button
+                    onClick={(e) => handleRemoveSymbolFromList(item.symbol, e)}
+                    title="إزالة من القائمة"
+                    className="opacity-0 group-hover:opacity-100 text-[#64748B] hover:text-rose-400 p-0.5 ml-0.5 transition-opacity"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Tablet & Phone Card Layout (< 1101px): Touch-friendly cards showing code, price, sub-name, change%, and spread */}
+              <div
+                onClick={() => onSelectSymbol(item.symbol)}
+                className={`min-[1101px]:hidden p-2.5 rounded-lg border cursor-pointer transition-all active:scale-[0.99] select-none flex flex-col gap-1.5 ${
+                  isClosed ? 'opacity-60 saturate-50' : ''
+                } ${
+                  isSelected
+                    ? 'bg-[#131F33] border-[#2DD4BF]/80 shadow-[0_0_8px_rgba(45,212,191,0.15)]'
+                    : 'bg-[#0E1726]/80 hover:bg-[#121A2B] border-[#1C2638] active:bg-[#162033]'
+                } ${flash === 'up' ? 'bg-[#22C55E]/15' : flash === 'down' ? 'bg-[#EF4444]/15' : ''}`}
+              >
+                {/* Top Row: Symbol + Status + Price */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
                       dir="ltr"
-                      className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap shrink-0 text-right ${
+                      className={`font-mono font-bold text-sm tracking-tight ${
                         isSelected ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'
                       }`}
                     >
                       {item.symbol}
                     </span>
                     {isClosed && (
-                      <span className="text-[8px] px-1 rounded bg-[#1E293B] text-[#94A3B8] font-sans">
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#1E293B] text-[#94A3B8] font-sans">
                         مغلق
                       </span>
                     )}
                   </div>
-                  <span
-                    className="text-[9px] text-[#7B8DA8] truncate max-w-[85px] text-right block"
-                    title={item.name}
-                  >
+                  <div className="text-left font-mono text-sm font-bold text-[#E8EEF9] whitespace-nowrap">
+                    {displayPrice.toFixed(item.precision)}
+                  </div>
+                </div>
+
+                {/* Bottom Row: Sub-name + Change% + Spread */}
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="text-[11px] text-[#7B8DA8] truncate max-w-[170px]" title={item.name}>
                     {item.name}
                   </span>
+                  <div className="flex items-center gap-2 font-mono whitespace-nowrap">
+                    <span
+                      className={`font-bold text-xs ${
+                        isUp ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {isUp ? '+' : ''}{item.change24h}%
+                    </span>
+                    <span className="text-[10px] text-[#64748B] bg-[#08111E] px-1.5 py-0.5 rounded border border-[#1E283D]">
+                      {displaySpread}
+                    </span>
+                  </div>
                 </div>
-                <div className="mr-auto shrink-0 pl-1">{renderSparkline(item)}</div>
               </div>
-
-              {/* Price */}
-              <div className="text-left font-mono text-[11px] font-medium text-[#E8EEF9]">
-                {displayPrice.toFixed(item.precision)}
-              </div>
-
-              {/* Change % */}
-              <div className={`text-left font-mono text-[10px] font-semibold ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                {isUp ? '+' : ''}
-                {item.change24h}%
-              </div>
-
-              {/* Spread */}
-              <div className="text-left font-mono text-[10px] text-[#7B8DA8] flex items-center justify-between">
-                <span>{displaySpread}</span>
-                <button
-                  onClick={(e) => handleRemoveSymbolFromList(item.symbol, e)}
-                  title="إزالة من القائمة"
-                  className="opacity-0 group-hover:opacity-100 text-[#64748B] hover:text-rose-400 p-0.5"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
+            </React.Fragment>
           );
         })}
       </div>
