@@ -14,10 +14,21 @@
   "build": {
     "appId": "com.matrix.charts",
     "productName": "MATRIX Charts",
-    "directories": { "output": "dist" },
-    "files": ["main.js", "preload.js", "package.json", "web-build/**/*"],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "web-build/**/*",
+      "desktop-config.json",
+      "build/**/*"
+    ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico",
       "artifactName": "MATRIX-Charts-Setup-${version}.${ext}"
     },
@@ -29,14 +40,17 @@
       "uninstallerIcon": "build/icon.ico"
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "build/icon.icns",
       "category": "public.app-category.finance",
       "artifactName": "MATRIX-Charts-${version}.${ext}"
     },
     "dmg": {
       "title": "MATRIX Charts"
-    }
+    },
+    "extraFiles": []
   },
   "devDependencies": {
     "electron": "^35.0.0",

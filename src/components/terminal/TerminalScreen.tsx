@@ -26,6 +26,7 @@ import { getCandles, getQuote, getMarketStatus, MarketStatus } from '../../api/m
 import { loadDrawings, saveDrawings } from '../../api/drawings';
 import { loadAlerts, saveAlerts } from '../../api/alerts';
 import { playAlertChime } from '../../utils/sound';
+import { showSystemNotification, alertNotificationText, requestSystemNotifications } from '../../utils/systemNotify';
 import {
   Maximize2,
   Minimize2,
@@ -329,6 +330,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
         setActiveNotification({ alert: triggeredItem, price: sym.price });
         playAlertChime();
+        const note = alertNotificationText(alert.symbol, String(alert.condition), alert.targetPrice, sym.price);
+        void showSystemNotification(note.title, note.body, `alert-${alert.id}`);
         return triggeredItem;
       }
 
@@ -768,6 +771,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
   // Price Alert Handlers (Part 5)
   const handleAddAlert = (item: PriceAlertItem) => {
+    // ask for system-notification permission from this user action (first alert only; no-op afterwards)
+    void requestSystemNotifications();
     const next = [...alerts, item];
     setAlerts(next);
     saveAlerts(next);

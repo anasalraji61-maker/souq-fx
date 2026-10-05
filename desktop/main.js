@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, Menu, protocol, net } = require('electron');
+const { app, BrowserWindow, shell, Menu, protocol, net, Tray, nativeImage, Notification, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -78,6 +78,138 @@ function registerBundledWebProtocol() {
 /** @type {Electron.BrowserWindow | null} */
 let mainWindow = null;
 
+
+// ـــ وضع الخادم الحي (الإصدار الموزَّع للمستخدمين) ـــ
+// إن ضُبط عنوان خادم MATRIX الحي (متغيّر البيئة MATRIX_REMOTE_URL، أو ملف desktop-config.json بجانب
+// التطبيق أو بمجلد بيانات المستخدم بالشكل {"remoteUrl":"https://..."}) تُحمَّل الواجهة منه مباشرة:
+// نفس نسخة الويب التي يخدمها الباك-إند، فتصل التحديثات لكل مستخدمي الديسكتوب فوراً بلا إعادة تثبيت.
+function readDesktopConfig() {
+  const candidates = [
+    path.join(path.dirname(process.execPath), 'desktop-config.json'),
+    path.join(__dirname, 'desktop-config.json'),
+  ];
+  try {
+    candidates.unshift(path.join(app.getPath('userData'), 'desktop-config.json'));
+  } catch {
+    // app.getPath غير متاح قبل الجاهزية ببعض البيئات — نكمل بالمرشحين الآخرين
+  }
+  for (const file of candidates) {
+    try {
+      if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8')) || {};
+    } catch {
+      // ملف تالف — يُتجاهَل
+    }
+  }
+  return {};
+}
+
+function resolveRemoteUrl() {
+  const raw = (process.env.MATRIX_REMOTE_URL || readDesktopConfig().remoteUrl || '').trim();
+  if (!raw) return '';
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'https:' || u.protocol === 'http:' ? u.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+// ـــ حفظ حجم ومكان النافذة بين التشغيلات ـــ
+function windowStateFile() {
+  return path.join(app.getPath('userData'), 'window-state.json');
+}
+
+function loadWindowState() {
+  try {
+    const s = JSON.parse(fs.readFileSync(windowStateFile(), 'utf8'));
+    if (Number.isFinite(s.width) && Number.isFinite(s.height)) return s;
+  } catch {
+    // لا حالة محفوظة بعد
+  }
+  return { width: 1440, height: 920 };
+}
+
+function saveWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  try {
+    const maximized = mainWindow.isMaximized();
+    const b = maximized ? (mainWindow.__lastNormalBounds || mainWindow.getBounds()) : mainWindow.getBounds();
+    fs.writeFileSync(windowStateFile(), JSON.stringify({ ...b, maximized }));
+  } catch {
+    // الكتابة فشلت (قرص ممتلئ/صلاحيات) — ليس حرجاً
+  }
+}
+
+// ـــ أيقونة شريط المهام (Tray) ـــ
+// إغلاق النافذة يخفيها إلى الشريط بدل إنهاء التطبيق، فتبقى التنبيهات السعرية تعمل بالخلفية.
+// «خروج» من قائمة الأيقونة هو الإنهاء الفعلي.
+let tray = null;
+let isQuitting = false;
+
+function showMainWindow() {
+  if (!mainWindow) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+function createTray() {
+  if (tray || process.platform === 'darwin') return; // ماك: أيقونة الـDock تكفي
+  const iconFile = fs.existsSync(WINDOW_ICON) ? WINDOW_ICON : path.join(__dirname, 'build', 'icon.png');
+  const image = fs.existsSync(iconFile) ? nativeImage.createFromPath(iconFile) : nativeImage.createEmpty();
+  try {
+    tray = new Tray(image);
+  } catch (err) {
+    console.error('[MATRIX] tray unavailable:', err);
+    return;
+  }
+  tray.setToolTip('MATRIX Charts');
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: 'فتح MATRIX  /  Open', click: showMainWindow },
+      { type: 'separator' },
+      {
+        label: 'خروج  /  Quit',
+        click: () => {
+          isQuitting = true;
+          app.quit();
+        },
+      },
+    ])
+  );
+  tray.on('click', showMainWindow);
+}
+
+// ـــ إشعارات النظام ـــ
+// الواجهة تستدعي window.matrixDesktop.notify(title, body) (من preload.js) لتنبيه سعري حقيقي من النظام
+// حتى والنافذة مخفية. النقر على الإشعار يُظهر النافذة. النصوص تُقصّ وتُنظَّف لمنع إساءة الاستخدام.
+function registerNotificationBridge() {
+  ipcMain.handle('matrix:notify', (_event, payload) => {
+    if (!Notification.isSupported()) return false;
+    const title = String((payload && payload.title) || 'MATRIX').slice(0, 120);
+    const body = String((payload && payload.body) || '').slice(0, 400);
+    const n = new Notification({
+      title,
+      body,
+      silent: Boolean(payload && payload.silent),
+      icon: fs.existsSync(WINDOW_ICON) ? WINDOW_ICON : undefined,
+    });
+    n.on('click', showMainWindow);
+    n.show();
+    return true;
+  });
+  ipcMain.handle('matrix:app-info', () => ({
+    version: app.getVersion(),
+    platform: process.platform,
+    remote: Boolean(REMOTE_URL),
+  }));
+}
+
+let REMOTE_URL = '';
+
 function createMenu() {
   // لا قائمة «عرض» في شريط النافذة — واجهة MATRIX داخل التطبيق فقط
   Menu.setApplicationMenu(null);
@@ -109,6 +241,7 @@ function isAppUrl(url, bundled) {
     // لا تُقارَن الأصول: `new URL('matrix://app/x').origin` بـNode يساوي السلسلة 'null'
     // (مخطّط غير قياسي بمحلّل WHATWG) — فمقارنة الأصول كانت ستُصدِّق **أي** رابط بمخطّط
     // غريب. المخطّط والمضيف معاً هما الفحص الصحيح بالعملية الرئيسة.
+    if (REMOTE_URL) return target.origin === new URL(REMOTE_URL).origin;
     if (bundled) return target.protocol === `${APP_SCHEME}:` && target.host === APP_HOST;
     return target.origin === new URL(WEB_URL).origin;
   } catch {
@@ -143,9 +276,12 @@ function showFallbackPage(ar, en) {
 }
 
 function createWindow() {
+  const state = loadWindowState();
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 920,
+    width: state.width,
+    height: state.height,
+    x: Number.isFinite(state.x) ? state.x : undefined,
+    y: Number.isFinite(state.y) ? state.y : undefined,
     minWidth: 960,
     minHeight: 640,
     backgroundColor: '#0B1220',
@@ -159,10 +295,30 @@ function createWindow() {
     },
   });
 
-  mainWindow.once('ready-to-show', () => mainWindow?.show());
+  mainWindow.once('ready-to-show', () => {
+    if (state.maximized) mainWindow?.maximize();
+    mainWindow?.show();
+  });
+  const rememberNormal = () => {
+    if (mainWindow && !mainWindow.isMaximized() && !mainWindow.isMinimized()) {
+      mainWindow.__lastNormalBounds = mainWindow.getBounds();
+    }
+  };
+  mainWindow.on('resize', rememberNormal);
+  mainWindow.on('move', rememberNormal);
+  // الإغلاق يخفي إلى شريط المهام (ويندوز/لينكس) ما لم يكن خروجاً فعلياً
+  mainWindow.on('close', (event) => {
+    saveWindowState();
+    if (!isQuitting && tray) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
 
   const hasBundledBuild = !isDev && fs.existsSync(BUNDLED_WEB_INDEX);
-  const loadApp = mainWindow.loadURL(hasBundledBuild ? `${APP_ORIGIN}/index.html` : WEB_URL);
+  const loadApp = mainWindow.loadURL(
+    REMOTE_URL ? REMOTE_URL : hasBundledBuild ? `${APP_ORIGIN}/index.html` : WEB_URL
+  );
 
   // شبكة أمان: إن علق التحميل (خادم لا يردّ) لا يبقى التطبيق مخفياً بلا نافذة إطلاقاً.
   const showTimer = setTimeout(() => {
@@ -175,6 +331,13 @@ function createWindow() {
   // `http://127.0.0.1:8081` — تعليمات بيئة تطوير لا معنى لها لمن حمّل المثبِّت من الموقع. الآن
   // تظهر تلك الحروف بالتشغيل غير المحزَّم وحده (`app.isPackaged === false`).
   loadApp.catch(() => {
+    if (REMOTE_URL) {
+      showFallbackPage(
+        { message: 'تعذّر الاتصال بخادم MATRIX', hint: 'تحقّق من اتصال الإنترنت ثم أعد فتح التطبيق' },
+        { message: 'Could not reach the MATRIX server', hint: 'Check your internet connection, then reopen the app' }
+      );
+      return;
+    }
     if (!app.isPackaged) {
       const devHintAr = hasBundledBuild
         ? 'أعد تصدير حزمة الويب (expo export --platform web) ثم أعد التثبيت'
@@ -247,10 +410,7 @@ if (!hasSingleInstanceLock) {
   app.quit();
 } else {
   app.on('second-instance', () => {
-    if (!mainWindow) return;
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.show();
-    mainWindow.focus();
+    showMainWindow();
   });
 }
 
@@ -265,11 +425,19 @@ app.whenReady().then(() => {
       console.error('[MATRIX] failed to register bundled web protocol:', err);
     }
   }
+  REMOTE_URL = isDev ? '' : resolveRemoteUrl();
+  registerNotificationBridge();
   createMenu();
   createWindow();
+  createTray();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
+  saveWindowState();
 });
 
 app.on('window-all-closed', () => {
