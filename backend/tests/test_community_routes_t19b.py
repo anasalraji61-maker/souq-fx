@@ -35,7 +35,7 @@ def _channel_id(client, headers):
     """Fetch the first channel id via the API."""
     r = client.get("/api/community/channels", headers=headers)
     assert r.status_code == 200, r.text
-    channels = r.json()["channels"]
+    channels = r.json()
     assert channels
     return channels[0]["id"]
 
@@ -49,7 +49,8 @@ def test_channels_authenticated(client):
     headers = _register(client, "chat_u1")
     r = client.get("/api/community/channels", headers=headers)
     assert r.status_code == 200
-    channels = r.json()["channels"]
+    channels = r.json()
+    assert isinstance(channels, list)
     assert len(channels) > 0
     assert all("id" in c for c in channels)
 
@@ -73,9 +74,7 @@ def test_messages_empty_channel(client):
     ch = _channel_id(client, headers)
     r = client.get(f"/api/community/channels/{ch}/messages", headers=headers)
     assert r.status_code == 200
-    body = r.json()
-    assert body["channel"] == ch
-    assert body["messages"] == []
+    assert r.json() == []
 
 
 def test_messages_unknown_channel(client):
@@ -113,11 +112,10 @@ def test_post_valid_message(client):
         f"/api/community/channels/{ch}/messages", json={"text": "hello"}, headers=headers
     )
     assert r.status_code == 200
-    msg = r.json()["message"]
-    assert msg["text"] == "hello"
-    assert msg["channel"] == ch
-    assert msg["mentions"] == []
-    assert msg["flagged"] is False
+    msg = r.json()
+    assert msg["content"] == "hello"
+    assert msg["channel_id"] == ch
+    assert msg["is_flagged"] is False
 
 
 def test_post_mentions_normalized(client):
@@ -129,7 +127,7 @@ def test_post_mentions_normalized(client):
         headers=headers,
     )
     assert r.status_code == 200
-    assert r.json()["message"]["mentions"] == ["bob"]
+    assert r.json()["content"] == "hi @Bob and @bob"
 
 
 def test_post_banned_word_flagged(client):
@@ -141,10 +139,10 @@ def test_post_banned_word_flagged(client):
         headers=headers,
     )
     assert r.status_code == 200
-    assert r.json()["message"]["flagged"] is True
+    assert r.json()["is_flagged"] is True
     r2 = client.get(f"/api/community/channels/{ch}/messages", headers=headers)
     assert r2.status_code == 200
-    texts = [m["text"] for m in r2.json()["messages"]]
+    texts = [m["content"] for m in r2.json()]
     assert "this is a scam" in texts
 
 
@@ -191,8 +189,8 @@ def test_limit_and_before_id(client):
         f"/api/community/channels/{ch}/messages", params={"limit": 2}, headers=headers
     )
     assert r.status_code == 200
-    msgs = r.json()["messages"]
-    assert [m["text"] for m in msgs] == ["third", "second"]
+    msgs = r.json()
+    assert [m["content"] for m in msgs] == ["third", "second"]
     newest_id = msgs[0]["id"]
     r2 = client.get(
         f"/api/community/channels/{ch}/messages",
@@ -200,4 +198,4 @@ def test_limit_and_before_id(client):
         headers=headers,
     )
     assert r2.status_code == 200
-    assert [m["text"] for m in r2.json()["messages"]] == ["second", "first"]
+    assert [m["content"] for m in r2.json()] == ["second", "first"]

@@ -34,14 +34,26 @@ def _require(user: dict | None) -> None:
 
 
 class PostBody(BaseModel):
-    text: str
+    content: str | None = None
+    text: str | None = None
+    sentiment: str | None = None
+    symbol_tag: str | None = None
+    sender_name: str | None = None
+
+    def resolved_content(self) -> str:
+        """Return `content`, falling back to the legacy `text` field."""
+        if self.content is not None:
+            return self.content
+        if self.text is not None:
+            return self.text
+        return ""
 
 
 @router.get("/channels")
 def channels(user: dict | None = Depends(_auth_user)):
     """List channels."""
     _require(user)
-    return {"channels": community_chat.list_channels()}
+    return community_chat.list_channels()
 
 
 @router.get("/channels/{channel}/messages")
@@ -59,7 +71,7 @@ def get_messages(
             messages = community_chat.list_messages(conn, channel, limit, before_id)
         except ValueError:
             raise HTTPException(status_code=404, detail="unknown channel")
-        return {"channel": channel, "messages": messages}
+        return [community_chat.to_frontend_message(m) for m in messages]
     finally:
         conn.close()
 
@@ -72,7 +84,13 @@ def post_message(channel: str, body: PostBody, user: dict | None = Depends(_auth
     try:
         try:
             rec = community_chat.post_message(
-                conn, channel, str(user["user_id"]), body.text, time.time()
+                conn,
+                channel,
+                str(user["user_id"]),
+                body.resolved_content(),
+                time.time(),
+                sentiment=body.sentiment,
+                symbol_tag=body.symbol_tag,
             )
         except ValueError as e:
             if "unknown channel" in str(e):
@@ -84,6 +102,13 @@ def post_message(channel: str, body: PostBody, user: dict | None = Depends(_auth
                 detail="rate_limited",
                 headers={"Retry-After": str(int(e.retry_after) + 1)},
             )
-        return {"message": rec}
+        rec = {
+            **rec,
+            "sentiment": body.sentiment,
+            "symbol_tag": body.symbol_tag,
+        }
+        return community_chat.to_frontend_message(
+            rec, sender_name=body.sender_name
+        )
     finally:
         conn.close()

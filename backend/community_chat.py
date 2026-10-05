@@ -8,12 +8,51 @@ explicit `now` timestamp. No routes; no imports from db.py.
 import json
 import re
 import sqlite3
+from datetime import datetime, timezone
 
 DEFAULT_CHANNELS = [
-    {"id": "general", "name": "General"},
-    {"id": "forex", "name": "Forex"},
-    {"id": "metals", "name": "Metals"},
-    {"id": "signals", "name": "Signals"},
+    {
+        "id": "general",
+        "name": "General",
+        "name_ar": "غرفة النقاش العام",
+        "description": "نقاش عام في السوق والأخبار الاقتصادية",
+        "online_count": 88,
+    },
+    {
+        "id": "forex",
+        "name": "Forex Majors",
+        "name_ar": "غرفة العملات والفوركس",
+        "description": "تحليلات أزواج العملات الرئيسية وتذبذب الجلسات اللندنية والأمريكية",
+        "online_count": 142,
+    },
+    {
+        "id": "metals",
+        "name": "Precious Metals",
+        "name_ar": "غرفة الذهب والمعادن (XAU / XAG)",
+        "description": "متابعة حركة أونصة الذهب والفضة ومناطق السيولة وملاذات الأمان",
+        "online_count": 218,
+    },
+    {
+        "id": "indices",
+        "name": "Global Indices",
+        "name_ar": "غرفة المؤشرات العالمية والأسهم",
+        "description": "متابعة داو جونز US30 وناسداك NAS100 وداكس الألماني GER40",
+        "online_count": 96,
+    },
+    {
+        "id": "energy",
+        "name": "Energy & Oil",
+        "name_ar": "غرفة الطاقة والنفط (USOIL)",
+        "description": "مناقشات خام تكساس والنفط والغاز وإعلانات المخزونات الأسبوعية",
+        "online_count": 73,
+    },
+    {
+        "id": "signals",
+        "name": "Signals",
+        "name_ar": "غرفة الإشارات",
+        "description": "مشاركة الإشارات الفنية ونقاط الدخول والإيقاف",
+        "online_count": 64,
+    },
 ]
 
 BANNED_WORDS = ("scam", "fraud", "spamlink")
@@ -69,9 +108,18 @@ def init_db(conn):
         "text TEXT,"
         "mentions TEXT,"
         "flagged INTEGER,"
-        "created_at REAL"
+        "created_at REAL,"
+        "sentiment TEXT,"
+        "symbol_tag TEXT"
         ")"
     )
+    existing_cols = {
+        row[1] for row in conn.execute("PRAGMA table_info(community_messages)").fetchall()
+    }
+    if "sentiment" not in existing_cols:
+        conn.execute("ALTER TABLE community_messages ADD COLUMN sentiment TEXT")
+    if "symbol_tag" not in existing_cols:
+        conn.execute("ALTER TABLE community_messages ADD COLUMN symbol_tag TEXT")
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_community_messages_channel "
         "ON community_messages (channel, id)"
@@ -84,7 +132,37 @@ def list_channels():
     return [dict(c) for c in DEFAULT_CHANNELS]
 
 
-def post_message(conn, channel, user_id, text, now, limit=5, window=10.0):
+def to_frontend_message(rec, sender_name=None):
+    """Map a store record dict to the frontend message shape.
+
+    `text` -> `content`, `channel` -> `channel_id`, `flagged` ->
+    `is_flagged`, epoch `created_at` -> ISO-8601 UTC string, `id` -> str.
+    `sender_name` defaults to `f"user-{user_id}"`.
+    """
+    created_at = rec.get("created_at")
+    if isinstance(created_at, (int, float)):
+        created_at = datetime.fromtimestamp(created_at, tz=timezone.utc).isoformat()
+    return {
+        "id": str(rec["id"]),
+        "channel_id": rec["channel"],
+        "sender_name": (
+            sender_name if sender_name is not None else f"user-{rec['user_id']}"
+        ),
+        "badge": "Community",
+        "avatar_bg": "bg-slate-600",
+        "content": rec["text"],
+        "created_at": created_at,
+        "sentiment": rec.get("sentiment") or "neutral",
+        "symbol_tag": rec.get("symbol_tag"),
+        "likes": 0,
+        "is_flagged": bool(rec["flagged"]),
+    }
+
+
+def post_message(
+    conn, channel, user_id, text, now, limit=5, window=10.0,
+    sentiment=None, symbol_tag=None,
+):
     """Validate and store a message. Returns the stored record dict.
 
     Raises ValueError for unknown channel, empty/whitespace-only text,
@@ -125,9 +203,10 @@ def post_message(conn, channel, user_id, text, now, limit=5, window=10.0):
 
     cur = conn.execute(
         "INSERT INTO community_messages "
-        "(channel, user_id, text, mentions, flagged, created_at) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
-        (channel, user_id, text, json.dumps(mentions), flagged, now),
+        "(channel, user_id, text, mentions, flagged, created_at, sentiment, symbol_tag) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (channel, user_id, text, json.dumps(mentions), flagged, now,
+         sentiment, symbol_tag),
     )
     conn.commit()
 
@@ -143,7 +222,8 @@ def post_message(conn, channel, user_id, text, now, limit=5, window=10.0):
 
 
 def _row_to_dict(row):
-    (msg_id, channel, user_id, text, mentions_json, flagged, created_at) = row
+    (msg_id, channel, user_id, text, mentions_json, flagged, created_at,
+     sentiment, symbol_tag) = row
     return {
         "id": msg_id,
         "channel": channel,
@@ -152,6 +232,8 @@ def _row_to_dict(row):
         "mentions": json.loads(mentions_json) if mentions_json else [],
         "flagged": bool(flagged),
         "created_at": created_at,
+        "sentiment": sentiment,
+        "symbol_tag": symbol_tag,
     }
 
 
@@ -167,7 +249,8 @@ def list_messages(conn, channel, limit=50, before_id=None):
 
     if before_id is None:
         cur = conn.execute(
-            "SELECT id, channel, user_id, text, mentions, flagged, created_at "
+            "SELECT id, channel, user_id, text, mentions, flagged, created_at, "
+            "sentiment, symbol_tag "
             "FROM community_messages "
             "WHERE channel = ? "
             "ORDER BY id DESC LIMIT ?",
@@ -175,7 +258,8 @@ def list_messages(conn, channel, limit=50, before_id=None):
         )
     else:
         cur = conn.execute(
-            "SELECT id, channel, user_id, text, mentions, flagged, created_at "
+            "SELECT id, channel, user_id, text, mentions, flagged, created_at, "
+            "sentiment, symbol_tag "
             "FROM community_messages "
             "WHERE channel = ? AND id < ? "
             "ORDER BY id DESC LIMIT ?",

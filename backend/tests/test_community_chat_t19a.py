@@ -227,7 +227,8 @@ def test_list_messages_unknown_channel(tmp_path):
 
 def test_list_channels_default():
     channels = list_channels()
-    assert len(channels) == 4
+    assert len(channels) == 6
     ids = [c["id"] for c in channels]
-    assert ids == ["general", "forex", "metals", "signals"]
+    assert ids == ["general", "forex", "metals", "indices", "energy", "signals"]
     assert any(c["id"] == "general" for c in channels)
+    assert any(c["id"] == "signals" for c in channels)
