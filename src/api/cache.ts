@@ -4,6 +4,8 @@
  * Lead Builder: Google AI Studio
  */
 
+import { apiClient } from './client';
+
 interface RawCacheStats {
   symbol?: string;
   hit_rate_pct?: number;
@@ -29,16 +31,12 @@ export const cacheAPI = {
   // Invalidate candle cache (called on candle close)
   async invalidateCache(symbol: string, timeframe: string = '*', reason: string = 'candle_close') {
     try {
-      const response = await fetch(
+      const res = await apiClient.post<{ status?: string }>(
         `/api/cache/invalidate/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(
           timeframe
-        )}&reason=${encodeURIComponent(reason)}`,
-        { method: 'POST' }
+        )}&reason=${encodeURIComponent(reason)}`
       );
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      return res.ok ? res.data : null;
     } catch (error) {
       console.error('Failed to invalidate cache:', error);
       return null;
@@ -48,15 +46,8 @@ export const cacheAPI = {
   // Update hot symbols list
   async updateHotSymbols(symbols: string[]) {
     try {
-      const response = await fetch('/api/cache/hot-symbols', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(symbols),
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      const res = await apiClient.post<unknown>('/api/cache/hot-symbols', symbols);
+      return res.ok ? res.data : null;
     } catch (error) {
       console.error('Failed to update hot symbols:', error);
       return null;
@@ -67,11 +58,8 @@ export const cacheAPI = {
   async getStats(symbol?: string) {
     try {
       const url = symbol ? `/api/cache/stats?symbol=${encodeURIComponent(symbol)}` : '/api/cache/stats';
-      const response = await fetch(url);
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      const res = await apiClient.get<RawCacheStats>(url);
+      return res.ok ? res.data : null;
     } catch (error) {
       console.error('Failed to get cache stats:', error);
       return null;

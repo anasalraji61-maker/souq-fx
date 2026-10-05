@@ -4,6 +4,8 @@
  * Lead Builder: Google AI Studio
  */
 
+import { apiClient } from './client';
+
 export interface TimeframeSignalData {
   timeframe: string;
   direction: 'BUY' | 'SELL' | 'NEUTRAL';
@@ -60,11 +62,8 @@ export interface MTABacktestData {
 export const mtaAPI = {
   async analyze(symbol: string): Promise<MTAConsensusData | null> {
     try {
-      const response = await fetch(`/api/mta/analyze/${encodeURIComponent(symbol)}`);
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      const res = await apiClient.get<MTAConsensusData>(`/api/mta/analyze/${encodeURIComponent(symbol)}`);
+      return res.ok ? res.data : null;
     } catch (error) {
       console.error('Failed to fetch MTA analysis:', error);
       return null;
@@ -73,11 +72,8 @@ export const mtaAPI = {
 
   async getBacktest(symbol: string): Promise<MTABacktestData | null> {
     try {
-      const response = await fetch(`/api/mta/backtest/${encodeURIComponent(symbol)}`);
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
+      const res = await apiClient.get<MTABacktestData>(`/api/mta/backtest/${encodeURIComponent(symbol)}`);
+      return res.ok ? res.data : null;
     } catch (error) {
       console.error('Failed to fetch MTA backtest:', error);
       return null;
