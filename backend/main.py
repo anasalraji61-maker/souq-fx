@@ -69,6 +69,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=APP_NAME, version="0.1.0", lifespan=lifespan)
 
+from spa_static import register_spa
+register_spa(app)
+
 from routers_analysis import router as analysis_router
 app.include_router(analysis_router)
 
