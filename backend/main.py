@@ -81,6 +81,9 @@ app.include_router(academy_progress_router)
 from routers_community import router as community_router
 app.include_router(community_router)
 
+from trading_mode import router as trading_mode_router
+app.include_router(trading_mode_router)
+
 from api_hardening import RateLimiter, RateLimitMiddleware, health_payload, limit_from_env
 from cors_config import get_cors_origins
 
