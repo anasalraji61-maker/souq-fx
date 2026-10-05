@@ -137,7 +137,7 @@ async function testResetDuringLoad() {
   const { storage, mem } = makeStorage({ delayMs: 40 });
   mem.set(
     WATCHLIST_KEY_V2,
-    JSON.stringify({ v: 2, symbols: ['BTCUSD', 'ETHUSD'] })
+    JSON.stringify({ v: 2, symbols: ['EURUSD', 'GBPUSD'] })
   );
   reset(storage);
   const loadP = ensureWatchlistLoaded();

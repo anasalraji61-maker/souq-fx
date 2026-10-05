@@ -23,8 +23,6 @@ export const MOCK_BASES: Readonly<Record<string, number>> = {
   XAGUSD: 28.4,
   USOIL: 78.35,
   UKOIL: 82.1,
-  BTCUSD: 67420,
-  ETHUSD: 3450,
 };
 
 /** سعر البداية التجريبي لرمز — 1 لما لا يُعرف (كما كان كل مستهلك يفعل). */

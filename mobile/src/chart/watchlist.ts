@@ -19,6 +19,4 @@ export const WATCHLIST = [
   { symbol: 'XAGUSD', label: 'XAGUSD', group: 'Metals' },
   { symbol: 'USOIL', label: 'USOIL', group: 'Energy' },
   { symbol: 'UKOIL', label: 'UKOIL', group: 'Energy' },
-  { symbol: 'BTCUSD', label: 'BTCUSD', group: 'Crypto' },
-  { symbol: 'ETHUSD', label: 'ETHUSD', group: 'Crypto' },
 ] as const;
