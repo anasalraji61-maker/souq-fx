@@ -198,4 +198,4 @@ def test_stats_by_tag_empty_returns_empty(tmp_path):
 
 
 def test_emotions_constant():
-    assert EMOTIONS == ("calm", "confident", "fearful", "greedy", "anxious", "neutral")
+    assert EMOTIONS == ("calm", "confident", "fearful", "greedy", "anxious", "neutral", "disciplined", "fomo", "revenge")

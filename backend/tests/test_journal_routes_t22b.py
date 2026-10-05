@@ -69,16 +69,18 @@ def test_create_valid(client):
         headers=headers,
     )
     assert r.status_code == 200, r.text
-    entry = r.json()["entry"]
-    assert entry["trade_id"] == "T123"
+    entry = r.json()
+    assert isinstance(entry, dict)
     assert entry["notes"] == "my notes"
     assert entry["tags"] == ["a", "b"]
     assert entry["emotion"] == "confident"
     assert entry["screenshot_url"] == "https://example.com/img.png"
     assert entry["pnl"] == 12.5
-    assert "id" in entry
-    assert entry["created_at"] > 0
-    assert entry["updated_at"] > 0
+    assert isinstance(entry["id"], str)
+    assert entry["date"]
+    assert "trade_id" not in entry
+    r_by_trade = client.get("/api/journal/entries?trade_id=T123", headers=headers)
+    assert len(r_by_trade.json()) == 1
 
 
 def test_create_empty_trade_id_returns_400(client):
@@ -97,11 +99,11 @@ def test_get_returns_created_entry(client):
     headers = _register(client, "jr_u1")
     r = client.post("/api/journal/entries", json={"trade_id": "T1", "notes": "hi"}, headers=headers)
     assert r.status_code == 200
-    entry_id = r.json()["entry"]["id"]
+    entry_id = r.json()["id"]
     r2 = client.get(f"/api/journal/entries/{entry_id}", headers=headers)
     assert r2.status_code == 200
-    assert r2.json()["entry"]["id"] == entry_id
-    assert r2.json()["entry"]["notes"] == "hi"
+    assert r2.json()["id"] == entry_id
+    assert r2.json()["notes"] == "hi"
 
 
 def test_get_missing_id_returns_404(client):
@@ -117,11 +119,12 @@ def test_list_filters_by_tag_and_trade_id(client):
     client.post("/api/journal/entries", json={"trade_id": "T3", "tags": ["alpha", "beta"]}, headers=headers)
     r_tag = client.get("/api/journal/entries?tag=alpha", headers=headers)
     assert r_tag.status_code == 200
-    assert len(r_tag.json()["entries"]) == 2
+    assert len(r_tag.json()) == 2
     r_trade = client.get("/api/journal/entries?trade_id=T2", headers=headers)
     assert r_trade.status_code == 200
-    assert len(r_trade.json()["entries"]) == 1
-    assert r_trade.json()["entries"][0]["trade_id"] == "T2"
+    assert len(r_trade.json()) == 1
+    r_none = client.get("/api/journal/entries?trade_id=NOPE", headers=headers)
+    assert len(r_none.json()) == 0
 
 
 def test_limit_and_offset_paginate(client):
@@ -130,7 +133,7 @@ def test_limit_and_offset_paginate(client):
         client.post("/api/journal/entries", json={"trade_id": f"T{i}", "notes": f"n{i}"}, headers=headers)
     r = client.get("/api/journal/entries?limit=2&offset=1", headers=headers)
     assert r.status_code == 200
-    entries = r.json()["entries"]
+    entries = r.json()
     assert len(entries) == 2
     assert entries[0]["notes"] == "n3"
     assert entries[1]["notes"] == "n2"
@@ -139,15 +142,14 @@ def test_limit_and_offset_paginate(client):
 def test_patch_updates_notes_leaves_other_fields_unchanged(client):
     headers = _register(client, "jr_u1")
     r = client.post("/api/journal/entries", json={"trade_id": "T1", "notes": "old", "emotion": "neutral", "tags": ["x"], "pnl": 5.0}, headers=headers)
-    entry_id = r.json()["entry"]["id"]
+    entry_id = r.json()["id"]
     r2 = client.patch(f"/api/journal/entries/{entry_id}", json={"notes": "new"}, headers=headers)
     assert r2.status_code == 200
-    entry = r2.json()["entry"]
+    entry = r2.json()
     assert entry["notes"] == "new"
     assert entry["emotion"] == "neutral"
     assert entry["tags"] == ["x"]
     assert entry["pnl"] == 5.0
-    assert entry["updated_at"] > entry["created_at"]
 
 
 def test_patch_missing_id_returns_404(client):
@@ -159,7 +161,7 @@ def test_patch_missing_id_returns_404(client):
 def test_patch_invalid_emotion_returns_400(client):
     headers = _register(client, "jr_u1")
     r = client.post("/api/journal/entries", json={"trade_id": "T1"}, headers=headers)
-    entry_id = r.json()["entry"]["id"]
+    entry_id = r.json()["id"]
     r2 = client.patch(f"/api/journal/entries/{entry_id}", json={"emotion": "ecstatic"}, headers=headers)
     assert r2.status_code == 400
 
@@ -167,7 +169,7 @@ def test_patch_invalid_emotion_returns_400(client):
 def test_delete_returns_200_then_get_404_then_delete_404(client):
     headers = _register(client, "jr_u1")
     r = client.post("/api/journal/entries", json={"trade_id": "T1"}, headers=headers)
-    entry_id = r.json()["entry"]["id"]
+    entry_id = r.json()["id"]
     r2 = client.delete(f"/api/journal/entries/{entry_id}", headers=headers)
     assert r2.status_code == 200
     assert r2.json()["deleted"] is True
@@ -181,7 +183,7 @@ def test_user_isolation(client):
     headers1 = _register(client, "jr_u1")
     headers2 = _register(client, "jr_u2")
     r = client.post("/api/journal/entries", json={"trade_id": "T1", "notes": "u1 note"}, headers=headers1)
-    entry_id = r.json()["entry"]["id"]
+    entry_id = r.json()["id"]
     r2 = client.get(f"/api/journal/entries/{entry_id}", headers=headers2)
     assert r2.status_code == 404
     r3 = client.patch(f"/api/journal/entries/{entry_id}", json={"notes": "hack"}, headers=headers2)
@@ -190,7 +192,7 @@ def test_user_isolation(client):
     assert r4.status_code == 404
     r5 = client.get("/api/journal/entries", headers=headers2)
     assert r5.status_code == 200
-    assert r5.json()["entries"] == []
+    assert r5.json() == []
 
 
 def test_stats_by_tag_known_numbers(client):
@@ -200,15 +202,23 @@ def test_stats_by_tag_known_numbers(client):
     client.post("/api/journal/entries", json={"trade_id": "T3", "tags": ["b"], "pnl": 20.0}, headers=headers)
     r = client.get("/api/journal/stats", headers=headers)
     assert r.status_code == 200
-    stats = r.json()["stats"]
-    a = next(s for s in stats if s["tag"] == "a")
-    b = next(s for s in stats if s["tag"] == "b")
-    assert a == {"tag": "a", "count": 2, "wins": 1, "win_rate": 0.5, "total_pnl": 5.0}
-    assert b == {"tag": "b", "count": 2, "wins": 2, "win_rate": 1.0, "total_pnl": 30.0}
+    stats = r.json()
+    a = next(s for s in stats["by_tag"] if s["tag"] == "a")
+    b = next(s for s in stats["by_tag"] if s["tag"] == "b")
+    assert a == {"tag": "a", "count": 2, "win_rate": 50, "total_pnl": 5.0}
+    assert b == {"tag": "b", "count": 2, "win_rate": 100, "total_pnl": 30.0}
 
 
 def test_stats_empty_user_returns_empty(client):
     headers = _register(client, "jr_u1")
     r = client.get("/api/journal/stats", headers=headers)
     assert r.status_code == 200
-    assert r.json()["stats"] == []
+    assert r.json() == {
+        "total_trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "total_pnl": 0.0,
+        "profit_factor": 0.0,
+        "by_tag": [],
+    }

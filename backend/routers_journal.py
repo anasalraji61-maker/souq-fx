@@ -4,6 +4,7 @@ from __future__ import annotations
 import sqlite3
 import time
 
+import journal_contract
 import trade_journal
 from core import db_conn
 from core.auth import _auth_user
@@ -22,6 +23,7 @@ def _conn() -> sqlite3.Connection:
     """Open a connection and ensure the journal tables exist."""
     conn = sqlite3.connect(_db_path())
     trade_journal.init_db(conn)
+    journal_contract.init_extra(conn)
     return conn
 
 
@@ -32,7 +34,13 @@ def _require(user: dict | None) -> None:
 
 
 class CreateBody(BaseModel):
-    trade_id: str
+    trade_id: str | None = None
+    date: str | None = None
+    symbol: str | None = None
+    direction: str | None = None
+    entry_price: float | None = None
+    exit_price: float | None = None
+    lots: float | None = None
     notes: str = ""
     tags: list[str] | None = None
     emotion: str = "neutral"
@@ -41,11 +49,29 @@ class CreateBody(BaseModel):
 
 
 class UpdateBody(BaseModel):
+    date: str | None = None
+    symbol: str | None = None
+    direction: str | None = None
+    entry_price: float | None = None
+    exit_price: float | None = None
+    lots: float | None = None
     notes: str | None = None
     tags: list[str] | None = None
     emotion: str | None = None
     screenshot_url: str | None = None
     pnl: float | None = None
+
+
+def _user_id(user) -> str:
+    return str(user["user_id"])
+
+
+def _frontend(conn, rec) -> dict:
+    extra = journal_contract.get_extra(conn, rec["id"])
+    try:
+        return journal_contract.to_frontend_entry(rec, extra)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/entries", status_code=200)
@@ -54,21 +80,39 @@ def create_entry(body: CreateBody, user: dict | None = Depends(_auth_user)):
     _require(user)
     conn = _conn()
     try:
+        trade_id = body.trade_id
+        if trade_id is None:
+            symbol = body.symbol or ""
+            trade_id = f"{symbol}-{int(time.time())}" if symbol else f"tr-{int(time.time())}"
+        now = time.time()
+        extra_data = {
+            k: v
+            for k, v in {
+                "date": body.date,
+                "symbol": body.symbol,
+                "direction": body.direction,
+                "entry_price": body.entry_price,
+                "exit_price": body.exit_price,
+                "lots": body.lots,
+            }.items()
+            if v is not None
+        }
         try:
             rec = trade_journal.create_entry(
                 conn,
-                str(user["user_id"]),
-                body.trade_id,
+                _user_id(user),
+                trade_id,
                 body.notes,
                 body.tags,
                 body.emotion,
                 body.screenshot_url,
                 body.pnl,
-                time.time(),
+                now,
             )
+            journal_contract.save_extra(conn, rec["id"], extra_data)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
-        return {"entry": rec}
+        return _frontend(conn, rec)
     finally:
         conn.close()
 
@@ -86,9 +130,9 @@ def list_entries(
     conn = _conn()
     try:
         entries = trade_journal.list_entries(
-            conn, str(user["user_id"]), tag, trade_id, limit, offset
+            conn, _user_id(user), tag, trade_id, limit, offset
         )
-        return {"entries": entries}
+        return [_frontend(conn, rec) for rec in entries]
     finally:
         conn.close()
 
@@ -99,10 +143,10 @@ def get_entry(entry_id: int, user: dict | None = Depends(_auth_user)):
     _require(user)
     conn = _conn()
     try:
-        entry = trade_journal.get_entry(conn, str(user["user_id"]), entry_id)
+        entry = trade_journal.get_entry(conn, _user_id(user), entry_id)
         if entry is None:
             raise HTTPException(status_code=404, detail="not found")
-        return {"entry": entry}
+        return _frontend(conn, entry)
     finally:
         conn.close()
 
@@ -114,15 +158,25 @@ def update_entry(entry_id: int, body: UpdateBody, user: dict | None = Depends(_a
     conn = _conn()
     try:
         fields = body.model_dump(exclude_unset=True)
+        core_fields = {k: v for k, v in fields.items() if k in ("notes", "tags", "emotion", "screenshot_url", "pnl")}
+        extra_fields = {k: v for k, v in fields.items() if k in ("date", "symbol", "direction", "entry_price", "exit_price", "lots")}
+        if extra_fields:
+            existing = trade_journal.get_entry(conn, _user_id(user), entry_id)
+            if existing is None:
+                raise HTTPException(status_code=404, detail="not found")
+            try:
+                journal_contract.save_extra(conn, entry_id, extra_fields)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
         try:
             entry = trade_journal.update_entry(
-                conn, str(user["user_id"]), entry_id, time.time(), **fields
+                conn, _user_id(user), entry_id, time.time(), **core_fields
             )
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         if entry is None:
             raise HTTPException(status_code=404, detail="not found")
-        return {"entry": entry}
+        return _frontend(conn, entry)
     finally:
         conn.close()
 
@@ -133,9 +187,10 @@ def delete_entry(entry_id: int, user: dict | None = Depends(_auth_user)):
     _require(user)
     conn = _conn()
     try:
-        deleted = trade_journal.delete_entry(conn, str(user["user_id"]), entry_id)
+        deleted = trade_journal.delete_entry(conn, _user_id(user), entry_id)
         if not deleted:
             raise HTTPException(status_code=404, detail="not found")
+        journal_contract.delete_extra(conn, entry_id)
         return {"deleted": True}
     finally:
         conn.close()
@@ -143,11 +198,12 @@ def delete_entry(entry_id: int, user: dict | None = Depends(_auth_user)):
 
 @router.get("/stats")
 def stats(user: dict | None = Depends(_auth_user)):
-    """Get per-tag stats for the user."""
+    """Get journal stats for the user in the frontend shape."""
     _require(user)
     conn = _conn()
     try:
-        stats_data = trade_journal.stats_by_tag(conn, str(user["user_id"]))
-        return {"stats": stats_data}
+        entries = trade_journal.list_entries(conn, _user_id(user), limit=200, offset=0)
+        frontend_entries = [journal_contract.to_frontend_entry(rec, journal_contract.get_extra(conn, rec["id"])) for rec in entries]
+        return journal_contract.compute_stats(frontend_entries)
     finally:
         conn.close()

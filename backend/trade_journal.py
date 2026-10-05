@@ -9,7 +9,7 @@ import json
 import math
 import sqlite3
 
-EMOTIONS = ("calm", "confident", "fearful", "greedy", "anxious", "neutral")
+EMOTIONS = ("calm", "confident", "fearful", "greedy", "anxious", "neutral", "disciplined", "fomo", "revenge")
 
 _MAX_NOTES_CHARS = 2000
 _MAX_TAGS = 10
