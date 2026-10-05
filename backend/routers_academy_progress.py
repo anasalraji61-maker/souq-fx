@@ -7,6 +7,7 @@ import time
 
 import db
 import academy_progress
+import academy_contract
 from core import db_conn
 from core.auth import _auth_user
 from fastapi import APIRouter, Depends, HTTPException
@@ -33,7 +34,7 @@ def get_all_progress(user: dict | None = Depends(_auth_user)):
     path = _cert_path()
     academy_progress.init_cert_db(path)
     rows = db.get_progress(uid)
-    return {"courses": academy_progress.compute_all_progress(rows)}
+    return academy_contract.build_courses_payload(rows)
 
 
 @router.get("/courses/{school_id}")
@@ -50,8 +51,20 @@ def get_course_progress(school_id: str, user: dict | None = Depends(_auth_user))
     return result
 
 
+from pydantic import BaseModel
+
+
+class CertBody(BaseModel):
+    """Optional body for certificate issuance."""
+    student_name: str | None = None
+
+
 @router.post("/courses/{school_id}/certificate")
-def issue_certificate(school_id: str, user: dict | None = Depends(_auth_user)):
+def issue_certificate(
+    school_id: str,
+    body: CertBody | None = None,
+    user: dict | None = Depends(_auth_user),
+):
     """Issue a certificate for completing a course."""
     _require(user)
     uid = user["user_id"]
@@ -66,7 +79,10 @@ def issue_certificate(school_id: str, user: dict | None = Depends(_auth_user)):
     cert = academy_progress.issue_certificate(path, uid, school_id, rows, time.time())
     if cert is None:
         raise HTTPException(status_code=409, detail="course_not_complete")
-    return {"certificate": cert}
+
+    student_name = body.student_name if body else None
+    enriched = academy_contract.enrich_certificate(cert, student_name)
+    return {"certificate": enriched}
 
 
 @router.get("/certificates")
@@ -77,4 +93,5 @@ def list_certificates(user: dict | None = Depends(_auth_user)):
     path = _cert_path()
     academy_progress.init_cert_db(path)
     certs = academy_progress.list_certificates(path, uid)
-    return {"certificates": certs}
+    enriched = [academy_contract.enrich_certificate(c) for c in certs]
+    return enriched

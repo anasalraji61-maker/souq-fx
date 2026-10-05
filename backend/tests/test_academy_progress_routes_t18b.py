@@ -91,10 +91,17 @@ def test_get_courses_no_progress_shows_zero(client):
     assert r.status_code == 200, r.text
     data = r.json()
     assert "courses" in data
-    for course in data["courses"]:
+    assert "completed" in data
+    assert data["completed"] == []
+    for course in data["courses"].values():
         assert course["completed"] == 0
-        assert course["percent"] == 0.0
+        assert course["completed_lectures"] == 0
+        assert course["progress_pct"] == 0.0
         assert course["is_complete"] is False
+        # Old keys still present
+        assert course["total"] == course["total_lectures"]
+        assert course["completed"] == course["completed_lectures"]
+        assert course["percent"] == course["progress_pct"]
 
 
 def test_get_courses_partial_progress(client):
@@ -108,11 +115,16 @@ def test_get_courses_partial_progress(client):
     assert r.status_code == 200, r.text
     data = r.json()
 
+    assert "courses" in data
+    assert "completed" in data
     # Find the first school
-    course = next(c for c in data["courses"] if c["school_id"] == _SCHOOL["id"])
+    course = data["courses"][_SCHOOL["id"]]
     assert course["completed"] > 0
+    assert course["completed_lectures"] > 0
     assert course["percent"] > 0.0
+    assert course["progress_pct"] > 0.0
     assert course["percent"] < 100.0
+    assert course["progress_pct"] < 100.0
     assert course["is_complete"] is False
 
 
@@ -193,9 +205,9 @@ def test_get_certificates_lists_exactly_one_after_issuing(client):
     r = client.get("/api/academy/progress/certificates", headers=headers)
     assert r.status_code == 200, r.text
     data = r.json()
-    assert "certificates" in data
-    assert len(data["certificates"]) == 1
-    assert data["certificates"][0]["id"] == cert_id
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["id"] == cert_id
 
 
 def test_get_certificates_empty_for_fresh_user(client):
@@ -204,7 +216,7 @@ def test_get_certificates_empty_for_fresh_user(client):
     r = client.get("/api/academy/progress/certificates", headers=headers)
     assert r.status_code == 200, r.text
     data = r.json()
-    assert data["certificates"] == []
+    assert data == []
 
 
 def test_certificates_isolated_between_users(client):
@@ -222,11 +234,11 @@ def test_certificates_isolated_between_users(client):
     r2 = client.get("/api/academy/progress/certificates", headers=headers2)
     assert r2.status_code == 200, r2.text
     data2 = r2.json()
-    assert data2["certificates"] == []
+    assert data2 == []
 
     # User 1 still sees their certificate
     r1_list = client.get("/api/academy/progress/certificates", headers=headers1)
     assert r1_list.status_code == 200, r1_list.text
     data1 = r1_list.json()
-    assert len(data1["certificates"]) == 1
-    assert data1["certificates"][0]["id"] == cert1
+    assert len(data1) == 1
+    assert data1[0]["id"] == cert1
