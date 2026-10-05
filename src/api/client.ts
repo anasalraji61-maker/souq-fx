@@ -9,7 +9,7 @@
  * - Dispatches 'matrix:offline-status' events for reactive UI badges
  */
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   ok: boolean;
   data: T | null;
   error: string | null;
@@ -17,7 +17,7 @@ export interface ApiResponse<T = any> {
   isOffline: boolean;
 }
 
-const API_BASE = ((import.meta as any).env?.VITE_API_BASE || '').replace(/\/$/, '');
+const API_BASE = ((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE || '').replace(/\/$/, '');
 const TIMEOUT_MS = 10000;
 
 // Track global backend reachability
@@ -44,7 +44,7 @@ function updateBackendStatus(offline: boolean) {
   }
 }
 
-export async function apiClient<T = any>(
+export async function apiClient<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
@@ -99,7 +99,7 @@ export async function apiClient<T = any>(
     // Success response
     updateBackendStatus(false);
     const contentType = res.headers.get('content-type') || '';
-    let data: any = null;
+    let data: unknown = null;
     if (contentType.includes('application/json')) {
       data = await res.json();
     } else {
@@ -113,11 +113,14 @@ export async function apiClient<T = any>(
       status: res.status,
       isOffline: false,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     clearTimeout(timeoutId);
     updateBackendStatus(true);
 
-    const isTimeout = err?.name === 'AbortError';
+    const isTimeout =
+      err instanceof Error && err.name === 'AbortError' ||
+      (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') ||
+      (err as { name?: string } | null)?.name === 'AbortError';
     const errorMsg = isTimeout
       ? 'انتهت مهلة الاتصال بالخادم (10 ثوان)'
       : 'تعذر الاتصال بالخادم (الوضع المحلي نشط)';
@@ -133,22 +136,22 @@ export async function apiClient<T = any>(
 }
 
 // Method helpers
-apiClient.get = <T = any>(endpoint: string, headers?: HeadersInit) =>
+apiClient.get = <T = unknown>(endpoint: string, headers?: HeadersInit) =>
   apiClient<T>(endpoint, { method: 'GET', headers });
 
-apiClient.post = <T = any>(endpoint: string, body?: any, headers?: HeadersInit) =>
+apiClient.post = <T = unknown>(endpoint: string, body?: unknown, headers?: HeadersInit) =>
   apiClient<T>(endpoint, {
     method: 'POST',
     body: body ? JSON.stringify(body) : undefined,
     headers,
   });
 
-apiClient.patch = <T = any>(endpoint: string, body?: any, headers?: HeadersInit) =>
+apiClient.patch = <T = unknown>(endpoint: string, body?: unknown, headers?: HeadersInit) =>
   apiClient<T>(endpoint, {
     method: 'PATCH',
     body: body ? JSON.stringify(body) : undefined,
     headers,
   });
 
-apiClient.delete = <T = any>(endpoint: string, headers?: HeadersInit) =>
+apiClient.delete = <T = unknown>(endpoint: string, headers?: HeadersInit) =>
   apiClient<T>(endpoint, { method: 'DELETE', headers });

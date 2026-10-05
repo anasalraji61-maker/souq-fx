@@ -42,6 +42,23 @@ export interface AccountStats {
 
 const LOCAL_POSITIONS_KEY = 'matrix_local_positions_v1';
 
+// Raw API row shape: a partial Position with snake_case overrides from the backend.
+// Numeric/string values may arrive as either depending on the source.
+type RawPosition = Partial<Position> & Record<string, unknown>;
+
+function normalizePosition(d: RawPosition): Position {
+  return {
+    ...d,
+    avgEntryPrice: d.avg_entry_price ?? d.avgEntryPrice,
+    openTime: d.open_time ?? d.openTime,
+    closePrice: d.close_price ?? d.closePrice,
+    closeTime: d.close_time ?? d.closeTime,
+    closeReason: d.close_reason ?? d.closeReason,
+    realizedPnl: d.realized_pnl ?? d.realizedPnl,
+    realizedPnlPct: d.realized_pnl_pct ?? d.realizedPnlPct,
+  } as Position;
+}
+
 function getLocalPositions(): Position[] {
   try {
     const raw = localStorage.getItem(LOCAL_POSITIONS_KEY);
@@ -120,17 +137,8 @@ export const positionsAPI = {
       const params = symbol ? `?symbol=${encodeURIComponent(symbol)}` : '';
       const response = await fetch(`/api/positions/open${params}`);
       if (response.ok) {
-        const data = await response.json();
-        return data.map((d: any) => ({
-          ...d,
-          avgEntryPrice: d.avg_entry_price ?? d.avgEntryPrice,
-          openTime: d.open_time ?? d.openTime,
-          closePrice: d.close_price ?? d.closePrice,
-          closeTime: d.close_time ?? d.closeTime,
-          closeReason: d.close_reason ?? d.closeReason,
-          realizedPnl: d.realized_pnl ?? d.realizedPnl,
-          realizedPnlPct: d.realized_pnl_pct ?? d.realizedPnlPct,
-        }));
+        const data = (await response.json()) as RawPosition[];
+        return data.map((d) => normalizePosition(d));
       }
     } catch {
       // fallback
@@ -151,17 +159,8 @@ export const positionsAPI = {
       params.append('limit', limit.toString());
       const response = await fetch(`/api/positions/history?${params.toString()}`);
       if (response.ok) {
-        const data = await response.json();
-        return data.map((d: any) => ({
-          ...d,
-          avgEntryPrice: d.avg_entry_price ?? d.avgEntryPrice,
-          openTime: d.open_time ?? d.openTime,
-          closePrice: d.close_price ?? d.closePrice,
-          closeTime: d.close_time ?? d.closeTime,
-          closeReason: d.close_reason ?? d.closeReason,
-          realizedPnl: d.realized_pnl ?? d.realizedPnl,
-          realizedPnlPct: d.realized_pnl_pct ?? d.realizedPnlPct,
-        }));
+        const data = (await response.json()) as RawPosition[];
+        return data.map((d) => normalizePosition(d));
       }
     } catch {
       // fallback
