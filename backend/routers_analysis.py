@@ -14,6 +14,7 @@ from typing import Literal
 import order_flow
 import portfolio_risk
 import analytics_metrics
+import analysis_contract
 
 
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
@@ -27,15 +28,19 @@ class Candle(BaseModel):
     low: float
     close: float
     volume: float
-    time: str | None = None
+    time: float | str | None = None
 
 
 class OrderFlowRequest(BaseModel):
     candles: list[Candle] = Field(default_factory=list, max_length=10000)
+    symbol: str | None = None
+    timeframe: str | None = None
 
 
 class VaRRequest(BaseModel):
     returns: list[float] = Field(default_factory=list, max_length=10000)
+    trades: list[dict] = Field(default_factory=list, max_length=10000)
+    equity: float = 10000
 
 
 class CorrelationRequest(BaseModel):
@@ -95,26 +100,49 @@ def _catch_value_error(func):
 @router.post("/order-flow")
 @_catch_value_error
 async def order_flow_endpoint(req: OrderFlowRequest):
-    """Compute order flow metrics from OHLCV candles."""
+    """Compute order flow metrics from OHLCV candles.
+
+    Returns the legacy dict (with ``estimated``, ``bars``, ``divergence``) for
+    backward compatibility — unless the request looks like a frontend call, in
+    which case a bare JSON list of bars (see ``analysis_contract``) is returned.
+    """
     candles = [c.model_dump() for c in req.candles]
     result = order_flow.compute_order_flow(candles)
     divergence = order_flow.detect_delta_divergence(candles)
     result["divergence"] = divergence
-    return result
+    return analysis_contract.order_flow_response(
+        candles, result, req.symbol, req.timeframe
+    )
 
 
 @router.post("/var")
 @_catch_value_error
 async def var_endpoint(req: VaRRequest):
-    """Generate VaR report from returns."""
-    return portfolio_risk.var_report(req.returns)
+    """Generate VaR report from returns or trades.
+
+    Accepts the legacy ``returns`` body and/or the frontend ``trades`` +
+    ``equity`` body. When ``trades`` is supplied, returns are derived as
+    ``pnl/equity`` for each trade. The response keeps all legacy keys and adds
+    ``confidence_95``/``confidence_99`` blocks plus ``equity``/``sample_size``.
+    """
+    if req.trades:
+        returns = analysis_contract.var_trade_returns(req.trades, req.equity)
+    else:
+        returns = req.returns
+    raw = portfolio_risk.var_report(returns)
+    return analysis_contract.var_response(req.equity, returns, raw)
 
 
 @router.post("/correlation")
 @_catch_value_error
 async def correlation_endpoint(req: CorrelationRequest):
-    """Compute correlation matrix for multiple series."""
-    return portfolio_risk.correlation_matrix(req.series)
+    """Compute correlation matrix for multiple series.
+
+    Returns the legacy nested-list ``matrix`` (kept for backward compatibility)
+    plus a dict-of-dicts ``matrix_dict`` that the frontend expects.
+    """
+    raw = portfolio_risk.correlation_matrix(req.series)
+    return analysis_contract.correlation_response(raw)
 
 
 @router.post("/stress-test")
