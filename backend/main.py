@@ -95,6 +95,9 @@ app.include_router(drawings_router)
 
 from routers_alerts_compat import router as alerts_compat_router
 app.include_router(alerts_compat_router)
+
+from routers_mobile_compat import router as mobile_compat_router
+app.include_router(mobile_compat_router)
 _RATE_LIMITER = RateLimiter(limit_from_env())
 app.add_middleware(RateLimitMiddleware, limiter=_RATE_LIMITER)
 
