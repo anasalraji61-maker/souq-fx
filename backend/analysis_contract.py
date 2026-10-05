@@ -22,6 +22,13 @@ Contract rules (T27a):
   dict-of-dicts with 1.0 on the diagonal. The legacy call returns `matrix` as a
   nested list. We add the dict-of-dicts version under `matrix_dict` and keep the
   nested-list `matrix` for old tests, while still exposing `symbols`.
+* /stress-test: the frontend POSTs `{trades, equity}` and expects a *bare JSON
+  list* of `StressScenarioResult` (name, shock_pct, estimated_pnl,
+  projected_equity, equity_impact_pct, status). The legacy API accepts
+  `{positions, shocks}` and returns `{scenarios, total_notional, estimated}`.
+  When `trades` is non-empty we translate trades -> positions, run the legacy
+  stress_test, and reshape the result into the frontend list; otherwise the
+  legacy dict path is unchanged.
 """
 from __future__ import annotations
 
@@ -132,6 +139,86 @@ def var_response(equity: float, returns: list[float], raw: dict) -> dict:
         "cvar_amount": round(cvar_99 * equity, 6),
     }
     return result
+
+
+# ─── Stress Test ───────────────────────────────────────────────────────────────
+
+def trades_to_positions(trades: list[dict]) -> list[dict]:
+    """Translate frontend trade dicts into legacy ``position`` dicts.
+
+    Each trade contributes a position:
+        symbol  <- trade.symbol
+        side    <- direction if it is "buy" or "sell", else "buy"
+        units   <- lots * 100000
+        price   <- entry_price
+
+    Trades with units <= 0 or price <= 0 are skipped.
+    """
+    positions: list[dict] = []
+    for t in trades:
+        symbol = t.get("symbol")
+        direction = t.get("direction", "")
+        side = direction if direction in ("buy", "sell") else "buy"
+        lots = t.get("lots", 0)
+        try:
+            units = float(lots) * 100000
+            price = float(t.get("entry_price", 0))
+        except (TypeError, ValueError):
+            units = 0.0
+            price = 0.0
+        if units <= 0 or price <= 0 or not symbol:
+            continue
+        positions.append({
+            "symbol": symbol,
+            "side": side,
+            "units": units,
+            "price": price,
+        })
+    return positions
+
+
+def stress_test_response(equity: float, raw: dict) -> list[dict]:
+    """Reshape a legacy stress_test dict into the frontend list.
+
+    The frontend expects one item per scenario:
+        name, shock_pct, estimated_pnl, projected_equity,
+        equity_impact_pct, status
+
+    where ``shock_pct = shock * 100`` and ``status`` follows the impact level.
+    """
+    scenarios = raw.get("scenarios", [])
+    out: list[dict] = []
+    for sc in scenarios:
+        shock = float(sc.get("shock", 0.0))
+        pnl = float(sc.get("pnl", 0.0))
+
+        shock_pct = round(shock * 100, 6)
+        sign = "+" if shock_pct >= 0 else ""
+        name = f"Shock {sign}{shock_pct}%"
+
+        estimated_pnl = round(pnl, 2)
+        projected_equity = round(max(0.0, equity + pnl), 2)
+        if equity <= 0:
+            equity_impact_pct = 0.0
+        else:
+            equity_impact_pct = round(pnl / equity * 100, 2)
+
+        if equity_impact_pct < -15:
+            status = "DANGER"
+        elif equity_impact_pct < -5:
+            status = "WARNING"
+        else:
+            status = "STABLE"
+
+        out.append({
+            "name": name,
+            "shock_pct": shock_pct,
+            "estimated_pnl": estimated_pnl,
+            "projected_equity": projected_equity,
+            "equity_impact_pct": equity_impact_pct,
+            "status": status,
+        })
+    return out
 
 
 # ─── Correlation ─────────────────────────────────────────────────────────────

@@ -65,6 +65,8 @@ class Position(BaseModel):
 class StressTestRequest(BaseModel):
     positions: list[Position] = Field(default_factory=list, max_length=10000)
     shocks: list[float] | None = Field(default=None, max_length=10000)
+    trades: list[dict] = Field(default_factory=list, max_length=10000)
+    equity: float = 10000
 
 
 class Trade(BaseModel):
@@ -148,7 +150,18 @@ async def correlation_endpoint(req: CorrelationRequest):
 @router.post("/stress-test")
 @_catch_value_error
 async def stress_test_endpoint(req: StressTestRequest):
-    """Run portfolio stress test under market shocks."""
+    """Run portfolio stress test under market shocks.
+
+    When ``trades`` is non-empty, translate them to positions via
+    ``analysis_contract.trades_to_positions`` and return the
+    frontend-shaped list from ``analysis_contract.stress_test_response``.
+    Otherwise keep the legacy ``{positions, shocks}`` dict path unchanged.
+    """
+    if req.trades:
+        positions = analysis_contract.trades_to_positions(req.trades)
+        shocks = tuple(req.shocks) if req.shocks is not None else (-0.05, -0.02, 0.02, 0.05)
+        raw = portfolio_risk.stress_test(positions, shocks)
+        return analysis_contract.stress_test_response(req.equity, raw)
     positions = [p.model_dump() for p in req.positions]
     shocks = tuple(req.shocks) if req.shocks is not None else (-0.05, -0.02, 0.02, 0.05)
     return portfolio_risk.stress_test(positions, shocks)
