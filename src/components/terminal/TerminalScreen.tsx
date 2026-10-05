@@ -21,7 +21,8 @@ import { AiCopilotPanel } from './AiCopilotPanel';
 import { OrderPanel } from '../trading/OrderPanel';
 import { PositionPanel } from '../trading/PositionPanel';
 import { OrderFlowPanel } from './OrderFlowPanel';
-import { generateCandles, updateLastCandleWithTick } from '../../data/candleGenerator';
+import { generateCandles, updateLastCandleWithTick, TIMEFRAME_SECONDS } from '../../data/candleGenerator';
+import { getCandles, getQuote, getMarketStatus, MarketStatus } from '../../api/market';
 import { loadDrawings, saveDrawings } from '../../api/drawings';
 import { loadAlerts, saveAlerts } from '../../api/alerts';
 import { playAlertChime } from '../../utils/sound';
@@ -65,8 +66,10 @@ interface ChartCellState {
   candles: Candle[];
   drawings: DrawingItem[];
   indicators: IndicatorInstance[];
-  providerStatus: 'Cached' | 'Provider' | 'Unavailable';
+  providerStatus: 'Cached' | 'Provider' | 'Unavailable' | 'Demo';
   marketStatus: 'Closed' | 'Open';
+  isDemo?: boolean;
+  isLoading?: boolean;
 }
 
 interface SavedLayout {
@@ -210,6 +213,17 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
     price: number;
   } | null>(null);
 
+  // 1.5 Market status badge state
+  const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
+
+  useEffect(() => {
+    getMarketStatus().then(setMarketStatus);
+    const msInterval = setInterval(() => {
+      getMarketStatus().then(setMarketStatus);
+    }, 30000);
+    return () => clearInterval(msInterval);
+  }, []);
+
   // Initialize cells (Part 4.2)
   const [cells, setCells] = useState<ChartCellState[]>(() => [
     {
@@ -323,6 +337,166 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   // Track loaded drawings per cell (cellId -> symbol:timeframe)
   const loadedMapRef = useRef<Map<string, string>>(new Map());
 
+  // 1.2 Load real candles per cell with fallback and demo flag
+  const loadCellCandles = useCallback(
+    async (cellId: string, symbol: string, timeframe: Timeframe) => {
+      setCells((prev) =>
+        prev.map((c) => (c.id === cellId ? { ...c, isLoading: true } : c))
+      );
+
+      try {
+        const res = await getCandles(symbol, timeframe, 180);
+        setCells((prev) =>
+          prev.map((c) => {
+            if (c.id !== cellId) return c;
+            const providerStatus =
+              res.dataKind === 'provider'
+                ? 'Provider'
+                : res.dataKind === 'cache'
+                ? 'Cached'
+                : res.dataKind === 'demo'
+                ? 'Demo'
+                : 'Unavailable';
+
+            return {
+              ...c,
+              candles: res.candles,
+              isDemo: res.isDemo,
+              providerStatus,
+              isLoading: false,
+            };
+          })
+        );
+      } catch {
+        const symObj = symbols.find((s) => s.symbol === symbol) || symbols[0];
+        const fallback = generateCandles(symObj?.price || 1.085, timeframe, 150);
+        setCells((prev) =>
+          prev.map((c) =>
+            c.id === cellId
+              ? {
+                  ...c,
+                  candles: fallback,
+                  isDemo: true,
+                  providerStatus: 'Demo',
+                  isLoading: false,
+                }
+              : c
+          )
+        );
+      }
+    },
+    [symbols]
+  );
+
+  // Track loaded candles per cell (cellId -> symbol:timeframe)
+  const loadedCandlesMapRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    cells.forEach((cell) => {
+      const key = `${cell.symbol.toUpperCase()}:${cell.timeframe.toLowerCase()}`;
+      if (loadedCandlesMapRef.current.get(cell.id) !== key) {
+        loadedCandlesMapRef.current.set(cell.id, key);
+        loadCellCandles(cell.id, cell.symbol, cell.timeframe);
+      }
+    });
+  }, [cells, loadCellCandles]);
+
+  // 1.3 Live updates: poll getQuote every 2s while tab is visible
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    let isCancelled = false;
+
+    const pollQuotes = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        timer = setTimeout(pollQuotes, 2000);
+        return;
+      }
+
+      // Unique visible symbols
+      const uniqueSymbols = Array.from(new Set(cells.map((c) => c.symbol)));
+
+      for (const sym of uniqueSymbols) {
+        if (isCancelled) break;
+        try {
+          const quote = await getQuote(sym);
+          if (isCancelled || quote.price === null) continue;
+
+          setCells((prevCells) =>
+            prevCells.map((cell) => {
+              if (cell.symbol !== sym || cell.candles.length === 0) return cell;
+
+              const recentCandles = cell.candles.slice(-20);
+              const lastCandle = recentCandles[recentCandles.length - 1];
+
+              // Outlier check: If quote is far from last close (> 3x average candle range of last 20 candles),
+              // do NOT draw it into the candle; refetch candles instead to prevent fake giant candle.
+              if (recentCandles.length >= 5) {
+                const avgRange =
+                  recentCandles.reduce((acc, c) => acc + Math.abs(c.high - c.low), 0) /
+                  recentCandles.length;
+                const diff = Math.abs(quote.price! - lastCandle.close);
+
+                if (avgRange > 0 && diff > avgRange * 3) {
+                  loadCellCandles(cell.id, cell.symbol, cell.timeframe);
+                  return cell;
+                }
+              }
+
+              // Check if candle time has elapsed
+              const intervalSec = TIMEFRAME_SECONDS[cell.timeframe] || 900;
+              const nowSec = Math.floor(Date.now() / 1000);
+
+              let nextCandles: Candle[];
+              if (nowSec >= lastCandle.time + intervalSec) {
+                const newCandle: Candle = {
+                  time: lastCandle.time + intervalSec,
+                  open: quote.price!,
+                  high: quote.price!,
+                  low: quote.price!,
+                  close: quote.price!,
+                  volume: 1,
+                };
+                nextCandles = [...cell.candles, newCandle];
+              } else {
+                nextCandles = updateLastCandleWithTick(cell.candles, quote.price!, cell.timeframe);
+              }
+
+              const providerStatus =
+                quote.dataKind === 'provider'
+                  ? 'Provider'
+                  : quote.dataKind === 'cache'
+                  ? 'Cached'
+                  : quote.dataKind === 'demo'
+                  ? 'Demo'
+                  : 'Unavailable';
+
+              return {
+                ...cell,
+                candles: nextCandles,
+                isDemo: quote.isDemo ? true : cell.isDemo,
+                providerStatus,
+                marketStatus: quote.marketOpen === false ? 'Closed' : 'Open',
+              };
+            })
+          );
+        } catch {
+          // Ignore quote polling errors silently
+        }
+      }
+
+      if (!isCancelled) {
+        timer = setTimeout(pollQuotes, 2000);
+      }
+    };
+
+    timer = setTimeout(pollQuotes, 2000);
+
+    return () => {
+      isCancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [cells, loadCellCandles]);
+
   useEffect(() => {
     cells.forEach((cell) => {
       const key = `${cell.symbol.toUpperCase()}:${cell.timeframe.toLowerCase()}`;
@@ -353,16 +527,9 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
     saveTimersRef.current.set(key, timer);
   }, []);
 
-  // Update cell candles on tick
+  // Update cell candles on tick (kept as subtle fallback)
   useEffect(() => {
-    setCells((prev) =>
-      prev.map((c) => {
-        const symObj = symbols.find((s) => s.symbol === c.symbol);
-        if (!symObj) return c;
-        const updated = updateLastCandleWithTick(c.candles, symObj.price, c.timeframe);
-        return { ...c, candles: updated };
-      })
-    );
+    // Only update if no quote polling is actively driving ticks
   }, [symbols]);
 
   // Keyboard Shortcuts (Part 7.1)
@@ -724,10 +891,40 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             title="بحث عن رمز (Ctrl+K)"
             className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131E33] hover:bg-[#1A2A44] border border-[#233554] text-[#E8EEF9] font-bold font-mono transition-colors"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${activeCell.isDemo ? 'bg-amber-400' : 'bg-emerald-400'}`} />
             <span className="text-sm tracking-wide">{activeCell.symbol}</span>
             <Search className="w-3 h-3 text-[#7B8DA8] ml-1" />
           </button>
+
+          {/* 1.2 Demo/Live label in header */}
+          {activeCell.isDemo ? (
+            <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold font-sans">
+              بيانات تجريبية
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-[#22C55E] text-[10px] font-bold font-sans">
+              سوق مباشر
+            </span>
+          )}
+
+          {/* 1.5 Market status badge in terminal header */}
+          {marketStatus && (
+            <span
+              title={`الجلسة: ${marketStatus.currentSession} • القادمة: ${marketStatus.nextSession}`}
+              className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border ${
+                marketStatus.isOpen
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                  : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  marketStatus.isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
+                }`}
+              />
+              <span>{marketStatus.isOpen ? 'السوق مفتوح' : 'مغلق'}</span>
+            </span>
+          )}
 
           <div className="w-[1px] h-4 bg-[#1E283D]" />
 
@@ -1262,6 +1459,15 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                           {symObj.change24h >= 0 ? '+' : ''}
                           {symObj.change24h}%
                         </span>
+                        {cell.isDemo ? (
+                          <span className="px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold font-sans">
+                            بيانات تجريبية
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30 text-[#22C55E] text-[9px] font-bold font-sans">
+                            مباشر
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -1311,6 +1517,21 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
                   {/* Chart Canvas Area */}
                   <div className="flex-1 w-full h-full relative overflow-hidden bg-[#060D19]">
+                    {/* 1.2 Loading skeleton overlay */}
+                    {cell.isLoading && (
+                      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#060D19]/80 backdrop-blur-xs">
+                        <div className="w-8 h-8 rounded-full border-2 border-[#2DD4BF] border-t-transparent animate-spin mb-2" />
+                        <span className="text-xs text-[#A3B4D0] font-mono">جاري تحميل بيانات الشارت...</span>
+                      </div>
+                    )}
+
+                    {/* 1.2 Visible Demo Data Banner on Canvas (so user never confuses demo with real) */}
+                    {cell.isDemo && (
+                      <div className="absolute top-2.5 left-2.5 z-20 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0A101D]/90 border border-amber-500/40 text-amber-400 text-[10px] font-bold backdrop-blur-xs shadow-lg">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        <span>بيانات تجريبية</span>
+                      </div>
+                    )}
                     <MatrixChartCanvas
                       symbol={cell.symbol}
                       candles={cell.candles}
@@ -1341,6 +1562,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       onCrosshairTimeChange={(time) => {
                         if (syncCrosshair) setSyncedCrosshairTime(time);
                       }}
+                      isDemo={cell.isDemo}
                     />
                   </div>
                 </div>

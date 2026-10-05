@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MarketSymbol } from '../../types/market';
-import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { getQuote, MarketQuote, getMarketStatus, MarketStatus } from '../../api/market';
+import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 
 interface WatchlistPanelProps {
   symbols: MarketSymbol[];
@@ -34,8 +35,14 @@ export function getPipSize(symbol: string): number {
   return 0.0001; // standard FX
 }
 
-export function formatSpread(item: MarketSymbol): string {
+export function formatSpread(item: MarketSymbol, realBid?: number | null, realAsk?: number | null): string {
   const pipSize = getPipSize(item.symbol);
+  if (realAsk !== undefined && realBid !== undefined && realAsk !== null && realBid !== null && realAsk > realBid) {
+    const pips = (realAsk - realBid) / pipSize;
+    if (pips > 0 && pips < 500) {
+      return `${pips.toFixed(1)}p`;
+    }
+  }
   if (item.ask !== undefined && item.bid !== undefined && item.ask > item.bid) {
     const pips = (item.ask - item.bid) / pipSize;
     if (pips > 0 && pips < 500) {
@@ -99,7 +106,47 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
   const [activeListId, setActiveListId] = useState<string>('main');
   const [draggedSymbol, setDraggedSymbol] = useState<string | null>(null);
 
+  // 1.4 Real Quotes State & Staggered Polling (max 4 req/sec = 250ms per symbol)
+  const [realQuotes, setRealQuotes] = useState<Record<string, MarketQuote>>({});
+  const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
+  const queueIndexRef = useRef(0);
+
+  // Fetch market status on mount and every 30s
+  useEffect(() => {
+    getMarketStatus().then(setMarketStatus);
+    const interval = setInterval(() => {
+      getMarketStatus().then(setMarketStatus);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const currentList = watchlists.find((w) => w.id === activeListId) || watchlists[0];
+
+  // Staggered quote polling loop: 1 request every 250ms (never > 4 req/sec)
+  useEffect(() => {
+    const symbolsToPoll = currentList.symbols;
+    if (symbolsToPoll.length === 0) return;
+
+    const interval = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+
+      const sym = symbolsToPoll[queueIndexRef.current % symbolsToPoll.length];
+      queueIndexRef.current++;
+
+      try {
+        const quote = await getQuote(sym);
+        if (quote.price !== null) {
+          setRealQuotes((prev) => ({ ...prev, [sym]: quote }));
+        }
+      } catch {
+        // Silently continue
+      }
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [currentList.symbols]);
 
   const handleSaveWatchlists = (next: NamedWatchlist[]) => {
     setWatchlists(next);
@@ -279,6 +326,10 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
           const isSelected = item.symbol === activeSymbol;
           const flash = priceFlashMap[item.symbol];
           const isUp = item.change24h >= 0;
+          const quote = realQuotes[item.symbol];
+          const displayPrice = quote && quote.price !== null ? quote.price : item.price;
+          const displaySpread = formatSpread(item, quote?.bid, quote?.ask);
+          const isClosed = quote?.marketOpen === false || (marketStatus && !marketStatus.isOpen);
 
           return (
             <div
@@ -289,23 +340,33 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
               onDragEnd={handleDragEnd}
               onClick={() => onSelectSymbol(item.symbol)}
               className={`group grid grid-cols-[minmax(115px,1fr)_56px_52px_42px] items-center px-1.5 py-1.5 rounded cursor-pointer transition-all ${
+                isClosed ? 'opacity-55 saturate-50' : ''
+              } ${
                 isSelected
                   ? 'bg-[#131F33] border border-[#2DD4BF]/80 shadow-[0_0_8px_rgba(45,212,191,0.12)]'
                   : 'hover:bg-[#121A2B]/70 border border-transparent'
               } ${flash === 'up' ? 'bg-[#22C55E]/15' : flash === 'down' ? 'bg-[#EF4444]/15' : ''}`}
+              title={isClosed ? 'السوق مغلق حالياً' : undefined}
             >
               {/* Symbol Name & Mini Sparkline */}
               <div className="flex items-center gap-1.5 min-w-0 pr-0.5 overflow-hidden">
                 <GripVertical className="w-3 h-3 text-[#334155] opacity-0 group-hover:opacity-100 shrink-0 cursor-grab" />
                 <div className="flex flex-col min-w-0 shrink">
-                  <span
-                    dir="ltr"
-                    className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap shrink-0 text-right ${
-                      isSelected ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'
-                    }`}
-                  >
-                    {item.symbol}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span
+                      dir="ltr"
+                      className={`font-mono font-bold text-xs tracking-tight whitespace-nowrap shrink-0 text-right ${
+                        isSelected ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'
+                      }`}
+                    >
+                      {item.symbol}
+                    </span>
+                    {isClosed && (
+                      <span className="text-[8px] px-1 rounded bg-[#1E293B] text-[#94A3B8] font-sans">
+                        مغلق
+                      </span>
+                    )}
+                  </div>
                   <span
                     className="text-[9px] text-[#7B8DA8] truncate max-w-[85px] text-right block"
                     title={item.name}
@@ -318,7 +379,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
               {/* Price */}
               <div className="text-left font-mono text-[11px] font-medium text-[#E8EEF9]">
-                {item.price.toFixed(item.precision)}
+                {displayPrice.toFixed(item.precision)}
               </div>
 
               {/* Change % */}
@@ -329,7 +390,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
               {/* Spread */}
               <div className="text-left font-mono text-[10px] text-[#7B8DA8] flex items-center justify-between">
-                <span>{formatSpread(item)}</span>
+                <span>{displaySpread}</span>
                 <button
                   onClick={(e) => handleRemoveSymbolFromList(item.symbol, e)}
                   title="إزالة من القائمة"

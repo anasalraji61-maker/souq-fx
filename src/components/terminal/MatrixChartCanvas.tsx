@@ -66,6 +66,7 @@ export interface MatrixChartCanvasProps {
   onOpenAlertModal?: (targetPrice?: number) => void;
   syncedCrosshairTime?: number | null;
   onCrosshairTimeChange?: (time: number | null) => void;
+  isDemo?: boolean;
 }
 
 interface ChartTransformState {
@@ -80,7 +81,7 @@ interface ChartTransformState {
   startIndex: number;
 }
 
-export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
+const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
   symbol,
   candles,
   timeframe,
@@ -105,6 +106,7 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
   onOpenAlertModal,
   syncedCrosshairTime,
   onCrosshairTimeChange,
+  isDemo = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -392,23 +394,26 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
     [magnetMode, timeframe]
   );
 
-  // Main Render Loop (Canvas)
+  // Main Render Loop (Canvas with requestAnimationFrame for 60fps performance)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    let animId: number | null = null;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const render = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const width = dimensions.width;
-    const height = dimensions.height;
-    if (width <= 0 || height <= 0) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    // Handle high DPI displays
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
+      const width = dimensions.width;
+      const height = dimensions.height;
+      if (width <= 0 || height <= 0) return;
+
+      // Handle high DPI displays
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
 
     // Layout partitioning
     const priceScaleWidth = 68;
@@ -756,7 +761,13 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
         ctx.fillText(timeBadge, crosshairX, height - 7);
       }
     }
-  }, [
+  };
+
+  animId = requestAnimationFrame(render);
+  return () => {
+    if (animId !== null) cancelAnimationFrame(animId);
+  };
+}, [
     dimensions,
     candles,
     symbol,
@@ -1224,6 +1235,12 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
       <div className="absolute top-2 left-3 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono bg-[#121A2B]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#243049] shadow-md pointer-events-none">
         <span className="font-bold text-[#2DD4BF] tracking-wide text-sm">{symbol}</span>
         <span className="text-[#7B8DA8] uppercase">{timeframe}</span>
+        {isDemo && (
+          <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 font-bold font-sans text-[11px] flex items-center gap-1 shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            بيانات تجريبية
+          </span>
+        )}
         {hudCandle && (
           <>
             <span className="text-[#A3B4D0]">
@@ -1391,3 +1408,5 @@ export const MatrixChartCanvas: React.FC<MatrixChartCanvasProps> = ({
     </div>
   );
 };
+
+export const MatrixChartCanvas = React.memo(MatrixChartCanvasComponent);

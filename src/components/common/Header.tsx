@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LangId, DICTS } from '../../i18n/locales';
 import { MarketSymbol } from '../../types/market';
+import { getMarketStatus, MarketStatus } from '../../api/market';
+import { NotificationsCenterModal } from './NotificationsCenterModal';
 import {
   TrendingUp,
   Sliders,
@@ -46,6 +48,16 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const dict = DICTS[currentLang];
   const [timeStr, setTimeStr] = useState('');
+  const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
+  const [isNotifsOpen, setIsNotifsOpen] = useState(false);
+
+  useEffect(() => {
+    getMarketStatus().then(setMarketStatus);
+    const statusInterval = setInterval(() => {
+      getMarketStatus().then(setMarketStatus);
+    }, 30000);
+    return () => clearInterval(statusInterval);
+  }, []);
 
   useEffect(() => {
     const updateClock = () => {
@@ -150,32 +162,54 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* 1.5 Market status badge in header (open/closed + next session) */}
+        <div
+          title={
+            marketStatus
+              ? `الجلسة الحالية: ${marketStatus.currentSession} • الجلسة القادمة: ${marketStatus.nextSession}`
+              : 'جاري فحص حالة السوق...'
+          }
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#070D18] border border-[#16233B] text-[11px] font-mono cursor-default"
+        >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              marketStatus?.isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
+            }`}
+          />
+          <span className={marketStatus?.isOpen ? 'text-emerald-400 font-semibold' : 'text-[#94A3B8]'}>
+            {marketStatus?.isOpen ? 'السوق مفتوح' : 'السوق مغلق'}
+          </span>
+          {marketStatus && (
+            <span className="text-[#64748B] text-[10px] hidden xl:inline">
+              ({marketStatus.isOpen ? marketStatus.currentSession : marketStatus.nextSession})
+            </span>
+          )}
+        </div>
+
         {/* GMT Clock */}
         <div className="hidden lg:flex items-center gap-1.5 font-mono text-[11px] text-[#64748B] bg-[#070D18] px-2.5 py-1 rounded border border-[#16233B]">
           <Clock className="w-3 h-3 text-[#2DD4BF]" />
           <span>{timeStr}</span>
         </div>
 
-        {/* Price Alerts Bell */}
-        {onOpenAlerts && (
-          <button
-            onClick={onOpenAlerts}
-            title="التنبيهات السعرية"
-            className="p-1.5 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white relative transition-colors"
-          >
-            <Bell className="w-4 h-4" />
-            {activeAlertsCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
-                {activeAlertsCount}
-              </span>
-            )}
-          </button>
-        )}
+        {/* 3.2 Notifications center (bell in header) */}
+        <button
+          onClick={() => setIsNotifsOpen(true)}
+          title="مركز الإشعارات والتنبيهات"
+          className="p-1.5 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white relative transition-colors cursor-pointer"
+        >
+          <Bell className="w-4 h-4" />
+          {activeAlertsCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+              {activeAlertsCount}
+            </span>
+          )}
+        </button>
 
         {/* Account / Settings Tab Button */}
         <button
           onClick={() => onTabChange('account')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             currentTab === 'account'
               ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
               : 'bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white'
@@ -185,6 +219,13 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden sm:inline">حسابي</span>
         </button>
       </div>
+
+      {/* 3.2 Notifications Center Modal */}
+      <NotificationsCenterModal
+        isOpen={isNotifsOpen}
+        onClose={() => setIsNotifsOpen(false)}
+        onSelectSymbol={onSelectSymbol}
+      />
     </header>
   );
 };

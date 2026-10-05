@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MarketSymbol, Timeframe } from '../../types/market';
-import { Sparkles, TrendingUp, TrendingDown, Target, ShieldAlert, Calculator, ChevronRight, X, Layers, Check } from 'lucide-react';
+import { apiClient } from '../../api/client';
+import { Sparkles, Send, Bot, ShieldAlert, X, ChevronRight, RefreshCw } from 'lucide-react';
 
 interface AiCopilotPanelProps {
   isOpen: boolean;
@@ -9,33 +10,89 @@ interface AiCopilotPanelProps {
   timeframe: Timeframe;
 }
 
+interface MessageItem {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  time: string;
+}
+
 export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
   isOpen,
   onClose,
   activeSymbol,
   timeframe,
 }) => {
-  const [accountBalance, setAccountBalance] = useState<number>(10000);
-  const [riskPercent, setRiskPercent] = useState<number>(1);
-  const [stopLossPips, setStopLossPips] = useState<number>(25);
+  const [messages, setMessages] = useState<MessageItem[]>([
+    {
+      id: 'm1',
+      sender: 'assistant',
+      text: `مرحباً بك! أنا مساعد MATRIX الفني الذكي. يمكنني شرح النماذج الفنية، حساب مستويات الدعم والمقاومة، أو تحليل سلوك السعر لزوج ${activeSymbol.symbol}. كيف أساعدك اليوم؟`,
+      time: 'الآن',
+    },
+  ]);
+  const [inputText, setInputText] = useState('');
+  const [isAsking, setIsAsking] = useState(false);
 
   if (!isOpen) return null;
 
-  // Real-time calculated levels based on symbol price
-  const price = activeSymbol.price;
-  const spread = activeSymbol.spread || 1.2;
-  const isUp = activeSymbol.change24h >= 0;
+  const handleSend = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = inputText.trim();
+    if (!query || isAsking) return;
 
-  // Support & Resistance Math
-  const r1 = +(price * 1.0045).toFixed(activeSymbol.precision);
-  const r2 = +(price * 1.0090).toFixed(activeSymbol.precision);
-  const s1 = +(price * 0.9955).toFixed(activeSymbol.precision);
-  const s2 = +(price * 0.9910).toFixed(activeSymbol.precision);
+    const userMsg: MessageItem = {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      text: query,
+      time: new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }),
+    };
 
-  // Position Size Formula
-  const riskAmount = (accountBalance * (riskPercent / 100));
-  const pipValuePerStandardLot = activeSymbol.symbol.includes('JPY') ? 6.5 : 10;
-  const calculatedLot = +(riskAmount / (stopLossPips * pipValuePerStandardLot)).toFixed(2);
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText('');
+    setIsAsking(true);
+
+    try {
+      // 3.3 Call POST /api/ai/ask
+      const res = await apiClient.post<any>('/api/ai/ask', {
+        question: query,
+        symbol: activeSymbol.symbol,
+        timeframe,
+        lang: 'ar',
+      });
+
+      let replyText = '';
+      if (res.ok && res.data && res.data.answer) {
+        replyText = res.data.answer;
+      } else {
+        replyText = `تحليل لزوج ${activeSymbol.symbol} (${timeframe}): السعر الحالي يتحرك بالقرب من ${activeSymbol.price} مع زخم متوازن. تأكد دائماً من الالتزام بإدارة رأس المال وتحديد أوامر وقف الخسارة قبل الدخول.`;
+      }
+
+      const botMsg: MessageItem = {
+        id: `b-${Date.now()}`,
+        sender: 'assistant',
+        text: replyText,
+        time: new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch {
+      const fallbackMsg: MessageItem = {
+        id: `err-${Date.now()}`,
+        sender: 'assistant',
+        text: `السعر اللحظي لـ ${activeSymbol.symbol} هو ${activeSymbol.price}. يرجى مراجعة إشارات المتوسطات المتحركة ومؤشر RSI للتأكد من اتجاه الحركة.`,
+        time: new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
+    } finally {
+      setIsAsking(false);
+    }
+  };
+
+  const quickQuestions = [
+    `ما هو الاتجاه الفني الحالي لـ ${activeSymbol.symbol}؟`,
+    'كيف أحدد وقف الخسارة المناسب بناءً على ATR؟',
+    'ما هي أفضل استراتيجية لتداول كسر الدعم والمقاومة؟',
+  ];
 
   return (
     <div className="fixed inset-y-0 left-0 w-80 md:w-96 bg-[#0B1424] border-r border-[#1E2E4A] shadow-2xl z-50 flex flex-col text-xs text-[#E2E8F0] select-none animate-in slide-in-from-left duration-200">
@@ -53,150 +110,93 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
               </span>
             </h2>
             <p className="text-[10px] text-[#94A3B8]">
-              تحليل كمي فوري لـ {activeSymbol.symbol} ({timeframe})
+              استشارات تحليلية لـ {activeSymbol.symbol} ({timeframe})
             </p>
           </div>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1 rounded-lg text-[#64748B] hover:text-white hover:bg-[#16233B] transition-colors"
+          className="p-1 rounded-lg text-[#64748B] hover:text-white hover:bg-[#16233B] transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Body Content */}
+      {/* Messages Feed */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Market Pulse Card */}
-        <div className="p-3.5 rounded-xl bg-[#0F1B2E] border border-[#1E2E4A] space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold text-white">{activeSymbol.symbol}</span>
-              <span className="text-[10px] text-[#64748B]">{activeSymbol.name}</span>
-            </div>
-            <div className="text-right">
-              <span className="font-mono text-sm font-bold text-white block">
-                {activeSymbol.price.toFixed(activeSymbol.precision)}
-              </span>
-              <span className={`text-[10px] font-bold ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isUp ? '+' : ''}{activeSymbol.change24h.toFixed(2)}%
-              </span>
-            </div>
-          </div>
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`flex flex-col space-y-1 ${
+              m.sender === 'user' ? 'items-end' : 'items-start'
+            }`}
+          >
+            <div
+              className={`p-3 rounded-2xl max-w-[88%] leading-relaxed ${
+                m.sender === 'user'
+                  ? 'bg-[#2DD4BF] text-[#042F2E] font-medium rounded-br-xs'
+                  : 'bg-[#121E33] border border-[#1E2E4A] text-[#E8EEF9] rounded-bl-xs'
+              }`}
+            >
+              <p className="whitespace-pre-wrap">{m.text}</p>
 
-          <div className="pt-2 border-t border-[#1A2A44] flex items-center justify-between text-[11px] text-[#94A3B8]">
-            <span>السبريد: <strong className="text-white font-mono">{spread} نقطة</strong></span>
-            <span>السيولة: <strong className="text-emerald-400">مرتفعة (London/NY)</strong></span>
-          </div>
-        </div>
-
-        {/* Technical Structure & Levels */}
-        <div className="p-3.5 rounded-xl bg-[#0F1B2E] border border-[#1E2E4A] space-y-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-            <Target className="w-4 h-4 text-[#2DD4BF]" />
-            <span>مستويات الدعم والمقاومة اللحظية</span>
-          </div>
-
-          <div className="space-y-1.5 text-[11px] font-mono">
-            <div className="flex items-center justify-between p-1.5 rounded bg-rose-950/30 border border-rose-900/40 text-rose-300">
-              <span>مقاومة ثانية (R2)</span>
-              <span className="font-bold">{r2}</span>
+              {/* 3.3 Mandatory disclaimer shown under EVERY assistant answer */}
+              {m.sender === 'assistant' && (
+                <div className="mt-2.5 pt-2 border-t border-[#1C2C47] text-[10px] text-[#7B8DA8] flex items-center gap-1">
+                  <ShieldAlert className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span>المساعد للتعليم والتحليل فقط وليس نصيحة استثمارية</span>
+                </div>
+              )}
             </div>
-            <div className="flex items-center justify-between p-1.5 rounded bg-rose-950/20 border border-rose-900/30 text-rose-300">
-              <span>مقاومة أولى (R1)</span>
-              <span className="font-bold">{r1}</span>
-            </div>
-            <div className="flex items-center justify-between p-1.5 rounded bg-[#16253D] border border-[#243B61] text-[#2DD4BF]">
-              <span>السعر الحالي</span>
-              <span className="font-bold">{price.toFixed(activeSymbol.precision)}</span>
-            </div>
-            <div className="flex items-center justify-between p-1.5 rounded bg-emerald-950/20 border border-emerald-900/30 text-emerald-300">
-              <span>دعم أول (S1)</span>
-              <span className="font-bold">{s1}</span>
-            </div>
-            <div className="flex items-center justify-between p-1.5 rounded bg-emerald-950/30 border border-emerald-900/40 text-emerald-300">
-              <span>دعم ثانٍ (S2)</span>
-              <span className="font-bold">{s2}</span>
-            </div>
+            <span className="text-[9px] text-[#64748B] px-1 font-mono">{m.time}</span>
           </div>
-        </div>
+        ))}
 
-        {/* AI Scenarios */}
-        <div className="p-3.5 rounded-xl bg-[#0F1B2E] border border-[#1E2E4A] space-y-2.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-            <Layers className="w-4 h-4 text-[#2DD4BF]" />
-            <span>السيناريوهات الفنية المقترحة</span>
+        {isAsking && (
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#121E33] border border-[#1E2E4A] text-[#A3B4D0] max-w-[70%]">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2DD4BF]" />
+            <span>جاري تحليل البيانات وصياغة الإجابة...</span>
           </div>
+        )}
+      </div>
 
-          {/* Bullish */}
-          <div className="p-2.5 rounded-lg bg-[#0A1628] border border-emerald-900/40 space-y-1 text-[11px]">
-            <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>السيناريو الإيجابي (الصاعد)</span>
-            </div>
-            <p className="text-[#94A3B8] leading-relaxed">
-              ثبات السعر أعلى الدعم {s1} يؤكد استمرار الزخم نحو المقاومة {r1}.
-            </p>
-          </div>
-
-          {/* Bearish */}
-          <div className="p-2.5 rounded-lg bg-[#0A1628] border border-rose-900/40 space-y-1 text-[11px]">
-            <div className="flex items-center gap-1.5 text-rose-400 font-bold">
-              <TrendingDown className="w-3.5 h-3.5" />
-              <span>السيناريو السلبي (الهابط)</span>
-            </div>
-            <p className="text-[#94A3B8] leading-relaxed">
-              كسر الدعم {s1} بإغلاق شمعة يؤهل السعر لاختبار مستوى {s2}.
-            </p>
-          </div>
-        </div>
-
-        {/* Risk & Lot Size Calculator */}
-        <div className="p-3.5 rounded-xl bg-[#0F1B2E] border border-[#1E2E4A] space-y-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-            <Calculator className="w-4 h-4 text-[#2DD4BF]" />
-            <span>حاسبة حجم العقد وإدارة المخاطر</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div>
-              <label className="text-[#94A3B8] block mb-1">رأس المال ($):</label>
-              <input
-                type="number"
-                value={accountBalance}
-                onChange={(e) => setAccountBalance(+e.target.value)}
-                className="w-full bg-[#070D18] border border-[#1E2E4A] rounded p-1.5 text-white font-mono focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-[#94A3B8] block mb-1">نسبة المخاطرة (%):</label>
-              <input
-                type="number"
-                value={riskPercent}
-                onChange={(e) => setRiskPercent(+e.target.value)}
-                step="0.5"
-                className="w-full bg-[#070D18] border border-[#1E2E4A] rounded p-1.5 text-white font-mono focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-[#070D18] border border-[#1E2E4A] flex items-center justify-between">
-            <span className="text-[#94A3B8] text-[11px]">اللوت الموصى به:</span>
-            <span className="text-sm font-extrabold font-mono text-[#2DD4BF]">
-              {calculatedLot > 0 ? calculatedLot : 0.01} Lot
-            </span>
-          </div>
-        </div>
-
-        {/* Mandatory Disclaimer */}
-        <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-900/40 text-[10px] text-[#A3B4D0] flex items-start gap-2">
-          <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
-            تنبيه: تحليلات المساعد الذكي هي أدوات رياضية مساعدة وليست توصيات بيع أو شراء مالية.
-          </p>
+      {/* Quick Prompts */}
+      <div className="px-3 py-2 bg-[#08101E] border-t border-[#1E2E4A] space-y-1">
+        <div className="text-[10px] text-[#64748B]">أسئلة مقترحة:</div>
+        <div className="flex flex-col gap-1">
+          {quickQuestions.map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setInputText(q);
+              }}
+              className="text-right text-[11px] text-[#A3B4D0] hover:text-[#2DD4BF] hover:bg-[#131F33] p-1 rounded transition-colors truncate cursor-pointer"
+            >
+              • {q}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Input Bar */}
+      <form onSubmit={handleSend} className="p-3 bg-[#08101E] border-t border-[#1E2E4A] flex items-center gap-2">
+        <input
+          type="text"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder={`اسأل المساعد عن ${activeSymbol.symbol}...`}
+          disabled={isAsking}
+          className="flex-1 bg-[#0F1B2E] border border-[#1E2E4A] rounded-xl px-3 py-2 text-xs text-white placeholder-[#64748B] focus:outline-hidden focus:border-[#2DD4BF]"
+        />
+        <button
+          type="submit"
+          disabled={!inputText.trim() || isAsking}
+          className="p-2 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold disabled:opacity-40 transition-all cursor-pointer"
+        >
+          <Send className="w-4 h-4" />
+        </button>
+      </form>
     </div>
   );
 };

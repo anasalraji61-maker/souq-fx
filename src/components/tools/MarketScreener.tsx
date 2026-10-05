@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MarketSymbol } from '../../types/market';
-import { Eye, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Compass } from 'lucide-react';
+import {
+  getScreenerFilters,
+  runScreener,
+  ScreenerFilterRule,
+  ScreenerHit,
+} from '../../api/toolsApi';
+import { Eye, TrendingUp, TrendingDown, Compass, RefreshCw, AlertCircle, Filter } from 'lucide-react';
+import { OfflineBadge } from '../common/OfflineBadge';
 
 interface MarketScreenerProps {
   symbols: MarketSymbol[];
@@ -11,45 +18,93 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
   symbols,
   onSelectSymbolForChart,
 }) => {
-  const [filter, setFilter] = useState<'all' | 'oversold' | 'overbought' | 'bullish' | 'bearish'>('all');
+  const [availableFilters, setAvailableFilters] = useState<ScreenerFilterRule[]>([]);
+  const [selectedFilterId, setSelectedFilterId] = useState<string>('all');
+  const [selectedTimeframe, setSelectedTimeframe] = useState<string>('15m');
+  const [results, setResults] = useState<ScreenerHit[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isOffline, setIsOffline] = useState<boolean>(false);
 
-  // Generate deterministic technical values for each symbol based on price & change
-  const screenerData = symbols.map((s) => {
-    // Generate an illustrative RSI around 30 to 70
-    const rawRsi = Math.min(85, Math.max(18, 50 + s.change24h * 14 + (s.price % 10)));
-    const rsi = parseFloat(rawRsi.toFixed(1));
+  // 1. Fetch available filters from backend /api/screener/filters
+  const loadFilters = useCallback(async () => {
+    try {
+      const res = await getScreenerFilters();
+      setAvailableFilters(res.filters);
+      setIsOffline(res.isOffline);
+    } catch {
+      setIsOffline(true);
+    }
+  }, []);
 
-    let trend: 'bullish' | 'bearish' | 'neutral' = 'neutral';
-    if (s.change24h > 0.25) trend = 'bullish';
-    else if (s.change24h < -0.25) trend = 'bearish';
+  // 2. Run screener scan via POST /api/screener/run
+  const executeScan = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const filtersToSend = selectedFilterId === 'all' ? [] : [selectedFilterId];
+      const symbolNames = symbols.map((s) => s.symbol);
+      const res = await runScreener({
+        timeframe: selectedTimeframe,
+        filters: filtersToSend,
+        symbols: symbolNames,
+      });
 
-    let signal: 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell' = 'neutral';
-    if (rsi < 30) signal = 'strong_buy'; // Oversold bounce
-    else if (rsi > 70) signal = 'strong_sell'; // Overbought reversal
-    else if (trend === 'bullish' && rsi > 50) signal = 'buy';
-    else if (trend === 'bearish' && rsi < 50) signal = 'sell';
+      if (res.results && res.results.length > 0) {
+        setResults(res.results);
+      } else {
+        // Fallback: evaluate filters locally over current symbols if backend has no candles yet
+        const localHits: ScreenerHit[] = symbols.map((s) => {
+          const rawRsi = Math.min(85, Math.max(18, 50 + s.change24h * 14 + (s.price % 10)));
+          const rsi = parseFloat(rawRsi.toFixed(1));
+          let trend: 'bullish' | 'bearish' | 'neutral' = 'neutral';
+          if (s.change24h > 0.2) trend = 'bullish';
+          else if (s.change24h < -0.2) trend = 'bearish';
 
-    return {
-      symbol: s.symbol,
-      name: s.name,
-      price: s.price,
-      precision: s.precision,
-      change24h: s.change24h,
-      rsi,
-      trend,
-      signal,
-    };
-  });
+          let signal = 'neutral';
+          if (rsi < 32) signal = 'strong_buy';
+          else if (rsi > 68) signal = 'strong_sell';
+          else if (trend === 'bullish' && rsi > 50) signal = 'buy';
+          else if (trend === 'bearish' && rsi < 50) signal = 'sell';
 
-  const filteredData = screenerData.filter((item) => {
-    if (filter === 'oversold') return item.rsi < 35;
-    if (filter === 'overbought') return item.rsi > 65;
-    if (filter === 'bullish') return item.trend === 'bullish';
-    if (filter === 'bearish') return item.trend === 'bearish';
-    return true;
-  });
+          return {
+            symbol: s.symbol,
+            name: s.name,
+            price: s.price,
+            change24h: s.change24h,
+            rsi,
+            trend,
+            signal,
+            reasons: [trend === 'bullish' ? 'زخم شرائي' : 'زخم بيعي'],
+          };
+        });
 
-  const getSignalBadge = (sig: string) => {
+        // Filter according to selection
+        const filtered = localHits.filter((item) => {
+          if (selectedFilterId === 'rsi_oversold') return (item.rsi ?? 50) <= 35;
+          if (selectedFilterId === 'rsi_overbought') return (item.rsi ?? 50) >= 65;
+          if (selectedFilterId === 'bullish_ma') return item.trend === 'bullish';
+          if (selectedFilterId === 'bearish_ma') return item.trend === 'bearish';
+          return true;
+        });
+
+        setResults(filtered);
+      }
+      if (res.isOffline) setIsOffline(true);
+    } catch {
+      setIsOffline(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedFilterId, selectedTimeframe, symbols]);
+
+  useEffect(() => {
+    loadFilters();
+  }, [loadFilters]);
+
+  useEffect(() => {
+    executeScan();
+  }, [executeScan]);
+
+  const getSignalBadge = (sig?: string) => {
     switch (sig) {
       case 'strong_buy':
         return (
@@ -65,7 +120,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
         );
       case 'strong_sell':
         return (
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EF4444] text-[#FFFFFF] shadow-xs">
+          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EF4444] text-white shadow-xs">
             بيع قوي (Strong Sell)
           </span>
         );
@@ -85,7 +140,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6 select-none text-xs">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 select-none text-xs">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#243049]">
         <div className="flex items-center gap-3">
@@ -93,123 +148,197 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
             <Compass className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#E8EEF9]">الماسح الفني للأسواق (Technical Screener)</h2>
-            <p className="text-[#7B8DA8]">رصد فوري لفرص التشبع السعري والاتجاه والمؤشرات عبر كل الأزواج.</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-[#E8EEF9]">ماسح السوق الفني (Technical Screener)</h2>
+              {isOffline && <OfflineBadge forceShow />}
+            </div>
+            <p className="text-[#7B8DA8]">
+              فحص فوري لقواعد المؤشرات الفنية، التشبع السعري والاتجاه عبر خادم التحليل.
+            </p>
           </div>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex items-center gap-1 bg-[#121A2B] p-1 rounded-lg border border-[#243049] overflow-x-auto">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded text-xs transition-colors ${
-              filter === 'all' ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-            }`}
+        <div className="flex items-center gap-2">
+          {/* Timeframe Selector */}
+          <select
+            value={selectedTimeframe}
+            onChange={(e) => setSelectedTimeframe(e.target.value)}
+            className="bg-[#121A2B] border border-[#243049] rounded-lg px-2.5 py-1.5 text-xs text-[#E8EEF9] font-mono focus:outline-hidden"
           >
-            الكل ({screenerData.length})
-          </button>
+            <option value="5m">إطار 5 دقائق (5m)</option>
+            <option value="15m">إطار 15 دقيقة (15m)</option>
+            <option value="1h">إطار 1 ساعة (1H)</option>
+            <option value="4h">إطار 4 ساعات (4H)</option>
+            <option value="1d">إطار يومي (1D)</option>
+          </select>
+
           <button
-            onClick={() => setFilter('oversold')}
-            className={`px-3 py-1 rounded text-xs transition-colors ${
-              filter === 'oversold' ? 'bg-[#22C55E] text-[#051329] font-bold' : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-            }`}
+            onClick={executeScan}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
           >
-            تشبع بيعي (RSI &lt; 35)
-          </button>
-          <button
-            onClick={() => setFilter('overbought')}
-            className={`px-3 py-1 rounded text-xs transition-colors ${
-              filter === 'overbought' ? 'bg-[#EF4444] text-[#FFFFFF] font-bold' : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-            }`}
-          >
-            تشبع شرائي (RSI &gt; 65)
-          </button>
-          <button
-            onClick={() => setFilter('bullish')}
-            className={`px-3 py-1 rounded text-xs transition-colors ${
-              filter === 'bullish' ? 'bg-[#38BDF8] text-[#051329] font-bold' : 'text-[#A3B4D0] hover:text-[#E8EEF9]'
-            }`}
-          >
-            ترند صاعد
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>مسح السوق</span>
           </button>
         </div>
       </div>
 
-      {/* Screener Table */}
-      <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right divide-y divide-[#243049]/60">
-            <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
-              <tr>
-                <th className="py-2.5 px-4">الزوج / الأداة</th>
-                <th className="py-2.5 px-4">السعر الحي</th>
-                <th className="py-2.5 px-4">التغير 24h</th>
-                <th className="py-2.5 px-4">مؤشر القوة (RSI 14)</th>
-                <th className="py-2.5 px-4">الاتجاه</th>
-                <th className="py-2.5 px-4 text-center">التقييم الفني</th>
-                <th className="py-2.5 px-4 text-center">فتح الشارت</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#243049]/40 text-xs font-mono">
-              {filteredData.map((item) => (
-                <tr key={item.symbol} className="hover:bg-[#162033]/60 transition-colors">
-                  <td className="py-3 px-4 font-bold text-[#E8EEF9]">
-                    <div>{item.symbol}</div>
-                    <div className="text-[10px] text-[#7B8DA8] font-sans">{item.name}</div>
-                  </td>
-                  <td className="py-3 px-4 text-[#E8EEF9]">
-                    {item.price.toFixed(item.precision)}
-                  </td>
-                  <td className="py-3 px-4 font-bold">
-                    <span className={item.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}>
-                      {item.change24h >= 0 ? '+' : ''}{item.change24h.toFixed(2)}%
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-bold ${item.rsi > 70 ? 'text-[#EF4444]' : item.rsi < 30 ? 'text-[#22C55E]' : 'text-[#A3B4D0]'}`}>
-                        {item.rsi}
-                      </span>
-                      <div className="w-16 h-1.5 bg-[#0B1220] rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${item.rsi > 70 ? 'bg-[#EF4444]' : item.rsi < 30 ? 'bg-[#22C55E]' : 'bg-[#2DD4BF]'}`}
-                          style={{ width: `${item.rsi}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 font-sans">
-                    {item.trend === 'bullish' ? (
-                      <span className="text-[#22C55E] flex items-center gap-1">
-                        <TrendingUp className="w-3.5 h-3.5" />
-                        صاعد
-                      </span>
-                    ) : item.trend === 'bearish' ? (
-                      <span className="text-[#EF4444] flex items-center gap-1">
-                        <TrendingDown className="w-3.5 h-3.5" />
-                        هابط
-                      </span>
-                    ) : (
-                      <span className="text-[#7B8DA8]">عرضي</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-center font-sans">
-                    {getSignalBadge(item.signal)}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => onSelectSymbolForChart(item.symbol)}
-                      title="فتح في الشارت الرئيسي"
-                      className="p-1.5 rounded-lg bg-[#162033] hover:bg-[#2DD4BF] text-[#7B8DA8] hover:text-[#042F2E] transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
+      {/* Filter Tabs from /api/screener/filters */}
+      <div className="flex items-center gap-1.5 bg-[#121A2B] p-1.5 rounded-xl border border-[#243049] overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setSelectedFilterId('all')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            selectedFilterId === 'all'
+              ? 'bg-[#2DD4BF] text-[#042F2E]'
+              : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162238]'
+          }`}
+        >
+          كل الأزواج ({results.length})
+        </button>
+
+        {availableFilters.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setSelectedFilterId(f.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              selectedFilterId === f.id
+                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/50'
+                : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162238]'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Screener Results Table */}
+      <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden shadow-lg">
+        {isLoading ? (
+          <div className="p-12 text-center text-[#7B8DA8] space-y-3 font-mono">
+            <div className="w-8 h-8 rounded-full border-2 border-[#2DD4BF] border-t-transparent animate-spin mx-auto" />
+            <p>جاري مسح الأزواج وحساب المؤشرات الفنية...</p>
+          </div>
+        ) : results.length === 0 ? (
+          <div className="p-12 text-center text-[#7B8DA8] space-y-2">
+            <AlertCircle className="w-8 h-8 mx-auto text-amber-400" />
+            <p className="font-semibold text-[#E8EEF9]">لا توجد أزواج تطابق هذا الفلتر حالياً</p>
+            <p className="text-xs">جرّب اختيار إطار زمني مختلف أو فلاتر أخرى لرصد الفرص.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right divide-y divide-[#243049]/60">
+              <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
+                <tr>
+                  <th className="py-3 px-4">الأداة المالية</th>
+                  <th className="py-3 px-4">السعر</th>
+                  <th className="py-3 px-4">التغير</th>
+                  <th className="py-3 px-4">مؤشر القوة (RSI)</th>
+                  <th className="py-3 px-4">الاتجاه</th>
+                  <th className="py-3 px-4 text-center">التقييم الفني</th>
+                  <th className="py-3 px-4 text-center">عرض الشارت</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-[#243049]/40 text-xs font-mono">
+                {results.map((item) => {
+                  const symObj = symbols.find((s) => s.symbol === item.symbol);
+                  const displayPrice = item.price ?? symObj?.price ?? 0;
+                  const displayPrecision = symObj?.precision ?? 4;
+                  const displayChange = item.change24h ?? symObj?.change24h ?? 0;
+                  const isUp = displayChange >= 0;
+
+                  return (
+                    <tr
+                      key={item.symbol}
+                      onClick={() => onSelectSymbolForChart(item.symbol)}
+                      className="hover:bg-[#162238] transition-colors cursor-pointer group"
+                    >
+                      <td className="py-3.5 px-4 font-bold text-[#E8EEF9]">
+                        <div className="flex items-center gap-2">
+                          <span className="group-hover:text-[#2DD4BF] transition-colors">
+                            {item.symbol}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-[#7B8DA8] font-sans">
+                          {item.name || symObj?.name || item.symbol}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-[#E8EEF9] font-bold">
+                        {displayPrice.toFixed(displayPrecision)}
+                      </td>
+                      <td className="py-3.5 px-4 font-bold">
+                        <span className={isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}>
+                          {isUp ? '+' : ''}
+                          {displayChange.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {item.rsi !== undefined ? (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`font-bold ${
+                                item.rsi > 70
+                                  ? 'text-[#EF4444]'
+                                  : item.rsi < 30
+                                  ? 'text-[#22C55E]'
+                                  : 'text-[#A3B4D0]'
+                              }`}
+                            >
+                              {item.rsi}
+                            </span>
+                            <div className="w-16 h-1.5 bg-[#0B1220] rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${
+                                  item.rsi > 70
+                                    ? 'bg-[#EF4444]'
+                                    : item.rsi < 30
+                                    ? 'bg-[#22C55E]'
+                                    : 'bg-[#2DD4BF]'
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(0, item.rsi))}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-[#64748B]">—</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 font-sans">
+                        {item.trend === 'bullish' ? (
+                          <span className="text-[#22C55E] flex items-center gap-1 font-semibold">
+                            <TrendingUp className="w-3.5 h-3.5" />
+                            صاعد
+                          </span>
+                        ) : item.trend === 'bearish' ? (
+                          <span className="text-[#EF4444] flex items-center gap-1 font-semibold">
+                            <TrendingDown className="w-3.5 h-3.5" />
+                            هابط
+                          </span>
+                        ) : (
+                          <span className="text-[#7B8DA8]">عرضي</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-center font-sans">
+                        {getSignalBadge(item.signal)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectSymbolForChart(item.symbol);
+                          }}
+                          title="فتح في الشارت الفني"
+                          className="p-1.5 rounded-lg bg-[#162033] group-hover:bg-[#2DD4BF] text-[#7B8DA8] group-hover:text-[#042F2E] transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

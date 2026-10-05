@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MarketSymbol, SymbolCategory } from '../../types/market';
-import { Search, X, TrendingUp, TrendingDown, DollarSign, Shield, Activity, Flame } from 'lucide-react';
+import { searchSymbols, SymbolSearchResult } from '../../api/market';
+import { Search, X, TrendingUp, TrendingDown, DollarSign, Shield, Activity, Flame, Loader2 } from 'lucide-react';
 
 interface SymbolSearchModalProps {
   isOpen: boolean;
@@ -20,20 +21,46 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<SymbolCategory>('all');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [remoteResults, setRemoteResults] = useState<SymbolSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setQuery('');
+      setRemoteResults([]);
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
 
-  const filteredSymbols = useMemo(() => {
+  // 1.6 300ms debounced backend search with local fallback
+  useEffect(() => {
+    if (!query.trim()) {
+      setRemoteResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchSymbols(query, 25);
+        setRemoteResults(res);
+      } catch {
+        setRemoteResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Local fallback filtered list
+  const localFiltered = useMemo(() => {
     return symbols.filter((s) => {
       if (category !== 'all' && s.category !== category) return false;
-
       if (!query.trim()) return true;
       const q = query.toLowerCase().trim();
       return (
@@ -44,22 +71,52 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
     });
   }, [symbols, category, query]);
 
+  // Combine or prioritize results
+  const displayedItems = useMemo(() => {
+    if (remoteResults.length > 0) {
+      return remoteResults
+        .filter((r) => category === 'all' || r.category === category)
+        .map((r) => {
+          const localMatch = symbols.find((s) => s.symbol.toUpperCase() === r.symbol.toUpperCase());
+          return {
+            symbol: r.symbol,
+            name: r.name || localMatch?.name || r.symbol,
+            category: r.category || localMatch?.category || 'forex',
+            price: localMatch?.price,
+            precision: localMatch?.precision || 4,
+            change24h: localMatch?.change24h || 0,
+            spread: localMatch?.spread,
+          };
+        });
+    }
+
+    return localFiltered.map((s) => ({
+      symbol: s.symbol,
+      name: s.name,
+      category: s.category,
+      price: s.price,
+      precision: s.precision,
+      change24h: s.change24h,
+      spread: s.spread,
+    }));
+  }, [remoteResults, localFiltered, category, symbols]);
+
   useEffect(() => {
     setSelectedIndex(0);
-  }, [query, category]);
+  }, [displayedItems.length]);
 
   // Keyboard navigation (ArrowUp, ArrowDown, Enter, Esc)
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(filteredSymbols.length - 1, prev + 1));
+      setSelectedIndex((prev) => Math.min(displayedItems.length - 1, prev + 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(0, prev - 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredSymbols[selectedIndex]) {
-        onSelectSymbol(filteredSymbols[selectedIndex].symbol);
+      if (displayedItems[selectedIndex]) {
+        onSelectSymbol(displayedItems[selectedIndex].symbol);
         onClose();
       }
     } else if (e.key === 'Escape') {
@@ -69,6 +126,21 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
 
   if (!isOpen) return null;
 
+  const getCategoryColor = (cat: string) => {
+    switch (cat) {
+      case 'forex':
+        return '#2DD4BF';
+      case 'metals':
+        return '#F59E0B';
+      case 'energy':
+        return '#EF4444';
+      case 'indices':
+        return '#38BDF8';
+      default:
+        return '#64748B';
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs select-none">
       <div
@@ -77,7 +149,11 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
       >
         {/* Search Input Header */}
         <div className="p-3 border-b border-[#1E283D] bg-[#0B1322] flex items-center gap-2.5">
-          <Search className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+          {isSearching ? (
+            <Loader2 className="w-4 h-4 text-[#2DD4BF] animate-spin shrink-0" />
+          ) : (
+            <Search className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+          )}
           <input
             ref={inputRef}
             type="text"
@@ -92,54 +168,49 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
             </span>
             <button
               onClick={onClose}
-              className="p-1 rounded text-[#7B8DA8] hover:text-white hover:bg-[#1C2740] transition-colors"
+              className="p-1 rounded text-[#7B8DA8] hover:text-white hover:bg-[#1C2740] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Group Filter Tabs */}
-        <div className="px-3 py-2 border-b border-[#1E283D] bg-[#0A101D] flex items-center gap-1.5 overflow-x-auto">
+        {/* Category Pills (0% crypto) */}
+        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[#1E283D] bg-[#0A101D] overflow-x-auto no-scrollbar">
           {(
             [
-              { id: 'all', label: 'الكل All', icon: Activity },
-              { id: 'forex', label: 'العملات Forex', icon: DollarSign },
-              { id: 'metals', label: 'المعادن Metals', icon: Shield },
-              { id: 'indices', label: 'المؤشرات Indices', icon: TrendingUp },
-              { id: 'energy', label: 'الطاقة Energy', icon: Flame },
-            ] as const
-          ).map((t) => {
-            const Icon = t.icon;
-            const active = category === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setCategory(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs transition-colors shrink-0 ${
-                  active
-                    ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold border border-[#2DD4BF]/40'
-                    : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#141E30]'
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                {t.label}
-              </button>
-            );
-          })}
+              { id: 'all', label: 'الكل' },
+              { id: 'forex', label: 'العملات (Forex)' },
+              { id: 'metals', label: 'المعادن' },
+              { id: 'energy', label: 'الطاقة' },
+              { id: 'indices', label: 'المؤشرات' },
+            ] as { id: SymbolCategory; label: string }[]
+          ).map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setCategory(c.id)}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                category === c.id
+                  ? 'bg-[#2DD4BF] text-[#042F2E]'
+                  : 'bg-[#121A2B] text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1A263D]'
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
         </div>
 
         {/* Symbol List */}
         <div className="p-2 overflow-y-auto space-y-1 max-h-[420px]">
-          {filteredSymbols.length === 0 ? (
+          {displayedItems.length === 0 ? (
             <div className="text-center py-12 text-[#64748B]">
               لم يتم العثور على أزواج تطابق بحثك.
             </div>
           ) : (
-            filteredSymbols.map((s, idx) => {
+            displayedItems.map((s, idx) => {
               const isSelected = selectedIndex === idx;
               const isCurrent = currentSymbol === s.symbol;
-              const isUp = s.change24h >= 0;
+              const isUp = (s.change24h || 0) >= 0;
 
               return (
                 <div
@@ -173,13 +244,19 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-left font-mono">
-                    <div className="font-bold text-xs text-[#E8EEF9]">{s.price.toFixed(s.precision)}</div>
-                    <div className={`text-[10px] font-semibold flex items-center justify-end gap-0.5 ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                      {isUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-                      {isUp ? '+' : ''}{s.change24h.toFixed(2)}% ({s.spread} pip)
+                  {s.price !== undefined ? (
+                    <div className="text-left font-mono">
+                      <div className="font-bold text-xs text-[#E8EEF9]">{s.price.toFixed(s.precision)}</div>
+                      <div className={`text-[10px] font-semibold flex items-center justify-end gap-0.5 ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                        {isUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                        {isUp ? '+' : ''}{s.change24h.toFixed(2)}%{s.spread ? ` (${s.spread} pip)` : ''}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-left font-mono text-[11px] text-[#64748B]">
+                      اختر للرسم
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -189,19 +266,9 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
         {/* Footer shortcuts info */}
         <div className="p-2.5 border-t border-[#1E283D] bg-[#0A101D] flex items-center justify-between text-[11px] text-[#64748B]">
           <span>استخدم الأسهم ↑ ↓ للتنقل و Enter للاختيار</span>
-          <span className="font-sans text-[#2DD4BF]">فوركس • معادن • طاقة • مؤشرات</span>
+          <span className="text-[#38BDF8] font-semibold">فوركس، معادن، طاقة، مؤشرات</span>
         </div>
       </div>
     </div>
   );
 };
-
-function getCategoryColor(cat: string): string {
-  switch (cat) {
-    case 'forex': return '#38BDF8';
-    case 'metals': return '#F59E0B';
-    case 'indices': return '#A78BFA';
-    case 'energy': return '#EC4899';
-    default: return '#2DD4BF';
-  }
-}
