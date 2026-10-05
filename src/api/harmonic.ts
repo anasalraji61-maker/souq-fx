@@ -108,7 +108,7 @@ export const harmonicAPI = {
     }
   },
 
-  async getPatternHistory(symbol: string, timeframe: string = '1h'): Promise<any[]> {
+  async getPatternHistory(symbol: string, timeframe: string = '1h'): Promise<HarmonicPattern[]> {
     try {
       const res = await fetch(`/api/harmonic/patterns/${encodeURIComponent(symbol)}?timeframe=${timeframe}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

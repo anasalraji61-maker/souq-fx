@@ -64,10 +64,20 @@ export async function fetchVolumeProfileAnalysis(
   return res.json();
 }
 
+export interface OrderFlowDetails {
+  symbol: string;
+  timeframe: string;
+  current_price: number;
+  order_flow_summary: OrderFlowSummary;
+  trading_signals: VolumeProfileSignal[];
+  hvn_levels: number[];
+  lvn_levels: number[];
+}
+
 export async function fetchOrderFlowDetails(
   symbol: string,
   timeframe: string = '1h'
-): Promise<any> {
+): Promise<OrderFlowDetails> {
   const res = await fetch(`/api/volume-profile/order-flow/${symbol.toUpperCase()}?timeframe=${timeframe}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch order flow: ${res.statusText}`);

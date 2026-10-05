@@ -89,7 +89,7 @@ export const fibonacciAPI = {
     }
   },
 
-  async getLatest(symbol: string, timeframe: string = '1h'): Promise<any> {
+  async getLatest(symbol: string, timeframe: string = '1h'): Promise<FibonacciResponse | null> {
     try {
       const res = await fetch(`/api/fibonacci/latest/${encodeURIComponent(symbol)}?timeframe=${timeframe}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

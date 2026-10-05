@@ -89,7 +89,7 @@ export const divergenceAPI = {
     }
   },
 
-  async getSignalHistory(symbol: string, timeframe: string = '1h'): Promise<any[]> {
+  async getSignalHistory(symbol: string, timeframe: string = '1h'): Promise<DivergenceSignal[]> {
     try {
       const res = await fetch(`/api/divergence/signals/${encodeURIComponent(symbol)}?timeframe=${timeframe}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

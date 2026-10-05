@@ -90,11 +90,12 @@ const SEED_TRADE_IDS = new Set([
   'demo-5',
 ]);
 
-export function isSeedTrade(e: any): boolean {
+export function isSeedTrade(e: unknown): boolean {
   if (!e || typeof e !== 'object') return false;
-  if (e.is_seed || e.isSeed || e.is_demo || e.isDemo || e.seed || e.demo) return true;
-  if (typeof e.id === 'string') {
-    const id = e.id.toLowerCase().trim();
+  const o = e as Record<string, unknown>;
+  if (o.is_seed || o.isSeed || o.is_demo || o.isDemo || o.seed || o.demo) return true;
+  if (typeof o.id === 'string') {
+    const id = (o.id as string).toLowerCase().trim();
     if (SEED_TRADE_IDS.has(id)) return true;
     if (id.startsWith('tr-seed') || id.startsWith('seed-') || id.includes('seed-trade')) return true;
     if (id.startsWith('demo-') || id.includes('demo-trade')) return true;

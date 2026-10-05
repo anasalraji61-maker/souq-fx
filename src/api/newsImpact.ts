@@ -29,7 +29,7 @@ export interface SymbolGuardStatus {
   guard_mode_active: boolean;
   max_risk_score: number;
   recommendation: 'FREEZE_PENDING_ORDERS' | 'NORMAL';
-  active_alerts: any[];
+  active_alerts: Array<Record<string, unknown>>;
 }
 
 export const newsImpactAPI = {

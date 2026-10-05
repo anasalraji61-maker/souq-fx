@@ -58,7 +58,7 @@ export const sentimentAPI = {
     }
   },
 
-  async getLatest(symbol: string): Promise<any> {
+  async getLatest(symbol: string): Promise<SentimentResponse | null> {
     try {
       const res = await fetch(`/api/sentiment/latest/${encodeURIComponent(symbol)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

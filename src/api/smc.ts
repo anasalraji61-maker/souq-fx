@@ -167,7 +167,7 @@ export const smcAPI = {
     }
   },
 
-  async getLatestSaved(symbol: string, timeframe: string = '1h'): Promise<any> {
+  async getLatestSaved(symbol: string, timeframe: string = '1h'): Promise<SMCAnalysisResponse | null> {
     try {
       const res = await fetch(`/api/smc/latest/${encodeURIComponent(symbol)}?timeframe=${timeframe}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

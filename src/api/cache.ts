@@ -4,6 +4,18 @@
  * Lead Builder: Google AI Studio
  */
 
+interface RawCacheStats {
+  symbol?: string;
+  hit_rate_pct?: number;
+  overall_hit_rate_pct?: number;
+  avg_hit_latency_ms?: number;
+  avg_miss_latency_ms?: number;
+  hits?: number;
+  total_hits?: number;
+  misses?: number;
+  total_misses?: number;
+}
+
 export interface CacheMetrics {
   symbol: string;
   hitRate: string;
@@ -67,7 +79,7 @@ export const cacheAPI = {
   },
 
   // Format cache statistics for display
-  formatStats(stats: any): CacheMetrics | null {
+  formatStats(stats: RawCacheStats | null | undefined): CacheMetrics | null {
     if (!stats) return null;
 
     const rate = stats.hit_rate_pct ?? stats.overall_hit_rate_pct ?? 0;
