@@ -84,17 +84,87 @@ export interface BacktestResult {
   isOffline?: boolean;
 }
 
+export interface RawScreenerFilter {
+  id?: string;
+  key?: string;
+  label?: string;
+  name?: string;
+  description?: string;
+  category?: string;
+}
+
+export interface RawScreenerHit {
+  symbol?: string;
+  name?: string;
+  price?: number;
+  last?: number;
+  change24h?: number;
+  change_pct?: number;
+  rsi?: number;
+  sma_fast?: number;
+  sma_slow?: number;
+  trend?: ScreenerHit['trend'];
+  signal?: string;
+  matched_filters?: string[];
+  reasons?: string[];
+  timeframe?: string;
+}
+
+export interface RawScreenerRun {
+  results?: RawScreenerHit[];
+  count?: number;
+  scanned?: number;
+  total?: number;
+  provider_configured?: boolean;
+}
+
+export interface RawCalendarEvent {
+  id?: string;
+  time?: string;
+  date?: string;
+  currency?: string;
+  impact?: string;
+  title?: string;
+  event?: string;
+  forecast?: string | null;
+  previous?: string | null;
+  actual?: string | null;
+}
+
+export interface RawNewsItem {
+  id?: string;
+  title?: string;
+  source?: string;
+  time?: string;
+  published_at?: string;
+  url?: string;
+  symbols?: string[];
+  summary?: string;
+  description?: string;
+}
+
+export interface RawBacktest {
+  strategy?: string;
+  symbol?: string;
+  timeframe?: string;
+  trades?: BacktestTrade[];
+  stats?: Partial<BacktestStats>;
+  equity_curve?: BacktestResult['equity_curve'];
+  data_kind?: string;
+  unavailable_reason?: string;
+}
+
 /**
  * 2.1 Screener: GET /api/screener/filters
  */
 export async function getScreenerFilters(): Promise<{ filters: ScreenerFilterRule[]; isOffline: boolean }> {
   try {
-    const res = await apiClient.get<{ filters: any[] }>('/api/screener/filters');
+    const res = await apiClient.get<{ filters: RawScreenerFilter[] }>('/api/screener/filters');
     if (res.ok && res.data && Array.isArray(res.data.filters)) {
       return {
-        filters: res.data.filters.map((f: any) => ({
-          id: f.id || f.key || String(f),
-          label: f.label || f.name || f.id || String(f),
+        filters: res.data.filters.map((f: RawScreenerFilter) => ({
+          id: f.id ?? f.key ?? String(f.id ?? ''),
+          label: f.label ?? f.name ?? f.id ?? String(f.id ?? ''),
           description: f.description,
           category: f.category,
         })),
@@ -129,7 +199,7 @@ export async function runScreener(params: {
   slow?: number;
 }): Promise<ScreenerRunResult> {
   try {
-    const res = await apiClient.post<any>('/api/screener/run', {
+    const res = await apiClient.post<RawScreenerRun>('/api/screener/run', {
       timeframe: params.timeframe || '15m',
       filters: params.filters || [],
       symbols: params.symbols || [],
@@ -140,17 +210,17 @@ export async function runScreener(params: {
     if (res.ok && res.data) {
       const rawResults = Array.isArray(res.data.results) ? res.data.results : [];
       return {
-        results: rawResults.map((r: any) => ({
-          symbol: r.symbol || '',
-          name: r.name || r.symbol,
+        results: rawResults.map((r: RawScreenerHit) => ({
+          symbol: r.symbol ?? '',
+          name: r.name ?? r.symbol ?? '',
           price: typeof r.price === 'number' ? r.price : r.last,
           change24h: typeof r.change24h === 'number' ? r.change24h : r.change_pct,
           rsi: typeof r.rsi === 'number' ? r.rsi : undefined,
-          trend: r.trend || (r.sma_fast > r.sma_slow ? 'bullish' : 'bearish'),
-          signal: r.signal || (r.rsi && r.rsi < 30 ? 'strong_buy' : r.rsi && r.rsi > 70 ? 'strong_sell' : 'neutral'),
-          matched_filters: r.matched_filters || r.reasons || [],
-          reasons: r.reasons || [],
-          timeframe: r.timeframe || params.timeframe,
+          trend: r.trend ?? ((r.sma_fast ?? 0) > (r.sma_slow ?? 0) ? 'bullish' : 'bearish'),
+          signal: r.signal ?? (r.rsi !== undefined && r.rsi < 30 ? 'strong_buy' : r.rsi !== undefined && r.rsi > 70 ? 'strong_sell' : 'neutral'),
+          matched_filters: r.matched_filters ?? r.reasons ?? [],
+          reasons: r.reasons ?? [],
+          timeframe: r.timeframe ?? params.timeframe,
         })),
         count: res.data.count ?? rawResults.length,
         scanned: res.data.scanned ?? rawResults.length,
