@@ -195,7 +195,20 @@ async def performance_endpoint(req: PerformanceRequest):
 @router.post("/pnl-groups")
 @_catch_value_error
 async def pnl_groups_endpoint(req: PerformanceRequest):
-    """P&L grouped by symbol and by timeframe."""
+    """P&L grouped by symbol and by timeframe.
+
+    With ``initialBalance`` the frontend-shaped ``{trades, pnl, win_rate}``
+    groups from ``analysis_contract.performance_response`` are returned.
+    Legacy bodies keep the old ``analytics_metrics`` shape.
+    """
+    if req.initialBalance is not None:
+        r = analysis_contract.performance_response(
+            [t.model_dump() for t in req.trades], req.initialBalance
+        )
+        return {
+            "by_symbol": r["by_symbol"],
+            "by_timeframe": r["by_timeframe"],
+        }
     trades = [t.model_dump() for t in req.trades]
     return {
         "by_symbol": analytics_metrics.pnl_by_symbol(trades),
