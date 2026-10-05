@@ -255,11 +255,11 @@ export async function getEconomicCalendar(currency?: string, impact?: string): P
     if (impact && impact !== 'all') q.set('impact', impact);
 
     const queryStr = q.toString() ? `?${q.toString()}` : '';
-    const res = await apiClient.get<{ events: any[] }>(`/api/calendar${queryStr}`);
+    const res = await apiClient.get<{ events: RawCalendarEvent[] }>(`/api/calendar${queryStr}`);
 
     if (res.ok && res.data && Array.isArray(res.data.events)) {
       return {
-        events: res.data.events.map((e: any, idx: number) => ({
+        events: res.data.events.map((e: RawCalendarEvent, idx) => ({
           id: e.id || `ev-${idx}`,
           time: e.time || e.date || '',
           currency: (e.currency || 'USD').toUpperCase(),
@@ -287,10 +287,10 @@ export async function getEconomicCalendar(currency?: string, impact?: string): P
  */
 export async function getMarketNews(): Promise<{ news: NewsItem[]; isOffline: boolean }> {
   try {
-    const res = await apiClient.get<{ news: any[] }>('/api/news');
+    const res = await apiClient.get<{ news: RawNewsItem[] }>('/api/news');
     if (res.ok && res.data && Array.isArray(res.data.news)) {
       return {
-        news: res.data.news.map((item: any, idx: number) => ({
+        news: res.data.news.map((item: RawNewsItem, idx) => ({
           id: item.id || `news-${idx}`,
           title: item.title || '',
           source: item.source || 'رويترز / بلومبرغ',
@@ -325,7 +325,7 @@ export async function runBacktest(params: {
   rsi_high?: number;
 }): Promise<BacktestResult> {
   try {
-    const res = await apiClient.post<any>('/api/backtest', {
+    const res = await apiClient.post<RawBacktest>('/api/backtest', {
       symbol: params.symbol.toUpperCase(),
       timeframe: params.timeframe,
       strategy: params.strategy,
