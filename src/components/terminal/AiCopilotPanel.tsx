@@ -94,10 +94,44 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
     'ما هي أفضل استراتيجية لتداول كسر الدعم والمقاومة؟',
   ];
 
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY !== null) {
+      const deltaY = e.touches[0].clientY - touchStartY;
+      if (deltaY > 60) {
+        onClose();
+        setTouchStartY(null);
+      }
+    }
+  };
+
   return (
-    <div className="fixed inset-y-0 left-0 w-80 md:w-96 bg-[#0B1424] border-r border-[#1E2E4A] shadow-2xl z-50 flex flex-col text-xs text-[#E2E8F0] select-none animate-in slide-in-from-left duration-200">
-      {/* Header */}
-      <div className="p-4 border-b border-[#1E2E4A] flex items-center justify-between bg-[#08101E]">
+    <>
+      {/* Backdrop for mobile and desktop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 animate-in fade-in duration-150"
+        onClick={onClose}
+      />
+
+      {/* Drawer / Bottom sheet container */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        className="fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 md:right-auto md:w-96 max-h-[85vh] md:max-h-full h-[82vh] md:h-full bg-[#0B1424] border-t md:border-t-0 md:border-r border-[#1E2E4A] rounded-t-3xl md:rounded-none shadow-2xl z-50 flex flex-col text-xs text-[#E2E8F0] select-none animate-in slide-in-from-bottom md:slide-in-from-left duration-200"
+      >
+        {/* Mobile Drag Handle */}
+        <div
+          className="md:hidden w-12 h-1.5 bg-[#24344E] rounded-full mx-auto my-2 shrink-0 cursor-grab active:bg-[#2DD4BF]"
+          onClick={onClose}
+        />
+
+        {/* Header */}
+        <div className="p-3 md:p-4 border-b border-[#1E2E4A] flex items-center justify-between bg-[#08101E]">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#2DD4BF] to-[#0284C7] flex items-center justify-center text-[#042F2E] shadow-md">
             <Sparkles className="w-4 h-4 text-white" />
@@ -198,5 +232,6 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
         </button>
       </form>
     </div>
+    </>
   );
 };

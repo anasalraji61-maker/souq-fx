@@ -226,7 +226,8 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-right divide-y divide-[#243049]/60">
+            {/* Desktop Table View */}
+            <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
               <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
                 <tr>
                   <th className="py-3 px-4">الأداة المالية</th>
@@ -337,6 +338,55 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
                 })}
               </tbody>
             </table>
+
+            {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
+            <div className="md:hidden space-y-2.5 p-3">
+              {results.map((item) => {
+                const symObj = symbols.find((s) => s.symbol === item.symbol);
+                const displayPrice = item.price ?? symObj?.price ?? 0;
+                const displayPrecision = symObj?.precision ?? 4;
+                const displayChange = item.change24h ?? symObj?.change24h ?? 0;
+                const isUp = displayChange >= 0;
+
+                return (
+                  <div
+                    key={item.symbol}
+                    onClick={() => onSelectSymbolForChart(item.symbol)}
+                    className="p-3 rounded-xl bg-[#0E1626] border border-[#1E2E4A] space-y-2 active:border-[#2DD4BF] cursor-pointer shadow-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-[#E8EEF9] text-sm">{item.symbol}</div>
+                        <div className="text-[10px] text-[#7B8DA8]">{item.name || symObj?.name}</div>
+                      </div>
+                      <div className="text-left font-mono">
+                        <div className="font-bold text-white text-xs">{displayPrice.toFixed(displayPrecision)}</div>
+                        <div className={`text-[11px] font-bold ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                          {isUp ? '+' : ''}{displayChange.toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-1.5 text-[10px] bg-[#070D18] p-2 rounded-lg border border-[#16233B]">
+                      <div>
+                        <span className="text-[#64748B] block">RSI (14)</span>
+                        <span className="font-mono font-bold text-[#2DD4BF]">{item.rsi ?? '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#64748B] block">الاتجاه</span>
+                        <span className={`font-semibold ${item.trend === 'bullish' ? 'text-[#22C55E]' : item.trend === 'bearish' ? 'text-[#EF4444]' : 'text-[#7B8DA8]'}`}>
+                          {item.trend === 'bullish' ? 'صاعد' : item.trend === 'bearish' ? 'هابط' : 'عرضي'}
+                        </span>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-[#64748B] block">الإشارة</span>
+                        <span>{getSignalBadge(item.signal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

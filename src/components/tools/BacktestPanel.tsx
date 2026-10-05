@@ -283,7 +283,8 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
                 سجل صفقات الاختبار ({result.trades.length} صفقة)
               </div>
               <div className="overflow-x-auto max-h-80">
-                <table className="w-full text-right divide-y divide-[#243049]/60 font-mono text-xs">
+                {/* Desktop Table View */}
+                <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60 font-mono text-xs">
                   <thead className="bg-[#080E1A] text-[#7B8DA8] text-[10px]">
                     <tr>
                       <th className="py-2.5 px-3">النوع</th>
@@ -326,6 +327,49 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
+                <div className="md:hidden space-y-2 p-2">
+                  {result.trades.map((t, i) => (
+                    <div
+                      key={i}
+                      className="p-2.5 rounded-lg bg-[#080E1A] border border-[#1E2E4A] flex items-center justify-between text-xs font-mono"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                            t.type === 'BUY'
+                              ? 'bg-emerald-500/15 text-[#22C55E]'
+                              : 'bg-rose-500/15 text-[#EF4444]'
+                          }`}
+                        >
+                          {t.type}
+                        </span>
+                        <span className="text-[#A3B4D0] text-[11px]">
+                          {t.entry_price} → {t.exit_price}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-bold ${
+                            t.pnl_pips >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
+                          }`}
+                        >
+                          {t.pnl_pips >= 0 ? '+' : ''}{t.pnl_pips}p
+                        </span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                            t.result === 'WIN'
+                              ? 'bg-[#22C55E]/20 text-[#22C55E]'
+                              : 'bg-[#EF4444]/20 text-[#EF4444]'
+                          }`}
+                        >
+                          {t.result === 'WIN' ? 'ربح' : 'خسارة'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

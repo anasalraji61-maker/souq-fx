@@ -33,27 +33,21 @@ import {
   Sparkles,
   Sliders,
   Grid,
-  Square,
-  Columns,
   LayoutGrid,
   Layers,
   Trash2,
   Ruler,
   Magnet,
   Bell,
-  Undo2,
-  Redo2,
   HelpCircle,
   Save,
   FolderOpen,
-  ArrowRight,
-  Move,
   Type,
   Check,
-  SplitSquareVertical,
-  SplitSquareHorizontal,
   Search,
   Activity,
+  PenTool,
+  X,
 } from 'lucide-react';
 
 export type LayoutType = '1' | '2-side' | '2-stack' | '3' | '4';
@@ -170,6 +164,18 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [activeCellId, setActiveCellId] = useState<string>('cell-1');
   const [maximizedCellId, setMaximizedCellId] = useState<string | null>(null);
 
+  // Mobile-first responsive detection (MEGA BATCH D)
+  const [isPhone, setIsPhone] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const [isMobileDrawingSheetOpen, setIsMobileDrawingSheetOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPhone(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Sync Toggles (Part 4.3)
   const [syncSymbol, setSyncSymbol] = useState(false);
   const [syncTimeframe, setSyncTimeframe] = useState(false);
@@ -219,6 +225,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   useEffect(() => {
     getMarketStatus().then(setMarketStatus);
     const msInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       getMarketStatus().then(setMarketStatus);
     }, 30000);
     return () => clearInterval(msInterval);
@@ -833,8 +840,13 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
     } catch {}
   };
 
-  // Visible cells calculation based on layout (Part 4.1)
+  // Visible cells calculation based on layout (Part 4.1 & Part 1.5)
   const visibleCells = useMemo(() => {
+    // 1.5 Multi-chart layouts: on phone force a single chart
+    if (isPhone) {
+      const active = cells.find((c) => c.id === activeCellId) || cells[0];
+      return [active];
+    }
     if (maximizedCellId) {
       return cells.filter((c) => c.id === maximizedCellId);
     }
@@ -847,10 +859,10 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         ? 3
         : 4;
     return cells.slice(0, count);
-  }, [cells, layoutType, maximizedCellId]);
+  }, [cells, layoutType, maximizedCellId, isPhone, activeCellId]);
 
   const getGridClass = () => {
-    if (maximizedCellId || layoutType === '1') return 'grid-cols-1 grid-rows-1';
+    if (isPhone || maximizedCellId || layoutType === '1') return 'grid-cols-1 grid-rows-1';
     if (layoutType === '2-side') return 'grid-cols-1 md:grid-cols-2 grid-rows-1';
     if (layoutType === '2-stack') return 'grid-cols-1 grid-rows-2';
     if (layoutType === '3') return 'grid-cols-1 md:grid-cols-2 grid-rows-2';
@@ -881,10 +893,10 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
       )}
 
-      {/* 1. TOP TOOLBAR (TradingView Pro Standard) */}
-      <div className="h-11 bg-[#0A101D] border-b border-[#1E283D] px-3 flex items-center justify-between text-xs shrink-0 gap-2 z-20">
+      {/* 1. TOP TOOLBAR (TradingView Pro Standard - horizontally scrollable on tablet so nothing is cut) */}
+      <div className="h-11 bg-[#0A101D] border-b border-[#1E283D] px-2.5 sm:px-3 flex items-center justify-between text-xs shrink-0 gap-2 z-20 overflow-x-auto no-scrollbar scroll-smooth">
         {/* Left Side: Symbol search, Timeframes, Chart Type, Indicators */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Symbol Search Trigger (Part 6.1) */}
           <button
             onClick={() => setIsSymbolSearchOpen(true)}
@@ -928,15 +940,15 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
           <div className="w-[1px] h-4 bg-[#1E283D]" />
 
-          {/* Timeframe Bar */}
-          <div className="flex items-center gap-0.5 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
+          {/* 1.2 Timeframe Bar (scrolls horizontally on phones) */}
+          <div className="flex items-center gap-0.5 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D] overflow-x-auto no-scrollbar scroll-smooth shrink-0 max-w-[190px] sm:max-w-none">
             {(['1m', '5m', '15m', '1h', '4h', '1D'] as Timeframe[]).map((tf) => {
               const isTfActive = activeCell.timeframe === tf;
               return (
                 <button
                   key={tf}
                   onClick={() => handleTimeframeChange(tf)}
-                  className={`px-2 py-0.8 rounded text-xs font-mono transition-colors ${
+                  className={`px-2 py-1 rounded text-xs font-mono shrink-0 transition-colors cursor-pointer ${
                     isTfActive
                       ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold shadow-xs'
                       : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
@@ -1070,8 +1082,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             </button>
           </div>
 
-          {/* Layout Selector (Part 4.1) */}
-          <div className="relative">
+          {/* 1.5 Layout Selector (hidden on phone, forced single) */}
+          <div className="relative hidden md:block">
             <div className="flex items-center gap-0.5 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
               <button
                 onClick={() => {
@@ -1231,8 +1243,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
       {/* 2. MAIN WORKSPACE: Left Tools Rail + Center Charts Grid + Right Watchlist */}
       <div className="flex-1 flex w-full h-[calc(100%-44px)] overflow-hidden relative">
-        {/* Left Drawing Rail (Part 3) */}
-        <div className="w-10 bg-[#0B1220] border-r border-[#1E283D] flex flex-col items-center py-2 gap-1.5 shrink-0 z-10 text-xs select-none">
+        {/* Left Drawing Rail (hidden on phones, opened via floating button) */}
+        <div className="hidden md:flex w-10 bg-[#0B1220] border-r border-[#1E283D] flex-col items-center py-2 gap-1.5 shrink-0 z-10 text-xs select-none">
           {/* Trendline */}
           <button
             onClick={() => setActiveTool(activeTool === 'trendline' ? 'none' : 'trendline')}
@@ -1565,53 +1577,231 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       isDemo={cell.isDemo}
                     />
                   </div>
+
+                  {/* 1.2 Mobile Quick Trade Strip (< 768px) below the chart (~60% height) */}
+                  <div className="md:hidden flex-none bg-[#0B1424] border-t border-[#1E2E4A] px-3 py-2 flex items-center justify-between gap-2 shrink-0">
+                    <div className="flex flex-col min-w-0 pr-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-white font-mono text-xs">{symObj.symbol}</span>
+                        <span
+                          className={`text-[11px] font-mono font-bold ${
+                            symObj.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
+                          }`}
+                        >
+                          {symObj.change24h >= 0 ? '+' : ''}
+                          {symObj.change24h}%
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#7B8DA8] font-mono">
+                        {symObj.price.toFixed(symObj.precision)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => {
+                          setTradingDrawerTab('orders');
+                          setIsOrderPanelOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-xs flex items-center gap-1 active:scale-95 cursor-pointer"
+                      >
+                        <span>شراء</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTradingDrawerTab('orders');
+                          setIsOrderPanelOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 font-bold text-xs flex items-center gap-1 active:scale-95 cursor-pointer"
+                      >
+                        <span>بيع</span>
+                      </button>
+                      <button
+                        onClick={() => setIsAiCopilotOpen(true)}
+                        className="p-1.5 rounded-lg bg-[#16233B] border border-[#24344E] text-[#2DD4BF] active:scale-95 cursor-pointer"
+                        title="المساعد الذكي"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Right Trading & Position Panel */}
-        {isOrderPanelOpen && (
-          <div className="w-96 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-y-auto z-20 shadow-2xl flex flex-col">
-            <div className="p-2 flex justify-between items-center bg-[#0d1424] border-b border-[#1E283D]">
-              <div className="flex items-center gap-1.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+        {/* 1.2 Floating Drawing Tools Button for Phone (< 768px) */}
+        <button
+          onClick={() => setIsMobileDrawingSheetOpen(true)}
+          title="أدوات الرسم الفني"
+          className="md:hidden fixed bottom-16 right-4 z-30 w-11 h-11 rounded-full bg-[#132034] border border-[#2DD4BF]/60 text-[#2DD4BF] shadow-2xl flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
+        >
+          <PenTool className="w-5 h-5" />
+          {activeTool !== 'none' && (
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#2DD4BF] text-[#042F2E] font-bold text-[9px] flex items-center justify-center shadow-xs">
+              ✓
+            </span>
+          )}
+        </button>
+
+        {/* 1.2 Mobile Drawing Tools Bottom Sheet */}
+        {isMobileDrawingSheetOpen && (
+          <div
+            className="md:hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex flex-col justify-end animate-in fade-in duration-150"
+            onClick={() => setIsMobileDrawingSheetOpen(false)}
+          >
+            <div
+              className="bg-[#0C1526] border-t border-[#1E2E4A] rounded-t-3xl p-4 space-y-3 max-h-[75vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drag Handle */}
+              <div
+                className="w-12 h-1.5 bg-[#24344E] rounded-full mx-auto cursor-grab"
+                onClick={() => setIsMobileDrawingSheetOpen(false)}
+              />
+
+              <div className="flex items-center justify-between pb-2 border-b border-[#1E2E4A]">
+                <div className="flex items-center gap-2">
+                  <PenTool className="w-4 h-4 text-[#2DD4BF]" />
+                  <span className="font-bold text-sm text-white">أدوات الرسم والتحليل</span>
+                </div>
                 <button
-                  onClick={() => setTradingDrawerTab('orders')}
-                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                    tradingDrawerTab === 'orders'
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
+                  onClick={() => setIsMobileDrawingSheetOpen(false)}
+                  className="p-1 rounded-lg text-[#7B8DA8] hover:text-white"
                 >
-                  أمر جديد
-                </button>
-                <button
-                  onClick={() => setTradingDrawerTab('positions')}
-                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                    tradingDrawerTab === 'positions'
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  المراكز والصفقات
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-              <button
-                onClick={() => setIsOrderPanelOpen(false)}
-                className="text-slate-400 hover:text-white p-1"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {tradingDrawerTab === 'orders' ? (
-                <OrderPanel currentSymbol={activeSymbolObj.symbol} currentPrice={activeSymbolObj.price} />
-              ) : (
-                <PositionPanel />
-              )}
+
+              {/* Drawing Tools Grid */}
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                {[
+                  { id: 'trendline', label: 'خط اتجاه', icon: '╱' },
+                  { id: 'horizontal', label: 'خط أفقي', icon: '―' },
+                  { id: 'vertical', label: 'خط رأسي', icon: '│' },
+                  { id: 'ray', label: 'شعاع', icon: '⟶' },
+                  { id: 'extended', label: 'خط ممتد', icon: '⟷' },
+                  { id: 'channel', label: 'قناة متوازية', icon: '∥' },
+                  { id: 'arrow', label: 'سهم إشارة', icon: '↗' },
+                  { id: 'box', label: 'مستطيل منطقة', icon: '▭' },
+                  { id: 'text', label: 'نص توضيحي', icon: 'T' },
+                  { id: 'measure', label: 'مسطرة قياس', icon: '📏' },
+                  { id: 'fibonacci', label: 'فيبوناتشي', icon: '0.618' },
+                  { id: 'position_long', label: 'صفقة شراء', icon: '▲ Long' },
+                  { id: 'position_short', label: 'صفقة بيع', icon: '▼ Short' },
+                ].map((tool) => (
+                  <button
+                    key={tool.id}
+                    onClick={() => {
+                      setActiveTool(tool.id as DrawingTool);
+                      setIsMobileDrawingSheetOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center p-2.5 rounded-xl border min-h-[52px] transition-all cursor-pointer ${
+                      activeTool === tool.id
+                        ? 'bg-[#1C2E4A] border-[#2DD4BF] text-[#2DD4BF] font-bold shadow-md'
+                        : 'bg-[#121E33] border-[#1E2E4A] text-[#A3B4D0] hover:text-white'
+                    }`}
+                  >
+                    <span className="text-base mb-0.5 font-mono">{tool.icon}</span>
+                    <span className="text-[10px] leading-tight text-center">{tool.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Clear and Magnet Controls */}
+              <div className="flex items-center gap-2 pt-2 border-t border-[#1E2E4A]">
+                <button
+                  onClick={() => setIsMagnetOn(!isMagnetOn)}
+                  className={`flex-1 py-2 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-colors ${
+                    isMagnetOn
+                      ? 'bg-[#1C2E4A] text-[#2DD4BF] border-[#2DD4BF]'
+                      : 'bg-[#121E33] text-[#7B8DA8] border-[#1E2E4A]'
+                  }`}
+                >
+                  <Magnet className="w-4 h-4" />
+                  <span>المغناطيس {isMagnetOn ? 'مفعّل' : 'معطّل'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleClearDrawings(activeCell.id);
+                    setIsMobileDrawingSheetOpen(false);
+                  }}
+                  className="py-2 px-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>مسح الكل</span>
+                </button>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* 1.4 Right Trading & Position Panel (Bottom Sheet on Phone) */}
+        {isOrderPanelOpen && (
+          <>
+            <div
+              className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs animate-in fade-in duration-150"
+              onClick={() => setIsOrderPanelOpen(false)}
+            />
+            <div className="fixed inset-x-0 bottom-0 z-50 md:relative md:inset-auto md:w-96 md:z-20 md:border-l md:border-[#1E283D] bg-[#0B1220] rounded-t-3xl md:rounded-none max-h-[85vh] md:max-h-full h-[80vh] md:h-full overflow-hidden shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-200 md:animate-none">
+              {/* Mobile Drag Handle with swipe down to close */}
+              <div
+                className="md:hidden py-2 shrink-0 cursor-grab flex flex-col items-center select-none"
+                onTouchStart={(e) => {
+                  (e.currentTarget as any)._touchStartY = e.touches[0].clientY;
+                }}
+                onTouchMove={(e) => {
+                  const startY = (e.currentTarget as any)._touchStartY;
+                  if (startY && e.touches[0].clientY - startY > 50) {
+                    setIsOrderPanelOpen(false);
+                  }
+                }}
+                onClick={() => setIsOrderPanelOpen(false)}
+              >
+                <div className="w-12 h-1.5 bg-[#24344E] rounded-full active:bg-[#2DD4BF]" />
+              </div>
+
+              <div className="p-2 flex justify-between items-center bg-[#0d1424] border-b border-[#1E283D] shrink-0">
+                <div className="flex items-center gap-1.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                  <button
+                    onClick={() => setTradingDrawerTab('orders')}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
+                      tradingDrawerTab === 'orders'
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    أمر جديد
+                  </button>
+                  <button
+                    onClick={() => setTradingDrawerTab('positions')}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
+                      tradingDrawerTab === 'positions'
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    المراكز والصفقات
+                  </button>
+                </div>
+                <button
+                  onClick={() => setIsOrderPanelOpen(false)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {tradingDrawerTab === 'orders' ? (
+                  <OrderPanel currentSymbol={activeSymbolObj.symbol} currentPrice={activeSymbolObj.price} />
+                ) : (
+                  <PositionPanel />
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Right Watchlist Panel (Part 6 & Part 7.2) */}
@@ -1621,7 +1811,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               className="md:hidden fixed inset-0 bg-black/50 z-20 backdrop-blur-xs"
               onClick={() => setIsWatchlistCollapsed(true)}
             />
-            <div className="fixed md:relative inset-y-0 right-0 z-30 md:z-10 w-72 md:w-64 border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-hidden flex flex-col shadow-2xl md:shadow-none">
+            <div className="fixed md:relative inset-y-0 right-0 z-30 md:z-10 w-72 md:w-[300px] min-[1101px]:w-[325px] xl:w-[340px] min-w-[300px] border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-hidden flex flex-col shadow-2xl md:shadow-none">
               <WatchlistPanel
                 symbols={symbols}
                 activeSymbol={activeCell.symbol}

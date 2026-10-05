@@ -10,8 +10,9 @@ import { PriceAlertNotificationBanner } from './components/common/PriceAlertNoti
 import { PriceAlertsModal } from './components/common/PriceAlertsModal';
 import { GeminiChatDrawer } from './components/chat/GeminiChatDrawer';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { BottomTabBar } from './components/common/BottomTabBar';
+import { WatchlistPanel } from './components/terminal/WatchlistPanel';
 import { playAlertChime } from './utils/sound';
-import { Sparkles, Bot, Shield, Terminal as TerminalIcon } from 'lucide-react';
 
 // Code-splitting lazy loading for subpages to reduce initial bundle for mobile performance
 const ToolsScreen = lazy(() => import('./components/tools/ToolsScreen').then(m => ({ default: m.ToolsScreen })));
@@ -32,7 +33,6 @@ const ScreenFallback = () => (
 export default function App() {
   // Navigation & Language
   const [currentTab, setCurrentTab] = useState<AppTab>('home');
-  const [botSubTab, setBotSubTab] = useState<'swarm' | 'mt5'>('swarm');
   const [currentLang, setCurrentLang] = useState<LangId>(() => {
     return (localStorage.getItem('matrix_lang') as LangId) || 'ar';
   });
@@ -51,6 +51,34 @@ export default function App() {
   const [timeframe, setTimeframe] = useState<Timeframe>('15m');
   const [chartType, setChartType] = useState<ChartType>('candles');
   const [priceFlashMap, setPriceFlashMap] = useState<Record<string, 'up' | 'down'>>({});
+
+  // Mobile-first & PWA states (MEGA BATCH D)
+  const [toolsInitialTab, setToolsInitialTab] = useState<
+    'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics'
+  >('calculator');
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredInstallPrompt) return;
+    try {
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredInstallPrompt(null);
+      }
+    } catch {
+      // Ignored
+    }
+  };
 
   // Preferences
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -140,9 +168,12 @@ export default function App() {
     setCandles(initialCandles);
   }, [activeSymbol, timeframe]);
 
-  // Live market price simulation ticks
+  // Live market price simulation ticks (4.1: pause when tab hidden)
   useEffect(() => {
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) {
+        return;
+      }
       setSymbols((prevSymbols) => {
         let hasTriggered = false;
         const flashes: Record<string, 'up' | 'down'> = {};
@@ -282,8 +313,8 @@ export default function App() {
         onOpenAiChat={() => setIsAiChatOpen(true)}
       />
 
-      {/* Main View Area with Global Error Boundary (Part 5.3) */}
-      <main className="flex-1 overflow-hidden relative">
+      {/* Main View Area with Global Error Boundary (Part 5.3 & FIX D1) */}
+      <main className="flex-1 overflow-hidden relative pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
         <ErrorBoundary>
           {currentTab === 'home' && (
             <TerminalScreen
@@ -302,6 +333,45 @@ export default function App() {
               onTabChange={setCurrentTab}
               currentTab={currentTab}
             />
+          )}
+
+          {/* 2. Watchlist Tab: Full-screen view taking 100% width and height above bottom tab bar */}
+          {currentTab === 'watchlist' && (
+            <>
+              {/* Phone: 100% width and height full-screen watchlist */}
+              <div className="md:hidden w-full h-full flex flex-col bg-[#0B1220]">
+                <WatchlistPanel
+                  symbols={symbols}
+                  activeSymbol={activeSymbol}
+                  onSelectSymbol={(sym) => {
+                    setActiveSymbol(sym);
+                    setCurrentTab('home');
+                  }}
+                  priceFlashMap={priceFlashMap}
+                  isMobileMode={true}
+                />
+              </div>
+
+              {/* Desktop Fallback: Standard TerminalScreen with integrated watchlist */}
+              <div className="hidden md:block w-full h-full">
+                <TerminalScreen
+                  symbols={symbols}
+                  activeSymbol={activeSymbol}
+                  onSelectSymbol={setActiveSymbol}
+                  candles={candles}
+                  timeframe={timeframe}
+                  onTimeframeChange={setTimeframe}
+                  chartType={chartType}
+                  onChartTypeChange={setChartType}
+                  indicators={indicators}
+                  onUpdateIndicators={setIndicators}
+                  priceFlashMap={priceFlashMap}
+                  showGrid={showGrid}
+                  onTabChange={setCurrentTab}
+                  currentTab={currentTab}
+                />
+              </div>
+            </>
           )}
 
           <Suspense fallback={<ScreenFallback />}>
@@ -323,6 +393,7 @@ export default function App() {
                 onAddAlert={handleAddAlert}
                 onDeleteAlert={handleDeleteAlert}
                 onToggleAlert={handleToggleAlert}
+                initialTool={toolsInitialTab}
               />
             )}
 
@@ -369,8 +440,8 @@ export default function App() {
         activeSymbol={activeSymbolObj}
       />
 
-      {/* Clean TradingView-grade Status Bar */}
-      <footer className="h-6 bg-[#08101E] border-t border-[#1C283E] px-4 flex items-center justify-between text-[11px] font-mono text-[#64748B] select-none z-20 shrink-0">
+      {/* Clean TradingView-grade Status Bar (hidden on phone to save space for BottomTabBar) */}
+      <footer className="hidden md:flex h-6 bg-[#08101E] border-t border-[#1C283E] px-4 items-center justify-between text-[11px] font-mono text-[#64748B] select-none z-20 shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -402,6 +473,22 @@ export default function App() {
           </span>
         </div>
       </footer>
+
+      {/* 1.1 Bottom Tab Bar on Phones (< 768px) */}
+      <BottomTabBar
+        currentTab={currentTab}
+        onTabChange={(tab) => {
+          setCurrentTab(tab);
+        }}
+        onOpenJournal={() => {
+          setToolsInitialTab('journal');
+          setCurrentTab('tools');
+        }}
+        onOpenNotifications={() => setIsAlertsModalOpen(true)}
+        activeAlertsCount={activeAlertsCount}
+        deferredPrompt={deferredInstallPrompt}
+        onInstallApp={handleInstallApp}
+      />
 
       {/* Onboarding Tour */}
       <OnboardingOverlay isOpen={showOnboarding} onClose={handleCloseOnboarding} />

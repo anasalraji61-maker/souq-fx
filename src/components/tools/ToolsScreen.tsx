@@ -27,6 +27,7 @@ interface ToolsScreenProps {
   onAddAlert?: (newAlert: Omit<PriceAlertItem, 'id' | 'triggered' | 'active'>) => void;
   onDeleteAlert?: (id: string) => void;
   onToggleAlert?: (id: string) => void;
+  initialTool?: 'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics';
 }
 
 export const ToolsScreen: React.FC<ToolsScreenProps> = ({
@@ -37,10 +38,17 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   onAddAlert,
   onDeleteAlert,
   onToggleAlert,
+  initialTool = 'calculator',
 }) => {
   const [activeTool, setActiveTool] = useState<
     'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics'
-  >('calculator');
+  >(initialTool);
+
+  React.useEffect(() => {
+    if (initialTool) {
+      setActiveTool(initialTool);
+    }
+  }, [initialTool]);
 
   const tools = [
     { id: 'calculator', name: 'حاسبة اللوت والمخاطرة', icon: <Calculator className="w-4 h-4" /> },
@@ -74,7 +82,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
       </div>
 
       {/* Main Tool Content Container */}
-      <div className="flex-1">
+      <div className="flex-1 pb-20 md:pb-6">
         {activeTool === 'calculator' && (
           <PositionSizeCalculator symbols={symbols} activeSymbol={activeSymbol} />
         )}

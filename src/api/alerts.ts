@@ -5,7 +5,7 @@ const STORAGE_KEY = 'matrix.alerts';
 export async function loadAlerts(): Promise<PriceAlertItem[]> {
   // 1. Try backend endpoint first
   try {
-    const res = await fetch('/api/alerts-compat');
+    const res = await fetch('/api/alerts');
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -67,7 +67,7 @@ export async function saveAlerts(alerts: PriceAlertItem[]): Promise<void> {
 
   // 2. Attempt backend persistence
   try {
-    await fetch('/api/alerts-compat', {
+    await fetch('/api/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(alerts),

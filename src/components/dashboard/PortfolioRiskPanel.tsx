@@ -222,7 +222,8 @@ export const PortfolioRiskPanel: React.FC = () => {
 
               <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden shadow-lg">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-right divide-y divide-[#243049]/60">
+                  {/* Desktop Table View */}
+                  <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
                     <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
                       <tr>
                         <th className="py-3 px-4">سيناريو الصدمة</th>
@@ -287,6 +288,64 @@ export const PortfolioRiskPanel: React.FC = () => {
                       })}
                     </tbody>
                   </table>
+
+                  {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
+                  <div className="md:hidden space-y-2.5 p-3">
+                    {stressData.map((sc, i) => {
+                      const isGain = sc.estimated_pnl >= 0;
+                      return (
+                        <div
+                          key={i}
+                          className="p-3 rounded-xl bg-[#0E1626] border border-[#1E2E4A] space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-white text-xs">{sc.name}</span>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                sc.shock_pct >= 0
+                                  ? 'bg-emerald-500/15 text-emerald-400'
+                                  : 'bg-rose-500/15 text-rose-400'
+                              }`}
+                            >
+                              {sc.shock_pct >= 0 ? '+' : ''}{sc.shock_pct}%
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-[#070D18] p-2 rounded-lg border border-[#16233B]">
+                            <div>
+                              <span className="text-[#64748B] block text-[9px]">أثر P&L</span>
+                              <span className={`font-bold ${isGain ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                                {isGain ? '+' : ''}${sc.estimated_pnl} ({isGain ? '+' : ''}{sc.equity_impact_pct}%)
+                              </span>
+                            </div>
+                            <div className="text-left">
+                              <span className="text-[#64748B] block text-[9px]">الرصيد التقديري</span>
+                              <span className="text-white font-bold">${sc.projected_equity}</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-1 flex items-center justify-between text-[10px]">
+                            <span className="text-[#7B8DA8]">حالة الاستقرار:</span>
+                            {sc.status === 'STABLE' && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold">
+                                آمن ومستقر
+                              </span>
+                            )}
+                            {sc.status === 'WARNING' && (
+                              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">
+                                تحذير ضغط هامش
+                              </span>
+                            )}
+                            {sc.status === 'DANGER' && (
+                              <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-bold">
+                                خطر استنزاف
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
