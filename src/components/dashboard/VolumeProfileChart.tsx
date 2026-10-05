@@ -2,8 +2,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   fetchVolumeProfileAnalysis,
   VolumeProfileResponse,
-  VolumeBin,
-  VolumeProfileSignal,
 } from '../../api/volumeProfile';
 
 interface VolumeProfileChartProps {
@@ -17,7 +15,7 @@ export const VolumeProfileChart: React.FC<VolumeProfileChartProps> = ({
 }) => {
   const [symbol, setSymbol] = useState(initialSymbol);
   const [timeframe, setTimeframe] = useState(initialTimeframe);
-  const [binsCount, setBinsCount] = useState<number>(28);
+  const [binsCount] = useState<number>(28);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<VolumeProfileResponse | null>(null);

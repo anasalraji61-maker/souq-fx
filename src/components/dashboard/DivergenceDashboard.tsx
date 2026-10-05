@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { divergenceAPI, MultiIndicatorDivergenceResponse, DivergenceSignal } from '../../api/divergence';
+import { divergenceAPI, MultiIndicatorDivergenceResponse } from '../../api/divergence';
 
 interface DivergenceDashboardProps {
   symbol?: string;

@@ -10,7 +10,7 @@ export const SentimentDepthPanel: React.FC<SentimentDepthPanelProps> = ({
 }) => {
   const [data, setData] = useState<SentimentResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [depthLevels, setDepthLevels] = useState<number>(8);
+  const [depthLevels] = useState<number>(8);
 
   useEffect(() => {
     let mounted = true;

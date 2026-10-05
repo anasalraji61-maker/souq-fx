@@ -5,14 +5,8 @@ import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
 import {
   TrendingUp,
-  TrendingDown,
   BarChart3,
-  PieChart,
-  Activity,
-  Award,
-  Shield,
   RotateCcw,
-  Zap,
 } from 'lucide-react';
 
 export const AnalyticsDashboardPanel: React.FC = () => {

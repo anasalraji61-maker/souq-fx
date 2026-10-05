@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   fetchJournalEntries,
   JournalEntry,
@@ -15,11 +15,8 @@ import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
 import {
   ShieldAlert,
-  ShieldCheck,
-  TrendingDown,
   Activity,
   Layers,
-  AlertTriangle,
   RotateCcw,
   Zap,
 } from 'lucide-react';

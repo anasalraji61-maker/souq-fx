@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { newsImpactAPI, NewsImpactResponse, VolatilityPreAlert } from '../../api/newsImpact';
+import { newsImpactAPI, NewsImpactResponse } from '../../api/newsImpact';
 
 interface NewsImpactGuardPanelProps {
   symbol?: string;

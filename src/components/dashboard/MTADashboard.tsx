@@ -25,7 +25,7 @@ export const MTADashboard: React.FC<MTADashboardProps> = ({
   const [data, setData] = useState<MTAConsensusData | null>(null);
   const [backtest, setBacktest] = useState<MTABacktestData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh] = useState(true);
 
   useEffect(() => {
     setSymbol(currentSymbol);

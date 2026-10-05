@@ -16,7 +16,7 @@ export const HarmonicPatternChart: React.FC<HarmonicPatternChartProps> = ({
   const [selectedPattern, setSelectedPattern] = useState<HarmonicPattern | null>(null);
   const [tolerance, setTolerance] = useState<number>(0.08);
   const [loading, setLoading] = useState<boolean>(true);
-  const [history, setHistory] = useState<any[]>([]);
+  const [, setHistory] = useState<any[]>([]);
 
   useEffect(() => {
     let mounted = true;
