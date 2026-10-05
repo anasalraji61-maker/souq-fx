@@ -1,22 +1,16 @@
 import { PriceAlertItem } from '../types/market';
+import { apiClient } from './client';
 
 const STORAGE_KEY = 'matrix.alerts';
 
 export async function loadAlerts(): Promise<PriceAlertItem[]> {
   // 1. Try backend endpoint first
-  try {
-    const res = await fetch('/api/alerts-compat');
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch {}
-        return data;
-      }
-    }
-  } catch {
-    // Silent fallback to localStorage
+  const res = await apiClient.get<PriceAlertItem[]>('/api/alerts-compat');
+  if (res.ok && Array.isArray(res.data)) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.data));
+    } catch {}
+    return res.data;
   }
 
   // 2. LocalStorage fallback
@@ -67,12 +61,6 @@ export async function saveAlerts(alerts: PriceAlertItem[]): Promise<void> {
 
   // 2. Attempt backend persistence
   try {
-    await fetch('/api/alerts-compat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(alerts),
-    });
-  } catch {
-    // Silent fail
-  }
+    await apiClient.post('/api/alerts-compat', alerts);
+  } catch {}
 }

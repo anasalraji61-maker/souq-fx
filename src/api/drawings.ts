@@ -1,4 +1,5 @@
 import { DrawingItem } from '../types/market';
+import { apiClient } from './client';
 
 /**
  * Loads chart drawings for a given symbol and timeframe.
@@ -11,20 +12,13 @@ export async function loadDrawings(symbol: string, timeframe: string): Promise<D
   const storageKey = `matrix.drawings.${normSym}.${normTf}`;
 
   // 1. Try backend endpoint first
-  try {
-    const res = await fetch(`/api/drawings?symbol=${encodeURIComponent(normSym)}&timeframe=${encodeURIComponent(normTf)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        // Cache to localStorage
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(data));
-        } catch {}
-        return data;
-      }
-    }
-  } catch {
-    // Backend endpoint not ready or offline - silently proceed to localStorage
+  const res = await apiClient.get<DrawingItem[]>(`/api/drawings?symbol=${encodeURIComponent(normSym)}&timeframe=${encodeURIComponent(normTf)}`);
+  if (res.ok && Array.isArray(res.data)) {
+    // Cache to localStorage
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(res.data));
+    } catch {}
+    return res.data;
   }
 
   // 2. Silently fall back to localStorage
@@ -62,14 +56,6 @@ export async function saveDrawings(symbol: string, timeframe: string, drawings: 
 
   // 2. Attempt backend persistence
   try {
-    await fetch(`/api/drawings?symbol=${encodeURIComponent(normSym)}&timeframe=${encodeURIComponent(normTf)}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(drawings),
-    });
-  } catch {
-    // Backend endpoint is optional / in-progress - silent ignore
-  }
+    await apiClient.post(`/api/drawings?symbol=${encodeURIComponent(normSym)}&timeframe=${encodeURIComponent(normTf)}`, drawings);
+  } catch {}
 }
