@@ -1,9 +1,11 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { LangId, DICTS } from '../../i18n/locales';
 
 interface Props {
   children: ReactNode;
   fallbackMessage?: string;
+  currentLang?: LangId;
 }
 
 interface State {
@@ -38,9 +40,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      let lang = this.props.currentLang;
+      if (!lang && typeof window !== 'undefined') {
+        lang = (localStorage.getItem('matrix_lang') as LangId) || 'ar';
+      }
+      const dict = DICTS[lang || 'ar'] || DICTS.ar;
+      const isRtl = lang === 'ar' || lang === 'ku';
+
       return (
         <div
-          dir="rtl"
+          dir={isRtl ? 'rtl' : 'ltr'}
           className="h-full w-full min-h-[360px] flex items-center justify-center bg-[#070D18] text-[#E8EEF9] p-6 select-none"
         >
           <div className="max-w-md w-full bg-[#0E1626] border border-[#243049] rounded-2xl p-6 shadow-2xl text-center space-y-4">
@@ -50,33 +59,26 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <div>
               <h2 className="text-base font-bold text-white mb-1.5">
-                حدث خطأ أثناء تحميل هذه الشاشة
+                {dict.errorTitle}
               </h2>
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                {this.props.fallbackMessage ||
-                  'واجه التطبيق استثناءً غير متوقع في معالجة هذه الواجهة. تم عزل الخطأ لمنع توقف المنصة.'}
+                {this.props.fallbackMessage || dict.errorSubtitle}
               </p>
             </div>
-
-            {this.state.error && (
-              <div className="p-2.5 rounded-lg bg-[#070C16] border border-[#1A253A] font-mono text-[10px] text-rose-300 text-left overflow-x-auto max-h-24">
-                {this.state.error.message}
-              </div>
-            )}
 
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={this.handleReset}
-                className="px-4 py-2 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white text-xs font-semibold transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-[#16233B] hover:bg-[#1E2E4A] text-[#2DD4BF] text-xs font-bold transition-colors cursor-pointer border border-[#2DD4BF]/30 min-h-[44px]"
               >
-                محاولة استعادة العرض
+                {dict.retryButton}
               </button>
               <button
                 onClick={this.handleReload}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#042F2E] text-xs font-black transition-colors cursor-pointer shadow-md min-h-[44px] flex items-center gap-1.5"
               >
-                <RotateCcw className="w-4 h-4" />
-                <span>إعادة تحميل الشاشة</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{lang === 'en-US' ? 'Reload Page' : lang === 'ku' ? 'نوێکردنەوەی پەڕە' : 'إعادة تحميل الصفحة'}</span>
               </button>
             </div>
           </div>

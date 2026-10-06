@@ -1,13 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, BarChart2, ListFilter, Layers, GraduationCap, Bell, Check } from 'lucide-react';
+import { LangId, DICTS } from '../../i18n/locales';
 
 interface OnboardingOverlayProps {
   isOpen: boolean;
   onClose: () => void;
+  currentLang?: LangId;
 }
 
-export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, onClose }) => {
+export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
+  isOpen,
+  onClose,
+  currentLang = 'ar',
+}) => {
+  const dict = DICTS[currentLang] || DICTS.ar;
   const [step, setStep] = useState(0);
+
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = React.useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previouslyFocusedElementRef.current = document.activeElement as HTMLElement;
+      setTimeout(() => {
+        if (modalRef.current) {
+          const firstFocusable = modalRef.current.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          firstFocusable?.focus();
+        }
+      }, 50);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -16,61 +74,120 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
       localStorage.setItem('matrix_onboarding_seen', 'true');
     } catch {}
     onClose();
+    previouslyFocusedElementRef.current?.focus();
   };
 
-  // 1.5: 5 steps highlighting chart, watchlist, indicators, academy, alerts. Skip / next / back.
   const steps = [
     {
-      title: 'شارت التحليل الفني الاحترافي (Chart)',
-      desc: 'استمتع بشارت شموع يابانية فائق الاستجابة مع دعم 6 أنواع مختلفة من الشارتات (شموع، مفرغة، هيكين آشي، بارات، خط، مساحة) وفريمات متعددة من 1m إلى 1D.',
+      title:
+        currentLang === 'en-US'
+          ? 'Professional Technical Chart'
+          : currentLang === 'ku'
+          ? 'چارتی شیکاری تەکنیکی پێشکەوتوو'
+          : 'شارت التحليل الفني الاحترافي (Chart)',
+      desc:
+        currentLang === 'en-US'
+          ? 'Ultra-responsive candlestick charts with multi-timeframe analysis from 1m to 1D and high-performance indicators.'
+          : currentLang === 'ku'
+          ? 'چارتی مۆمی ژاپۆنی خێرا لەگەڵ پشتگیری فریمە کاتییەکان لە 1m تا 1D و ئامرازە تەکنیکییەکان.'
+          : 'استمتع بشارت شموع يابانية فائق الاستجابة مع دعم 6 أنواع مختلفة من الشارتات وفريمات متعددة من 1m إلى 1D.',
       icon: <BarChart2 className="w-8 h-8 text-[#2DD4BF]" />,
     },
     {
-      title: 'قائمة مراقبة الأسعار (Watchlist)',
-      desc: 'تابع أسعار أزواج الفوركس، الذهب، الفضة، النفط والمؤشرات العالمية مع حساب دقيق للفارق السعري (Spread) ومنحنى بياني مصغر وإعادة ترتيب بالسحب.',
+      title:
+        currentLang === 'en-US'
+          ? 'Live Market Watchlist'
+          : currentLang === 'ku'
+          ? 'لیستی چاودێری نرخەکان'
+          : 'قائمة مراقبة الأسعار (Watchlist)',
+      desc:
+        currentLang === 'en-US'
+          ? 'Track Forex pairs, Gold, Silver, Crude Oil, and Global Indices with real-time spread metrics and sparkline charts.'
+          : currentLang === 'ku'
+          ? 'چاودێری جووتەکانی فۆرێکس، زێڕ، نەوت و پێوەرە جیهانییەکان لەگەڵ جیاوازی نرخی سپڕێد و هێڵی گۆڕانکاری.'
+          : 'تابع أسعار أزواج الفوركس، الذهب، الفضة، النفط والمؤشرات العالمية مع حساب دقيق للفارق السعري (Spread).',
       icon: <ListFilter className="w-8 h-8 text-[#38BDF8]" />,
     },
     {
-      title: 'المؤشرات الفنية وأدوات الرسم (Indicators)',
-      desc: 'أكثر من 15 مؤشراً فنياً من المتوسطات EMA وSMA وبولينجر باندز إلى RSI والماكد وVWAP، بالإضافة إلى حزمة أدوات رسم متكاملة وتصحيحات فيبوناتشي.',
+      title:
+        currentLang === 'en-US'
+          ? 'Indicators & Drawing Tools'
+          : currentLang === 'ku'
+          ? 'ئیندیکەیتەرەکان و ئامرازەکانی وێنەکێشان'
+          : 'المؤشرات الفنية وأدوات الرسم (Indicators)',
+      desc:
+        currentLang === 'en-US'
+          ? 'Over 15 indicators including EMA, Bollinger Bands, RSI, MACD, and VWAP with extensive Fibonacci and trendline tools.'
+          : currentLang === 'ku'
+          ? 'زیاتر لە 15 ئیندیکەیتەری تەکنیکی (EMA, Bollinger, RSI, MACD) لەگەڵ کۆمەڵەی تەواوی ئامرازەکانی وێنەکێشان.'
+          : 'أكثر من 15 مؤشراً فنياً من المتوسطات EMA وSMA وبولينجر باندز إلى RSI والماكد وVWAP، بالإضافة لأدوات الرسم.',
       icon: <Layers className="w-8 h-8 text-[#A78BFA]" />,
     },
     {
-      title: 'أكاديمية MATRIX للتداول والشهادات (Academy)',
-      desc: 'مسارات تعليمية متكاملة لمدارس التحليل الفني (الكلاسيكي، كتل الأوامر والسيولة SMC، موجات إليوت) مع اختبارات فهم وشهادات إتمام معتمدة قابلة للطباعة.',
+      title:
+        currentLang === 'en-US'
+          ? 'MATRIX Academy & Certification'
+          : currentLang === 'ku'
+          ? 'ئەکادیمیای MATRIX و بڕوانامەکان'
+          : 'أكاديمية MATRIX للتداول والشهادات (Academy)',
+      desc:
+        currentLang === 'en-US'
+          ? 'Comprehensive learning paths from basics to Smart Money Concepts (SMC) with quizzes and printable certificates.'
+          : currentLang === 'ku'
+          ? 'خولە فێرکارییە تەواوەکان لە سەرەتاوە تا پارەی زیرەک (SMC) لەگەڵ تاقیکردنەوە و بڕوانامەی شایستەی چاپکردن.'
+          : 'مسارات تعليمية متكاملة لمدارس التحليل الفني (الكلاسيكي، SMC، إليوت) مع اختبارات فهم وشهادات إتمام معتمدة.',
       icon: <GraduationCap className="w-8 h-8 text-[#E8B86D]" />,
     },
     {
-      title: 'تنبيهات الأسعار اللحظية (Alerts)',
-      desc: 'عيّن تنبيهات فورية عند وصول السعر إلى مستويات محددة أو اختراقها للأعلى أو للأسفل مع إشعارات مرئية وصوتية مسموعة لحماية فرصك الاستثمارية.',
+      title:
+        currentLang === 'en-US'
+          ? 'Real-Time Price Alerts'
+          : currentLang === 'ku'
+          ? 'ئاگادارییەکانی نرخی ڕاستەوخۆ'
+          : 'تنبيهات الأسعار اللحظية (Alerts)',
+      desc:
+        currentLang === 'en-US'
+          ? 'Set instant price threshold alerts with visual and audio chimes to never miss key market opportunities.'
+          : currentLang === 'ku'
+          ? 'ئاگاداری دەستبەجێ دابنێ کاتێک نرخ دەگاتە ئاستە دیاریکراوەکان لەگەڵ دەنگی تایبەت بە ئاگاداری.'
+          : 'عيّن تنبيهات فورية عند وصول السعر إلى مستويات محددة أو اختراقها مع إشعارات مرئية وصوتية مسموعة.',
       icon: <Bell className="w-8 h-8 text-[#EF4444]" />,
     },
   ];
 
   const current = steps[step];
+  const isRtl = currentLang === 'ar' || currentLang === 'ku';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs select-none">
-      <div className="w-full max-w-[460px] bg-[#121A2B] border border-[#243049] rounded-2xl shadow-2xl overflow-hidden p-5 sm:p-6 space-y-6 text-xs text-right">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs select-none"
+    >
+      <div
+        ref={modalRef}
+        className="w-full max-w-[460px] bg-[#121A2B] border border-[#243049] rounded-2xl shadow-2xl overflow-hidden p-5 sm:p-6 space-y-6 text-xs text-right"
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
         {/* Header with Step Counter & Skip */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#7B8DA8]">
-            <span>الخطوة {step + 1}</span>
-            <span>/</span>
-            <span>{steps.length}</span>
+            <span>
+              {dict.pageOf.replace('{current}', (step + 1).toString()).replace('{total}', steps.length.toString())}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleClose}
-              className="text-[11px] text-[#7B8DA8] hover:text-[#2DD4BF] transition-colors px-2 py-1.5 min-h-[44px] flex items-center cursor-pointer font-semibold"
+              className="text-[11px] text-[#7B8DA8] hover:text-[#2DD4BF] transition-colors px-2 py-1.5 min-h-[44px] flex items-center cursor-pointer font-semibold focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
             >
-              تخطي الجولة
+              {dict.skipTour}
             </button>
             <button
               onClick={handleClose}
-              aria-label="إغلاق"
-              className="p-2 rounded-lg text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+              aria-label={dict.closeModal}
+              className="p-2 rounded-lg text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
             >
               <X className="w-4 h-4" />
             </button>
@@ -103,27 +220,27 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
           <button
             disabled={step === 0}
             onClick={() => setStep(step - 1)}
-            className="px-3 py-1.5 rounded-lg text-[#A3B4D0] hover:text-[#E8EEF9] disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1"
+            className="px-3 py-1.5 rounded-lg text-[#A3B4D0] hover:text-[#E8EEF9] disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
           >
-            <ChevronRight className="w-4 h-4" />
-            <span>السابق</span>
+            {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <span>{dict.prevStep}</span>
           </button>
 
           {step < steps.length - 1 ? (
             <button
               onClick={() => setStep(step + 1)}
-              className="px-5 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold flex items-center gap-1 shadow-md cursor-pointer min-h-[44px]"
+              className="px-5 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold flex items-center gap-1 shadow-md cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
             >
-              <span>التالي</span>
-              <ChevronLeft className="w-4 h-4" />
+              <span>{dict.nextStep}</span>
+              {isRtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </button>
           ) : (
             <button
               onClick={handleClose}
-              className="px-5 py-2.5 rounded-xl bg-[#22C55E] hover:bg-[#1eb354] text-[#051329] font-bold flex items-center gap-1 shadow-md cursor-pointer min-h-[44px]"
+              className="px-5 py-2.5 rounded-xl bg-[#22C55E] hover:bg-[#1eb354] text-[#051329] font-bold flex items-center gap-1 shadow-md cursor-pointer min-h-[44px] focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
             >
               <Check className="w-4 h-4" />
-              <span>بدء استخدام المنصة</span>
+              <span>{dict.finishTour}</span>
             </button>
           )}
         </div>
@@ -131,3 +248,5 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
     </div>
   );
 };
+
+export default OnboardingOverlay;

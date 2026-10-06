@@ -3,13 +3,17 @@ import { fetchJournalEntries, JournalEntry } from '../../api/journal';
 import { fetchPerformanceAnalysis, PerformanceResult } from '../../api/analysis';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
+import { LangId, DICTS } from '../../i18n/locales';
 import {
   TrendingUp,
   BarChart3,
   RotateCcw,
 } from 'lucide-react';
 
-export const AnalyticsDashboardPanel: React.FC = () => {
+export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
+  currentLang = 'ar',
+}) => {
+  const dict = DICTS[currentLang] || DICTS.ar;
   const [trades, setTrades] = useState<JournalEntry[]>([]);
   const [data, setData] = useState<PerformanceResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);

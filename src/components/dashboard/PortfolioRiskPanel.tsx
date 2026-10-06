@@ -13,6 +13,7 @@ import {
 } from '../../api/analysis';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
+import { LangId, DICTS } from '../../i18n/locales';
 import {
   ShieldAlert,
   Activity,
@@ -21,7 +22,10 @@ import {
   Zap,
 } from 'lucide-react';
 
-export const PortfolioRiskPanel: React.FC = () => {
+export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
+  currentLang = 'ar',
+}) => {
+  const dict = DICTS[currentLang] || DICTS.ar;
   const [trades, setTrades] = useState<JournalEntry[]>([]);
   const [varData, setVarData] = useState<VaRResult | null>(null);
   const [correlationData, setCorrelationData] = useState<CorrelationMatrixResult | null>(null);

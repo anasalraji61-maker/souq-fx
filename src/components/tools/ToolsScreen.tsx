@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MarketSymbol, PriceAlertItem } from '../../types/market';
+import { LangId, DICTS } from '../../i18n/locales';
 import { PositionSizeCalculator } from './PositionSizeCalculator';
 import { TradeJournal } from './TradeJournal';
 import { EconomicCalendar } from './EconomicCalendar';
@@ -28,6 +29,7 @@ interface ToolsScreenProps {
   onDeleteAlert?: (id: string) => void;
   onToggleAlert?: (id: string) => void;
   initialTool?: 'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics';
+  currentLang?: LangId;
 }
 
 export const ToolsScreen: React.FC<ToolsScreenProps> = ({
@@ -39,7 +41,9 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   onDeleteAlert,
   onToggleAlert,
   initialTool = 'calculator',
+  currentLang = 'ar',
 }) => {
+  const dict = DICTS[currentLang] || DICTS.ar;
   const [activeTool, setActiveTool] = useState<
     'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics'
   >(initialTool);
@@ -51,14 +55,14 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   }, [initialTool]);
 
   const tools = [
-    { id: 'calculator', name: 'حاسبة اللوت والمخاطرة', icon: <Calculator className="w-4 h-4" /> },
-    { id: 'journal', name: 'دفتر الصفقات', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 'calendar', name: 'التقويم الاقتصادي', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'screener', name: 'ماسح السوق الفني', icon: <Compass className="w-4 h-4" /> },
-    { id: 'risk', name: 'إدارة المخاطر و VaR', icon: <ShieldAlert className="w-4 h-4" /> },
-    { id: 'analytics', name: 'تحليلات الأداء والنمو', icon: <TrendingUp className="w-4 h-4" /> },
-    { id: 'alerts', name: 'تنبيهات الأسعار', icon: <Bell className="w-4 h-4" /> },
-    { id: 'backtest', name: 'محاكي الاستراتيجيات', icon: <LineChart className="w-4 h-4" /> },
+    { id: 'calculator', name: dict.toolPositionCalc, icon: <Calculator className="w-4 h-4" /> },
+    { id: 'journal', name: dict.toolTradeJournal, icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'calendar', name: dict.toolCalendar, icon: <Calendar className="w-4 h-4" /> },
+    { id: 'screener', name: dict.toolScreener, icon: <Compass className="w-4 h-4" /> },
+    { id: 'risk', name: dict.toolRisk, icon: <ShieldAlert className="w-4 h-4" /> },
+    { id: 'analytics', name: dict.toolAnalytics, icon: <TrendingUp className="w-4 h-4" /> },
+    { id: 'alerts', name: dict.toolAlerts, icon: <Bell className="w-4 h-4" /> },
+    { id: 'backtest', name: dict.toolBacktest, icon: <LineChart className="w-4 h-4" /> },
   ];
 
   return (
@@ -86,13 +90,13 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
         {activeTool === 'calculator' && (
           <PositionSizeCalculator symbols={symbols} activeSymbol={activeSymbol} />
         )}
-        {activeTool === 'journal' && <TradeJournal symbols={symbols} />}
+        {activeTool === 'journal' && <TradeJournal symbols={symbols} currentLang={currentLang} />}
         {activeTool === 'calendar' && <EconomicCalendar />}
         {activeTool === 'screener' && (
           <MarketScreener symbols={symbols} onSelectSymbolForChart={onSelectSymbolForChart} />
         )}
-        {activeTool === 'risk' && <PortfolioRiskPanel />}
-        {activeTool === 'analytics' && <AnalyticsDashboardPanel />}
+        {activeTool === 'risk' && <PortfolioRiskPanel currentLang={currentLang} />}
+        {activeTool === 'analytics' && <AnalyticsDashboardPanel currentLang={currentLang} />}
         {activeTool === 'alerts' && (
           <PriceAlerts
             symbols={symbols}

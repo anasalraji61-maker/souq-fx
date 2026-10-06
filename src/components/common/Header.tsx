@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LangId, DICTS } from '../../i18n/locales';
 import { MarketSymbol } from '../../types/market';
 import { getMarketStatus, MarketStatus } from '../../api/market';
-import { NotificationsCenterModal } from './NotificationsCenterModal';
+import { NotificationsCenterModal, getStoredNotifications } from './NotificationsCenterModal';
 import { OfflineBadge } from './OfflineBadge';
 import {
   TrendingUp,
@@ -52,8 +52,20 @@ export const Header: React.FC<HeaderProps> = ({
   const [timeStr, setTimeStr] = useState('');
   const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+
+  // Sync unread notifications count with localStorage
+  useEffect(() => {
+    const updateUnread = () => {
+      const items = getStoredNotifications();
+      setUnreadNotifsCount(items.filter((n) => !n.read).length);
+    };
+    updateUnread();
+    window.addEventListener('matrix_notifications_updated', updateUnread);
+    return () => window.removeEventListener('matrix_notifications_updated', updateUnread);
+  }, []);
 
   // Close menus on outside click or esc
   useEffect(() => {
@@ -116,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
             {activeSymbol}
           </span>
           <span
-            title={marketStatus?.isOpen ? 'السوق مفتوح' : 'السوق مغلق'}
+            title={marketStatus?.isOpen ? dict.marketStatusOpen : dict.marketStatusClosed}
             className={`w-2 h-2 rounded-full shrink-0 ${
               marketStatus?.isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
             }`}
@@ -126,83 +138,89 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="w-[1px] h-5 bg-[#1E293B] hidden md:block" />
 
-        {/* 1. Commercial End-User Navigation Tabs (compact single line on tablet 768-1100px, full labels on desktop > 1100px, hidden on phones) */}
+        {/* 1. Commercial End-User Navigation Tabs */}
         <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 flex-nowrap shrink-0">
           <button
             onClick={() => onTabChange('home')}
-            title="الشارت الفني"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            title={dict.navChart}
+            aria-label={dict.navChart}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
               currentTab === 'home'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-            <span className="inline min-[1101px]:hidden">الشارت</span>
-            <span className="hidden min-[1101px]:inline">الشارت الفني</span>
+            <span className="inline min-[1101px]:hidden">{dict.navChartShort}</span>
+            <span className="hidden min-[1101px]:inline">{dict.navChart}</span>
           </button>
 
           <button
             onClick={() => onTabChange('community')}
-            title="مجتمع المتداولين"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            title={dict.navCommunity}
+            aria-label={dict.navCommunity}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
               currentTab === 'community'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-            <span className="inline min-[1101px]:hidden">المجتمع</span>
-            <span className="hidden min-[1101px]:inline">مجتمع المتداولين</span>
+            <span className="inline min-[1101px]:hidden">{dict.navCommunityShort}</span>
+            <span className="hidden min-[1101px]:inline">{dict.navCommunity}</span>
           </button>
 
           <button
             onClick={() => onTabChange('academy')}
-            title="الأكاديمية والدروس"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            title={dict.navAcademy}
+            aria-label={dict.navAcademy}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
               currentTab === 'academy'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-            <span className="inline min-[1101px]:hidden">الأكاديمية</span>
-            <span className="hidden min-[1101px]:inline">الأكاديمية والدروس</span>
+            <span className="inline min-[1101px]:hidden">{dict.navAcademyShort}</span>
+            <span className="hidden min-[1101px]:inline">{dict.navAcademy}</span>
           </button>
 
           {/* Desktop Only Tabs (> 1100px) */}
           <button
             onClick={() => onTabChange('tools')}
-            title="أدوات التحليل والتقويم"
-            className={`hidden min-[1101px]:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            title={dict.navTools}
+            aria-label={dict.navTools}
+            className={`hidden min-[1101px]:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
               currentTab === 'tools'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <Wrench className="w-3.5 h-3.5 shrink-0" />
-            <span>أدوات التحليل والتقويم</span>
+            <span>{dict.navTools}</span>
           </button>
 
           <button
             onClick={() => onTabChange('pricing')}
-            title="الباقات والترقية"
-            className={`hidden min-[1101px]:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            title={dict.navPricing}
+            aria-label={dict.navPricing}
+            className={`hidden min-[1101px]:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
               currentTab === 'pricing'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <CreditCard className="w-3.5 h-3.5 shrink-0" />
-            <span>الباقات والترقية</span>
+            <span>{dict.navPricing}</span>
           </button>
 
           {/* Tablet "المزيد" (More) Menu (768px – 1100px) */}
           <div className="relative min-[1101px]:hidden">
             <button
               onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-              title="المزيد من الأقسام والأدوات"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              title={dict.moreMenuTitle}
+              aria-label={dict.moreMenuTitle}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                 currentTab === 'tools' || currentTab === 'pricing' || currentTab === 'account'
                   ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                   : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
@@ -210,47 +228,47 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <span>
                 {currentTab === 'tools'
-                  ? 'الأدوات'
+                  ? dict.navToolsShort
                   : currentTab === 'pricing'
-                  ? 'الباقات'
+                  ? dict.navPricingShort
                   : currentTab === 'account'
-                  ? 'حسابي'
-                  : 'المزيد'}
+                  ? dict.navAccountShort
+                  : dict.moreTabs}
               </span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isMoreMenuOpen && (
               <div
-                className="absolute top-full mt-1.5 right-0 z-50 bg-[#0E1726] border border-[#1E283D] rounded-xl shadow-2xl py-1.5 w-44 text-xs animate-in fade-in"
+                className="absolute top-full mt-1.5 right-0 z-50 bg-[#0E1726] border border-[#1E283D] rounded-xl shadow-2xl py-1.5 w-48 text-xs animate-in fade-in"
                 onClick={() => setIsMoreMenuOpen(false)}
               >
                 <button
                   onClick={() => onTabChange('tools')}
-                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer ${
+                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                     currentTab === 'tools' ? 'text-[#2DD4BF] font-bold bg-[#16233B]/50' : 'text-[#E8EEF9]'
                   }`}
                 >
                   <Wrench className="w-3.5 h-3.5 text-[#2DD4BF]" />
-                  <span>أدوات التحليل والتقويم</span>
+                  <span>{dict.navTools}</span>
                 </button>
                 <button
                   onClick={() => onTabChange('pricing')}
-                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer ${
+                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                     currentTab === 'pricing' ? 'text-[#2DD4BF] font-bold bg-[#16233B]/50' : 'text-[#E8EEF9]'
                   }`}
                 >
                   <CreditCard className="w-3.5 h-3.5 text-[#2DD4BF]" />
-                  <span>الباقات والترقية</span>
+                  <span>{dict.navPricing}</span>
                 </button>
                 <button
                   onClick={() => onTabChange('account')}
-                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer ${
+                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                     currentTab === 'account' ? 'text-[#2DD4BF] font-bold bg-[#16233B]/50' : 'text-[#E8EEF9]'
                   }`}
                 >
                   <User className="w-3.5 h-3.5 text-[#2DD4BF]" />
-                  <span>حسابي والإعدادات</span>
+                  <span>{dict.navAccount}</span>
                 </button>
               </div>
             )}
@@ -263,12 +281,12 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Offline Status Badge (Desktop & Tablet) */}
         <OfflineBadge className="hidden md:inline-flex" />
 
-        {/* 1.5 Market status badge in header (open/closed + next session) - Visible on tablet and desktop */}
+        {/* 1.5 Market status badge in header */}
         <div
           title={
             marketStatus
-              ? `الجلسة الحالية: ${marketStatus.currentSession} • الجلسة القادمة: ${marketStatus.nextSession}`
-              : 'جاري فحص حالة السوق...'
+              ? `${dict.currentSessionLabel}: ${marketStatus.currentSession} • ${dict.nextSessionLabel}: ${marketStatus.nextSession}`
+              : dict.checkingMarket
           }
           className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#070D18] border border-[#16233B] text-[11px] font-mono cursor-default shrink-0 whitespace-nowrap"
         >
@@ -278,7 +296,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           />
           <span className={marketStatus?.isOpen ? 'text-emerald-400 font-semibold' : 'text-[#94A3B8]'}>
-            {marketStatus?.isOpen ? 'السوق مفتوح' : 'السوق مغلق'}
+            {marketStatus?.isOpen ? dict.marketStatusOpen : dict.marketStatusClosed}
           </span>
           {marketStatus && (
             <span className="text-[#64748B] text-[10px] hidden min-[1101px]:inline">
@@ -297,14 +315,15 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative">
           <button
             onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-            title="تغيير لغة المنصة"
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white transition-colors cursor-pointer text-xs shrink-0 whitespace-nowrap"
+            title={dict.switchLanguage}
+            aria-label={dict.switchLanguage}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white transition-colors cursor-pointer text-xs shrink-0 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
           >
             <Globe className="w-3.5 h-3.5 text-[#2DD4BF]" />
             <span className="hidden sm:inline font-sans font-medium text-[11px]">
               {currentLang === 'ar' ? 'العربية' : currentLang === 'en-US' ? 'EN' : 'کوردی'}
             </span>
-            <ChevronDown className="w-3 h-3 text-[#64748B]" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#64748B]" />
           </button>
           {isLangMenuOpen && (
             <div className="absolute top-full mt-1.5 left-0 z-50 bg-[#0E1726] border border-[#1E283D] rounded-xl shadow-2xl py-1 w-28 text-xs text-right animate-in fade-in">
@@ -313,7 +332,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onLanguageChange('ar');
                   setIsLangMenuOpen(false);
                 }}
-                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer ${
+                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                   currentLang === 'ar' ? 'text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
                 }`}
               >
@@ -325,7 +344,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onLanguageChange('en-US');
                   setIsLangMenuOpen(false);
                 }}
-                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer ${
+                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                   currentLang === 'en-US' ? 'text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
                 }`}
               >
@@ -337,7 +356,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onLanguageChange('ku');
                   setIsLangMenuOpen(false);
                 }}
-                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer ${
+                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
                   currentLang === 'ku' ? 'text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
                 }`}
               >
@@ -348,16 +367,17 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* 3.2 Notifications center (bell in header) - Visible on phone, tablet and desktop */}
+        {/* 3.4 Badge count in header equals unread count */}
         <button
           onClick={() => setIsNotifsOpen(true)}
-          title="مركز الإشعارات والتنبيهات"
-          className="p-1.5 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white relative transition-colors cursor-pointer shrink-0"
+          title={dict.notificationsTitle}
+          aria-label={dict.notificationsTitle}
+          className="p-1.5 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white relative transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden"
         >
           <Bell className="w-4 h-4" />
-          {activeAlertsCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
-              {activeAlertsCount}
+          {unreadNotifsCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center font-mono animate-pulse">
+              {unreadNotifsCount > 99 ? '99+' : unreadNotifsCount}
             </span>
           )}
         </button>
@@ -365,15 +385,16 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Account / Settings Tab Button - Visible on tablet and desktop */}
         <button
           onClick={() => onTabChange('account')}
-          title="حسابي وإعدادات المنصة"
-          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+          title={dict.accountTitle}
+          aria-label={dict.accountTitle}
+          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#2DD4BF] focus-visible:outline-hidden ${
             currentTab === 'account'
               ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
               : 'bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white'
           }`}
         >
           <User className="w-3.5 h-3.5" />
-          <span className="hidden min-[1101px]:inline">حسابي</span>
+          <span className="hidden min-[1101px]:inline">{dict.tabAccount}</span>
         </button>
       </div>
 
@@ -382,6 +403,7 @@ export const Header: React.FC<HeaderProps> = ({
         isOpen={isNotifsOpen}
         onClose={() => setIsNotifsOpen(false)}
         onSelectSymbol={onSelectSymbol}
+        currentLang={currentLang}
       />
     </header>
   );
