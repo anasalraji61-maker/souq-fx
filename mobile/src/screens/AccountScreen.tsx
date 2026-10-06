@@ -25,7 +25,7 @@ import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
 import { SHOW_REFERRAL_AND_PLANS } from '../featureFlags';
 import { OnboardingOverlay } from '../components/OnboardingOverlay';
 import { markOnboardingSeen } from '../onboarding';
-import { api } from '../api';
+import { api, API_URL } from '../api';
 import { confirmDestructive } from '../chart/confirmDestructive';
 import { useNotificationPermissionOnResume } from '../hooks/useNotificationPermissionOnResume';
 
@@ -698,11 +698,44 @@ export function AccountScreen() {
           ) : null}
         </View>
       ) : null}
+      <LegalLinks />
     </ScrollView>
   );
 }
 
+/** Public legal pages (stores require them reachable from inside the app). Opened in the system browser. */
+function LegalLinks() {
+  const { t, rtl } = useI18n();
+  const items: { label: string; path: string }[] = [
+    { label: t.legalPrivacy, path: '/legal/privacy.html' },
+    { label: t.legalTerms, path: '/legal/terms.html' },
+    { label: t.legalRisk, path: '/legal/risk.html' },
+    { label: t.legalDeleteWeb, path: '/legal/delete-account.html' },
+  ];
+  return (
+    <View style={[styles.card, { gap: spacing.xs }]} accessibilityRole="summary">
+      <Text style={[styles.legalTitle, { textAlign: rtl ? 'right' : 'left' }]}>{t.legalTitle}</Text>
+      {items.map((it) => (
+        <Pressable
+          key={it.path}
+          accessibilityRole="link"
+          accessibilityLabel={it.label}
+          onPress={() => {
+            Linking.openURL(`${API_URL}${it.path}`).catch(() => {});
+          }}
+          style={({ pressed }) => [styles.legalLink, pressed && { opacity: buttons.pressedOpacity }]}
+        >
+          <Text style={[styles.legalLinkText, { textAlign: rtl ? 'right' : 'left' }]}>{it.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  legalTitle: { color: colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 2 },
+  legalLink: { minHeight: 40, justifyContent: 'center' },
+  legalLinkText: { color: colors.accent, fontSize: 14 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   wrap: { padding: spacing.lg, gap: spacing.md, backgroundColor: colors.bg, minHeight: '100%' },
   title: { color: colors.text, fontSize: 18, fontWeight: '500' },

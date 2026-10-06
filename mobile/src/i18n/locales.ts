@@ -79,6 +79,11 @@ export type Dict = {
   deleteAccountConfirmBody: string;
   deleteAccountConfirmBtn: string;
   deleteAccountError: string;
+  legalTitle: string;
+  legalPrivacy: string;
+  legalTerms: string;
+  legalRisk: string;
+  legalDeleteWeb: string;
   cancel: string;
   notifications: string;
   notifStatusGranted: string;
@@ -1761,6 +1766,11 @@ const ar: Dict = {
     'سيُحذف نهائياً دفتر صفقاتك وتنبيهاتك وتخطيطاتك وقائمة متابعتك، مع اسم المستخدم والإيميل وكلمة المرور، ولن تتمكّن من الدخول بهذا الحساب مرة أخرى. لا يمكن التراجع عن هذا.',
   deleteAccountConfirmBtn: 'حذف نهائياً',
   deleteAccountError: 'تعذّر تأكيد حذف الحساب — تحقّق من الاتصال ثم اضغط «حذف الحساب» مرة أخرى.',
+  legalTitle: 'الخصوصية والشروط',
+  legalPrivacy: 'سياسة الخصوصية',
+  legalTerms: 'شروط الاستخدام',
+  legalRisk: 'إخلاء المسؤولية عن المخاطر',
+  legalDeleteWeb: 'حذف الحساب من الموقع',
   cancel: 'إلغاء',
   notifications: 'الإشعارات',
   notifStatusGranted: 'مفعّلة',
@@ -3064,6 +3074,11 @@ const enUS: Dict = {
     'Your trade journal, alerts, layouts and watchlist will be permanently erased along with your username, email and password, and you will not be able to sign back into this account. This cannot be undone.',
   deleteAccountConfirmBtn: 'Delete permanently',
   deleteAccountError: 'Couldn’t confirm your account was deleted — check your connection, then select “Delete account” again.',
+  legalTitle: 'Privacy and terms',
+  legalPrivacy: 'Privacy policy',
+  legalTerms: 'Terms of use',
+  legalRisk: 'Risk disclaimer',
+  legalDeleteWeb: 'Delete account on the website',
   cancel: 'Cancel',
   notifications: 'Notifications',
   notifStatusGranted: 'Enabled',
@@ -4415,6 +4430,11 @@ const ku: Dict = {
     'دەفتەری مامەڵەکانت و ئاگادارکردنەوەکانت و نەخشەسازییە پاشەکەوتکراوەکانت و لیستی چاودێریت لەگەڵ ناوی بەکارهێنەر و ئیمەیڵ و وشەی نهێنی بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
   deleteAccountConfirmBtn: 'بە تەواوی بسڕەوە',
   deleteAccountError: 'سڕینەوەی هەژمار پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە، پاشان دووبارە «سڕینەوەی هەژمار» دابگرە.',
+  legalTitle: 'تایبەتمەندی و مەرجەکان',
+  legalPrivacy: 'سیاسەتی تایبەتمەندی',
+  legalTerms: 'مەرجەکانی بەکارهێنان',
+  legalRisk: 'ئاگادارکردنەوەی مەترسی',
+  legalDeleteWeb: 'سڕینەوەی هەژمار لە ماڵپەڕ',
   cancel: 'پاشگەزبوونەوە',
   notifications: 'ئاگادارکردنەوەکان',
   notifStatusGranted: 'چالاکە',
