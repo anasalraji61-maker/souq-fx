@@ -13,6 +13,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { BottomTabBar } from './components/common/BottomTabBar';
 import { WatchlistPanel } from './components/terminal/WatchlistPanel';
 import { playAlertChime } from './utils/sound';
+import { addAppNotification } from './components/common/NotificationsCenterModal';
 
 // Code-splitting lazy loading for subpages to reduce initial bundle for mobile performance
 const ToolsScreen = lazy(() => import('./components/tools/ToolsScreen').then(m => ({ default: m.ToolsScreen })));
@@ -21,14 +22,17 @@ const AccountScreen = lazy(() => import('./components/account/AccountScreen').th
 const CommunityScreen = lazy(() => import('./components/community/CommunityScreen').then(m => ({ default: m.CommunityScreen })));
 const SubscriptionPlansScreen = lazy(() => import('./components/pricing/SubscriptionPlansScreen').then(m => ({ default: m.SubscriptionPlansScreen })));
 
-const ScreenFallback = () => (
-  <div className="h-full w-full flex items-center justify-center bg-[#050B14]">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-      <span className="text-xs text-slate-400 font-mono">تحميل المحتوى...</span>
+const ScreenFallback = () => {
+  const dict = DICTS['ar'];
+  return (
+    <div className="h-full w-full flex items-center justify-center bg-[#050B14]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-[#2DD4BF] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs text-slate-400 font-mono">{dict.loadingContent}</span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function App() {
   // Navigation & Language
@@ -232,6 +236,14 @@ export default function App() {
                 currentPrice: sym.price,
               });
 
+              addAppNotification({
+                type: 'price_alert',
+                title: `${alert.symbol} (${alert.condition === 'above' ? '▲' : '▼'})`,
+                message: alert.note || `وصل سعر ${sym.symbol} إلى ${alert.targetPrice}`,
+                symbol: alert.symbol,
+                level: 'danger',
+              });
+
               if (soundEnabled) {
                 playAlertChime();
               }
@@ -392,7 +404,7 @@ export default function App() {
           )}
 
           <Suspense fallback={<ScreenFallback />}>
-            {currentTab === 'community' && <CommunityScreen />}
+            {currentTab === 'community' && <CommunityScreen currentLang={currentLang} onNavigate={setCurrentTab} />}
 
             {currentTab === 'academy' && <AcademyScreen />}
 
@@ -411,6 +423,7 @@ export default function App() {
                 onDeleteAlert={handleDeleteAlert}
                 onToggleAlert={handleToggleAlert}
                 initialTool={toolsInitialTab}
+                currentLang={currentLang}
               />
             )}
 
@@ -448,6 +461,7 @@ export default function App() {
           setActiveSymbol(sym);
           setCurrentTab('home');
         }}
+        currentLang={currentLang}
       />
 
       {/* Gemini AI Multi-turn Chat Drawer */}
@@ -470,23 +484,23 @@ export default function App() {
           {/* Sessions status */}
           <div className="hidden sm:flex items-center gap-3 text-[10px]">
             <span className={isTokyoOpen ? 'text-emerald-400 font-medium' : 'text-[#475569]'}>
-              طوكيو {isTokyoOpen ? '● مفتوح' : '○ مغلق'}
+              {DICTS[currentLang]?.sessionTokyo || 'Tokyo'} {isTokyoOpen ? '● ' + (DICTS[currentLang]?.statusOpen || 'Open') : '○ ' + (DICTS[currentLang]?.statusClosed || 'Closed')}
             </span>
             <span className={isLondonOpen ? 'text-emerald-400 font-medium' : 'text-[#475569]'}>
-              لندن {isLondonOpen ? '● مفتوح' : '○ مغلق'}
+              {DICTS[currentLang]?.sessionLondon || 'London'} {isLondonOpen ? '● ' + (DICTS[currentLang]?.statusOpen || 'Open') : '○ ' + (DICTS[currentLang]?.statusClosed || 'Closed')}
             </span>
             <span className={isNewYorkOpen ? 'text-emerald-400 font-medium' : 'text-[#475569]'}>
-              نيويورك {isNewYorkOpen ? '● مفتوح' : '○ مغلق'}
+              {DICTS[currentLang]?.sessionNewYork || 'New York'} {isNewYorkOpen ? '● ' + (DICTS[currentLang]?.statusOpen || 'Open') : '○ ' + (DICTS[currentLang]?.statusClosed || 'Closed')}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <span className="text-[#94A3B8]">
-            الرمز: <strong className="text-white">{activeSymbol}</strong> ({timeframe})
+            {DICTS[currentLang]?.symbolLabel || 'Symbol'}: <strong className="text-white">{activeSymbol}</strong> ({timeframe})
           </span>
           <span className="text-[10px] text-amber-500/80 hidden md:inline">
-            خدمة تحليل فني تعليمية • ليست نصيحة استثمارية
+            {DICTS[currentLang]?.educationalServiceNotice || 'Educational technical analysis service • Not investment advice'}
           </span>
         </div>
       </footer>
@@ -505,12 +519,14 @@ export default function App() {
         activeAlertsCount={activeAlertsCount}
         deferredPrompt={deferredInstallPrompt}
         onInstallApp={handleInstallApp}
+        currentLang={currentLang}
       />
 
       {/* Onboarding Tour (shown only once per device and never on top of modals) */}
       <OnboardingOverlay
         isOpen={showOnboarding && !isAlertsModalOpen && !isAiChatOpen && !activeNotificationAlert}
         onClose={handleCloseOnboarding}
+        currentLang={currentLang}
       />
     </div>
   );

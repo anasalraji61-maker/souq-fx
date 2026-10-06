@@ -269,7 +269,7 @@ class VoteCreate(BaseModel):
 
 
 class ContentReport(BaseModel):
-    kind: Literal["group_message", "vote"]
+    kind: Literal["group_message", "vote", "channel_message"]
     target_id: str = Field(min_length=1, max_length=64)
     reason: Literal["spam", "abuse", "scam", "other"] = "other"
 
@@ -3157,7 +3157,7 @@ def report_content(body: ContentReport, user: dict | None = Depends(_auth_user))
 
 
 class ModerationAction(BaseModel):
-    kind: Literal["group_message", "vote"]
+    kind: Literal["group_message", "vote", "channel_message"]
     target_id: str = Field(min_length=1, max_length=64)
     action: Literal["remove", "dismiss"]
 

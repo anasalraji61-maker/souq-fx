@@ -108,7 +108,7 @@ def test_post_returns_bare_message_with_types(client):
     assert MESSAGE_KEYS <= set(msg), msg
     assert isinstance(msg["id"], str)
     assert msg["channel_id"] == "forex"
-    assert msg["sender_name"] == "Tarek"
+    assert msg["sender_name"] == USER  # the account name, never a client-supplied name
     assert msg["content"] == "EURUSD looking strong"
     assert msg["sentiment"] == "bullish"
     assert msg["symbol_tag"] == "EURUSD"

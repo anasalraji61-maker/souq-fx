@@ -1390,6 +1390,9 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM watchlist WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM academy_progress WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM group_messages WHERE user_id=?", (user_id,))
+        # Channel messages (community_chat, table community_messages, user_id stored as text) were kept.
+        if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='community_messages'").fetchone():
+            c.execute("DELETE FROM community_messages WHERE user_id=?", (str(user_id),))
         # بلاغاته عن محتوى الآخرين **تبقى**: كان حذفها يُنزل عدّاد العنصر تحت `REPORT_HIDE_THRESHOLD`
         # فتعود رسالة احتيال مخفية ظاهرة للجميع بلا مراجعة (وثلاثة حسابات تُبلغ ثم تُحذف = لا أثر).
         # الصفّ لا يحمل هوية: `reporter_id` يشير لصفّ users المُجهَّل أعلاه، والسبب من قائمة ثابتة.
@@ -1530,15 +1533,18 @@ _LEGACY_CHAT_USER = "أنت"
 # لجدول content_reports). ثلاثة: حساب واحد غاضب لا يُسكت أحداً، وثلاثة بلاغات مستقلة تكفي لإزالة
 # الاحتيال/الإساءة الظاهرة بسرعة قبل أن يراها مبتدئ.
 REPORT_HIDE_THRESHOLD = 3
-REPORT_KINDS = ("group_message", "vote")
+REPORT_KINDS = ("group_message", "vote", "channel_message")
+_REPORT_TABLES = {"group_message": "group_messages", "vote": "votes", "channel_message": "community_messages"}
 
 
 def report_content(kind: str, target_id: str, reporter_id: int, reason: str) -> bool | None:
     """يسجّل بلاغاً. None = العنصر غير موجود؛ True = بلاغ جديد؛ False = الحساب أبلغ عنه سابقاً."""
-    table = {"group_message": "group_messages", "vote": "votes"}.get(kind)
+    table = _REPORT_TABLES.get(kind)
     if table is None:
         return None
     with _conn() as c:
+        if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone():
+            return None
         if not c.execute(f"SELECT 1 FROM {table} WHERE id=?", (target_id,)).fetchone():
             return None
         cur = c.execute(
@@ -1565,6 +1571,14 @@ def list_reports(limit: int = 200) -> list[dict]:
         for r in rows:
             if r["kind"] == "group_message":
                 t = c.execute("SELECT user_name AS author, text FROM group_messages WHERE id=?", (r["target_id"],)).fetchone()
+            elif r["kind"] == "channel_message":
+                t = None
+                if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='community_messages'").fetchone():
+                    t = c.execute(
+                        """SELECT COALESCE(u.username, 'user-' || m.user_id) AS author, '#' || m.channel || ' — ' || m.text AS text
+                           FROM community_messages m LEFT JOIN users u ON CAST(u.id AS TEXT)=m.user_id WHERE m.id=?""",
+                        (r["target_id"],),
+                    ).fetchone()
             else:
                 t = c.execute("SELECT author, symbol || ' ' || direction || ' — ' || COALESCE(note,'') AS text FROM votes WHERE id=?", (r["target_id"],)).fetchone()
             out.append({
@@ -1590,12 +1604,14 @@ def count_reported_items() -> int:
 
 def moderate(kind: str, target_id: str, action: str) -> bool:
     """remove: حذف العنصر نهائياً (وأصوات الفكرة) + بلاغاته. dismiss: إسقاط البلاغات فيعود ظاهراً."""
-    table = {"group_message": "group_messages", "vote": "votes"}.get(kind)
+    table = _REPORT_TABLES.get(kind)
     if table is None:
         return False
     with _conn() as c:
         removed = 0
-        if action == "remove":
+        if action == "remove" and c.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone():
             removed = c.execute(f"DELETE FROM {table} WHERE id=?", (target_id,)).rowcount
             if kind == "vote":
                 c.execute("DELETE FROM vote_ballots WHERE vote_id=?", (target_id,))
@@ -3138,3 +3154,22 @@ def cancel_oco_group(oco_group: str, triggered_order_id: str) -> list[str]:
             cancelled_ids.append(oid)
     return cancelled_ids
 
+
+
+def hidden_ids(kind: str, viewer_id: int | None) -> set[str]:
+    """Public wrapper of `_hidden_ids` for routers outside this module (community channels)."""
+    with _conn() as c:
+        return _hidden_ids(c, kind, viewer_id)
+
+
+def usernames_by_id(ids: list[str]) -> dict[str, str]:
+    """Map user ids (as text) to current usernames; unknown ids are left out."""
+    clean = sorted({i for i in ids if str(i).isdigit()})[:500]
+    if not clean:
+        return {}
+    with _conn() as c:
+        rows = c.execute(
+            f"SELECT id, username FROM users WHERE id IN ({','.join('?' * len(clean))})",
+            tuple(int(i) for i in clean),
+        ).fetchall()
+    return {str(r["id"]): r["username"] for r in rows if r["username"]}

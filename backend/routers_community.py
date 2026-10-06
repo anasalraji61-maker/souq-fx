@@ -6,7 +6,10 @@ from __future__ import annotations
 import sqlite3
 import time
 
+import unicodedata
+
 import community_chat
+import db
 from core import db_conn
 from core.auth import _auth_user
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -56,6 +59,32 @@ def channels(user: dict | None = Depends(_auth_user)):
     return community_chat.list_channels()
 
 
+_LINK_DOTS = str.maketrans({"\u3002": ".", "\uff0e": ".", "\uff61": "."})
+
+
+def _has_link(text: str) -> bool:
+    """Same link filter as the group chat and trade ideas (main._has_link): no links in channels."""
+    norm = unicodedata.normalize("NFKC", text or "").translate(_LINK_DOTS)
+    norm = "".join(ch for ch in norm if unicodedata.category(ch) != "Cf")
+    return bool(db.LINK_RE.search(norm))
+
+
+def _blank(text: str) -> bool:
+    return not "".join(ch for ch in (text or "") if not ch.isspace() and unicodedata.category(ch) != "Cf")
+
+
+def _present(messages: list[dict], viewer_id) -> list[dict]:
+    """Frontend shape with the sender's real username (never a client-supplied name) and `mine`."""
+    names = db.usernames_by_id([str(m["user_id"]) for m in messages])
+    out = []
+    for m in messages:
+        uid = str(m["user_id"])
+        item = community_chat.to_frontend_message(m, sender_name=names.get(uid) or f"user-{uid}")
+        item["mine"] = viewer_id is not None and uid == str(viewer_id)
+        out.append(item)
+    return out
+
+
 @router.get("/channels/{channel}/messages")
 def get_messages(
     channel: str,
@@ -63,23 +92,34 @@ def get_messages(
     before_id: int | None = None,
     user: dict | None = Depends(_auth_user),
 ):
-    """List messages in a channel, newest first."""
+    """List messages in a channel, newest first. Reported messages are hidden from the reporter at once
+    and from everyone once `db.REPORT_HIDE_THRESHOLD` accounts reported them."""
     _require(user)
     conn = _conn()
     try:
         try:
-            messages = community_chat.list_messages(conn, channel, limit, before_id)
+            hidden = db.hidden_ids("channel_message", user["user_id"])
+            limit = max(1, min(200, int(limit)))
+            messages = community_chat.list_messages(conn, channel, limit + len(hidden), before_id)
         except ValueError:
             raise HTTPException(status_code=404, detail="unknown channel")
-        return [community_chat.to_frontend_message(m) for m in messages]
+        messages = [m for m in messages if str(m["id"]) not in hidden][:limit]
+        return _present(messages, user["user_id"])
     finally:
         conn.close()
 
 
 @router.post("/channels/{channel}/messages", status_code=200)
 def post_message(channel: str, body: PostBody, user: dict | None = Depends(_auth_user)):
-    """Post a message to a channel."""
+    """Post a message to a channel as the signed-in account."""
     _require(user)
+    text = body.resolved_content()
+    if _blank(text):
+        raise HTTPException(status_code=400, detail="empty")
+    if _has_link(text) or _has_link(body.symbol_tag or ""):
+        raise HTTPException(status_code=400, detail="links_not_allowed")
+    sentiment = body.sentiment if body.sentiment in ("bullish", "bearish", "neutral") else None
+    symbol_tag = (body.symbol_tag or "").strip().upper()[:12] or None
     conn = _conn()
     try:
         try:
@@ -87,10 +127,10 @@ def post_message(channel: str, body: PostBody, user: dict | None = Depends(_auth
                 conn,
                 channel,
                 str(user["user_id"]),
-                body.resolved_content(),
+                text,
                 time.time(),
-                sentiment=body.sentiment,
-                symbol_tag=body.symbol_tag,
+                sentiment=sentiment,
+                symbol_tag=symbol_tag,
             )
         except ValueError as e:
             if "unknown channel" in str(e):
@@ -102,13 +142,9 @@ def post_message(channel: str, body: PostBody, user: dict | None = Depends(_auth
                 detail="rate_limited",
                 headers={"Retry-After": str(int(e.retry_after) + 1)},
             )
-        rec = {
-            **rec,
-            "sentiment": body.sentiment,
-            "symbol_tag": body.symbol_tag,
-        }
-        return community_chat.to_frontend_message(
-            rec, sender_name=body.sender_name
-        )
+        rec = {**rec, "sentiment": sentiment, "symbol_tag": symbol_tag}
+        out = community_chat.to_frontend_message(rec, sender_name=user.get("username") or f"user-{user['user_id']}")
+        out["mine"] = True
+        return out
     finally:
         conn.close()

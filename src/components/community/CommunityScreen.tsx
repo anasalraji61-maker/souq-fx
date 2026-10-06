@@ -1,548 +1,697 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  Hash,
   MessageSquare,
+  Lightbulb,
   Send,
-  Users,
+  Loader2,
+  ArrowDown,
+  ChevronUp,
+  AlertTriangle,
   TrendingUp,
   TrendingDown,
-  ShieldAlert,
-  Hash,
-  ThumbsUp,
-  AlertTriangle,
-  AlertCircle,
-  Menu,
-  X,
+  Minus,
+  ShieldCheck,
+  Users,
 } from 'lucide-react';
 import {
   CommunityChannel,
   CommunityMessage,
+  CommunityErrorCode,
+  DEFAULT_CHANNELS,
+  MESSAGE_MAX_CHARS,
+  PAGE_SIZE,
+  containsLink,
   fetchChannels,
   fetchChannelMessages,
   postChannelMessage,
-  DEFAULT_CHANNELS,
 } from '../../api/community';
-import { OfflineBadge } from '../common/OfflineBadge';
+import type { TradeIdea } from '../../api/ideas';
+import { LangId, gx, GxDict, fmt } from '../../i18n/locales';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
+import { IdeasPanel } from './IdeasPanel';
+import {
+  Avatar,
+  ItemMenu,
+  LoginRequired,
+  ReportDialog,
+  Toast,
+  ToastKind,
+  dayKey,
+  dayLabel,
+  timeLabel,
+  useSessionUser,
+} from './communityShared';
 
-export const CommunityScreen: React.FC = () => {
-  const [channels, setChannels] = useState<CommunityChannel[]>(DEFAULT_CHANNELS);
-  const [activeChannelId, setActiveChannelId] = useState<string>('forex');
-  const [messages, setMessages] = useState<CommunityMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [userSentiment, setUserSentiment] = useState<'bullish' | 'bearish' | 'neutral'>('bullish');
-  const [selectedTag, setSelectedTag] = useState<string>('EURUSD');
+type MobileTab = 'channels' | 'messages' | 'ideas';
+type Sentiment = 'bullish' | 'bearish' | 'neutral';
 
-  // Screen states
-  const [isLoadingChannels, setIsLoadingChannels] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+interface CommunityScreenProps {
+  currentLang?: LangId;
+  /** Switch the app tab (used to open the account tab for sign-in). */
+  onNavigate?: (tab: 'account') => void;
+}
 
-  // Rate limit toast (2.3)
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+const IDEA_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD', 'EURJPY', 'GBPJPY', 'XAUUSD', 'XAGUSD', 'US30', 'NAS100', 'SPX500', 'GER40'];
+const TAG_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'XAGUSD', 'US30', 'NAS100', 'GER40', 'USOIL', 'DXY'];
+const COLLAPSE_CHARS = 320;
+const POLL_MS = 12000;
+const CHANNEL_KEY = 'matrix.community.channel.v1';
 
-  // Mobile sidebar drawer
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+function channelText(x: GxDict, ch: CommunityChannel): { name: string; desc: string } {
+  const map: Record<string, [string, string]> = {
+    general: [x.c_chGeneral, x.c_chGeneralDesc],
+    forex: [x.c_chForex, x.c_chForexDesc],
+    metals: [x.c_chMetals, x.c_chMetalsDesc],
+    indices: [x.c_chIndices, x.c_chIndicesDesc],
+    energy: [x.c_chEnergy, x.c_chEnergyDesc],
+    signals: [x.c_chSignals, x.c_chSignalsDesc],
+  };
+  const m = map[ch.id];
+  return m ? { name: m[0], desc: m[1] } : { name: ch.name, desc: '' };
+}
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const composerInputRef = useRef<HTMLInputElement>(null);
+function errorText(x: GxDict, e: CommunityErrorCode | undefined): string {
+  switch (e) {
+    case 'links_not_allowed':
+      return x.c_errLinks;
+    case 'rate_limited':
+      return x.c_errRate;
+    case 'too_long':
+      return fmt(x.c_errTooLong, { n: MESSAGE_MAX_CHARS });
+    case 'empty':
+      return x.c_errEmpty;
+    case 'login_required':
+      return x.c_loginToChat;
+    case 'network':
+      return x.g_networkError;
+    default:
+      return x.g_serverError;
+  }
+}
 
-  // Helper to trigger Arabic toast
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage((cur) => (cur === msg ? null : cur));
-    }, 4000);
+function readSavedChannel(): string {
+  try {
+    return localStorage.getItem(CHANNEL_KEY) || 'general';
+  } catch {
+    return 'general';
+  }
+}
+
+const SentimentChip: React.FC<{ s?: Sentiment; x: GxDict }> = ({ s, x }) => {
+  if (!s || s === 'neutral') return null;
+  return s === 'bullish' ? (
+    <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300">
+      <TrendingUp className="w-3 h-3" /> {x.c_sentUp}
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-300">
+      <TrendingDown className="w-3 h-3" /> {x.c_sentDown}
+    </span>
+  );
+};
+
+const MessageItem: React.FC<{
+  m: CommunityMessage;
+  x: GxDict;
+  lang: LangId;
+  grouped: boolean;
+  onReport: () => void;
+}> = ({ m, x, lang, grouped, onReport }) => {
+  const [expanded, setExpanded] = useState(false);
+  const long = m.content.length > COLLAPSE_CHARS || m.content.split('\n').length > 7;
+  const text = long && !expanded ? m.content.slice(0, COLLAPSE_CHARS).trimEnd() + '…' : m.content;
+  return (
+    <div
+      className={`group flex gap-2.5 px-3 sm:px-4 ${grouped ? 'pt-0.5' : 'pt-3'} pb-0.5 hover:bg-[#0F1828]/60`}
+      data-testid="chat-message"
+      data-id={m.id}
+    >
+      <div className="w-[34px] shrink-0">{!grouped && <Avatar name={m.sender_name} />}</div>
+      <div className="flex-1 min-w-0">
+        {!grouped && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[13px] font-bold ${m.mine ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'}`}>{m.sender_name}</span>
+            {m.mine && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2DD4BF]/15 text-[#2DD4BF]">{x.c_mine}</span>}
+            <time className="text-[10px] text-[#64748B]" dateTime={m.created_at}>
+              {timeLabel(m.created_at, lang)}
+            </time>
+          </div>
+        )}
+        <div className="flex items-start gap-1">
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] leading-[1.75] text-[#CBD5E1] whitespace-pre-line break-words" dir="auto">
+              {text}
+            </p>
+            {long && (
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                className="text-[11px] text-[#2DD4BF] hover:underline cursor-pointer"
+                aria-expanded={expanded}
+              >
+                {expanded ? x.c_showLess : x.c_showMore}
+              </button>
+            )}
+            {(m.symbol_tag || (m.sentiment && m.sentiment !== 'neutral') || m.is_flagged) && (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                {m.symbol_tag && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1C2740] text-[#A3B4D0] font-mono" dir="ltr">
+                    #{m.symbol_tag}
+                  </span>
+                )}
+                <SentimentChip s={m.sentiment} x={x} />
+                {m.is_flagged && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300">
+                    <AlertTriangle className="w-3 h-3" /> {x.c_flagged}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          {!m.mine && (
+            <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity">
+              <ItemMenu x={x} onReport={onReport} label={x.c_moreActions} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Composer: React.FC<{
+  x: GxDict;
+  channelName: string;
+  onSend: (text: string, tag: string, sentiment: Sentiment) => Promise<boolean>;
+}> = ({ x, channelName, onSend }) => {
+  const [text, setText] = useState('');
+  const [tag, setTag] = useState('');
+  const [sentiment, setSentiment] = useState<Sentiment>('neutral');
+  const [busy, setBusy] = useState(false);
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const linkWarn = containsLink(text);
+  const over = text.length > MESSAGE_MAX_CHARS;
+  const empty = text.trim().length === 0;
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  }, [text]);
+
+  const send = async () => {
+    if (busy || empty || over || linkWarn) return;
+    setBusy(true);
+    const ok = await onSend(text, tag, sentiment);
+    setBusy(false);
+    if (ok) {
+      setText('');
+      setSentiment('neutral');
+      ref.current?.focus();
+    }
   };
 
-  // Scroll to bottom (newest at bottom) (2.1)
-  const scrollToBottom = useCallback((smooth = true) => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
-    }
-  }, []);
-
-  // Load Channels
-  const loadChannels = useCallback(async () => {
-    setIsLoadingChannels(true);
-    setIsError(false);
-    try {
-      const res = await fetchChannels();
-      setChannels(res.channels);
-      setIsOffline(res.isOffline);
-    } catch {
-      setIsError(true);
-    } finally {
-      setIsLoadingChannels(false);
-    }
-  }, []);
-
-  // Load Messages for active channel
-  const loadMessages = useCallback(
-    async (isBackgroundPoll = false) => {
-      if (!isBackgroundPoll) {
-        setIsLoadingMessages(true);
-      }
-      try {
-        const res = await fetchChannelMessages(activeChannelId);
-        setMessages(res.messages);
-        if (res.isOffline) {
-          setIsOffline(true);
-        }
-        if (!isBackgroundPoll) {
-          setTimeout(() => scrollToBottom(false), 50);
-        }
-      } catch {
-        if (!isBackgroundPoll) {
-          setIsError(true);
-        }
-      } finally {
-        if (!isBackgroundPoll) {
-          setIsLoadingMessages(false);
-        }
-      }
-    },
-    [activeChannelId, scrollToBottom]
+  const sentBtn = (s: Sentiment, icon: React.ReactNode, label: string, tone: string) => (
+    <button
+      type="button"
+      onClick={() => setSentiment(s)}
+      aria-pressed={sentiment === s}
+      title={label}
+      className={`min-h-[30px] px-2 rounded-lg text-[11px] flex items-center gap-1 border cursor-pointer ${
+        sentiment === s ? tone : 'border-[#24344E] text-[#7B8DA8] hover:text-[#CBD5E1]'
+      }`}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
   );
 
-  // Initial load
+  return (
+    <div className="border-t border-[#1E283D] bg-[#0B1220] p-2.5 sm:p-3 space-y-2" data-testid="composer">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <select
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+          aria-label={x.c_tagSymbol}
+          className="min-h-[30px] rounded-lg bg-[#0F1828] border border-[#24344E] px-2 text-[11px] text-[#CBD5E1] font-mono"
+          dir="ltr"
+        >
+          <option value="">{x.c_noTag}</option>
+          {TAG_SYMBOLS.map((s) => (
+            <option key={s} value={s}>
+              #{s}
+            </option>
+          ))}
+        </select>
+        <span className="text-[11px] text-[#64748B] ms-1">{x.c_myView}</span>
+        {sentBtn('bullish', <TrendingUp className="w-3.5 h-3.5" />, x.c_sentUp, 'border-emerald-400/60 bg-emerald-500/15 text-emerald-200')}
+        {sentBtn('bearish', <TrendingDown className="w-3.5 h-3.5" />, x.c_sentDown, 'border-rose-400/60 bg-rose-500/15 text-rose-200')}
+        {sentBtn('neutral', <Minus className="w-3.5 h-3.5" />, x.c_sentFlat, 'border-[#2DD4BF]/50 bg-[#2DD4BF]/10 text-[#CFFAFE]')}
+      </div>
+      <div className="flex items-end gap-2">
+        <textarea
+          ref={ref}
+          value={text}
+          rows={1}
+          dir="auto"
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && window.matchMedia?.('(pointer: fine)').matches) {
+              e.preventDefault();
+              void send();
+            }
+          }}
+          placeholder={fmt(x.c_composerPh, { ch: channelName })}
+          aria-label={x.c_composerLabel}
+          className="flex-1 min-h-[44px] max-h-[132px] resize-none rounded-xl bg-[#0F1828] border border-[#24344E] focus:border-[#2DD4BF] outline-none px-3 py-2.5 text-[13px] leading-6 text-[#E8EEF9]"
+        />
+        <button
+          onClick={() => void send()}
+          disabled={busy || empty || over || linkWarn}
+          aria-label={x.c_send}
+          className="w-11 h-11 rounded-xl bg-[#2DD4BF] text-[#042F2E] flex items-center justify-center disabled:opacity-40 cursor-pointer shrink-0"
+          data-testid="send-btn"
+        >
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 rtl:-scale-x-100" />}
+        </button>
+      </div>
+      <div className="flex items-center justify-between gap-2 text-[11px] min-h-[16px]">
+        <span className={linkWarn ? 'text-amber-300' : 'text-[#64748B]'} data-testid="composer-hint">
+          {linkWarn ? x.c_errLinks : x.c_composerHint}
+        </span>
+        <span className={`font-mono shrink-0 ${over ? 'text-rose-300' : text.length > MESSAGE_MAX_CHARS * 0.9 ? 'text-amber-300' : 'text-[#64748B]'}`} dir="ltr" data-testid="char-count">
+          {text.length}/{MESSAGE_MAX_CHARS}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+export const CommunityScreen: React.FC<CommunityScreenProps> = ({ currentLang = 'ar', onNavigate }) => {
+  const x = gx(currentLang);
+  const user = useSessionUser();
+  const [channels, setChannels] = useState<CommunityChannel[]>(DEFAULT_CHANNELS);
+  const [channelId, setChannelId] = useState<string>(readSavedChannel);
+  const [mobileTab, setMobileTab] = useState<MobileTab>('messages');
+  const [messages, setMessages] = useState<CommunityMessage[]>([]);
+  const [msgState, setMsgState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [msgError, setMsgError] = useState<CommunityErrorCode | undefined>();
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [newCount, setNewCount] = useState(0);
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const [report, setReport] = useState<
+    { kind: 'channel_message' | 'vote'; id: string; preview: string } | null
+  >(null);
+  const [toastState, setToastState] = useState<{ text: string; kind: ToastKind } | null>(null);
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const atBottomRef = useRef(true);
+  const channelRef = useRef(channelId);
+  channelRef.current = channelId;
+
+  const toast = useCallback((text: string, kind: ToastKind = 'info') => setToastState({ text, kind }), []);
+  const goLogin = useCallback(() => onNavigate?.('account'), [onNavigate]);
+
+  const activeChannel = channels.find((c) => c.id === channelId) || channels[0] || DEFAULT_CHANNELS[0];
+  const activeText = channelText(x, activeChannel);
+
   useEffect(() => {
-    loadChannels();
-  }, [loadChannels]);
-
-  // Load messages when channel changes
-  useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
-
-  // 2.4 Poll new messages every 5s ONLY while the screen / document is visible
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        loadMessages(true);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [loadMessages]);
-
-  // Handle Send Message (Enter to send, 2.1 & 2.3 429 rate limit handling)
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const trimmed = inputText.trim();
-    if (!trimmed || isSending) return;
-
-    setIsSending(true);
     try {
-      const res = await postChannelMessage(activeChannelId, {
-        content: trimmed,
-        sentiment: userSentiment,
-        symbol_tag: selectedTag,
-        sender_name: 'أنت (متداول نشط)',
-      });
-
-      // 2.3 Handle 429 rate limit: show toast "تمهّل قليلاً" and keep the draft
-      if (res.status === 429 || (!res.ok && res.error?.includes('429'))) {
-        showToast('تمهّل قليلاً، تم تجاوز حد إرسال الرسائل. يُرجى الانتظار بضع ثوانٍ.');
-        return; // draft preserved in inputText
-      }
-
-      if (res.ok && res.message) {
-        setMessages((prev) => [...prev, res.message!]);
-        setInputText(''); // clear draft on success
-        setTimeout(() => scrollToBottom(true), 50);
-      } else {
-        showToast(res.error || 'تعذر إرسال الرسالة، يرجى المحاولة لاحقاً');
-      }
+      localStorage.setItem(CHANNEL_KEY, channelId);
     } catch {
-      showToast('حدث خطأ في الاتصال، تم الاحتفاظ بالمسودة');
-    } finally {
-      setIsSending(false);
-      composerInputRef.current?.focus();
+      // storage blocked
     }
+  }, [channelId]);
+
+  // Channels (need an account on the server; the static list is shown meanwhile).
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    void fetchChannels().then((r) => {
+      if (!alive || !r.ok) return;
+      setChannels(r.channels);
+      if (!r.channels.some((c) => c.id === channelRef.current)) setChannelId(r.channels[0].id);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [user?.user_id]);
+
+  const scrollToBottom = useCallback((smooth = false) => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+    atBottomRef.current = true;
+    setNewCount(0);
+  }, []);
+
+  // Initial page of the channel.
+  const loadChannel = useCallback(async () => {
+    if (!user) return;
+    setMsgState('loading');
+    setMessages([]);
+    setNewCount(0);
+    const ch = channelId;
+    const r = await fetchChannelMessages(ch);
+    if (channelRef.current !== ch) return;
+    if (r.ok) {
+      setMessages(r.messages);
+      setHasMore(r.hasMore);
+      setMsgState('ready');
+      requestAnimationFrame(() => scrollToBottom(false));
+    } else {
+      setMsgError(r.error);
+      setMsgState('error');
+    }
+  }, [channelId, user, scrollToBottom]);
+
+  useEffect(() => {
+    void loadChannel();
+  }, [loadChannel]);
+
+  // Poll for new messages while the screen is visible.
+  useEffect(() => {
+    if (!user || msgState !== 'ready') return;
+    const ch = channelId;
+    const t = setInterval(async () => {
+      if (document.hidden) return;
+      const r = await fetchChannelMessages(ch);
+      if (!r.ok || channelRef.current !== ch) return;
+      setMessages((prev) => {
+        const known = new Set(prev.map((m) => m.id));
+        const fresh = r.messages.filter((m) => !known.has(m.id));
+        if (fresh.length === 0) return prev;
+        if (!atBottomRef.current) setNewCount((n) => n + fresh.filter((m) => !m.mine).length);
+        return [...prev, ...fresh];
+      });
+    }, POLL_MS);
+    return () => clearInterval(t);
+  }, [user, msgState, channelId]);
+
+  // Keep the view pinned to the bottom only when the reader is already there.
+  useLayoutEffect(() => {
+    if (atBottomRef.current) {
+      const el = listRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
+  }, [messages.length]);
+
+  const onScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    atBottomRef.current = atBottom;
+    if (atBottom && newCount) setNewCount(0);
   };
 
-  const handleLike = (id: string) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, likes: m.likes + 1 } : m))
-    );
-  };
-
-  // 2.2 Highlight @mentions in message content
-  const renderMessageContent = (text: string) => {
-    const parts = text.split(/(@[^\s@]+)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('@')) {
-        return (
-          <span
-            key={i}
-            className="font-bold text-[#38BDF8] bg-[#38BDF8]/15 px-1.5 py-0.5 rounded mx-0.5 inline-block text-xs"
-          >
-            {part}
-          </span>
-        );
-      }
-      return <span key={i}>{part}</span>;
+  const loadOlder = async () => {
+    if (loadingOlder || messages.length === 0) return;
+    const el = listRef.current;
+    const before = el ? el.scrollHeight - el.scrollTop : 0;
+    setLoadingOlder(true);
+    const ch = channelId;
+    const oldest = messages[0].id;
+    const r = await fetchChannelMessages(ch, { beforeId: oldest, limit: PAGE_SIZE });
+    setLoadingOlder(false);
+    if (channelRef.current !== ch) return;
+    if (!r.ok) {
+      toast(errorText(x, r.error), 'error');
+      return;
+    }
+    atBottomRef.current = false;
+    setMessages((prev) => {
+      const known = new Set(prev.map((m) => m.id));
+      return [...r.messages.filter((m) => !known.has(m.id)), ...prev];
+    });
+    setHasMore(r.hasMore);
+    requestAnimationFrame(() => {
+      const el2 = listRef.current;
+      if (el2) el2.scrollTop = el2.scrollHeight - before;
     });
   };
 
-  const activeChannel = channels.find((c) => c.id === activeChannelId) || channels[0];
+  const send = async (text: string, tag: string, sentiment: Sentiment): Promise<boolean> => {
+    const r = await postChannelMessage(channelId, {
+      content: text,
+      symbol_tag: tag || undefined,
+      sentiment,
+    });
+    if (r.ok && r.message) {
+      atBottomRef.current = true;
+      setMessages((prev) => (prev.some((m) => m.id === r.message!.id) ? prev : [...prev, r.message!]));
+      requestAnimationFrame(() => scrollToBottom(true));
+      return true;
+    }
+    if (r.error === 'login_required') {
+      toast(x.c_loginToChat, 'info');
+      return false;
+    }
+    toast(errorText(x, r.error), 'error');
+    return false;
+  };
+
+  const visibleMessages = useMemo(
+    () => messages.filter((m) => !hidden.has(`channel_message:${m.id}`)),
+    [messages, hidden]
+  );
+  const hiddenIdeaIds = useMemo(() => {
+    const s = new Set<string>();
+    hidden.forEach((k) => {
+      if (k.startsWith('vote:')) s.add(k.slice(5));
+    });
+    return s;
+  }, [hidden]);
+
+  const openReportIdea = useCallback((i: TradeIdea) => {
+    setReport({ kind: 'vote', id: i.id, preview: `${i.symbol} — ${i.note || ''}`.trim() });
+  }, []);
+
+  const selectChannel = (id: string) => {
+    setChannelId(id);
+    setMobileTab('messages');
+  };
+
+  // ---------------------------------------------------------------------------------------------
+  const channelList = (
+    <nav aria-label={x.c_channels} className="p-2 space-y-1">
+      <div className="px-2 pt-1 pb-2 text-[11px] font-semibold text-[#64748B] uppercase tracking-wide">{x.c_channels}</div>
+      {channels.map((ch) => {
+        const t = channelText(x, ch);
+        const active = ch.id === channelId;
+        return (
+          <button
+            key={ch.id}
+            onClick={() => selectChannel(ch.id)}
+            aria-current={active ? 'page' : undefined}
+            className={`w-full text-start rounded-xl px-3 py-2.5 min-h-[48px] flex items-start gap-2 cursor-pointer transition-colors ${
+              active ? 'bg-[#13283A] text-[#E8EEF9] border border-[#2DD4BF]/40' : 'text-[#A3B4D0] hover:bg-[#121C2E] border border-transparent'
+            }`}
+            data-testid={`channel-${ch.id}`}
+          >
+            <Hash className={`w-4 h-4 mt-0.5 shrink-0 ${active ? 'text-[#2DD4BF]' : 'text-[#64748B]'}`} />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold truncate">{t.name}</span>
+              <span className="block text-[11px] text-[#64748B] leading-snug line-clamp-2">{t.desc}</span>
+            </span>
+          </button>
+        );
+      })}
+      <div className="mx-2 mt-3 p-3 rounded-xl bg-[#0F1828] border border-[#1E283D] text-[11px] text-[#7B8DA8] leading-relaxed flex gap-2">
+        <ShieldCheck className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+        <span>{x.c_rulesShort}</span>
+      </div>
+    </nav>
+  );
+
+  const groups: { key: string; label: string; items: CommunityMessage[] }[] = [];
+  visibleMessages.forEach((m) => {
+    const d = new Date(m.created_at);
+    const k = Number.isNaN(d.getTime()) ? 'unknown' : dayKey(d);
+    const last = groups[groups.length - 1];
+    if (last && last.key === k) last.items.push(m);
+    else groups.push({ key: k, label: Number.isNaN(d.getTime()) ? '' : dayLabel(d, currentLang, x), items: [m] });
+  });
+
+  const messagesPane = (
+    <section className="flex flex-col h-full min-h-0 relative" aria-label={x.c_messages}>
+      <header className="px-3 sm:px-4 py-2.5 border-b border-[#1E283D] bg-[#0B1220] flex items-center gap-2">
+        <Hash className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-[#E8EEF9] truncate" data-testid="channel-title">
+            {activeText.name}
+          </h2>
+          <p className="text-[11px] text-[#64748B] truncate">{activeText.desc}</p>
+        </div>
+      </header>
+
+      {!user ? (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-sm w-full space-y-3">
+            <EmptyState
+              currentLang={currentLang}
+              icon={<Users className="w-6 h-6 text-[#2DD4BF]" />}
+              title={x.c_guestTitle}
+              message={x.c_guestText}
+            />
+            <LoginRequired x={x} text={x.c_loginToChat} onLogin={goLogin} />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div ref={listRef} onScroll={onScroll} className="flex-1 min-h-0 overflow-y-auto pb-2" data-testid="message-list">
+            {msgState === 'loading' ? (
+              <LoadingSkeleton rows={6} />
+            ) : msgState === 'error' ? (
+              msgError === 'login_required' ? (
+                <div className="p-4">
+                  <LoginRequired x={x} text={x.c_sessionExpired} onLogin={goLogin} />
+                </div>
+              ) : (
+                <ErrorState
+                  currentLang={currentLang}
+                  title={x.c_loadErrorTitle}
+                  message={msgError === 'network' ? x.c_serverUnreachable : x.g_serverError}
+                  onRetry={() => void loadChannel()}
+                />
+              )
+            ) : visibleMessages.length === 0 ? (
+              <EmptyState
+                currentLang={currentLang}
+                icon={<MessageSquare className="w-6 h-6 text-[#2DD4BF]" />}
+                title={x.c_emptyTitle}
+                message={fmt(x.c_emptyText, { ch: activeText.name })}
+              />
+            ) : (
+              <>
+                {hasMore && (
+                  <div className="flex justify-center pt-3">
+                    <button
+                      onClick={() => void loadOlder()}
+                      disabled={loadingOlder}
+                      className="min-h-[36px] px-4 rounded-full bg-[#121C2E] border border-[#24344E] text-[11px] text-[#A3B4D0] hover:text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      data-testid="load-older"
+                    >
+                      {loadingOlder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                      {x.c_loadOlder}
+                    </button>
+                  </div>
+                )}
+                {groups.map((g) => (
+                  <div key={g.key} role="group" aria-label={g.label}>
+                    {g.label && (
+                      <div className="sticky top-0 z-10 flex justify-center py-2 pointer-events-none">
+                        <span className="px-3 py-1 rounded-full bg-[#121C2E]/95 border border-[#1E283D] text-[10px] text-[#94A3B8] backdrop-blur">
+                          {g.label}
+                        </span>
+                      </div>
+                    )}
+                    {g.items.map((m, i) => {
+                      const prev = g.items[i - 1];
+                      const grouped =
+                        !!prev &&
+                        prev.sender_name === m.sender_name &&
+                        new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < 5 * 60 * 1000;
+                      return (
+                        <MessageItem
+                          key={m.id}
+                          m={m}
+                          x={x}
+                          lang={currentLang}
+                          grouped={grouped}
+                          onReport={() => setReport({ kind: 'channel_message', id: m.id, preview: m.content })}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+          {newCount > 0 && (
+            <button
+              onClick={() => scrollToBottom(true)}
+              className="absolute bottom-[132px] left-1/2 -translate-x-1/2 z-20 px-3.5 min-h-[34px] rounded-full bg-[#2DD4BF] text-[#042F2E] text-[11px] font-bold shadow-xl flex items-center gap-1 cursor-pointer"
+              data-testid="new-messages-pill"
+            >
+              {fmt(x.c_newMessages, { n: newCount })} <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <Composer x={x} channelName={activeText.name} onSend={send} />
+        </>
+      )}
+    </section>
+  );
+
+  const ideasPane = (
+    <IdeasPanel
+      x={x}
+      lang={currentLang}
+      user={user}
+      onLogin={goLogin}
+      onReport={openReportIdea}
+      hiddenIds={hiddenIdeaIds}
+      toast={toast}
+      symbols={IDEA_SYMBOLS}
+    />
+  );
+
+  const tabBtn = (id: MobileTab, icon: React.ReactNode, label: string) => (
+    <button
+      role="tab"
+      aria-selected={mobileTab === id}
+      onClick={() => setMobileTab(id)}
+      className={`flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold border-b-2 cursor-pointer ${
+        mobileTab === id ? 'border-[#2DD4BF] text-[#E8EEF9]' : 'border-transparent text-[#7B8DA8]'
+      }`}
+      data-testid={`ctab-${id}`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
 
   return (
-    <div className="h-full flex flex-col md:flex-row bg-[#08101E] text-[#E2E8F0] overflow-hidden select-none text-xs relative">
-      {/* 2.3 Toast for Rate Limit / Alerts */}
-      {toastMessage && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/90 text-[#0F172A] font-bold text-xs shadow-2xl backdrop-blur-md border border-amber-300 animate-in fade-in slide-in-from-top-3">
-          <AlertCircle className="w-4 h-4 shrink-0 text-[#0F172A]" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Mobile Channel Switcher Top Bar (< 768px) */}
-      <div className="md:hidden flex items-center justify-between p-3 bg-[#0A1222] border-b border-[#1E293B] shrink-0">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-            aria-label="قائمة الغرف"
-            className="p-2.5 rounded-lg bg-[#141F33] text-[#2DD4BF] border border-[#24334E] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
-          >
-            {isMobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-          <div>
-            <span className="font-bold text-white text-xs">{activeChannel?.name_ar}</span>
-            <span className="text-[10px] text-[#7B8DA8] block">
-              {activeChannel?.online_count} متصل <span className="text-amber-400 font-semibold">(مثال)</span>
-            </span>
-          </div>
-        </div>
-        {isOffline && <OfflineBadge forceShow />}
+    <div className="h-full flex flex-col bg-[#070D18] text-[#E8EEF9]" data-testid="community-screen">
+      <div className="lg:hidden flex bg-[#0B1220] border-b border-[#1E283D]" role="tablist" aria-label={x.c_title}>
+        {tabBtn('channels', <Hash className="w-4 h-4" />, x.c_channels)}
+        {tabBtn('messages', <MessageSquare className="w-4 h-4" />, x.c_messages)}
+        {tabBtn('ideas', <Lightbulb className="w-4 h-4" />, x.c_ideasTab)}
       </div>
-
-      {/* 2.1 Channels Sidebar */}
-      <div
-        className={`w-full md:w-64 bg-[#0B1528] border-l md:border-l-0 md:border-r border-[#1E293B] flex flex-col shrink-0 transition-all ${
-          isMobileSidebarOpen
-            ? 'absolute inset-0 z-40 md:relative'
-            : 'hidden md:flex'
-        }`}
-      >
-        <div className="p-4 border-b border-[#1E293B] flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-bold text-white">
-              <MessageSquare className="w-4 h-4 text-[#2DD4BF]" />
-              <h2>غرف نقاش المتداولين</h2>
-            </div>
-            <p className="text-[11px] text-[#94A3B8] mt-1">
-              تبادل التحليلات والفرص الفنية اللحظية
-            </p>
-          </div>
-          {isMobileSidebarOpen && (
-            <button
-              onClick={() => setIsMobileSidebarOpen(false)}
-              aria-label="إغلاق القائمة"
-              className="md:hidden p-2 rounded-lg bg-[#162033] text-[#7B8DA8] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Room Navigation */}
-        <div className="p-3 space-y-1.5 flex-1 overflow-y-auto">
-          {isLoadingChannels ? (
-            <LoadingSkeleton rows={4} />
-          ) : (
-            channels.map((chan) => {
-              const isActive = activeChannelId === chan.id;
-              return (
-                <button
-                  key={chan.id}
-                  onClick={() => {
-                    setActiveChannelId(chan.id);
-                    setIsMobileSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-right min-h-[46px] cursor-pointer ${
-                    isActive
-                      ? 'bg-[#2DD4BF]/15 text-[#2DD4BF] border border-[#2DD4BF]/40 font-bold shadow-xs'
-                      : 'text-[#94A3B8] hover:bg-[#132038] hover:text-white border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Hash className="w-4 h-4 shrink-0 text-[#2DD4BF]" />
-                    <div className="truncate">
-                      <span className="block truncate font-bold">{chan.name_ar}</span>
-                      <span className="text-[10px] text-[#64748B] block truncate">
-                        {chan.description}
-                      </span>
-                    </div>
-                  </div>
-                  <span
-                    title="عدد المتصلين (تقديري - مثال)"
-                    className="text-[10px] bg-[#1E293B] px-1.5 py-0.5 rounded text-[#94A3B8] font-mono shrink-0"
-                  >
-                    {chan.online_count}
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
-
-        {/* Ethics & Risk Disclaimer */}
-        <div className="p-3 m-3 rounded-xl bg-[#0F1D35] border border-[#1E2E4A] text-[10px] text-[#94A3B8] space-y-1.5 shrink-0">
-          <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>ميثاق النقاش الفني النظيف</span>
-          </div>
-          <p className="leading-relaxed">
-            الآراء المعروضة هي دراسات فنية شخصية. MATRIX لا تقدم نصائح استثمارية وتلتزم بنسبة 0% عملات مشفرة.
-          </p>
-        </div>
-      </div>
-
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Chat Header */}
-        <div className="h-12 bg-[#0A1222] border-b border-[#1E293B] px-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <h3 className="text-xs font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{activeChannel?.name_ar}</span>
-              <span className="text-[#64748B] font-normal text-[11px] hidden sm:inline">
-                ({activeChannel?.description})
-              </span>
-            </h3>
-            {isOffline && <OfflineBadge forceShow />}
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
-            <Users className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span className="hidden sm:inline">المتداولون النشطون:</span>
-            <span className="font-mono text-white font-bold">{activeChannel?.online_count || 120}</span>
-            <span className="text-[10px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 shrink-0">
-              (تقديري - مثال)
-            </span>
-          </div>
-        </div>
-
-        {/* Messages Stream (2.1: Newest at bottom) */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-          {isLoadingMessages ? (
-            <LoadingSkeleton rows={5} />
-          ) : isError ? (
-            <ErrorState
-              title="تعذر تحميل رسائل الغرفة"
-              message="حدث خطأ في الاتصال بالخادم. يرجى إعادة المحاولة."
-              onRetry={() => loadMessages()}
-            />
-          ) : messages.length === 0 ? (
-            <EmptyState
-              icon={<MessageSquare className="w-8 h-8 text-[#2DD4BF]" />}
-              title="لا توجد رسائل في هذه الغرفة بعد"
-              message="كن أول من يشارك تحليله الفني أو يطرح فكرة تداول في هذه الغرفة!"
-              action={
-                <button
-                  onClick={() => composerInputRef.current?.focus()}
-                  className="px-5 py-2.5 rounded-xl bg-[#2DD4BF] text-[#042F2E] font-bold text-xs hover:brightness-110 min-h-[44px] inline-flex items-center justify-center cursor-pointer shadow-md"
-                >
-                  كتابة أول مشاركة
-                </button>
-              }
-            />
-          ) : (
-            messages.map((msg) => {
-              // 2.2 Flagged moderation messages shown dimmed with "قيد المراجعة"
-              if (msg.is_flagged) {
-                return (
-                  <div
-                    key={msg.id}
-                    className="p-3 rounded-xl bg-[#0B1220]/60 border border-dashed border-[#334155] opacity-50 flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center gap-2 text-[#94A3B8]">
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      <span className="italic">محتوى هذه الرسالة قيد المراجعة والتدقيق بواسطة الإشراف الآلي</span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-mono">
-                      قيد المراجعة
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={msg.id}
-                  className="p-3.5 rounded-xl bg-[#0D182E] border border-[#1E2A44] hover:border-[#2C3E63] transition-all flex flex-col gap-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-7 h-7 rounded-lg ${
-                          msg.avatar_bg || 'bg-teal-600'
-                        } flex items-center justify-center font-bold text-white text-xs`}
-                      >
-                        {msg.sender_name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-white">{msg.sender_name}</span>
-                          {msg.badge && (
-                            <span
-                              className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                                msg.badge === 'AI Sentinel'
-                                  ? 'bg-cyan-950 text-cyan-400 border border-cyan-800'
-                                  : msg.badge === 'Pro Analyst'
-                                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                                  : 'bg-amber-950 text-amber-400 border border-amber-800'
-                              }`}
-                            >
-                              {msg.badge === 'AI Sentinel'
-                                ? 'حارس آلي (مثال)'
-                                : msg.badge === 'Pro Analyst'
-                                ? 'محلل فني (مثال)'
-                                : `${msg.badge} (مثال)`}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-[#64748B] font-mono">{msg.created_at}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {msg.symbol_tag && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#16233B] text-[#2DD4BF] border border-[#243657]">
-                          {msg.symbol_tag}
-                        </span>
-                      )}
-                      {msg.sentiment === 'bullish' && (
-                        <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60 font-semibold">
-                          <TrendingUp className="w-3 h-3" />
-                          <span>صاعد</span>
-                        </span>
-                      )}
-                      {msg.sentiment === 'bearish' && (
-                        <span className="flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-800/60 font-semibold">
-                          <TrendingDown className="w-3 h-3" />
-                          <span>هابط</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 2.2 Message Content with @mentions highlighting */}
-                  <p className="text-xs text-[#CBD5E1] leading-relaxed pr-9">
-                    {renderMessageContent(msg.content)}
-                  </p>
-
-                  <div className="flex items-center justify-between pr-9 pt-1 text-[11px] text-[#64748B]">
-                    <button
-                      onClick={() => handleLike(msg.id)}
-                      className="flex items-center gap-1.5 hover:text-[#2DD4BF] transition-colors cursor-pointer min-h-[44px] min-w-[44px] px-2 py-1 -mr-2 rounded-lg"
-                    >
-                      <ThumbsUp className="w-3.5 h-3.5" />
-                      <span className="font-mono">{msg.likes}</span>
-                    </button>
-                    <span className="text-[10px] text-[#475569]">نقاش فني تحليلي</span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-          {/* Scroll anchor for newest at bottom */}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* 2.1 Composer: Enter to send, tags and sentiment */}
-        <form
-          onSubmit={handleSendMessage}
-          className="p-3 bg-[#0B1528] border-t border-[#1E293B] flex flex-col gap-2 shrink-0 pb-3 md:pb-3"
+      <div className="flex-1 min-h-0 lg:grid lg:grid-cols-[230px_minmax(0,1fr)_330px] xl:grid-cols-[250px_minmax(0,1fr)_370px]">
+        <aside
+          className={`${mobileTab === 'channels' ? 'block' : 'hidden'} lg:block h-full overflow-y-auto bg-[#0A111E] lg:border-e border-[#1E283D]`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-[#94A3B8]">النظرة:</span>
-              <button
-                type="button"
-                onClick={() => setUserSentiment('bullish')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] flex items-center ${
-                  userSentiment === 'bullish'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-[#16233B] text-[#94A3B8] hover:text-white'
-                }`}
-              >
-                صاعد
-              </button>
-              <button
-                type="button"
-                onClick={() => setUserSentiment('bearish')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] flex items-center ${
-                  userSentiment === 'bearish'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'bg-[#16233B] text-[#94A3B8] hover:text-white'
-                }`}
-              >
-                هابط
-              </button>
-              <button
-                type="button"
-                onClick={() => setUserSentiment('neutral')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] flex items-center ${
-                  userSentiment === 'neutral'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-[#16233B] text-[#94A3B8] hover:text-white'
-                }`}
-              >
-                محايد
-              </button>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#94A3B8]">الرمز:</span>
-              <select
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value)}
-                className="bg-[#16233B] border border-[#243657] rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer min-h-[44px]"
-              >
-                <option value="EURUSD">EURUSD</option>
-                <option value="GBPUSD">GBPUSD</option>
-                <option value="USDJPY">USDJPY</option>
-                <option value="XAUUSD">XAUUSD (الذهب)</option>
-                <option value="XAGUSD">XAGUSD (الفضة)</option>
-                <option value="USOIL">USOIL (النفط)</option>
-                <option value="US30">US30 (داو جونز)</option>
-                <option value="NAS100">NAS100 (ناسداك)</option>
-                <option value="GER40">GER40 (داكس)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              ref={composerInputRef}
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder="اكتب تحليلك الفني أو وجهة نظرك (اضغط Enter للإرسال)..."
-              disabled={isSending}
-              className="flex-1 bg-[#070E1C] border border-[#1E293B] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-[#2DD4BF] transition-colors min-h-[44px]"
-            />
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isSending}
-              className="px-4 py-2.5 bg-[#2DD4BF] hover:bg-[#14B8A6] disabled:opacity-40 disabled:pointer-events-none text-[#042F2E] font-black text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer min-h-[44px] shrink-0"
-            >
-              <span>{isSending ? 'جارٍ الإرسال...' : 'إرسال'}</span>
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </form>
+          {channelList}
+        </aside>
+        <div className={`${mobileTab === 'messages' ? 'flex' : 'hidden'} lg:flex flex-col h-full min-h-0`}>{messagesPane}</div>
+        <aside
+          className={`${mobileTab === 'ideas' ? 'flex' : 'hidden'} lg:flex flex-col h-full min-h-0 bg-[#0A111E] lg:border-s border-[#1E283D]`}
+        >
+          {ideasPane}
+        </aside>
       </div>
+
+      {report && (
+        <ReportDialog
+          x={x}
+          kind={report.kind}
+          targetId={report.id}
+          preview={report.preview}
+          onClose={() => setReport(null)}
+          onLoginRequired={() => {
+            setReport(null);
+            toast(x.c_loginToReport, 'info');
+          }}
+          onReported={(res) => {
+            setHidden((prev) => new Set(prev).add(`${report.kind}:${report.id}`));
+            setReport(null);
+            toast(res === 'already' ? x.c_reportAlready : x.c_reportThanks, 'ok');
+          }}
+        />
+      )}
+      {toastState && <Toast text={toastState.text} kind={toastState.kind} onClose={() => setToastState(null)} />}
     </div>
   );
 };
