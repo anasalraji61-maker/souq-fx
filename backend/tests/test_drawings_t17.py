@@ -39,7 +39,7 @@ def test_trendline_one_point_raises(tmp_path):
         store.add("u1", "btc", "H1", "trendline", [{"time": 1, "price": 2.0}])
 
 
-@pytest.mark.parametrize("bad_type", ["circle", "box", ""])
+@pytest.mark.parametrize("bad_type", ["circle", "spiral", ""])
 def test_unknown_type_raises(tmp_path, bad_type):
     store = _store(tmp_path)
     with pytest.raises(DrawingError):

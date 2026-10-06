@@ -24,6 +24,8 @@ import { OrderFlowPanel } from './OrderFlowPanel';
 import { generateCandles, updateLastCandleWithTick, TIMEFRAME_SECONDS } from '../../data/candleGenerator';
 import { getCandles, getQuote, getMarketStatus, MarketStatus } from '../../api/market';
 import { loadDrawings, saveDrawings } from '../../api/drawings';
+import { onCloudSyncApplied } from '../../api/cloudSync';
+import { onSessionChange } from '../../api/session';
 import { loadAlerts, saveAlerts } from '../../api/alerts';
 import { playAlertChime } from '../../utils/sound';
 import { showSystemNotification, alertNotificationText, requestSystemNotifications } from '../../utils/systemNotify';
@@ -538,6 +540,32 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
       }
     });
   }, [cells]);
+
+  // Account sync: after sign-in / sign-out reload this chart's drawings from the right owner,
+  // and re-read layouts / indicators when newer copies arrive from another device.
+  useEffect(() => {
+    const offSession = onSessionChange(() => {
+      loadedMapRef.current.clear();
+      setCells((prev) => [...prev]);
+    });
+    const offSync = onCloudSyncApplied((docs) => {
+      if (docs.includes('layouts')) {
+        try {
+          const raw = localStorage.getItem('matrix.layouts');
+          setSavedLayouts(raw ? JSON.parse(raw) : []);
+        } catch {
+          // keep current list
+        }
+      }
+      if (docs.includes('indicators')) {
+        setCells((prev) => prev.map((c) => ({ ...c, indicators: loadCellIndicators(c.id) })));
+      }
+    });
+    return () => {
+      offSession();
+      offSync();
+    };
+  }, []);
 
   // Debounced save drawings helper (500 ms)
   const saveTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());

@@ -3,8 +3,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { installIdentityFetch } from './api/session';
+import { startCloudSync } from './api/cloudSync';
 
 installIdentityFetch(((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE) || '');
+startCloudSync();
 
 // PWA & Service Worker Initialization (MEGA BATCH D)
 if (typeof window !== 'undefined') {

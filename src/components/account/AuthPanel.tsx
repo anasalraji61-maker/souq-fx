@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LogIn, LogOut, UserPlus, KeyRound, Trash2, ShieldCheck, Loader2, Cloud } from 'lucide-react';
 import { login, register, logout, refreshMe, changePassword, deleteAccount } from '../../api/auth';
 import { getSessionUser, onSessionChange, SessionUser } from '../../api/session';
+import { getCloudSyncStatus, onCloudSyncStatus, syncNow, CloudSyncStatus } from '../../api/cloudSync';
 
 type Mode = 'login' | 'register';
 
@@ -127,9 +128,7 @@ export const AuthPanel: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-[#E8EEF9]">{user.username}</span>
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                  <Cloud className="w-3 h-3" /> متزامن
-                </span>
+                <SyncBadge />
               </div>
               <p className="text-[#7B8DA8] text-xs font-mono mt-0.5" dir="ltr">
                 {user.email || '—'}
@@ -269,3 +268,30 @@ export const LegalLinks: React.FC = () => (
     <a href="/legal/about.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">عن MATRIX</a>
   </nav>
 );
+
+/** Account sync state + "sync now" (watchlists, layouts, indicators, drawings). */
+const SyncBadge: React.FC = () => {
+  const [st, setSt] = useState<CloudSyncStatus>(getCloudSyncStatus());
+  useEffect(() => onCloudSyncStatus(setSt), []);
+  const syncing = st.state === 'syncing';
+  const failed = st.state === 'error';
+  const label = syncing ? 'جارٍ المزامنة…' : failed ? 'تعذّرت المزامنة' : 'متزامن';
+  const time = st.lastSyncAt
+    ? new Date(st.lastSyncAt).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' })
+    : null;
+  return (
+    <button
+      type="button"
+      onClick={() => void syncNow()}
+      disabled={syncing}
+      title={`قوائم المراقبة والتخطيطات والمؤشرات والرسومات تُحفظ في حسابك${time ? ` • آخر مزامنة ${time}` : ''} • اضغط للمزامنة الآن`}
+      className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer disabled:cursor-wait ${
+        failed
+          ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+          : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+      }`}
+    >
+      {syncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Cloud className="w-3 h-3" />} {label}
+    </button>
+  );
+};

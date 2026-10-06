@@ -9,13 +9,32 @@ import sqlite3
 import time
 import uuid
 
-ALLOWED_TYPES = ("trendline", "hline", "fibonacci", "rectangle")
+# Web chart tools (src/types/market.ts DrawingTool). Every web tool stores 2 anchor points
+# (a horizontal line keeps its second anchor for the label position). The original four stay as they were.
+_WEB_TYPES = (
+    "horizontal",
+    "vertical",
+    "ray",
+    "extended",
+    "channel",
+    "arrow",
+    "text",
+    "price_range",
+    "date_range",
+    "box",
+    "measure",
+    "position_long",
+    "position_short",
+)
+
+ALLOWED_TYPES = ("trendline", "hline", "fibonacci", "rectangle") + _WEB_TYPES
 
 _REQUIRED_POINTS = {
     "trendline": 2,
     "hline": 1,
     "fibonacci": 2,
     "rectangle": 2,
+    **{t: 2 for t in _WEB_TYPES},
 }
 
 _MAX_STYLE_CHARS = 2000

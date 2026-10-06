@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { onCloudSyncApplied } from '../../api/cloudSync';
 
 /**
  * Multi-chart layouts (TradingView style) + draggable splitters.
@@ -169,6 +170,17 @@ export function useLayoutSizes(spec: LayoutSpec) {
     const saved = readAllSizes()[spec.id];
     setSizesState(validSizes(saved, spec) ? saved : defaultSizes(spec));
   }, [spec]);
+
+  // Sizes changed on another device (account sync)
+  useEffect(
+    () =>
+      onCloudSyncApplied((docs) => {
+        if (!docs.includes('layouts')) return;
+        const saved = readAllSizes()[spec.id];
+        if (validSizes(saved, spec)) setSizesState(saved);
+      }),
+    [spec]
+  );
 
   const setSizes = useCallback(
     (next: LayoutSizes) => {

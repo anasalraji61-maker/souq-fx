@@ -153,7 +153,7 @@ def test_unsupported_type_skipped(client):
     params = {"symbol": "EURUSD", "timeframe": "4h"}
     r = client.post(
         "/api/drawings",
-        json=[_trendline(), {"id": "x", "type": "text", "points": [], "text": "hi"}],
+        json=[_trendline(), {"id": "x", "type": "spiral", "points": [], "text": "hi"}],
         params=params,
         headers=headers,
     )

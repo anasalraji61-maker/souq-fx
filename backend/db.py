@@ -1369,6 +1369,10 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM trades WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
+        # Chart drawings (`drawings.DrawingStore`, table chart_drawings, user_id stored as text) were kept
+        # after account deletion. The table only exists once the drawings router has been used.
+        if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='chart_drawings'").fetchone():
+            c.execute("DELETE FROM chart_drawings WHERE user_id=?", (str(user_id),))
         c.execute("DELETE FROM vote_ballots WHERE user_id=?", (user_id,))
         # قائمة المتابعة المخصّصة وتقدّم الأكاديمية بيانات شخصية أيضاً وكانت تبقى بعد الحذف
         c.execute("DELETE FROM watchlist WHERE user_id=?", (user_id,))

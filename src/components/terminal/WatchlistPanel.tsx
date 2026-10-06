@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { onCloudSyncApplied } from '../../api/cloudSync';
 import { MarketSymbol } from '../../types/market';
 import { getQuote, MarketQuote, getMarketStatus, MarketStatus } from '../../api/market';
 import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock, X } from 'lucide-react';
@@ -146,6 +147,22 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
     return () => clearInterval(interval);
   }, [currentList.symbols]);
+
+  // Watchlists changed on another device (account sync) → re-read them
+  useEffect(
+    () =>
+      onCloudSyncApplied((docs) => {
+        if (!docs.includes('watchlists')) return;
+        try {
+          const raw = localStorage.getItem('matrix.watchlists');
+          const parsed = raw ? JSON.parse(raw) : null;
+          if (Array.isArray(parsed) && parsed.length > 0) setWatchlists(parsed);
+        } catch {
+          // keep current lists
+        }
+      }),
+    []
+  );
 
   const handleSaveWatchlists = (next: NamedWatchlist[]) => {
     setWatchlists(next);
