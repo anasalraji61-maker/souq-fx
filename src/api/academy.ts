@@ -79,13 +79,15 @@ function sameTopic(a: string, b: string): boolean {
 }
 
 function mergeSchool(raw: AcademySchool): AcademySchool {
+  // quizzes / illustrations in the app copy are Arabic: attach them only to Arabic lesson texts
+  const arabic = !raw.content_lang || raw.content_lang === 'ar';
   const local = ACADEMY_SCHOOLS.find((s) => s.id === raw.id);
   const localLecture = (id: string) => local?.levels.flatMap((l) => l.lectures).find((l) => l.id === id);
   const levels = (Array.isArray(raw.levels) ? raw.levels : []).map((lvl) => ({
     ...lvl,
     lectures: (Array.isArray(lvl.lectures) ? lvl.lectures : []).map((lec: RawLecture) => {
       const cand = localLecture(lec.id);
-      const ll = cand && sameTopic(cand.title, lec.title) ? cand : undefined;
+      const ll = arabic && cand && sameTopic(cand.title, lec.title) ? cand : undefined;
       return {
         ...lec,
         outline: Array.isArray(lec.outline) ? lec.outline : [],
@@ -105,11 +107,12 @@ function mergeSchool(raw: AcademySchool): AcademySchool {
   };
 }
 
-export async function fetchSchools(): Promise<{ schools: AcademySchool[]; isOffline: boolean }> {
+export async function fetchSchools(lang: string = 'ar'): Promise<{ schools: AcademySchool[]; isOffline: boolean }> {
+  const q = lang && lang !== 'ar' ? `?lang=${encodeURIComponent(lang)}` : '';
   const res = await apiClient.get<{ schools?: { id: string }[] }>('/api/academy/schools');
   if (res.ok && res.data && Array.isArray(res.data.schools) && res.data.schools.length > 0) {
     const details = await Promise.all(
-      res.data.schools.map((s) => apiClient.get<AcademySchool>(`/api/academy/schools/${encodeURIComponent(s.id)}`))
+      res.data.schools.map((s) => apiClient.get<AcademySchool>(`/api/academy/schools/${encodeURIComponent(s.id)}${q}`))
     );
     if (details.every((d) => d.ok && d.data && Array.isArray(d.data.levels))) {
       currentSchools = details.map((d) => mergeSchool(d.data as AcademySchool)).sort((a, b) => a.order - b.order);

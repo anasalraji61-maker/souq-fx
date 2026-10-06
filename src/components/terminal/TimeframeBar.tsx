@@ -22,6 +22,7 @@ import {
   BoxSelect,
   Sparkles,
 } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 export type TerminalLayoutMode = 'single' | 'split-v' | 'split-h' | 'triple' | 'quad';
 
@@ -101,7 +102,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
         <div className="flex items-center bg-[#0B1220] p-0.5 rounded border border-[#243049]">
           <button
             onClick={() => onChartTypeChange('candles')}
-            title="شموع يابانية (Candlesticks)"
+            title={tl().tm_210}
             className={`p-1 rounded ${
               chartType === 'candles' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -110,7 +111,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onChartTypeChange('line')}
-            title="خط سعري (Line Chart)"
+            title={tl().tm_211}
             className={`p-1 rounded ${
               chartType === 'line' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -131,7 +132,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
-          <span>المؤشرات</span>
+          <span>{tl().tm_105}</span>
           {activeIndicatorCount > 0 && (
             <span className="w-4 h-4 rounded-full bg-[#2DD4BF] text-[#042F2E] font-bold text-[10px] flex items-center justify-center">
               {activeIndicatorCount}
@@ -145,7 +146,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
         <div className="flex items-center bg-[#0B1220] p-0.5 rounded border border-[#243049] gap-0.5">
           <button
             onClick={() => onDrawingToolChange('none')}
-            title="مؤشر عادي / تقاطع"
+            title={tl().tm_212}
             className={`p-1 rounded ${
               activeDrawingTool === 'none' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -154,7 +155,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onDrawingToolChange('horizontal')}
-            title="مستوى أفقي / دعم ومقاومة"
+            title={tl().tm_213}
             className={`p-1 rounded ${
               activeDrawingTool === 'horizontal' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -163,7 +164,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onDrawingToolChange('trendline')}
-            title="خط اتجاه (Trendline)"
+            title={tl().tm_201}
             className={`p-1 rounded ${
               activeDrawingTool === 'trendline' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -172,7 +173,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onDrawingToolChange('fibonacci')}
-            title="فيبوناتشي الارتدادي (Fibonacci Retracement)"
+            title={tl().tm_214}
             className={`p-1 rounded ${
               activeDrawingTool === 'fibonacci' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -181,7 +182,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onDrawingToolChange('box')}
-            title="منطقة طلب وعرض / بلوك أوامر (Order Block Zone)"
+            title={tl().tm_215}
             className={`p-1 rounded ${
               activeDrawingTool === 'box' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -190,7 +191,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onDrawingToolChange('measure')}
-            title="مسطرة قياس النقاط والنسبة المئوية (Measure Ruler)"
+            title={tl().tm_216}
             className={`p-1 rounded ${
               activeDrawingTool === 'measure' ? 'bg-[#1C2740] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -199,7 +200,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={onClearDrawings}
-            title="مسح كل الرسوم"
+            title={tl().tm_217}
             className="p-1 rounded text-[#7B8DA8] hover:text-[#EF4444] transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -212,31 +213,31 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
         {/* MTF Presets Pills */}
         {onApplyMtfPreset && (
           <div className="hidden lg:flex items-center gap-1 bg-[#0B1220] p-0.5 rounded border border-[#243049]">
-            <span className="text-[10px] text-[#7B8DA8] px-1 font-semibold">قوالب MTF:</span>
+            <span className="text-[10px] text-[#7B8DA8] px-1 font-semibold">{tl().tm_218}</span>
             <button
               onClick={() => onApplyMtfPreset('mtf-pro')}
-              title="توزيع فريمات احترافي: 5m / 15m / 1h / 4h"
+              title={tl().tm_219}
               className="px-1.5 py-0.5 rounded bg-[#162033] hover:bg-[#1E293B] text-[#2DD4BF] text-[10px] font-mono transition-colors"
             >
               MTF Pro
             </button>
             <button
               onClick={() => onApplyMtfPreset('scalp')}
-              title="مضاربة سريعة: 1m / 5m / 15m / 1h"
+              title={tl().tm_220}
               className="px-1.5 py-0.5 rounded bg-[#162033] hover:bg-[#1E293B] text-[#A3B4D0] hover:text-[#E8EEF9] text-[10px] font-mono transition-colors"
             >
               Scalp
             </button>
             <button
               onClick={() => onApplyMtfPreset('swing')}
-              title="سوينغ متوسط وطويل: 1h / 4h / 1D / 1D"
+              title={tl().tm_221}
               className="px-1.5 py-0.5 rounded bg-[#162033] hover:bg-[#1E293B] text-[#A3B4D0] hover:text-[#E8EEF9] text-[10px] font-mono transition-colors"
             >
               Swing
             </button>
             <button
               onClick={() => onApplyMtfPreset('major')}
-              title="الأزواج الأربعة الكبرى: EURUSD / GBPUSD / USDJPY / XAUUSD"
+              title={tl().tm_222}
               className="px-1.5 py-0.5 rounded bg-[#162033] hover:bg-[#1E293B] text-[#F59E0B] text-[10px] font-mono transition-colors"
             >
               Majors
@@ -248,7 +249,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
         {onToggleSyncSymbol && (
           <button
             onClick={onToggleSyncSymbol}
-            title={syncSymbol ? 'مزامنة الرمز عبر كل الفريمات (مفعّل)' : 'مزامنة الرمز (معطّل - كل فريم مستقل)'}
+            title={syncSymbol ? tl().tm_223 : tl().tm_224}
             className={`flex items-center gap-1 px-2 py-1 rounded border text-xs transition-colors ${
               syncSymbol
                 ? 'bg-[#042F2E] border-[#2DD4BF] text-[#2DD4BF] font-semibold'
@@ -256,7 +257,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
             }`}
           >
             <Link2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">مزامنة الرمز</span>
+            <span className="hidden sm:inline">{tl().tm_140}</span>
           </button>
         )}
 
@@ -266,7 +267,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
         <div className="flex items-center gap-0.5 bg-[#0B1220] p-0.5 rounded border border-[#243049]">
           <button
             onClick={() => onLayoutModeChange('single')}
-            title="شارت فردي كامل (1 Chart)"
+            title={tl().tm_225}
             className={`p-1 rounded transition-colors ${
               layoutMode === 'single' ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -275,7 +276,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onLayoutModeChange('split-v')}
-            title="فريمين عموديين جنب بعض (2 Charts Side-by-Side)"
+            title={tl().tm_226}
             className={`p-1 rounded transition-colors ${
               layoutMode === 'split-v' ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -284,7 +285,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onLayoutModeChange('split-h')}
-            title="فريمين أفقيين فوق بعض (2 Charts Stacked)"
+            title={tl().tm_227}
             className={`p-1 rounded transition-colors ${
               layoutMode === 'split-h' ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -293,7 +294,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onLayoutModeChange('triple')}
-            title="3 فريمات (فريم رئيسي كبير + فريمين)"
+            title={tl().tm_228}
             className={`p-1 rounded transition-colors ${
               layoutMode === 'triple' ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -302,7 +303,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
           </button>
           <button
             onClick={() => onLayoutModeChange('quad')}
-            title="شبكة 4 فريمات مربعة 2x2 (TradingView Quad 4-Square)"
+            title={tl().tm_229}
             className={`p-1 rounded transition-colors ${
               layoutMode === 'quad' ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
             }`}
@@ -315,7 +316,7 @@ export const TimeframeBar: React.FC<TimeframeBarProps> = ({
         {onToggleConsole && (
           <button
             onClick={onToggleConsole}
-            title="فتح/إغلاق موجه الأوامر (Command Session Console)"
+            title={tl().tm_230}
             className={`p-1 px-2 rounded border border-[#243049] flex items-center gap-1 font-mono text-xs transition-colors ${
               isConsoleOpen ? 'bg-[#2DD4BF] text-[#042F2E] font-bold' : 'bg-[#162033] text-[#A3B4D0] hover:text-[#E8EEF9]'
             }`}

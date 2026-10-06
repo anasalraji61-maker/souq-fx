@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { IndicatorInstance } from '../../types/market';
 import { INDICATOR_CATALOG, IndicatorDefinition } from '../../data/indicators';
 import { X, Check } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface IndicatorSettingsModalProps {
   isOpen: boolean;
@@ -113,7 +114,7 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
             </div>
           ) : (
             <div className="text-xs text-[#7B8DA8] p-2 text-center bg-[#162033] rounded-lg">
-              هذا المؤشر لا يتطلب معاملات إضافية.
+              {tl().tm_63}
             </div>
           )}
 
@@ -146,7 +147,7 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-colors"
           >
-            حفظ وإغلاق
+            {tl().tm_64}
           </button>
         </div>
       </div>

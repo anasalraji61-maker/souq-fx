@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Terminal, Save, Share2, Trash2, ChevronDown, ChevronUp, Send, Check, FileText } from 'lucide-react';
 import { MarketSymbol, Timeframe, IndicatorSettings } from '../../types/market';
+import { tl, fmt } from '../../i18n/locales';
 
 export interface CommandLogEntry {
   id: string;
@@ -63,7 +64,7 @@ export const CommandSessionDrawer: React.FC<CommandSessionDrawerProps> = ({
       case 'help':
         onAddLog(
           'sys',
-          'الأوامر المتاحة:\n  - quote : عرض تفاصيل السعر والفارق للأداة الحالية\n  - rsi : فحص قراءة مؤشر القوة النسبية (RSI)\n  - status : فحص حالة الجلسة والمؤشرات النشطة\n  - alert [price] : جدولة تنبيه سعر جديد\n  - calc [lots] : حساب قيمة النقطة لحجم العقد\n  - clear : مسح سجل الأوامر\n  - save / export : تصدير الجلسة كملف نصي (.txt)'
+          tl().tm_38
         );
         break;
 
@@ -92,7 +93,7 @@ export const CommandSessionDrawer: React.FC<CommandSessionDrawerProps> = ({
         if (parts[1]) {
           onAddLog('alert', `ALERT ARMED: Trigger level set at ${parts[1]} for ${symbol.symbol}.`);
         } else {
-          onAddLog('sys', 'صيغة الأمر: alert [السعر المستهدف] (مثال: alert 1.0900)');
+          onAddLog('sys', tl().tm_39);
         }
         break;
 
@@ -112,7 +113,7 @@ export const CommandSessionDrawer: React.FC<CommandSessionDrawerProps> = ({
         break;
 
       default:
-        onAddLog('sys', `أمر غير معروف: "${cmd}". اكتب "help" لعرض قائمة الأوامر.`);
+        onAddLog('sys', fmt(tl().tm_40, { cmd: cmd }));
         break;
     }
   };
@@ -144,34 +145,34 @@ export const CommandSessionDrawer: React.FC<CommandSessionDrawerProps> = ({
           {copiedNotification && (
             <span className="text-[10px] font-mono text-[#22C55E] flex items-center gap-1 animate-pulse">
               <Check className="w-3 h-3" />
-              <span>تم النسخ والحفظ!</span>
+              <span>{tl().tm_41}</span>
             </span>
           )}
 
           {/* Save / Export Button */}
           <button
             onClick={onExportSession}
-            title="تصدير وحفظ الجلسة كملف نصي (Save as .txt)"
+            title={tl().tm_42}
             className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-[#162033] hover:bg-[#2DD4BF] text-[#2DD4BF] hover:text-[#042F2E] border border-[#243049] font-bold text-[11px] transition-colors"
           >
             <Save className="w-3 h-3" />
-            <span>حفظ الجلسة (Save .txt)</span>
+            <span>{tl().tm_43}</span>
           </button>
 
           {/* Share Button */}
           <button
             onClick={onShareSession}
-            title="مشاركة / نسخ مخرجات الجلسة (Share Session Output)"
+            title={tl().tm_44}
             className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#162033] hover:bg-[#1E293B] text-[#A3B4D0] hover:text-[#E8EEF9] border border-[#243049] text-[11px] transition-colors"
           >
             <Share2 className="w-3 h-3 text-[#38BDF8]" />
-            <span>مشاركة (Share)</span>
+            <span>{tl().tm_45}</span>
           </button>
 
           {isOpen && (
             <button
               onClick={onClearLogs}
-              title="مسح مخرجات الجلسة"
+              title={tl().tm_46}
               className="p-1 rounded text-[#7B8DA8] hover:text-[#EF4444]"
             >
               <Trash2 className="w-3 h-3" />
@@ -226,13 +227,13 @@ export const CommandSessionDrawer: React.FC<CommandSessionDrawerProps> = ({
               type="text"
               value={commandInput}
               onChange={(e) => setCommandInput(e.target.value)}
-              placeholder="اكتب أمراً (help, quote, rsi, status, calc, alert, save)..."
+              placeholder={tl().tm_47}
               className="flex-1 bg-transparent border-none text-xs font-mono text-[#E8EEF9] focus:outline-none placeholder-[#4B5E7D]"
             />
             <button
               type="submit"
               className="p-1 rounded text-[#7B8DA8] hover:text-[#2DD4BF]"
-              title="إرسال الأمر"
+              title={tl().tm_48}
             >
               <Send className="w-3 h-3" />
             </button>

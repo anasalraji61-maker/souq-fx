@@ -40,6 +40,7 @@ import {
   calculateCCI,
   calculateOBV,
 } from '../../data/indicators';
+import { tl, fmt } from '../../i18n/locales';
 
 export interface MatrixChartCanvasProps {
   symbol: string;
@@ -1712,7 +1713,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
           {isDemo && (
             <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 font-bold font-sans text-[10px] flex items-center gap-1 shadow-xs shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              بيانات تجريبية
+              {tl().tm_65}
             </span>
           )}
         </div>
@@ -1790,7 +1791,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                       e.stopPropagation();
                       onUpdateIndicatorInstance?.({ ...ind, visible: !ind.visible });
                     }}
-                    title={ind.visible ? 'إخفاء المؤشر' : 'إظهار المؤشر'}
+                    title={ind.visible ? tl().tm_66 : tl().tm_67}
                     className="text-[#94A3B8] hover:text-white transition-colors cursor-pointer"
                   >
                     {ind.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3 text-[#64748B]" />}
@@ -1800,7 +1801,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                       e.stopPropagation();
                       onOpenIndicatorSettings?.(ind);
                     }}
-                    title="إعدادات المؤشر"
+                    title={tl().tm_68}
                     className="text-[#94A3B8] hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     <Settings className="w-3 h-3" />
@@ -1810,7 +1811,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                       e.stopPropagation();
                       onRemoveIndicatorInstance?.(ind.id);
                     }}
-                    title="حذف المؤشر"
+                    title={tl().tm_59}
                     className="text-[#94A3B8] hover:text-rose-400 transition-colors cursor-pointer"
                   >
                     <X className="w-3 h-3" />
@@ -1827,7 +1828,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                 e.stopPropagation();
                 setIsLegendExpanded(true);
               }}
-              title="عرض باقي المؤشرات"
+              title={tl().tm_69}
               className="px-2 py-0.5 rounded-md bg-[#16293D] border border-[#2DD4BF]/40 text-[#2DD4BF] text-[10px] font-mono font-bold hover:bg-[#1E3A5A] active:scale-95 transition-all cursor-pointer shadow-xs"
             >
               +{indicatorInstances.length - 1}
@@ -1841,7 +1842,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
                 e.stopPropagation();
                 setIsLegendExpanded(false);
               }}
-              title="طي قائمة المؤشرات"
+              title={tl().tm_70}
               className="px-1.5 py-0.5 rounded-md bg-[#1E293B] border border-[#334155] text-[#94A3B8] text-[10px] hover:text-white active:scale-95 transition-all cursor-pointer"
             >
               ▲
@@ -1854,14 +1855,14 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       <div className="absolute top-2 right-20 z-10 flex items-center gap-1 bg-[#121A2B]/80 backdrop-blur border border-[#243049] rounded-md p-1 shadow">
         <button
           onClick={() => setVisibleCount((prev) => Math.max(20, prev - 10))}
-          title="تكبير (Zoom In)"
+          title={tl().tm_71}
           className="p-1 hover:bg-[#1C2740] rounded text-[#A3B4D0] hover:text-[#E8EEF9] transition-colors"
         >
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
           onClick={() => setVisibleCount((prev) => Math.min(candles.length, prev + 10))}
-          title="تصغير (Zoom Out)"
+          title={tl().tm_72}
           className="p-1 hover:bg-[#1C2740] rounded text-[#A3B4D0] hover:text-[#E8EEF9] transition-colors"
         >
           <ZoomOut className="w-4 h-4" />
@@ -1872,14 +1873,14 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
             setVisibleCount(70);
             resetAutoScale();
           }}
-          title="إعادة ضبط العرض والسعر (Reset View)"
+          title={tl().tm_73}
           className="p-1 hover:bg-[#1C2740] rounded text-[#A3B4D0] hover:text-[#E8EEF9] transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
         <button
           onClick={resetAutoScale}
-          title={isAutoScale ? 'ملاءمة تلقائية للسعر (مفعّلة)' : 'إعادة الملاءمة التلقائية للسعر'}
+          title={isAutoScale ? tl().tm_74 : tl().tm_75}
           className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-colors ${
             isAutoScale ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
           }`}
@@ -1888,7 +1889,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
         </button>
         <button
           onClick={() => setIsLogScale(!isLogScale)}
-          title={isLogScale ? 'الوضع الخطي' : 'الوضع اللوغاريتمي (Log Scale)'}
+          title={isLogScale ? tl().tm_76 : tl().tm_77}
           className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${
             isLogScale ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
           }`}
@@ -1902,9 +1903,9 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
         <button
           onClick={() => setPanOffset(0)}
           className="absolute bottom-8 right-24 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#131E33]/95 hover:bg-[#1E2D4A] border border-[#2DD4BF]/50 text-[#2DD4BF] text-xs font-semibold shadow-2xl backdrop-blur-md transition-all cursor-pointer animate-pulse"
-          title="الانتقال إلى الشمعة الأحدث (Go to Latest)"
+          title={tl().tm_78}
         >
-          <span>الأحدث</span>
+          <span>{tl().tm_79}</span>
           <ChevronsRight className="w-3.5 h-3.5" />
         </button>
       )}

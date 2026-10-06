@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PriceAlertItem, AlertCondition, MarketSymbol } from '../../types/market';
 import { X, Bell, Plus, Trash2, CheckCircle2, Clock, AlertTriangle, Volume2 } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface AlertsPanelProps {
   isOpen: boolean;
@@ -65,7 +66,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E283D] bg-[#0A101D]">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-[#F59E0B]" />
-            <h3 className="font-bold text-sm text-[#E8EEF9]">تنبيهات الأسعار (Price Alerts)</h3>
+            <h3 className="font-bold text-sm text-[#E8EEF9]">{tl().tm_13}</h3>
           </div>
           <button
             onClick={onClose}
@@ -92,13 +93,13 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
                   className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#1C2E4A] hover:bg-[#2DD4BF] text-[#2DD4BF] hover:text-[#042F2E] font-bold text-xs transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  إنشاء تنبيه جديد
+                  {tl().tm_14}
                 </button>
               </div>
 
               {alerts.length === 0 ? (
                 <div className="text-center py-10 text-[#64748B] bg-[#141E30] rounded-xl border border-[#243049]">
-                  لا توجد تنبيهات نشطة حالياً. انقر على "إنشاء تنبيه جديد" أو اضغط بالزر الأيمن على الشارت.
+                  {tl().tm_15}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -135,7 +136,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
                             </span>
                             {alert.triggered && (
                               <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 font-bold animate-pulse">
-                                تم التفعيل!
+                                {tl().tm_16}
                               </span>
                             )}
                           </div>
@@ -148,7 +149,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
                       <button
                         onClick={() => onDeleteAlert(alert.id)}
                         className="p-1.5 rounded hover:bg-rose-500/20 text-[#64748B] hover:text-rose-400 transition-colors"
-                        title="حذف التنبيه"
+                        title={tl().tm_17}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -161,19 +162,19 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
             /* Creation Form */
             <form onSubmit={handleCreate} className="space-y-3.5 bg-[#141E30] p-4 rounded-xl border border-[#243049]">
               <div className="flex items-center justify-between pb-2 border-b border-[#243049]">
-                <span className="font-bold text-sm text-[#E8EEF9]">إنشاء تنبيه سعر جديد</span>
+                <span className="font-bold text-sm text-[#E8EEF9]">{tl().tm_18}</span>
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
                   className="text-xs text-[#7B8DA8] hover:text-white"
                 >
-                  إلغاء
+                  {tl().tm_19}
                 </button>
               </div>
 
               {/* Symbol */}
               <div>
-                <label className="block text-[11px] text-[#7B8DA8] mb-1">الرمز (Symbol)</label>
+                <label className="block text-[11px] text-[#7B8DA8] mb-1">{tl().tm_20}</label>
                 <select
                   value={symbol}
                   onChange={(e) => {
@@ -193,23 +194,23 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
               {/* Condition */}
               <div>
-                <label className="block text-[11px] text-[#7B8DA8] mb-1">الشرط (Condition)</label>
+                <label className="block text-[11px] text-[#7B8DA8] mb-1">{tl().tm_21}</label>
                 <select
                   value={condition}
                   onChange={(e) => setCondition(e.target.value as AlertCondition)}
                   className="w-full px-3 py-1.5 bg-[#0B1220] border border-[#243049] rounded-lg text-xs text-[#E8EEF9] focus:outline-none focus:border-[#2DD4BF]"
                 >
-                  <option value="crosses">يتقاطع مع السعر (Crosses)</option>
-                  <option value="crosses_up">يخترق صعوداً (Crosses Up)</option>
-                  <option value="crosses_down">يكسر هبوطاً (Crosses Down)</option>
-                  <option value="greater_than">أكبر من أو يساوي (Greater Than)</option>
-                  <option value="less_than">أقل من أو يساوي (Less Than)</option>
+                  <option value="crosses">{tl().tm_22}</option>
+                  <option value="crosses_up">{tl().tm_23}</option>
+                  <option value="crosses_down">{tl().tm_24}</option>
+                  <option value="greater_than">{tl().tm_25}</option>
+                  <option value="less_than">{tl().tm_26}</option>
                 </select>
               </div>
 
               {/* Target Price */}
               <div>
-                <label className="block text-[11px] text-[#7B8DA8] mb-1">السعر المستهدف (Target Price)</label>
+                <label className="block text-[11px] text-[#7B8DA8] mb-1">{tl().tm_27}</label>
                 <input
                   type="number"
                   step="any"
@@ -222,12 +223,12 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
               {/* Note / Message */}
               <div>
-                <label className="block text-[11px] text-[#7B8DA8] mb-1">ملاحظة التنبيه (اختياري)</label>
+                <label className="block text-[11px] text-[#7B8DA8] mb-1">{tl().tm_28}</label>
                 <input
                   type="text"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="مثلاً: كسر مستوى المقاومة أو الدعم"
+                  placeholder={tl().tm_29}
                   className="w-full px-3 py-1.5 bg-[#0B1220] border border-[#243049] rounded-lg text-xs text-[#E8EEF9] focus:outline-none focus:border-[#2DD4BF]"
                 />
               </div>
@@ -238,14 +239,14 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
                   onClick={() => setIsCreating(false)}
                   className="px-3 py-1.5 rounded-lg bg-[#1C2740] text-[#7B8DA8] hover:text-white text-xs transition-colors"
                 >
-                  إلغاء
+                  {tl().tm_19}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-colors flex items-center gap-1.5"
                 >
                   <Bell className="w-3.5 h-3.5" />
-                  حفظ وتفعيل التنبيه
+                  {tl().tm_30}
                 </button>
               </div>
             </form>
@@ -256,13 +257,13 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
         <div className="p-3 border-t border-[#1E283D] bg-[#0A101D] flex items-center justify-between text-[#64748B]">
           <span className="flex items-center gap-1">
             <Volume2 className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            يصدر رنيناً صوتياً وإشعاراً فورياً عند ملامسة السعر.
+            {tl().tm_31}
           </span>
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-[#1C2E4A] hover:bg-[#243B60] text-[#2DD4BF] font-bold text-xs transition-colors"
           >
-            إغلاق
+            {tl().tm_32}
           </button>
         </div>
       </div>
@@ -272,11 +273,11 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
 function getConditionLabel(cond: AlertCondition): string {
   switch (cond) {
-    case 'crosses': return 'يتقاطع مع';
-    case 'crosses_up': return 'يخترق صعوداً ↑';
-    case 'crosses_down': return 'يكسر هبوطاً ↓';
-    case 'greater_than': return '≥ أكبر من';
-    case 'less_than': return '≤ أقل من';
+    case 'crosses': return tl().tm_33;
+    case 'crosses_up': return tl().tm_34;
+    case 'crosses_down': return tl().tm_35;
+    case 'greater_than': return tl().tm_36;
+    case 'less_than': return tl().tm_37;
     default: return cond;
   }
 }

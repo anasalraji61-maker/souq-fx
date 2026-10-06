@@ -103,7 +103,7 @@ export function CoursesScreen() {
     setLoadingSchool(true);
     setSchoolFallback(false);
     try {
-      const detail = await api.academySchool(id);
+      const detail = await api.academySchool(id, lang.startsWith('en') ? 'en' : lang);
       if (!fresh()) return;
       setSchool(detail);
     } catch {

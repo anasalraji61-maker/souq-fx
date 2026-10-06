@@ -326,3 +326,22 @@ export async function searchSymbols(
     category: s.category,
   }));
 }
+
+/**
+ * Session texts in the interface language (the `currentSession` / `nextSession` strings above are Arabic).
+ * `t` holds the translated words: session names, "closed for the weekend", "liquidity switch", "{s} opens {t}".
+ */
+export function localizedSessionLabels(
+  ms: MarketStatus,
+  t: { tokyo: string; london: string; newYork: string; sydney: string; weekend: string; switching: string; opens: string },
+  now: Date = new Date()
+): { current: string; next: string } {
+  const names: Record<string, string> = { Tokyo: t.tokyo, London: t.london, 'New York': t.newYork };
+  const open = ms.sessions.filter((s) => s.isOpen).map((s) => names[s.name] || s.name);
+  const day = now.getUTCDay();
+  const weekend = !ms.isOpen && (day === 6 || day === 0 || (day === 5 && now.getUTCHours() >= 21));
+  const current = open.length ? open.join(' + ') : weekend ? t.weekend : t.switching;
+  const h = now.getUTCHours() + now.getUTCMinutes() / 60;
+  const [nextName, nextTime] = h < 7 ? [t.london, '07:00'] : h < 12 ? [t.newYork, '12:00'] : h < 21 ? [t.sydney, '21:00'] : [t.tokyo, '00:00'];
+  return { current, next: t.opens.replace('{s}', nextName).replace('{t}', `${nextTime} UTC`) };
+}

@@ -14,6 +14,7 @@ import {
   BarChart2,
   Sparkles,
 } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface OrderFlowPanelProps {
   isOpen: boolean;
@@ -134,10 +135,10 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
       <button
         onClick={onToggle}
         className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:bottom-8 left-3 md:left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A]/90 hover:bg-[#1E293B] border border-[#2DD4BF]/40 text-[#2DD4BF] text-xs font-bold shadow-lg backdrop-blur-sm transition-all"
-        title="فتح لوحة تدفق الأوامر التقديرية"
+        title={tl().tm_80}
       >
         <Activity className="w-3.5 h-3.5" />
-        <span>تدفق الأوامر (Order Flow)</span>
+        <span>{tl().tm_81}</span>
         <ChevronUp className="w-3.5 h-3.5" />
       </button>
     );
@@ -166,7 +167,7 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
           <button
             onClick={onToggle}
             className="p-1 rounded text-[#7B8DA8] hover:text-white hover:bg-[#162033]"
-            title="تصغير اللوحة"
+            title={tl().tm_82}
           >
             <ChevronDown className="w-4 h-4" />
           </button>
@@ -182,8 +183,8 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
         ) : closedCandles.length < 5 ? (
           <EmptyState
             icon={<Activity className="w-8 h-8 text-[#2DD4BF]" />}
-            title="لا توجد شموع مغلقة كافية"
-            message="يتطلب تدفق الأوامر ما لا يقل عن 5 شموع مغلقة لاحتساب الدلتا وأحجام الشراء والبيع التقديرية."
+            title={tl().tm_83}
+            message={tl().tm_84}
           />
         ) : (
           <>
@@ -192,8 +193,8 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
               {/* Delta Last */}
               <div className="p-3 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
                 <div className="flex items-center justify-between text-[11px] text-[#7B8DA8]">
-                  <span>دلتا الشمعة الأخيرة</span>
-                  <span className="text-[9px] text-amber-400">تقديري</span>
+                  <span>{tl().tm_85}</span>
+                  <span className="text-[9px] text-amber-400">{tl().tm_86}</span>
                 </div>
                 <div
                   className={`text-lg font-bold font-mono ${
@@ -208,8 +209,8 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
               {/* Total Delta */}
               <div className="p-3 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
                 <div className="flex items-center justify-between text-[11px] text-[#7B8DA8]">
-                  <span>صافي الدلتا للفترة</span>
-                  <span className="text-[9px] text-amber-400">تقديري</span>
+                  <span>{tl().tm_87}</span>
+                  <span className="text-[9px] text-amber-400">{tl().tm_86}</span>
                 </div>
                 <div
                   className={`text-lg font-bold font-mono ${
@@ -224,8 +225,8 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
               {/* Cumulative CVD */}
               <div className="p-3 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
                 <div className="flex items-center justify-between text-[11px] text-[#7B8DA8]">
-                  <span>خط CVD التراكمي</span>
-                  <span className="text-[9px] text-amber-400">تقديري</span>
+                  <span>{tl().tm_88}</span>
+                  <span className="text-[9px] text-amber-400">{tl().tm_86}</span>
                 </div>
                 <div className="text-lg font-bold font-mono text-[#F59E0B]">
                   {lastBar?.cumulative_delta ?? 0}
@@ -235,8 +236,8 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
               {/* Buy / Sell Imbalance */}
               <div className="p-3 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
                 <div className="flex items-center justify-between text-[11px] text-[#7B8DA8]">
-                  <span>عدم التوازن (Imbalance)</span>
-                  <span className="text-[9px] text-amber-400">تقديري</span>
+                  <span>{tl().tm_89}</span>
+                  <span className="text-[9px] text-amber-400">{tl().tm_86}</span>
                 </div>
                 <div
                   className={`text-lg font-bold font-mono ${
@@ -254,10 +255,10 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
               <div className="flex items-center justify-between text-[11px]">
                 <span className="font-bold text-white flex items-center gap-1.5">
                   <BarChart2 className="w-3.5 h-3.5 text-[#F59E0B]" />
-                  <span>منحنى الدلتا التراكمية (Cumulative Volume Delta Line)</span>
+                  <span>{tl().tm_90}</span>
                 </span>
                 <span className="text-[10px] text-[#7B8DA8]">
-                  مبني على الشموع المغلقة فقط • كل قيمة مصنفة كـ «تقديري»
+                  {tl().tm_91}
                 </span>
               </div>
               <div className="w-full h-24 bg-[#08101E] rounded-lg p-1 border border-[#1E283D]">
@@ -272,13 +273,13 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
                 <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
                   <thead className="bg-[#0B1220] text-[#7B8DA8] text-[10px] font-semibold">
                     <tr>
-                      <th className="py-2 px-3">الوقت</th>
-                      <th className="py-2 px-3">الإغلاق</th>
-                      <th className="py-2 px-3">حجم الشراء (تقديري)</th>
-                      <th className="py-2 px-3">حجم البيع (تقديري)</th>
-                      <th className="py-2 px-3">الدلتا Δ (تقديري)</th>
-                      <th className="py-2 px-3">CVD التراكمي (تقديري)</th>
-                      <th className="py-2 px-3 text-center">الخلل % (تقديري)</th>
+                      <th className="py-2 px-3">{tl().tm_92}</th>
+                      <th className="py-2 px-3">{tl().tm_93}</th>
+                      <th className="py-2 px-3">{tl().tm_94}</th>
+                      <th className="py-2 px-3">{tl().tm_95}</th>
+                      <th className="py-2 px-3">{tl().tm_96}</th>
+                      <th className="py-2 px-3">{tl().tm_97}</th>
+                      <th className="py-2 px-3 text-center">{tl().tm_98}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#243049]/40 text-xs font-mono">
@@ -348,11 +349,11 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
                         <div className="grid grid-cols-3 gap-1 text-[10px] text-center bg-[#050B14] p-1.5 rounded">
                           <div>
                             <span className="text-emerald-400 block font-bold">{b.buy_volume}</span>
-                            <span className="text-[#64748B] text-[8px]">شراء</span>
+                            <span className="text-[#64748B] text-[8px]">{tl().tm_99}</span>
                           </div>
                           <div>
                             <span className="text-rose-400 block font-bold">{b.sell_volume}</span>
-                            <span className="text-[#64748B] text-[8px]">بيع</span>
+                            <span className="text-[#64748B] text-[8px]">{tl().tm_100}</span>
                           </div>
                           <div>
                             <span className="text-amber-400 block font-bold">{b.cumulative_delta}</span>

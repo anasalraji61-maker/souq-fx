@@ -36,6 +36,10 @@ export interface AcademySchool {
   max_level: number;
   summary: string;
   summary_en: string;
+  /** server: the school name in the requested language (Kurdish / English) */
+  name_localized?: string;
+  /** server: language of the lesson texts in this copy ('ar' | 'en' | 'ku') */
+  content_lang?: string;
   levels_count: number;
   lectures_count: number;
   classroom: {

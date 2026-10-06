@@ -158,7 +158,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         } catch {
           // الصوت غير متاح في Expo Go لهذا الإصدار — نكمل بدون تهيئة الصوت
         }
-        const lec = await api.academyLecture(schoolId, lectureId);
+        const lec = await api.academyLecture(schoolId, lectureId, lang.startsWith('en') ? 'en' : lang);
         const resume = await resolveResume(lec.script_segments?.length ?? 0);
         if (alive) {
           // الموضع والمحاضرة بدفعة واحدة: لو ضُبط الموضع بعدها لبدأ السرد من المقطع
@@ -214,7 +214,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     return () => {
       alive = false;
     };
-  }, [schoolId, lectureId, userId]);
+  }, [schoolId, lectureId, userId, lang]);
 
   // إيقاف الصوت يتبع المحاضرة لا المستخدم: كان بتنظيف أثر التحميل أعلاه، وهو يُعاد عند اكتمال
   // الدخول (`userId`) ⇒ يُفرَّغ الصوت ولا يُعاد تشغيله (المقطع نفسه، فأثر التشغيل لا يُعاد)،

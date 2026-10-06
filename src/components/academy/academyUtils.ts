@@ -31,14 +31,19 @@ export function nextLecture(school: AcademySchool, completed: string[]): Academy
 }
 
 export function schoolName(s: AcademySchool, lang: LangId): string {
-  return lang === 'en-US' ? s.name_en : s.name_ar;
+  if (lang === 'en-US') return s.name_en;
+  if (lang === 'ku') return s.name_localized || s.name_ar;
+  return s.name_ar;
 }
 
 export function schoolSummary(s: AcademySchool, lang: LangId): string {
-  return lang === 'en-US' ? s.summary_en || s.summary : s.summary;
+  if (lang === 'en-US') return s.content_lang === 'en' ? s.summary : s.summary_en || s.summary;
+  return s.summary;
 }
 
-/** Arabic content language note: lecture texts are Arabic for now. */
-export function contentIsArabic(lang: LangId): boolean {
-  return lang !== 'ar';
+/** True when the loaded lesson texts are not in the interface language (server could not translate). */
+export function contentIsArabic(lang: LangId, schools: AcademySchool[] = []): boolean {
+  if (lang === 'ar') return false;
+  const want = lang === 'en-US' ? 'en' : 'ku';
+  return !schools.length || schools.some((s) => (s.content_lang || 'ar') !== want);
 }

@@ -3,6 +3,7 @@ import { planLimit, requestUpgrade } from '../../api/plan';
 import { MarketSymbol, Timeframe } from '../../types/market';
 import { apiClient } from '../../api/client';
 import { Sparkles, Send, Bot, ShieldAlert, X, ChevronRight, RefreshCw } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface AiCopilotPanelProps {
   isOpen: boolean;
@@ -28,8 +29,8 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
     {
       id: 'm1',
       sender: 'assistant',
-      text: `مرحباً بك! أنا مساعد MATRIX الفني الذكي. يمكنني شرح النماذج الفنية، حساب مستويات الدعم والمقاومة، أو تحليل سلوك السعر لزوج ${activeSymbol.symbol}. كيف أساعدك اليوم؟`,
-      time: 'الآن',
+      text: fmt(tl().tm_0, { sym: activeSymbol.symbol }),
+      time: tl().tm_1,
     },
   ]);
   const [inputText, setInputText] = useState('');
@@ -66,11 +67,11 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
       if (res.status === 429) {
         const max = planLimit('ai_daily');
         requestUpgrade('ai_daily', max);
-        replyText = 'وصلت إلى حدّ أسئلة المساعد الذكي لهذا اليوم. يتجدد الحد غداً، أو يمكنك الترقية لباقة أعلى.';
+        replyText = tl().tm_2;
       } else if (res.ok && res.data && res.data.answer) {
         replyText = res.data.answer;
       } else {
-        replyText = `تحليل لزوج ${activeSymbol.symbol} (${timeframe}): السعر الحالي يتحرك بالقرب من ${activeSymbol.price} مع زخم متوازن. تأكد دائماً من الالتزام بإدارة رأس المال وتحديد أوامر وقف الخسارة قبل الدخول.`;
+        replyText = fmt(tl().tm_3, { sym: activeSymbol.symbol, tf: timeframe, price: activeSymbol.price });
       }
 
       const botMsg: MessageItem = {
@@ -84,7 +85,7 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
       const fallbackMsg: MessageItem = {
         id: `err-${Date.now()}`,
         sender: 'assistant',
-        text: `السعر اللحظي لـ ${activeSymbol.symbol} هو ${activeSymbol.price}. يرجى مراجعة إشارات المتوسطات المتحركة ومؤشر RSI للتأكد من اتجاه الحركة.`,
+        text: fmt(tl().tm_4, { sym: activeSymbol.symbol, price: activeSymbol.price }),
         time: new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -94,9 +95,9 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
   };
 
   const quickQuestions = [
-    `ما هو الاتجاه الفني الحالي لـ ${activeSymbol.symbol}؟`,
-    'كيف أحدد وقف الخسارة المناسب بناءً على ATR؟',
-    'ما هي أفضل استراتيجية لتداول كسر الدعم والمقاومة؟',
+    fmt(tl().tm_5, { sym: activeSymbol.symbol }),
+    tl().tm_6,
+    tl().tm_7,
   ];
 
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
@@ -143,7 +144,7 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
           </div>
           <div>
             <h2 className="text-xs font-bold text-white flex items-center gap-1.5">
-              <span>المساعد الذكي (AI Copilot)</span>
+              <span>{tl().tm_8}</span>
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#2DD4BF]/20 text-[#2DD4BF] border border-[#2DD4BF]/40">
                 PRO
               </span>
@@ -184,7 +185,7 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
               {m.sender === 'assistant' && (
                 <div className="mt-2.5 pt-2 border-t border-[#1C2C47] text-[10px] text-[#7B8DA8] flex items-center gap-1">
                   <ShieldAlert className="w-3 h-3 text-amber-400 shrink-0" />
-                  <span>المساعد للتعليم والتحليل فقط وليس نصيحة استثمارية</span>
+                  <span>{tl().tm_9}</span>
                 </div>
               )}
             </div>
@@ -195,14 +196,14 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
         {isAsking && (
           <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#121E33] border border-[#1E2E4A] text-[#A3B4D0] max-w-[70%]">
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2DD4BF]" />
-            <span>جاري تحليل البيانات وصياغة الإجابة...</span>
+            <span>{tl().tm_10}</span>
           </div>
         )}
       </div>
 
       {/* Quick Prompts */}
       <div className="px-3 py-2 bg-[#08101E] border-t border-[#1E2E4A] space-y-1">
-        <div className="text-[10px] text-[#64748B]">أسئلة مقترحة:</div>
+        <div className="text-[10px] text-[#64748B]">{tl().tm_11}</div>
         <div className="flex flex-col gap-1">
           {quickQuestions.map((q, idx) => (
             <button
@@ -224,7 +225,7 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder={`اسأل المساعد عن ${activeSymbol.symbol}...`}
+          placeholder={fmt(tl().tm_12, { sym: activeSymbol.symbol })}
           disabled={isAsking}
           className="flex-1 bg-[#0F1B2E] border border-[#1E2E4A] rounded-xl px-3 py-2 text-xs text-white placeholder-[#64748B] focus:outline-hidden focus:border-[#2DD4BF]"
         />

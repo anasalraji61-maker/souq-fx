@@ -4,6 +4,7 @@ import { blockedByPlan } from '../../api/plan';
 import { MarketSymbol } from '../../types/market';
 import { getQuote, MarketQuote, getMarketStatus, MarketStatus } from '../../api/market';
 import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock, X } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface WatchlistPanelProps {
   symbols: MarketSymbol[];
@@ -76,7 +77,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
     return [
       {
         id: 'main',
-        name: 'الرئيسية (Main)',
+        name: tl().tm_231,
         symbols: [
           'EURUSD',
           'GBPUSD',
@@ -92,12 +93,12 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
       },
       {
         id: 'forex',
-        name: 'العملات (Forex)',
+        name: tl().tm_102,
         symbols: ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCAD', 'USDCHF', 'AUDUSD', 'NZDUSD', 'EURJPY', 'GBPJPY'],
       },
       {
         id: 'commodities',
-        name: 'السلع والمعادن',
+        name: tl().tm_232,
         symbols: ['XAUUSD', 'XAGUSD', 'USOIL', 'UKOIL'],
       },
     ];
@@ -174,7 +175,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
   const handleCreateNewList = () => {
     if (blockedByPlan('watchlists', watchlists.length + 1)) return;
-    const name = prompt('أدخل اسم قائمة المراقبة الجديدة:');
+    const name = prompt(tl().tm_233);
     if (!name?.trim()) return;
 
     const newList: NamedWatchlist = {
@@ -190,7 +191,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
   const handleDeleteCurrentList = () => {
     if (watchlists.length <= 1) {
-      alert('لا يمكن حذف القائمة الرئيسية الوحيدة.');
+      alert(tl().tm_234);
       return;
     }
     const next = watchlists.filter((w) => w.id !== currentList.id);
@@ -300,7 +301,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
             </select>
             <button
               onClick={handleCreateNewList}
-              title="إضافة قائمة مراقبة جديدة"
+              title={tl().tm_235}
               className="p-1.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] text-[#2DD4BF] border border-[#243049] cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -308,7 +309,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
             {watchlists.length > 1 && (
               <button
                 onClick={handleDeleteCurrentList}
-                title="حذف هذه القائمة"
+                title={tl().tm_236}
                 className="p-1.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] text-[#7B8DA8] hover:text-rose-400 border border-[#243049] cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -322,7 +323,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
               <button
                 onClick={onCloseMobile}
                 className="p-1.5 rounded-lg bg-[#162033] text-[#A3B4D0] hover:text-white cursor-pointer"
-                title="إغلاق القائمة"
+                title={tl().tm_237}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -334,7 +335,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
         <div className="relative">
           <input
             type="text"
-            placeholder="بحث وتصفية الرموز..."
+            placeholder={tl().tm_238}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#08111E] border border-[#243049] rounded-lg px-3 py-2 text-xs text-[#E8EEF9] placeholder-[#7B8DA8] focus:outline-hidden focus:border-[#2DD4BF]"
@@ -344,11 +345,11 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
       {/* Desktop Column Headers (> 1100px): strictly aligned with the 5 items in the compact row */}
       <div className="hidden min-[1101px]:grid grid-cols-[minmax(84px,1fr)_34px_60px_52px_36px] gap-1.5 px-2.5 py-1.5 text-[10px] text-[#64748B] font-semibold border-b border-[#1E283D] bg-[#08111E]">
-        <span className="text-right">الرمز / الاسم</span>
-        <span className="text-center">خط</span>
-        <span className="text-left font-mono">السعر</span>
-        <span className="text-left font-mono">التغير</span>
-        <span className="text-left font-mono">الفارق</span>
+        <span className="text-right">{tl().tm_239}</span>
+        <span className="text-center">{tl().tm_240}</span>
+        <span className="text-left font-mono">{tl().tm_241}</span>
+        <span className="text-left font-mono">{tl().tm_242}</span>
+        <span className="text-left font-mono">{tl().tm_243}</span>
       </div>
 
       {/* Symbol List with sparkline and drag reorder */}
@@ -382,7 +383,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                     ? 'bg-[#131F33] border border-[#2DD4BF]/80 shadow-[0_0_8px_rgba(45,212,191,0.12)]'
                     : 'hover:bg-[#121A2B]/70 border border-transparent active:bg-[#162033]'
                 } ${flash === 'up' ? 'bg-[#22C55E]/15' : flash === 'down' ? 'bg-[#EF4444]/15' : ''}`}
-                title={isClosed ? 'السوق مغلق حالياً' : undefined}
+                title={isClosed ? tl().tm_244 : undefined}
               >
                 {/* 1. Code + Sub-name */}
                 <div className="flex items-center gap-1.5 min-w-0 pr-0.5">
@@ -399,7 +400,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                       </span>
                       {isClosed && (
                         <span className="text-[8px] px-1 rounded bg-[#1E293B] text-[#94A3B8] font-sans">
-                          مغلق
+                          {tl().tm_122}
                         </span>
                       )}
                     </div>
@@ -432,7 +433,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                   <span>{displaySpread}</span>
                   <button
                     onClick={(e) => handleRemoveSymbolFromList(item.symbol, e)}
-                    title="إزالة من القائمة"
+                    title={tl().tm_245}
                     className="opacity-0 group-hover:opacity-100 text-[#64748B] hover:text-rose-400 p-0.5 ml-0.5 transition-opacity"
                   >
                     ✕
@@ -464,7 +465,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                     </span>
                     {isClosed && (
                       <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#1E293B] text-[#94A3B8] font-sans">
-                        مغلق
+                        {tl().tm_122}
                       </span>
                     )}
                   </div>

@@ -63,6 +63,7 @@ import {
   type LayoutSizes,
   type LayoutType,
 } from './chartLayouts';
+import { tl, fmt } from '../../i18n/locales';
 export type { LayoutType };
 
 interface ChartCellState {
@@ -129,7 +130,7 @@ function loadCellIndicators(cellId: string): IndicatorInstance[] {
       id: `${cellId}-ema-20`,
       type: 'ema',
       name: 'EMA (20)',
-      nameAr: 'المتوسط الأسي (EMA 20)',
+      get nameAr() { return tl().tm_111; },
       params: { period: 20 },
       color: '#2DD4BF',
       visible: true,
@@ -139,7 +140,7 @@ function loadCellIndicators(cellId: string): IndicatorInstance[] {
       id: `${cellId}-ema-50`,
       type: 'ema',
       name: 'EMA (50)',
-      nameAr: 'المتوسط الأسي (EMA 50)',
+      get nameAr() { return tl().tm_112; },
       params: { period: 50 },
       color: '#F59E0B',
       visible: true,
@@ -149,7 +150,7 @@ function loadCellIndicators(cellId: string): IndicatorInstance[] {
       id: `${cellId}-rsi-14`,
       type: 'rsi',
       name: 'RSI (14)',
-      nameAr: 'مؤشر القوة النسبية (RSI 14)',
+      get nameAr() { return tl().tm_113; },
       params: { period: 14 },
       color: '#A78BFA',
       visible: true,
@@ -842,7 +843,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
   // Layout Management (Part 4.4)
   const handleSaveCurrentLayout = () => {
-    const name = prompt('أدخل اسم التخطيط لحفظه (Enter layout name):', `تخطيط ${new Date().toLocaleDateString('ar-EG')}`);
+    const name = prompt(tl().tm_115, fmt(tl().tm_114, { date: new Date().toLocaleDateString() }));
     if (!name?.trim()) return;
 
     const newLayout: SavedLayout = {
@@ -957,7 +958,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Symbol Search Trigger (Part 6.1) */}
           <button
             onClick={() => setIsSymbolSearchOpen(true)}
-            title="بحث عن رمز (Ctrl+K)"
+            title={tl().tm_116}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131E33] hover:bg-[#1A2A44] border border-[#233554] text-[#E8EEF9] font-bold font-mono transition-colors"
           >
             <span className={`w-2 h-2 rounded-full shrink-0 ${activeCell.isDemo ? 'bg-amber-400' : 'bg-emerald-400'}`} />
@@ -968,20 +969,20 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* 1.2 Demo/Live label in header */}
           {activeCell.isDemo ? (
             <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold font-sans">
-              <span className="hidden min-[1440px]:inline">بيانات تجريبية</span>
-              <span className="min-[1440px]:hidden">تجريبي</span>
+              <span className="hidden min-[1440px]:inline">{tl().tm_65}</span>
+              <span className="min-[1440px]:hidden">{tl().tm_117}</span>
             </span>
           ) : (
             <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-[#22C55E] text-[10px] font-bold font-sans">
-              <span className="hidden min-[1440px]:inline">سوق مباشر</span>
-              <span className="min-[1440px]:hidden">مباشر</span>
+              <span className="hidden min-[1440px]:inline">{tl().tm_118}</span>
+              <span className="min-[1440px]:hidden">{tl().tm_119}</span>
             </span>
           )}
 
           {/* 1.5 Market status badge in terminal header */}
           {marketStatus && (
             <span
-              title={`الجلسة: ${marketStatus.currentSession} • القادمة: ${marketStatus.nextSession}`}
+              title={fmt(tl().tm_120, { cur: marketStatus.currentSession, next: marketStatus.nextSession })}
               className={`hidden min-[1440px]:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border ${
                 marketStatus.isOpen
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
@@ -993,7 +994,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                   marketStatus.isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
                 }`}
               />
-              <span>{marketStatus.isOpen ? 'السوق مفتوح' : 'مغلق'}</span>
+              <span>{marketStatus.isOpen ? tl().tm_121 : tl().tm_122}</span>
             </span>
           )}
 
@@ -1030,20 +1031,20 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               <span>
                 {activeCell.chartType === 'candles' && (
                   <>
-                    <span className="hidden min-[1800px]:inline">الشموع اليابانية</span>
-                    <span className="min-[1800px]:hidden">شموع</span>
+                    <span className="hidden min-[1800px]:inline">{tl().tm_123}</span>
+                    <span className="min-[1800px]:hidden">{tl().tm_124}</span>
                   </>
                 )}
                 {activeCell.chartType === 'hollow' && (
                   <>
-                    <span className="hidden min-[1800px]:inline">الشموع المفرغة</span>
-                    <span className="min-[1800px]:hidden">مفرغة</span>
+                    <span className="hidden min-[1800px]:inline">{tl().tm_125}</span>
+                    <span className="min-[1800px]:hidden">{tl().tm_126}</span>
                   </>
                 )}
-                {activeCell.chartType === 'heikin_ashi' && 'هيكين آشي'}
-                {activeCell.chartType === 'bars' && 'أعمدة السعر'}
-                {activeCell.chartType === 'line' && 'خطي'}
-                {activeCell.chartType === 'area' && 'مساحي'}
+                {activeCell.chartType === 'heikin_ashi' && tl().tm_127}
+                {activeCell.chartType === 'bars' && tl().tm_128}
+                {activeCell.chartType === 'line' && tl().tm_129}
+                {activeCell.chartType === 'area' && tl().tm_130}
               </span>
               <ChevronDown className="w-3 h-3 text-[#7B8DA8]" />
             </button>
@@ -1052,12 +1053,12 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               <div className="absolute top-8 left-0 z-50 w-44 bg-[#0E1626] border border-[#243049] rounded-lg shadow-2xl py-1 text-xs">
                 {(
                   [
-                    { id: 'candles', label: 'الشموع اليابانية' },
-                    { id: 'hollow', label: 'الشموع المفرغة (Hollow)' },
-                    { id: 'heikin_ashi', label: 'هيكين آشي (Heikin Ashi)' },
-                    { id: 'bars', label: 'أعمدة السعر (OHLC Bars)' },
-                    { id: 'line', label: 'خطي (Line)' },
-                    { id: 'area', label: 'مساحي (Area)' },
+                    { id: 'candles', label: tl().tm_123 },
+                    { id: 'hollow', label: tl().tm_131 },
+                    { id: 'heikin_ashi', label: tl().tm_132 },
+                    { id: 'bars', label: tl().tm_133 },
+                    { id: 'line', label: tl().tm_134 },
+                    { id: 'area', label: tl().tm_135 },
                   ] as { id: ChartType; label: string }[]
                 ).map((ct) => (
                   <button
@@ -1083,7 +1084,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131E33] hover:bg-[#1A2A44] border border-[#233554] text-[#A3B4D0] hover:text-white transition-colors"
           >
             <Sliders className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span className="hidden min-[1440px]:inline">المؤشرات</span>
+            <span className="hidden min-[1440px]:inline">{tl().tm_105}</span>
             <span>({activeCell.indicators.length})</span>
           </button>
         </div>
@@ -1093,7 +1094,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Order Flow Toggle Button (Part 4.3) */}
           <button
             onClick={() => setIsOrderFlowOpen(!isOrderFlowOpen)}
-            title="لوحة تدفق الأوامر التقديرية (Order Flow)"
+            title={tl().tm_136}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
               isOrderFlowOpen
                 ? 'bg-[#1C2E4A] text-[#2DD4BF] border-[#2DD4BF]/40'
@@ -1101,7 +1102,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             }`}
           >
             <Activity className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span className="hidden min-[1440px]:inline">تدفق الأوامر</span>
+            <span className="hidden min-[1440px]:inline">{tl().tm_137}</span>
           </button>
 
           {/* Price Alerts Trigger Button (Part 5) */}
@@ -1110,7 +1111,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               setAlertModalInitialPrice(activeSymbolObj.price);
               setIsAlertsOpen(true);
             }}
-            title="التنبيهات السعرية"
+            title={tl().tm_138}
             className="relative p-1.5 rounded-lg bg-[#101827] border border-[#1E283D] text-[#A3B4D0] hover:text-white transition-colors"
           >
             <Bell className="w-3.5 h-3.5" />
@@ -1125,33 +1126,33 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           <div className="hidden min-[1100px]:flex items-center gap-1 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
             <button
               onClick={() => setSyncSymbol(!syncSymbol)}
-              title="مزامنة الرمز عبر جميع الشاشات"
+              title={tl().tm_139}
               className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
                 syncSymbol ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
               }`}
             >
-              <span className="hidden min-[1800px]:inline">مزامنة الرمز</span>
-              <span className="min-[1800px]:hidden">رمز</span>
+              <span className="hidden min-[1800px]:inline">{tl().tm_140}</span>
+              <span className="min-[1800px]:hidden">{tl().tm_141}</span>
             </button>
             <button
               onClick={() => setSyncTimeframe(!syncTimeframe)}
-              title="مزامنة الفاصل الزمني عبر جميع الشاشات"
+              title={tl().tm_142}
               className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
                 syncTimeframe ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
               }`}
             >
-              <span className="hidden min-[1800px]:inline">مزامنة الإطار</span>
-              <span className="min-[1800px]:hidden">إطار</span>
+              <span className="hidden min-[1800px]:inline">{tl().tm_143}</span>
+              <span className="min-[1800px]:hidden">{tl().tm_144}</span>
             </button>
             <button
               onClick={() => setSyncCrosshair(!syncCrosshair)}
-              title="مزامنة مؤشر الفأرة (Crosshair)"
+              title={tl().tm_145}
               className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
                 syncCrosshair ? 'bg-[#1C2E4A] text-[#2DD4BF] font-bold' : 'text-[#7B8DA8] hover:text-white'
               }`}
             >
-              <span className="hidden min-[1800px]:inline">مزامنة الفأرة</span>
-              <span className="min-[1800px]:hidden">فأرة</span>
+              <span className="hidden min-[1800px]:inline">{tl().tm_146}</span>
+              <span className="min-[1800px]:hidden">{tl().tm_147}</span>
             </button>
           </div>
 
@@ -1172,7 +1173,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               {/* Layout Save/Load Dropdown trigger */}
               <button
                 onClick={() => setIsLayoutMenuOpen(!isLayoutMenuOpen)}
-                title="إدارة التخطيطات المحفوظة (Layouts)"
+                title={tl().tm_148}
                 className="p-1 rounded text-[#7B8DA8] hover:text-white transition-colors"
               >
                 <FolderOpen className="w-3.5 h-3.5" />
@@ -1183,17 +1184,17 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             {isLayoutMenuOpen && (
               <div className="absolute top-8 right-0 z-50 w-52 bg-[#0E1626] border border-[#243049] rounded-lg shadow-2xl p-2 text-xs">
                 <div className="flex items-center justify-between pb-2 border-b border-[#1E283D] mb-2 font-bold text-[#E8EEF9]">
-                  <span>التخطيطات (Layouts)</span>
+                  <span>{tl().tm_149}</span>
                   <button
                     onClick={handleSaveCurrentLayout}
                     className="flex items-center gap-1 text-[10px] text-[#2DD4BF] hover:underline"
                   >
                     <Save className="w-3 h-3" />
-                    <span>حفظ كـ</span>
+                    <span>{tl().tm_150}</span>
                   </button>
                 </div>
                 {savedLayouts.length === 0 ? (
-                  <div className="text-[#64748B] text-center py-2 text-[11px]">لا توجد تخطيطات محفوظة</div>
+                  <div className="text-[#64748B] text-center py-2 text-[11px]">{tl().tm_151}</div>
                 ) : (
                   <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
                     {savedLayouts.map((sl) => (
@@ -1227,8 +1228,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-teal-950 to-blue-950 border border-teal-500/50 text-[#2DD4BF] hover:border-teal-400 font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-teal-400 animate-pulse" />
-            <span className="hidden min-[1800px]:inline">المساعد الذكي (AI Copilot)</span>
-            <span className="hidden sm:inline min-[1800px]:hidden">المساعد</span>
+            <span className="hidden min-[1800px]:inline">{tl().tm_8}</span>
+            <span className="hidden sm:inline min-[1800px]:hidden">{tl().tm_152}</span>
           </button>
 
           {/* Order Panel Button */}
@@ -1239,16 +1240,16 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950/50'
                 : 'bg-[#131E33] border-[#233554] text-emerald-400 hover:border-emerald-500'
             }`}
-            title="لوحة الأوامر المتقدمة وإدارة المخاطر"
+            title={tl().tm_153}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span className="hidden min-[1440px]:inline">أمر تداول</span>
+            <span className="hidden min-[1440px]:inline">{tl().tm_154}</span>
           </button>
 
           {/* Shortcut Help Button (Part 7.1) */}
           <button
             onClick={() => setIsShortcutsModalOpen(true)}
-            title="اختصارات لوحة المفاتيح (?)"
+            title={tl().tm_155}
             className="p-1 rounded bg-[#101827] border border-[#1E283D] text-[#7B8DA8] hover:text-white transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5" />
@@ -1257,7 +1258,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Toggle Watchlist button */}
           <button
             onClick={() => setIsWatchlistCollapsed(!isWatchlistCollapsed)}
-            title="إظهار/إخفاء قائمة المراقبة"
+            title={tl().tm_156}
             className="p-1 rounded bg-[#101827] border border-[#1E283D] text-[#7B8DA8] hover:text-white transition-colors"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -1272,7 +1273,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Trendline */}
           <button
             onClick={() => setActiveTool(activeTool === 'trendline' ? 'none' : 'trendline')}
-            title="خط اتجاه (Trendline - Alt+T)"
+            title={tl().tm_157}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'trendline' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1283,7 +1284,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Horizontal Line */}
           <button
             onClick={() => setActiveTool(activeTool === 'horizontal' ? 'none' : 'horizontal')}
-            title="خط أفقي (Horizontal - Alt+H)"
+            title={tl().tm_158}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'horizontal' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1294,7 +1295,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Vertical Line */}
           <button
             onClick={() => setActiveTool(activeTool === 'vertical' ? 'none' : 'vertical')}
-            title="خط رأسي (Vertical Line)"
+            title={tl().tm_159}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'vertical' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1305,7 +1306,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Ray Line */}
           <button
             onClick={() => setActiveTool(activeTool === 'ray' ? 'none' : 'ray')}
-            title="شعاع (Ray Line)"
+            title={tl().tm_160}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'ray' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1316,7 +1317,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Extended Line */}
           <button
             onClick={() => setActiveTool(activeTool === 'extended' ? 'none' : 'extended')}
-            title="خط ممتد للطرفين (Extended Line)"
+            title={tl().tm_161}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'extended' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1327,7 +1328,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Parallel Channel */}
           <button
             onClick={() => setActiveTool(activeTool === 'channel' ? 'none' : 'channel')}
-            title="قناة سعرية متوازية (Parallel Channel)"
+            title={tl().tm_162}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'channel' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1338,7 +1339,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Arrow */}
           <button
             onClick={() => setActiveTool(activeTool === 'arrow' ? 'none' : 'arrow')}
-            title="سهم إشارة (Arrow)"
+            title={tl().tm_163}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'arrow' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1349,7 +1350,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Box / Rectangle */}
           <button
             onClick={() => setActiveTool(activeTool === 'box' ? 'none' : 'box')}
-            title="مستطيل منطقة دعم/مقاومة (Box/Zone)"
+            title={tl().tm_164}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'box' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1360,7 +1361,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Text Annotation */}
           <button
             onClick={() => setActiveTool(activeTool === 'text' ? 'none' : 'text')}
-            title="نص توضيحي على الشارت (Text Label)"
+            title={tl().tm_165}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'text' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1371,7 +1372,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Fibonacci */}
           <button
             onClick={() => setActiveTool(activeTool === 'fibonacci' ? 'none' : 'fibonacci')}
-            title="مستويات فيبوناتشي (Fibonacci - Alt+F)"
+            title={tl().tm_166}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'fibonacci' ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1382,7 +1383,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Measure Tool */}
           <button
             onClick={() => setActiveTool(activeTool === 'measure' ? 'none' : 'measure')}
-            title="أداة قياس النقاط والنسبة (Measure Tool)"
+            title={tl().tm_167}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'measure' ? 'bg-[#1C2E4A] text-[#38BDF8]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1393,7 +1394,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Long Position Tool (3.1) */}
           <button
             onClick={() => setActiveTool(activeTool === 'position_long' ? 'none' : 'position_long')}
-            title="صفقة شراء محسوبة العائد للمخاطرة (Long Position)"
+            title={tl().tm_168}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'position_long' ? 'bg-[#1C2E4A] text-[#22C55E]' : 'text-[#7B8DA8] hover:text-[#22C55E]'
             }`}
@@ -1404,7 +1405,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Short Position Tool (3.1) */}
           <button
             onClick={() => setActiveTool(activeTool === 'position_short' ? 'none' : 'position_short')}
-            title="صفقة بيع محسوبة العائد للمخاطرة (Short Position)"
+            title={tl().tm_169}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               activeTool === 'position_short' ? 'bg-[#1C2E4A] text-[#EF4444]' : 'text-[#7B8DA8] hover:text-[#EF4444]'
             }`}
@@ -1417,7 +1418,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Magnet Mode Toggle (Part 3.3) */}
           <button
             onClick={() => setIsMagnetOn(!isMagnetOn)}
-            title={isMagnetOn ? 'إلغاء وضع المغناطيس (Magnet ON)' : 'تفعيل وضع المغناطيس للمحاذاة التلقائية (Magnet OFF)'}
+            title={isMagnetOn ? tl().tm_170 : tl().tm_171}
             className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
               isMagnetOn ? 'bg-[#1C2E4A] text-[#2DD4BF] ring-1 ring-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
             }`}
@@ -1428,7 +1429,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* Object Tree Panel Trigger (Part 3.5) */}
           <button
             onClick={() => setIsObjectTreeOpen(true)}
-            title="شجرة الكائنات والمؤشرات (Object Tree)"
+            title={tl().tm_172}
             className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-[#38BDF8] hover:bg-[#1C2740] transition-colors"
           >
             <Layers className="w-3.5 h-3.5" />
@@ -1438,14 +1439,14 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           <div className="mt-auto flex flex-col items-center gap-1.5 pt-2 border-t border-[#182338]">
             <button
               onClick={() => handleClearDrawings(activeCell.id)}
-              title="مسح جميع رسومات الشارت النشط (Clear Drawings)"
+              title={tl().tm_173}
               className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-rose-400 hover:bg-[#1C2740] transition-colors cursor-pointer text-xs"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setActiveTool('none')}
-              title="إلغاء تفعيل الأداة (Esc)"
+              title={tl().tm_174}
               className="w-7 h-7 rounded flex items-center justify-center text-[#7B8DA8] hover:text-white hover:bg-[#1C2740] transition-colors cursor-pointer text-xs"
             >
               ✕
@@ -1509,11 +1510,11 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                         )}
                         {cell.isDemo ? (
                           <span className="px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold font-sans">
-                            بيانات تجريبية
+                            {tl().tm_65}
                           </span>
                         ) : (
                           <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30 text-[#22C55E] text-[9px] font-bold font-sans">
-                            مباشر
+                            {tl().tm_119}
                           </span>
                         )}
                       </div>
@@ -1544,7 +1545,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                           e.stopPropagation();
                           handleClearDrawings(cell.id);
                         }}
-                        title="مسح رسومات هذا الشارت"
+                        title={tl().tm_175}
                         className="text-[#64748B] hover:text-rose-400 text-xs transition-colors pl-1"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -1554,7 +1555,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       {(layoutSpec.areas.length > 1 || isMax) && (
                         <button
                           onClick={() => setMaximizedCellId(isMax ? null : cell.id)}
-                          title={isMax ? 'استعادة الشبكة' : 'تكبير الشارت'}
+                          title={isMax ? tl().tm_176 : tl().tm_177}
                           className="text-[#7B8DA8] hover:text-[#2DD4BF] text-xs transition-colors pl-1"
                         >
                           {isMax ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -1569,7 +1570,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                     {cell.isLoading && (
                       <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#060D19]/80 backdrop-blur-xs">
                         <div className="w-8 h-8 rounded-full border-2 border-[#2DD4BF] border-t-transparent animate-spin mb-2" />
-                        <span className="text-xs text-[#A3B4D0] font-mono">جاري تحميل بيانات الشارت...</span>
+                        <span className="text-xs text-[#A3B4D0] font-mono">{tl().tm_178}</span>
                       </div>
                     )}
 
@@ -1577,7 +1578,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                     {cell.isDemo && (
                       <div className="absolute top-2.5 left-2.5 z-20 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0A101D]/90 border border-amber-500/40 text-amber-400 text-[10px] font-bold backdrop-blur-xs shadow-lg">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                        <span>بيانات تجريبية</span>
+                        <span>{tl().tm_65}</span>
                       </div>
                     )}
                     <MatrixChartCanvas
@@ -1639,7 +1640,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                         }}
                         className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-xs flex items-center gap-1 active:scale-95 cursor-pointer"
                       >
-                        <span>شراء</span>
+                        <span>{tl().tm_99}</span>
                       </button>
                       <button
                         onClick={() => {
@@ -1648,12 +1649,12 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                         }}
                         className="px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 font-bold text-xs flex items-center gap-1 active:scale-95 cursor-pointer"
                       >
-                        <span>بيع</span>
+                        <span>{tl().tm_100}</span>
                       </button>
                       <button
                         onClick={() => setIsAiCopilotOpen(true)}
                         className="p-1.5 rounded-lg bg-[#16233B] border border-[#24344E] text-[#2DD4BF] active:scale-95 cursor-pointer"
-                        title="المساعد الذكي"
+                        title={tl().tm_179}
                       >
                         <Sparkles className="w-4 h-4" />
                       </button>
@@ -1669,7 +1670,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         {(!isPhone || (currentTab === 'home' && isWatchlistCollapsed)) && (
           <button
             onClick={() => setIsMobileDrawingSheetOpen(true)}
-            title="أدوات الرسم الفني"
+            title={tl().tm_180}
             className="md:hidden fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] right-4 z-30 w-11 h-11 rounded-full bg-[#132034] border border-[#2DD4BF]/60 text-[#2DD4BF] shadow-2xl flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
           >
             <PenTool className="w-5 h-5" />
@@ -1700,7 +1701,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               <div className="flex items-center justify-between pb-2 border-b border-[#1E2E4A]">
                 <div className="flex items-center gap-2">
                   <PenTool className="w-4 h-4 text-[#2DD4BF]" />
-                  <span className="font-bold text-sm text-white">أدوات الرسم والتحليل</span>
+                  <span className="font-bold text-sm text-white">{tl().tm_181}</span>
                 </div>
                 <button
                   onClick={() => setIsMobileDrawingSheetOpen(false)}
@@ -1713,19 +1714,19 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               {/* Drawing Tools Grid */}
               <div className="grid grid-cols-3 gap-2 text-xs">
                 {[
-                  { id: 'trendline', label: 'خط اتجاه', icon: '╱' },
-                  { id: 'horizontal', label: 'خط أفقي', icon: '―' },
-                  { id: 'vertical', label: 'خط رأسي', icon: '│' },
-                  { id: 'ray', label: 'شعاع', icon: '⟶' },
-                  { id: 'extended', label: 'خط ممتد', icon: '⟷' },
-                  { id: 'channel', label: 'قناة متوازية', icon: '∥' },
-                  { id: 'arrow', label: 'سهم إشارة', icon: '↗' },
-                  { id: 'box', label: 'مستطيل منطقة', icon: '▭' },
-                  { id: 'text', label: 'نص توضيحي', icon: 'T' },
-                  { id: 'measure', label: 'مسطرة قياس', icon: '📏' },
-                  { id: 'fibonacci', label: 'فيبوناتشي', icon: '0.618' },
-                  { id: 'position_long', label: 'صفقة شراء', icon: '▲ Long' },
-                  { id: 'position_short', label: 'صفقة بيع', icon: '▼ Short' },
+                  { id: 'trendline', label: tl().tm_182, icon: '╱' },
+                  { id: 'horizontal', label: tl().tm_183, icon: '―' },
+                  { id: 'vertical', label: tl().tm_184, icon: '│' },
+                  { id: 'ray', label: tl().tm_185, icon: '⟶' },
+                  { id: 'extended', label: tl().tm_186, icon: '⟷' },
+                  { id: 'channel', label: tl().tm_187, icon: '∥' },
+                  { id: 'arrow', label: tl().tm_188, icon: '↗' },
+                  { id: 'box', label: tl().tm_189, icon: '▭' },
+                  { id: 'text', label: tl().tm_190, icon: 'T' },
+                  { id: 'measure', label: tl().tm_191, icon: '📏' },
+                  { id: 'fibonacci', label: tl().tm_192, icon: '0.618' },
+                  { id: 'position_long', label: tl().tm_193, icon: '▲ Long' },
+                  { id: 'position_short', label: tl().tm_194, icon: '▼ Short' },
                 ].map((tool) => (
                   <button
                     key={tool.id}
@@ -1756,7 +1757,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                   }`}
                 >
                   <Magnet className="w-4 h-4" />
-                  <span>المغناطيس {isMagnetOn ? 'مفعّل' : 'معطّل'}</span>
+                  <span>المغناطيس {isMagnetOn ? tl().tm_195 : tl().tm_196}</span>
                 </button>
 
                 <button
@@ -1767,7 +1768,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                   className="py-2 px-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-1.5"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>مسح الكل</span>
+                  <span>{tl().tm_197}</span>
                 </button>
               </div>
             </div>
@@ -1809,7 +1810,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    أمر جديد
+                    {tl().tm_198}
                   </button>
                   <button
                     onClick={() => setTradingDrawerTab('positions')}
@@ -1819,7 +1820,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    المراكز والصفقات
+                    {tl().tm_199}
                   </button>
                 </div>
                 <button
@@ -1941,7 +1942,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-[#1E283D] mb-3">
               <div className="flex items-center gap-2 text-sm font-bold text-white">
                 <HelpCircle className="w-4 h-4 text-[#2DD4BF]" />
-                <span>اختصارات لوحة المفاتيح (Shortcuts)</span>
+                <span>{tl().tm_200}</span>
               </div>
               <button
                 onClick={() => setIsShortcutsModalOpen(false)}
@@ -1953,35 +1954,35 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
             <div className="space-y-2 font-mono">
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">خط اتجاه (Trendline)</span>
+                <span className="text-[#A3B4D0]">{tl().tm_201}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Alt + T</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">خط أفقي (Horizontal)</span>
+                <span className="text-[#A3B4D0]">{tl().tm_202}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Alt + H</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">مستويات فيبوناتشي (Fibonacci)</span>
+                <span className="text-[#A3B4D0]">{tl().tm_203}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Alt + F</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">إلغاء تفعيل الأداة</span>
+                <span className="text-[#A3B4D0]">{tl().tm_204}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#E8EEF9]">Esc</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">حذف الرسم المحدد</span>
+                <span className="text-[#A3B4D0]">{tl().tm_205}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-rose-400">Delete / Backspace</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">تراجع / إعادة (Undo / Redo)</span>
+                <span className="text-[#A3B4D0]">{tl().tm_206}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#38BDF8]">Ctrl + Z / Ctrl + Y</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">تبديل الأطر الزمنية</span>
+                <span className="text-[#A3B4D0]">{tl().tm_207}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#E8EEF9]">1 - 6 (1m to 1D)</kbd>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#1A253A]">
-                <span className="text-[#A3B4D0]">بحث عن رمز</span>
+                <span className="text-[#A3B4D0]">{tl().tm_208}</span>
                 <kbd className="px-2 py-0.5 rounded bg-[#1C2740] text-[#2DD4BF]">Ctrl + K</kbd>
               </div>
             </div>
@@ -1990,7 +1991,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               onClick={() => setIsShortcutsModalOpen(false)}
               className="mt-4 w-full py-1.5 rounded-lg bg-[#1C2E4A] hover:bg-[#253D63] text-[#2DD4BF] font-bold text-center transition-colors"
             >
-              تم
+              {tl().tm_209}
             </button>
           </div>
         </div>

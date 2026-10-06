@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { onCloudSyncApplied } from '../../api/cloudSync';
+import { tl, fmt } from '../../i18n/locales';
 
 /**
  * Multi-chart layouts (TradingView style) + draggable splitters.
@@ -44,13 +45,13 @@ const ONE_PLUS_TWO: Omit<LayoutSpec, 'id' | 'label' | 'title'> = {
 };
 
 export const LAYOUT_SPECS: LayoutSpec[] = [
-  { id: '1', label: '1', title: 'شارت واحد', cols: 1, rows: 1, areas: [a(1, 2, 1, 2)] },
-  { id: '2-side', label: '2H', title: 'شارتان جنباً إلى جنب', cols: 2, rows: 1, areas: [a(1, 2, 1, 2), a(2, 3, 1, 2)] },
-  { id: '2-stack', label: '2V', title: 'شارتان فوق بعض', cols: 1, rows: 2, areas: [a(1, 2, 1, 2), a(1, 2, 2, 3)] },
+  { id: '1', label: '1', get title() { return tl().tm_246; }, cols: 1, rows: 1, areas: [a(1, 2, 1, 2)] },
+  { id: '2-side', label: '2H', get title() { return tl().tm_247; }, cols: 2, rows: 1, areas: [a(1, 2, 1, 2), a(2, 3, 1, 2)] },
+  { id: '2-stack', label: '2V', get title() { return tl().tm_248; }, cols: 1, rows: 2, areas: [a(1, 2, 1, 2), a(1, 2, 2, 3)] },
   {
     id: '3H',
     label: '3H',
-    title: '3 أعمدة',
+    get title() { return tl().tm_249; },
     cols: 3,
     rows: 1,
     areas: [a(1, 2, 1, 2), a(2, 3, 1, 2), a(3, 4, 1, 2)],
@@ -58,16 +59,16 @@ export const LAYOUT_SPECS: LayoutSpec[] = [
   {
     id: '3V',
     label: '3V',
-    title: '3 صفوف',
+    get title() { return tl().tm_250; },
     cols: 1,
     rows: 3,
     areas: [a(1, 2, 1, 2), a(1, 2, 2, 3), a(1, 2, 3, 4)],
   },
-  { id: '1+2', label: '1+2', title: 'شارت كبير يسار + 2 يمين', ...ONE_PLUS_TWO },
+  { id: '1+2', label: '1+2', get title() { return tl().tm_251; }, ...ONE_PLUS_TWO },
   {
     id: '2+1',
     label: '2+1',
-    title: '2 في الأعلى + 1 عريض في الأسفل',
+    get title() { return tl().tm_252; },
     cols: 2,
     rows: 2,
     areas: [a(1, 2, 1, 2), a(2, 3, 1, 2), a(1, 3, 2, 3)],
@@ -75,7 +76,7 @@ export const LAYOUT_SPECS: LayoutSpec[] = [
   {
     id: '4',
     label: '4G',
-    title: 'شبكة 2×2',
+    get title() { return tl().tm_253; },
     cols: 2,
     rows: 2,
     areas: [a(1, 2, 1, 2), a(2, 3, 1, 2), a(1, 2, 2, 3), a(2, 3, 2, 3)],
@@ -83,7 +84,7 @@ export const LAYOUT_SPECS: LayoutSpec[] = [
   {
     id: '4H',
     label: '4H',
-    title: '4 أعمدة',
+    get title() { return tl().tm_254; },
     cols: 4,
     rows: 1,
     areas: [a(1, 2, 1, 2), a(2, 3, 1, 2), a(3, 4, 1, 2), a(4, 5, 1, 2)],
@@ -91,7 +92,7 @@ export const LAYOUT_SPECS: LayoutSpec[] = [
   {
     id: '4V',
     label: '4V',
-    title: '4 صفوف',
+    get title() { return tl().tm_255; },
     cols: 1,
     rows: 4,
     areas: [a(1, 2, 1, 2), a(1, 2, 2, 3), a(1, 2, 3, 4), a(1, 2, 4, 5)],
@@ -99,14 +100,14 @@ export const LAYOUT_SPECS: LayoutSpec[] = [
   {
     id: '1+3',
     label: '1+3',
-    title: 'شارت كبير يسار + 3 يمين',
+    get title() { return tl().tm_256; },
     cols: 2,
     rows: 3,
     areas: [a(1, 2, 1, 4), a(2, 3, 1, 2), a(2, 3, 2, 3), a(2, 3, 3, 4)],
   },
 ];
 
-const LEGACY_3: LayoutSpec = { id: '3', label: '1+2', title: 'شارت كبير + 2', ...ONE_PLUS_TWO };
+const LEGACY_3: LayoutSpec = { id: '3', label: '1+2', get title() { return tl().tm_257; }, ...ONE_PLUS_TWO };
 
 export function getLayoutSpec(id: LayoutType): LayoutSpec {
   if (id === '3') return LEGACY_3;
@@ -282,7 +283,7 @@ const Splitter: React.FC<SplitterProps> = ({ orientation, index, sizes, spec, co
     <div
       role="separator"
       aria-orientation={isCol ? 'vertical' : 'horizontal'}
-      title="اسحب لتغيير الحجم • نقرتان لإعادة الضبط"
+      title={tl().tm_258}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={end}
@@ -417,7 +418,7 @@ export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, max
     <div ref={boxRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        title={`التخطيط: ${current.title}`}
+        title={fmt(tl().tm_259, { title: current.title })}
         className="flex items-center gap-1.5 px-1.5 py-0.5 rounded hover:bg-[#1C2740] transition-colors"
       >
         <LayoutIcon spec={current} active />
@@ -425,7 +426,7 @@ export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, max
       </button>
       {open && (
         <div className="absolute top-full mt-1 left-0 z-50 w-[236px] p-2 rounded-lg bg-[#0E1626] border border-[#24344E] shadow-2xl">
-          <div className="text-[10px] text-[#7B8DA8] mb-1.5 px-0.5">تخطيط الشارتات</div>
+          <div className="text-[10px] text-[#7B8DA8] mb-1.5 px-0.5">{tl().tm_260}</div>
           <div className="grid grid-cols-4 gap-1.5">
             {LAYOUT_SPECS.map((spec) => {
               const tooBig = spec.areas.length > maxCells;
@@ -446,9 +447,9 @@ export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, max
                   }}
                   title={
                     disabled
-                      ? `${spec.title} (غير متاح على هذه الشاشة)`
+                      ? fmt(tl().tm_261, { title: spec.title })
                       : planLocked
-                      ? `${spec.title} (في باقة أعلى)`
+                      ? fmt(tl().tm_262, { title: spec.title })
                       : spec.title
                   }
                   className={`flex flex-col items-center gap-1 p-1.5 rounded-md border transition-colors ${
@@ -464,7 +465,7 @@ export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, max
               );
             })}
           </div>
-          <div className="text-[9px] text-[#64748B] mt-1.5 px-0.5">اسحب الفواصل بين الشارتات لتغيير الحجم</div>
+          <div className="text-[9px] text-[#64748B] mt-1.5 px-0.5">{tl().tm_263}</div>
         </div>
       )}
     </div>

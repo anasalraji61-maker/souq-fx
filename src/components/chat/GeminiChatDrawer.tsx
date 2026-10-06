@@ -15,6 +15,7 @@ import {
   Check,
 } from 'lucide-react';
 import { MarketSymbol } from '../../types/market';
+import { tl, fmt } from '../../i18n/locales';
 
 export interface ChatMessage {
   id: string;
@@ -36,9 +37,9 @@ const ROLE_CONFIGS: Record<
   { name: string; modelName: string; description: string; systemInstruction: string }
 > = {
   general: {
-    name: 'المحلل الفني الشامل (General Analyst)',
+    get name() { return tl().tm_264; },
     modelName: 'gemini-3.5-flash',
-    description: 'تحليل شامل للشموع، الاتجاه، الدعم والمقاومة، والمؤشرات الفنية',
+    get description() { return tl().tm_265; },
     systemInstruction: `You are MATRIX AI, a Senior Technical Analyst specialized in Forex, metals, energy, and indices.
 Your role: Provide concise, professional, and mathematically sound technical market analysis.
 Analyze market structure (Higher Highs / Higher Lows), candlestick patterns, trendlines, and key technical indicators (RSI, Moving Averages, MACD).
@@ -46,26 +47,26 @@ Always answer in Arabic if the user asks in Arabic, and in English if the user a
 Structure answers with clear bullet points. Emphasize risk management and state that analysis is educational only, not financial advice.`,
   },
   smc: {
-    name: 'خبير كتل الأوامر والسيولة (SMC & ICT)',
+    get name() { return tl().tm_266; },
     modelName: 'gemini-3.5-flash',
-    description: 'تحليل مناطق العرض والطلب، فجوات القيمة العادلة FVG، وتصريف السيولة',
+    get description() { return tl().tm_267; },
     systemInstruction: `You are the MATRIX SMC / ICT Trading Specialist.
 You specialize in Smart Money Concepts, Inner Circle Trader (ICT) methodology, Order Blocks (OB), Fair Value Gaps (FVG), Liquidity Sweeps, Change of Character (CHoCH), and Break of Structure (BOS).
 Explain institutional order flow concepts clearly and guide users on how to identify high-probability points of interest (POI). Include risk warnings. Respond in the user's language.`,
   },
   risk: {
-    name: 'مستشار إدارة المخاطر ورأس المال (Risk Coach)',
+    get name() { return tl().tm_268; },
     modelName: 'gemini-3.5-flash',
-    description: 'حساب اللوت، نسبة العائد إلى المخاطرة R:R، والتحكم في الخسارة المتتالية',
+    get description() { return tl().tm_269; },
     systemInstruction: `You are the MATRIX Risk Management and Trading Psychology Coach.
 Your mission is to protect the trader's capital above all else.
 Help traders calculate exact position sizing, enforce the 1% to 2% max risk per trade rule, calculate optimal Risk-to-Reward (R:R >= 1:2), and manage trading psychology during drawdowns.
 Be disciplined, clear, and mathematically accurate. Respond in the user's language.`,
   },
   fast: {
-    name: 'المساعد السريع (Fast Flash Lite)',
+    get name() { return tl().tm_270; },
     modelName: 'gemini-3.1-flash-lite',
-    description: 'إجابات خاطفة فائقة السرعة للتعريفات والمصطلحات والحسابات السريعة',
+    get description() { return tl().tm_271; },
     systemInstruction: `You are MATRIX Fast Assistant powered by gemini-3.1-flash-lite. Provide ultra-fast, direct, and concise answers to financial and technical trading questions. Keep answers compact and focused. Respond in the user's language.`,
   },
 };
@@ -93,7 +94,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
       {
         id: 'msg-welcome',
         role: 'assistant',
-        text: `أهلاً بك في **MATRIX AI Assistant**! 📊\n\nأنا مساعدك التحليلي الذكي المتقدم للأسواق المالية. يمكنني مساعدتك في تحليل أزواج العملات، شرح استراتيجيات SMC وICT، قراءة المؤشرات الفنية، أو حساب إدارة المخاطر لحسابك.\n\nالزوج النشط حالياً: **${activeSymbol.symbol}** (سعر العرض: ${activeSymbol.bid} | الفارق: ${activeSymbol.spread} نقطة). بماذا يمكنني مساعدتك اليوم؟`,
+        text: fmt(tl().tm_272, { sym: activeSymbol.symbol, bid: activeSymbol.bid, spread: activeSymbol.spread }),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ];
@@ -165,7 +166,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
       }
 
       const data = await res.json();
-      const replyText = data.reply || 'لم يتم استلام رد من النموذج.';
+      const replyText = data.reply || tl().tm_273;
 
       const assistantMsg: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
@@ -180,7 +181,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
       const errorMsg: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         role: 'assistant',
-        text: `⚠️ عذراً، تعذر الاتصال بمساعد Gemini: ${err.message || 'حدث خطأ في الشبكة'}.\nيرجى التأكد من اتصال الخادم وتكوين مفتاح GEMINI_API_KEY.`,
+        text: fmt(tl().tm_274, { err: err.message || tl().g_networkError }),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -193,7 +194,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
     const welcome: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: 'assistant',
-      text: `تم مسح سجل المحادثة. كيف يمكنني مساعدتك في تحليل السوق اليوم؟`,
+      text: tl().tm_275,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages([welcome]);
@@ -206,10 +207,10 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
   };
 
   const samplePrompts = [
-    `حلل لي الزوج الحالي ${activeSymbol.symbol} فنياً الآن`,
-    'كيف أحدد مناطق كتل الأوامر (Order Blocks)؟',
-    'ما هي أفضل استراتيجية لإدارة المخاطر بحساب $10,000؟',
-    'شرح دايفرجنس مؤشر RSI الإيجابي والسلبي',
+    fmt(tl().tm_276, { sym: activeSymbol.symbol }),
+    tl().tm_277,
+    tl().tm_278,
+    tl().tm_279,
   ];
 
   if (!isOpen) return null;
@@ -240,14 +241,14 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleClearHistory}
-            title="مسح المحادثة"
+            title={tl().tm_280}
             className="p-1.5 rounded-lg text-[#7B8DA8] hover:text-[#EF4444] hover:bg-[#162033]"
           >
             <Trash2 className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            title="إغلاق"
+            title={tl().tm_32}
             className="p-1.5 rounded-lg text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]"
           >
             <X className="w-4 h-4" />
@@ -266,7 +267,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
           }`}
         >
           <TrendingUp className="w-3 h-3" />
-          <span>تحليل عام</span>
+          <span>{tl().tm_281}</span>
         </button>
 
         <button
@@ -290,7 +291,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
           }`}
         >
           <ShieldCheck className="w-3 h-3" />
-          <span>إدارة المخاطر</span>
+          <span>{tl().tm_282}</span>
         </button>
 
         <button
@@ -302,7 +303,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
           }`}
         >
           <Zap className="w-3 h-3" />
-          <span>سريع (Lite)</span>
+          <span>{tl().tm_283}</span>
         </button>
       </div>
 
@@ -338,7 +339,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
                     <button
                       onClick={() => handleCopyText(msg.id, msg.text)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-[#7B8DA8] hover:text-[#E8EEF9]"
-                      title="نسخ الإجابة"
+                      title={tl().tm_284}
                     >
                       {copiedId === msg.id ? (
                         <Check className="w-3 h-3 text-[#22C55E]" />
@@ -391,7 +392,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
           type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={`اسأل المساعد الذكي عن ${activeSymbol.symbol} أو أي تحليل فني...`}
+          placeholder={fmt(tl().tm_285, { sym: activeSymbol.symbol })}
           disabled={isLoading}
           className="flex-1 bg-[#08101E] border border-[#243049] focus:border-[#2DD4BF] rounded-xl px-3 py-2 text-xs text-[#E8EEF9] placeholder-[#4B5E7D] outline-none transition-colors"
         />
@@ -399,7 +400,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
           type="submit"
           disabled={!inputMessage.trim() || isLoading}
           className="p-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          title="إرسال"
+          title={tl().tm_286}
         >
           <Send className="w-3.5 h-3.5" />
         </button>

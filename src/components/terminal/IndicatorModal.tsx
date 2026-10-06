@@ -3,6 +3,7 @@ import { IndicatorInstance, IndicatorType } from '../../types/market';
 import { INDICATOR_CATALOG, IndicatorDefinition } from '../../data/indicators';
 import { IndicatorSettingsModal } from './IndicatorSettingsModal';
 import { X, Search, Plus, Eye, EyeOff, Settings, Trash2, Layers, BarChart2 } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
     if (def.pane === 'sub') {
       const activeSubPanes = instances.filter((i) => i.pane === 'sub' && i.visible);
       if (activeSubPanes.length >= 3) {
-        alert('الحد الأقصى للوحات السفلية النشطة معاً هو 3 مؤشرات لتوفير وضوح تام للشارت.');
+        alert(tl().tm_49);
         return;
       }
     }
@@ -85,7 +86,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E283D] bg-[#0A101D]">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-[#2DD4BF]" />
-            <h3 className="font-bold text-sm text-[#E8EEF9]">المؤشرات الفنية (Technical Indicators)</h3>
+            <h3 className="font-bold text-sm text-[#E8EEF9]">{tl().tm_50}</h3>
           </div>
           <button
             onClick={onClose}
@@ -103,7 +104,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث بالاسم العربي أو الإنجليزي (EMA, RSI, بولينجر, إيشيموكو...)"
+              placeholder={tl().tm_51}
               className="w-full pr-9 pl-3 py-2 bg-[#121A2B] border border-[#243049] rounded-lg text-xs text-[#E8EEF9] placeholder-[#64748B] focus:outline-none focus:border-[#2DD4BF]"
             />
             {search && (
@@ -166,7 +167,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
             /* Active Indicators Tab */
             instances.length === 0 ? (
               <div className="text-center py-12 text-[#64748B]">
-                لا توجد مؤشرات مضافة حالياً. يمكنك إضافة مؤشرات من تبويب "الكل".
+                {tl().tm_53}
               </div>
             ) : (
               <div className="space-y-2">
@@ -193,7 +194,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                             {paramStr ? ` (${paramStr})` : ''}
                           </div>
                           <div className="text-[10px] text-[#64748B]">
-                            {inst.pane === 'main' ? 'متراكب على الشارت الرئيسي' : 'لوحة سفلية منفصلة'}
+                            {inst.pane === 'main' ? tl().tm_54 : tl().tm_55}
                           </div>
                         </div>
                       </div>
@@ -201,7 +202,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => onUpdateInstance({ ...inst, visible: !inst.visible })}
-                          title={inst.visible ? 'إخفاء' : 'إظهار'}
+                          title={inst.visible ? tl().tm_56 : tl().tm_57}
                           className="p-1.5 rounded hover:bg-[#1E293B] text-[#7B8DA8] hover:text-white transition-colors"
                         >
                           {inst.visible ? (
@@ -212,14 +213,14 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                         </button>
                         <button
                           onClick={() => setEditingIndicator(inst)}
-                          title="الإعدادات"
+                          title={tl().tm_58}
                           className="p-1.5 rounded hover:bg-[#1E293B] text-[#7B8DA8] hover:text-white transition-colors"
                         >
                           <Settings className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => onRemoveInstance(inst.id)}
-                          title="حذف المؤشر"
+                          title={tl().tm_59}
                           className="p-1.5 rounded hover:bg-[#1E293B] text-[#7B8DA8] hover:text-rose-400 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -234,7 +235,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
             /* Catalog List */
             filteredCatalog.length === 0 ? (
               <div className="text-center py-12 text-[#64748B]">
-                لم يتم العثور على مؤشرات تطابق البحث.
+                {tl().tm_60}
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-2">
@@ -268,11 +269,11 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                         )}
                         <button
                           onClick={() => handleAdd(def)}
-                          title="إضافة إلى الشارت"
+                          title={tl().tm_61}
                           className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#1C2E4A] hover:bg-[#2DD4BF] text-[#2DD4BF] hover:text-[#042F2E] font-bold text-xs transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          إضافة
+                          {tl().tm_62}
                         </button>
                       </div>
                     </div>
@@ -292,7 +293,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-colors"
           >
-            إغلاق
+            {tl().tm_32}
           </button>
         </div>
       </div>

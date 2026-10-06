@@ -1029,11 +1029,12 @@ export const api = {
     getJson<Course & { ai_intro: string; modules: unknown[] }>(`/api/courses/${id}`),
   academySchools: () =>
     getJson<{ schools: import('./academy').AcademySchoolSummary[] }>('/api/academy/schools'),
-  academySchool: (id: string) =>
-    getJson<import('./academy').AcademySchool>(`/api/academy/schools/${id}`),
-  academyLecture: (schoolId: string, lectureId: string) =>
+  /** `lang`: lesson texts in English / Kurdish when translated on the server (Arabic otherwise). */
+  academySchool: (id: string, lang?: string) =>
+    getJson<import('./academy').AcademySchool>(`/api/academy/schools/${id}${lang ? `?lang=${encodeURIComponent(lang)}` : ''}`),
+  academyLecture: (schoolId: string, lectureId: string, lang?: string) =>
     getJson<import('./academy').AcademyLecture>(
-      `/api/academy/schools/${schoolId}/lectures/${lectureId}`
+      `/api/academy/schools/${schoolId}/lectures/${lectureId}${lang ? `?lang=${encodeURIComponent(lang)}` : ''}`
     ),
   academyInterrupt: (payload: {
     school_id: string;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, gx } from '../../i18n/locales';
 import { MarketSymbol } from '../../types/market';
-import { getMarketStatus, MarketStatus } from '../../api/market';
+import { getMarketStatus, MarketStatus, localizedSessionLabels } from '../../api/market';
 import { NotificationsCenterModal, getStoredNotifications } from './NotificationsCenterModal';
 import { OfflineBadge } from './OfflineBadge';
 import {
@@ -49,6 +49,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAiChat,
 }) => {
   const dict = DICTS[currentLang];
+  const gxt = gx(currentLang);
+  const sessionText = (ms: MarketStatus) =>
+    localizedSessionLabels(ms, { tokyo: gxt.g_sesTokyo, london: gxt.g_sesLondon, newYork: gxt.g_sesNewYork, sydney: gxt.g_sesSydney, weekend: gxt.g_sesWeekend, switching: gxt.g_sesSwitching, opens: gxt.g_sesOpens });
   const [timeStr, setTimeStr] = useState('');
   const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
@@ -285,7 +288,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div
           title={
             marketStatus
-              ? `${dict.currentSessionLabel}: ${marketStatus.currentSession} • ${dict.nextSessionLabel}: ${marketStatus.nextSession}`
+              ? `${dict.currentSessionLabel}: ${sessionText(marketStatus).current} • ${dict.nextSessionLabel}: ${sessionText(marketStatus).next}`
               : dict.checkingMarket
           }
           className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#070D18] border border-[#16233B] text-[11px] font-mono cursor-default shrink-0 whitespace-nowrap"
@@ -300,7 +303,7 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
           {marketStatus && (
             <span className="text-[#64748B] text-[10px] hidden min-[1101px]:inline">
-              ({marketStatus.isOpen ? marketStatus.currentSession : marketStatus.nextSession})
+              ({marketStatus.isOpen ? sessionText(marketStatus).current : sessionText(marketStatus).next})
             </span>
           )}
         </div>

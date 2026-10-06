@@ -123,14 +123,15 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
     window.speechSynthesis.cancel();
     const segs = lecture.script_segments;
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find((v) => v.lang?.toLowerCase().startsWith('ar'));
+    const want = school.content_lang === 'en' ? 'en' : 'ar';
+    const voice = voices.find((v) => v.lang?.toLowerCase().startsWith(want));
     const sayIndex = (k: number) => {
       if (k >= segs.length) {
         setSpeaking(null);
         return;
       }
       const u = new SpeechSynthesisUtterance(`${segs[k].title}. ${segs[k].narration}`);
-      u.lang = 'ar';
+      u.lang = want;
       if (voice) u.voice = voice;
       u.rate = 0.95;
       u.onstart = () => {
@@ -207,7 +208,12 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
       </div>
 
       <div className={`max-w-6xl mx-auto px-4 sm:px-6 py-6 ${showToc ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-10' : ''}`}>
-        <article className="mx-auto w-full max-w-[70ch] text-[#CBD5E1]" lang="ar" dir="rtl" data-testid="lecture-article">
+        <article
+          className="mx-auto w-full max-w-[70ch] text-[#CBD5E1]"
+          lang={school.content_lang === 'en' ? 'en' : school.content_lang === 'ku' ? 'ckb' : 'ar'}
+          dir={school.content_lang === 'en' ? 'ltr' : 'rtl'}
+          data-testid="lecture-article"
+        >
           <header className="space-y-2 mb-6" dir={rtl ? 'rtl' : 'ltr'} lang={currentLang === 'en-US' ? 'en' : currentLang}>
             <div className="flex items-center gap-2 text-[#2DD4BF] text-[12px] font-semibold">
               <BookOpen className="w-4 h-4" />
@@ -220,7 +226,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" /> {fmt(x.a_minutes, { n: lecture.duration_min })}
               </span>
-              {canSpeak() && (
+              {canSpeak() && school.content_lang !== 'ku' && (
                 <button
                   onClick={() => (speaking === null ? speakFrom(0) : stopSpeaking())}
                   className="flex items-center gap-1.5 min-h-[34px] px-3 rounded-full border border-[#2DD4BF]/40 text-[#2DD4BF] hover:bg-[#2DD4BF]/10 cursor-pointer"

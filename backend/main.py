@@ -38,6 +38,7 @@ import openrouter_ai
 import mailer
 import alert_worker
 import econ_calendar
+import academy_i18n
 import backtest as backtest_engine
 import screener as screener_engine
 import indicators as ind_engine
@@ -3255,7 +3256,7 @@ def academy_schools():
 
 
 @app.get("/api/academy/schools/{school_id}")
-def academy_school(school_id: str):
+def academy_school(school_id: str, lang: str | None = Query(default=None, max_length=8)):
     """**404 لا 200 بجسم `{"error": "not found"}`**: العميل يرمي عند `!res.ok` وحده
     (`getJson`)، وله مسار احتياطي مكتوب لهذه الحالة بالضبط (`setSchoolFallback`) — فردُّ 200
     كان **يعطّل احتياطيَّه**: يُسنَد كائن الخطأ كأنه مدرسة، فـ`school.levels` غير معرّفة
@@ -3263,16 +3264,23 @@ def academy_school(school_id: str):
     school = get_school(school_id)
     if not school:
         raise HTTPException(status_code=404, detail="school not found")
-    return school
+    return academy_i18n.localize_school(school, lang)
 
 
 @app.get("/api/academy/schools/{school_id}/lectures/{lecture_id}")
-def academy_lecture(school_id: str, lecture_id: str):
+def academy_lecture(school_id: str, lecture_id: str, lang: str | None = Query(default=None, max_length=8)):
     """نفس السبب، وأثره هنا أوضح: `LectureClassroom` يبني **محاضرة احتياطية بمقطعين** عند
     الخطأ، وردُّ 200 كان يمرّ من فوقه فيُعرض «درس» بلا عنوان ولا مقاطع ولا نصّ."""
     lec = get_lecture(school_id, lecture_id)
     if not lec:
         raise HTTPException(status_code=404, detail="lecture not found")
+    if academy_i18n.normalize_lang(lang) != "ar":
+        school = academy_i18n.localize_school(get_school(school_id), lang)
+        for lv in school["levels"]:
+            for item in lv["lectures"]:
+                if item["id"] == lecture_id:
+                    lec = {**lec, "title": item["title"], "outline": item["outline"], "script_segments": item["script_segments"],
+                           "level_title": lv["title"], "content_lang": school.get("content_lang")}
     return lec
 
 

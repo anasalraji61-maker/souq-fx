@@ -74,7 +74,7 @@ export const AcademyScreen: React.FC<{ currentLang?: LangId }> = ({ currentLang 
   const loadData = useCallback(async () => {
     setState('loading');
     try {
-      const s = await fetchSchools(); // first: progress maths use the curriculum it loads
+      const s = await fetchSchools(currentLang); // first: progress maths use the curriculum it loads
       const [p, c] = await Promise.all([fetchSchoolProgress(), fetchCertificates()]);
       setSchools(s.schools);
       setCompleted(p.completedLectureIds);
@@ -84,7 +84,7 @@ export const AcademyScreen: React.FC<{ currentLang?: LangId }> = ({ currentLang 
     } catch {
       setState('error');
     }
-  }, []);
+  }, [currentLang]);
 
   useEffect(() => {
     void loadData();
@@ -180,7 +180,7 @@ export const AcademyScreen: React.FC<{ currentLang?: LangId }> = ({ currentLang 
           </div>
         </div>
 
-        {contentIsArabic(currentLang) && (
+        {state === 'ready' && contentIsArabic(currentLang, schools) && (
           <div className="px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200" data-testid="content-lang-note">
             {x.a_contentArabic}
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MarketSymbol, SymbolCategory } from '../../types/market';
 import { searchSymbols, SymbolSearchResult } from '../../api/market';
 import { Search, X, TrendingUp, TrendingDown, DollarSign, Shield, Activity, Flame, Loader2 } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface SymbolSearchModalProps {
   isOpen: boolean;
@@ -159,7 +160,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="ابحث عن أزواج العملات، المعادن، المؤشرات أو النفط (Ctrl+K)..."
+            placeholder={tl().tm_101}
             className="w-full bg-transparent text-sm text-[#E8EEF9] placeholder-[#64748B] focus:outline-none"
           />
           <div className="flex items-center gap-1.5">
@@ -179,11 +180,11 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
         <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[#1E283D] bg-[#0A101D] overflow-x-auto no-scrollbar">
           {(
             [
-              { id: 'all', label: 'الكل' },
-              { id: 'forex', label: 'العملات (Forex)' },
-              { id: 'metals', label: 'المعادن' },
-              { id: 'energy', label: 'الطاقة' },
-              { id: 'indices', label: 'المؤشرات' },
+              { id: 'all', label: tl().tm_52 },
+              { id: 'forex', label: tl().tm_102 },
+              { id: 'metals', label: tl().tm_103 },
+              { id: 'energy', label: tl().tm_104 },
+              { id: 'indices', label: tl().tm_105 },
             ] as { id: SymbolCategory; label: string }[]
           ).map((c) => (
             <button
@@ -204,7 +205,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
         <div className="p-2 overflow-y-auto space-y-1 max-h-[420px]">
           {displayedItems.length === 0 ? (
             <div className="text-center py-12 text-[#64748B]">
-              لم يتم العثور على أزواج تطابق بحثك.
+              {tl().tm_106}
             </div>
           ) : (
             displayedItems.map((s, idx) => {
@@ -235,7 +236,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
                         <span className="font-bold text-xs font-mono text-[#E8EEF9]">{s.symbol}</span>
                         {isCurrent && (
                           <span className="px-1.5 py-0.2 rounded text-[9px] bg-[#2DD4BF]/20 text-[#2DD4BF] font-bold">
-                            النشط
+                            {tl().tm_107}
                           </span>
                         )}
                         <span className="text-[10px] text-[#64748B] uppercase">{s.category}</span>
@@ -254,7 +255,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
                     </div>
                   ) : (
                     <div className="text-left font-mono text-[11px] text-[#64748B]">
-                      اختر للرسم
+                      {tl().tm_108}
                     </div>
                   )}
                 </div>
@@ -265,8 +266,8 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
 
         {/* Footer shortcuts info */}
         <div className="p-2.5 border-t border-[#1E283D] bg-[#0A101D] flex items-center justify-between text-[11px] text-[#64748B]">
-          <span>استخدم الأسهم ↑ ↓ للتنقل و Enter للاختيار</span>
-          <span className="text-[#38BDF8] font-semibold">فوركس، معادن، طاقة، مؤشرات</span>
+          <span>{tl().tm_109}</span>
+          <span className="text-[#38BDF8] font-semibold">{tl().tm_110}</span>
         </div>
       </div>
     </div>
