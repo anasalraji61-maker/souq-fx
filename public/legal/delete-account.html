@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حذف الحساب — MATRIX</title>
+<meta name="description" content="احذف حساب MATRIX وبياناته نهائياً، من داخل التطبيق أو من هذه الصفحة.">
+<meta name="theme-color" content="#050b14">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/legal/legal.css">
+</head>
+<body>
+<main>
+  <h1>حذف الحساب والبيانات</h1>
+  <p class="meta">Delete your MATRIX account — <a href="#en">English below</a></p>
+
+  <h2>الطريقة 1: من داخل التطبيق</h2>
+  <ol>
+    <li>افتح التطبيق وسجّل الدخول.</li>
+    <li>اذهب إلى <strong>حسابي</strong>.</li>
+    <li>اضغط <strong>حذف الحساب</strong>، واكتب اسم المستخدم للتأكيد.</li>
+  </ol>
+
+  <h2>الطريقة 2: من هذه الصفحة</h2>
+  <div class="card danger">
+    <strong>الحذف نهائي ولا يمكن التراجع عنه.</strong> تُحذف فوراً كل هذه البيانات:
+    <ul>
+      <li>البريد وكلمة المرور والجلسات</li>
+      <li>التنبيهات وقوائم المراقبة</li>
+      <li>الرسومات والتخطيطات</li>
+      <li>سجل الصفقات التدريبية وتقدّم الأكاديمية</li>
+      <li>رموز الإشعارات</li>
+      <li>رسائل المجموعات والمحادثات الخاصة</li>
+    </ul>
+    التفاصيل في <a href="/legal/privacy.html#ar">سياسة الخصوصية، القسم 6</a>.
+  </div>
+
+  <form id="del" autocomplete="on" novalidate>
+    <label>اسم المستخدم أو البريد الإلكتروني
+      <input type="text" id="ident" name="username" autocomplete="username" required>
+    </label>
+    <label>كلمة المرور
+      <input type="password" id="pass" name="password" autocomplete="current-password" required>
+    </label>
+    <label class="check">
+      <input type="checkbox" id="confirm">
+      <span>أفهم أن حسابي وبياناته ستُحذف نهائياً ولا يمكن استرجاعها.</span>
+    </label>
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
+    <div>
+      <button type="submit" class="btn-danger" id="go" disabled>حذف حسابي نهائياً</button>
+    </div>
+  </form>
+
+  <h2>الطريقة 3: بالبريد الإلكتروني</h2>
+  <p>إذا لم تعد تستطيع الدخول إلى حسابك، فراسلنا من البريد المسجّل في الحساب على <a data-site-mailto></a> بعنوان «حذف الحساب». سننفّذ الطلب خلال 30 يوماً بعد التحقق من ملكيتك للحساب.</p>
+
+  <section id="en" class="en">
+    <h2>Delete your account (English)</h2>
+    <ol>
+      <li><strong>In the app:</strong> sign in → <em>Account</em> → <em>Delete account</em> → type your username to confirm.</li>
+      <li><strong>On this page:</strong> enter your username or e-mail and password above, tick the confirmation box and press the red button.</li>
+      <li><strong>By e-mail:</strong> if you cannot sign in, write from your account e-mail to <a data-site-mailto></a> with the subject "Delete account". We complete verified requests within 30 days.</li>
+    </ol>
+    <p>Deletion is immediate and permanent. Your e-mail, password, sessions, alerts, watchlists, drawings, layouts, practice journal, academy progress, push tokens, group messages and direct conversations are erased. Public trade ideas you posted remain with your name replaced by an anonymous identifier, and abuse reports you filed remain without your identity.</p>
+  </section>
+</main>
+<script src="/legal/legal.js"></script>
+<script>
+(function () {
+  var form = document.getElementById('del');
+  var ident = document.getElementById('ident');
+  var pass = document.getElementById('pass');
+  var confirmBox = document.getElementById('confirm');
+  var go = document.getElementById('go');
+  var msg = document.getElementById('msg');
+
+  function show(text, kind) {
+    msg.textContent = text;
+    msg.className = 'msg show ' + kind;
+  }
+  function refresh() {
+    go.disabled = !(ident.value.trim() && pass.value && confirmBox.checked);
+  }
+  ident.addEventListener('input', refresh);
+  pass.addEventListener('input', refresh);
+  confirmBox.addEventListener('change', refresh);
+
+  function readError(res) {
+    return res.json().then(function (d) { return (d && d.detail) ? String(d.detail) : ''; }, function () { return ''; });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (go.disabled) return;
+    go.disabled = true;
+    show('جارٍ التحقق…', 'ok');
+    var id = ident.value.trim();
+    var body = id.indexOf('@') >= 0 ? { email: id, password: pass.value } : { username: id, password: pass.value };
+
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return readError(res).then(function (detail) {
+            if (res.status === 401 || /invalid/i.test(detail)) throw new Error('بيانات الدخول غير صحيحة.');
+            if (res.status === 429) throw new Error('محاولات كثيرة. انتظر قليلاً ثم حاول مجدداً.');
+            throw new Error('تعذّر التحقق من الحساب (' + res.status + ').');
+          });
+        }
+        return res.json();
+      })
+      .then(function (session) {
+        if (!session || !session.token) throw new Error('تعذّر التحقق من الحساب.');
+        return fetch('/api/auth/account', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + session.token, 'Accept': 'application/json' }
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('تعذّر حذف الحساب (' + res.status + '). حاول مجدداً أو راسلنا بالبريد.');
+        pass.value = '';
+        ident.value = '';
+        confirmBox.checked = false;
+        show('تم حذف حسابك وبياناته نهائياً. إذا كان التطبيق مفتوحاً على جهاز آخر، فسجّل الخروج منه.', 'ok');
+        try {
+          localStorage.removeItem('matrix.session.token');
+          localStorage.removeItem('matrix.session.user');
+        } catch (err) { /* storage blocked: nothing to clear */ }
+      })
+      .catch(function (err) {
+        show(err && err.message ? err.message : 'حدث خطأ غير متوقع.', 'err');
+        refresh();
+      });
+  });
+})();
+</script>
+</body>
+</html>

@@ -191,6 +191,7 @@ export const AuthPanel: React.FC = () => {
           </div>
           <p className="text-[10px] text-[#64748B] mt-2">يحذف الحساب وكل بياناته من الخادم، ولا يمكن التراجع.</p>
         </details>
+        <LegalLinks />
       </section>
     );
   }
@@ -249,8 +250,22 @@ export const AuthPanel: React.FC = () => {
       </form>
       {messages}
       <p className="text-[10px] text-[#64748B]">
-        MATRIX للتحليل والتعليم فقط، ولا ينفّذ صفقات حقيقية. باستخدامك الحساب توافق على شروط الاستخدام وسياسة الخصوصية.
+        MATRIX للتحليل والتعليم فقط، ولا ينفّذ صفقات حقيقية. باستخدامك الحساب توافق على{' '}
+        <a href="/legal/terms.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">شروط الاستخدام</a> و
+        <a href="/legal/privacy.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">سياسة الخصوصية</a>.
       </p>
+      <LegalLinks />
     </section>
   );
 };
+
+/** Links to the public legal pages (needed by App Store / Google Play reviewers and users). */
+export const LegalLinks: React.FC = () => (
+  <nav className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[#64748B]" aria-label="روابط قانونية">
+    <a href="/legal/privacy.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">الخصوصية</a>
+    <a href="/legal/terms.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">الشروط</a>
+    <a href="/legal/risk.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">إخلاء المسؤولية</a>
+    <a href="/legal/delete-account.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">حذف الحساب</a>
+    <a href="/legal/about.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">عن MATRIX</a>
+  </nav>
+);
