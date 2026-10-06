@@ -256,6 +256,21 @@ export type Dict = {
   chatYou: string;
   chatAnonTrader: string;
   chatLoginRequired: string;
+  chanTitle: string;
+  chanGeneral: string;
+  chanForex: string;
+  chanMetals: string;
+  chanIndices: string;
+  chanEnergy: string;
+  chanSignals: string;
+  chanLoginToRead: string;
+  chanEmpty: string;
+  chanLoadOlder: string;
+  chanRetry: string;
+  chanRateLimited: string;
+  chanRejected: string;
+  chanPlaceholder: string;
+  chanFlagged: string;
   chatInputPlaceholder: string;
   chatInputA11y: string;
   chatSendA11y: string;
@@ -1924,6 +1939,21 @@ const ar: Dict = {
   chatYou: 'أنت',
   chatAnonTrader: 'متداول',
   chatLoginRequired: 'سجّل الدخول للمشاركة بمحادثة المجموعة — رسائلك تظهر باسم حسابك',
+  chanTitle: "مجتمع المتداولين",
+  chanGeneral: "النقاش العام",
+  chanForex: "العملات",
+  chanMetals: "الذهب والمعادن",
+  chanIndices: "المؤشرات",
+  chanEnergy: "الطاقة والنفط",
+  chanSignals: "التحليل الفني",
+  chanLoginToRead: "القنوات للأعضاء المسجّلين فقط حمايةً من الاحتيال. سجّل الدخول من «حسابي» لقراءة الرسائل والمشاركة.",
+  chanEmpty: "لا رسائل في هذه القناة بعد — ابدأ النقاش.",
+  chanLoadOlder: "تحميل رسائل أقدم",
+  chanRetry: "إعادة المحاولة",
+  chanRateLimited: "تمهّل قليلاً: رسائل كثيرة خلال ثوانٍ. حاول بعد لحظات.",
+  chanRejected: "لم تُنشر الرسالة: النص فارغ أو أطول من 1000 حرف.",
+  chanPlaceholder: "اكتب في «{ch}»…",
+  chanFlagged: "قيد المراجعة",
   chatInputPlaceholder: 'اكتب رسالة…',
   chatInputA11y: 'رسالة الدردشة الجماعية',
   chatSendA11y: 'إرسال رسالة الدردشة الجماعية',
@@ -3231,6 +3261,21 @@ const enUS: Dict = {
   chatYou: 'You',
   chatAnonTrader: 'Trader',
   chatLoginRequired: 'Log in to post in the group chat — your messages show under your account name',
+  chanTitle: "Traders community",
+  chanGeneral: "General",
+  chanForex: "Forex",
+  chanMetals: "Gold & metals",
+  chanIndices: "Indices",
+  chanEnergy: "Energy & oil",
+  chanSignals: "Technical analysis",
+  chanLoginToRead: "Channels are for signed-in members only, to keep scams out. Sign in from “Account” to read and post.",
+  chanEmpty: "No messages in this channel yet — start the discussion.",
+  chanLoadOlder: "Load older messages",
+  chanRetry: "Try again",
+  chanRateLimited: "Slow down: many messages in a few seconds. Try again shortly.",
+  chanRejected: "Not posted: the text is empty or longer than 1000 characters.",
+  chanPlaceholder: "Write in “{ch}”…",
+  chanFlagged: "Under review",
   chatInputPlaceholder: 'Type a message…',
   chatInputA11y: 'Group chat message',
   chatSendA11y: 'Send group chat message',
@@ -4587,6 +4632,21 @@ const ku: Dict = {
   chatYou: 'تۆ',
   chatAnonTrader: 'بازرگان',
   chatLoginRequired: 'بۆ نووسین لە گفتوگۆی گروپ بچۆ ژوورەوە — نامەکانت بە ناوی هەژمارەکەت دەردەکەون',
+  chanTitle: "کۆمەڵگەی بازرگانان",
+  chanGeneral: "گفتوگۆی گشتی",
+  chanForex: "دراوەکان",
+  chanMetals: "زێڕ و کانزاکان",
+  chanIndices: "پێوەرەکان",
+  chanEnergy: "وزە و نەوت",
+  chanSignals: "شیکاری تەکنیکی",
+  chanLoginToRead: "کەناڵەکان تەنها بۆ ئەندامانی چوونەژوورەوەن بۆ پاراستن لە فێڵ. لە «هەژمار» بچۆ ژوورەوە بۆ خوێندنەوە و نووسین.",
+  chanEmpty: "هێشتا هیچ نامەیەک لەم کەناڵەدا نییە — گفتوگۆ دەست پێبکە.",
+  chanLoadOlder: "بارکردنی نامە کۆنەکان",
+  chanRetry: "دووبارە هەوڵ بدەرەوە",
+  chanRateLimited: "هێواشتر: لە چەند چرکەیەکدا زۆر نامە. کەمێکی تر هەوڵ بدەرەوە.",
+  chanRejected: "نامەکە بڵاو نەکرایەوە: دەقەکە بەتاڵە یان لە 1000 پیت درێژترە.",
+  chanPlaceholder: "لە «{ch}» بنووسە…",
+  chanFlagged: "لە پشکنیندایە",
   chatInputPlaceholder: 'نامەیەک بنووسە…',
   chatInputA11y: 'نامەی گفتوگۆی گروپی',
   chatSendA11y: 'ناردنی نامەی گفتوگۆی گروپی',

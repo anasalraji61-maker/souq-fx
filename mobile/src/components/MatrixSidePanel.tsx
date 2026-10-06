@@ -13,7 +13,7 @@ import { NewsPanel } from './NewsPanel';
 import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
 import { IndicatorForecastPanel } from './IndicatorForecastPanel';
-import { GroupChatPanel } from './GroupChatPanel';
+import { ChannelChatPanel } from './ChannelChatPanel';
 import { VotePanel } from './VotePanel';
 import type { Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
@@ -209,7 +209,7 @@ export function MatrixSidePanel({
             {panel === 'indForecast' ? <IndicatorForecastPanel symbol={symbol} timeframe={timeframe} /> : null}
             {panel === 'community' ? (
               <View style={styles.community}>
-                <GroupChatPanel />
+                <ChannelChatPanel />
                 <VotePanel />
               </View>
             ) : null}

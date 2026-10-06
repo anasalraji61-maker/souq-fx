@@ -11,7 +11,7 @@ import { BacktestPanel } from './BacktestPanel';
 import { NewsPanel } from './NewsPanel';
 import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
-import { GroupChatPanel } from './GroupChatPanel';
+import { ChannelChatPanel } from './ChannelChatPanel';
 import { VotePanel } from './VotePanel';
 import { AnalystsPanel } from './AnalystsPanel';
 import { SocialConsensusPanel } from './SocialConsensusPanel';
@@ -283,7 +283,7 @@ export function MatrixBottomDock({
             {tab === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} chartBannerVisible /> : null}
             {tab === 'community' ? (
               <View style={styles.community}>
-                <GroupChatPanel />
+                <ChannelChatPanel />
                 <VotePanel />
               </View>
             ) : null}

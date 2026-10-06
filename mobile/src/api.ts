@@ -210,7 +210,24 @@ export type ChatMsg = {
   mine?: boolean;
 };
 
-export type ReportKind = 'group_message' | 'vote';
+export type ReportKind = 'group_message' | 'vote' | 'channel_message';
+
+/** Community channel message (server: routers_community.py, same channels as the web app). */
+export type ChannelMsg = {
+  id: string;
+  channel_id: string;
+  /** the author's account name (set by the server) */
+  sender_name: string;
+  content: string;
+  /** ISO-8601 UTC */
+  created_at: string;
+  sentiment?: 'bullish' | 'bearish' | 'neutral' | null;
+  symbol_tag?: string | null;
+  is_flagged?: boolean;
+  mine?: boolean;
+};
+
+export type ChannelInfo = { id: string; name: string; name_ar: string; description: string };
 export type ReportReason = 'spam' | 'abuse' | 'scam' | 'other';
 
 /**
@@ -552,6 +569,15 @@ export const api = {
       `/api/charts/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}&outputsize=${Math.max(50, Math.min(5000, Math.round(outputsize)))}`
     ),
   groupChat: () => getJson<{ messages: ChatMsg[] }>('/api/chat/group'),
+  /** Channels need an account: a guest gets `HTTP 401`. Messages come newest first. */
+  channels: () => getJson<ChannelInfo[]>('/api/community/channels'),
+  channelMessages: (channel: string, beforeId?: string) =>
+    getJson<ChannelMsg[]>(
+      `/api/community/channels/${encodeURIComponent(channel)}/messages?limit=40${beforeId ? `&before_id=${encodeURIComponent(beforeId)}` : ''}`
+    ),
+  /** Errors: HTTP 400 detail `links_not_allowed` / `empty`, 401 login, 429 rate limit (err.status / err.detail). */
+  postChannel: (channel: string, content: string) =>
+    postJson<ChannelMsg>(`/api/community/channels/${encodeURIComponent(channel)}/messages`, { content }),
   /** الخادم يحدد المرسل من التوكن (المشاركة للمسجّل فقط → `login_required` للمجهول) */
   postGroup: (text: string) =>
     postJson<{ ok: boolean; message?: ChatMsg; error?: string }>('/api/chat/group', { text }),
