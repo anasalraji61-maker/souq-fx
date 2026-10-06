@@ -356,7 +356,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
       );
 
       try {
-        const res = await getCandles(symbol, timeframe, 180);
+        const res = await getCandles(symbol, timeframe, 500);
         setCells((prev) =>
           prev.map((c) => {
             if (c.id !== cellId) return c;

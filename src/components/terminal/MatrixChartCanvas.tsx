@@ -113,7 +113,10 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
 
   // View state: visible candles count and pan offset
   const [visibleCount, setVisibleCount] = useState(70);
-  const [panOffset, setPanOffset] = useState(0); // 0 = anchored to latest candle
+  const [panOffset, setPanOffset] = useState(0); // 0 = anchored to latest candle; < 0 = empty space after it
+  // Like TradingView: the chart can be dragged left past the latest candle, leaving empty space on the right.
+  const clampPan = (value: number, count: number) =>
+    Math.max(-Math.floor(count * 0.6), Math.min(Math.max(0, candles.length - count), value));
   const [crosshair, setCrosshair] = useState<{
     x: number;
     y: number;
@@ -459,8 +462,10 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
 
     // Slice candles to display
     const totalCandles = candles.length;
+    const rightSpace = Math.max(0, -panOffset);
     const endIndex = Math.min(totalCandles, totalCandles - panOffset);
-    const startIndex = Math.max(0, endIndex - visibleCount);
+    // Keep bar spacing constant when there is empty space on the right (fewer candles, same width each)
+    const startIndex = Math.max(0, endIndex - Math.max(5, visibleCount - rightSpace));
     const displayedCandles = candles.slice(startIndex, endIndex);
 
     if (displayedCandles.length === 0) return;
@@ -478,7 +483,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     const adjustedMax = centerPrice + stretchedRange / 2;
     const adjustedRange = adjustedMax - adjustedMin || 0.0001;
 
-    const candleWidth = chartWidth / displayedCandles.length;
+    const candleWidth = chartWidth / (displayedCandles.length + rightSpace);
     const intervalSeconds = TIMEFRAME_SECONDS[timeframe] || 60;
 
     // Save transform state for pointer event conversions
@@ -1123,7 +1128,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     if (isDraggingRef.current) {
       const dx = x - dragStartXRef.current;
       const candleShift = Math.round(dx / candleWidth);
-      const newOffset = Math.max(0, Math.min(candles.length - visibleCount, dragStartOffsetRef.current + candleShift));
+      const newOffset = clampPan(dragStartOffsetRef.current + candleShift, visibleCount);
       setPanOffset(newOffset);
       // Vertical: engage after a clear vertical move so plain horizontal drags keep auto-fit.
       const dy = y - dragStartYRef.current;
@@ -1341,7 +1346,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
         const centerRatio = Math.max(0, Math.min(1, centerX / chartWidth));
         const offsetAdj = Math.round(countDiff * (1 - centerRatio));
         setVisibleCount(newVisible);
-        setPanOffset(Math.max(0, Math.min(candles.length - newVisible, pinchStartOffsetRef.current - offsetAdj)));
+        setPanOffset(clampPan(pinchStartOffsetRef.current - offsetAdj, newVisible));
       }
       return;
     }
@@ -1434,7 +1439,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       if (isDraggingRef.current) {
         const dx = x - dragStartXRef.current;
         const candleShift = Math.round(dx / candleWidth);
-        const newOffset = Math.max(0, Math.min(candles.length - visibleCount, dragStartOffsetRef.current + candleShift));
+        const newOffset = clampPan(dragStartOffsetRef.current + candleShift, visibleCount);
         setPanOffset(newOffset);
         return;
       }
@@ -1515,7 +1520,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       const shift = Math.trunc(wheelPanAccRef.current / step);
       if (shift !== 0) {
         wheelPanAccRef.current -= shift * step;
-        setPanOffset((prev) => Math.max(0, Math.min(candles.length - visibleCount, prev - shift)));
+        setPanOffset((prev) => clampPan(prev - shift, visibleCount));
       }
       return;
     }
@@ -1531,7 +1536,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     const offsetAdjustment = Math.round(countDiff * (1 - pointerRatio));
 
     setVisibleCount(nextCount);
-    setPanOffset((prev) => Math.max(0, Math.min(candles.length - nextCount, prev - offsetAdjustment)));
+    setPanOffset((prev) => clampPan(prev - offsetAdjustment, nextCount));
   };
 
   // Context Menu: create alert at clicked price (5.1)
@@ -1760,7 +1765,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       </div>
 
       {/* 4. Go to Latest Floating Button (2.5) */}
-      {panOffset > 0 && (
+      {panOffset !== 0 && (
         <button
           onClick={() => setPanOffset(0)}
           className="absolute bottom-8 right-24 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#131E33]/95 hover:bg-[#1E2D4A] border border-[#2DD4BF]/50 text-[#2DD4BF] text-xs font-semibold shadow-2xl backdrop-blur-md transition-all cursor-pointer animate-pulse"
