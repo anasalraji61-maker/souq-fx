@@ -1453,7 +1453,7 @@ def watchlist():
     return {
         "symbols": [
             {"symbol": sym, "td_symbol": market.td_symbol(sym)}
-            for sym in market.SYMBOL_MAP
+            for sym in [*market.SYMBOL_MAP, *market.INDEX_MAP]
         ]
         + [
             {"symbol": sym, "td_symbol": None, "unavailable_reason": why}

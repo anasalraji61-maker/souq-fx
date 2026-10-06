@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { LangId, DICTS } from './i18n/locales';
+import { LangId, DICTS, tl, fmt, setActiveLang } from './i18n/locales';
 import { MarketSymbol, Candle, Timeframe, ChartType, IndicatorSettings, PriceAlertItem } from './types/market';
 import { INITIAL_SYMBOLS } from './data/symbols';
 import { generateCandles, updateLastCandleWithTick } from './data/candleGenerator';
@@ -40,6 +40,8 @@ export default function App() {
   const [currentLang, setCurrentLang] = useState<LangId>(() => {
     return (localStorage.getItem('matrix_lang') as LangId) || 'ar';
   });
+  // Components outside the prop chain read the language through tl(); set it before children render.
+  setActiveLang(currentLang);
 
   // Keep HTML document and body dir in sync with language (ar/ku = rtl, en = ltr)
   useEffect(() => {
@@ -103,26 +105,8 @@ export default function App() {
         // fallback
       }
     }
-    return [
-      {
-        id: 'alt-1',
-        symbol: 'EURUSD',
-        targetPrice: 1.0900,
-        condition: 'above',
-        note: 'اختراق المقاومة اليومية 1.0900',
-        active: true,
-        triggered: false,
-      },
-      {
-        id: 'alt-2',
-        symbol: 'XAUUSD',
-        targetPrice: 2750.0,
-        condition: 'above',
-        note: 'قمة تاريخية جديدة للذهب',
-        active: true,
-        triggered: false,
-      },
-    ];
+    // No demo alerts: the user creates their own.
+    return [];
   });
 
   useEffect(() => {
@@ -241,7 +225,7 @@ export default function App() {
               addAppNotification({
                 type: 'price_alert',
                 title: `${alert.symbol} (${alert.condition === 'above' ? '▲' : '▼'})`,
-                message: alert.note || `وصل سعر ${sym.symbol} إلى ${alert.targetPrice}`,
+                message: alert.note || fmt(tl().mx2_priceHit, { sym: sym.symbol, price: alert.targetPrice }),
                 symbol: alert.symbol,
                 level: 'danger',
               });

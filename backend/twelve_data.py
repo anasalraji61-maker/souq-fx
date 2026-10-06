@@ -43,13 +43,36 @@ SYMBOL_MAP: dict[str, str] = {
     # README، `.agents/agent-4-backend.md` «Strictly zero crypto symbols»). انظر `is_crypto`.
 }
 
+# مؤشرات الأسهم (US30، NAS100، SPX500، GER40): لا تقدّمها باقة Twelve Data الأساسية. تُفعَّل فقط عندما يضع
+# المشغّل خريطتها في `MATRIX_INDEX_MAP` (مثال: «US30=DJI,NAS100=NDX,SPX500=SPX,GER40=DAX») بعد أن يثبت
+# سكربت `probe_indices.sh` أن مفتاحه يعيد أسعارها. بدونها تُعلَن «غير متاحة» بدل طلب فاشل وسلسلة مختلَقة.
+INDEX_SYMBOLS: tuple[str, ...] = ("US30", "NAS100", "SPX500", "GER40")
+
+
+def _load_index_map(raw: str | None = None) -> dict[str, str]:
+    raw = os.getenv("MATRIX_INDEX_MAP", "") if raw is None else raw
+    out: dict[str, str] = {}
+    for part in (raw or "").split(","):
+        if "=" not in part:
+            continue
+        k, v = part.split("=", 1)
+        k, v = k.strip().upper(), v.strip()
+        if k in INDEX_SYMBOLS and v and len(v) <= 20 and all(c.isalnum() or c in "/.:-^" for c in v):
+            out[k] = v
+    return out
+
+
+INDEX_MAP: dict[str, str] = _load_index_map()
+
 _TD_TO_MATRIX: dict[str, str] = {v.upper(): k for k, v in SYMBOL_MAP.items() if v.replace("/", "") != k}
+_TD_TO_MATRIX.update({v.upper(): k for k, v in INDEX_MAP.items() if v.upper() != k})
 
 # رموز يعرضها التطبيق لكن **لا يقدّمها المزوّد**. DXY كان مُسنداً لـ`DX-Y.NYB` (رمز Yahoo) ولا
 # مؤشر دولار بقائمة Twelve Data (/indices) ⇒ كل طلب يفشل ويُستهلك من الحدّ المشترك ثم تُعرض
 # سلسلة مختلَقة. الآن لا طلب أصلاً، والسبب يُعاد صراحةً للعميل.
 UNAVAILABLE_AT_PROVIDER: dict[str, str] = {
     "DXY": "not_offered_by_provider",
+    **{sym: "not_offered_by_provider" for sym in INDEX_SYMBOLS if sym not in INDEX_MAP},
 }
 
 
@@ -645,6 +668,8 @@ def td_symbol(matrix_symbol: str) -> str:
     sym = canonical_symbol(matrix_symbol)
     if sym in SYMBOL_MAP:
         return SYMBOL_MAP[sym]
+    if sym in INDEX_MAP:
+        return INDEX_MAP[sym]
     # زوج عملتين خارج الخريطة ⇒ صيغة المزوّد القانونية (كما يعيدها بحثه نفسه)
     if _is_iso_pair(sym):
         return f"{sym[:3]}/{sym[3:]}"

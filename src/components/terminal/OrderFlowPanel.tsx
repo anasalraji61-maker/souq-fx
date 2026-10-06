@@ -155,10 +155,10 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-[#2DD4BF]" />
           <h3 className="font-bold text-xs text-white">
-            لوحة تدفق الأوامر والدلتا التراكمية (Order Flow & CVD) - {symbol} ({timeframe})
+            {tl().mx_orderFlow} - {symbol} ({timeframe})
           </h3>
           <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
-            تقديري (Estimated)
+            {tl().mx_estimated}
           </span>
           {isOffline && <OfflineBadge forceShow />}
         </div>

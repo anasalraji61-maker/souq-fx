@@ -132,10 +132,10 @@ export const CommandSessionDrawer: React.FC<CommandSessionDrawerProps> = ({
         >
           <Terminal className="w-3.5 h-3.5 text-[#2DD4BF]" />
           <span className="font-mono font-bold text-xs text-[#E8EEF9]">
-            موجه الأوامر وجلسة الطرفية (Command Session)
+            {tl().mx_cmdTitle}
           </span>
           <span className="text-[10px] text-[#7B8DA8] font-mono bg-[#162033] px-1.5 py-0.2 rounded border border-[#243049]">
-            {logs.length} أحداث
+            {logs.length} {tl().mx_events}
           </span>
           {isOpen ? <ChevronDown className="w-3.5 h-3.5 ml-1 text-[#7B8DA8]" /> : <ChevronUp className="w-3.5 h-3.5 ml-1 text-[#7B8DA8]" />}
         </div>

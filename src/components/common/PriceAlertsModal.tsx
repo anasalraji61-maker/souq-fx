@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MarketSymbol, PriceAlertItem } from '../../types/market';
 import { Bell, Plus, Trash2, X, CheckCircle2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl } from '../../i18n/locales';
 
 interface PriceAlertsModalProps {
   isOpen: boolean;
@@ -75,7 +75,7 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
           ? 'Maximum limit of 50 active alerts reached.'
           : currentLang === 'ku'
           ? 'گەیشتە زۆرترین ڕێژە (50 ئاگاداری).'
-          : 'تم الوصول للحد الأقصى (50 تنبيهاً). يُرجى حذف بعض التنبيهات لإضافة جديد.'
+          : tl().tm2_430
       );
       setTimeout(() => setModalLimitNotice(null), 5000);
       return;
@@ -121,7 +121,7 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
                   ? 'Set target price triggers with real-time audio and visual popups.'
                   : currentLang === 'ku'
                   ? 'ئاستی نرخی دیاریکراو دابنێ بۆ وەرگرتنی ئاگاداری دەستبەجێ.'
-                  : 'عيّن عتبات سعرية مستهدفة وسيصلك إشعار فوري عند وصول السعر إليها.'}
+                  : tl().tm2_431}
               </p>
             </div>
           </div>
@@ -201,7 +201,7 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder={currentLang === 'en-US' ? 'Alert note (optional)...' : currentLang === 'ku' ? 'تێبینی ئاگاداری...' : 'ملاحظة التنبيه...'}
+                placeholder={currentLang === 'en-US' ? 'Alert note (optional)...' : currentLang === 'ku' ? 'تێبینی ئاگاداری...' : tl().tm2_432}
                 value={formNote}
                 onChange={(e) => setFormNote(e.target.value)}
                 className="flex-1 bg-[#0B1220] border border-[#243049] rounded-lg p-2.5 text-[#E8EEF9] text-xs min-h-[44px]"
@@ -223,7 +223,7 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
                 {dict.activeAlerts} ({alerts.length})
               </span>
               <span className="text-[10px] text-[#7B8DA8]">
-                {currentLang === 'en-US' ? 'Live monitoring active' : currentLang === 'ku' ? 'چاودێری ڕاستەوخۆ چالاکە' : 'مراقبة حية مستمرة'}
+                {currentLang === 'en-US' ? 'Live monitoring active' : currentLang === 'ku' ? 'چاودێری ڕاستەوخۆ چالاکە' : tl().tm2_433}
               </span>
             </div>
 
@@ -284,7 +284,7 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
                             {alt.triggered ? (
                               <span className="px-1.5 py-0.2 rounded text-[10px] bg-[#22C55E]/15 text-[#22C55E] flex items-center gap-0.5 font-bold">
                                 <CheckCircle2 className="w-3 h-3" />
-                                {currentLang === 'en-US' ? 'Triggered' : currentLang === 'ku' ? 'جێبەجێکرا' : 'تم التنفيذ'}
+                                {currentLang === 'en-US' ? 'Triggered' : currentLang === 'ku' ? 'جێبەجێکرا' : tl().tm2_434}
                               </span>
                             ) : alt.active ? (
                               <span className="px-1.5 py-0.2 rounded text-[10px] bg-[#2DD4BF]/15 text-[#2DD4BF]">
@@ -292,7 +292,7 @@ export const PriceAlertsModal: React.FC<PriceAlertsModalProps> = ({
                               </span>
                             ) : (
                               <span className="px-1.5 py-0.2 rounded text-[10px] bg-zinc-800 text-zinc-400">
-                                {currentLang === 'en-US' ? 'Disabled' : currentLang === 'ku' ? 'ناچالاک' : 'معطل'}
+                                {currentLang === 'en-US' ? 'Disabled' : currentLang === 'ku' ? 'ناچالاک' : tl().tm2_436}
                               </span>
                             )}
                           </div>

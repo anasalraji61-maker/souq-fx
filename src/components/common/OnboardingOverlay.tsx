@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, BarChart2, ListFilter, Layers, GraduationCap, Bell, Check } from 'lucide-react';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl } from '../../i18n/locales';
 
 interface OnboardingOverlayProps {
   isOpen: boolean;
@@ -84,13 +84,13 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
           ? 'Professional Technical Chart'
           : currentLang === 'ku'
           ? 'چارتی شیکاری تەکنیکی پێشکەوتوو'
-          : 'شارت التحليل الفني الاحترافي (Chart)',
+          : tl().tm2_328,
       desc:
         currentLang === 'en-US'
           ? 'Ultra-responsive candlestick charts with multi-timeframe analysis from 1m to 1D and high-performance indicators.'
           : currentLang === 'ku'
           ? 'چارتی مۆمی ژاپۆنی خێرا لەگەڵ پشتگیری فریمە کاتییەکان لە 1m تا 1D و ئامرازە تەکنیکییەکان.'
-          : 'استمتع بشارت شموع يابانية فائق الاستجابة مع دعم 6 أنواع مختلفة من الشارتات وفريمات متعددة من 1m إلى 1D.',
+          : tl().tm2_329,
       icon: <BarChart2 className="w-8 h-8 text-[#2DD4BF]" />,
     },
     {
@@ -99,13 +99,13 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
           ? 'Live Market Watchlist'
           : currentLang === 'ku'
           ? 'لیستی چاودێری نرخەکان'
-          : 'قائمة مراقبة الأسعار (Watchlist)',
+          : tl().tm2_330,
       desc:
         currentLang === 'en-US'
           ? 'Track Forex pairs, Gold, Silver, Crude Oil, and Global Indices with real-time spread metrics and sparkline charts.'
           : currentLang === 'ku'
           ? 'چاودێری جووتەکانی فۆرێکس، زێڕ، نەوت و پێوەرە جیهانییەکان لەگەڵ جیاوازی نرخی سپڕێد و هێڵی گۆڕانکاری.'
-          : 'تابع أسعار أزواج الفوركس، الذهب، الفضة، النفط والمؤشرات العالمية مع حساب دقيق للفارق السعري (Spread).',
+          : tl().tm2_331,
       icon: <ListFilter className="w-8 h-8 text-[#38BDF8]" />,
     },
     {
@@ -114,13 +114,13 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
           ? 'Indicators & Drawing Tools'
           : currentLang === 'ku'
           ? 'ئیندیکەیتەرەکان و ئامرازەکانی وێنەکێشان'
-          : 'المؤشرات الفنية وأدوات الرسم (Indicators)',
+          : tl().tm2_332,
       desc:
         currentLang === 'en-US'
           ? 'Over 15 indicators including EMA, Bollinger Bands, RSI, MACD, and VWAP with extensive Fibonacci and trendline tools.'
           : currentLang === 'ku'
           ? 'زیاتر لە 15 ئیندیکەیتەری تەکنیکی (EMA, Bollinger, RSI, MACD) لەگەڵ کۆمەڵەی تەواوی ئامرازەکانی وێنەکێشان.'
-          : 'أكثر من 15 مؤشراً فنياً من المتوسطات EMA وSMA وبولينجر باندز إلى RSI والماكد وVWAP، بالإضافة لأدوات الرسم.',
+          : tl().tm2_333,
       icon: <Layers className="w-8 h-8 text-[#A78BFA]" />,
     },
     {
@@ -129,13 +129,13 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
           ? 'MATRIX Academy & Certification'
           : currentLang === 'ku'
           ? 'ئەکادیمیای MATRIX و بڕوانامەکان'
-          : 'أكاديمية MATRIX للتداول والشهادات (Academy)',
+          : tl().tm2_334,
       desc:
         currentLang === 'en-US'
           ? 'Comprehensive learning paths from basics to Smart Money Concepts (SMC) with quizzes and printable certificates.'
           : currentLang === 'ku'
           ? 'خولە فێرکارییە تەواوەکان لە سەرەتاوە تا پارەی زیرەک (SMC) لەگەڵ تاقیکردنەوە و بڕوانامەی شایستەی چاپکردن.'
-          : 'مسارات تعليمية متكاملة لمدارس التحليل الفني (الكلاسيكي، SMC، إليوت) مع اختبارات فهم وشهادات إتمام معتمدة.',
+          : tl().tm2_335,
       icon: <GraduationCap className="w-8 h-8 text-[#E8B86D]" />,
     },
     {
@@ -144,13 +144,13 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
           ? 'Real-Time Price Alerts'
           : currentLang === 'ku'
           ? 'ئاگادارییەکانی نرخی ڕاستەوخۆ'
-          : 'تنبيهات الأسعار اللحظية (Alerts)',
+          : tl().tm2_336,
       desc:
         currentLang === 'en-US'
           ? 'Set instant price threshold alerts with visual and audio chimes to never miss key market opportunities.'
           : currentLang === 'ku'
           ? 'ئاگاداری دەستبەجێ دابنێ کاتێک نرخ دەگاتە ئاستە دیاریکراوەکان لەگەڵ دەنگی تایبەت بە ئاگاداری.'
-          : 'عيّن تنبيهات فورية عند وصول السعر إلى مستويات محددة أو اختراقها مع إشعارات مرئية وصوتية مسموعة.',
+          : tl().tm2_337,
       icon: <Bell className="w-8 h-8 text-[#EF4444]" />,
     },
   ];

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeBackendStatus } from '../../api/client';
 import { WifiOff } from 'lucide-react';
-import { LangId } from '../../i18n/locales';
+import { LangId, tl } from '../../i18n/locales';
 
 interface OfflineBadgeProps {
   className?: string;
@@ -43,10 +43,10 @@ export const OfflineBadge: React.FC<OfflineBadgeProps> = ({ className = '', forc
       ? 'Operating in local offline mode due to disconnected backend server'
       : currentLang === 'ku'
       ? 'کارکردن لە دۆخی ناوخۆیی (ئۆفلاین) بەهۆی نەبوونی پەیوەندی بە سێرڤەر'
-      : 'يتم العمل بالوضع المحلي التلقائي لعدم توفر اتصال مباشر بالخادم الخلفي';
+      : tl().tm2_441;
 
   const label =
-    currentLang === 'en-US' ? 'Offline Mode' : currentLang === 'ku' ? 'دۆخی ئۆفلاین' : 'الوضع المحلي (Offline)';
+    currentLang === 'en-US' ? 'Offline Mode' : currentLang === 'ku' ? 'دۆخی ئۆفلاین' : tl().tm2_442;
 
   return (
     <div

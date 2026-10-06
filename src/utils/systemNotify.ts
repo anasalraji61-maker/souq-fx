@@ -1,3 +1,4 @@
+import { tl, fmt } from '../i18n/locales';
 /**
  * System-level notifications for triggered price alerts.
  *
@@ -69,16 +70,16 @@ export async function showSystemNotification(title: string, body: string, tag?: 
 /** Arabic text for a triggered price alert. */
 export function alertNotificationText(symbol: string, condition: string, target: number, price: number) {
   const dir: Record<string, string> = {
-    above: 'تجاوز',
-    greater_than: 'تجاوز',
-    crosses_up: 'اخترق صعوداً',
-    below: 'نزل تحت',
-    less_than: 'نزل تحت',
-    crosses_down: 'اخترق هبوطاً',
-    crosses: 'لامس',
+    above: tl().mx2_above,
+    greater_than: tl().mx2_above,
+    crosses_up: tl().mx2_crossUp,
+    below: tl().mx2_below,
+    less_than: tl().mx2_below,
+    crosses_down: tl().mx2_crossDown,
+    crosses: tl().mx2_touched,
   };
   return {
-    title: `تنبيه سعري: ${symbol}`,
-    body: `${symbol} ${dir[condition] || 'وصل'} ${target} — السعر الآن ${price}`,
+    title: fmt(tl().mx2_alertTitle, { sym: symbol }),
+    body: fmt(tl().mx2_alertBody, { sym: symbol, dir: dir[condition] || tl().mx2_reached, target, price }),
   };
 }

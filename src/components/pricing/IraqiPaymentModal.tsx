@@ -8,6 +8,7 @@ import {
   Clock,
   Info,
 } from 'lucide-react';
+import { tl, getActiveLang } from '../../i18n/locales';
 
 interface IraqiPaymentModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
   // Approximate USD to IQD market rate (~1520 IQD/USD)
   const usdToIqdRate = 1520;
   const priceIqd = Math.round(planPriceUsd * usdToIqdRate);
-  const formattedIqd = new Intl.NumberFormat('ar-IQ').format(priceIqd);
+  const formattedIqd = new Intl.NumberFormat(getActiveLang() === 'ar' ? 'ar-IQ' : 'en-US').format(priceIqd);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 select-none text-xs">
@@ -41,12 +42,12 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#2DD4BF]/10 text-[#2DD4BF] font-semibold border border-[#2DD4BF]/20">
-                بوابات الدفع المحلية في العراق 🇮🇶
+                {tl().tm2_374}
               </span>
-              <span className="text-xs text-amber-400 font-bold">قريباً (عرض فقط)</span>
+              <span className="text-xs text-amber-400 font-bold">{tl().tm2_375}</span>
             </div>
             <h2 className="text-base font-bold text-white mt-1">
-              تفاصيل اشتراك {planName} ({billingCycle === 'annual' ? 'سنوي' : 'شهري'})
+              {tl().mx_subDetails} {planName} ({billingCycle === 'annual' ? tl().tm2_376 : tl().tm2_377})
             </h2>
           </div>
           <button
@@ -60,18 +61,18 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
         {/* Pricing Summary Banner */}
         <div className="p-5 bg-gradient-to-r from-[#0F1E36] to-[#0A162B] border-b border-[#1E2E4A] flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="text-xs text-[#94A3B8]">قيمة الباقة المقدرة:</span>
+            <span className="text-xs text-[#94A3B8]">{tl().tm2_378}</span>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-white">${planPriceUsd}</span>
               <span className="text-sm font-bold text-[#2DD4BF]">
-                ≈ {formattedIqd} دينار عراقي
+                ≈ {formattedIqd} {tl().mx_iqd}
               </span>
             </div>
-            <span className="text-[11px] text-[#64748B]">سعر الصرف التقديري: 1$ = {usdToIqdRate} د.ع</span>
+            <span className="text-[11px] text-[#64748B]">{tl().mx_fxRate2} {usdToIqdRate} {tl().mx_iqdShort}</span>
           </div>
           <div className="flex items-center gap-2 bg-[#12223D] px-3.5 py-2 rounded-xl border border-[#1E3358] text-xs text-amber-400">
             <Clock className="w-4 h-4 shrink-0" />
-            <span>التفعيل المالي غير متاح حالياً</span>
+            <span>{tl().tm2_379}</span>
           </div>
         </div>
 
@@ -80,15 +81,15 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
           <div className="p-4 rounded-xl bg-[#0F1B2E] border border-[#1E2E4A] space-y-2">
             <div className="flex items-center gap-2 text-[#2DD4BF] font-bold text-sm">
               <Info className="w-4 h-4" />
-              <span>إشعار للمستخدمين</span>
+              <span>{tl().tm2_380}</span>
             </div>
             <p className="text-xs text-[#A3B4D0] leading-relaxed">
-              هذه الشاشة مخصصة لعرض معلومات الباقات وخيارات الدفع المحلية في العراق مستقبلاً. لا نقوم حالياً بجمع أي تفاصيل دفع أو بيانات بطاقات بنكية، ولا يوجد أي تعامل بالعملات الرقمية أو المشفرة إطلاقاً وفق سياسة المنصة.
+              {tl().tm2_381}
             </p>
           </div>
 
           <div className="space-y-3">
-            <span className="text-xs font-bold text-white block">طرق الدفع المحلية المعتمدة مستقبلاً:</span>
+            <span className="text-xs font-bold text-white block">{tl().tm2_382}</span>
             <div className="grid grid-cols-2 gap-3">
               <div
                 onClick={() => setSelectedMethod('zaincash')}
@@ -98,9 +99,9 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
               >
                 <div className="flex items-center gap-2 text-white font-bold">
                   <Smartphone className="w-4 h-4 text-[#2DD4BF]" />
-                  <span>زين كاش (ZainCash)</span>
+                  <span>{tl().tm2_109}</span>
                 </div>
-                <p className="text-[11px] text-[#64748B] mt-1">محفظة رقمية سريعة</p>
+                <p className="text-[11px] text-[#64748B] mt-1">{tl().tm2_383}</p>
               </div>
 
               <div
@@ -111,9 +112,9 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
               >
                 <div className="flex items-center gap-2 text-white font-bold">
                   <CreditCard className="w-4 h-4 text-amber-400" />
-                  <span>كي كارد (Qi Card)</span>
+                  <span>{tl().tm2_111}</span>
                 </div>
-                <p className="text-[11px] text-[#64748B] mt-1">ماستركارد والبطاقات المصرفية</p>
+                <p className="text-[11px] text-[#64748B] mt-1">{tl().tm2_384}</p>
               </div>
 
               <div
@@ -124,9 +125,9 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
               >
                 <div className="flex items-center gap-2 text-white font-bold">
                   <Building2 className="w-4 h-4 text-emerald-400" />
-                  <span>مصرف العراق الأول (FIB)</span>
+                  <span>{tl().tm2_112}</span>
                 </div>
-                <p className="text-[11px] text-[#64748B] mt-1">تحويل بنكي فوري</p>
+                <p className="text-[11px] text-[#64748B] mt-1">{tl().tm2_385}</p>
               </div>
 
               <div
@@ -137,21 +138,21 @@ export const IraqiPaymentModal: React.FC<IraqiPaymentModalProps> = ({
               >
                 <div className="flex items-center gap-2 text-white font-bold">
                   <Smartphone className="w-4 h-4 text-purple-400" />
-                  <span>فاست بي (FastPay)</span>
+                  <span>{tl().tm2_114}</span>
                 </div>
-                <p className="text-[11px] text-[#64748B] mt-1">كردستان وعموم العراق</p>
+                <p className="text-[11px] text-[#64748B] mt-1">{tl().tm2_386}</p>
               </div>
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-[#09111D] border border-[#1A263B] text-center space-y-2">
-            <span className="text-xs text-[#7B8DA8] block">حالة تفعيل الاشتراكات:</span>
+            <span className="text-xs text-[#7B8DA8] block">{tl().tm2_387}</span>
             <button
               disabled
               className="px-6 py-2.5 rounded-xl bg-[#16233B] text-amber-400 font-extrabold text-xs border border-amber-500/30 cursor-not-allowed opacity-90 inline-flex items-center gap-2"
             >
               <Clock className="w-4 h-4" />
-              <span>بوابات الدفع قيد الإطلاق (قريباً)</span>
+              <span>{tl().tm2_388}</span>
             </button>
           </div>
         </div>

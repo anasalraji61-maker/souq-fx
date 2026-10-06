@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { positionsAPI, Position, AccountStats } from '../../api/positions';
 import { PositionDetailModal } from './PositionDetailModal';
+import { tl } from '../../i18n/locales';
 
 interface PositionPanelProps {
   currentPrices?: Record<string, number>;
@@ -79,7 +80,7 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-bold text-white tracking-wide">
-              المراكز المفتوحة ({positions.length})
+              {tl().mx_openPos} ({positions.length})
             </h3>
             <span className="text-[11px] text-slate-400">Position Management & Live P&L</span>
           </div>
@@ -88,7 +89,7 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
         {/* Live Metrics */}
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 flex items-center gap-2">
-            <span className="text-slate-400">صافي العائم:</span>
+            <span className="text-slate-400">{tl().tm2_309}</span>
             <span
               className={`font-bold ${
                 totalOpenPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'
@@ -101,12 +102,12 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
           {stats && (
             <div className="hidden sm:flex items-center gap-3 text-slate-400">
               <div>
-                نسبة الفوز:{' '}
+                {tl().mx_winRate}{' '}
                 <span className="text-cyan-400 font-bold">{stats.winRatePct}%</span>
               </div>
               <div className="h-3 w-px bg-slate-700" />
               <div>
-                معامل الربح:{' '}
+                {tl().mx_profitFactor}{' '}
                 <span className="text-amber-400 font-bold">{stats.profitFactor}</span>
               </div>
             </div>
@@ -119,8 +120,8 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
         {positions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-slate-500 text-xs gap-2">
             <span className="text-2xl">⚡</span>
-            <span>لا توجد مراكز تداول مفتوحة حالياً</span>
-            <span className="text-[10px] text-slate-600">افتح أمراً جديداً من لوحة التداول لبدء تتبع المركز</span>
+            <span>{tl().tm2_310}</span>
+            <span className="text-[10px] text-slate-600">{tl().tm2_311}</span>
           </div>
         ) : (
           <>
@@ -128,14 +129,14 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
             <table className="hidden md:table w-full text-right text-xs">
               <thead className="bg-slate-950/40 text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
                 <tr>
-                  <th className="py-2.5 px-3">الرمز</th>
-                  <th className="py-2.5 px-3">النوع</th>
-                  <th className="py-2.5 px-3">العقود</th>
-                  <th className="py-2.5 px-3">سعر الدخول</th>
-                  <th className="py-2.5 px-3">السعر الحالي</th>
-                  <th className="py-2.5 px-3">الربح/الخسارة ($)</th>
-                  <th className="py-2.5 px-3">النسبة (%)</th>
-                  <th className="py-2.5 px-3 text-center">إجراءات</th>
+                  <th className="py-2.5 px-3">{tl().tm2_287}</th>
+                  <th className="py-2.5 px-3">{tl().tm2_312}</th>
+                  <th className="py-2.5 px-3">{tl().tm2_313}</th>
+                  <th className="py-2.5 px-3">{tl().tm2_314}</th>
+                  <th className="py-2.5 px-3">{tl().tm2_315}</th>
+                  <th className="py-2.5 px-3">{tl().tm2_316}</th>
+                  <th className="py-2.5 px-3">{tl().tm2_317}</th>
+                  <th className="py-2.5 px-3 text-center">{tl().tm2_318}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono">
@@ -198,16 +199,16 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
                           <button
                             onClick={() => setSelectedPosition(pos)}
                             className="rounded bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 text-[11px] font-sans transition-colors"
-                            title="عرض وتعديل التفاصيل"
+                            title={tl().tm2_319}
                           >
-                            تفاصيل
+                            {tl().tm2_320}
                           </button>
                           <button
                             onClick={() => handleOpenQuickClose(pos)}
                             className="rounded bg-rose-600/80 hover:bg-rose-500 text-white font-bold px-2.5 py-1 text-[11px] font-sans transition-colors shadow-sm"
-                            title="إغلاق فوري"
+                            title={tl().tm2_321}
                           >
-                            إغلاق
+                            {tl().tm2_232}
                           </button>
                         </div>
                       </td>
@@ -253,7 +254,7 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
                         >
                           {pos.side}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">({pos.qty} عقود)</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({pos.qty} {tl().mx_contracts})</span>
                       </div>
                       <div className="text-right">
                         <span
@@ -268,11 +269,11 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
 
                     <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-slate-950/40 p-2 rounded-lg border border-slate-800/50">
                       <div>
-                        <span className="text-slate-500 block text-[10px]">سعر الدخول</span>
+                        <span className="text-slate-500 block text-[10px]">{tl().tm2_314}</span>
                         <span className="text-slate-200">{pos.avgEntryPrice.toFixed(4)}</span>
                       </div>
                       <div className="text-left">
-                        <span className="text-slate-500 block text-[10px]">السعر الحالي</span>
+                        <span className="text-slate-500 block text-[10px]">{tl().tm2_315}</span>
                         <span className="text-cyan-400 font-semibold">{cur.toFixed(4)}</span>
                       </div>
                     </div>
@@ -282,13 +283,13 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
                         onClick={() => setSelectedPosition(pos)}
                         className="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold text-center"
                       >
-                        تفاصيل وتعديل
+                        {tl().tm2_322}
                       </button>
                       <button
                         onClick={() => handleOpenQuickClose(pos)}
                         className="py-1.5 px-4 rounded-lg bg-rose-600/80 text-white font-bold text-xs shadow-xs"
                       >
-                        إغلاق
+                        {tl().tm2_232}
                       </button>
                     </div>
                   </div>
@@ -310,15 +311,15 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <h4 className="text-base font-bold text-white mb-2">
-              إغلاق المركز: {quickCloseModal.symbol} ({quickCloseModal.side.toUpperCase()})
+              {tl().mx_closePos} {quickCloseModal.symbol} ({quickCloseModal.side.toUpperCase()})
             </h4>
             <p className="text-xs text-slate-400 mb-4">
-              سيتم إغلاق المركز فورياً وتصفية الأرباح أو الخسائر المحققة في حسابك.
+              {tl().tm2_323}
             </p>
 
             <div className="space-y-3 mb-5">
               <div>
-                <label className="text-xs text-slate-400 block mb-1">سعر التنفيذ</label>
+                <label className="text-xs text-slate-400 block mb-1">{tl().tm2_324}</label>
                 <input
                   type="number"
                   step="0.0001"
@@ -335,13 +336,13 @@ export const PositionPanel: React.FC<PositionPanelProps> = ({
                 disabled={loading || !quickClosePrice}
                 className="flex-1 rounded-lg bg-rose-600 hover:bg-rose-500 py-2 text-xs font-bold text-white transition-colors disabled:opacity-50"
               >
-                {loading ? 'جاري الإغلاق...' : 'تأكيد الإغلاق الفوري'}
+                {loading ? tl().tm2_325 : tl().tm2_326}
               </button>
               <button
                 onClick={() => setQuickCloseModal(null)}
                 className="rounded-lg bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs text-slate-300 transition-colors"
               >
-                إلغاء
+                {tl().tm2_327}
               </button>
             </div>
           </div>

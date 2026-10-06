@@ -3,7 +3,7 @@ import { IndicatorInstance, IndicatorType } from '../../types/market';
 import { INDICATOR_CATALOG, IndicatorDefinition } from '../../data/indicators';
 import { IndicatorSettingsModal } from './IndicatorSettingsModal';
 import { X, Search, Plus, Eye, EyeOff, Settings, Trash2, Layers, BarChart2 } from 'lucide-react';
-import { tl, fmt } from '../../i18n/locales';
+import { tl, fmt, getActiveLang } from '../../i18n/locales';
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -126,7 +126,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                   : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
               }`}
             >
-              الكل ({INDICATOR_CATALOG.length})
+              {tl().mx_all} ({INDICATOR_CATALOG.length})
             </button>
             <button
               onClick={() => setActiveTab('overlay')}
@@ -136,7 +136,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                   : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
               }`}
             >
-              متراكبة على السعر (Overlays)
+              {tl().mx_overlays}
             </button>
             <button
               onClick={() => setActiveTab('oscillator')}
@@ -146,7 +146,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                   : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
               }`}
             >
-              مذبذبات سفلية (Oscillators)
+              {tl().mx_oscillators}
             </button>
             <button
               onClick={() => setActiveTab('active')}
@@ -156,7 +156,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                   : 'text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#162033]'
               }`}
             >
-              المؤشرات النشطة ({instances.length})
+              {tl().mx_activeIndShort} ({instances.length})
             </button>
           </div>
         </div>
@@ -172,7 +172,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
             ) : (
               <div className="space-y-2">
                 <div className="text-[11px] text-[#7B8DA8] px-1 font-semibold">
-                  المؤشرات المطبقة على هذا الشارت (اضغط على المسنن لتغيير الإعدادات والألوان):
+                  {tl().mx_appliedHelp}
                 </div>
                 {instances.map((inst) => {
                   const paramStr = Object.entries(inst.params)
@@ -190,7 +190,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                         />
                         <div>
                           <div className="font-bold text-[#E8EEF9] text-xs">
-                            {inst.nameAr || inst.name}
+                            {getActiveLang() === 'ar' ? inst.nameAr || inst.name : inst.name}
                             {paramStr ? ` (${paramStr})` : ''}
                           </div>
                           <div className="text-[10px] text-[#64748B]">
@@ -253,7 +253,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                         />
                         <div>
                           <div className="font-bold text-[#E8EEF9] text-xs group-hover:text-[#2DD4BF] transition-colors">
-                            {def.nameAr}
+                            {getActiveLang() === 'ar' ? def.nameAr : def.name}
                           </div>
                           <div className="text-[10px] text-[#64748B] font-mono">
                             {def.name} ({def.pane === 'main' ? 'Overlay' : 'Oscillator'})
@@ -264,7 +264,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
                       <div className="flex items-center gap-2">
                         {addedCount > 0 && (
                           <span className="text-[10px] font-mono bg-[#1E293B] text-[#2DD4BF] px-1.5 py-0.5 rounded">
-                            مفعل ({addedCount})
+                            {tl().mx_enabled} ({addedCount})
                           </span>
                         )}
                         <button
@@ -287,7 +287,7 @@ export const IndicatorModal: React.FC<IndicatorModalProps> = ({
         {/* Footer */}
         <div className="p-3 border-t border-[#1E283D] bg-[#0A101D] flex items-center justify-between">
           <span className="text-[11px] text-[#64748B]">
-            يمكن إضافة نفس المؤشر أكثر من مرة بفترات مختلفة (مثل EMA 20 و EMA 50).
+            {tl().mx_multiHelp}
           </span>
           <button
             onClick={onClose}

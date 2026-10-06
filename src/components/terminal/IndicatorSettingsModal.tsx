@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { IndicatorInstance } from '../../types/market';
 import { INDICATOR_CATALOG, IndicatorDefinition } from '../../data/indicators';
 import { X, Check } from 'lucide-react';
-import { tl, fmt } from '../../i18n/locales';
+import { tl, fmt, getActiveLang } from '../../i18n/locales';
 
 interface IndicatorSettingsModalProps {
   isOpen: boolean;
@@ -72,7 +72,7 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
             <h3 className="font-bold text-sm text-[#E8EEF9]">
-              إعدادات: {indicator.nameAr || indicator.name}
+              {tl().mx_settingsOf} {getActiveLang() === 'ar' ? indicator.nameAr || indicator.name : indicator.name}
             </h3>
           </div>
           <button
@@ -89,7 +89,7 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
           {def && Object.keys(def.paramLabels).length > 0 ? (
             <div className="space-y-3">
               <div className="text-[11px] font-semibold text-[#7B8DA8] uppercase tracking-wider">
-                معاملات المؤشر (Inputs)
+                {tl().mx_inputs}
               </div>
               {Object.entries(def.paramLabels).map(([key, meta]) => {
                 const currentVal = params[key] ?? def.defaultParams[key] ?? meta.min;
@@ -121,7 +121,7 @@ export const IndicatorSettingsModal: React.FC<IndicatorSettingsModalProps> = ({
           {/* Color Selector */}
           <div className="space-y-2 pt-2 border-t border-[#1E283D]">
             <div className="text-[11px] font-semibold text-[#7B8DA8] uppercase tracking-wider">
-              لون الخط (Style)
+              {tl().mx_lineStyle}
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
               {PRESET_COLORS.map((c) => (

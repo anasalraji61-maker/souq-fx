@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, ShieldAlert, Check, Trash2, X, AlertTriangle, Info, Clock, AlertCircle } from 'lucide-react';
-import { LangId, DICTS, formatDateTime, t } from '../../i18n/locales';
+import { LangId, DICTS, formatDateTime, t, getActiveLang } from '../../i18n/locales';
 
 export interface AppNotification {
   id: string;
@@ -16,7 +16,7 @@ export interface AppNotification {
 const STORAGE_KEY = 'matrix.notifications.v1';
 const MAX_NOTIFICATIONS = 200;
 
-export function getStoredNotifications(lang: LangId = 'ar'): AppNotification[] {
+export function getStoredNotifications(lang: LangId = getActiveLang()): AppNotification[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -36,26 +36,6 @@ export function getStoredNotifications(lang: LangId = 'ar'): AppNotification[] {
       timestamp: now - 1000 * 60 * 15, // 15 mins ago
       read: false,
       level: 'info',
-    },
-    {
-      id: 'notif-2',
-      type: 'news_impact',
-      title: dict.notifCpiTitle,
-      message: dict.notifCpiMsg,
-      timestamp: now - 1000 * 60 * 120, // 2 hours ago
-      read: false,
-      level: 'warning',
-      symbol: 'USD',
-    },
-    {
-      id: 'notif-3',
-      type: 'price_alert',
-      title: dict.notifGoldAlertTitle,
-      message: dict.notifGoldAlertMsg,
-      timestamp: now - 1000 * 60 * 60 * 26, // yesterday
-      read: true,
-      level: 'danger',
-      symbol: 'XAUUSD',
     },
   ];
 

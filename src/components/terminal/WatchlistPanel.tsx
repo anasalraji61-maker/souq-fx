@@ -4,7 +4,16 @@ import { blockedByPlan } from '../../api/plan';
 import { MarketSymbol } from '../../types/market';
 import { getQuote, MarketQuote, getMarketStatus, MarketStatus } from '../../api/market';
 import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock, X } from 'lucide-react';
-import { tl, fmt } from '../../i18n/locales';
+import { tl, fmt, gx } from '../../i18n/locales';
+
+/** Default lists are stored with the name of the language they were created in; show them in the current one. */
+const DEFAULT_LIST_KEYS: Record<string, 'tm_231' | 'tm_102' | 'tm_232'> = { main: 'tm_231', forex: 'tm_102', commodities: 'tm_232' };
+function watchlistLabel(w: { id: string; name: string }): string {
+  const key = DEFAULT_LIST_KEYS[w.id];
+  if (!key) return w.name;
+  const defaults = (['ar', 'en-US', 'ku'] as const).map((l) => gx(l)[key]);
+  return defaults.includes(w.name) ? tl()[key] : w.name;
+}
 
 interface WatchlistPanelProps {
   symbols: MarketSymbol[];
@@ -86,9 +95,9 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
           'XAUUSD',
           'XAGUSD',
           'USOIL',
-          'SPX500',
-          'NAS100',
-          'DXY',
+          'AUDUSD',
+          'USDCHF',
+          'EURJPY',
         ],
       },
       {
@@ -295,7 +304,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
             >
               {watchlists.map((w) => (
                 <option key={w.id} value={w.id}>
-                  {w.name}
+                  {watchlistLabel(w)}
                 </option>
               ))}
             </select>
@@ -318,7 +327,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-[#7B8DA8] font-mono">{filteredSymbols.length} رمز</span>
+            <span className="text-[11px] text-[#7B8DA8] font-mono">{filteredSymbols.length} {tl().mx_symbols}</span>
             {isMobileMode && onCloseMobile && (
               <button
                 onClick={onCloseMobile}

@@ -15,7 +15,16 @@ if errorlevel 1 (
 
 if not exist desktop-config.json (
   copy /y desktop-config.example.json desktop-config.json >nul
-  echo Created desktop-config.json - the app will open the live MATRIX server written inside it.
+)
+echo.
+echo The app opens this MATRIX server:
+type desktop-config.json
+echo.
+set "NEWURL="
+set /p NEWURL=Press Enter to keep it, or type your domain (example: https://matrix-fx.com): 
+if defined NEWURL (
+  echo {"remoteUrl": "%NEWURL%"}> desktop-config.json
+  echo Saved: %NEWURL%
 )
 
 echo.

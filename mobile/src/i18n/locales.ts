@@ -291,6 +291,13 @@ export type Dict = {
   iapRestore: string;
   iapRestored: string;
   iapRestoreFailed: string;
+  certMine: string;
+  certGet: string;
+  certIssued: string;
+  certNo: string;
+  certProgress: string;
+  certFailed: string;
+  certSignIn: string;
   iapDisclosureIos: string;
   iapDisclosureAndroid: string;
   iapTerms: string;
@@ -1998,6 +2005,13 @@ const ar: Dict = {
   iapRestore: "استعادة المشتريات",
   iapRestored: "تمت مزامنة مشترياتك مع حسابك.",
   iapRestoreFailed: "تعذّرت الاستعادة الآن. حاول لاحقاً.",
+  certMine: "شهاداتي",
+  certGet: "احصل على الشهادة",
+  certIssued: "شهادة إتمام",
+  certNo: "رقم الشهادة",
+  certProgress: "أنجزت {p}%",
+  certFailed: "أكمل كل دروس المدرسة أولاً.",
+  certSignIn: "سجّل الدخول من «حسابي» لحفظ تقدمك والحصول على الشهادات.",
   iapDisclosureIos: "الاشتراك شهري ويتجدد تلقائياً ويُخصم من حساب Apple الخاص بك ما لم تلغه قبل 24 ساعة على الأقل من نهاية الفترة. يمكنك إدارة الاشتراك وإلغاؤه من إعدادات حساب App Store.",
   iapDisclosureAndroid: "الاشتراك شهري ويتجدد تلقائياً عبر Google Play حتى تلغيه. يمكنك إدارة الاشتراك وإلغاؤه من Google Play ← الدفعات والاشتراكات.",
   iapTerms: "شروط الاستخدام",
@@ -3344,6 +3358,13 @@ const enUS: Dict = {
   iapRestore: "Restore purchases",
   iapRestored: "Your purchases are synced with your account.",
   iapRestoreFailed: "Could not restore right now. Try again later.",
+  certMine: "My certificates",
+  certGet: "Get certificate",
+  certIssued: "Completion certificate",
+  certNo: "Certificate no.",
+  certProgress: "{p}% done",
+  certFailed: "Finish every lesson of the school first.",
+  certSignIn: "Sign in from \"Account\" to save progress and earn certificates.",
   iapDisclosureIos: "Monthly subscription that renews automatically and is charged to your Apple ID unless cancelled at least 24 hours before the end of the period. Manage or cancel it in your App Store account settings.",
   iapDisclosureAndroid: "Monthly subscription that renews automatically through Google Play until you cancel. Manage or cancel it in Google Play → Payments & subscriptions.",
   iapTerms: "Terms of use",
@@ -3840,7 +3861,7 @@ const enUS: Dict = {
   layoutDeleteA11yPrefix: 'Delete layout',
   coursesTitle: 'Academy',
   // المحاضرات نفسها عربية فقط (`backend/academy_data.py`، QA27) — تُقال هنا قبل أن يفتح المستخدم درساً. سؤالك يُجاب بلغتك.
-  coursesSub: 'Lessons in Arabic · voice narration · pause and ask about any part in English',
+  coursesSub: 'Full-screen lessons · pause and ask about any part',
   coursesStaleNote: "Couldn’t refresh the school list — showing saved data",
   coursesNoteTitle: 'Important classification',
   coursesNoteText:
@@ -4311,7 +4332,7 @@ const enUS: Dict = {
     ],
     academyFeatures: [
       'Everything in Core',
-      'The full academy: schools, levels and lectures (taught in Arabic)',
+      'The full academy: schools, levels and lectures',
       'Interactive classroom — interrupt the teacher with a question',
     ],
     fullFeatures: [
@@ -4739,6 +4760,13 @@ const ku: Dict = {
   iapRestore: "گەڕاندنەوەی کڕینەکان",
   iapRestored: "کڕینەکانت لەگەڵ هەژمارەکەت هاوکات کران.",
   iapRestoreFailed: "ئێستا گەڕاندنەوە نەکرا. دواتر هەوڵ بدەرەوە.",
+  certMine: "بڕوانامەکانم",
+  certGet: "وەرگرتنی بڕوانامە",
+  certIssued: "بڕوانامەی تەواوکردن",
+  certNo: "ژمارەی بڕوانامە",
+  certProgress: "{p}% تەواو",
+  certFailed: "سەرەتا هەموو وانەکانی قوتابخانەکە تەواو بکە.",
+  certSignIn: "لە «هەژمار» بچۆ ژوورەوە بۆ پاشەکەوتکردنی پێشکەوتن و وەرگرتنی بڕوانامە.",
   iapDisclosureIos: "بەشدارییەکی مانگانەیە و خۆکارانە نوێ دەبێتەوە و لە هەژماری Apple ـەکەت دەبڕدرێت مەگەر لانیکەم 24 کاتژمێر پێش کۆتایی ماوەکە هەڵیبوەشێنیتەوە. لە ڕێکخستنەکانی App Store بەڕێوەی ببە.",
   iapDisclosureAndroid: "بەشدارییەکی مانگانەیە و لە ڕێگەی Google Play خۆکارانە نوێ دەبێتەوە تا هەڵیدەوەشێنیتەوە. لە Google Play ← پارەدان و بەشدارییەکان بەڕێوەی ببە.",
   iapTerms: "مەرجەکانی بەکارهێنان",
@@ -5245,7 +5273,7 @@ const ku: Dict = {
   layoutBuiltinName: 'بنەڕەت',
   layoutDeleteA11yPrefix: 'سڕینەوەی نەخشەسازی',
   coursesTitle: 'ئەکادیمی',
-  coursesSub: 'وانەکان بە عەرەبین · ڕوونکردنەوەی دەنگی · ڕاوەستە و بە کوردی پرسیار بکە دەربارەی هەر بەشێک',
+  coursesSub: 'وانەی شاشەی تەواو · ڕاوەستە و پرسیار بکە دەربارەی هەر بەشێک',
   coursesStaleNote: 'نەکرا لیستی قوتابخانەکان نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
   coursesNoteTitle: 'پۆلێنبەندییەکی گرنگ',
   coursesNoteText:

@@ -1,6 +1,7 @@
 import React from 'react';
 import { DrawingItem } from '../../../types/market';
 import { Lock, Unlock, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { tl } from '../../../i18n/locales';
 
 interface DrawingStyleBarProps {
   drawing: DrawingItem | null;
@@ -64,7 +65,7 @@ export const DrawingStyleBar: React.FC<DrawingStyleBarProps> = ({
                 : 'text-[#94A3B8] hover:text-white'
             }`}
           >
-            {style === 'solid' ? 'متصل' : style === 'dashed' ? 'متقطع' : 'منقط'}
+            {style === 'solid' ? tl().tm2_437 : style === 'dashed' ? tl().tm2_438 : tl().tm2_439}
           </button>
         ))}
       </div>
@@ -72,7 +73,7 @@ export const DrawingStyleBar: React.FC<DrawingStyleBarProps> = ({
       {/* Lock / Unlock */}
       <button
         onClick={() => onUpdate({ ...drawing, locked: !drawing.locked })}
-        title={drawing.locked ? 'إلغاء القفل' : 'قفل الرسم'}
+        title={drawing.locked ? tl().tm2_229 : tl().tm2_440}
         className={`p-1 rounded transition-colors ${
           drawing.locked ? 'bg-amber-500/20 text-amber-400' : 'text-[#94A3B8] hover:text-white'
         }`}
@@ -83,7 +84,7 @@ export const DrawingStyleBar: React.FC<DrawingStyleBarProps> = ({
       {/* Hide / Show */}
       <button
         onClick={() => onUpdate({ ...drawing, hidden: !drawing.hidden })}
-        title={drawing.hidden ? 'إظهار' : 'إخفاء'}
+        title={drawing.hidden ? tl().tm2_224 : tl().tm2_223}
         className="p-1 rounded text-[#94A3B8] hover:text-white transition-colors"
       >
         {drawing.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -95,7 +96,7 @@ export const DrawingStyleBar: React.FC<DrawingStyleBarProps> = ({
           onDelete(drawing.id);
           onClose();
         }}
-        title="حذف الرسم"
+        title={tl().tm2_231}
         className="p-1 rounded text-[#94A3B8] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
       >
         <Trash2 className="w-3.5 h-3.5" />
@@ -105,7 +106,7 @@ export const DrawingStyleBar: React.FC<DrawingStyleBarProps> = ({
       <button
         onClick={onClose}
         className="text-[#94A3B8] hover:text-white text-xs px-1"
-        title="إغلاق"
+        title={tl().tm2_232}
       >
         ✕
       </button>

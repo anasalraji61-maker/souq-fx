@@ -3,7 +3,7 @@ import { fetchJournalEntries, JournalEntry } from '../../api/journal';
 import { fetchPerformanceAnalysis, PerformanceResult } from '../../api/analysis';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl, fmt } from '../../i18n/locales';
 import {
   TrendingUp,
   BarChart3,
@@ -153,12 +153,12 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold text-white">
-                  لوحة تحليلات الأداء ومنحنى رأس المال
+                  {tl().tm2_355}
                 </h1>
                 {isOffline && <OfflineBadge forceShow />}
               </div>
               <p className="text-[#7B8DA8]">
-                تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع، وتوزيع الأرباح.
+                {tl().tm2_356}
               </p>
             </div>
           </div>
@@ -168,15 +168,15 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
             className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>تحديث</span>
+            <span>{tl().tm2_357}</span>
           </button>
         </div>
 
         <div className="p-6 max-w-2xl mx-auto">
           <EmptyState
             icon={<BarChart3 className="w-10 h-10 text-[#2DD4BF]" />}
-            title="لا توجد بيانات صفقات مغلقة للتحليل"
-            message="سجل صفقاتك المكتملة في دفتر الصفقات لتوليد منحنى رأس المال الفعلي وحساب نسبة النجاح الحقيقية دون أي بيانات وهمية أو افتراضية."
+            title={tl().tm2_358}
+            message={tl().tm2_359}
           />
         </div>
       </div>
@@ -194,12 +194,12 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold text-white">
-                لوحة تحليلات الأداء ومنحنى رأس المال
+                {tl().tm2_355}
               </h1>
               {isOffline && <OfflineBadge forceShow />}
             </div>
             <p className="text-[#7B8DA8]">
-              تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع، وتوزيع الأرباح.
+              {tl().tm2_356}
             </p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
           className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>تحديث</span>
+          <span>{tl().tm2_357}</span>
         </button>
       </div>
 
@@ -223,7 +223,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             {/* Win Rate */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">معدل الفوز بالصفقات</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">{tl().tm2_360}</span>
               <div
                 className={`text-2xl font-bold font-mono ${
                   data.win_rate >= 50 ? 'text-[#22C55E]' : 'text-[#EF4444]'
@@ -232,24 +232,24 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                 {data.win_rate}%
               </div>
               <span className="text-[10px] text-[#64748B]">
-                {data.winning_trades} رابحة من {data.total_trades} صفقة
+                {fmt(tl().mx_winOf, { w: data.winning_trades, t: data.total_trades })}
               </span>
             </div>
 
             {/* Profit Factor */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
               <span className="text-[#7B8DA8] text-[11px] font-semibold">
-                معامل الربحية
+                {tl().tm2_361}
               </span>
               <div className="text-2xl font-bold font-mono text-[#38BDF8]">
                 {data.profit_factor}
               </div>
-              <span className="text-[10px] text-[#64748B]">إجمالي الأرباح ÷ الخسائر</span>
+              <span className="text-[10px] text-[#64748B]">{tl().tm2_362}</span>
             </div>
 
             {/* Sharpe Ratio */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">مؤشر شارب للمخاطر</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">{tl().tm2_363}</span>
               <div
                 className={`text-2xl font-bold font-mono ${
                   data.sharpe_ratio >= 1.0 ? 'text-[#22C55E]' : 'text-amber-400'
@@ -258,20 +258,20 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                 {data.sharpe_ratio}
               </div>
               <span className="text-[10px] text-[#64748B]">
-                {data.sharpe_ratio >= 1.5 ? 'أداء متفوق ومستقر' : 'مخاطرة مقبولة'}
+                {data.sharpe_ratio >= 1.5 ? tl().tm2_364 : tl().tm2_365}
               </span>
             </div>
 
             {/* Max Drawdown */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
               <span className="text-[#7B8DA8] text-[11px] font-semibold">
-                أقصى تراجع للمحفظة
+                {tl().tm2_366}
               </span>
               <div className="text-2xl font-bold font-mono text-rose-400">
                 {data.max_drawdown_pct}%
               </div>
               <span className="text-[10px] text-[#64748B] font-mono">
-                -${data.max_drawdown_usd.toFixed(2)} أقصى هبوط من القمة
+                -${data.max_drawdown_usd.toFixed(2)} {tl().mx_maxDd}
               </span>
             </div>
           </div>
@@ -281,19 +281,19 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="font-bold text-sm text-white">
-                  منحنى نمو رأس المال
+                  {tl().tm2_367}
                 </h3>
                 <p className="text-[11px] text-[#7B8DA8]">
-                  تطور رصيد الحساب مع كل صفقة مغلقة مبني على نتائج الدفتر الفعلية
+                  {tl().tm2_368}
                 </p>
               </div>
 
               <div className="flex items-center gap-3 font-mono text-xs">
                 <span className="text-[#A3B4D0]">
-                  الرصيد الابتدائي: <strong>${data.initial_balance}</strong>
+                  {tl().mx_initBal} <strong>${data.initial_balance}</strong>
                 </span>
                 <span className="text-emerald-400 font-bold">
-                  الرصيد الحالي: ${data.current_equity}
+                  {tl().mx_curEq} ${data.current_equity}
                 </span>
               </div>
             </div>
@@ -308,7 +308,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
             <div className="flex items-center justify-between border-b border-[#1E283D] pb-3">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#2DD4BF]" />
-                <h3 className="font-bold text-sm text-white">توزيع الأرباح والخسائر</h3>
+                <h3 className="font-bold text-sm text-white">{tl().tm2_369}</h3>
               </div>
 
               <div className="flex items-center gap-1.5 bg-[#0B1220] p-1 rounded-xl border border-[#243049]">
@@ -320,7 +320,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                       : 'text-[#7B8DA8] hover:text-white'
                   }`}
                 >
-                  حسب الزوج
+                  {tl().tm2_370}
                 </button>
                 <button
                   onClick={() => setActiveTab('timeframe')}
@@ -330,7 +330,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                       : 'text-[#7B8DA8] hover:text-white'
                   }`}
                 >
-                  حسب الفاصل الزمني
+                  {tl().tm2_371}
                 </button>
               </div>
             </div>
@@ -339,7 +339,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
             <div className="space-y-3">
               {activeTab === 'symbol' ? (
                 Object.keys(data.by_symbol).length === 0 ? (
-                  <div className="text-center py-6 text-[#64748B]">لا توجد بيانات رموز مسجلة</div>
+                  <div className="text-center py-6 text-[#64748B]">{tl().tm2_372}</div>
                 ) : (
                   Object.entries(data.by_symbol).map(([sym, item]) => {
                     const isProfit = item.pnl >= 0;
@@ -349,7 +349,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                           <span className="font-bold text-white">{sym}</span>
                           <div className="flex items-center gap-3">
                             <span className="text-[#7B8DA8] font-sans">
-                              {item.trades} صفقات • {item.win_rate}% فوز
+                              {fmt(tl().mx_tradesWin, { n: item.trades, w: item.win_rate })}
                             </span>
                             <span
                               className={`font-bold ${
@@ -377,7 +377,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                   })
                 )
               ) : Object.keys(data.by_timeframe).length === 0 ? (
-                <div className="text-center py-6 text-[#64748B]">لا توجد بيانات فريمات مسجلة</div>
+                <div className="text-center py-6 text-[#64748B]">{tl().tm2_373}</div>
               ) : (
                 Object.entries(data.by_timeframe).map(([tf, item]) => {
                   const isProfit = item.pnl >= 0;
@@ -387,7 +387,7 @@ export const AnalyticsDashboardPanel: React.FC<{ currentLang?: LangId }> = ({
                         <span className="font-bold text-white">{tf}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-[#7B8DA8] font-sans">
-                            {item.trades} صفقات • {item.win_rate}% فوز
+                            {fmt(tl().mx_tradesWin, { n: item.trades, w: item.win_rate })}
                           </span>
                           <span
                             className={`font-bold ${

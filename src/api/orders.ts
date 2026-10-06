@@ -1,3 +1,4 @@
+import { tl } from '../i18n/locales';
 /**
  * MATRIX Advanced Orders & Risk Management Client API (Task 13)
  * Full support for Market, Limit, Stop, Trailing Stop, OCO, and Risk-Reward math.
@@ -84,7 +85,7 @@ export function calculateLocalRiskReward(
   side: OrderSide = 'buy'
 ): RiskRewardResult {
   if (entryPrice <= 0 || stopLoss <= 0 || takeProfit <= 0) {
-    return { valid: false, error: 'الأسعار يجب أن تكون أرقاماً موجبة أكبر من صفر' };
+    return { valid: false, error: tl().mx2_ordPos };
   }
 
   const riskDist = side === 'buy' ? entryPrice - stopLoss : stopLoss - entryPrice;
@@ -93,14 +94,14 @@ export function calculateLocalRiskReward(
   if (riskDist <= 0) {
     return {
       valid: false,
-      error: side === 'buy' ? 'وقف الخسارة يجب أن يكون أدنى من سعر الدخول' : 'وقف الخسارة يجب أن يكون أعلى من سعر الدخول',
+      error: side === 'buy' ? tl().mx2_slBuy : tl().mx2_slSell,
     };
   }
 
   if (rewardDist <= 0) {
     return {
       valid: false,
-      error: side === 'buy' ? 'الهدف الربحي يجب أن يكون أعلى من سعر الدخول' : 'الهدف الربحي يجب أن يكون أدنى من سعر الدخول',
+      error: side === 'buy' ? tl().mx2_tpBuy : tl().mx2_tpSell,
     };
   }
 

@@ -26,29 +26,8 @@ export async function loadAlerts(): Promise<PriceAlertItem[]> {
     console.warn('[Alerts API] Error loading alerts from localStorage:', err);
   }
 
-  // Default initial demo alert for EURUSD
-  return [
-    {
-      id: 'alert-1',
-      symbol: 'EURUSD',
-      targetPrice: 1.0900,
-      condition: 'crosses_up',
-      note: 'اختراق المقاومة 1.0900',
-      active: true,
-      triggered: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'alert-2',
-      symbol: 'XAUUSD',
-      targetPrice: 2750.0,
-      condition: 'greater_than',
-      note: 'الذهب فوق 2750$',
-      active: true,
-      triggered: false,
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  // No demo alerts: the user creates their own.
+  return [];
 }
 
 export async function saveAlerts(alerts: PriceAlertItem[]): Promise<void> {

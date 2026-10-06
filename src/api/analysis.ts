@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { Candle } from '../types/market';
 import { JournalEntry } from './journal';
+import { tl } from '../i18n/locales';
 
 export interface OrderFlowBar {
   time: number;
@@ -104,7 +105,7 @@ export async function fetchOrderFlowAnalysis(
       buy_volume: buyVol,
       sell_volume: sellVol,
       imbalance_pct: imbalance,
-      label: 'تقديري',
+      label: tl().mx2_est,
     };
   });
 
@@ -247,10 +248,10 @@ export async function fetchStressTestAnalysis(
     closedTrades.reduce((acc, t) => acc + t.lots * 100000, 0) / (closedTrades.length || 1);
 
   const shocks = [
-    { name: 'صدمة إيجابية طفيفة (+2%)', shock: 0.02 },
-    { name: 'صدمة سلبية طفيفة (-2%)', shock: -0.02 },
-    { name: 'صدمة سيولة حادة (+5%)', shock: 0.05 },
-    { name: 'صدمة سيولة عنيفة (-5%)', shock: -0.05 },
+    { name: tl().mx2_shockUp2, shock: 0.02 },
+    { name: tl().mx2_shockDn2, shock: -0.02 },
+    { name: tl().mx2_shockUp5, shock: 0.05 },
+    { name: tl().mx2_shockDn5, shock: -0.05 },
   ];
 
   const results: StressScenarioResult[] = shocks.map((sc) => {
@@ -301,7 +302,7 @@ export async function fetchPerformanceAnalysis(
   );
 
   const equityCurve = [
-    { trade_num: 0, equity: initialBalance, pnl: 0, date: sortedTrades[0]?.date || 'البداية' },
+    { trade_num: 0, equity: initialBalance, pnl: 0, date: sortedTrades[0]?.date || tl().mx2_start },
   ];
 
   const bySymbol: Record<string, { trades: number; pnl: number; wins: number; win_rate: number }> =

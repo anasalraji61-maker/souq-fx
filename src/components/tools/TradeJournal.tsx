@@ -11,7 +11,7 @@ import {
 } from '../../api/journal';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
-import { LangId, DICTS, formatDateTime, t } from '../../i18n/locales';
+import { LangId, DICTS, formatDateTime, t, tl } from '../../i18n/locales';
 import {
   BookOpen,
   Plus,
@@ -401,7 +401,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
           ? 'Please ensure all numeric inputs are valid.'
           : currentLang === 'ku'
           ? 'تکایە دڵنیابە لە دروستی هەموو خانە ژمارەییەکان.'
-          : 'يرجى التأكد من إدخال جميع الحقول الرقمية بشكل صحيح.'
+          : tl().tm2_389
       );
       return;
     }
@@ -451,7 +451,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
           ? 'Failed to save trade record. Please try again.'
           : currentLang === 'ku'
           ? 'پاشەکەوتکردن سەرکەوتوو نەبوو. دووبارە هەوڵبدەرەوە.'
-          : 'فشل حفظ البيانات. يرجى المحاولة ثانية.'
+          : tl().tm2_390
       );
     }
   };
@@ -702,7 +702,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1E283D] pb-3">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#2DD4BF]" />
-              <h3 className="font-bold text-sm text-white">الرسوم البيانية التراكمية لتحليل الأداء</h3>
+              <h3 className="font-bold text-sm text-white">{tl().tm2_391}</h3>
             </div>
             <div className="flex items-center gap-1 bg-[#101827] p-1 rounded-xl border border-[#1E2E4A] overflow-x-auto no-scrollbar">
               <button
@@ -975,7 +975,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
         <button
           onClick={handleResetFilters}
           className="p-2.5 rounded-xl text-[#94A3B8] hover:text-white bg-[#121A2B] border border-[#243452] hover:bg-[#1E2E4A] cursor-pointer min-h-[44px] flex items-center justify-center shrink-0"
-          title="إعادة ضبط الفلاتر"
+          title={tl().tm2_392}
         >
           <RotateCcw className="w-4 h-4" />
         </button>
@@ -998,13 +998,13 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
       ) : filteredAndSortedEntries.length === 0 ? (
         <div className="bg-[#0B1220] border border-[#1E283D] rounded-2xl p-12 text-center space-y-3">
           <Filter className="w-8 h-8 mx-auto text-[#64748B]" />
-          <h4 className="font-bold text-sm text-white">لا توجد صفقات تطابق معايير الفلترة</h4>
-          <p className="text-xs text-[#94A3B8]">جرب تغيير فلاتر الزوج أو الاتجاه أو مسح البحث.</p>
+          <h4 className="font-bold text-sm text-white">{tl().tm2_393}</h4>
+          <p className="text-xs text-[#94A3B8]">{tl().tm2_394}</p>
           <button
             onClick={handleResetFilters}
             className="px-4 py-2 rounded-xl bg-[#16233B] hover:bg-[#1E2E4A] text-[#2DD4BF] font-bold text-xs cursor-pointer transition-colors"
           >
-            إعادة ضبط الفلاتر
+            {tl().tm2_392}
           </button>
         </div>
       ) : (
@@ -1077,7 +1077,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                       <ArrowUpDown className="w-3 h-3" />
                     </div>
                   </th>
-                  <th className="py-3 px-4 font-bold text-center no-print">إجراءات</th>
+                  <th className="py-3 px-4 font-bold text-center no-print">{tl().tm2_318}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#162238]">
@@ -1120,14 +1120,14 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                           <button
                             onClick={() => handleOpenEdit(item)}
                             className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#2DD4BF] hover:bg-[#16233B] transition-colors cursor-pointer"
-                            title="تعديل"
+                            title={tl().tm2_395}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setDeletingId(item.id)}
                             className="p-1.5 rounded-lg text-[#94A3B8] hover:text-rose-400 hover:bg-[#16233B] transition-colors cursor-pointer"
-                            title="حذف"
+                            title={tl().tm2_396}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1204,13 +1204,13 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                       onClick={() => handleOpenEdit(item)}
                       className="px-3 py-1.5 rounded-lg bg-[#14233C] text-[#2DD4BF] text-xs font-bold cursor-pointer"
                     >
-                      تعديل
+                      {tl().tm2_395}
                     </button>
                     <button
                       onClick={() => setDeletingId(item.id)}
                       className="px-3 py-1.5 rounded-lg bg-rose-950/40 text-rose-400 text-xs font-bold cursor-pointer"
                     >
-                      حذف
+                      {tl().tm2_396}
                     </button>
                   </div>
                 </div>
@@ -1223,7 +1223,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
             <span className="text-[#94A3B8]">
               {dict.pageOf
                 .replace('{current}', currentPage.toString())
-                .replace('{total}', totalPages.toString())} ({filteredAndSortedEntries.length} صفقة)
+                .replace('{total}', totalPages.toString())} ({filteredAndSortedEntries.length} {tl().mx_trades})
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -1348,7 +1348,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#94A3B8] mb-1">وقف الخسارة (SL)</label>
+                  <label className="block text-[11px] font-bold text-[#94A3B8] mb-1">{tl().tm2_202}</label>
                   <input
                     type="number"
                     step="any"
@@ -1394,7 +1394,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                   rows={2}
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="سبب الدخول، إدارة الصفقة، الملاحظات النفسية..."
+                  placeholder={tl().tm2_397}
                   className="w-full bg-[#121A2B] border border-[#243452] rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-[#2DD4BF]"
                 />
               </div>
@@ -1427,7 +1427,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in"
         >
           <div className="bg-[#0E1626] border border-rose-500/40 rounded-2xl p-5 max-w-sm w-full space-y-4">
-            <h4 className="font-bold text-sm text-white">تأكيد حذف الصفقة</h4>
+            <h4 className="font-bold text-sm text-white">{tl().tm2_398}</h4>
             <p className="text-xs text-[#94A3B8] leading-relaxed">{dict.confirmDeleteTrade}</p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
@@ -1440,7 +1440,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                 onClick={handleConfirmDelete}
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer min-h-[44px]"
               >
-                تأكيد الحذف
+                {tl().tm2_399}
               </button>
             </div>
           </div>

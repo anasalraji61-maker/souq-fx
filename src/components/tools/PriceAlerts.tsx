@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PriceAlertItem, MarketSymbol } from '../../types/market';
 import { Bell, BellRing, Plus, Trash2, CheckCircle2, Volume2 } from 'lucide-react';
+import { tl, fmt } from '../../i18n/locales';
 
 interface PriceAlertsProps {
   symbols: MarketSymbol[];
@@ -28,26 +29,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
         // fallback
       }
     }
-    return [
-      {
-        id: 'alt-1',
-        symbol: 'EURUSD',
-        targetPrice: 1.0900,
-        condition: 'above',
-        note: 'اختراق المقاومة اليومية 1.0900',
-        active: true,
-        triggered: false,
-      },
-      {
-        id: 'alt-2',
-        symbol: 'XAUUSD',
-        targetPrice: 2750.0,
-        condition: 'above',
-        note: 'قمة تاريخية جديدة للذهب',
-        active: true,
-        triggered: false,
-      },
-    ];
+    return [];
   });
 
   const alerts = propAlerts || localAlerts;
@@ -73,7 +55,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
     if (!price || isNaN(price)) return;
 
     if (alerts.length >= 50) {
-      setLimitNotice('تم الوصول للحد الأقصى (50 تنبيهاً لكل جهاز). يُرجى حذف بعض التنبيهات لإضافة تنبيه جديد.');
+      setLimitNotice(tl().tm2_291);
       setTimeout(() => setLimitNotice(null), 5000);
       return;
     }
@@ -84,7 +66,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
         symbol: formSymbol,
         targetPrice: price,
         condition: formCondition,
-        note: formNote || `تنبيه عند وصول السعر إلى ${price}`,
+        note: formNote || fmt(tl().tm2_292, { price: price }),
       });
     } else {
       const newAlert: PriceAlertItem = {
@@ -92,7 +74,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
         symbol: formSymbol,
         targetPrice: price,
         condition: formCondition,
-        note: formNote || `تنبيه عند وصول السعر إلى ${price}`,
+        note: formNote || fmt(tl().tm2_292, { price: price }),
         active: true,
         triggered: false,
       };
@@ -112,7 +94,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
   };
 
   const handleTriggerTest = () => {
-    setTestBanner(`🔔 تنبيه فوري: ${selectedSymObj.symbol} وصل إلى السعر المستهدف ${selectedSymObj.price}!`);
+    setTestBanner(fmt(tl().tm2_293, { sym: selectedSymObj.symbol, price: selectedSymObj.price }));
     setTimeout(() => {
       setTestBanner(null);
     }, 4500);
@@ -128,7 +110,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
             <span>{testBanner}</span>
           </div>
           <button onClick={() => setTestBanner(null)} className="text-sm underline">
-            إغلاق
+            {tl().tm2_232}
           </button>
         </div>
       )}
@@ -141,7 +123,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
             <span>{limitNotice}</span>
           </div>
           <button onClick={() => setLimitNotice(null)} className="text-xs text-amber-400 hover:text-white">
-            إغلاق
+            {tl().tm2_232}
           </button>
         </div>
       )}
@@ -154,12 +136,12 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-[#E8EEF9]">تنبيهات الأسعار (Price Alerts)</h2>
+              <h2 className="text-base font-bold text-[#E8EEF9]">{tl().tm2_294}</h2>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${alerts.length >= 50 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-[#162033] text-[#7B8DA8] border border-[#243049]'}`}>
-                {alerts.length} / 50 تنبيه
+                {alerts.length} / 50 {tl().mx_alertCount}
               </span>
             </div>
-            <p className="text-[#7B8DA8]">عيّن تنبيهات فورية عند وصول الأسعار إلى مستويات الدعم والمقاومة المستهدفة.</p>
+            <p className="text-[#7B8DA8]">{tl().tm2_295}</p>
           </div>
         </div>
 
@@ -168,17 +150,17 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#A3B4D0] hover:text-[#E8EEF9] transition-colors"
         >
           <Volume2 className="w-4 h-4 text-[#2DD4BF]" />
-          <span>اختبار صوت التنبيه</span>
+          <span>{tl().tm2_296}</span>
         </button>
       </div>
 
       {/* Create Alert Box */}
       <form onSubmit={handleAddAlert} className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4">
-        <h3 className="font-bold text-sm text-[#E8EEF9]">إنشاء تنبيه سعر جديد</h3>
+        <h3 className="font-bold text-sm text-[#E8EEF9]">{tl().tm2_297}</h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">الزوج</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_298}</label>
             <select
               value={formSymbol}
               onChange={(e) => {
@@ -190,26 +172,26 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
             >
               {symbols.map((s) => (
                 <option key={s.symbol} value={s.symbol}>
-                  {s.symbol} (حالياً: {s.price})
+                  {s.symbol} ({tl().mx_nowPrice} {s.price})
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">الشرط</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_299}</label>
             <select
               value={formCondition}
               onChange={(e) => setFormCondition(e.target.value as 'above' | 'below')}
               className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9]"
             >
-              <option value="above">يخترق لأعلى من السعر (Above)</option>
-              <option value="below">يكسر لأسفل من السعر (Below)</option>
+              <option value="above">{tl().tm2_300}</option>
+              <option value="below">{tl().tm2_301}</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">السعر المستهدف</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_302}</label>
             <input
               type="number"
               step="any"
@@ -222,10 +204,10 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
           </div>
 
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">ملاحظة التنبيه</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_303}</label>
             <input
               type="text"
-              placeholder="مثال: كسر ترند هابط..."
+              placeholder={tl().tm2_304}
               value={formNote}
               onChange={(e) => setFormNote(e.target.value)}
               className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9]"
@@ -239,7 +221,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
             className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold"
           >
             <Plus className="w-4 h-4" />
-            <span>تفعيل التنبيه</span>
+            <span>{tl().tm2_305}</span>
           </button>
         </div>
       </form>
@@ -247,7 +229,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
       {/* Alerts List */}
       <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden">
         <div className="p-4 border-b border-[#243049]">
-          <h3 className="font-bold text-sm text-[#E8EEF9]">قائمة التنبيهات المجدولة ({alerts.length})</h3>
+          <h3 className="font-bold text-sm text-[#E8EEF9]">{tl().mx_schedAlerts} ({alerts.length})</h3>
         </div>
 
         <div className="divide-y divide-[#243049]/50">
@@ -270,11 +252,11 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
                     {alt.triggered ? (
                       <span className="px-2 py-0.5 rounded text-[10px] bg-slate-500/20 text-[#7B8DA8] flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
-                        نُفّذ
+                        {tl().tm2_306}
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-[#22C55E]">
-                        يراقب السعر
+                        {tl().tm2_307}
                       </span>
                     )}
                   </div>
@@ -293,7 +275,7 @@ export const PriceAlerts: React.FC<PriceAlertsProps> = ({
 
           {alerts.length === 0 && (
             <div className="p-8 text-center text-[#7B8DA8]">
-              لا توجد تنبيهات أسعار نشطة حالياً.
+              {tl().tm2_308}
             </div>
           )}
         </div>

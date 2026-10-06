@@ -82,7 +82,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-[#7B8DA8] uppercase tracking-wider">
-                  التنبيهات المجدولة ({alerts.length})
+                  {tl().mx_schedAlerts} ({alerts.length})
                 </span>
                 <button
                   onClick={() => {

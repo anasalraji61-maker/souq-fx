@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl } from '../../i18n/locales';
 import { AuthPanel } from './AuthPanel';
 import { MarketSymbol, Timeframe } from '../../types/market';
 import { User, Globe, Sliders, ShieldAlert, Sparkles, Check, Volume2, Grid, Save, Mail } from 'lucide-react';
@@ -37,7 +37,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   // 3.1 Local Profile info saved in localStorage
   const [userName, setUserName] = useState<string>(() => {
-    return localStorage.getItem('matrix.profile.name') || 'متداول MATRIX';
+    return localStorage.getItem('matrix.profile.name') || tl().tm2_338;
   });
   const [userEmail, setUserEmail] = useState<string>(() => {
     return localStorage.getItem('matrix.profile.email') || 'trader@matrix.iq';
@@ -72,7 +72,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-[#E8EEF9]">{userName}</h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2DD4BF]/15 text-[#2DD4BF] border border-[#2DD4BF]/30">
-                  الملف المحلي
+                  {tl().tm2_339}
                 </span>
               </div>
               <p className="text-[#7B8DA8] text-xs font-mono mt-0.5">{userEmail}</p>
@@ -85,7 +85,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              <span>حفظ الإعدادات</span>
+              <span>{tl().tm2_340}</span>
             </button>
             <button
               type="button"
@@ -101,13 +101,13 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         {saveFeedback && (
           <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs flex items-center gap-1.5">
             <Check className="w-4 h-4" />
-            <span>تم حفظ التفضيلات على هذا الجهاز.</span>
+            <span>{tl().tm2_341}</span>
           </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">اسم المتداول (الاسم المعروض)</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_342}</label>
             <input
               type="text"
               value={userName}
@@ -117,7 +117,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
 
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">البريد الإلكتروني</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_161}</label>
             <input
               type="email"
               value={userEmail}
@@ -127,14 +127,14 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           </div>
 
           <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">كثافة مظهر الشارت (Theme Density)</label>
+            <label className="block text-[#A3B4D0] mb-1 font-medium">{tl().tm2_343}</label>
             <select
               value={themeDensity}
               onChange={(e) => setThemeDensity(e.target.value as any)}
               className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2.5 text-[#E8EEF9] focus:outline-hidden font-semibold"
             >
-              <option value="normal">قياسي متوازن (Standard)</option>
-              <option value="compact">مضغوط لشاشات اللابتوب (Compact Pro)</option>
+              <option value="normal">{tl().tm2_344}</option>
+              <option value="compact">{tl().tm2_345}</option>
             </select>
           </div>
         </div>
@@ -159,7 +159,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
           >
             <div>
               <div className="text-sm">العربية (Arabic)</div>
-              <div className="text-[10px] text-[#7B8DA8]">واجهة كاملة من اليمين لليسار</div>
+              <div className="text-[10px] text-[#7B8DA8]">{tl().tm2_347}</div>
             </div>
             {currentLang === 'ar' && <Check className="w-4 h-4" />}
           </button>
@@ -234,12 +234,12 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               }}
               className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2.5 text-[#E8EEF9] font-mono focus:outline-hidden"
             >
-              <option value="1m">1 دقيقة (1m)</option>
-              <option value="5m">5 دقائق (5m)</option>
-              <option value="15m">15 دقيقة (15m)</option>
-              <option value="1h">1 ساعة (1H)</option>
-              <option value="4h">4 ساعات (4H)</option>
-              <option value="1D">1 يوم (1D)</option>
+              <option value="1m">{tl().tm2_349}</option>
+              <option value="5m">{tl().tm2_350}</option>
+              <option value="15m">{tl().tm2_351}</option>
+              <option value="1h">{tl().tm2_352}</option>
+              <option value="4h">{tl().tm2_353}</option>
+              <option value="1D">{tl().tm2_354}</option>
             </select>
           </div>
 

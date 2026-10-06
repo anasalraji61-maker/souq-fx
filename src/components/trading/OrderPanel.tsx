@@ -22,6 +22,7 @@ import {
   cancelOrder,
   calculateLocalRiskReward,
 } from '../../api/orders';
+import { tl, fmt } from '../../i18n/locales';
 
 interface OrderPanelProps {
   currentSymbol?: string;
@@ -102,7 +103,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
       });
 
       setMessage({
-        text: `تم وضع الأمر بنجاح (#${created.id.slice(-6)})!`,
+        text: fmt(tl().tm2_186, { id: created.id.slice(-6) }),
         type: 'success',
       });
       loadOrders();
@@ -112,7 +113,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
       setTimeout(() => setMessage(null), 4000);
     } catch (err: any) {
       setMessage({
-        text: err?.message || 'تعذر إرسال الأمر، يرجى مراجعة المعطيات.',
+        text: err?.message || tl().tm2_187,
         type: 'error',
       });
     } finally {
@@ -124,7 +125,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
     const ok = await cancelOrder(orderId);
     if (ok) {
       loadOrders();
-      setMessage({ text: 'تم إلغاء الأمر المعلق بنجاح.', type: 'success' });
+      setMessage({ text: tl().tm2_188, type: 'success' });
       setTimeout(() => setMessage(null), 3000);
     }
   };
@@ -135,7 +136,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
       <div className="bg-[#1a1f2c] px-4 py-3 border-b border-[#2a2e39] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Layers className="w-5 h-5 text-emerald-400" />
-          <span className="font-bold text-sm tracking-wide">أوامر التداول المتقدمة (Task 13)</span>
+          <span className="font-bold text-sm tracking-wide">{tl().tm2_189}</span>
           <span className="text-xs bg-[#242b3d] text-emerald-300 px-2 py-0.5 rounded font-mono">
             {currentSymbol}
           </span>
@@ -148,7 +149,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               activeTab === 'create' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white'
             }`}
           >
-            إنشاء أمر
+            {tl().tm2_190}
           </button>
           <button
             type="button"
@@ -157,7 +158,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               activeTab === 'active' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white'
             }`}
           >
-            <span>الأوامر المعلقة</span>
+            <span>{tl().tm2_191}</span>
             {orders.filter((o) => o.status === 'pending').length > 0 && (
               <span className="bg-amber-500 text-black text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
                 {orders.filter((o) => o.status === 'pending').length}
@@ -181,7 +182,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               }`}
             >
               <TrendingUp className="w-4 h-4" />
-              <span>شراء (BUY / LONG)</span>
+              <span>{tl().tm2_192}</span>
             </button>
             <button
               type="button"
@@ -193,20 +194,20 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               }`}
             >
               <TrendingDown className="w-4 h-4" />
-              <span>بيع (SELL / SHORT)</span>
+              <span>{tl().tm2_193}</span>
             </button>
           </div>
 
           {/* Order Types */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">نوع الأمر المتقدم:</label>
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5">{tl().tm2_194}</label>
             <div className="grid grid-cols-4 gap-1.5 bg-[#0e121a] p-1 rounded-lg border border-[#262b38]">
               {(
                 [
-                  { id: 'market', label: 'سوق', sub: 'Market' },
-                  { id: 'limit', label: 'حدّ', sub: 'Limit' },
-                  { id: 'stop', label: 'وقف', sub: 'Stop' },
-                  { id: 'trailing_stop', label: 'متحرك', sub: 'Trailing' },
+                  { id: 'market', label: tl().tm2_195, sub: 'Market' },
+                  { id: 'limit', label: tl().tm2_196, sub: 'Limit' },
+                  { id: 'stop', label: tl().tm2_197, sub: 'Stop' },
+                  { id: 'trailing_stop', label: tl().tm2_198, sub: 'Trailing' },
                 ] as const
               ).map((t) => (
                 <button
@@ -230,7 +231,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-slate-400 mb-1">
-                {orderType === 'market' ? 'سعر السوق الحالي' : 'سعر التنفيذ المستهدف'}
+                {orderType === 'market' ? tl().tm2_199 : tl().tm2_200}
               </label>
               <input
                 type="number"
@@ -244,7 +245,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1">حجم اللوت / الكمية (Lots)</label>
+              <label className="block text-xs text-slate-400 mb-1">{tl().tm2_201}</label>
               <div className="flex gap-1.5">
                 <input
                   type="number"
@@ -281,7 +282,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
             <div>
               <div className="flex items-center gap-1 text-xs text-rose-400 mb-1">
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>وقف الخسارة (SL)</span>
+                <span>{tl().tm2_202}</span>
               </div>
               <input
                 type="number"
@@ -295,7 +296,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
             <div>
               <div className="flex items-center gap-1 text-xs text-emerald-400 mb-1">
                 <Target className="w-3.5 h-3.5" />
-                <span>جني الأرباح (TP)</span>
+                <span>{tl().tm2_203}</span>
               </div>
               <input
                 type="number"
@@ -313,7 +314,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
             <div className="bg-[#182133] border border-blue-900/40 p-3 rounded-lg space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-blue-300 font-bold flex items-center gap-1">
-                  <Percent className="w-3.5 h-3.5" /> نسبة الوقف المتحرك (Trailing %):
+                  <Percent className="w-3.5 h-3.5" /> {tl().mx_trailPct}
                 </span>
                 <span className="font-mono text-emerald-400 font-bold">{trailingPct}%</span>
               </div>
@@ -348,16 +349,16 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                 />
                 <span className="flex items-center gap-1">
                   <ArrowRightLeft className="w-3.5 h-3.5 text-amber-400" />
-                  ربط بأمر مضاد (One-Cancels-Other — OCO)
+                  {tl().mx_ocoLink}
                 </span>
               </label>
-              <span className="text-[10px] text-slate-500">استراتيجيات الاختراق</span>
+              <span className="text-[10px] text-slate-500">{tl().tm2_204}</span>
             </div>
             {isOco && (
               <div className="mt-2 pt-2 border-t border-[#232938]">
                 <input
                   type="text"
-                  placeholder="اسم مجموعة OCO (مثال: oco_gold_breakout)"
+                  placeholder={tl().tm2_205}
                   value={ocoGroupName}
                   onChange={(e) => setOcoGroupName(e.target.value)}
                   className="w-full bg-[#10141f] border border-[#2e374d] rounded px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-amber-500"
@@ -378,7 +379,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-bold">
                   <Calculator className="w-4 h-4 text-emerald-400" />
-                  <span>حاسبة المخاطرة / العائد (R:R Calculator):</span>
+                  <span>{tl().tm2_206}</span>
                 </div>
                 {rrData.valid && (
                   <span
@@ -390,7 +391,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                         : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
                     }`}
                   >
-                    نسبة {rrData.ratio_str}
+                    {tl().mx_ratio} {rrData.ratio_str}
                   </span>
                 )}
               </div>
@@ -398,19 +399,19 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               {rrData.valid ? (
                 <div className="grid grid-cols-3 gap-2 pt-1 border-t border-emerald-950/60">
                   <div>
-                    <span className="text-[10px] text-slate-400 block">المخاطرة:</span>
+                    <span className="text-[10px] text-slate-400 block">{tl().tm2_207}</span>
                     <span className="font-mono text-rose-400 font-bold">
                       -{rrData.risk_pct}% ({rrData.risk_distance})
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">العائد المتوقع:</span>
+                    <span className="text-[10px] text-slate-400 block">{tl().tm2_208}</span>
                     <span className="font-mono text-emerald-400 font-bold">
                       +{rrData.reward_pct}% ({rrData.reward_distance})
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">نسبة التعادل:</span>
+                    <span className="text-[10px] text-slate-400 block">{tl().tm2_209}</span>
                     <span className="font-mono text-blue-300 font-bold">{rrData.breakeven_winrate}%</span>
                   </div>
                 </div>
@@ -459,7 +460,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
               <TrendingDown className="w-4 h-4" />
             )}
             <span>
-              إرسال أمر {orderType.toUpperCase()} ({side.toUpperCase()}) — {qty} لوت
+              {fmt(tl().mx_sendOrder, { type: orderType.toUpperCase(), side: side.toUpperCase(), qty })}
             </span>
           </button>
         </form>
@@ -468,7 +469,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
         <div className="p-4 space-y-3 max-h-[460px] overflow-y-auto">
           {orders.length === 0 ? (
             <div className="text-center py-8 text-slate-500 text-xs">
-              لا توجد أوامر مسجلة حالياً لهذا الزوج.
+              {tl().tm2_210}
             </div>
           ) : (
             orders.map((ord) => (
@@ -498,26 +499,26 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                     }`}
                   >
                     {ord.status === 'pending'
-                      ? 'معلّق'
+                      ? tl().tm2_211
                       : ord.status === 'filled'
-                      ? 'منفّذ'
+                      ? tl().tm2_212
                       : ord.status === 'cancelled'
-                      ? 'ملغى'
+                      ? tl().tm2_213
                       : ord.status}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 font-mono text-slate-300 pt-1 border-t border-[#242b3d]">
                   <div>
-                    <span className="text-[10px] text-slate-500 block">السعر:</span>
+                    <span className="text-[10px] text-slate-500 block">{tl().tm2_214}</span>
                     <span>{ord.price}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 block">الكمية:</span>
+                    <span className="text-[10px] text-slate-500 block">{tl().tm2_215}</span>
                     <span>{ord.qty}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 block">الوقف / الهدف:</span>
+                    <span className="text-[10px] text-slate-500 block">{tl().tm2_216}</span>
                     <span className="text-[11px]">
                       {ord.stop_loss_price || '-'} / {ord.take_profit_price || '-'}
                     </span>
@@ -526,7 +527,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
 
                 {ord.is_oco_group && (
                   <div className="text-[10px] text-amber-400 font-mono bg-amber-950/30 px-2 py-0.5 rounded">
-                    مجموعة OCO: {ord.is_oco_group}
+                    {tl().mx_ocoGroup} {ord.is_oco_group}
                   </div>
                 )}
 
@@ -537,7 +538,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
                       onClick={() => handleCancelOrder(ord.id)}
                       className="px-2.5 py-1 rounded bg-rose-950/60 text-rose-300 hover:bg-rose-900/80 border border-rose-800/40 text-[10px] font-bold transition-all"
                     >
-                      إلغاء الأمر
+                      {tl().tm2_217}
                     </button>
                   </div>
                 )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Position, positionsAPI } from '../../api/positions';
+import { tl, fmt } from '../../i18n/locales';
 
 interface PositionDetailModalProps {
   position: Position;
@@ -103,7 +104,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            تفاصيل المركز
+            {tl().tm2_400}
           </button>
           <button
             onClick={() => setActiveTab('pyramid')}
@@ -113,7 +114,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            التعزيز والهرمية (Pyramid)
+            {tl().mx_pyramid}
           </button>
           <button
             onClick={() => setActiveTab('close')}
@@ -123,7 +124,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            إغلاق المركز
+            {tl().tm2_401}
           </button>
         </div>
 
@@ -133,25 +134,25 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                  <span className="text-xs text-slate-400">متوسط سعر الدخول</span>
+                  <span className="text-xs text-slate-400">{tl().tm2_402}</span>
                   <div className="text-base font-semibold text-slate-200 font-mono mt-0.5">
                     {position.avgEntryPrice.toFixed(4)}
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                  <span className="text-xs text-slate-400">السعر اللحظي الحالي</span>
+                  <span className="text-xs text-slate-400">{tl().tm2_403}</span>
                   <div className="text-base font-semibold text-cyan-400 font-mono mt-0.5">
                     {currentPrice.toFixed(4)}
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                  <span className="text-xs text-slate-400">الكمية / العقود</span>
+                  <span className="text-xs text-slate-400">{tl().tm2_404}</span>
                   <div className="text-base font-semibold text-slate-200 font-mono mt-0.5">
-                    {position.qty} عقود
+                    {position.qty} {tl().mx_contracts}
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                  <span className="text-xs text-slate-400">تاريخ الفتح</span>
+                  <span className="text-xs text-slate-400">{tl().tm2_405}</span>
                   <div className="text-xs text-slate-300 font-mono mt-1">
                     {new Date(position.openTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
@@ -167,7 +168,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                 }`}
               >
                 <div className="text-xs uppercase tracking-wider text-slate-400 mb-1">
-                  الربح / الخسارة العائمة (Floating P&L)
+                  {tl().mx_floatPl}
                 </div>
                 <div
                   className={`text-2xl font-black font-mono ${
@@ -184,11 +185,11 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
           {activeTab === 'pyramid' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-400 leading-relaxed">
-                التعزيز (Pyramiding) يسمح لك بزيادة حجم المركز الرابح مع اتجاه السوق، وسيتم تلقائياً إعادة حساب متوسط سعر الدخول المرجح بالكمية.
+                {tl().mx_pyramidHelp}
               </p>
               <div className="space-y-3 text-sm">
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">العقود الإضافية</label>
+                  <label className="text-xs text-slate-400 block mb-1">{tl().tm2_406}</label>
                   <input
                     type="number"
                     min="1"
@@ -198,7 +199,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">سعر التنفيذ الإضافي</label>
+                  <label className="text-xs text-slate-400 block mb-1">{tl().tm2_407}</label>
                   <input
                     type="number"
                     step="0.0001"
@@ -212,7 +213,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   disabled={loading}
                   className="w-full mt-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'جاري التعزيز...' : `تعزيز المركز (+${addQty} عقود)`}
+                  {loading ? tl().tm2_409 : fmt(tl().tm2_408, { n: addQty })}
                 </button>
               </div>
             </div>
@@ -222,7 +223,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
             <div className="space-y-4">
               <div className="space-y-3 text-sm">
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">سعر الإغلاق</label>
+                  <label className="text-xs text-slate-400 block mb-1">{tl().tm2_410}</label>
                   <input
                     type="number"
                     step="0.0001"
@@ -232,16 +233,16 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 block mb-1">سبب الإغلاق</label>
+                  <label className="text-xs text-slate-400 block mb-1">{tl().tm2_411}</label>
                   <select
                     value={closeReason}
                     onChange={(e) => setCloseReason(e.target.value)}
                     className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-white focus:border-cyan-500 focus:outline-none"
                   >
-                    <option value="manual">إغلاق يدوي فوري (Manual Close)</option>
-                    <option value="take_profit">تحقيق الهدف الربحي (Take Profit)</option>
-                    <option value="stop_loss">وقف الخسارة (Stop Loss)</option>
-                    <option value="liquidation">تصفية إجبارية (Liquidation)</option>
+                    <option value="manual">{tl().tm2_412}</option>
+                    <option value="take_profit">{tl().tm2_413}</option>
+                    <option value="stop_loss">{tl().tm2_414}</option>
+                    <option value="liquidation">{tl().tm2_415}</option>
                   </select>
                 </div>
                 <button
@@ -249,7 +250,7 @@ export const PositionDetailModal: React.FC<PositionDetailModalProps> = ({
                   disabled={loading}
                   className="w-full mt-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'جاري الإغلاق...' : 'تأكيد إغلاق المركز وتحصيل النتيجة'}
+                  {loading ? tl().tm2_325 : tl().tm2_416}
                 </button>
               </div>
             </div>

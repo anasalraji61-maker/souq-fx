@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
-import { api } from '../api';
+import { api, isSignedIn } from '../api';
 import {
   mockAcademySchools,
   type AcademySchool,
@@ -86,6 +86,41 @@ export function CoursesScreen() {
       alive = false;
     };
   }, []);
+
+  // Course completion and certificates (signed-in only). Reloaded when a lecture closes.
+  const [progress, setProgress] = useState<Record<string, { percent: number; is_complete: boolean }>>({});
+  const [certs, setCerts] = useState<{ id: string; school_id: string; issued_at: number }[]>([]);
+  const [certBusy, setCertBusy] = useState<string | null>(null);
+  const [certMsg, setCertMsg] = useState<string | null>(null);
+  const signedIn = isSignedIn();
+  const loadProgress = () => {
+    if (!isSignedIn()) return;
+    api.academyCourses().then((r) => mounted.current && setProgress(r.courses || {})).catch(() => {});
+    api.certificates().then((r) => mounted.current && setCerts(Array.isArray(r) ? r : [])).catch(() => {});
+  };
+  useEffect(() => {
+    if (!activeLecture) loadProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLecture]);
+  const claim = async (schoolId: string) => {
+    setCertBusy(schoolId);
+    setCertMsg(null);
+    try {
+      await api.claimCertificate(schoolId);
+      loadProgress();
+    } catch {
+      setCertMsg(t.certFailed);
+    } finally {
+      if (mounted.current) setCertBusy(null);
+    }
+  };
+  const certDate = (ts: number) => {
+    try {
+      return new Date(ts * 1000).toLocaleDateString(lang === 'ar' ? 'ar' : lang === 'ku' ? 'ckb' : 'en-GB');
+    } catch {
+      return '';
+    }
+  };
 
   /** إلغاء الفتح: يغلق الورقة ويُبطل ردّ الطلب الجاري بزيادة الجيل. */
   const cancelOpen = () => {
@@ -196,10 +231,38 @@ export function CoursesScreen() {
               </Text>
               {/* ما يهمّ المتداول: أن الدرس مشروح صوتياً. اسم مزوّد الـTTS وسلسلة `video_pipeline`
                   (نصّ داخلي إنجليزي من الباك-إند) لا تعنيان له شيئاً ولا تُترجَمان. */}
-              <Text style={styles.aiTag}>{t.coursesNarratedBadge}</Text>
+              {lang !== 'ku' ? <Text style={styles.aiTag}>{t.coursesNarratedBadge}</Text> : null}
+              {progress[s.id] && progress[s.id].percent > 0 ? (
+                <Text style={styles.metaText}>{t.certProgress.replace('{p}', String(Math.round(progress[s.id].percent)))}</Text>
+              ) : null}
             </View>
+            {(() => {
+              const c = certs.find((x) => x.school_id === s.id);
+              if (c) {
+                return (
+                  <Text style={[styles.certOk, { textAlign: align }]}>
+                    ✓ {t.certIssued} · {t.certNo} {String(c.id).slice(0, 8).toUpperCase()} · {certDate(c.issued_at)}
+                  </Text>
+                );
+              }
+              if (progress[s.id]?.is_complete) {
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.certBtn}
+                    disabled={certBusy === s.id}
+                    onPress={() => claim(s.id)}
+                  >
+                    {certBusy === s.id ? <ActivityIndicator color={colors.bg} /> : <Text style={styles.certBtnText}>{t.certGet}</Text>}
+                  </Pressable>
+                );
+              }
+              return null;
+            })()}
           </Pressable>
         ))}
+        {certMsg ? <Text style={[styles.staleNote, { textAlign: align }]}>{certMsg}</Text> : null}
+        {!signedIn ? <Text style={[styles.noteText, { textAlign: align }]}>{t.certSignIn}</Text> : null}
       </ScrollView>
 
       {/* الورقة تُفتح **بمجرّد النقر** لا بعد وصول الردّ: كانت `visible={!!school}` وحدها، و`school`
@@ -307,6 +370,16 @@ export function CoursesScreen() {
 }
 
 const styles = StyleSheet.create({
+  certOk: { marginTop: spacing.sm, color: colors.accent, fontSize: 12, fontWeight: '700' },
+  certBtn: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+  },
+  certBtnText: { color: colors.bg, fontWeight: '800', fontSize: 13 },
   safe: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: spacing.lg,

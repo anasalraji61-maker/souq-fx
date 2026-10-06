@@ -18,6 +18,7 @@ export interface ApiResponse<T = unknown> {
 }
 
 import { getInstallId, getToken, clearSession } from './session';
+import { tl } from '../i18n/locales';
 
 const API_BASE = ((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE || '').replace(/\/$/, '');
 const TIMEOUT_MS = 10000;
@@ -136,8 +137,8 @@ export async function apiClient<T = unknown>(
       (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') ||
       (err as { name?: string } | null)?.name === 'AbortError';
     const errorMsg = isTimeout
-      ? 'انتهت مهلة الاتصال بالخادم (10 ثوان)'
-      : 'تعذر الاتصال بالخادم (الوضع المحلي نشط)';
+      ? tl().mx2_timeout
+      : tl().mx2_offline;
 
     return {
       ok: false,

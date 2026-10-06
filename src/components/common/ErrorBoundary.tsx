@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { reportError } from '../../api/errorReport';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl } from '../../i18n/locales';
 
 interface Props {
   children: ReactNode;
@@ -80,7 +80,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 className="px-4 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#042F2E] text-xs font-black transition-colors cursor-pointer shadow-md min-h-[44px] flex items-center gap-1.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>{lang === 'en-US' ? 'Reload Page' : lang === 'ku' ? 'نوێکردنەوەی پەڕە' : 'إعادة تحميل الصفحة'}</span>
+                <span>{lang === 'en-US' ? 'Reload Page' : lang === 'ku' ? 'نوێکردنەوەی پەڕە' : tl().tm2_443}</span>
               </button>
             </div>
           </div>

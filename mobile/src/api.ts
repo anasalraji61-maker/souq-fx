@@ -68,6 +68,10 @@ const installIdReady: Promise<void> = AsyncStorage.getItem(INSTALL_ID_KEY)
     installId = installId ?? randomInstallId();
   });
 
+export function isSignedIn(): boolean {
+  return !!authToken;
+}
+
 export function authHeaders(): Record<string, string> {
   const h: Record<string, string> = {};
   if (authToken) h.Authorization = `Bearer ${authToken}`;
@@ -559,6 +563,16 @@ export const api = {
     segment_index: number;
     completed?: boolean;
   }) => postJson<{ ok: boolean }>('/api/academy/progress', body),
+  /** Course completion per school (signed-in only). */
+  academyCourses: () =>
+    getJson<{ courses: Record<string, { percent: number; is_complete: boolean }> }>('/api/academy/progress/courses'),
+  certificates: () =>
+    getJson<{ id: string; school_id: string; issued_at: number; course_name?: string }[]>('/api/academy/progress/certificates'),
+  claimCertificate: (schoolId: string) =>
+    postJson<{ certificate: { id: string; school_id: string; issued_at: number } }>(
+      `/api/academy/progress/courses/${encodeURIComponent(schoolId)}/certificate`,
+      {}
+    ),
   getProgress: () =>
     getJson<{
       progress: {

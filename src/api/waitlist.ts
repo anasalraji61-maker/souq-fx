@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { tl } from '../i18n/locales';
 
 /** Plan id from the displayed plan name/price (the pricing screen passes Arabic names). */
 export function planIdFrom(planName: string, priceUsd: number): 'free' | 'basic' | 'pro' | 'vip' | null {
@@ -20,7 +21,7 @@ export async function joinWaitlist(email: string, plan: string | null, source = 
   }
   const res = await apiClient.post<{ ok: boolean }>('/api/waitlist', { email: email.trim(), plan, lang, source });
   if (res.ok) return null;
-  if (res.status === 422) return 'يرجى إدخال عنوان بريد إلكتروني صحيح.';
-  if (res.status === 429) return 'محاولات كثيرة. حاول بعد قليل.';
-  return 'تعذّر الاتصال بالخادم. تحقّق من الإنترنت وحاول مجدداً.';
+  if (res.status === 422) return tl().mx2_wlBadEmail;
+  if (res.status === 429) return tl().mx2_wlTooMany;
+  return tl().mx2_wlNoServer;
 }

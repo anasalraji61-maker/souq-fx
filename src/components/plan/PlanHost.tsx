@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Crown, X, Check, Loader2, CreditCard, PartyPopper } from 'lucide-react';
 import { getPlan, onPlanChange, refreshPlan, PlanInfo, PlanId, LimitKey, PlanLimitEventDetail } from '../../api/plan';
 import { billingConfig, startCheckout } from '../../api/billing';
+import { tl, fmt, getActiveLang } from '../../i18n/locales';
 
 /**
  * Global plan UI, mounted in its own root (main.tsx):
@@ -11,18 +12,18 @@ import { billingConfig, startCheckout } from '../../api/billing';
  */
 
 const LIMIT_TEXT: Record<LimitKey, (max: number | null) => string> = {
-  charts: (m) => `باقتك الحالية تسمح بـ${m ?? '—'} شارت في الشاشة.`,
-  indicators_per_chart: (m) => `باقتك الحالية تسمح بـ${m ?? '—'} مؤشرات على كل شارت.`,
-  watchlists: (m) => `باقتك الحالية تسمح بـ${m ?? '—'} قائمة مراقبة.`,
-  watchlist_symbols: (m) => `باقتك الحالية تسمح بـ${m ?? '—'} رمزاً في القائمة.`,
-  alerts: (m) => `باقتك الحالية تسمح بـ${m ?? '—'} تنبيهات أسعار نشطة.`,
-  ai_daily: (m) => `وصلت إلى حدّ أسئلة المساعد الذكي لليوم (${m ?? '—'} سؤالاً). يتجدد الحد غداً.`,
+  charts: (m) => fmt(tl().tm2_248, { m: m ?? '—' }),
+  indicators_per_chart: (m) => fmt(tl().tm2_249, { m: m ?? '—' }),
+  watchlists: (m) => fmt(tl().tm2_250, { m: m ?? '—' }),
+  watchlist_symbols: (m) => fmt(tl().tm2_251, { m: m ?? '—' }),
+  alerts: (m) => fmt(tl().tm2_252, { m: m ?? '—' }),
+  ai_daily: (m) => fmt(tl().tm2_253, { m: m ?? '—' }),
 };
 
 const PAID: Exclude<PlanId, 'free'>[] = ['basic', 'pro', 'vip'];
 
 function limitLabel(v: number | null): string {
-  return v === null ? 'غير محدود' : String(v);
+  return v === null ? tl().tm2_8 : String(v);
 }
 
 const UpgradeDialog: React.FC<{ detail: PlanLimitEventDetail; onClose: () => void }> = ({ detail, onClose }) => {
@@ -59,7 +60,7 @@ const UpgradeDialog: React.FC<{ detail: PlanLimitEventDetail; onClose: () => voi
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
-      dir="rtl"
+      dir={getActiveLang() === 'en-US' ? 'ltr' : 'rtl'}
       role="dialog"
       aria-modal="true"
       aria-labelledby="plan-limit-title"
@@ -73,16 +74,16 @@ const UpgradeDialog: React.FC<{ detail: PlanLimitEventDetail; onClose: () => voi
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-amber-400" />
             <h2 id="plan-limit-title" className="font-bold text-sm">
-              هذه الميزة تحتاج باقة أعلى
+              {tl().tm2_254}
             </h2>
           </div>
-          <button onClick={onClose} aria-label="إغلاق" className="p-1 rounded hover:bg-[#1C2740] text-[#94A3B8] cursor-pointer">
+          <button onClick={onClose} aria-label={tl().tm2_232} className="p-1 rounded hover:bg-[#1C2740] text-[#94A3B8] cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
         <div className="p-5 space-y-4">
           <p className="text-sm text-[#CBD5E1]">
-            {LIMIT_TEXT[detail.limit](detail.max)} باقتك الآن: <strong>{plan?.label ?? 'المجانية'}</strong>.
+            {LIMIT_TEXT[detail.limit](detail.max)} {tl().mx_planNow} <strong>{plan?.label ?? tl().tm2_255}</strong>.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {options.map((p) => (
@@ -93,11 +94,11 @@ const UpgradeDialog: React.FC<{ detail: PlanLimitEventDetail; onClose: () => voi
                 <div className="text-xs text-[#94A3B8]">{plan?.labels?.[p] ?? p}</div>
                 <div className="text-xl font-black" dir="ltr">
                   ${plan?.prices_usd?.[p] ?? '—'}
-                  <span className="text-[11px] font-normal text-[#94A3B8]"> /شهر</span>
+                  <span className="text-[11px] font-normal text-[#94A3B8]"> {tl().tm2_256}</span>
                 </div>
                 <div className="text-[11px] text-[#A3B4D0] mt-1 flex items-center gap-1">
                   <Check className="w-3 h-3 text-emerald-400" />
-                  {detail.limit === 'ai_daily' ? 'أسئلة يومياً: ' : 'الحد: '}
+                  {detail.limit === 'ai_daily' ? tl().tm2_257 : tl().tm2_258}
                   {limitLabel(plan?.plan_limits?.[p]?.[detail.limit] ?? null)}
                 </div>
                 {billing && (
@@ -107,7 +108,7 @@ const UpgradeDialog: React.FC<{ detail: PlanLimitEventDetail; onClose: () => voi
                     className="mt-2 w-full min-h-[38px] rounded-lg bg-[#2DD4BF] text-[#042F2E] text-xs font-bold flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
                   >
                     {busy === p ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                    اشترك بالبطاقة
+                    {tl().tm2_259}
                   </button>
                 )}
               </div>
@@ -116,12 +117,12 @@ const UpgradeDialog: React.FC<{ detail: PlanLimitEventDetail; onClose: () => voi
           {err && <p className="text-xs text-rose-300" role="alert">{err}</p>}
           {plan?.payment_instructions && (
             <div className="rounded-lg bg-[#0F1828] border border-[#24344E] p-3 text-[12px] text-[#A3B4D0] leading-relaxed">
-              <strong className="text-[#E8EEF9]">{billing ? 'أو ادفع محلياً: ' : 'طريقة الاشتراك: '}</strong>
+              <strong className="text-[#E8EEF9]">{billing ? tl().tm2_260 : tl().tm2_261}</strong>
               {plan.payment_instructions}
             </div>
           )}
           <p className="text-[10px] text-[#64748B]">
-            MATRIX أداة تحليل تعليمية وليست نصيحة استثمارية. يمكنك إلغاء الاشتراك بالبطاقة في أي وقت من صفحة «حسابي».
+            {tl().tm2_262}
           </p>
         </div>
       </div>
@@ -146,7 +147,7 @@ const BillingResult: React.FC<{ kind: 'success' | 'cancel'; onClose: () => void 
   }, [kind]);
   const active = plan && plan.plan !== 'free';
   return (
-    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-24px)] max-w-md" dir="rtl" role="status">
+    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-24px)] max-w-md" dir={getActiveLang() === 'en-US' ? 'ltr' : 'rtl'} role="status">
       <div
         className={`flex items-start gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur ${
           kind === 'success' ? 'bg-[#06251F]/95 border-emerald-500/50' : 'bg-[#1F1606]/95 border-amber-500/40'
@@ -157,23 +158,23 @@ const BillingResult: React.FC<{ kind: 'success' | 'cancel'; onClose: () => void 
           {kind === 'success' ? (
             active ? (
               <>
-                <strong className="text-emerald-300">تم تفعيل باقة {plan?.label}!</strong>
-                <div className="text-[12px] text-[#A3B4D0]">شكراً لاشتراكك. كل مزايا الباقة متاحة الآن.</div>
+                <strong className="text-emerald-300">{fmt(tl().mx_planActivated, { label: plan?.label ?? '' })}</strong>
+                <div className="text-[12px] text-[#A3B4D0]">{tl().tm2_263}</div>
               </>
             ) : (
               <>
-                <strong className="text-emerald-300">تم الدفع، جارٍ تفعيل الباقة…</strong>
-                <div className="text-[12px] text-[#A3B4D0]">يستغرق ذلك ثوانٍ. إذا لم تتفعّل خلال دقيقة فراسلنا.</div>
+                <strong className="text-emerald-300">{tl().tm2_264}</strong>
+                <div className="text-[12px] text-[#A3B4D0]">{tl().tm2_265}</div>
               </>
             )
           ) : (
             <>
-              <strong className="text-amber-300">لم يكتمل الدفع.</strong>
-              <div className="text-[12px] text-[#A3B4D0]">لم يُخصم أي مبلغ. يمكنك المحاولة مجدداً من صفحة الباقات.</div>
+              <strong className="text-amber-300">{tl().tm2_266}</strong>
+              <div className="text-[12px] text-[#A3B4D0]">{tl().tm2_267}</div>
             </>
           )}
         </div>
-        <button onClick={onClose} aria-label="إغلاق" className="p-1 text-[#94A3B8] hover:text-white cursor-pointer">
+        <button onClick={onClose} aria-label={tl().tm2_232} className="p-1 text-[#94A3B8] hover:text-white cursor-pointer">
           <X className="w-4 h-4" />
         </button>
       </div>

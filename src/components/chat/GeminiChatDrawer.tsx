@@ -361,7 +361,7 @@ export const GeminiChatDrawer: React.FC<GeminiChatDrawerProps> = ({
             </div>
             <div className="p-3 rounded-2xl rounded-tl-xs bg-[#101A2C] border border-[#243049] text-xs text-[#A3B4D0] flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#2DD4BF] animate-ping" />
-              <span>جاري التحليل واستدعاء نموذج {currentRoleConfig.modelName}...</span>
+              <span>{fmt(tl().mx_aiThinking, { model: currentRoleConfig.modelName })}</span>
             </div>
           </div>
         )}

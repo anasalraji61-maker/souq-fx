@@ -22,7 +22,7 @@ import { OrderPanel } from '../trading/OrderPanel';
 import { PositionPanel } from '../trading/PositionPanel';
 import { OrderFlowPanel } from './OrderFlowPanel';
 import { generateCandles, updateLastCandleWithTick, TIMEFRAME_SECONDS } from '../../data/candleGenerator';
-import { getCandles, getQuote, getMarketStatus, MarketStatus } from '../../api/market';
+import { getCandles, getQuote, getMarketStatus, MarketStatus, localizedSessionLabels } from '../../api/market';
 import { loadDrawings, saveDrawings } from '../../api/drawings';
 import { onCloudSyncApplied } from '../../api/cloudSync';
 import { onSessionChange } from '../../api/session';
@@ -938,7 +938,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           <Bell className="w-5 h-5 text-amber-400 animate-bounce" />
           <div className="flex flex-col text-xs">
             <span className="font-bold text-white text-sm">
-              تنبيه سعر! {activeNotification.alert.symbol} وصل إلى {activeNotification.price}
+              {fmt(tl().mx_priceAlertHit, { sym: activeNotification.alert.symbol, price: activeNotification.price })}
             </span>
             <span className="text-[#94A3B8]">{activeNotification.alert.note}</span>
           </div>
@@ -982,7 +982,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* 1.5 Market status badge in terminal header */}
           {marketStatus && (
             <span
-              title={fmt(tl().tm_120, { cur: marketStatus.currentSession, next: marketStatus.nextSession })}
+              title={fmt(tl().tm_120, (() => { const t = tl(); const l = localizedSessionLabels(marketStatus, { tokyo: t.g_sesTokyo, london: t.g_sesLondon, newYork: t.g_sesNewYork, sydney: t.g_sesSydney, weekend: t.g_sesWeekend, switching: t.g_sesSwitching, opens: t.g_sesOpens }); return { cur: l.current, next: l.next }; })())}
               className={`hidden min-[1440px]:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border ${
                 marketStatus.isOpen
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
@@ -1757,7 +1757,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                   }`}
                 >
                   <Magnet className="w-4 h-4" />
-                  <span>المغناطيس {isMagnetOn ? tl().tm_195 : tl().tm_196}</span>
+                  <span>{tl().mx_magnet} {isMagnetOn ? tl().tm_195 : tl().tm_196}</span>
                 </button>
 
                 <button

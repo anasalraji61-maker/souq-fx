@@ -13,7 +13,7 @@ import {
 } from '../../api/analysis';
 import { OfflineBadge } from '../common/OfflineBadge';
 import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl, fmt } from '../../i18n/locales';
 import {
   ShieldAlert,
   Activity,
@@ -86,11 +86,11 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold text-white">إدارة مخاطر المحفظة واختبارات الإجهاد</h1>
+                <h1 className="text-base font-bold text-white">{tl().tm2_268}</h1>
                 {isOffline && <OfflineBadge forceShow />}
               </div>
               <p className="text-[#7B8DA8]">
-                تحليل القيمة المعرضة للمخاطر (VaR / CVaR)، مصفوفة الترابط السعري، واختبارات الصدمات الحادة.
+                {tl().mx_riskSub}
               </p>
             </div>
           </div>
@@ -100,15 +100,15 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
             className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>تحديث الحسابات</span>
+            <span>{tl().tm2_269}</span>
           </button>
         </div>
 
         <div className="p-6 max-w-2xl mx-auto">
           <EmptyState
             icon={<ShieldAlert className="w-10 h-10 text-amber-400" />}
-            title="لا توجد صفقات مغلقة لحساب مؤشرات المخاطر"
-            message="تتطلب حاسبة القيمة المعرضة للمخاطر (VaR) واختبارات الإجهاد وجود صفقات مغلقة في دفتر الصفقات لحساب الأرقام الفعلية دون أرقام وهمية أو افتراضية."
+            title={tl().tm2_270}
+            message={tl().tm2_271}
           />
         </div>
       </div>
@@ -125,11 +125,11 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white">إدارة مخاطر المحفظة واختبارات الإجهاد</h1>
+              <h1 className="text-base font-bold text-white">{tl().tm2_268}</h1>
               {isOffline && <OfflineBadge forceShow />}
             </div>
             <p className="text-[#7B8DA8]">
-              تحليل القيمة المعرضة للمخاطر (VaR / CVaR)، مصفوفة الترابط السعري، واختبارات الصدمات الحادة.
+              {tl().mx_riskSub}
             </p>
           </div>
         </div>
@@ -139,7 +139,7 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
           className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>تحديث الحسابات</span>
+          <span>{tl().tm2_269}</span>
         </button>
       </div>
 
@@ -154,59 +154,59 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-white">
                 <Activity className="w-4 h-4 text-[#2DD4BF]" />
-                <h3>القيمة المعرضة للمخاطر الشرطية (Value at Risk & CVaR)</h3>
+                <h3>{tl().tm2_272}</h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                 {/* VaR 95% */}
                 <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1.5">
                   <span className="text-[#7B8DA8] text-[11px] font-semibold block">
-                    VaR 95% (أقصى خسارة متوقعة)
+                    {tl().mx_var95}
                   </span>
                   <div className="text-2xl font-bold font-mono text-amber-400">
                     ${varData.confidence_95.var_amount}
                   </div>
                   <span className="text-[10px] text-[#A3B4D0] font-mono">
-                    {varData.confidence_95.var_pct}% من رأس المال
+                    {varData.confidence_95.var_pct}{tl().mx_ofCapital}
                   </span>
                 </div>
 
                 {/* CVaR 95% */}
                 <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1.5">
                   <span className="text-[#7B8DA8] text-[11px] font-semibold block">
-                    CVaR 95% (متوسط خسارة الذيل)
+                    {tl().mx_cvar95}
                   </span>
                   <div className="text-2xl font-bold font-mono text-amber-500">
                     ${varData.confidence_95.cvar_amount}
                   </div>
                   <span className="text-[10px] text-[#A3B4D0] font-mono">
-                    {varData.confidence_95.cvar_pct}% أسوأ 5% من الحالات
+                    {varData.confidence_95.cvar_pct}{tl().mx_worst5}
                   </span>
                 </div>
 
                 {/* VaR 99% */}
                 <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1.5">
                   <span className="text-[#7B8DA8] text-[11px] font-semibold block">
-                    VaR 99% (أقصى خسارة استثنائية)
+                    {tl().mx_var99}
                   </span>
                   <div className="text-2xl font-bold font-mono text-rose-400">
                     ${varData.confidence_99.var_amount}
                   </div>
                   <span className="text-[10px] text-[#A3B4D0] font-mono">
-                    {varData.confidence_99.var_pct}% من رأس المال
+                    {varData.confidence_99.var_pct}{tl().mx_ofCapital}
                   </span>
                 </div>
 
                 {/* CVaR 99% */}
                 <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1.5">
                   <span className="text-[#7B8DA8] text-[11px] font-semibold block">
-                    CVaR 99% (خسارة الصدمة القصوى)
+                    {tl().mx_cvar99}
                   </span>
                   <div className="text-2xl font-bold font-mono text-rose-500">
                     ${varData.confidence_99.cvar_amount}
                   </div>
                   <span className="text-[10px] text-[#A3B4D0] font-mono">
-                    {varData.confidence_99.cvar_pct}% أسوأ 1% من الحالات
+                    {varData.confidence_99.cvar_pct}{tl().mx_worst1}
                   </span>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-white">
                 <Zap className="w-4 h-4 text-amber-400" />
-                <h3>اختبارات الإجهاد وصدمات السوق الفجائية (Stress Testing ±2%, ±5%)</h3>
+                <h3>{tl().tm2_273}</h3>
               </div>
 
               <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden shadow-lg">
@@ -227,12 +227,12 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
                   <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
                     <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
                       <tr>
-                        <th className="py-3 px-4">سيناريو الصدمة</th>
-                        <th className="py-3 px-4">نسبة التغير بالسوق</th>
-                        <th className="py-3 px-4">الأثر التقديري P&L</th>
-                        <th className="py-3 px-4">رأس المال المتوقع</th>
-                        <th className="py-3 px-4">نسبة التأثير</th>
-                        <th className="py-3 px-4 text-center">حالة الاستقرار</th>
+                        <th className="py-3 px-4">{tl().tm2_274}</th>
+                        <th className="py-3 px-4">{tl().tm2_275}</th>
+                        <th className="py-3 px-4">{tl().tm2_276}</th>
+                        <th className="py-3 px-4">{tl().tm2_277}</th>
+                        <th className="py-3 px-4">{tl().tm2_278}</th>
+                        <th className="py-3 px-4 text-center">{tl().tm2_279}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#243049]/40 text-xs font-mono">
@@ -270,17 +270,17 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
                             <td className="py-3 px-4 text-center font-sans">
                               {sc.status === 'STABLE' && (
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold text-[10px]">
-                                  آمن ومستقر
+                                  {tl().tm2_280}
                                 </span>
                               )}
                               {sc.status === 'WARNING' && (
                                 <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold text-[10px]">
-                                  تحذير ضغط هامش
+                                  {tl().tm2_281}
                                 </span>
                               )}
                               {sc.status === 'DANGER' && (
                                 <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-bold text-[10px]">
-                                  خطر استنزاف
+                                  {tl().tm2_282}
                                 </span>
                               )}
                             </td>
@@ -314,32 +314,32 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
 
                           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-[#070D18] p-2 rounded-lg border border-[#16233B]">
                             <div>
-                              <span className="text-[#64748B] block text-[9px]">أثر P&L</span>
+                              <span className="text-[#64748B] block text-[9px]">{tl().tm2_283}</span>
                               <span className={`font-bold ${isGain ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                                 {isGain ? '+' : ''}${sc.estimated_pnl} ({isGain ? '+' : ''}{sc.equity_impact_pct}%)
                               </span>
                             </div>
                             <div className="text-left">
-                              <span className="text-[#64748B] block text-[9px]">الرصيد التقديري</span>
+                              <span className="text-[#64748B] block text-[9px]">{tl().tm2_284}</span>
                               <span className="text-white font-bold">${sc.projected_equity}</span>
                             </div>
                           </div>
 
                           <div className="pt-1 flex items-center justify-between text-[10px]">
-                            <span className="text-[#7B8DA8]">حالة الاستقرار:</span>
+                            <span className="text-[#7B8DA8]">{tl().tm2_285}</span>
                             {sc.status === 'STABLE' && (
                               <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold">
-                                آمن ومستقر
+                                {tl().tm2_280}
                               </span>
                             )}
                             {sc.status === 'WARNING' && (
                               <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold">
-                                تحذير ضغط هامش
+                                {tl().tm2_281}
                               </span>
                             )}
                             {sc.status === 'DANGER' && (
                               <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-bold">
-                                خطر استنزاف
+                                {tl().tm2_282}
                               </span>
                             )}
                           </div>
@@ -357,7 +357,7 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-white">
                 <Layers className="w-4 h-4 text-[#38BDF8]" />
-                <h3>مصفوفة الترابط بين أزواج العملات والسلع (Correlation Heat-Map)</h3>
+                <h3>{tl().tm2_286}</h3>
               </div>
 
               <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] overflow-x-auto shadow-lg">
@@ -369,7 +369,7 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
                       gridTemplateColumns: `80px repeat(${correlationData.symbols.length}, minmax(60px, 1fr))`,
                     }}
                   >
-                    <div className="text-right text-[#64748B] font-sans">الرمز</div>
+                    <div className="text-right text-[#64748B] font-sans">{tl().tm2_287}</div>
                     {correlationData.symbols.map((sym) => (
                       <div key={sym}>{sym}</div>
                     ))}
@@ -408,7 +408,7 @@ export const PortfolioRiskPanel: React.FC<{ currentLang?: LangId }> = ({
                             <div
                               key={colSym}
                               className={`p-2 rounded text-center transition-colors ${bg}`}
-                              title={`الترابط بين ${rowSym} و ${colSym}: ${val}`}
+                              title={fmt(tl().tm2_288, { a: rowSym, b: colSym, v: val })}
                             >
                               {val.toFixed(2)}
                             </div>

@@ -5,6 +5,7 @@ import { getSessionUser, onSessionChange, SessionUser } from '../../api/session'
 import { getCloudSyncStatus, onCloudSyncStatus, syncNow, CloudSyncStatus } from '../../api/cloudSync';
 import { getPlan, onPlanChange, refreshPlan, requestUpgrade, PlanInfo } from '../../api/plan';
 import { billingConfig, openBillingPortal } from '../../api/billing';
+import { tl, fmt, getActiveLang } from '../../i18n/locales';
 
 type Mode = 'login' | 'register';
 
@@ -50,19 +51,19 @@ export const AuthPanel: React.FC = () => {
     setError(null);
     setNotice(null);
     if (mode === 'register') {
-      if (username.trim().length < 3) return setError('اسم المستخدم 3 أحرف على الأقل.');
-      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('البريد الإلكتروني غير صالح.');
-      if (password.length < 8) return setError('كلمة المرور 8 أحرف على الأقل.');
-      if (password !== password2) return setError('كلمتا المرور غير متطابقتين.');
+      if (username.trim().length < 3) return setError(tl().tm2_137);
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError(tl().tm2_138);
+      if (password.length < 8) return setError(tl().tm2_139);
+      if (password !== password2) return setError(tl().tm2_140);
     } else if (!identifier.trim() || !password) {
-      return setError('أدخل اسم المستخدم أو البريد وكلمة المرور.');
+      return setError(tl().tm2_141);
     }
     setBusy(true);
     const res = mode === 'register' ? await register(username, email, password) : await login(identifier, password);
     setBusy(false);
     if (res.ok) {
       resetForm();
-      setNotice(mode === 'register' ? 'تم إنشاء حسابك بنجاح. أهلاً بك في MATRIX!' : 'تم تسجيل الدخول.');
+      setNotice(mode === 'register' ? tl().tm2_142 : tl().tm2_143);
     } else {
       setError(res.message);
     }
@@ -72,14 +73,14 @@ export const AuthPanel: React.FC = () => {
     setBusy(true);
     await logout();
     setBusy(false);
-    setNotice('تم تسجيل الخروج. بياناتك محفوظة في حسابك.');
+    setNotice(tl().tm2_144);
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setNotice(null);
-    if (newPw.length < 8) return setError('كلمة المرور الجديدة 8 أحرف على الأقل.');
+    if (newPw.length < 8) return setError(tl().tm2_145);
     setBusy(true);
     const r = await changePassword(curPw, newPw);
     setBusy(false);
@@ -95,7 +96,7 @@ export const AuthPanel: React.FC = () => {
 
   const handleDelete = async () => {
     if (!user || confirmDelete.trim() !== user.username) {
-      setError('اكتب اسم المستخدم كما هو لتأكيد الحذف.');
+      setError(tl().tm2_146);
       return;
     }
     setBusy(true);
@@ -121,7 +122,7 @@ export const AuthPanel: React.FC = () => {
 
   if (user) {
     return (
-      <section className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-lg" dir="rtl">
+      <section className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-lg" dir={getActiveLang() === 'en-US' ? 'ltr' : 'rtl'}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#2DD4BF] to-[#38BDF8] flex items-center justify-center text-[#042F2E] font-black">
@@ -143,7 +144,7 @@ export const AuthPanel: React.FC = () => {
               onClick={() => setShowPw((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#162033] border border-[#243049] text-[#A3B4D0] hover:text-[#E8EEF9] cursor-pointer"
             >
-              <KeyRound className="w-4 h-4" /> تغيير كلمة المرور
+              <KeyRound className="w-4 h-4" /> {tl().mx_changePw}
             </button>
             <button
               type="button"
@@ -151,21 +152,21 @@ export const AuthPanel: React.FC = () => {
               disabled={busy}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#162033] border border-[#243049] text-[#A3B4D0] hover:text-rose-300 cursor-pointer disabled:opacity-50"
             >
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />} خروج
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />} {tl().mx_logout}
             </button>
           </div>
         </div>
         <p className="text-[11px] text-[#7B8DA8] flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-[#2DD4BF]" />
-          دفتر الصفقات والتنبيهات والرسومات محفوظة في حسابك، وتظهر على أي جهاز تسجّل الدخول منه.
+          {tl().tm2_147}
         </p>
 
         {showPw && (
           <form onSubmit={handleChangePassword} className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#1E283D]">
-            <input type="password" autoComplete="current-password" placeholder="كلمة المرور الحالية" value={curPw} onChange={(e) => setCurPw(e.target.value)} className={inputCls} />
-            <input type="password" autoComplete="new-password" placeholder="كلمة المرور الجديدة (8+)" value={newPw} onChange={(e) => setNewPw(e.target.value)} className={inputCls} />
+            <input type="password" autoComplete="current-password" placeholder={tl().tm2_148} value={curPw} onChange={(e) => setCurPw(e.target.value)} className={inputCls} />
+            <input type="password" autoComplete="new-password" placeholder={tl().tm2_149} value={newPw} onChange={(e) => setNewPw(e.target.value)} className={inputCls} />
             <button type="submit" disabled={busy} className="px-4 py-2 rounded-lg bg-[#2DD4BF] text-[#042F2E] font-bold text-xs cursor-pointer disabled:opacity-50">
-              حفظ كلمة المرور
+              {tl().tm2_150}
             </button>
           </form>
         )}
@@ -173,10 +174,10 @@ export const AuthPanel: React.FC = () => {
         {messages}
 
         <details className="pt-2 border-t border-[#1E283D]">
-          <summary className="text-[11px] text-rose-300/80 cursor-pointer select-none">حذف الحساب نهائياً</summary>
+          <summary className="text-[11px] text-rose-300/80 cursor-pointer select-none">{tl().tm2_151}</summary>
           <div className="mt-3 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
             <input
-              placeholder={`اكتب "${user.username}" للتأكيد`}
+              placeholder={fmt(tl().tm2_152, { name: user.username })}
               value={confirmDelete}
               onChange={(e) => setConfirmDelete(e.target.value)}
               className={inputCls}
@@ -187,10 +188,10 @@ export const AuthPanel: React.FC = () => {
               disabled={busy}
               className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-300 font-bold text-xs cursor-pointer disabled:opacity-50 shrink-0"
             >
-              <Trash2 className="w-4 h-4" /> حذف الحساب
+              <Trash2 className="w-4 h-4" /> {tl().tm2_172}
             </button>
           </div>
-          <p className="text-[10px] text-[#64748B] mt-2">يحذف الحساب وكل بياناته من الخادم، ولا يمكن التراجع.</p>
+          <p className="text-[10px] text-[#64748B] mt-2">{tl().tm2_153}</p>
         </details>
         <PlanCard />
         <LegalLinks />
@@ -199,12 +200,12 @@ export const AuthPanel: React.FC = () => {
   }
 
   return (
-    <section className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-lg" dir="rtl">
+    <section className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-lg" dir={getActiveLang() === 'en-US' ? 'ltr' : 'rtl'}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-[#E8EEF9]">حسابك في MATRIX</h2>
+          <h2 className="text-sm font-bold text-[#E8EEF9]">{tl().tm2_154}</h2>
           <p className="text-[11px] text-[#7B8DA8] mt-1">
-            سجّل الدخول لحفظ دفتر الصفقات والتنبيهات والرسومات على الخادم والوصول إليها من أي جهاز.
+            {tl().tm2_155}
           </p>
         </div>
         <div className="flex rounded-lg bg-[#0B1220] border border-[#243049] p-0.5 shrink-0">
@@ -221,7 +222,7 @@ export const AuthPanel: React.FC = () => {
                 mode === m ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#A3B4D0]'
               }`}
             >
-              {m === 'login' ? 'دخول' : 'حساب جديد'}
+              {m === 'login' ? tl().tm2_156 : tl().tm2_157}
             </button>
           ))}
         </div>
@@ -230,15 +231,15 @@ export const AuthPanel: React.FC = () => {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {mode === 'login' ? (
           <>
-            <input autoComplete="username" placeholder="اسم المستخدم أو البريد" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className={inputCls} dir="ltr" />
-            <input type="password" autoComplete="current-password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} dir="ltr" />
+            <input autoComplete="username" placeholder={tl().tm2_158} value={identifier} onChange={(e) => setIdentifier(e.target.value)} className={inputCls} dir="ltr" />
+            <input type="password" autoComplete="current-password" placeholder={tl().tm2_159} value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} dir="ltr" />
           </>
         ) : (
           <>
-            <input autoComplete="username" placeholder="اسم المستخدم (3+ أحرف)" value={username} onChange={(e) => setUsername(e.target.value)} className={inputCls} dir="ltr" />
-            <input type="email" autoComplete="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} dir="ltr" />
-            <input type="password" autoComplete="new-password" placeholder="كلمة المرور (8+ أحرف)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} dir="ltr" />
-            <input type="password" autoComplete="new-password" placeholder="تأكيد كلمة المرور" value={password2} onChange={(e) => setPassword2(e.target.value)} className={inputCls} dir="ltr" />
+            <input autoComplete="username" placeholder={tl().tm2_160} value={username} onChange={(e) => setUsername(e.target.value)} className={inputCls} dir="ltr" />
+            <input type="email" autoComplete="email" placeholder={tl().tm2_161} value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} dir="ltr" />
+            <input type="password" autoComplete="new-password" placeholder={tl().tm2_162} value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} dir="ltr" />
+            <input type="password" autoComplete="new-password" placeholder={tl().tm2_163} value={password2} onChange={(e) => setPassword2(e.target.value)} className={inputCls} dir="ltr" />
           </>
         )}
         <button
@@ -247,15 +248,15 @@ export const AuthPanel: React.FC = () => {
           className="sm:col-span-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs cursor-pointer disabled:opacity-50"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-          {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء الحساب'}
+          {mode === 'login' ? tl().tm2_164 : tl().tm2_165}
         </button>
       </form>
       {messages}
       {mode === 'login' && <ForgotPassword initialEmail={identifier.includes('@') ? identifier : ''} />}
       <p className="text-[10px] text-[#64748B]">
-        MATRIX للتحليل والتعليم فقط، ولا ينفّذ صفقات حقيقية. باستخدامك الحساب توافق على{' '}
-        <a href="/legal/terms.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">شروط الاستخدام</a> و
-        <a href="/legal/privacy.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">سياسة الخصوصية</a>.
+        {tl().mx_authNote}{' '}
+        <a href="/legal/terms.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">{tl().tm2_166}</a> {tl().mx_and}{' '}
+        <a href="/legal/privacy.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">{tl().tm2_167}</a>.
       </p>
       <LegalLinks />
     </section>
@@ -264,12 +265,12 @@ export const AuthPanel: React.FC = () => {
 
 /** Links to the public legal pages (needed by App Store / Google Play reviewers and users). */
 export const LegalLinks: React.FC = () => (
-  <nav className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[#64748B]" aria-label="روابط قانونية">
-    <a href="/legal/privacy.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">الخصوصية</a>
-    <a href="/legal/terms.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">الشروط</a>
-    <a href="/legal/risk.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">إخلاء المسؤولية</a>
-    <a href="/legal/delete-account.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">حذف الحساب</a>
-    <a href="/legal/about.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">عن MATRIX</a>
+  <nav className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[#64748B]" aria-label={tl().tm2_168}>
+    <a href="/legal/privacy.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">{tl().tm2_169}</a>
+    <a href="/legal/terms.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">{tl().tm2_170}</a>
+    <a href="/legal/risk.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">{tl().tm2_171}</a>
+    <a href="/legal/delete-account.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">{tl().tm2_172}</a>
+    <a href="/legal/about.html" target="_blank" rel="noopener" className="hover:text-[#2DD4BF]">{tl().tm2_173}</a>
   </nav>
 );
 
@@ -279,7 +280,7 @@ const SyncBadge: React.FC = () => {
   useEffect(() => onCloudSyncStatus(setSt), []);
   const syncing = st.state === 'syncing';
   const failed = st.state === 'error';
-  const label = syncing ? 'جارٍ المزامنة…' : failed ? 'تعذّرت المزامنة' : 'متزامن';
+  const label = syncing ? tl().tm2_174 : failed ? tl().tm2_175 : tl().tm2_176;
   const time = st.lastSyncAt
     ? new Date(st.lastSyncAt).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' })
     : null;
@@ -288,7 +289,7 @@ const SyncBadge: React.FC = () => {
       type="button"
       onClick={() => void syncNow()}
       disabled={syncing}
-      title={`قوائم المراقبة والتخطيطات والمؤشرات والرسومات تُحفظ في حسابك${time ? ` • آخر مزامنة ${time}` : ''} • اضغط للمزامنة الآن`}
+      title={`${tl().tm2_177}${time ? ` • ${tl().au_lastSync} ${time}` : ''}${tl().tm2_178}`}
       className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer disabled:cursor-wait ${
         failed
           ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
@@ -327,14 +328,14 @@ const ForgotPassword: React.FC<{ initialEmail: string }> = ({ initialEmail }) =>
         }}
         className="text-[11px] text-[#2DD4BF] hover:underline cursor-pointer"
       >
-        نسيت كلمة المرور؟
+        {tl().tm2_179}
       </button>
     );
   }
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setResult({ ok: false, message: 'أدخل البريد الإلكتروني المسجّل في حسابك.' });
+      setResult({ ok: false, message: tl().tm2_180 });
       return;
     }
     setBusy(true);
@@ -343,7 +344,7 @@ const ForgotPassword: React.FC<{ initialEmail: string }> = ({ initialEmail }) =>
   };
   return (
     <form onSubmit={submit} className="p-3 rounded-lg bg-[#0B1220] border border-[#243049] space-y-2">
-      <p className="text-[11px] text-[#A3B4D0]">اكتب بريدك المسجّل وسنرسل لك رابطاً لاختيار كلمة مرور جديدة.</p>
+      <p className="text-[11px] text-[#A3B4D0]">{tl().tm2_181}</p>
       <div className="flex flex-col sm:flex-row gap-2">
         <input
           type="email"
@@ -359,7 +360,7 @@ const ForgotPassword: React.FC<{ initialEmail: string }> = ({ initialEmail }) =>
           disabled={busy}
           className="px-4 py-2 rounded-lg bg-[#2DD4BF] text-[#042F2E] font-bold text-xs cursor-pointer disabled:opacity-50 min-h-[40px] flex items-center justify-center gap-1"
         >
-          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null} إرسال الرابط
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null} {tl().mx_sendLink}
         </button>
       </div>
       {result && (
@@ -393,8 +394,8 @@ const PlanCard: React.FC = () => {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Crown className={`w-4 h-4 ${paid ? 'text-amber-400' : 'text-[#64748B]'}`} />
-          <span className="text-xs font-bold text-[#E8EEF9]">الباقة: {plan.label}</span>
-          {paid && end && <span className="text-[11px] text-[#94A3B8]">حتى {end}{plan.days_left !== null ? ` (${plan.days_left} يوماً)` : ''}</span>}
+          <span className="text-xs font-bold text-[#E8EEF9]">{tl().mx_planLbl} {plan.label}</span>
+          {paid && end && <span className="text-[11px] text-[#94A3B8]">{tl().mx_until} {end}{plan.days_left !== null ? fmt(tl().tm2_182, { days: plan.days_left }) : ''}</span>}
         </div>
         <div className="flex items-center gap-2">
           {paid && billing && (
@@ -409,7 +410,7 @@ const PlanCard: React.FC = () => {
               }}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#243049] text-[#A3B4D0] hover:text-white text-[11px] cursor-pointer disabled:opacity-50"
             >
-              <CreditCard className="w-3.5 h-3.5" /> إدارة الاشتراك والفواتير
+              <CreditCard className="w-3.5 h-3.5" /> {tl().mx_manageSub}
             </button>
           )}
           {plan.plan !== 'vip' && (
@@ -418,13 +419,13 @@ const PlanCard: React.FC = () => {
               onClick={() => requestUpgrade('charts', plan.limits.charts)}
               className="px-3 py-1.5 rounded-lg bg-[#2DD4BF] text-[#042F2E] font-bold text-[11px] cursor-pointer"
             >
-              {paid ? 'ترقية الباقة' : 'اشترك'}
+              {paid ? tl().tm2_183 : tl().tm2_184}
             </button>
           )}
         </div>
       </div>
       {!plan.enforcement && (
-        <p className="text-[10px] text-[#64748B]">فترة الإطلاق: كل المزايا مفتوحة الآن لجميع الحسابات.</p>
+        <p className="text-[10px] text-[#64748B]">{tl().tm2_185}</p>
       )}
       {msg && <p className="text-[11px] text-rose-300">{msg}</p>}
     </div>

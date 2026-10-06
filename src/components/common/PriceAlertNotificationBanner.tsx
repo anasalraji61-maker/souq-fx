@@ -1,7 +1,7 @@
 import React from 'react';
 import { BellRing, X, ArrowUpRight, ArrowDownRight, ExternalLink } from 'lucide-react';
 import { PriceAlertItem } from '../../types/market';
-import { LangId, DICTS } from '../../i18n/locales';
+import { LangId, DICTS, tl } from '../../i18n/locales';
 
 interface PriceAlertNotificationBannerProps {
   alert: PriceAlertItem;
@@ -52,7 +52,7 @@ export const PriceAlertNotificationBanner: React.FC<PriceAlertNotificationBanner
                 ? 'Current price reached '
                 : currentLang === 'ku'
                 ? 'نرخی ئێستا گەیشتە '
-                : 'وصل السعر الحالي إلى '}
+                : tl().tm2_444}
               <span className="font-mono font-bold text-[#2DD4BF]">{currentPrice}</span>.
             </p>
             {alert.note && <p className="text-[#7B8DA8] text-[11px] mt-0.5">{alert.note}</p>}

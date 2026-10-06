@@ -5,24 +5,25 @@
  */
 import { apiClient } from './client';
 import { clearSession, saveSession, SessionUser, getSessionUser, getToken } from './session';
+import { tl } from '../i18n/locales';
 
 export type AuthResult = { ok: true; user: SessionUser } | { ok: false; message: string };
 
 /** Backend error codes → Arabic messages for the user. */
 export function authErrorAr(raw: string | null | undefined): string {
   const e = String(raw || '').toLowerCase();
-  if (e.includes('invalid credentials')) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
-  if (e.includes('email taken')) return 'هذا البريد مسجّل مسبقاً. جرّب تسجيل الدخول.';
-  if (e.includes('username or email taken') || e.includes('username taken')) return 'اسم المستخدم أو البريد مستخدم مسبقاً.';
-  if (e.includes('invalid email')) return 'البريد الإلكتروني غير صالح.';
-  if (e.includes('reserved')) return 'اسم المستخدم هذا محجوز، اختر اسماً آخر.';
-  if (e.includes('link or @')) return 'اسم المستخدم لا يقبل روابط أو الرمز @.';
-  if (e.includes('invisible') || e.includes('look-alike')) return 'اسم المستخدم يحتوي أحرفاً غير مسموحة.';
-  if (e.includes('too short')) return 'اسم المستخدم 3 أحرف على الأقل، وكلمة المرور 8 أحرف على الأقل.';
-  if (e.includes('invalid current password')) return 'كلمة المرور الحالية غير صحيحة.';
-  if (e.includes('too many') || e.includes('locked') || e.includes('429')) return 'محاولات كثيرة. انتظر قليلاً ثم حاول مجدداً.';
-  if (e.includes('timeout') || e.includes('network') || e.includes('failed to fetch')) return 'تعذّر الاتصال بالخادم. تحقّق من الإنترنت.';
-  return 'حدث خطأ غير متوقع. حاول مرة أخرى.';
+  if (e.includes('invalid credentials')) return tl().mx2_badCreds;
+  if (e.includes('email taken')) return tl().mx2_emailTaken;
+  if (e.includes('username or email taken') || e.includes('username taken')) return tl().mx2_userTaken;
+  if (e.includes('invalid email')) return tl().mx2_badEmail;
+  if (e.includes('reserved')) return tl().mx2_reserved;
+  if (e.includes('link or @')) return tl().mx2_noLinks;
+  if (e.includes('invisible') || e.includes('look-alike')) return tl().mx2_badChars;
+  if (e.includes('too short')) return tl().mx2_tooShort;
+  if (e.includes('invalid current password')) return tl().mx2_badCurPw;
+  if (e.includes('too many') || e.includes('locked') || e.includes('429')) return tl().mx2_tooMany;
+  if (e.includes('timeout') || e.includes('network') || e.includes('failed to fetch')) return tl().mx2_noServer;
+  return tl().mx2_unexpected;
 }
 
 function toUser(d: any): SessionUser {
@@ -79,7 +80,7 @@ export async function refreshMe(): Promise<SessionUser | null> {
 
 export async function changePassword(current: string, next: string): Promise<{ ok: boolean; message: string }> {
   const res = await apiClient.post<any>('/api/auth/password', { current_password: current, new_password: next });
-  if (res.ok) return { ok: true, message: 'تم تغيير كلمة المرور. خرجت الأجهزة الأخرى من حسابك.' };
+  if (res.ok) return { ok: true, message: tl().mx2_pwChanged };
   return { ok: false, message: authErrorAr(res.error) };
 }
 
@@ -88,7 +89,7 @@ export async function deleteAccount(): Promise<{ ok: boolean; message: string }>
   const res = await apiClient.delete<any>('/api/auth/account');
   if (res.ok) {
     clearSession();
-    return { ok: true, message: 'تم حذف الحساب وكل بياناته نهائياً.' };
+    return { ok: true, message: tl().mx2_accDeleted };
   }
   return { ok: false, message: authErrorAr(res.error) };
 }
@@ -108,10 +109,10 @@ export async function forgotPassword(email: string): Promise<{ ok: boolean; mess
   if (res.ok) {
     return {
       ok: true,
-      message: 'إذا كان هذا البريد مسجّلاً لدينا فستصلك رسالة فيها رابط لاختيار كلمة مرور جديدة خلال دقائق. تفقّد مجلد الرسائل غير المرغوب فيها أيضاً.',
+      message: tl().mx2_resetSent,
     };
   }
-  if (res.status === 503) return { ok: false, message: 'خدمة البريد غير مفعّلة حالياً. راسلنا من بريدك المسجّل لاستعادة حسابك.' };
-  if (res.status === 429) return { ok: false, message: 'طلبات كثيرة. انتظر ربع ساعة ثم حاول مجدداً.' };
-  return { ok: false, message: 'تعذّر إرسال الطلب. تحقق من الاتصال وحاول مجدداً.' };
+  if (res.status === 503) return { ok: false, message: tl().mx2_mailOff };
+  if (res.status === 429) return { ok: false, message: tl().mx2_tooManyReq };
+  return { ok: false, message: tl().mx2_sendFail };
 }

@@ -150,7 +150,7 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
               </span>
             </h2>
             <p className="text-[10px] text-[#94A3B8]">
-              استشارات تحليلية لـ {activeSymbol.symbol} ({timeframe})
+              {tl().mx_aiFor} {activeSymbol.symbol} ({timeframe})
             </p>
           </div>
         </div>
