@@ -935,7 +935,7 @@ def market_status():
 @app.post("/api/auth/register")
 def auth_register(body: AuthRegister):
     try:
-        return db.register_user(
+        session = db.register_user(
             body.username,
             body.password,
             role=body.role,
@@ -945,6 +945,10 @@ def auth_register(body: AuthRegister):
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    # The e-mail verification code must reach the user only by e-mail — never in the API response
+    # (otherwise anyone can "verify" an address they do not own).
+    session.pop("verification_code", None)
+    return session
 
 
 @app.post("/api/auth/login")
