@@ -337,9 +337,13 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
         {filteredSymbols.map((item) => {
           const isSelected = item.symbol === activeSymbol;
           const flash = priceFlashMap[item.symbol];
-          const isUp = item.change24h >= 0;
+          // Real data only: until a provider quote arrives the row shows "…" (never the simulated price).
           const quote = realQuotes[item.symbol];
-          const displayPrice = quote && quote.price !== null ? quote.price : item.price;
+          const hasReal = Boolean(quote && quote.price !== null && !quote.isDemo);
+          const displayPrice: number | null = hasReal ? (quote!.price as number) : null;
+          const realChange: number | null =
+            hasReal && typeof quote!.changePct === 'number' ? Number(quote!.changePct.toFixed(2)) : null;
+          const isUp = (realChange ?? 0) >= 0;
           const displaySpread = formatSpread(item, quote?.bid, quote?.ask);
           const isClosed = quote?.marketOpen === false || (marketStatus && !marketStatus.isOpen);
 
@@ -396,13 +400,12 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
                 {/* 3. Price */}
                 <div className="text-left font-mono text-xs font-semibold text-[#E8EEF9] whitespace-nowrap">
-                  {displayPrice.toFixed(item.precision)}
+                  {displayPrice !== null ? displayPrice.toFixed(item.precision) : '…'}
                 </div>
 
                 {/* 4. Change % */}
                 <div className={`text-left font-mono text-[11px] font-bold whitespace-nowrap ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                  {isUp ? '+' : ''}
-                  {item.change24h}%
+                  {realChange === null ? '—' : `${isUp ? '+' : ''}${realChange}%`}
                 </div>
 
                 {/* 5. Spread */}
@@ -447,7 +450,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                     )}
                   </div>
                   <div className="text-left font-mono text-sm font-bold text-[#E8EEF9] whitespace-nowrap">
-                    {displayPrice.toFixed(item.precision)}
+                    {displayPrice !== null ? displayPrice.toFixed(item.precision) : '…'}
                   </div>
                 </div>
 
@@ -462,7 +465,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
                         isUp ? 'text-emerald-400' : 'text-rose-400'
                       }`}
                     >
-                      {isUp ? '+' : ''}{item.change24h}%
+                      {realChange === null ? '—' : `${isUp ? '+' : ''}${realChange}%`}
                     </span>
                     <span className="text-[10px] text-[#64748B] bg-[#08111E] px-1.5 py-0.5 rounded border border-[#1E283D]">
                       {displaySpread}

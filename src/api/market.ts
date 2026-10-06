@@ -13,6 +13,7 @@ export interface MarketQuote {
   asOf: number | null;
   marketOpen: boolean | null;
   isDemo: boolean;
+  changePct?: number | null;
 }
 
 export interface MarketSession {
@@ -156,6 +157,7 @@ export async function getQuote(symbol: string): Promise<MarketQuote> {
         asOf: typeof d.as_of === 'number' ? d.as_of : null,
         marketOpen: typeof d.market_open === 'boolean' ? d.market_open : null,
         isDemo,
+        changePct: typeof d.percent_change === 'number' && Number.isFinite(d.percent_change) ? d.percent_change : null,
       };
     }
   } catch (err) {
