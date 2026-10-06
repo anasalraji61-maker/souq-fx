@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LogIn, LogOut, UserPlus, KeyRound, Trash2, ShieldCheck, Loader2, Cloud } from 'lucide-react';
-import { login, register, logout, refreshMe, changePassword, deleteAccount } from '../../api/auth';
+import { login, register, logout, refreshMe, changePassword, deleteAccount, emailAvailable, forgotPassword } from '../../api/auth';
 import { getSessionUser, onSessionChange, SessionUser } from '../../api/session';
 import { getCloudSyncStatus, onCloudSyncStatus, syncNow, CloudSyncStatus } from '../../api/cloudSync';
 
@@ -248,6 +248,7 @@ export const AuthPanel: React.FC = () => {
         </button>
       </form>
       {messages}
+      {mode === 'login' && <ForgotPassword initialEmail={identifier.includes('@') ? identifier : ''} />}
       <p className="text-[10px] text-[#64748B]">
         MATRIX للتحليل والتعليم فقط، ولا ينفّذ صفقات حقيقية. باستخدامك الحساب توافق على{' '}
         <a href="/legal/terms.html" target="_blank" rel="noopener" className="text-[#2DD4BF] hover:underline">شروط الاستخدام</a> و
@@ -293,5 +294,76 @@ const SyncBadge: React.FC = () => {
     >
       {syncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Cloud className="w-3 h-3" />} {label}
     </button>
+  );
+};
+
+/** "Forgot password?" — sends a reset link by e-mail (shown only when the server can send e-mail). */
+const ForgotPassword: React.FC<{ initialEmail: string }> = ({ initialEmail }) => {
+  const [available, setAvailable] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState(initialEmail);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void emailAvailable().then((v) => alive && setAvailable(v));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!available) return null;
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          setEmail((e) => e || initialEmail);
+        }}
+        className="text-[11px] text-[#2DD4BF] hover:underline cursor-pointer"
+      >
+        نسيت كلمة المرور؟
+      </button>
+    );
+  }
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setResult({ ok: false, message: 'أدخل البريد الإلكتروني المسجّل في حسابك.' });
+      return;
+    }
+    setBusy(true);
+    setResult(await forgotPassword(email));
+    setBusy(false);
+  };
+  return (
+    <form onSubmit={submit} className="p-3 rounded-lg bg-[#0B1220] border border-[#243049] space-y-2">
+      <p className="text-[11px] text-[#A3B4D0]">اكتب بريدك المسجّل وسنرسل لك رابطاً لاختيار كلمة مرور جديدة.</p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          type="email"
+          autoComplete="email"
+          dir="ltr"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="flex-1 bg-[#060D19] border border-[#243049] rounded-lg px-3 py-2 text-xs text-[#E8EEF9] focus:outline-none focus:border-[#2DD4BF] min-h-[40px]"
+        />
+        <button
+          type="submit"
+          disabled={busy}
+          className="px-4 py-2 rounded-lg bg-[#2DD4BF] text-[#042F2E] font-bold text-xs cursor-pointer disabled:opacity-50 min-h-[40px] flex items-center justify-center gap-1"
+        >
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null} إرسال الرابط
+        </button>
+      </div>
+      {result && (
+        <p className={`text-[11px] ${result.ok ? 'text-emerald-300' : 'text-rose-300'}`} role="status">
+          {result.message}
+        </p>
+      )}
+    </form>
   );
 };

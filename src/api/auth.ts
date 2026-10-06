@@ -92,3 +92,26 @@ export async function deleteAccount(): Promise<{ ok: boolean; message: string }>
   }
   return { ok: false, message: authErrorAr(res.error) };
 }
+
+/** Can the server send e-mail (password reset links)? Cached for the session. */
+let emailAvailableCache: boolean | null = null;
+export async function emailAvailable(): Promise<boolean> {
+  if (emailAvailableCache !== null) return emailAvailableCache;
+  const res = await apiClient.get<{ email?: boolean }>('/api/auth/email-status');
+  emailAvailableCache = Boolean(res.ok && res.data?.email);
+  return emailAvailableCache;
+}
+
+/** Ask for a password reset link. The server answers the same for unknown addresses (no account probing). */
+export async function forgotPassword(email: string): Promise<{ ok: boolean; message: string }> {
+  const res = await apiClient.post<{ ok: boolean }>('/api/auth/forgot', { email: email.trim() });
+  if (res.ok) {
+    return {
+      ok: true,
+      message: 'إذا كان هذا البريد مسجّلاً لدينا فستصلك رسالة فيها رابط لاختيار كلمة مرور جديدة خلال دقائق. تفقّد مجلد الرسائل غير المرغوب فيها أيضاً.',
+    };
+  }
+  if (res.status === 503) return { ok: false, message: 'خدمة البريد غير مفعّلة حالياً. راسلنا من بريدك المسجّل لاستعادة حسابك.' };
+  if (res.status === 429) return { ok: false, message: 'طلبات كثيرة. انتظر ربع ساعة ثم حاول مجدداً.' };
+  return { ok: false, message: 'تعذّر إرسال الطلب. تحقق من الاتصال وحاول مجدداً.' };
+}

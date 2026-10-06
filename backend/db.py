@@ -341,6 +341,7 @@ def init_db() -> None:
         _migrate_created_at(c)
         _migrate_content_reports(c)
         _migrate_owner_key(c)
+        _migrate_password_resets(c)
 
 
 def _migrate_owner_key(c: sqlite3.Connection) -> None:
@@ -1369,6 +1370,8 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM trades WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
+        if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='password_resets'").fetchone():
+            c.execute("DELETE FROM password_resets WHERE user_id=?", (user_id,))
         # Chart drawings (`drawings.DrawingStore`, table chart_drawings, user_id stored as text) were kept
         # after account deletion. The table only exists once the drawings router has been used.
         if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='chart_drawings'").fetchone():
@@ -1866,6 +1869,95 @@ def change_password(
             c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND owner_key IS NOT ?", (user_id, owner_key))
         else:
             c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=?", (user_id,))
+
+
+PASSWORD_RESET_TTL = 30 * 60  # seconds a reset link stays valid
+PASSWORD_RESET_COOLDOWN = 60  # one new link per account per minute (mail flooding)
+
+
+def _migrate_password_resets(c: sqlite3.Connection) -> None:
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS password_resets (
+            token_hash TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            created_at REAL NOT NULL,
+            expires_at REAL NOT NULL,
+            used_at REAL
+        )"""
+    )
+    c.execute("CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id)")
+
+
+def _reset_hash(token: str) -> str:
+    return hashlib.sha256((token or "").encode("utf-8")).hexdigest()
+
+
+def create_password_reset(email: str) -> dict | None:
+    """New one-time reset token for the account with this e-mail, or None (no such account, deleted
+    account, or a link was issued less than a minute ago). Only the token's hash is stored, so a
+    database leak does not hand out working reset links. Older unused links of the account stop working."""
+    email_norm = (email or "").strip().lower()
+    if "@" not in email_norm or len(email_norm) > 254:
+        return None
+    now = time.time()
+    with _conn() as c:
+        c.execute("BEGIN IMMEDIATE")
+        row = c.execute(
+            "SELECT id, username, email FROM users WHERE lower(email)=?", (email_norm,)
+        ).fetchone()
+        if not row or not row["email"]:
+            return None
+        uid = int(row["id"])
+        last = c.execute(
+            "SELECT MAX(created_at) AS t FROM password_resets WHERE user_id=?", (uid,)
+        ).fetchone()
+        if last and last["t"] and now - float(last["t"]) < PASSWORD_RESET_COOLDOWN:
+            return None
+        c.execute("DELETE FROM password_resets WHERE user_id=? OR expires_at<?", (uid, now - 86400))
+        token = secrets.token_urlsafe(32)
+        c.execute(
+            "INSERT INTO password_resets(token_hash, user_id, created_at, expires_at) VALUES(?,?,?,?)",
+            (_reset_hash(token), uid, now, now + PASSWORD_RESET_TTL),
+        )
+    return {"user_id": uid, "username": str(row["username"]), "email": str(row["email"]), "token": token}
+
+
+def reset_password_with_token(token: str, new_password: str) -> int:
+    """Set a new password with a reset token. Signs the account out everywhere (all sessions removed,
+    push tokens unlinked). Returns the user id. ValueError: short password or invalid/expired/used token."""
+    if len(new_password or "") < PASSWORD_MIN:
+        raise ValueError("password too short")
+    if not token or len(token) > 200:
+        raise ValueError("invalid or expired token")
+    now = time.time()
+    with _conn() as c:
+        c.execute("BEGIN IMMEDIATE")
+        row = c.execute(
+            "SELECT user_id, expires_at, used_at FROM password_resets WHERE token_hash=?",
+            (_reset_hash(token),),
+        ).fetchone()
+        if not row or row["used_at"] is not None or float(row["expires_at"]) < now:
+            raise ValueError("invalid or expired token")
+        uid = int(row["user_id"])
+        user = c.execute("SELECT email FROM users WHERE id=?", (uid,)).fetchone()
+        if not user or not user["email"]:  # account deleted after the link was sent
+            raise ValueError("invalid or expired token")
+        c.execute("UPDATE users SET password_hash=? WHERE id=?", (_encode_password(new_password), uid))
+        c.execute("UPDATE password_resets SET used_at=? WHERE token_hash=?", (now, _reset_hash(token)))
+        c.execute("DELETE FROM password_resets WHERE user_id=? AND used_at IS NULL", (uid,))
+        c.execute("DELETE FROM sessions WHERE user_id=?", (uid,))
+        c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=?", (uid,))
+    return uid
+
+
+def user_email_for_verification(user_id: int) -> dict | None:
+    with _conn() as c:
+        row = c.execute(
+            "SELECT username, email, email_verified FROM users WHERE id=?", (user_id,)
+        ).fetchone()
+    if not row or not row["email"]:
+        return None
+    return {"username": str(row["username"]), "email": str(row["email"]), "verified": bool(row["email_verified"])}
 
 
 def all_push_tokens() -> list[str]:

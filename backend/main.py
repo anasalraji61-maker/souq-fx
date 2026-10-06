@@ -35,6 +35,7 @@ import db
 from core.auth import _auth_user, _install_key, _owner_key
 import news_feed
 import openrouter_ai
+import mailer
 import alert_worker
 import econ_calendar
 import backtest as backtest_engine
@@ -933,7 +934,7 @@ def market_status():
 
 
 @app.post("/api/auth/register")
-def auth_register(body: AuthRegister):
+def auth_register(body: AuthRegister, background: BackgroundTasks):
     try:
         session = db.register_user(
             body.username,
@@ -947,7 +948,10 @@ def auth_register(body: AuthRegister):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     # The e-mail verification code must reach the user only by e-mail — never in the API response
     # (otherwise anyone can "verify" an address they do not own).
-    session.pop("verification_code", None)
+    vcode = session.pop("verification_code", None)
+    if vcode and session.get("email") and mailer.configured():
+        background.add_task(mailer.send_verification_code, session["email"], session.get("username", ""), vcode)
+    session["email_delivery"] = "sent" if (vcode and session.get("email") and mailer.configured()) else "unavailable"
     return session
 
 
@@ -978,13 +982,80 @@ def auth_verify_email(body: VerifyEmailRequest, user: dict | None = Depends(_aut
 
 
 @app.post("/api/auth/resend-verification")
-def auth_resend_verification(user: dict | None = Depends(_auth_user)):
+def auth_resend_verification(background: BackgroundTasks, user: dict | None = Depends(_auth_user)):
     if not user:
         raise HTTPException(status_code=401, detail="login_required")
+    # Said "sent" without sending anything (no mail transport existed). Now honest: 503 when e-mail is off.
+    if not mailer.configured():
+        raise HTTPException(status_code=503, detail="email_unavailable")
     vcode = db.resend_verification_code(user["user_id"])
     if not vcode:
         return {"ok": True, "message": "البريد الإلكتروني مفعل مسبقاً أو غير موجود"}
+    info = db.user_email_for_verification(user["user_id"])
+    if info:
+        background.add_task(mailer.send_verification_code, info["email"], info["username"], vcode)
     return {"ok": True, "message": "تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني"}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254)
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=10, max_length=200)
+    new_password: str = Field(..., min_length=1, max_length=256)
+
+
+_FORGOT_IP_HITS: dict[str, list[float]] = {}
+_FORGOT_IP_MAX = 5  # requests per IP per 15 minutes
+
+
+def _forgot_ip_allowed(ip: str) -> bool:
+    now = time.time()
+    hits = [t for t in _FORGOT_IP_HITS.get(ip, []) if now - t < 900]
+    if len(hits) >= _FORGOT_IP_MAX:
+        _FORGOT_IP_HITS[ip] = hits
+        return False
+    hits.append(now)
+    _FORGOT_IP_HITS[ip] = hits
+    if len(_FORGOT_IP_HITS) > 5000:
+        _FORGOT_IP_HITS.clear()
+    return True
+
+
+@app.post("/api/auth/forgot")
+def auth_forgot_password(body: ForgotPasswordRequest, request: Request, background: BackgroundTasks):
+    """Send a password reset link. Always answers the same way whether or not the e-mail has an
+    account (no account enumeration). 503 email_unavailable when SMTP is not configured."""
+    if not mailer.configured():
+        raise HTTPException(status_code=503, detail="email_unavailable")
+    ip = request.client.host if request.client else "?"
+    if not _forgot_ip_allowed(ip):
+        raise HTTPException(status_code=429, detail="too many requests")
+    reset = db.create_password_reset(body.email)
+    if reset:
+        base = mailer.public_base_url(str(request.base_url))
+        link = f"{base}/legal/reset-password.html#token={reset['token']}"
+        background.add_task(
+            mailer.send_password_reset, reset["email"], reset["username"], link, db.PASSWORD_RESET_TTL // 60
+        )
+    return {"ok": True}
+
+
+@app.post("/api/auth/reset")
+def auth_reset_password(body: ResetPasswordRequest):
+    try:
+        db.reset_password_with_token(body.token.strip(), body.new_password)
+    except ValueError as exc:
+        msg = str(exc)
+        raise HTTPException(status_code=400, detail="password too short" if "short" in msg else "invalid_or_expired") from exc
+    return {"ok": True}
+
+
+@app.get("/api/auth/email-status")
+def auth_email_status():
+    """Whether the server can send e-mail (the app hides "forgot password" when it cannot)."""
+    return {"email": mailer.configured()}
 
 
 class AuthLogout(BaseModel):
