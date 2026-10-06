@@ -51,7 +51,16 @@ import {
   X,
 } from 'lucide-react';
 
-export type LayoutType = '1' | '2-side' | '2-stack' | '3' | '4';
+import {
+  LayoutGrid as ChartLayoutGrid,
+  LayoutPicker,
+  effectiveLayout,
+  isLayoutType,
+  useLayoutSizes,
+  type LayoutSizes,
+  type LayoutType,
+} from './chartLayouts';
+export type { LayoutType };
 
 interface ChartCellState {
   id: string;
@@ -73,6 +82,7 @@ interface SavedLayout {
   name: string;
   createdAt: string;
   layoutType: LayoutType;
+  sizes?: LayoutSizes;
   cells: {
     id: string;
     symbol: string;
@@ -163,16 +173,22 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 }) => {
   // Multi-Chart Layout State (Part 4)
   const [layoutType, setLayoutType] = useState<LayoutType>('1');
+  const pendingSizesRef = useRef<LayoutSizes | null>(null);
   const [activeCellId, setActiveCellId] = useState<string>('cell-1');
   const [maximizedCellId, setMaximizedCellId] = useState<string | null>(null);
 
   // Mobile-first responsive detection (MEGA BATCH D)
   const [isPhone, setIsPhone] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  // Tablet (768–1099px): at most 2 charts side by side
+  const [isTablet, setIsTablet] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1100 : false
+  );
   const [isMobileDrawingSheetOpen, setIsMobileDrawingSheetOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
       setIsPhone(window.innerWidth < 768);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1100);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -802,6 +818,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
       name: name.trim(),
       createdAt: new Date().toISOString(),
       layoutType,
+      sizes: layoutSizes,
       cells: cells.map((c) => ({
         id: c.id,
         symbol: c.symbol,
@@ -820,7 +837,10 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   const handleLoadLayout = (layout: SavedLayout) => {
-    setLayoutType(layout.layoutType);
+    const lt = isLayoutType(layout.layoutType) ? layout.layoutType : '1';
+    setLayoutType(lt);
+    setMaximizedCellId(null);
+    if (layout.sizes) pendingSizesRef.current = layout.sizes;
     setCells((prev) =>
       prev.map((c, i) => {
         const savedCell = layout.cells[i];
@@ -848,6 +868,17 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   // Visible cells calculation based on layout (Part 4.1 & Part 1.5)
+  const maxCells = isPhone ? 1 : isTablet ? 2 : 4;
+  const layoutSpec = useMemo(() => effectiveLayout(layoutType, maxCells), [layoutType, maxCells]);
+  const { sizes: layoutSizes, setSizes: setLayoutSizes, resetSizes: resetLayoutSizes } = useLayoutSizes(layoutSpec);
+
+  useEffect(() => {
+    if (pendingSizesRef.current) {
+      setLayoutSizes(pendingSizesRef.current);
+      pendingSizesRef.current = null;
+    }
+  }, [layoutSpec, setLayoutSizes]);
+
   const visibleCells = useMemo(() => {
     // 1.5 Multi-chart layouts: on phone force a single chart
     if (isPhone) {
@@ -857,24 +888,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
     if (maximizedCellId) {
       return cells.filter((c) => c.id === maximizedCellId);
     }
-    const count =
-      layoutType === '1'
-        ? 1
-        : layoutType === '2-side' || layoutType === '2-stack'
-        ? 2
-        : layoutType === '3'
-        ? 3
-        : 4;
-    return cells.slice(0, count);
-  }, [cells, layoutType, maximizedCellId, isPhone, activeCellId]);
-
-  const getGridClass = () => {
-    if (isPhone || maximizedCellId || layoutType === '1') return 'grid-cols-1 grid-rows-1';
-    if (layoutType === '2-side') return 'grid-cols-1 md:grid-cols-2 grid-rows-1';
-    if (layoutType === '2-stack') return 'grid-cols-1 grid-rows-2';
-    if (layoutType === '3') return 'grid-cols-1 md:grid-cols-2 grid-rows-2';
-    return 'grid-cols-1 md:grid-cols-2 grid-rows-2'; // 4 quad
-  };
+    return cells.slice(0, layoutSpec.areas.length);
+  }, [cells, layoutSpec, maximizedCellId, isPhone, activeCellId]);
 
   const activeSymbolObj = symbols.find((s) => s.symbol === activeCell.symbol) || symbols[0];
   const activeAlertsCount = alerts.filter((a) => a.active && !a.triggered).length;
@@ -1092,66 +1107,14 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           {/* 1.5 Layout Selector (hidden on phone, forced single) */}
           <div className="relative hidden md:block">
             <div className="flex items-center gap-0.5 bg-[#101827] p-0.5 rounded-lg border border-[#1E283D]">
-              <button
-                onClick={() => {
-                  setLayoutType('1');
+              <LayoutPicker
+                value={layoutType}
+                maxCells={maxCells}
+                onChange={(id) => {
+                  setLayoutType(id);
                   setMaximizedCellId(null);
                 }}
-                title="شارت مفرد (Single 1)"
-                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                  layoutType === '1' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-                }`}
-              >
-                1
-              </button>
-              <button
-                onClick={() => {
-                  setLayoutType('2-side');
-                  setMaximizedCellId(null);
-                }}
-                title="شاشتان جنباً إلى جنب (2 Side-by-side)"
-                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                  layoutType === '2-side' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-                }`}
-              >
-                2H
-              </button>
-              <button
-                onClick={() => {
-                  setLayoutType('2-stack');
-                  setMaximizedCellId(null);
-                }}
-                title="شاشتان رأسيتان (2 Stacked)"
-                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                  layoutType === '2-stack' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-                }`}
-              >
-                2V
-              </button>
-              <button
-                onClick={() => {
-                  setLayoutType('3');
-                  setMaximizedCellId(null);
-                }}
-                title="3 شاشات متزامنة"
-                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                  layoutType === '3' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-                }`}
-              >
-                3
-              </button>
-              <button
-                onClick={() => {
-                  setLayoutType('4');
-                  setMaximizedCellId(null);
-                }}
-                title="شبكة 4 شاشات (4 Quad)"
-                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition-colors ${
-                  layoutType === '4' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#7B8DA8] hover:text-white'
-                }`}
-              >
-                4
-              </button>
+              />
 
               {/* Layout Save/Load Dropdown trigger */}
               <button
@@ -1438,7 +1401,12 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
         {/* Center: Chart Grid */}
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#050B14]">
-          <div className={`flex-1 grid ${getGridClass()} gap-[3px] p-[2px] h-full w-full overflow-hidden bg-[#050B14]`}>
+          <ChartLayoutGrid
+            spec={layoutSpec}
+            sizes={layoutSizes}
+            onSizesChange={setLayoutSizes}
+            onResetSizes={resetLayoutSizes}
+          >
             {visibleCells.map((cell) => {
               const symObj = symbols.find((s) => s.symbol === cell.symbol) || symbols[0];
               // Header price/change come from the cell's real data; the simulated symbol list is only a fallback.
@@ -1529,7 +1497,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       </button>
 
                       {/* Maximize / Restore Toggle */}
-                      {layoutType !== '1' && (
+                      {(layoutSpec.areas.length > 1 || isMax) && (
                         <button
                           onClick={() => setMaximizedCellId(isMax ? null : cell.id)}
                           title={isMax ? 'استعادة الشبكة' : 'تكبير الشارت'}
@@ -1640,7 +1608,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                 </div>
               );
             })}
-          </div>
+          </ChartLayoutGrid>
         </div>
 
         {/* 1.2 Floating Drawing Tools Button for Phone (< 768px) */}
