@@ -58,10 +58,12 @@ async def lifespan(app: FastAPI):
     db.init_db()
     ws_task = asyncio.create_task(td_ws.run_forever())
     alert_task = asyncio.create_task(alert_worker.run_alert_loop(60.0))
+    backup_task = asyncio.create_task(ops.run_backup_loop())
     yield
     ws_task.cancel()
     alert_task.cancel()
-    for task in (ws_task, alert_task):
+    backup_task.cancel()
+    for task in (ws_task, alert_task, backup_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -109,6 +111,11 @@ app.include_router(alerts_compat_router)
 
 from routers_mobile_compat import router as mobile_compat_router
 app.include_router(mobile_compat_router)
+
+import ops
+from routers_ops import router as ops_router
+
+app.include_router(ops_router)
 _RATE_LIMITER = RateLimiter(limit_from_env())
 app.add_middleware(RateLimitMiddleware, limiter=_RATE_LIMITER)
 
@@ -162,6 +169,13 @@ def _json_safe(v):
     if isinstance(v, (list, tuple)):
         return [_json_safe(x) for x in v]
     return v
+
+
+@app.exception_handler(Exception)
+async def _unhandled_error(request: Request, exc: Exception):
+    """Any unhandled exception: recorded for the admin «errors» tab (no body, no headers), generic 500."""
+    ops.record_exception(exc, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "internal_error"})
 
 
 @app.exception_handler(PermissionError)

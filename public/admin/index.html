@@ -69,6 +69,7 @@
         <button role="tab" data-tab="payments" aria-selected="false">الاشتراكات</button>
         <button role="tab" data-tab="waitlist" aria-selected="false">قائمة الانتظار</button>
         <button role="tab" data-tab="settings" aria-selected="false">الإعدادات</button>
+        <button role="tab" data-tab="errors" aria-selected="false">الأعطال <span id="errCount" class="count hidden">0</span></button>
         <button role="tab" data-tab="system" aria-selected="false">النظام</button>
       </div>
       <div class="row">
@@ -167,9 +168,35 @@
       <div class="panel"><h3>حدود الباقات</h3><div class="table-wrap"><table id="limitsTable"></table></div></div>
     </div>
 
+    <!-- Errors -->
+    <div data-pane="errors" class="hidden">
+      <div class="kpis" id="errKpis"></div>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0">الأعطال المسجّلة</h3>
+          <div class="row">
+            <select id="errSource" style="background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:6px;min-height:36px">
+              <option value="">الكل</option><option value="server">الخادم</option><option value="client">المتصفح</option>
+            </select>
+            <button class="btn-danger btn-sm" id="errClear">مسح الكل</button>
+          </div>
+        </div>
+        <p class="small">الخطأ نفسه يُجمع في صفّ واحد مع عدّاد. لا تُحفظ بيانات المستخدمين ولا الرموز السرية.</p>
+        <div id="errList"></div>
+      </div>
+    </div>
+
     <!-- System -->
     <div data-pane="system" class="hidden">
       <div class="panel"><h3>حالة الخادم</h3><div class="kv" id="sysKv"></div></div>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0">النسخ الاحتياطية لقاعدة البيانات</h3>
+          <button class="btn-primary btn-sm" id="bkNow">نسخة الآن</button>
+        </div>
+        <div class="kv" id="bkKv"></div>
+        <div class="table-wrap" style="margin-top:10px"><table id="bkTable"></table></div>
+      </div>
       <div class="panel"><h3>إحصاءات مزوّد الأسعار</h3><div class="kv" id="provKv"></div></div>
     </div>
   </section>
@@ -287,7 +314,8 @@
     if (name === 'users') loadUsers();
     if (name === 'reports') loadReports();
     if (name === 'waitlist') api('/api/admin/waitlist?limit=1000').then(renderWaitlist).catch(onError);
-    if (name === 'system') api('/api/admin/system').then(renderSystem).catch(onError);
+    if (name === 'system') { api('/api/admin/system').then(renderSystem).catch(onError); api('/api/admin/backups').then(renderBackups).catch(onError); }
+    if (name === 'errors') loadErrors();
     if (name === 'payments') api('/api/admin/payments?limit=300').then(renderPayments).catch(onError);
     if (name === 'settings') api('/api/admin/settings').then(renderSettings).catch(onError);
   }
@@ -305,7 +333,10 @@
       kpi('قائمة الانتظار', fmtNum(w.total), planSummary(w.by_plan)) +
       kpi('بلاغات معلّقة', fmtNum(d.reports_pending), d.reports_pending ? 'راجعها خلال 24 ساعة' : 'لا شيء معلّق') +
       kpi('موقوفون / محذوفون', fmtNum(u.suspended) + ' / ' + fmtNum(u.deleted)) +
-      (d.subscriptions ? kpi('مشتركون فعّالون', fmtNum(d.subscriptions.paying_total), 'دخل شهري متوقع: $' + fmtNum(d.subscriptions.mrr_usd)) : '');
+      (d.subscriptions ? kpi('مشتركون فعّالون', fmtNum(d.subscriptions.paying_total), 'دخل شهري متوقع: $' + fmtNum(d.subscriptions.mrr_usd)) : '') +
+      (d.errors_24h ? kpi('أعطال (24 ساعة)', fmtNum((d.errors_24h.server || 0) + (d.errors_24h.client || 0)), 'خادم ' + fmtNum(d.errors_24h.server) + ' · متصفح ' + fmtNum(d.errors_24h.client)) : '') +
+      (d.backup ? kpi('آخر نسخة احتياطية', d.backup.newest_at ? fmtDate(d.backup.newest_at) : 'لا توجد بعد', d.backup.last_error ? 'فشلت آخر محاولة!' : ('عدد النسخ: ' + fmtNum(d.backup.count))) : '');
+    setErrCount(d.errors_24h ? (d.errors_24h.groups || 0) : 0);
     var c = d.content || {};
     $('contentKpis').innerHTML =
       kpi('رسائل القنوات (24 ساعة)', fmtNum(c.channel_messages_24h)) +
@@ -469,6 +500,69 @@
       return '<div class="ltr">' + esc(k) + '</div><div class="ltr">' + esc(v === null ? '—' : v) + '</div>';
     }).join('') : '<div class="small">لا إحصاءات بعد.</div><div></div>';
   }
+
+  // ---------------------------------------------------------------------------- errors
+  function setErrCount(n) { var el = $('errCount'); el.textContent = n; el.classList.toggle('hidden', !n); }
+  $('errSource').addEventListener('change', function () { loadErrors(); });
+  $('errClear').addEventListener('click', function () {
+    if (!confirm('مسح كل الأعطال المسجّلة؟')) return;
+    api('/api/admin/errors', { method: 'DELETE' }).then(function () { toast('تم المسح.'); loadErrors(); }).catch(onError);
+  });
+  function loadErrors() {
+    var src = $('errSource').value;
+    api('/api/admin/errors' + (src ? '?source=' + src : '')).then(function (d) {
+      var a = d.last_24h || {}, b = d.last_7d || {};
+      $('errKpis').innerHTML = kpi('أعطال الخادم (24 ساعة)', fmtNum(a.server), '7 أيام: ' + fmtNum(b.server)) +
+        kpi('أعطال المتصفح (24 ساعة)', fmtNum(a.client), '7 أيام: ' + fmtNum(b.client)) + kpi('أنواع مختلفة (24 ساعة)', fmtNum(a.groups));
+      setErrCount(a.groups || 0);
+      var items = d.items || [];
+      $('errList').innerHTML = items.length ? items.map(function (e) {
+        return '<details class="err-item" style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">' +
+          '<summary style="cursor:pointer;list-style:none"><span class="pill ' + (e.source === 'server' ? 'bad' : 'warn') + '">' + (e.source === 'server' ? 'خادم' : 'متصفح') + '</span> ' +
+          '<div class="ltr" style="direction:ltr;text-align:left;margin-top:4px"><strong>' + esc(e.kind || '') + '</strong>: ' + esc(e.message || '') + '</div>' +
+          '<div class="small">المسار: <span class="ltr">' + esc(e.path || '—') + '</span> · المرات: ' + fmtNum(e.count) + ' · آخر مرة: ' + fmtDate(e.last_at) + ' · أول مرة: ' + fmtDate(e.first_at) + '</div></summary>' +
+          (e.stack ? '<pre class="ltr" style="white-space:pre-wrap;font-size:11px;max-height:260px;overflow:auto;background:var(--bg);padding:8px;border-radius:8px;margin-top:8px">' + esc(e.stack) + '</pre>' : '') +
+          '<div style="margin-top:6px"><button class="btn-ghost btn-sm" data-errdel="' + e.id + '">حذف</button></div></details>';
+      }).join('') : '<p class="small">لا أعطال مسجّلة. ممتاز.</p>';
+      document.querySelectorAll('[data-errdel]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          api('/api/admin/errors/' + btn.dataset.errdel, { method: 'DELETE' }).then(loadErrors).catch(onError);
+        });
+      });
+    }).catch(onError);
+  }
+
+  // ---------------------------------------------------------------------------- backups
+  function renderBackups(b) {
+    $('bkKv').innerHTML =
+      '<div>النسخ التلقائية</div><div>' + yesNo(b.enabled) + ' <span class="small">كل ' + esc(b.every_hours) + ' ساعة، يُحتفظ بآخر ' + esc(b.keep) + '</span></div>' +
+      '<div>آخر نسخة</div><div>' + (b.newest_at ? fmtDate(b.newest_at) : 'لا توجد بعد') + '</div>' +
+      '<div>المجلد</div><div class="ltr">' + esc(b.dir) + '</div>' +
+      (b.last_error ? '<div>آخر خطأ</div><div class="ltr" style="color:#fca5a5">' + esc(b.last_error) + '</div>' : '');
+    var files = b.files || [];
+    $('bkTable').innerHTML = '<thead><tr><th>الملف</th><th>الحجم</th><th>التاريخ</th><th></th></tr></thead><tbody>' +
+      (files.length ? files.map(function (f) {
+        return '<tr><td class="ltr">' + esc(f.name) + '</td><td class="ltr">' + (f.bytes / 1048576).toFixed(2) + ' MB</td><td>' + fmtDate(f.created_at) +
+          '</td><td><button class="btn-ghost btn-sm" data-bkdl="' + esc(f.name) + '">تنزيل</button></td></tr>';
+      }).join('') : '<tr><td colspan="4" class="small">لا نسخ بعد. أول نسخة تُصنع تلقائياً بعد دقيقة من تشغيل الخادم.</td></tr>') + '</tbody>';
+    document.querySelectorAll('[data-bkdl]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        api('/api/admin/backups/' + encodeURIComponent(btn.dataset.bkdl), { raw: true }).then(function (res) { return res.blob(); }).then(function (blob) {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob); a.download = btn.dataset.bkdl;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+        }).catch(onError);
+      });
+    });
+  }
+  $('bkNow').addEventListener('click', function () {
+    var btn = $('bkNow'); btn.disabled = true;
+    api('/api/admin/backups', { method: 'POST', body: {} }).then(function (r) {
+      toast('تمت النسخة: ' + r.backup.name);
+      return api('/api/admin/backups').then(renderBackups);
+    }).catch(onError).then(function () { btn.disabled = false; });
+  });
 
   // ---------------------------------------------------------------------------- plans
   var PLAN_AR = { free: 'المجانية', basic: 'الأساسية', pro: 'المحترف', vip: 'النخبة' };

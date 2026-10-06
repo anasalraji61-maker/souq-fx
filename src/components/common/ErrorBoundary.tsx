@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { reportError } from '../../api/errorReport';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { LangId, DICTS } from '../../i18n/locales';
 
@@ -25,6 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('MATRIX Uncaught Error in screen:', error, errorInfo);
+    reportError(error?.name || 'RenderError', error?.message || 'render error', `${error?.stack || ''}\n--- component stack ---${errorInfo?.componentStack || ''}`);
   }
 
   private handleReload = () => {

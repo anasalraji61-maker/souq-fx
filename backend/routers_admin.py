@@ -148,6 +148,8 @@ def admin_overview(days: int = Query(default=30, ge=7, le=180)):
         "waitlist": db.waitlist_counts(),
         "reports_pending": db.count_reported_items(),
         "subscriptions": __import__("plans").subscription_stats(),
+        "errors_24h": __import__("ops").error_counts(now - day),
+        "backup": {k: v for k, v in __import__("ops").backup_status().items() if k != "files"},
         "content": content,
     }
 

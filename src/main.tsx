@@ -6,6 +6,9 @@ import { installIdentityFetch } from './api/session';
 import { startCloudSync } from './api/cloudSync';
 import { startPlanTracking } from './api/plan';
 import { PlanHost } from './components/plan/PlanHost';
+import { installErrorReporting } from './api/errorReport';
+
+installErrorReporting();
 
 installIdentityFetch(((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE) || '');
 startCloudSync();
