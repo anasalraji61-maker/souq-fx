@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LangId, DICTS } from '../../i18n/locales';
+import { AuthPanel } from './AuthPanel';
 import { MarketSymbol, Timeframe } from '../../types/market';
 import { User, Globe, Sliders, ShieldAlert, Sparkles, Check, Volume2, Grid, Save, Mail } from 'lucide-react';
 
@@ -57,6 +58,9 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6 select-none text-xs">
+      {/* Real account: sign in / sign up / manage (server-side) */}
+      <AuthPanel />
+
       {/* 3.1 Profile Card & Editable Info */}
       <form onSubmit={handleSaveProfile} className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E283D]">
@@ -68,7 +72,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-[#E8EEF9]">{userName}</h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2DD4BF]/15 text-[#2DD4BF] border border-[#2DD4BF]/30">
-                  PRO ACTIVE
+                  الملف المحلي
                 </span>
               </div>
               <p className="text-[#7B8DA8] text-xs font-mono mt-0.5">{userEmail}</p>
@@ -97,7 +101,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({
         {saveFeedback && (
           <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs flex items-center gap-1.5">
             <Check className="w-4 h-4" />
-            <span>تم حفظ بيانات الحساب والتفضيلات محلياً بنجاح.</span>
+            <span>تم حفظ التفضيلات على هذا الجهاز.</span>
           </div>
         )}
 

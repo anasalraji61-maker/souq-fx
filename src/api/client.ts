@@ -17,6 +17,8 @@ export interface ApiResponse<T = unknown> {
   isOffline: boolean;
 }
 
+import { getInstallId, getToken, clearSession } from './session';
+
 const API_BASE = ((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE || '').replace(/\/$/, '');
 const TIMEOUT_MS = 10000;
 
@@ -62,6 +64,14 @@ export async function apiClient<T = unknown>(
   if (!headers.has('Accept')) {
     headers.set('Accept', 'application/json');
   }
+  // Identity: per-device install id (owner of personal rows) + Bearer token when signed in.
+  if (!headers.has('X-Install-Id')) {
+    headers.set('X-Install-Id', getInstallId());
+  }
+  const token = getToken();
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
 
   try {
     const res = await fetch(url, {
@@ -74,6 +84,10 @@ export async function apiClient<T = unknown>(
 
     // If server responded with 404 or 5xx, mark offline fallback
     if (!res.ok) {
+      // Expired / revoked session: forget it so the app continues as a guest instead of failing every call.
+      if (res.status === 401 && token && !endpoint.includes('/api/auth/login')) {
+        clearSession();
+      }
       if (res.status === 404 || res.status >= 500) {
         updateBackendStatus(true);
       }
