@@ -71,8 +71,14 @@ async def sync_compat_alerts(
     uid = user["user_id"] if user else None
     existing = _existing_ids(uid, key)
 
-    # Enforce the 50-alert cap on the combined total.
+    # Enforce the 50-alert cap on the combined total, and the plan's limit when enforcement is on.
     cap = 50
+    import plans
+
+    plan_limit = plans.effective_limits(plans.user_plan(uid)["plan"]).get("alerts")
+    if plan_limit is not None:
+        cap = min(cap, plan_limit)
+    plan_skipped = 0
     created = 0
     skipped = 0
 
@@ -100,6 +106,8 @@ async def sync_compat_alerts(
 
         if len(existing) + created >= cap:
             skipped += 1
+            if plan_limit is not None and cap == plan_limit:
+                plan_skipped += 1
             continue
 
         now = datetime.now(timezone.utc).isoformat()
@@ -117,4 +125,7 @@ async def sync_compat_alerts(
         existing.add(alert["id"])
         created += 1
 
-    return {"ok": True, "created": created, "skipped": skipped}
+    out = {"ok": True, "created": created, "skipped": skipped}
+    if plan_skipped:
+        out["plan_limit"] = {"limit": "alerts", "max": plan_limit, "skipped": plan_skipped}
+    return out

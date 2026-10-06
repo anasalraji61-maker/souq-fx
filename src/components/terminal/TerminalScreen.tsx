@@ -26,6 +26,7 @@ import { getCandles, getQuote, getMarketStatus, MarketStatus } from '../../api/m
 import { loadDrawings, saveDrawings } from '../../api/drawings';
 import { onCloudSyncApplied } from '../../api/cloudSync';
 import { onSessionChange } from '../../api/session';
+import { blockedByPlan, onPlanChange, planLimit, requestUpgrade } from '../../api/plan';
 import { loadAlerts, saveAlerts } from '../../api/alerts';
 import { playAlertChime } from '../../utils/sound';
 import { showSystemNotification, alertNotificationText, requestSystemNotifications } from '../../utils/systemNotify';
@@ -783,6 +784,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
   // Indicator Handlers (Part 1.7)
   const handleAddIndicator = (cellId: string, inst: IndicatorInstance) => {
+    const cell = cells.find((c) => c.id === cellId);
+    if (cell && blockedByPlan('indicators_per_chart', cell.indicators.length + 1)) return;
     setCells((prev) =>
       prev.map((c) => {
         if (c.id !== cellId) return c;
@@ -817,6 +820,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
 
   // Price Alert Handlers (Part 5)
   const handleAddAlert = (item: PriceAlertItem) => {
+    if (blockedByPlan('alerts', alerts.filter((a) => a.active && !a.triggered).length + 1)) return;
     // ask for system-notification permission from this user action (first alert only; no-op afterwards)
     void requestSystemNotifications();
     const next = [...alerts, item];
@@ -896,7 +900,10 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   };
 
   // Visible cells calculation based on layout (Part 4.1 & Part 1.5)
-  const maxCells = isPhone ? 1 : isTablet ? 2 : 4;
+  const [planCharts, setPlanCharts] = useState<number | null>(() => planLimit('charts'));
+  useEffect(() => onPlanChange(() => setPlanCharts(planLimit('charts'))), []);
+  const deviceMaxCells = isPhone ? 1 : isTablet ? 2 : 4;
+  const maxCells = planCharts === null ? deviceMaxCells : Math.max(1, Math.min(deviceMaxCells, planCharts));
   const layoutSpec = useMemo(() => effectiveLayout(layoutType, maxCells), [layoutType, maxCells]);
   const { sizes: layoutSizes, setSizes: setLayoutSizes, resetSizes: resetLayoutSizes } = useLayoutSizes(layoutSpec);
 
@@ -1154,6 +1161,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               <LayoutPicker
                 value={layoutType}
                 maxCells={maxCells}
+                deviceMaxCells={deviceMaxCells}
+                onLocked={() => requestUpgrade('charts', planCharts)}
                 onChange={(id) => {
                   setLayoutType(id);
                   setMaximizedCellId(null);

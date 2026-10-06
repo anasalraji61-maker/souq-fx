@@ -96,6 +96,13 @@ app.include_router(drawings_router)
 from routers_admin import router as admin_router, admin_token_configured
 
 app.include_router(admin_router)
+from routers_plans import router as plans_router
+import plans
+
+app.include_router(plans_router)
+from routers_billing import router as billing_router
+
+app.include_router(billing_router)
 
 from routers_alerts_compat import router as alerts_compat_router
 app.include_router(alerts_compat_router)
@@ -1412,6 +1419,13 @@ def list_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depen
     return {"alerts": db.list_alerts(uid, owner_key=key)}
 
 
+def _plan_alert_check(user_id: int | None, active_after: int) -> None:
+    """Plan limit for active price alerts (only while the admin has enforcement on)."""
+    limit = plans.effective_limits(plans.user_plan(user_id)["plan"]).get("alerts")
+    if limit is not None and active_after > limit:
+        raise HTTPException(status_code=403, detail={"error": "plan_limit", "limit": "alerts", "max": limit})
+
+
 @app.post("/api/alerts")
 def create_alert(
     body: AlertCreate,
@@ -1430,6 +1444,7 @@ def create_alert(
     }
     uid = user["user_id"] if user else None
     existing_alerts = db.list_alerts(uid, owner_key=key)
+    _plan_alert_check(uid, sum(1 for a in existing_alerts if a.get("active") and not a.get("triggered")) + 1)
     if len(existing_alerts) >= 50:
         raise HTTPException(
             status_code=400,
@@ -3404,13 +3419,27 @@ def _move_pct_text(move: float, first: float | None) -> str | None:
 
 
 @app.post("/api/ai/ask")
-def ai_ask(body: AiAsk):
+def ai_ask(
+    body: AiAsk,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+    request: Request = None,  # type: ignore[assignment]
+):
     """سؤال المساعد التعليمي. قرار أنس ٤: لا دخول ولا وقف ولا هدف ولا توصية شراء/بيع بأي مسار — كانت بطاقة
     `setup` تحمل اتجاهاً ودخولاً ووقف 1×ATR وهدف 2×ATR، والقالب «سيناريو مقترح». `setup` يبقى بالشكل (كل
     حقوله null) توافقاً مع العملاء القدامى، وردّ النموذج يمرّ بـ`openrouter_ai.guard_answer`. لا «احتمال نجاح» بأي مسار: كان `55 + hash(السؤال) % 28` (رقم عشوائي بمظهر
     إحصائي) ومسار OpenRouter يعيد 58 ثابتاً — نسبة نجاح مختلَقة يعرضها التطبيق لمتداول فردي كتقدير.
     `win_probability` يبقى بالشكل (null) توافقاً مع العملاء القدامى. وعند سلسلة demo البذرية (المزوّد
     متعذّر) لا دخول/وقف/هدف ولا اتجاه: كانت تُشتق من شموع مختلَقة وتُعرض كسيناريو على سعر حقيقي."""
+    uid = user["user_id"] if user else None
+    owner = f"u{uid}" if uid else (f"k{key}" if key else f"ip{request.client.host if request and request.client else '?'}")
+    ai_limit = plans.effective_limits(plans.user_plan(uid)["plan"]).get("ai_daily")
+    allowed, _used = plans.ai_take(owner, ai_limit)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "plan_limit", "limit": "ai_daily", "max": ai_limit if ai_limit is not None else plans.HARD_CAPS["ai_daily"]},
+        )
     q = body.question.strip()
     sym = market.canonical_symbol(body.symbol or "") or "EURUSD"
     lang = openrouter_ai.normalize_lang(body.lang)

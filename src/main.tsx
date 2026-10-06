@@ -4,9 +4,12 @@ import App from './App';
 import './index.css';
 import { installIdentityFetch } from './api/session';
 import { startCloudSync } from './api/cloudSync';
+import { startPlanTracking } from './api/plan';
+import { PlanHost } from './components/plan/PlanHost';
 
 installIdentityFetch(((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE) || '');
 startCloudSync();
+startPlanTracking();
 
 // PWA & Service Worker Initialization (MEGA BATCH D)
 if (typeof window !== 'undefined') {
@@ -89,3 +92,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
+// Plan dialogs (upgrade prompt, Stripe result) live in their own root so they work on every screen.
+const planRoot = document.createElement('div');
+planRoot.id = 'matrix-plan-root';
+document.body.appendChild(planRoot);
+ReactDOM.createRoot(planRoot).render(<PlanHost />);

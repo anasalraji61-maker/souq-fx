@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { planLimit, requestUpgrade } from '../../api/plan';
 import { MarketSymbol, Timeframe } from '../../types/market';
 import { apiClient } from '../../api/client';
 import { Sparkles, Send, Bot, ShieldAlert, X, ChevronRight, RefreshCw } from 'lucide-react';
@@ -62,7 +63,11 @@ export const AiCopilotPanel: React.FC<AiCopilotPanelProps> = ({
       });
 
       let replyText = '';
-      if (res.ok && res.data && res.data.answer) {
+      if (res.status === 429) {
+        const max = planLimit('ai_daily');
+        requestUpgrade('ai_daily', max);
+        replyText = 'وصلت إلى حدّ أسئلة المساعد الذكي لهذا اليوم. يتجدد الحد غداً، أو يمكنك الترقية لباقة أعلى.';
+      } else if (res.ok && res.data && res.data.answer) {
         replyText = res.data.answer;
       } else {
         replyText = `تحليل لزوج ${activeSymbol.symbol} (${timeframe}): السعر الحالي يتحرك بالقرب من ${activeSymbol.price} مع زخم متوازن. تأكد دائماً من الالتزام بإدارة رأس المال وتحديد أوامر وقف الخسارة قبل الدخول.`;

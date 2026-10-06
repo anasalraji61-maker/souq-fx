@@ -393,10 +393,13 @@ interface LayoutPickerProps {
   value: LayoutType;
   onChange: (id: LayoutType) => void;
   maxCells: number;
+  /** Cells the screen could show; layouts above `maxCells` but within this are locked by the plan. */
+  deviceMaxCells?: number;
+  onLocked?: () => void;
 }
 
 /** One button + dropdown with all layout icons (Arabic tooltips). */
-export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, maxCells }) => {
+export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, maxCells, deviceMaxCells, onLocked }) => {
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const current = getLayoutSpec(value);
@@ -425,23 +428,38 @@ export const LayoutPicker: React.FC<LayoutPickerProps> = ({ value, onChange, max
           <div className="text-[10px] text-[#7B8DA8] mb-1.5 px-0.5">تخطيط الشارتات</div>
           <div className="grid grid-cols-4 gap-1.5">
             {LAYOUT_SPECS.map((spec) => {
-              const disabled = spec.areas.length > maxCells;
+              const tooBig = spec.areas.length > maxCells;
+              const planLocked = tooBig && !!onLocked && spec.areas.length <= (deviceMaxCells ?? maxCells);
+              const disabled = tooBig && !planLocked;
               const isActive = spec.id === value || (value === '3' && spec.id === '1+2');
               return (
                 <button
                   key={spec.id}
                   disabled={disabled}
                   onClick={() => {
-                    onChange(spec.id);
                     setOpen(false);
+                    if (planLocked) {
+                      onLocked?.();
+                      return;
+                    }
+                    onChange(spec.id);
                   }}
-                  title={disabled ? `${spec.title} (غير متاح على هذه الشاشة)` : spec.title}
+                  title={
+                    disabled
+                      ? `${spec.title} (غير متاح على هذه الشاشة)`
+                      : planLocked
+                      ? `${spec.title} (في باقة أعلى)`
+                      : spec.title
+                  }
                   className={`flex flex-col items-center gap-1 p-1.5 rounded-md border transition-colors ${
                     isActive ? 'border-[#2DD4BF]/70 bg-[#12263A]' : 'border-transparent hover:bg-[#16233B]'
                   } ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <LayoutIcon spec={spec} active={isActive} />
-                  <span className="text-[9px] font-mono text-[#A3B4D0]">{spec.label}</span>
+                  <span className="text-[9px] font-mono text-[#A3B4D0]">
+                    {planLocked ? '🔒 ' : ''}
+                    {spec.label}
+                  </span>
                 </button>
               );
             })}

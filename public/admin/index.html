@@ -66,7 +66,9 @@
         <button role="tab" data-tab="overview" aria-selected="true">نظرة عامة</button>
         <button role="tab" data-tab="users" aria-selected="false">المستخدمون</button>
         <button role="tab" data-tab="reports" aria-selected="false">البلاغات <span id="repCount" class="count hidden">0</span></button>
+        <button role="tab" data-tab="payments" aria-selected="false">الاشتراكات</button>
         <button role="tab" data-tab="waitlist" aria-selected="false">قائمة الانتظار</button>
+        <button role="tab" data-tab="settings" aria-selected="false">الإعدادات</button>
         <button role="tab" data-tab="system" aria-selected="false">النظام</button>
       </div>
       <div class="row">
@@ -98,12 +100,13 @@
             <option value="active">نشط</option>
             <option value="suspended">موقوف</option>
             <option value="unverified">بريد غير مؤكد</option>
+            <option value="paying">مشتركون</option>
           </select>
           <span class="small" id="userTotal"></span>
         </div>
         <div class="table-wrap" style="margin-top:10px">
           <table>
-            <thead><tr><th>#</th><th>المستخدم</th><th>البريد</th><th>الحالة</th><th>التسجيل</th><th>آخر دخول</th><th>صفقات/تنبيهات</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>المستخدم</th><th>البريد</th><th>الحالة</th><th>الباقة</th><th>التسجيل</th><th>آخر دخول</th><th>صفقات/تنبيهات</th><th></th></tr></thead>
             <tbody id="userRows"></tbody>
           </table>
         </div>
@@ -134,6 +137,36 @@
       </div>
     </div>
 
+    <!-- Payments / subscriptions -->
+    <div data-pane="payments" class="hidden">
+      <div class="kpis" id="subKpis"></div>
+      <div class="panel">
+        <h3>آخر المدفوعات</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>التاريخ</th><th>المستخدم</th><th>الباقة</th><th>المدة</th><th>المبلغ</th><th>الطريقة</th><th>المرجع</th><th>ينتهي</th></tr></thead>
+            <tbody id="payRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div data-pane="settings" class="hidden">
+      <div class="panel">
+        <h3>تطبيق حدود الباقات</h3>
+        <p class="small">ما دام التطبيق متوقفاً فكل الحسابات تستخدم كل المزايا (فترة الإطلاق). عند التشغيل تُطبَّق حدود كل باقة كما في صفحة الأسعار.</p>
+        <label class="check"><input type="checkbox" id="enfToggle"> <span>تطبيق حدود الباقات الآن</span></label>
+      </div>
+      <div class="panel">
+        <h3>تعليمات الدفع المحلي (زين كاش / FIB)</h3>
+        <p class="small">تظهر للمستخدم في نافذة الترقية وصفحة الحساب.</p>
+        <textarea id="payInstr" rows="4" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px"></textarea>
+        <div style="margin-top:8px"><button class="btn-primary btn-sm" id="saveSettings">حفظ</button></div>
+      </div>
+      <div class="panel"><h3>حدود الباقات</h3><div class="table-wrap"><table id="limitsTable"></table></div></div>
+    </div>
+
     <!-- System -->
     <div data-pane="system" class="hidden">
       <div class="panel"><h3>حالة الخادم</h3><div class="kv" id="sysKv"></div></div>
@@ -142,6 +175,29 @@
   </section>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="planDlg" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px">
+  <form id="planForm" class="panel" style="width:100%;max-width:440px;margin:0">
+    <h3 id="planDlgTitle">تفعيل باقة</h3>
+    <div style="display:grid;gap:10px">
+      <label>الباقة
+        <select id="pfPlan" style="background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:40px">
+          <option value="basic">الأساسية ($10)</option><option value="pro" selected>المحترف ($15)</option><option value="vip">النخبة ($20)</option>
+        </select>
+      </label>
+      <label>المدة (أيام)<input type="text" id="pfDays" value="30" dir="ltr" inputmode="numeric"></label>
+      <label>المبلغ المستلم (دينار عراقي، اختياري)<input type="text" id="pfAmount" dir="ltr" inputmode="numeric" placeholder="22800"></label>
+      <label>طريقة الدفع
+        <select id="pfMethod" style="background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:40px">
+          <option value="zaincash">زين كاش</option><option value="fib">FIB</option><option value="qi">كي كارد</option><option value="asiahawala">آسيا حوالة</option><option value="cash">نقداً</option><option value="bank">تحويل بنكي</option><option value="other">أخرى</option>
+        </select>
+      </label>
+      <label>رقم العملية / المرجع<input type="text" id="pfRef" dir="ltr"></label>
+      <label>ملاحظة<input type="text" id="pfNote"></label>
+      <label class="check"><input type="checkbox" id="pfNotify" checked> <span>إرسال بريد للمشترك بالتفعيل (إذا كان البريد مفعّلاً)</span></label>
+      <div class="row"><button type="submit" class="btn-primary btn-sm">تفعيل</button><button type="button" class="btn-ghost btn-sm" id="pfCancel">إلغاء</button><button type="button" class="btn-danger btn-sm" id="pfEnd">إنهاء الباقة الحالية</button></div>
+    </div>
+  </form>
+</div>
 
 <script>
 (function () {
@@ -232,6 +288,8 @@
     if (name === 'reports') loadReports();
     if (name === 'waitlist') api('/api/admin/waitlist?limit=1000').then(renderWaitlist).catch(onError);
     if (name === 'system') api('/api/admin/system').then(renderSystem).catch(onError);
+    if (name === 'payments') api('/api/admin/payments?limit=300').then(renderPayments).catch(onError);
+    if (name === 'settings') api('/api/admin/settings').then(renderSettings).catch(onError);
   }
 
   // ---------------------------------------------------------------------------- overview
@@ -246,7 +304,8 @@
       kpi('نشطون (7 أيام)', fmtNum(u.active_7d), 'جلسات حيّة: ' + fmtNum(u.live_sessions)) +
       kpi('قائمة الانتظار', fmtNum(w.total), planSummary(w.by_plan)) +
       kpi('بلاغات معلّقة', fmtNum(d.reports_pending), d.reports_pending ? 'راجعها خلال 24 ساعة' : 'لا شيء معلّق') +
-      kpi('موقوفون / محذوفون', fmtNum(u.suspended) + ' / ' + fmtNum(u.deleted));
+      kpi('موقوفون / محذوفون', fmtNum(u.suspended) + ' / ' + fmtNum(u.deleted)) +
+      (d.subscriptions ? kpi('مشتركون فعّالون', fmtNum(d.subscriptions.paying_total), 'دخل شهري متوقع: $' + fmtNum(d.subscriptions.mrr_usd)) : '');
     var c = d.content || {};
     $('contentKpis').innerHTML =
       kpi('رسائل المجموعة (24 ساعة)', fmtNum(c.group_messages_24h)) +
@@ -299,7 +358,7 @@
       userTotal = d.total;
       $('userTotal').textContent = 'العدد: ' + fmtNum(d.total);
       $('userPage').textContent = d.total ? (userOffset + 1) + '–' + Math.min(userOffset + userLimit, d.total) + ' من ' + d.total : '';
-      $('userRows').innerHTML = d.users.length ? d.users.map(userRow).join('') : '<tr><td colspan="8" class="small">لا نتائج.</td></tr>';
+      $('userRows').innerHTML = d.users.length ? d.users.map(userRow).join('') : '<tr><td colspan="9" class="small">لا نتائج.</td></tr>';
     }).catch(onError);
   }
   function userRow(u) {
@@ -309,13 +368,15 @@
       ? '<button class="btn-ghost" data-act="unsuspend" data-id="' + u.id + '">رفع الإيقاف</button>'
       : '<button class="btn-danger" data-act="suspend" data-id="' + u.id + '" data-name="' + esc(u.username) + '">إيقاف</button>';
     return '<tr><td class="ltr">' + u.id + '</td><td class="ltr">' + esc(u.username) + (u.role ? ' <span class="small">(' + esc(u.role) + ')</span>' : '') + '</td>' +
-      '<td class="ltr">' + esc(u.email) + '</td><td>' + status + '</td><td>' + fmtDate(u.created_at) + '</td><td>' + fmtDate(u.last_login_at) + '</td>' +
-      '<td class="ltr">' + u.trades + ' / ' + u.alerts + '</td><td>' + action + '</td></tr>';
+      '<td class="ltr">' + esc(u.email) + '</td><td>' + status + '</td><td>' + planCell(u) + '</td><td>' + fmtDate(u.created_at) + '</td><td>' + fmtDate(u.last_login_at) + '</td>' +
+      '<td class="ltr">' + u.trades + ' / ' + u.alerts + '</td><td><div class="row" style="flex-wrap:nowrap">' +
+      '<button class="btn-primary" data-act="plan" data-id="' + u.id + '" data-name="' + esc(u.username) + '">باقة</button>' + action + '</div></td></tr>';
   }
   $('userRows').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-act]');
     if (!b) return;
     var id = b.dataset.id;
+    if (b.dataset.act === 'plan') { openPlanDlg(id, b.dataset.name); return; }
     if (b.dataset.act === 'suspend') {
       var reason = prompt('سبب إيقاف ' + b.dataset.name + ' (يظهر لك فقط):', 'مخالفة قواعد المجتمع');
       if (reason === null) return;
@@ -396,6 +457,7 @@
       '<div>حجم قاعدة البيانات</div><div class="ltr">' + (s.db_bytes ? (s.db_bytes / 1048576).toFixed(1) + ' MB' : '—') + '</div>' +
       '<div>مفتاح بيانات الأسعار</div><div>' + yesNo(s.market_data_key) + (s.market_rpm ? ' <span class="small ltr">(' + esc(s.market_rpm) + ' req/min)</span>' : '') + '</div>' +
       '<div>البريد الإلكتروني (SMTP)</div><div>' + yesNo(s.email) + '</div>' +
+      '<div>الدفع بالبطاقة (Stripe)</div><div>' + yesNo(s.stripe) + (s.stripe && s.stripe_test_mode ? ' <span class="pill warn">وضع تجريبي</span>' : '') + '</div>' +
       '<div>العنوان العام</div><div class="ltr">' + esc(s.public_base_url || '— (لم يُضبط نطاق بعد)') + '</div>' +
       '<div>التداول الحقيقي</div><div>' + (s.live_trading_enabled ? '<span class="pill bad">مفعّل!</span>' : '<span class="pill ok">مقفل (آمن)</span>') + '</div>';
     var p = s.provider_stats || {};
@@ -406,6 +468,72 @@
       return '<div class="ltr">' + esc(k) + '</div><div class="ltr">' + esc(v === null ? '—' : v) + '</div>';
     }).join('') : '<div class="small">لا إحصاءات بعد.</div><div></div>';
   }
+
+  // ---------------------------------------------------------------------------- plans
+  var PLAN_AR = { free: 'المجانية', basic: 'الأساسية', pro: 'المحترف', vip: 'النخبة' };
+  var METHOD_AR = { zaincash: 'زين كاش', fib: 'FIB', qi: 'كي كارد', asiahawala: 'آسيا حوالة', cash: 'نقداً', bank: 'بنك', other: 'أخرى', stripe: 'Stripe (بطاقة)' };
+  function planCell(u) {
+    if (!u.plan || u.plan === 'free') return '<span class="small">مجانية</span>';
+    return '<span class="pill ok">' + esc(PLAN_AR[u.plan] || u.plan) + '</span><div class="small">حتى ' + fmtDate(u.plan_expires_at).split(' ')[0] + '</div>';
+  }
+  var dlgUser = null;
+  function openPlanDlg(id, name) {
+    dlgUser = id;
+    $('planDlgTitle').textContent = 'تفعيل باقة لـ ' + name;
+    $('pfDays').value = '30'; $('pfAmount').value = ''; $('pfRef').value = ''; $('pfNote').value = '';
+    $('planDlg').classList.remove('hidden');
+  }
+  function closePlanDlg() { $('planDlg').classList.add('hidden'); dlgUser = null; }
+  $('pfCancel').addEventListener('click', closePlanDlg);
+  $('planDlg').addEventListener('click', function (e) { if (e.target === $('planDlg')) closePlanDlg(); });
+  $('planForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var days = parseInt($('pfDays').value, 10);
+    if (!(days >= 1 && days <= 3660)) { toast('المدة يجب أن تكون بين 1 و3660 يوماً'); return; }
+    var amount = $('pfAmount').value.replace(/[^0-9]/g, '');
+    var body = { plan: $('pfPlan').value, days: days, method: $('pfMethod').value, reference: $('pfRef').value.trim() || null,
+      note: $('pfNote').value.trim() || null, notify: $('pfNotify').checked, amount_iqd: amount ? parseInt(amount, 10) : null };
+    api('/api/admin/users/' + dlgUser + '/plan', { method: 'POST', body: body }).then(function (r) {
+      toast('تم التفعيل حتى ' + fmtDate(r.expires_at).split(' ')[0] + (r.emailed ? ' — أُرسل بريد للمشترك' : ''));
+      closePlanDlg(); loadUsers();
+    }).catch(onError);
+  });
+  $('pfEnd').addEventListener('click', function () {
+    if (!confirm('إنهاء باقة هذا المستخدم الآن وإرجاعه للمجانية؟')) return;
+    api('/api/admin/users/' + dlgUser + '/plan/cancel', { method: 'POST', body: {} })
+      .then(function () { toast('تم إنهاء الباقة.'); closePlanDlg(); loadUsers(); }).catch(onError);
+  });
+  function renderPayments(d) {
+    var st = d.stats || {}, a = st.active || {};
+    $('subKpis').innerHTML = kpi('مشتركون فعّالون', fmtNum(st.paying_total), 'أساسية ' + (a.basic || 0) + ' · محترف ' + (a.pro || 0) + ' · نخبة ' + (a.vip || 0)) +
+      kpi('دخل شهري متوقع', '$' + fmtNum(st.mrr_usd)) + kpi('مدفوعات محلية (30 يوماً)', fmtNum(st.revenue_30d_iqd) + ' د.ع') +
+      kpi('تنتهي خلال 7 أيام', fmtNum(st.expiring_7d), 'ذكّرهم بالتجديد');
+    $('payRows').innerHTML = d.payments.length ? d.payments.map(function (p) {
+      var amount = p.amount_usd_cents ? '$' + (p.amount_usd_cents / 100).toFixed(2) : (p.amount_iqd ? fmtNum(p.amount_iqd) + ' د.ع' : '—');
+      return '<tr><td>' + fmtDate(p.created_at) + '</td><td class="ltr">' + esc(p.username || p.user_id) + '</td><td>' + esc(PLAN_AR[p.plan] || p.plan) +
+        '</td><td class="ltr">' + p.days + 'd</td><td class="ltr">' + amount + '</td><td>' + esc(METHOD_AR[p.method] || p.method || '—') +
+        '</td><td class="ltr">' + esc(p.reference || '—') + '</td><td>' + fmtDate(p.expires_at).split(' ')[0] + '</td></tr>';
+    }).join('') : '<tr><td colspan="8" class="small">لا مدفوعات بعد.</td></tr>';
+  }
+  function renderSettings(s) {
+    $('enfToggle').checked = !!s.plan_enforcement;
+    $('payInstr').value = s.payment_instructions || '';
+    var keys = ['charts', 'indicators_per_chart', 'watchlists', 'alerts', 'ai_daily'];
+    var names = { charts: 'شارتات', indicators_per_chart: 'مؤشرات/شارت', watchlists: 'قوائم مراقبة', alerts: 'تنبيهات نشطة', ai_daily: 'أسئلة الذكاء/يوم' };
+    var plansOrder = ['free', 'basic', 'pro', 'vip'];
+    $('limitsTable').innerHTML = '<thead><tr><th></th>' + plansOrder.map(function (p) { return '<th>' + PLAN_AR[p] + ' ($' + s.prices_usd[p] + ')</th>'; }).join('') + '</tr></thead><tbody>' +
+      keys.map(function (k) { return '<tr><td>' + names[k] + '</td>' + plansOrder.map(function (p) { var v = s.plan_limits[p][k]; return '<td class="ltr">' + (v === null ? '∞' : v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody>';
+  }
+  $('enfToggle').addEventListener('change', function () {
+    var on = $('enfToggle').checked;
+    if (on && !confirm('تشغيل حدود الباقات؟ الحسابات المجانية ستصبح محدودة فوراً.')) { $('enfToggle').checked = false; return; }
+    api('/api/admin/settings', { method: 'POST', body: { plan_enforcement: on } })
+      .then(function (s) { renderSettings(s); toast(on ? 'الحدود مفعّلة.' : 'الحدود متوقفة: كل المزايا مفتوحة.'); }).catch(onError);
+  });
+  $('saveSettings').addEventListener('click', function () {
+    api('/api/admin/settings', { method: 'POST', body: { payment_instructions: $('payInstr').value } })
+      .then(function (s) { renderSettings(s); toast('تم الحفظ.'); }).catch(onError);
+  });
 
   // ---------------------------------------------------------------------------- start
   if (token) {

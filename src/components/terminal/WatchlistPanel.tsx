@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { onCloudSyncApplied } from '../../api/cloudSync';
+import { blockedByPlan } from '../../api/plan';
 import { MarketSymbol } from '../../types/market';
 import { getQuote, MarketQuote, getMarketStatus, MarketStatus } from '../../api/market';
 import { Search, Plus, Trash2, GripVertical, ChevronDown, TrendingUp, TrendingDown, Clock, X } from 'lucide-react';
@@ -172,6 +173,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
   };
 
   const handleCreateNewList = () => {
+    if (blockedByPlan('watchlists', watchlists.length + 1)) return;
     const name = prompt('أدخل اسم قائمة المراقبة الجديدة:');
     if (!name?.trim()) return;
 

@@ -343,6 +343,12 @@ def init_db() -> None:
         _migrate_owner_key(c)
         _migrate_password_resets(c)
         _migrate_admin(c)
+        import plans as _plans  # local import: plans imports db
+
+        _plans.migrate(c)
+        import stripe_billing as _sb
+
+        _sb.migrate(c)
 
 
 def _migrate_owner_key(c: sqlite3.Connection) -> None:

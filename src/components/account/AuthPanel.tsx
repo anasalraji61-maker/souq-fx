@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { LogIn, LogOut, UserPlus, KeyRound, Trash2, ShieldCheck, Loader2, Cloud } from 'lucide-react';
+import { LogIn, LogOut, UserPlus, KeyRound, Trash2, ShieldCheck, Loader2, Cloud, Crown, CreditCard } from 'lucide-react';
 import { login, register, logout, refreshMe, changePassword, deleteAccount, emailAvailable, forgotPassword } from '../../api/auth';
 import { getSessionUser, onSessionChange, SessionUser } from '../../api/session';
 import { getCloudSyncStatus, onCloudSyncStatus, syncNow, CloudSyncStatus } from '../../api/cloudSync';
+import { getPlan, onPlanChange, refreshPlan, requestUpgrade, PlanInfo } from '../../api/plan';
+import { billingConfig, openBillingPortal } from '../../api/billing';
 
 type Mode = 'login' | 'register';
 
@@ -190,6 +192,7 @@ export const AuthPanel: React.FC = () => {
           </div>
           <p className="text-[10px] text-[#64748B] mt-2">يحذف الحساب وكل بياناته من الخادم، ولا يمكن التراجع.</p>
         </details>
+        <PlanCard />
         <LegalLinks />
       </section>
     );
@@ -365,5 +368,65 @@ const ForgotPassword: React.FC<{ initialEmail: string }> = ({ initialEmail }) =>
         </p>
       )}
     </form>
+  );
+};
+
+/** Current plan, renewal date and the way to upgrade / manage the card subscription. */
+const PlanCard: React.FC = () => {
+  const [plan, setPlan] = useState<PlanInfo | null>(getPlan());
+  const [billing, setBilling] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    const off = onPlanChange(setPlan);
+    void refreshPlan();
+    void billingConfig().then((c) => setBilling(c.enabled));
+    return off;
+  }, []);
+  if (!plan) return null;
+  const paid = plan.plan !== 'free';
+  const end = plan.expires_at
+    ? new Date(plan.expires_at * 1000).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric', numberingSystem: 'latn' })
+    : null;
+  return (
+    <div className={`rounded-lg border p-3 space-y-2 ${paid ? 'border-amber-500/40 bg-amber-500/5' : 'border-[#243049] bg-[#0B1220]'}`}>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Crown className={`w-4 h-4 ${paid ? 'text-amber-400' : 'text-[#64748B]'}`} />
+          <span className="text-xs font-bold text-[#E8EEF9]">الباقة: {plan.label}</span>
+          {paid && end && <span className="text-[11px] text-[#94A3B8]">حتى {end}{plan.days_left !== null ? ` (${plan.days_left} يوماً)` : ''}</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          {paid && billing && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                const failure = await openBillingPortal();
+                setBusy(false);
+                if (failure) setMsg(failure);
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#243049] text-[#A3B4D0] hover:text-white text-[11px] cursor-pointer disabled:opacity-50"
+            >
+              <CreditCard className="w-3.5 h-3.5" /> إدارة الاشتراك والفواتير
+            </button>
+          )}
+          {plan.plan !== 'vip' && (
+            <button
+              type="button"
+              onClick={() => requestUpgrade('charts', plan.limits.charts)}
+              className="px-3 py-1.5 rounded-lg bg-[#2DD4BF] text-[#042F2E] font-bold text-[11px] cursor-pointer"
+            >
+              {paid ? 'ترقية الباقة' : 'اشترك'}
+            </button>
+          )}
+        </div>
+      </div>
+      {!plan.enforcement && (
+        <p className="text-[10px] text-[#64748B]">فترة الإطلاق: كل المزايا مفتوحة الآن لجميع الحسابات.</p>
+      )}
+      {msg && <p className="text-[11px] text-rose-300">{msg}</p>}
+    </div>
   );
 };

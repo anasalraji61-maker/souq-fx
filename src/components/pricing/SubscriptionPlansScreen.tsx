@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { billingConfig, startCheckout } from '../../api/billing';
+import { planIdFrom } from '../../api/waitlist';
 import {
   Check,
   X,
@@ -142,7 +144,24 @@ export const SubscriptionPlansScreen: React.FC = () => {
   } | null>(null);
   const [isIraqiModalOpen, setIsIraqiModalOpen] = useState(false);
 
-  const handleOpenNotify = (name: string, price: string, period: string, usd: number) => {
+  // Card payments (Stripe) when the server has billing on; otherwise the launch waitlist.
+  const [billingOn, setBillingOn] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState<number | null>(null);
+  useEffect(() => {
+    void billingConfig().then((c) => setBillingOn(c.enabled));
+  }, []);
+
+  const handleOpenNotify = async (name: string, price: string, period: string, usd: number) => {
+    const plan = planIdFrom(name, usd);
+    if (billingOn && plan && plan !== 'free') {
+      setCheckoutError(null);
+      setCheckoutBusy(usd);
+      const failure = await startCheckout(plan);
+      setCheckoutBusy(null);
+      if (failure) setCheckoutError(failure);
+      return;
+    }
     setSelectedPlanForNotify({ name, price, period, usd });
   };
 
@@ -185,6 +204,11 @@ export const SubscriptionPlansScreen: React.FC = () => {
           </div>
         </div>
 
+        {checkoutError && (
+          <div role="alert" className="mx-auto max-w-xl mb-4 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-200 text-sm text-center">
+            {checkoutError}
+          </div>
+        )}
         {/* 4 Monthly Plans Grid (Free $0, Basic $10, Pro $15 [Most Popular], VIP $20) */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-stretch">
           {/* Plan 1: Free ($0) */}
@@ -299,7 +323,7 @@ export const SubscriptionPlansScreen: React.FC = () => {
               className="w-full mt-6 py-3 rounded-xl text-xs font-bold bg-[#14233C] hover:bg-[#1C3256] text-[#2DD4BF] border border-[#2DD4BF]/40 transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
             >
               <Bell className="w-3.5 h-3.5" />
-              <span>أبلغني عند الإطلاق ($10/شهر)</span>
+              <span>{checkoutBusy === 10 ? 'جارٍ فتح صفحة الدفع…' : billingOn ? 'اشترك الآن ($10/شهر)' : 'أبلغني عند الإطلاق ($10/شهر)'}</span>
             </button>
           </div>
 
@@ -365,7 +389,7 @@ export const SubscriptionPlansScreen: React.FC = () => {
               className="w-full mt-6 py-3 rounded-xl text-xs font-black bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#042F2E] transition-all shadow-lg active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
             >
               <Bell className="w-4 h-4" />
-              <span>أبلغني عند الإطلاق ($15/شهر)</span>
+              <span>{checkoutBusy === 15 ? 'جارٍ فتح صفحة الدفع…' : billingOn ? 'اشترك الآن ($15/شهر)' : 'أبلغني عند الإطلاق ($15/شهر)'}</span>
             </button>
           </div>
 
@@ -420,7 +444,7 @@ export const SubscriptionPlansScreen: React.FC = () => {
               className="w-full mt-6 py-3 rounded-xl text-xs font-bold bg-[#132A4A] hover:bg-[#1B3B66] text-[#38BDF8] border border-[#38BDF8]/40 transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
             >
               <Bell className="w-3.5 h-3.5" />
-              <span>أبلغني عند الإطلاق ($20/شهر)</span>
+              <span>{checkoutBusy === 20 ? 'جارٍ فتح صفحة الدفع…' : billingOn ? 'اشترك الآن ($20/شهر)' : 'أبلغني عند الإطلاق ($20/شهر)'}</span>
             </button>
           </div>
         </div>
@@ -541,7 +565,7 @@ export const SubscriptionPlansScreen: React.FC = () => {
                   onClick={() => handleOpenNotify('الباقة الأساسية', '$10', 'شهرياً', 10)}
                   className="text-xs px-3.5 py-2.5 rounded-xl bg-[#14233C] hover:bg-[#1E3256] text-[#2DD4BF] border border-[#2DD4BF]/40 font-bold min-h-[44px] inline-flex items-center justify-center cursor-pointer transition-colors shrink-0"
                 >
-                  أبلغني عند الإطلاق
+                  {billingOn ? 'اشترك الآن' : 'أبلغني عند الإطلاق'}
                 </button>
               </div>
               <div className="text-[11px] font-bold text-[#38BDF8] p-2 bg-[#101C31] rounded-lg">
@@ -572,7 +596,7 @@ export const SubscriptionPlansScreen: React.FC = () => {
                   onClick={() => handleOpenNotify('باقة المحترف (Pro)', '$15', 'شهرياً', 15)}
                   className="text-xs px-3.5 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#042F2E] font-black shadow-md min-h-[44px] inline-flex items-center justify-center cursor-pointer transition-colors shrink-0"
                 >
-                  أبلغني عند الإطلاق
+                  {billingOn ? 'اشترك الآن' : 'أبلغني عند الإطلاق'}
                 </button>
               </div>
               <div className="text-[11px] font-bold text-[#2DD4BF] p-2 bg-[#122842] rounded-lg">
@@ -600,7 +624,7 @@ export const SubscriptionPlansScreen: React.FC = () => {
                   onClick={() => handleOpenNotify('باقة النخبة (VIP)', '$20', 'شهرياً', 20)}
                   className="text-xs px-3.5 py-2.5 rounded-xl bg-[#132A4A] hover:bg-[#1B3B66] text-[#38BDF8] border border-[#38BDF8]/40 font-bold min-h-[44px] inline-flex items-center justify-center cursor-pointer transition-colors shrink-0"
                 >
-                  أبلغني عند الإطلاق
+                  {billingOn ? 'اشترك الآن' : 'أبلغني عند الإطلاق'}
                 </button>
               </div>
               <div className="text-[11px] font-bold text-[#38BDF8] p-2 bg-[#10213A] rounded-lg">

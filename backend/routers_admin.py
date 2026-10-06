@@ -145,6 +145,7 @@ def admin_overview(days: int = Query(default=30, ge=7, le=180)):
         "signups_per_day": {"start": start, "days": days, "counts": per_day},
         "waitlist": db.waitlist_counts(),
         "reports_pending": db.count_reported_items(),
+        "subscriptions": __import__("plans").subscription_stats(),
         "content": content,
     }
 
@@ -159,7 +160,7 @@ def _has_column(c, table: str, col: str) -> bool:
 @router.get("/api/admin/users", dependencies=[Depends(require_admin)])
 def admin_users(
     q: str = Query(default="", max_length=100),
-    status: str = Query(default="all", pattern="^(all|active|suspended|unverified)$"),
+    status: str = Query(default="all", pattern="^(all|active|suspended|unverified|paying)$"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0, le=1_000_000),
 ):
@@ -176,11 +177,15 @@ def admin_users(
         where.append("u.suspended_at IS NULL")
     elif status == "unverified":
         where.append("u.email_verified=0")
+    elif status == "paying":
+        where.append("u.plan IN ('basic','pro','vip') AND u.plan_expires_at > ?")
+        args.append(time.time())
     sql_where = " AND ".join(where)
     with db._conn() as c:
         total = _count(c, f"SELECT COUNT(*) FROM users u WHERE {sql_where}", tuple(args))
         rows = c.execute(
             f"""SELECT u.id, u.username, u.email, u.email_verified, u.created_at, u.suspended_at, u.suspend_reason,
+                       u.plan, u.plan_expires_at,
                        n.role,
                        (SELECT MAX(expires_at) FROM sessions s WHERE s.user_id=u.id) AS last_session_exp,
                        (SELECT COUNT(*) FROM trades t WHERE t.user_id=u.id) AS trades,
@@ -204,6 +209,8 @@ def admin_users(
                 "last_login_at": (float(exp) - 30 * 86400) if exp else None,
                 "suspended_at": r["suspended_at"],
                 "suspend_reason": r["suspend_reason"],
+                "plan": r["plan"] if (r["plan"] and r["plan"] != "free" and r["plan_expires_at"] and float(r["plan_expires_at"]) > time.time()) else "free",
+                "plan_expires_at": r["plan_expires_at"],
                 "trades": int(r["trades"] or 0),
                 "alerts": int(r["alerts"] or 0),
             }
@@ -273,4 +280,6 @@ def admin_system():
         "public_base_url": os.getenv("PUBLIC_BASE_URL") or None,
         "live_trading_enabled": (os.getenv("LIVE_TRADING_ENABLED") or "false").lower() == "true",
         "moderation_token": bool((os.getenv("MATRIX_MODERATION_TOKEN") or "").strip()),
+        "stripe": __import__("stripe_billing").configured(),
+        "stripe_test_mode": __import__("stripe_billing").test_mode(),
     }
