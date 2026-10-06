@@ -1,404 +1,283 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Compass, Play, Loader2, ArrowUpDown, ArrowUp, ArrowDown, LineChart, AlertTriangle, Info } from 'lucide-react';
 import { MarketSymbol } from '../../types/market';
-import {
-  getScreenerFilters,
-  runScreener,
-  ScreenerFilterRule,
-  ScreenerHit,
-} from '../../api/toolsApi';
-import { Eye, TrendingUp, TrendingDown, Compass, RefreshCw, AlertCircle, Filter } from 'lucide-react';
-import { OfflineBadge } from '../common/OfflineBadge';
-import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
+import { runScreener, ScreenerHit, ScreenerFilterId, SCREENER_FILTER_IDS, SCREENER_UNIVERSE, ScreenerRunResult } from '../../api/toolsApi';
+import { LangId, gx, fmt, getIntlLocale, GxDict } from '../../i18n/locales';
+import { EmptyState, ErrorState } from '../common/ScreenState';
 
 interface MarketScreenerProps {
   symbols: MarketSymbol[];
-  onSelectSymbolForChart: (symbol: string) => void;
+  onSelectSymbolForChart: (sym: string) => void;
+  currentLang?: LangId;
 }
 
-export const MarketScreener: React.FC<MarketScreenerProps> = ({
-  symbols,
-  onSelectSymbolForChart,
-}) => {
-  const [availableFilters, setAvailableFilters] = useState<ScreenerFilterRule[]>([]);
-  const [selectedFilterId, setSelectedFilterId] = useState<string>('all');
-  const [selectedTimeframe, setSelectedTimeframe] = useState<string>('15m');
-  const [results, setResults] = useState<ScreenerHit[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isOffline, setIsOffline] = useState<boolean>(false);
+type Cat = keyof typeof SCREENER_UNIVERSE;
+type SortKey = 'symbol' | 'last' | 'change_pct' | 'rsi' | 'matched';
+const TIMEFRAMES = ['15m', '1H', '4H', 'D'] as const;
+const STORE_KEY = 'matrix.tools.screener.v2';
 
-  // 1. Fetch available filters from backend /api/screener/filters
-  const loadFilters = useCallback(async () => {
-    try {
-      const res = await getScreenerFilters();
-      setAvailableFilters(res.filters);
-      setIsOffline(res.isOffline);
-    } catch {
-      setIsOffline(true);
+function filterLabel(x: GxDict, f: string): string {
+  const m: Record<string, string> = {
+    rsi_oversold: x.t_fRsiOversold,
+    rsi_overbought: x.t_fRsiOverbought,
+    ma_cross_up: x.t_fMaUp,
+    ma_cross_down: x.t_fMaDown,
+    macd_cross_up: x.t_fMacdUp,
+    bullish: x.t_fBullish,
+    bearish: x.t_fBearish,
+  };
+  return m[f] || f;
+}
+
+function loadSaved(): { cats: Cat[]; filters: ScreenerFilterId[]; tf: string } {
+  try {
+    const v = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (v && Array.isArray(v.cats) && Array.isArray(v.filters)) {
+      return {
+        cats: v.cats.filter((c: string) => c in SCREENER_UNIVERSE),
+        filters: v.filters.filter((f: string) => (SCREENER_FILTER_IDS as readonly string[]).includes(f)),
+        tf: TIMEFRAMES.includes(v.tf) ? v.tf : '1H',
+      };
     }
-  }, []);
+  } catch {
+    // ignore
+  }
+  return { cats: ['forex', 'metals'], filters: ['rsi_oversold', 'rsi_overbought'], tf: '1H' };
+}
 
-  // 2. Run screener scan via POST /api/screener/run
-  const executeScan = useCallback(async () => {
-    setIsLoading(true);
+function priceText(v: number | null, sym: string): string {
+  if (v === null) return '—';
+  const d = sym.endsWith('JPY') ? 3 : sym === 'XAUUSD' || sym.endsWith('OIL') ? 2 : sym === 'XAGUSD' ? 3 : 5;
+  return v.toFixed(d);
+}
+
+const Th: React.FC<{ k: SortKey; label: string; end?: boolean; sort: { key: SortKey; dir: 1 | -1 }; sortBy: (k: SortKey) => void }> = ({ k, label, end, sort, sortBy }) => (
+  <th scope="col" className={`px-3 py-2 font-semibold ${end ? 'text-end' : 'text-start'}`} aria-sort={sort.key === k ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
+    <button onClick={() => sortBy(k)} className={`inline-flex items-center gap-1 cursor-pointer hover:text-white ${sort.key === k ? 'text-[#2DD4BF]' : ''}`} data-testid={`sort-${k}`}>
+      {label}
+      {sort.key === k ? sort.dir === 1 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" /> : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+    </button>
+  </th>
+);
+
+
+export const MarketScreener: React.FC<MarketScreenerProps> = ({ onSelectSymbolForChart, currentLang = 'ar' }) => {
+  const x = gx(currentLang);
+  const saved = useMemo(loadSaved, []);
+  const [cats, setCats] = useState<Cat[]>(saved.cats.length ? saved.cats : ['forex']);
+  const [filters, setFilters] = useState<ScreenerFilterId[]>(saved.filters.length ? saved.filters : ['rsi_oversold']);
+  const [tf, setTf] = useState<string>(saved.tf);
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<ScreenerRunResult | null>(null);
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'change_pct', dir: -1 });
+
+  const universe = cats.flatMap((c) => SCREENER_UNIVERSE[c]);
+  const canRun = universe.length > 0 && filters.length > 0 && !busy;
+
+  const persist = (c: Cat[], f: ScreenerFilterId[], t: string) => {
     try {
-      const filtersToSend = selectedFilterId === 'all' ? [] : [selectedFilterId];
-      const symbolNames = symbols.map((s) => s.symbol);
-      const res = await runScreener({
-        timeframe: selectedTimeframe,
-        filters: filtersToSend,
-        symbols: symbolNames,
-      });
-
-      if (res.results && res.results.length > 0) {
-        setResults(res.results);
-      } else {
-        // Fallback: evaluate filters locally over current symbols if backend has no candles yet
-        const localHits: ScreenerHit[] = symbols.map((s) => {
-          const rawRsi = Math.min(85, Math.max(18, 50 + s.change24h * 14 + (s.price % 10)));
-          const rsi = parseFloat(rawRsi.toFixed(1));
-          let trend: 'bullish' | 'bearish' | 'neutral' = 'neutral';
-          if (s.change24h > 0.2) trend = 'bullish';
-          else if (s.change24h < -0.2) trend = 'bearish';
-
-          let signal = 'neutral';
-          if (rsi < 32) signal = 'strong_buy';
-          else if (rsi > 68) signal = 'strong_sell';
-          else if (trend === 'bullish' && rsi > 50) signal = 'buy';
-          else if (trend === 'bearish' && rsi < 50) signal = 'sell';
-
-          return {
-            symbol: s.symbol,
-            name: s.name,
-            price: s.price,
-            change24h: s.change24h,
-            rsi,
-            trend,
-            signal,
-            reasons: [trend === 'bullish' ? 'زخم شرائي' : 'زخم بيعي'],
-          };
-        });
-
-        // Filter according to selection
-        const filtered = localHits.filter((item) => {
-          if (selectedFilterId === 'rsi_oversold') return (item.rsi ?? 50) <= 35;
-          if (selectedFilterId === 'rsi_overbought') return (item.rsi ?? 50) >= 65;
-          if (selectedFilterId === 'bullish_ma') return item.trend === 'bullish';
-          if (selectedFilterId === 'bearish_ma') return item.trend === 'bearish';
-          return true;
-        });
-
-        setResults(filtered);
-      }
-      if (res.isOffline) setIsOffline(true);
+      localStorage.setItem(STORE_KEY, JSON.stringify({ cats: c, filters: f, tf: t }));
     } catch {
-      setIsOffline(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedFilterId, selectedTimeframe, symbols]);
-
-  useEffect(() => {
-    loadFilters();
-  }, [loadFilters]);
-
-  useEffect(() => {
-    executeScan();
-  }, [executeScan]);
-
-  const getSignalBadge = (sig?: string) => {
-    switch (sig) {
-      case 'strong_buy':
-        return (
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#22C55E] text-[#051329] shadow-xs">
-            شراء قوي
-          </span>
-        );
-      case 'buy':
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-[#22C55E] border border-emerald-500/30">
-            شراء
-          </span>
-        );
-      case 'strong_sell':
-        return (
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EF4444] text-white shadow-xs">
-            بيع قوي
-          </span>
-        );
-      case 'sell':
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/15 text-[#EF4444] border border-rose-500/30">
-            بيع
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#162033] text-[#A3B4D0]">
-            حيادي
-          </span>
-        );
+      // ignore
     }
   };
 
+  const run = async () => {
+    if (!canRun) return;
+    setBusy(true);
+    persist(cats, filters, tf);
+    const r = await runScreener({ timeframe: tf, filters, symbols: universe });
+    setRes(r);
+    setBusy(false);
+  };
+
+  const rows = useMemo(() => {
+    if (!res) return [];
+    const val = (h: ScreenerHit): number | string | null => {
+      if (sort.key === 'symbol') return h.symbol;
+      if (sort.key === 'matched') return h.filters_matched.length;
+      if (sort.key === 'change_pct') return h.change_pct;
+      return h[sort.key];
+    };
+    return [...res.results].sort((a, b) => {
+      const va = val(a);
+      const vb = val(b);
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1; // missing values always last
+      if (vb === null) return -1;
+      if (typeof va === 'string' && typeof vb === 'string') return va.localeCompare(vb) * sort.dir;
+      return ((va as number) - (vb as number)) * sort.dir;
+    });
+  }, [res, sort]);
+
+  const sortBy = (key: SortKey) =>
+    setSort((s) => (s.key === key ? { key, dir: (s.dir * -1) as 1 | -1 } : { key, dir: key === 'symbol' ? 1 : -1 }));
+
+  const chip = (active: boolean) =>
+    `shrink-0 min-h-[36px] px-3 rounded-full text-[12px] font-semibold border cursor-pointer ${
+      active ? 'bg-[#2DD4BF] text-[#042F2E] border-transparent' : 'border-[#24344E] text-[#A3B4D0] hover:text-white'
+    }`;
+  const timeFmt = new Intl.DateTimeFormat(getIntlLocale(currentLang), { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short', numberingSystem: 'latn' });
+
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 select-none text-xs">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#243049]">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-[#2DD4BF]/10 text-[#2DD4BF] border border-[#2DD4BF]/20">
-            <Compass className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-[#E8EEF9]">ماسح السوق الفني</h2>
-              {isOffline && <OfflineBadge forceShow />}
-            </div>
-            <p className="text-[#7B8DA8]">
-              فحص فوري لقواعد المؤشرات الفنية، التشبع السعري والاتجاه عبر خادم التحليل.
-            </p>
-          </div>
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4" data-testid="screener">
+      <div className="flex items-center gap-2">
+        <div className="p-2 rounded-xl bg-[#2DD4BF]/10 text-[#2DD4BF]">
+          <Compass className="w-5 h-5" />
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Timeframe Selector */}
-          <select
-            value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
-            className="bg-[#121A2B] border border-[#243049] rounded-xl px-3 py-2 text-xs text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
-          >
-            <option value="5m">إطار 5 دقائق (5m)</option>
-            <option value="15m">إطار 15 دقيقة (15m)</option>
-            <option value="1h">إطار 1 ساعة (1H)</option>
-            <option value="4h">إطار 4 ساعات (4H)</option>
-            <option value="1d">إطار يومي (1D)</option>
-          </select>
-
-          <button
-            onClick={executeScan}
-            disabled={isLoading}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer min-h-[44px] shadow-md"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>مسح السوق</span>
-          </button>
+        <div>
+          <h2 className="text-base font-bold text-[#E8EEF9]">{x.t_scrTitle}</h2>
+          <p className="text-[12px] text-[#7B8DA8]">{x.t_scrSub}</p>
         </div>
       </div>
 
-      {/* Filter Tabs from /api/screener/filters */}
-      <div className="flex items-center gap-1.5 bg-[#121A2B] p-1.5 rounded-xl border border-[#243049] overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => setSelectedFilterId('all')}
-          className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer min-h-[40px] ${
-            selectedFilterId === 'all'
-              ? 'bg-[#2DD4BF] text-[#042F2E]'
-              : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162238]'
-          }`}
-        >
-          كل الأزواج ({results.length})
-        </button>
-
-        {availableFilters.map((f) => (
+      <div className="rounded-2xl bg-[#121A2B] border border-[#243049] p-3 space-y-3">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar" role="group" aria-label={x.t_markets}>
+          <span className="text-[11px] text-[#64748B] shrink-0 w-20">{x.t_markets}</span>
+          {(Object.keys(SCREENER_UNIVERSE) as Cat[]).map((c) => (
+            <button
+              key={c}
+              aria-pressed={cats.includes(c)}
+              onClick={() => setCats((l) => (l.includes(c) ? l.filter((i) => i !== c) : [...l, c]))}
+              className={chip(cats.includes(c))}
+              data-testid={`cat-${c}`}
+            >
+              {c === 'forex' ? x.t_catForex : c === 'metals' ? x.t_catMetals : x.t_catEnergy} · {SCREENER_UNIVERSE[c].length}
+            </button>
+          ))}
+          <span className="shrink-0 min-h-[36px] px-3 rounded-full text-[12px] border border-dashed border-[#24344E] text-[#64748B] flex items-center" title={x.t_catIndicesNA}>
+            {x.t_catIndices} — {x.t_unavailable}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar" role="group" aria-label={x.t_conditions}>
+          <span className="text-[11px] text-[#64748B] shrink-0 w-20">{x.t_conditions}</span>
+          {SCREENER_FILTER_IDS.map((f) => (
+            <button
+              key={f}
+              aria-pressed={filters.includes(f)}
+              onClick={() => setFilters((l) => (l.includes(f) ? l.filter((i) => i !== f) : [...l, f]))}
+              className={chip(filters.includes(f))}
+              data-testid={`flt-${f}`}
+            >
+              {filterLabel(x, f)}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-[#64748B] shrink-0 w-20">{x.t_timeframe}</span>
+          {TIMEFRAMES.map((t) => (
+            <button key={t} aria-pressed={tf === t} onClick={() => setTf(t)} className={`${chip(tf === t)} font-mono`}>
+              {t}
+            </button>
+          ))}
           <button
-            key={f.id}
-            onClick={() => setSelectedFilterId(f.id)}
-            className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer min-h-[40px] ${
-              selectedFilterId === f.id
-                ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/50'
-                : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162238]'
-            }`}
+            onClick={() => void run()}
+            disabled={!canRun}
+            className="ms-auto min-h-[42px] px-5 rounded-xl bg-[#2DD4BF] text-[#042F2E] text-[13px] font-bold flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            data-testid="run-screener"
           >
-            {f.label}
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {busy ? x.t_scanning : fmt(x.t_scanN, { n: universe.length })}
           </button>
-        ))}
+        </div>
+        <p className="text-[11px] text-[#64748B] flex gap-1.5">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          {filters.length === 0 ? x.t_pickCondition : x.t_scrNote}
+        </p>
       </div>
 
-      {/* Screener Results Table */}
-      <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden shadow-lg">
-        {isLoading ? (
-          <LoadingSkeleton rows={6} className="py-6" />
-        ) : results.length === 0 ? (
-          <EmptyState
-            icon={<Compass className="w-8 h-8 text-[#2DD4BF]" />}
-            title="لا توجد أزواج تطابق هذا الفلتر حالياً"
-            message="جرّب اختيار إطار زمني مختلف أو فلاتر أخرى لرصد الفرص الفنية."
-            action={
-              <button
-                onClick={() => {
-                  setSelectedFilterId('all');
-                  executeScan();
-                }}
-                className="px-4 py-2.5 rounded-xl bg-[#16233B] hover:bg-[#203352] text-[#2DD4BF] font-bold text-xs min-h-[44px] cursor-pointer inline-flex items-center justify-center transition-colors"
-              >
-                عرض كل الأزواج
-              </button>
-            }
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            {/* Desktop Table View */}
-            <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60">
-              <thead className="bg-[#0B1220] text-[#7B8DA8] text-[11px] font-semibold">
-                <tr>
-                  <th className="py-3 px-4">الأداة المالية</th>
-                  <th className="py-3 px-4">السعر</th>
-                  <th className="py-3 px-4">التغير</th>
-                  <th className="py-3 px-4">مؤشر القوة (RSI)</th>
-                  <th className="py-3 px-4">الاتجاه</th>
-                  <th className="py-3 px-4 text-center">التقييم الفني</th>
-                  <th className="py-3 px-4 text-center">عرض الشارت</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#243049]/40 text-xs font-mono">
-                {results.map((item) => {
-                  const symObj = symbols.find((s) => s.symbol === item.symbol);
-                  const displayPrice = item.price ?? symObj?.price ?? 0;
-                  const displayPrecision = symObj?.precision ?? 4;
-                  const displayChange = item.change24h ?? symObj?.change24h ?? 0;
-                  const isUp = displayChange >= 0;
-
-                  return (
-                    <tr
-                      key={item.symbol}
-                      onClick={() => onSelectSymbolForChart(item.symbol)}
-                      className="hover:bg-[#162238] transition-colors cursor-pointer group"
-                    >
-                      <td className="py-3.5 px-4 font-bold text-[#E8EEF9]">
-                        <div className="flex items-center gap-2">
-                          <span className="group-hover:text-[#2DD4BF] transition-colors">
-                            {item.symbol}
-                          </span>
+      {!res ? (
+        <EmptyState currentLang={currentLang} icon={<Compass className="w-6 h-6 text-[#2DD4BF]" />} title={x.t_scrIdleTitle} message={x.t_scrIdleText} />
+      ) : !res.ok ? (
+        <ErrorState currentLang={currentLang} title={x.t_scrErrTitle} message={res.isOffline ? x.g_networkError : x.g_serverError} onRetry={() => void run()} />
+      ) : (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#A3B4D0]" data-testid="scr-summary">
+            <span>{fmt(x.t_scrSummary, { hits: res.results.length, scanned: res.scanned, total: res.total })}</span>
+            {res.failed.length > 0 && (
+              <span className="text-amber-300 flex items-center gap-1" title={res.failed.join(', ')}>
+                <AlertTriangle className="w-3.5 h-3.5" /> {fmt(x.t_scrFailed, { n: res.failed.length })}
+              </span>
+            )}
+            {res.provider_configured === false && <span className="text-amber-300">{x.t_noProvider}</span>}
+          </div>
+          {rows.length === 0 ? (
+            <EmptyState currentLang={currentLang} title={x.t_scrNoHitsTitle} message={x.t_scrNoHitsText} />
+          ) : (
+            <div className="rounded-2xl border border-[#243049] bg-[#0E1626] overflow-x-auto">
+              <table className="w-full min-w-[640px] text-[13px]" data-testid="scr-table">
+                <thead className="text-[11px] text-[#7B8DA8] border-b border-[#1E283D]">
+                  <tr>
+                    <Th sort={sort} sortBy={sortBy} k="symbol" label={x.t_colSymbol} />
+                    <Th sort={sort} sortBy={sortBy} k="last" label={x.t_colLast} end />
+                    <Th sort={sort} sortBy={sortBy} k="change_pct" label={x.t_colChange} end />
+                    <Th sort={sort} sortBy={sortBy} k="rsi" label="RSI 14" end />
+                    <Th sort={sort} sortBy={sortBy} k="matched" label={x.t_colMatched} />
+                    <th scope="col" className="px-3 py-2 text-start font-semibold">
+                      {x.t_colDataTime}
+                    </th>
+                    <th scope="col" className="px-3 py-2">
+                      <span className="sr-only">{x.t_openChart}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((h) => (
+                    <tr key={h.symbol} className="border-b border-[#1E283D]/60 last:border-b-0 hover:bg-[#13213A]/50" data-testid="scr-row">
+                      <td className="px-3 py-2.5 font-mono font-bold text-white" dir="ltr">
+                        {h.symbol}
+                      </td>
+                      <td className="px-3 py-2.5 text-end font-mono text-[#CBD5E1]" dir="ltr">
+                        {priceText(h.last, h.symbol)}
+                      </td>
+                      <td
+                        className={`px-3 py-2.5 text-end font-mono ${
+                          h.change_pct === null ? 'text-[#64748B]' : h.change_pct > 0 ? 'text-emerald-300' : h.change_pct < 0 ? 'text-rose-300' : 'text-[#CBD5E1]'
+                        }`}
+                        dir="ltr"
+                      >
+                        {h.change_pct === null ? '—' : `${h.change_pct > 0 ? '+' : ''}${h.change_pct.toFixed(2)}%`}
+                      </td>
+                      <td
+                        className={`px-3 py-2.5 text-end font-mono ${
+                          h.rsi === null ? 'text-[#64748B]' : h.rsi <= 30 ? 'text-emerald-300' : h.rsi >= 70 ? 'text-rose-300' : 'text-[#CBD5E1]'
+                        }`}
+                        dir="ltr"
+                      >
+                        {h.rsi === null ? '—' : h.rsi.toFixed(1)}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {h.filters_matched.length === 0
+                            ? '—'
+                            : h.filters_matched.map((f) => (
+                                <span key={f} className="text-[10px] px-1.5 py-0.5 rounded bg-[#1C2740] text-[#A3B4D0]">
+                                  {filterLabel(x, f)}
+                                </span>
+                              ))}
                         </div>
-                        <div className="text-[10px] text-[#7B8DA8] font-sans">
-                          {item.name || symObj?.name || item.symbol}
-                        </div>
                       </td>
-                      <td className="py-3.5 px-4 text-[#E8EEF9] font-bold">
-                        {displayPrice.toFixed(displayPrecision)}
+                      <td className="px-3 py-2.5 text-[11px] text-[#7B8DA8]" dir="ltr">
+                        {h.price_as_of ? timeFmt.format(new Date(h.price_as_of * 1000)) : '—'}
+                        {h.data_kind === 'cache' && <span className="ms-1 text-amber-300">({x.t_cached})</span>}
                       </td>
-                      <td className="py-3.5 px-4 font-bold">
-                        <span className={isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}>
-                          {isUp ? '+' : ''}
-                          {displayChange.toFixed(2)}%
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        {item.rsi !== undefined ? (
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`font-bold ${
-                                item.rsi > 70
-                                  ? 'text-[#EF4444]'
-                                  : item.rsi < 30
-                                  ? 'text-[#22C55E]'
-                                  : 'text-[#A3B4D0]'
-                              }`}
-                            >
-                              {item.rsi}
-                            </span>
-                            <div className="w-16 h-1.5 bg-[#0B1220] rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${
-                                  item.rsi > 70
-                                    ? 'bg-[#EF4444]'
-                                    : item.rsi < 30
-                                    ? 'bg-[#22C55E]'
-                                    : 'bg-[#2DD4BF]'
-                                }`}
-                                style={{ width: `${Math.min(100, Math.max(0, item.rsi))}%` }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-[#64748B]">—</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 font-sans">
-                        {item.trend === 'bullish' ? (
-                          <span className="text-[#22C55E] flex items-center gap-1 font-semibold">
-                            <TrendingUp className="w-3.5 h-3.5" />
-                            صاعد
-                          </span>
-                        ) : item.trend === 'bearish' ? (
-                          <span className="text-[#EF4444] flex items-center gap-1 font-semibold">
-                            <TrendingDown className="w-3.5 h-3.5" />
-                            هابط
-                          </span>
-                        ) : (
-                          <span className="text-[#7B8DA8]">عرضي</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-sans">
-                        {getSignalBadge(item.signal)}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="px-3 py-2.5 text-end">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectSymbolForChart(item.symbol);
-                          }}
-                          title="فتح في الشارت الفني"
-                          className="p-1.5 rounded-lg bg-[#162033] group-hover:bg-[#2DD4BF] text-[#7B8DA8] group-hover:text-[#042F2E] transition-colors cursor-pointer"
+                          onClick={() => onSelectSymbolForChart(h.symbol)}
+                          className="min-h-[34px] px-2.5 rounded-lg bg-[#1C2740] text-[#2DD4BF] text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer hover:bg-[#233554]"
                         >
-                          <Eye className="w-4 h-4" />
+                          <LineChart className="w-3.5 h-3.5" /> {x.t_openChart}
                         </button>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
-            <div className="md:hidden space-y-2.5 p-3">
-              {results.map((item) => {
-                const symObj = symbols.find((s) => s.symbol === item.symbol);
-                const displayPrice = item.price ?? symObj?.price ?? 0;
-                const displayPrecision = symObj?.precision ?? 4;
-                const displayChange = item.change24h ?? symObj?.change24h ?? 0;
-                const isUp = displayChange >= 0;
-
-                return (
-                  <div
-                    key={item.symbol}
-                    onClick={() => onSelectSymbolForChart(item.symbol)}
-                    className="p-3 rounded-xl bg-[#0E1626] border border-[#1E2E4A] space-y-2 active:border-[#2DD4BF] cursor-pointer shadow-xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-[#E8EEF9] text-sm">{item.symbol}</div>
-                        <div className="text-[10px] text-[#7B8DA8]">{item.name || symObj?.name}</div>
-                      </div>
-                      <div className="text-left font-mono">
-                        <div className="font-bold text-white text-xs">{displayPrice.toFixed(displayPrecision)}</div>
-                        <div className={`text-[11px] font-bold ${isUp ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                          {isUp ? '+' : ''}{displayChange.toFixed(2)}%
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-1.5 text-[10px] bg-[#070D18] p-2 rounded-lg border border-[#16233B]">
-                      <div>
-                        <span className="text-[#64748B] block">RSI (14)</span>
-                        <span className="font-mono font-bold text-[#2DD4BF]">{item.rsi ?? '—'}</span>
-                      </div>
-                      <div>
-                        <span className="text-[#64748B] block">الاتجاه</span>
-                        <span className={`font-semibold ${item.trend === 'bullish' ? 'text-[#22C55E]' : item.trend === 'bearish' ? 'text-[#EF4444]' : 'text-[#7B8DA8]'}`}>
-                          {item.trend === 'bullish' ? 'صاعد' : item.trend === 'bearish' ? 'هابط' : 'عرضي'}
-                        </span>
-                      </div>
-                      <div className="text-left">
-                        <span className="text-[#64748B] block">الإشارة</span>
-                        <span>{getSignalBadge(item.signal)}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          <p className="text-[11px] text-[#64748B]">{x.t_scrEdu}</p>
+        </div>
+      )}
     </div>
   );
 };

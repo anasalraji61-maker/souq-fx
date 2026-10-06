@@ -1,386 +1,364 @@
-import React, { useState } from 'react';
-import { MarketSymbol, Timeframe } from '../../types/market';
-import { runBacktest, BacktestResult } from '../../api/toolsApi';
-import { LineChart, Award, TrendingDown, Percent, RotateCcw, Play, AlertCircle, ShieldAlert } from 'lucide-react';
-import { OfflineBadge } from '../common/OfflineBadge';
+import React, { useMemo, useState } from 'react';
+import { FlaskConical, Play, Loader2, AlertTriangle, Info, TrendingUp, TrendingDown } from 'lucide-react';
+import { MarketSymbol } from '../../types/market';
+import { runBacktest, BacktestResult, BacktestStrategy, SCREENER_UNIVERSE } from '../../api/toolsApi';
+import { LangId, gx, fmt, getIntlLocale, GxDict } from '../../i18n/locales';
+import { ErrorState, EmptyState } from '../common/ScreenState';
 
 interface BacktestPanelProps {
   symbols: MarketSymbol[];
+  currentLang?: LangId;
 }
 
-export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
+const STRATEGIES: BacktestStrategy[] = ['ma_cross', 'rsi_reversal', 'macd_cross', 'bb_bounce'];
+const TIMEFRAMES = ['15m', '30m', '1H', '4H', 'D'];
+const ALL_SYMBOLS = [...SCREENER_UNIVERSE.forex, ...SCREENER_UNIVERSE.metals, ...SCREENER_UNIVERSE.energy];
+
+function stratText(x: GxDict, s: BacktestStrategy): { name: string; desc: string } {
+  switch (s) {
+    case 'ma_cross':
+      return { name: x.t_stMa, desc: x.t_stMaDesc };
+    case 'rsi_reversal':
+      return { name: x.t_stRsi, desc: x.t_stRsiDesc };
+    case 'macd_cross':
+      return { name: x.t_stMacd, desc: x.t_stMacdDesc };
+    default:
+      return { name: x.t_stBb, desc: x.t_stBbDesc };
+  }
+}
+
+function priceFmt(v: number, sym: string): string {
+  if (!Number.isFinite(v)) return '—';
+  const d = sym.endsWith('JPY') ? 3 : sym === 'XAUUSD' || sym.endsWith('OIL') ? 2 : sym === 'XAGUSD' ? 3 : 5;
+  return v.toFixed(d);
+}
+
+function pct(v: number | null, sign = false): string {
+  if (v === null || !Number.isFinite(v)) return '—';
+  return `${sign && v > 0 ? '+' : ''}${v.toFixed(2)}%`;
+}
+
+/** Equity curve as an SVG polyline, with the 100 start line. */
+export const EquityCurve: React.FC<{ points: number[]; label: string }> = ({ points, label }) => {
+  const W = 640;
+  const H = 200;
+  const pad = 8;
+  if (points.length < 2) return null;
+  const min = Math.min(100, ...points);
+  const max = Math.max(100, ...points);
+  const span = max - min || 1;
+  const xAt = (i: number) => pad + (i / (points.length - 1)) * (W - 2 * pad);
+  const yAt = (v: number) => pad + (1 - (v - min) / span) * (H - 2 * pad);
+  const line = points.map((v, i) => `${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`).join(' ');
+  const area = `${xAt(0)},${H - pad} ${line} ${xAt(points.length - 1)},${H - pad}`;
+  const up = points[points.length - 1] >= 100;
+  const color = up ? '#34D399' : '#FB7185';
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-48" role="img" aria-label={label} preserveAspectRatio="none" data-testid="equity-svg" style={{ direction: 'ltr' }}>
+      <defs>
+        <linearGradient id="eqfill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <line x1={pad} x2={W - pad} y1={yAt(100)} y2={yAt(100)} stroke="#475569" strokeDasharray="4 4" strokeWidth="1" />
+      <polygon points={area} fill="url(#eqfill)" />
+      <polyline points={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      <text x={W - pad} y={yAt(100) - 4} textAnchor="end" fontSize="11" fill="#94A3B8">
+        100
+      </text>
+    </svg>
+  );
+};
+
+const ParamField: React.FC<{ id: string; label: string; help: string; value: string; onChange: (v: string) => void; err?: string }> = ({
+  id,
+  label,
+  help,
+  value,
+  onChange,
+  err,
+}) => (
+  <div className="space-y-1">
+    <label htmlFor={id} className="block text-[12px] text-[#A3B4D0] font-semibold">
+      {label}
+    </label>
+    <input
+      id={id}
+      inputMode="numeric"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`w-full min-h-[42px] rounded-xl bg-[#0B1220] border px-3 text-sm text-[#E8EEF9] font-mono outline-none focus:border-[#2DD4BF] ${
+        err ? 'border-rose-500/70' : 'border-[#24344E]'
+      }`}
+      dir="ltr"
+    />
+    {err ? <p className="text-[11px] text-rose-300" role="alert">{err}</p> : <p className="text-[11px] text-[#64748B] leading-relaxed">{help}</p>}
+  </div>
+);
+
+export const BacktestPanel: React.FC<BacktestPanelProps> = ({ currentLang = 'ar' }) => {
+  const x = gx(currentLang);
   const [symbol, setSymbol] = useState('EURUSD');
-  const [strategy, setStrategy] = useState<'sma_cross' | 'rsi_reversal' | 'breakout'>('sma_cross');
-  const [timeframe, setTimeframe] = useState<string>('1h');
-  const [fastPeriod, setFastPeriod] = useState<number>(9);
-  const [slowPeriod, setSlowPeriod] = useState<number>(21);
-  const [rsiLow, setRsiLow] = useState<number>(30);
-  const [rsiHigh, setRsiHigh] = useState<number>(70);
+  const [tf, setTf] = useState('1H');
+  const [strategy, setStrategy] = useState<BacktestStrategy>('ma_cross');
+  const [fast, setFast] = useState('9');
+  const [slow, setSlow] = useState('21');
+  const [rsiLow, setRsiLow] = useState('30');
+  const [rsiHigh, setRsiHigh] = useState('70');
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<BacktestResult | null>(null);
 
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [result, setResult] = useState<BacktestResult | null>(null);
-  const [isOffline, setIsOffline] = useState<boolean>(false);
+  const errs: Record<string, string> = {};
+  const int = (v: string) => (/^\d+$/.test(v.trim()) ? Number(v) : NaN);
+  if (strategy === 'ma_cross') {
+    const f = int(fast);
+    const s = int(slow);
+    if (!(f >= 2 && f <= 150)) errs.fast = fmt(x.t_errRange, { a: 2, b: 150 });
+    if (!(s >= 2 && s <= 150)) errs.slow = fmt(x.t_errRange, { a: 2, b: 150 });
+    if (!errs.fast && !errs.slow && f >= s) errs.slow = x.t_errSlowGtFast;
+  }
+  if (strategy === 'rsi_reversal') {
+    const lo = int(rsiLow);
+    const hi = int(rsiHigh);
+    if (!(lo >= 1 && lo <= 99)) errs.rsiLow = fmt(x.t_errRange, { a: 1, b: 99 });
+    if (!(hi >= 1 && hi <= 99)) errs.rsiHigh = fmt(x.t_errRange, { a: 1, b: 99 });
+    if (!errs.rsiLow && !errs.rsiHigh && lo >= hi) errs.rsiHigh = x.t_errRsiOrder;
+  }
+  const valid = Object.keys(errs).length === 0;
 
-  const handleRun = async () => {
-    setIsRunning(true);
-    try {
-      const res = await runBacktest({
-        symbol,
-        timeframe,
-        strategy,
-        fast: fastPeriod,
-        slow: slowPeriod,
-        rsi_low: rsiLow,
-        rsi_high: rsiHigh,
-      });
-
-      setResult(res);
-      setIsOffline(!!res.isOffline);
-    } catch {
-      setIsOffline(true);
-    } finally {
-      setIsRunning(false);
-    }
+  const run = async () => {
+    if (!valid || busy) return;
+    setBusy(true);
+    const r = await runBacktest({
+      symbol,
+      timeframe: tf,
+      strategy,
+      fast: Number(fast) || 9,
+      slow: Number(slow) || 21,
+      rsi_low: Number(rsiLow) || 30,
+      rsi_high: Number(rsiHigh) || 70,
+    });
+    setRes(r);
+    setBusy(false);
   };
 
-  // Prepare points for equity curve SVG
-  const equityPoints: number[] = React.useMemo(() => {
-    if (!result || !result.equity_curve || result.equity_curve.length === 0) return [];
-    if (typeof result.equity_curve[0] === 'number') {
-      return result.equity_curve as number[];
-    }
-    return (result.equity_curve as { equity: number }[]).map((p) => p.equity);
-  }, [result]);
-
-  const minEquity = equityPoints.length > 0 ? Math.min(...equityPoints) : 10000;
-  const maxEquity = equityPoints.length > 0 ? Math.max(...equityPoints) : 10000;
-  const range = maxEquity - minEquity || 1;
-  const svgWidth = 600;
-  const svgHeight = 160;
-
-  const pointsStr = equityPoints
-    .map((val, idx) => {
-      const x = (idx / (equityPoints.length - 1 || 1)) * svgWidth;
-      const y = svgHeight - ((val - minEquity) / range) * (svgHeight - 30) - 15;
-      return `${x},${y}`;
-    })
-    .join(' ');
+  const locale = getIntlLocale(currentLang);
+  const dt = useMemo(
+    () => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', numberingSystem: 'latn' }),
+    [locale]
+  );
+  const st = res?.stats ?? null;
+  const card = (label: string, value: string, tone = 'text-[#E8EEF9]', hint?: string) => (
+    <div className="rounded-xl bg-[#0B1220] border border-[#1E283D] p-3" title={hint}>
+      <div className="text-[11px] text-[#7B8DA8]">{label}</div>
+      <div className={`font-mono text-lg font-bold ${tone}`} dir="ltr">
+        {value}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 select-none text-xs">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#243049]">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-[#2DD4BF]/10 text-[#2DD4BF] border border-[#2DD4BF]/20">
-            <LineChart className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-[#E8EEF9]">
-                محاكي واختبار الاستراتيجيات الفنية
-              </h2>
-              {isOffline && <OfflineBadge forceShow />}
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4" data-testid="backtest">
+      <div className="flex items-center gap-2">
+        <div className="p-2 rounded-xl bg-[#2DD4BF]/10 text-[#2DD4BF]">
+          <FlaskConical className="w-5 h-5" />
+        </div>
+        <div>
+          <h2 className="text-base font-bold text-[#E8EEF9]">{x.t_btTitle}</h2>
+          <p className="text-[12px] text-[#7B8DA8]">{x.t_btSub}</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-amber-500/10 border border-amber-500/40 p-3 text-[12px] text-amber-100 flex gap-2" data-testid="bt-warning">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-300" />
+        <span>
+          <strong>{x.t_btWarnTitle}</strong> {x.t_btWarnText}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4">
+        {/* Form */}
+        <div className="rounded-2xl bg-[#121A2B] border border-[#243049] p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label htmlFor="bt-symbol" className="block text-[12px] text-[#A3B4D0] font-semibold">
+                {x.t_symbol}
+              </label>
+              <select id="bt-symbol" value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full min-h-[42px] rounded-xl bg-[#0B1220] border border-[#24344E] px-3 text-sm text-[#E8EEF9] font-mono" dir="ltr">
+                {ALL_SYMBOLS.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
             </div>
-            <p className="text-[#7B8DA8]">
-              اختبر نماذج التداول على الشموع المغلقة مع حساب السبريد ونسب المخاطرة بدقة.
+            <div className="space-y-1">
+              <label htmlFor="bt-tf" className="block text-[12px] text-[#A3B4D0] font-semibold">
+                {x.t_timeframe}
+              </label>
+              <select id="bt-tf" value={tf} onChange={(e) => setTf(e.target.value)} className="w-full min-h-[42px] rounded-xl bg-[#0B1220] border border-[#24344E] px-3 text-sm text-[#E8EEF9] font-mono" dir="ltr">
+                {TIMEFRAMES.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="text-[11px] text-[#64748B] -mt-2">{x.t_btDataHelp}</p>
+
+          <fieldset className="space-y-2">
+            <legend className="text-[12px] text-[#A3B4D0] font-semibold mb-1.5">{x.t_strategy}</legend>
+            {STRATEGIES.map((s) => {
+              const t = stratText(x, s);
+              return (
+                <label
+                  key={s}
+                  className={`flex gap-2.5 p-3 rounded-xl border cursor-pointer ${
+                    strategy === s ? 'border-[#2DD4BF]/70 bg-[#13283A]' : 'border-[#24344E] bg-[#0B1220] hover:border-[#475569]'
+                  }`}
+                  data-testid={`st-${s}`}
+                >
+                  <input type="radio" name="bt-strategy" checked={strategy === s} onChange={() => setStrategy(s)} className="mt-1 accent-[#2DD4BF]" />
+                  <span>
+                    <span className="block text-[13px] font-bold text-[#E8EEF9]">{t.name}</span>
+                    <span className="block text-[11px] text-[#7B8DA8] leading-relaxed">{t.desc}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+
+          {strategy === 'ma_cross' && (
+            <div className="grid grid-cols-2 gap-3">
+              <ParamField id="bt-fast" label={x.t_pFast} help={x.t_pFastHelp} value={fast} onChange={setFast} err={errs.fast} />
+              <ParamField id="bt-slow" label={x.t_pSlow} help={x.t_pSlowHelp} value={slow} onChange={setSlow} err={errs.slow} />
+            </div>
+          )}
+          {strategy === 'rsi_reversal' && (
+            <div className="grid grid-cols-2 gap-3">
+              <ParamField id="bt-rlo" label={x.t_pRsiLow} help={x.t_pRsiLowHelp} value={rsiLow} onChange={setRsiLow} err={errs.rsiLow} />
+              <ParamField id="bt-rhi" label={x.t_pRsiHigh} help={x.t_pRsiHighHelp} value={rsiHigh} onChange={setRsiHigh} err={errs.rsiHigh} />
+            </div>
+          )}
+          {(strategy === 'macd_cross' || strategy === 'bb_bounce') && (
+            <p className="text-[11px] text-[#64748B] flex gap-1.5">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" /> {strategy === 'macd_cross' ? x.t_pMacdFixed : x.t_pBbFixed}
             </p>
-          </div>
-        </div>
-
-        {/* 2.4 Disclaimer label */}
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs min-h-[44px]">
-          <ShieldAlert className="w-4 h-4 shrink-0" />
-          <span>نتائج تاريخية لا تضمن المستقبل (محاكاة تعليمية)</span>
-        </div>
-      </div>
-
-      {/* Configuration Form */}
-      <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4 shadow-lg">
-        <h3 className="font-bold text-sm text-[#E8EEF9]">إعدادات الاستراتيجية والفحص التاريخي</h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Symbol */}
-          <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">الرمز المالي</label>
-            <select
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              className="w-full bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
-            >
-              {symbols.map((s) => (
-                <option key={s.symbol} value={s.symbol}>
-                  {s.symbol} - {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Timeframe */}
-          <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">الفاصل الزمني</label>
-            <select
-              value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value)}
-              className="w-full bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
-            >
-              <option value="5m">5 دقائق (5m)</option>
-              <option value="15m">15 دقيقة (15m)</option>
-              <option value="30m">30 دقيقة (30m)</option>
-              <option value="1H">ساعة واحدة (1H)</option>
-              <option value="4H">4 ساعات (4H)</option>
-              <option value="D">يومي (1D)</option>
-            </select>
-          </div>
-
-          {/* Strategy */}
-          <div>
-            <label className="block text-[#A3B4D0] mb-1 font-medium">الاستراتيجية الفنية</label>
-            <select
-              value={strategy}
-              onChange={(e) => setStrategy(e.target.value as any)}
-              className="w-full bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-[#E8EEF9] focus:outline-hidden font-semibold min-h-[44px] cursor-pointer"
-            >
-              <option value="sma_cross">تقاطع المتوسطات المتحركة</option>
-              <option value="rsi_reversal">ارتداد مؤشر القوة النسبية</option>
-              <option value="breakout">كسر مستويات الدعم والمقاومة</option>
-            </select>
-          </div>
-
-          {/* Run Button */}
-          <div className="flex items-end">
-            <button
-              onClick={handleRun}
-              disabled={isRunning}
-              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-md min-h-[44px]"
-            >
-              <Play className={`w-4 h-4 fill-current ${isRunning ? 'animate-spin' : ''}`} />
-              <span>{isRunning ? 'جاري الاختبار...' : 'تشغيل الاختبار التاريخي'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Dynamic Params */}
-        {strategy === 'sma_cross' && (
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#1E283D]">
-            <div>
-              <label className="block text-[#A3B4D0] mb-1">فترة المتوسط السريع (Fast MA)</label>
-              <input
-                type="number"
-                value={fastPeriod}
-                onChange={(e) => setFastPeriod(parseInt(e.target.value, 10) || 9)}
-                className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-[#A3B4D0] mb-1">فترة المتوسط البطيء (Slow MA)</label>
-              <input
-                type="number"
-                value={slowPeriod}
-                onChange={(e) => setSlowPeriod(parseInt(e.target.value, 10) || 21)}
-                className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] font-mono"
-              />
-            </div>
-          </div>
-        )}
-
-        {strategy === 'rsi_reversal' && (
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#1E283D]">
-            <div>
-              <label className="block text-[#A3B4D0] mb-1">حد التشبع البيعي (RSI Low)</label>
-              <input
-                type="number"
-                value={rsiLow}
-                onChange={(e) => setRsiLow(parseInt(e.target.value, 10) || 30)}
-                className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-[#A3B4D0] mb-1">حد التشبع الشرائي (RSI High)</label>
-              <input
-                type="number"
-                value={rsiHigh}
-                onChange={(e) => setRsiHigh(parseInt(e.target.value, 10) || 70)}
-                className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] font-mono"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Results View */}
-      {result ? (
-        <div className="space-y-6">
-          {/* KPI Ribbon */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-            <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">إجمالي الصفقات</span>
-              <div className="text-2xl font-bold font-mono text-[#E8EEF9]">
-                {result.stats.total_trades}
-              </div>
-              <span className="text-[10px] text-[#64748B]">
-                {result.stats.winning_trades} رابحة • {result.stats.losing_trades} خاسرة
-              </span>
-            </div>
-
-            <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">نسبة النجاح بالصفقات</span>
-              <div
-                className={`text-2xl font-bold font-mono ${
-                  result.stats.win_rate >= 50 ? 'text-[#22C55E]' : 'text-[#EF4444]'
-                }`}
-              >
-                {result.stats.win_rate.toFixed(1)}%
-              </div>
-              <span className="text-[10px] text-[#64748B]">معدل تحقيق الأهداف</span>
-            </div>
-
-            <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">معامل الربحية</span>
-              <div className="text-2xl font-bold font-mono text-[#2DD4BF]">
-                {result.stats.profit_factor.toFixed(2)}
-              </div>
-              <span className="text-[10px] text-[#64748B]">إجمالي الأرباح / إجمالي الخسائر</span>
-            </div>
-
-            <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">أقصى تراجع للمحفظة</span>
-              <div className="text-2xl font-bold font-mono text-[#EF4444]">
-                {result.stats.max_drawdown_pct.toFixed(1)}%
-              </div>
-              <span className="text-[10px] text-[#64748B]">أكبر انخفاض من القمة</span>
-            </div>
-          </div>
-
-          {/* Equity Curve Chart */}
-          {equityPoints.length > 1 && (
-            <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-3">
-              <div className="flex items-center justify-between text-xs font-semibold text-[#E8EEF9]">
-                <span>منحنى نمو رأس المال الافتراضي (محاكاة)</span>
-                <span className="font-mono text-[#2DD4BF]">
-                  ${equityPoints[equityPoints.length - 1].toLocaleString()}
-                </span>
-              </div>
-
-              <div className="w-full bg-[#0B1220] rounded-lg p-2 border border-[#1E283D] overflow-hidden">
-                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-40">
-                  <polyline
-                    fill="none"
-                    stroke="#2DD4BF"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points={pointsStr}
-                  />
-                </svg>
-              </div>
-            </div>
           )}
 
-          {/* Trades Table */}
-          {result.trades.length > 0 && (
-            <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden">
-              <div className="p-3 bg-[#0B1220] border-b border-[#243049] font-bold text-xs text-[#E8EEF9]">
-                سجل صفقات الاختبار ({result.trades.length} صفقة)
-              </div>
-              <div className="overflow-x-auto max-h-80">
-                {/* Desktop Table View */}
-                <table className="hidden md:table w-full text-right divide-y divide-[#243049]/60 font-mono text-xs">
-                  <thead className="bg-[#080E1A] text-[#7B8DA8] text-[10px]">
-                    <tr>
-                      <th className="py-2.5 px-3">النوع</th>
-                      <th className="py-2.5 px-3">سعر الدخول</th>
-                      <th className="py-2.5 px-3">سعر الخروج</th>
-                      <th className="py-2.5 px-3">الربح (نقاط)</th>
-                      <th className="py-2.5 px-3 text-center">النتيجة</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#243049]/40">
-                    {result.trades.map((t, i) => (
-                      <tr key={i} className="hover:bg-[#162238] transition-colors">
-                        <td className="py-2 px-3 font-bold">
-                          <span
-                            className={t.type === 'BUY' ? 'text-[#22C55E]' : 'text-[#EF4444]'}
-                          >
-                            {t.type}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-[#E8EEF9]">{t.entry_price}</td>
-                        <td className="py-2 px-3 text-[#E8EEF9]">{t.exit_price}</td>
-                        <td className="py-2 px-3 font-bold">
-                          <span className={t.pnl_pips >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}>
-                            {t.pnl_pips >= 0 ? '+' : ''}
-                            {t.pnl_pips}p
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-center font-bold">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] ${
-                              t.result === 'WIN'
-                                ? 'bg-[#22C55E]/15 text-[#22C55E]'
-                                : 'bg-[#EF4444]/15 text-[#EF4444]'
-                            }`}
-                          >
-                            {t.result === 'WIN' ? 'رابحة' : 'خاسرة'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <button
+            onClick={() => void run()}
+            disabled={!valid || busy}
+            className="w-full min-h-[46px] rounded-xl bg-[#2DD4BF] text-[#042F2E] text-[13px] font-bold flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            data-testid="run-backtest"
+          >
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {busy ? x.t_btRunning : x.t_btRun}
+          </button>
+        </div>
 
-                {/* Mobile Card View (Part 1.6: no horizontal scroll) */}
-                <div className="md:hidden space-y-2 p-2">
-                  {result.trades.map((t, i) => (
-                    <div
-                      key={i}
-                      className="p-2.5 rounded-lg bg-[#080E1A] border border-[#1E2E4A] flex items-center justify-between text-xs font-mono"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
-                            t.type === 'BUY'
-                              ? 'bg-emerald-500/15 text-[#22C55E]'
-                              : 'bg-rose-500/15 text-[#EF4444]'
-                          }`}
-                        >
-                          {t.type}
-                        </span>
-                        <span className="text-[#A3B4D0] text-[11px]">
-                          {t.entry_price} → {t.exit_price}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-bold ${
-                            t.pnl_pips >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
-                          }`}
-                        >
-                          {t.pnl_pips >= 0 ? '+' : ''}{t.pnl_pips}p
-                        </span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                            t.result === 'WIN'
-                              ? 'bg-[#22C55E]/20 text-[#22C55E]'
-                              : 'bg-[#EF4444]/20 text-[#EF4444]'
-                          }`}
-                        >
-                          {t.result === 'WIN' ? 'ربح' : 'خسارة'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+        {/* Results */}
+        <div className="space-y-3" aria-live="polite">
+          {!res ? (
+            <EmptyState currentLang={currentLang} icon={<FlaskConical className="w-6 h-6 text-[#2DD4BF]" />} title={x.t_btIdleTitle} message={x.t_btIdleText} />
+          ) : res.error && !res.stats && res.data_kind !== 'demo' ? (
+            <ErrorState
+              currentLang={currentLang}
+              title={x.t_btErrTitle}
+              message={res.error === 'not enough candles' ? x.t_btNotEnough : res.isOffline ? x.g_networkError : x.g_serverError}
+              onRetry={() => void run()}
+            />
+          ) : res.data_kind === 'demo' ? (
+            <ErrorState currentLang={currentLang} title={x.t_btNoDataTitle} message={x.t_btNoDataText} onRetry={() => void run()} />
+          ) : !st ? (
+            <EmptyState currentLang={currentLang} title={x.t_btErrTitle} message={x.t_btNotEnough} />
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" data-testid="bt-cards">
+                {card(x.t_kTrades, String(st.trade_count))}
+                {card(x.t_kWinRate, st.win_rate === null ? '—' : `${st.win_rate.toFixed(1)}%`)}
+                {card(
+                  x.t_kReturn,
+                  pct(st.total_return_pct, true),
+                  st.total_return_pct === null ? undefined : st.total_return_pct >= 0 ? 'text-emerald-300' : 'text-rose-300'
+                )}
+                {card(x.t_kMaxDd, st.max_drawdown_pct === null ? '—' : `-${st.max_drawdown_pct.toFixed(2)}%`, 'text-rose-300', x.t_kMaxDdHelp)}
+                {card(x.t_kAvgWin, pct(st.avg_win_pct, true), 'text-emerald-300')}
+                {card(x.t_kAvgLoss, pct(st.avg_loss_pct), 'text-rose-300')}
+                {card(x.t_kFinal, st.final_equity === null ? '—' : st.final_equity.toFixed(2), undefined, x.t_kFinalHelp)}
+                {card(x.t_kOpen, pct(st.open_pnl_pct, true))}
+              </div>
+              <p className="text-[11px] text-[#7B8DA8]">
+                {st.costs_included
+                  ? fmt(x.t_btCostsIn, { s: st.spread_pips ?? '—' })
+                  : x.t_btCostsOut}{' '}
+                {st.ruined_at_trade ? fmt(x.t_btRuined, { n: st.ruined_at_trade }) : ''}
+              </p>
+              <div className="rounded-2xl bg-[#0E1626] border border-[#243049] p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-[13px] font-bold text-[#E8EEF9]">{x.t_equityCurve}</h3>
+                  <span className="text-[11px] text-[#64748B]">{x.t_equityHelp}</span>
                 </div>
+                {res.equity_curve.length >= 2 ? (
+                  <EquityCurve points={res.equity_curve} label={x.t_equityCurve} />
+                ) : (
+                  <p className="text-[12px] text-[#7B8DA8] py-6 text-center">{x.t_noTrades}</p>
+                )}
               </div>
-            </div>
+              <div className="rounded-2xl bg-[#0E1626] border border-[#243049]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1E283D]">
+                  <h3 className="text-[13px] font-bold text-[#E8EEF9]">{x.t_tradesTable}</h3>
+                  {res.trades_truncated && <span className="text-[11px] text-[#64748B]">{x.t_last40}</span>}
+                </div>
+                {res.trades.length === 0 ? (
+                  <p className="text-[12px] text-[#7B8DA8] py-6 text-center">{x.t_noTrades}</p>
+                ) : (
+                  <div className="overflow-x-auto max-h-[360px] overflow-y-auto">
+                    <table className="w-full min-w-[560px] text-[12px]" data-testid="bt-trades">
+                      <thead className="text-[11px] text-[#7B8DA8] sticky top-0 bg-[#0E1626]">
+                        <tr>
+                          <th className="px-3 py-2 text-start">{x.t_colSide}</th>
+                          <th className="px-3 py-2 text-start">{x.t_colEntryTime}</th>
+                          <th className="px-3 py-2 text-end">{x.t_colEntry}</th>
+                          <th className="px-3 py-2 text-start">{x.t_colExitTime}</th>
+                          <th className="px-3 py-2 text-end">{x.t_colExit}</th>
+                          <th className="px-3 py-2 text-end">{x.t_colPnl}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...res.trades].reverse().map((t, i) => (
+                          <tr key={`${t.entry_time}-${i}`} className="border-t border-[#1E283D]/60">
+                            <td className="px-3 py-2">
+                              <span className={`inline-flex items-center gap-1 ${t.side === 'long' ? 'text-emerald-300' : 'text-rose-300'}`}>
+                                {t.side === 'long' ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                                {t.side === 'long' ? x.c_dirBuy : x.c_dirSell}
+                                {t.open && <span className="text-[10px] text-amber-300">({x.t_open})</span>}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-[#A3B4D0]" dir="ltr">
+                              {dt.format(new Date(t.entry_time * 1000))}
+                            </td>
+                            <td className="px-3 py-2 text-end font-mono" dir="ltr">
+                              {priceFmt(t.entry, res.symbol)}
+                            </td>
+                            <td className="px-3 py-2 text-[#A3B4D0]" dir="ltr">
+                              {dt.format(new Date(t.exit_time * 1000))}
+                            </td>
+                            <td className="px-3 py-2 text-end font-mono" dir="ltr">
+                              {priceFmt(t.exit, res.symbol)}
+                            </td>
+                            <td className={`px-3 py-2 text-end font-mono font-bold ${t.pnl_pct > 0 ? 'text-emerald-300' : t.pnl_pct < 0 ? 'text-rose-300' : 'text-[#CBD5E1]'}`} dir="ltr">
+                              {pct(t.pnl_pct, true)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
-      ) : (
-        <div className="p-12 text-center text-[#7B8DA8] bg-[#121A2B] rounded-xl border border-[#243049] space-y-2">
-          <Play className="w-8 h-8 mx-auto text-[#2DD4BF]" />
-          <p className="font-semibold text-[#E8EEF9]">جاهز لبدء المحاكاة التاريخية</p>
-          <p className="text-xs">اضغط على زر &quot;تشغيل الاختبار التاريخي&quot; لعرض النتائج ومنحنى الأداء.</p>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -60,9 +60,11 @@ export default function App() {
   const [priceFlashMap, setPriceFlashMap] = useState<Record<string, 'up' | 'down'>>({});
 
   // Mobile-first & PWA states (MEGA BATCH D)
-  const [toolsInitialTab, setToolsInitialTab] = useState<
-    'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics'
-  >('calculator');
+  // Request to open a specific tool (e.g. the journal from the bottom bar); `at` lets the same request repeat.
+  const [toolsRequest, setToolsRequest] = useState<{
+    tool: 'calculator' | 'journal' | 'calendar' | 'screener' | 'alerts' | 'backtest' | 'risk' | 'analytics';
+    at: number;
+  } | null>(null);
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
 
   useEffect(() => {
@@ -406,7 +408,7 @@ export default function App() {
           <Suspense fallback={<ScreenFallback />}>
             {currentTab === 'community' && <CommunityScreen currentLang={currentLang} onNavigate={setCurrentTab} />}
 
-            {currentTab === 'academy' && <AcademyScreen />}
+            {currentTab === 'academy' && <AcademyScreen currentLang={currentLang} />}
 
             {currentTab === 'pricing' && <SubscriptionPlansScreen />}
 
@@ -422,7 +424,7 @@ export default function App() {
                 onAddAlert={handleAddAlert}
                 onDeleteAlert={handleDeleteAlert}
                 onToggleAlert={handleToggleAlert}
-                initialTool={toolsInitialTab}
+                openRequest={toolsRequest}
                 currentLang={currentLang}
               />
             )}
@@ -512,7 +514,7 @@ export default function App() {
           setCurrentTab(tab);
         }}
         onOpenJournal={() => {
-          setToolsInitialTab('journal');
+          setToolsRequest({ tool: 'journal', at: Date.now() });
           setCurrentTab('tools');
         }}
         onOpenNotifications={() => setIsAlertsModalOpen(true)}

@@ -25,7 +25,7 @@ import {
   Calendar,
 } from 'lucide-react';
 
-export const AcademyScreen: React.FC = () => {
+export const AcademyScreen: React.FC<{ currentLang?: import('../../i18n/locales').LangId }> = () => {
   const [activeTab, setActiveTab] = useState<'courses' | 'certificates'>('courses');
   const [schools, setSchools] = useState<AcademySchool[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<AcademySchool | null>(null);
