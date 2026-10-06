@@ -308,6 +308,7 @@
       (d.subscriptions ? kpi('مشتركون فعّالون', fmtNum(d.subscriptions.paying_total), 'دخل شهري متوقع: $' + fmtNum(d.subscriptions.mrr_usd)) : '');
     var c = d.content || {};
     $('contentKpis').innerHTML =
+      kpi('رسائل القنوات (24 ساعة)', fmtNum(c.channel_messages_24h)) +
       kpi('رسائل المجموعة (24 ساعة)', fmtNum(c.group_messages_24h)) +
       kpi('أفكار التداول', fmtNum(c.ideas)) +
       kpi('تنبيهات نشطة', fmtNum(c.alerts_active)) +
@@ -401,7 +402,7 @@
     api('/api/moderation/reports').then(function (d) {
       setReportsCount(d.pending_total);
       $('hideThreshold').textContent = d.hide_threshold;
-      var kinds = { group_message: 'رسالة مجموعة', vote: 'فكرة تداول' };
+      var kinds = { group_message: 'رسالة مجموعة', channel_message: 'رسالة قناة', vote: 'فكرة تداول' };
       $('reportList').innerHTML = d.reports.length ? d.reports.map(function (r) {
         return '<div class="panel">' +
           '<div class="row" style="justify-content:space-between">' +

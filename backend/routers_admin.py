@@ -124,6 +124,8 @@ def admin_overview(days: int = Query(default=30, ge=7, le=180)):
         content = {
             "group_messages_24h": _count(c, "SELECT COUNT(*) FROM group_messages WHERE created_at>=?", (now - day,))
             if _has_column(c, "group_messages", "created_at") else None,
+            "channel_messages_24h": _count(c, "SELECT COUNT(*) FROM community_messages WHERE created_at>=?", (now - day,))
+            if _table_exists(c, "community_messages") else 0,
             "ideas": _count(c, "SELECT COUNT(*) FROM votes"),
             "alerts_active": _count(c, "SELECT COUNT(*) FROM alerts WHERE active=1 AND triggered=0")
             if _has_column(c, "alerts", "triggered") else _count(c, "SELECT COUNT(*) FROM alerts"),
