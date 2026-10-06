@@ -127,6 +127,19 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
   const priceDragStartYRef = useRef(0);
   const priceDragStartStretchRef = useRef(1.0);
 
+  // Vertical pan (TradingView style): manual price offset. Any vertical drag turns auto-scale off;
+  // the "A" button / double-click on the price axis restores auto-fit.
+  const [priceOffset, setPriceOffset] = useState(0);
+  const [isAutoScale, setIsAutoScale] = useState(true);
+  const dragStartYRef = useRef(0);
+  const dragStartPriceOffsetRef = useRef(0);
+  const verticalPanRef = useRef(false);
+  const resetAutoScale = useCallback(() => {
+    setPriceOffset(0);
+    setPriceScaleStretch(1.0);
+    setIsAutoScale(true);
+  }, []);
+
   // Log scale toggle
   const [isLogScale, setIsLogScale] = useState(false);
 
@@ -459,7 +472,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     );
 
     // Apply manual price scale stretch factor
-    const centerPrice = (rawMin + rawMax) / 2;
+    const centerPrice = (rawMin + rawMax) / 2 + (isAutoScale ? 0 : priceOffset);
     const stretchedRange = rawRange * priceScaleStretch;
     const adjustedMin = centerPrice - stretchedRange / 2;
     const adjustedMax = centerPrice + stretchedRange / 2;
@@ -800,6 +813,8 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     drawings,
     showGrid,
     priceScaleStretch,
+    priceOffset,
+    isAutoScale,
     isLogScale,
     magnetMode,
     applyMagnetSnapping,
@@ -1033,6 +1048,10 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     isDraggingRef.current = true;
     dragStartXRef.current = x;
     dragStartOffsetRef.current = panOffset;
+    dragStartYRef.current = y;
+    dragStartPriceOffsetRef.current = isAutoScale ? 0 : priceOffset;
+    verticalPanRef.current = !isAutoScale;
+    setCrosshair(null);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -1058,6 +1077,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       const stretchDelta = dy / 150;
       const newStretch = Math.max(0.2, Math.min(5.0, priceDragStartStretchRef.current - stretchDelta));
       setPriceScaleStretch(newStretch);
+      if (Math.abs(dy) > 2) setIsAutoScale(false);
       return;
     }
 
@@ -1105,6 +1125,17 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       const candleShift = Math.round(dx / candleWidth);
       const newOffset = Math.max(0, Math.min(candles.length - visibleCount, dragStartOffsetRef.current + candleShift));
       setPanOffset(newOffset);
+      // Vertical: engage after a clear vertical move so plain horizontal drags keep auto-fit.
+      const dy = y - dragStartYRef.current;
+      if (!verticalPanRef.current && Math.abs(dy) > 12) {
+        verticalPanRef.current = true;
+        setIsAutoScale(false);
+        dragStartYRef.current = y;
+        dragStartPriceOffsetRef.current = 0;
+      } else if (verticalPanRef.current && mainChartHeight > 0) {
+        setPriceOffset(dragStartPriceOffsetRef.current + (dy / mainChartHeight) * adjustedRange);
+        setIsAutoScale(false);
+      }
       return;
     }
 
@@ -1456,16 +1487,39 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     if (x >= transformRef.current.chartWidth) {
-      setPriceScaleStretch(1.0);
+      resetAutoScale();
     }
   };
 
   // Wheel Zoom (Centered on pointer) (2.5)
+  const wheelPanAccRef = useRef(0);
+  // React wheel listeners are passive, so preventDefault() there is ignored and a trackpad swipe scrolls the
+  // page or triggers browser back/forward. A native non-passive listener blocks that; the React handler still runs.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const block = (ev: WheelEvent) => ev.preventDefault();
+    canvas.addEventListener('wheel', block, { passive: false });
+    return () => canvas.removeEventListener('wheel', block);
+  }, []);
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
     const pointerX = e.clientX - rect.left;
-    const { chartWidth } = transformRef.current;
+    const { chartWidth, candleWidth } = transformRef.current;
+
+    // Trackpad two-finger horizontal swipe (deltaX) or Shift+wheel = horizontal pan (like TradingView)
+    const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+    if (horizontal !== 0) {
+      wheelPanAccRef.current += horizontal;
+      const step = Math.max(4, candleWidth || 8);
+      const shift = Math.trunc(wheelPanAccRef.current / step);
+      if (shift !== 0) {
+        wheelPanAccRef.current -= shift * step;
+        setPanOffset((prev) => Math.max(0, Math.min(candles.length - visibleCount, prev - shift)));
+      }
+      return;
+    }
+    if (e.deltaY === 0) return;
 
     // Zoom direction
     const delta = e.deltaY < 0 ? -6 : 6;
@@ -1678,12 +1732,21 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
           onClick={() => {
             setPanOffset(0);
             setVisibleCount(70);
-            setPriceScaleStretch(1.0);
+            resetAutoScale();
           }}
           title="إعادة ضبط العرض والسعر (Reset View)"
           className="p-1 hover:bg-[#1C2740] rounded text-[#A3B4D0] hover:text-[#E8EEF9] transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
+        </button>
+        <button
+          onClick={resetAutoScale}
+          title={isAutoScale ? 'ملاءمة تلقائية للسعر (مفعّلة)' : 'إعادة الملاءمة التلقائية للسعر'}
+          className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-colors ${
+            isAutoScale ? 'bg-[#1C2E4A] text-[#2DD4BF]' : 'text-[#7B8DA8] hover:text-white'
+          }`}
+        >
+          A
         </button>
         <button
           onClick={() => setIsLogScale(!isLogScale)}
@@ -1721,7 +1784,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
       {/* 6. Main Canvas */}
       <canvas
         ref={canvasRef}
-        style={{ width: dimensions.width, height: dimensions.height, touchAction: 'none' }}
+        style={{ width: dimensions.width, height: dimensions.height, touchAction: 'none', overscrollBehavior: 'contain' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
