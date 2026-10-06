@@ -151,6 +151,25 @@ async def _reject_lone_surrogates(request: Request, call_next):
     return await call_next(request)
 
 
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(self)",
+}
+
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    """Basic hardening headers on every response; HSTS only when the request came over HTTPS (behind Caddy)."""
+    response = await call_next(request)
+    for k, v in _SECURITY_HEADERS.items():
+        response.headers.setdefault(k, v)
+    if request.headers.get("x-forwarded-proto") == "https" or request.url.scheme == "https":
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    return response
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_cors_origins(),
@@ -957,8 +976,30 @@ def market_status():
     return st
 
 
+_REGISTER_IP_HITS: dict[str, list[float]] = {}
+
+
+def _register_ip_allowed(ip: str) -> bool:
+    """Sign-ups per IP per hour (bots creating accounts in bulk). `MATRIX_REGISTER_PER_HOUR`, default 20."""
+    try:
+        cap = int(os.getenv("MATRIX_REGISTER_PER_HOUR", "20"))
+    except ValueError:
+        cap = 20
+    now = time.time()
+    hits = [t for t in _REGISTER_IP_HITS.get(ip, []) if now - t < 3600]
+    ok = len(hits) < cap
+    if ok:
+        hits.append(now)
+    _REGISTER_IP_HITS[ip] = hits
+    if len(_REGISTER_IP_HITS) > 20000:
+        _REGISTER_IP_HITS.clear()
+    return ok
+
+
 @app.post("/api/auth/register")
-def auth_register(body: AuthRegister, background: BackgroundTasks):
+def auth_register(body: AuthRegister, background: BackgroundTasks, request: Request):
+    if not _register_ip_allowed(request.client.host if request.client else "?"):
+        raise HTTPException(status_code=429, detail="too many sign-ups from this network, try again later")
     try:
         session = db.register_user(
             body.username,

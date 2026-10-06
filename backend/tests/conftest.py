@@ -16,6 +16,9 @@ if _BACKEND_DIR not in sys.path:
 
 import pytest
 
+# tests register many accounts from the same client address
+os.environ.setdefault("MATRIX_REGISTER_PER_HOUR", "1000000")
+
 
 @pytest.fixture(autouse=True)
 def _fresh_quote_cache():

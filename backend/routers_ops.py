@@ -94,3 +94,40 @@ def admin_backup_download(name: str):
     if p is None:
         raise HTTPException(status_code=404, detail="not found")
     return FileResponse(p, media_type="application/gzip", filename=name)
+
+
+# ---------------------------------------------------------------------------------------------
+# SEO: robots.txt and sitemap.xml (absolute URLs from PUBLIC_BASE_URL when set, else the request host)
+
+from fastapi.responses import PlainTextResponse, Response  # noqa: E402
+
+import mailer  # noqa: E402
+
+_PUBLIC_PAGES = [
+    ("/", "daily", "1.0"),
+    ("/legal/about.html", "weekly", "0.9"),
+    ("/legal/privacy.html", "monthly", "0.4"),
+    ("/legal/terms.html", "monthly", "0.4"),
+    ("/legal/risk.html", "monthly", "0.4"),
+    ("/legal/delete-account.html", "yearly", "0.2"),
+]
+
+
+def _base(request: Request) -> str:
+    return mailer.public_base_url(str(request.base_url)).rstrip("/")
+
+
+@router.get("/robots.txt", include_in_schema=False)
+def robots(request: Request):
+    body = "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: " + _base(request) + "/sitemap.xml\n"
+    return PlainTextResponse(body)
+
+
+@router.get("/sitemap.xml", include_in_schema=False)
+def sitemap(request: Request):
+    base = _base(request)
+    urls = "".join(
+        f"<url><loc>{base}{p}</loc><changefreq>{f}</changefreq><priority>{pr}</priority></url>" for p, f, pr in _PUBLIC_PAGES
+    )
+    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls + "</urlset>"
+    return Response(content=xml, media_type="application/xml")

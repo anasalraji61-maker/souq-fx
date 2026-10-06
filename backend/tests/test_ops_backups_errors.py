@@ -124,3 +124,27 @@ def test_errors_clear_and_cap(client, monkeypatch):
 def test_overview_has_errors_and_backup(client):
     ov = client.get("/api/admin/overview", headers=ADMIN).json()
     assert "errors_24h" in ov and "backup" in ov and "files" not in ov["backup"]
+
+
+def test_security_headers_and_register_limit(client, monkeypatch):
+    import main as m
+    r = client.get("/api/health")
+    assert r.headers["x-content-type-options"] == "nosniff"
+    assert r.headers["x-frame-options"] == "SAMEORIGIN"
+    assert "strict-transport-security" not in r.headers
+    r = client.get("/api/health", headers={"X-Forwarded-Proto": "https"})
+    assert "max-age" in r.headers["strict-transport-security"]
+    monkeypatch.setenv("MATRIX_REGISTER_PER_HOUR", "2")
+    m._REGISTER_IP_HITS.clear()
+    codes = [client.post("/api/auth/register", json={"username": f"rl_user{i}", "email": f"rl{i}@x.co", "password": "pass1234"}).status_code for i in range(3)]
+    assert codes == [200, 200, 429]
+    m._REGISTER_IP_HITS.clear()
+
+
+def test_robots_and_sitemap(client, monkeypatch):
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://matrix.example")
+    r = client.get("/robots.txt")
+    assert r.status_code == 200 and "Disallow: /admin/" in r.text and "https://matrix.example/sitemap.xml" in r.text
+    s = client.get("/sitemap.xml")
+    assert s.status_code == 200 and s.headers["content-type"].startswith("application/xml")
+    assert "<loc>https://matrix.example/legal/about.html</loc>" in s.text
