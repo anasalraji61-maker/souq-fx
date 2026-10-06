@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, ShieldAlert, Check, Trash2, X, AlertTriangle, Info, Clock, AlertCircle } from 'lucide-react';
 import { LangId, DICTS, formatDateTime, t } from '../../i18n/locales';
 
@@ -214,7 +214,8 @@ export const NotificationsCenterModal: React.FC<NotificationsCenterModalProps> =
   });
 
   // Grouping by day (3.1: items grouped by day - اليوم / أمس / date)
-  const groupedNotifications = useMemo(() => {
+  // computed per render (a hook here would run after the `!isOpen` early return: React error #310)
+  const groupedNotifications = (() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -252,7 +253,7 @@ export const NotificationsCenterModal: React.FC<NotificationsCenterModalProps> =
     });
 
     return groups;
-  }, [filteredNotifications, dict, currentLang]);
+  })();
 
   return (
     <div
