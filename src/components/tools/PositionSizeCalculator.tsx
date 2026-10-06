@@ -299,7 +299,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({ 
 
           {mode === 'pips' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field id="stop" label={x.t_stopPips} err={errors.stop}>
+              <Field id="stop" label={x.t_stopPips} err={errors.stop} hint={spec.kind === 'metal' ? fmt(x.t_metalPipHint, { pip: pipSizeText }) : undefined}>
                 <input id="stop" inputMode="decimal" value={stopPips} onChange={(e) => setStopPips(e.target.value)} className={inputCls(errors.stop)} dir="ltr" />
               </Field>
               <Field id="tp" label={x.t_tpPipsOpt} err={errors.tp}>

@@ -1,284 +1,379 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AcademyLecture, AcademySchool } from '../../data/academyData';
-import { ArrowRight, Play, Pause, CheckCircle2, HelpCircle, BookOpen, Volume2, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle2, HelpCircle, BookOpen, Volume2, Square, ListOrdered, Clock, Lock, ChevronDown } from 'lucide-react';
+import { LangId, gx, fmt } from '../../i18n/locales';
+import { ConceptDiagram } from './conceptDiagrams';
+import { isLectureUnlocked, orderedLectures, schoolName } from './academyUtils';
 
 interface LectureClassroomProps {
   school: AcademySchool;
   lecture: AcademyLecture;
+  completed: string[];
+  currentLang?: LangId;
   onBack: () => void;
-  isCompleted: boolean;
-  onToggleComplete: (lectureId: string) => void;
+  onOpenLecture: (lecture: AcademyLecture) => void;
+  onComplete: (lectureId: string) => Promise<void> | void;
 }
+
+const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 
 export const LectureClassroom: React.FC<LectureClassroomProps> = ({
   school,
   lecture,
+  completed,
+  currentLang = 'ar',
   onBack,
-  isCompleted,
-  onToggleComplete,
+  onOpenLecture,
+  onComplete,
 }) => {
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
-  const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const x = gx(currentLang);
+  const rtl = currentLang !== 'en-US';
+  const Back = rtl ? ArrowRight : ArrowLeft;
+  const Fwd = rtl ? ArrowLeft : ArrowRight;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState<string>('');
+  const [quizChoice, setQuizChoice] = useState<number | null>(null);
+  const [quizDone, setQuizDone] = useState(false);
+  const [speaking, setSpeaking] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [tocOpen, setTocOpen] = useState(false);
 
-  // Concept Visualizer SVG
-  const renderConceptDiagram = (concept?: string) => {
-    switch (concept) {
-      case 'support_resistance':
-        return (
-          <div className="bg-[#0B1220] p-4 rounded-xl border border-[#243049] flex flex-col items-center">
-            <span className="text-[11px] text-[#7B8DA8] mb-2 font-mono">مخطط ارتداد وتبادل أدوار الدعم والمقاومة</span>
-            <svg viewBox="0 0 400 160" className="w-full h-36">
-              {/* Resistance line */}
-              <line x1="20" y1="40" x2="380" y2="40" stroke="#EF4444" strokeWidth="2" strokeDasharray="4 4" />
-              <text x="320" y="32" fill="#EF4444" fontSize="10" fontFamily="sans-serif">مقاومة (Resistance)</text>
+  const list = useMemo(() => orderedLectures(school), [school]);
+  const idx = list.findIndex((l) => l.lecture.id === lecture.id);
+  const prev = idx > 0 ? list[idx - 1].lecture : null;
+  const next = idx >= 0 && idx < list.length - 1 ? list[idx + 1].lecture : null;
+  const isDone = completed.includes(lecture.id);
+  const nextUnlocked = next ? isLectureUnlocked(school, next.id, completed) : false;
+  const nextUnlockedIfDone = next ? isLectureUnlocked(school, next.id, [...completed, lecture.id]) : false;
 
-              {/* Support line */}
-              <line x1="20" y1="120" x2="380" y2="120" stroke="#22C55E" strokeWidth="2" strokeDasharray="4 4" />
-              <text x="320" y="140" fill="#22C55E" fontSize="10" fontFamily="sans-serif">دعم (Support)</text>
+  const sections = useMemo(
+    () => [
+      ...lecture.script_segments.map((s, i) => ({ id: `sec-${i}`, title: s.title })),
+      ...(lecture.quiz ? [{ id: 'sec-quiz', title: x.a_quiz }] : []),
+    ],
+    [lecture, x.a_quiz]
+  );
+  const showToc = sections.length >= 3;
 
-              {/* Price Wave bouncing between */}
-              <path
-                d="M 30 115 Q 70 45 110 115 T 190 115 T 250 45 L 290 20 L 330 40 L 370 15"
-                fill="none"
-                stroke="#2DD4BF"
-                strokeWidth="2.5"
-              />
-              <circle cx="110" cy="118" r="4" fill="#22C55E" />
-              <circle cx="190" cy="118" r="4" fill="#22C55E" />
-              <circle cx="250" cy="42" r="4" fill="#EF4444" />
-              <circle cx="330" cy="40" r="4" fill="#22C55E" />
-            </svg>
-          </div>
-        );
+  // Reset per lecture.
+  useEffect(() => {
+    setQuizChoice(null);
+    setQuizDone(false);
+    setTocOpen(false);
+    stopSpeaking();
+    scrollRef.current?.scrollTo({ top: 0 });
+    setProgress(0);
+    return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lecture.id]);
 
-      case 'order_block':
-        return (
-          <div className="bg-[#0B1220] p-4 rounded-xl border border-[#243049] flex flex-col items-center">
-            <span className="text-[11px] text-[#7B8DA8] mb-2 font-mono">مخطط كتلة الأوامر (Order Block) و FVG</span>
-            <svg viewBox="0 0 400 160" className="w-full h-36">
-              {/* Order block rectangle */}
-              <rect x="120" y="70" width="70" height="40" fill="rgba(45, 212, 191, 0.2)" stroke="#2DD4BF" strokeWidth="1.5" />
-              <text x="125" y="94" fill="#2DD4BF" fontSize="10" fontWeight="bold">Bullish OB</text>
+  // Reading progress + current section.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      setProgress(max > 0 ? Math.min(100, Math.round((el.scrollTop / max) * 100)) : 100);
+      let current = sections[0]?.id || '';
+      for (const s of sections) {
+        const node = document.getElementById(s.id);
+        if (node && node.getBoundingClientRect().top - el.getBoundingClientRect().top < 140) current = s.id;
+      }
+      setActiveSection(current);
+    };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [sections]);
 
-              {/* FVG rectangle */}
-              <rect x="220" y="45" width="55" height="30" fill="rgba(245, 158, 11, 0.2)" stroke="#F59E0B" strokeWidth="1.5" strokeDasharray="2 2" />
-              <text x="230" y="64" fill="#F59E0B" fontSize="10" fontWeight="bold">FVG Gap</text>
+  // Keyboard: arrows move between lectures (reading direction aware), Esc goes back.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
+      const backward = rtl ? 'ArrowRight' : 'ArrowLeft';
+      if (e.key === forward && next && nextUnlocked) {
+        e.preventDefault();
+        onOpenLecture(next);
+      } else if (e.key === backward && prev) {
+        e.preventDefault();
+        onOpenLecture(prev);
+      } else if (e.key === 'Escape') {
+        onBack();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [rtl, next, prev, nextUnlocked, onOpenLecture, onBack]);
 
-              {/* Candle sticks sketch */}
-              <line x1="80" y1="50" x2="80" y2="120" stroke="#EF4444" strokeWidth="3" />
-              <line x1="140" y1="65" x2="140" y2="115" stroke="#EF4444" strokeWidth="5" />
-              <line x1="200" y1="20" x2="200" y2="90" stroke="#22C55E" strokeWidth="5" />
-              <line x1="260" y1="10" x2="260" y2="60" stroke="#22C55E" strokeWidth="4" />
-              
-              {/* Retest arrow */}
-              <path d="M 280 40 Q 230 80 180 85" fill="none" stroke="#E8EEF9" strokeWidth="1.5" markerEnd="url(#arrow)" />
-            </svg>
-          </div>
-        );
+  function stopSpeaking() {
+    if (canSpeak()) window.speechSynthesis.cancel();
+    setSpeaking(null);
+  }
 
-      case 'elliott_wave':
-        return (
-          <div className="bg-[#0B1220] p-4 rounded-xl border border-[#243049] flex flex-col items-center">
-            <span className="text-[11px] text-[#7B8DA8] mb-2 font-mono">مخطط دورة موجات إليوت الكاملة (1-2-3-4-5 و A-B-C)</span>
-            <svg viewBox="0 0 400 160" className="w-full h-36">
-              <polyline
-                points="30,130 80,80 120,110 200,30 250,70 300,20 340,65 370,50 390,95"
-                fill="none"
-                stroke="#2DD4BF"
-                strokeWidth="2.5"
-              />
-              <text x="75" y="70" fill="#2DD4BF" fontWeight="bold" fontSize="12">(1)</text>
-              <text x="115" y="125" fill="#EF4444" fontWeight="bold" fontSize="12">(2)</text>
-              <text x="195" y="20" fill="#2DD4BF" fontWeight="bold" fontSize="12">(3)</text>
-              <text x="245" y="85" fill="#EF4444" fontWeight="bold" fontSize="12">(4)</text>
-              <text x="305" y="15" fill="#2DD4BF" fontWeight="bold" fontSize="12">(5)</text>
-
-              <text x="340" y="80" fill="#F59E0B" fontWeight="bold" fontSize="12">A</text>
-              <text x="365" y="40" fill="#F59E0B" fontWeight="bold" fontSize="12">B</text>
-              <text x="385" y="110" fill="#F59E0B" fontWeight="bold" fontSize="12">C</text>
-            </svg>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="bg-[#0B1220] p-4 rounded-xl border border-[#243049] flex flex-col items-center">
-            <span className="text-[11px] text-[#7B8DA8] mb-2 font-mono">نموذج الشموع والتحليل الفني</span>
-            <div className="h-28 flex items-center justify-center text-[#7B8DA8]">
-              <BookOpen className="w-10 h-10 text-[#2DD4BF]/40" />
-            </div>
-          </div>
-        );
-    }
+  const speakFrom = (i: number) => {
+    if (!canSpeak()) return;
+    window.speechSynthesis.cancel();
+    const segs = lecture.script_segments;
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((v) => v.lang?.toLowerCase().startsWith('ar'));
+    const sayIndex = (k: number) => {
+      if (k >= segs.length) {
+        setSpeaking(null);
+        return;
+      }
+      const u = new SpeechSynthesisUtterance(`${segs[k].title}. ${segs[k].narration}`);
+      u.lang = 'ar';
+      if (voice) u.voice = voice;
+      u.rate = 0.95;
+      u.onstart = () => {
+        setSpeaking(k);
+        document.getElementById(`sec-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      u.onend = () => sayIndex(k + 1);
+      u.onerror = () => setSpeaking(null);
+      window.speechSynthesis.speak(u);
+    };
+    sayIndex(i);
   };
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6 select-none text-xs">
-      {/* Navigation Bar */}
-      <div className="flex items-center justify-between pb-4 border-b border-[#243049]">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-[#A3B4D0] hover:text-[#E8EEF9] transition-colors"
-        >
-          <ArrowRight className="w-4 h-4" />
-          <span>العودة لدروس مدرسة: {school.name_ar}</span>
-        </button>
+  const finish = async (goNext: boolean) => {
+    setBusy(true);
+    if (!isDone) await onComplete(lecture.id);
+    setBusy(false);
+    if (goNext && next && nextUnlockedIfDone) onOpenLecture(next);
+  };
 
+  const jump = (id: string) => {
+    setTocOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const toc = (
+    <nav aria-label={x.a_toc} className="space-y-1">
+      {sections.map((s, i) => (
         <button
-          onClick={() => onToggleComplete(lecture.id)}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 cursor-pointer shadow-md ${
-            isCompleted
-              ? 'bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/40 hover:bg-[#22C55E]/30'
-              : 'bg-[#2DD4BF] text-[#042F2E] hover:bg-[#26bba8]'
+          key={s.id}
+          onClick={() => jump(s.id)}
+          aria-current={activeSection === s.id ? 'true' : undefined}
+          className={`w-full text-start flex items-start gap-2 px-3 py-2 rounded-lg text-[12px] leading-snug cursor-pointer border-s-2 ${
+            activeSection === s.id ? 'border-[#2DD4BF] bg-[#13283A] text-[#E8EEF9]' : 'border-transparent text-[#94A3B8] hover:text-white'
           }`}
         >
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{isCompleted ? 'أكملت الدرس ✓' : 'أكملت الدرس'}</span>
+          <span className="font-mono text-[10px] mt-0.5 text-[#64748B]">{s.id === 'sec-quiz' ? '?' : i + 1}</span>
+          <span dir="auto">{s.title}</span>
         </button>
-      </div>
+      ))}
+    </nav>
+  );
 
-      {/* Lecture Title Card */}
-      <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-2">
-        <div className="flex items-center gap-2 text-[#2DD4BF] text-[11px] font-semibold">
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>{school.name_ar} • المحاضرة {lecture.id}</span>
+  return (
+    <div ref={scrollRef} className="h-full overflow-y-auto bg-[#0A111E]" data-testid="classroom">
+      {/* Sticky bar: reading progress + navigation */}
+      <div className="sticky top-0 z-30 bg-[#0B1220]/95 backdrop-blur border-b border-[#1E283D]">
+        <div className="h-1 bg-[#13213A]" aria-hidden="true">
+          <div className="h-full bg-gradient-to-r from-[#2DD4BF] to-[#22C55E] transition-[width] duration-150" style={{ width: `${progress}%` }} data-testid="read-progress" />
         </div>
-        <h1 className="text-xl font-bold text-[#E8EEF9]">{lecture.title}</h1>
-        <div className="flex items-center gap-4 text-[#7B8DA8] pt-1">
-          <span>المدة التقديرية: ~{lecture.duration_min} دقائق</span>
-          <span>•</span>
-          <span>المدرّب: {school.classroom.teacher}</span>
-        </div>
-      </div>
-
-      {/* Audio Lecture Simulation Player */}
-      <div className="p-4 bg-[#162033] rounded-xl border border-[#2DD4BF]/30 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-            className="w-10 h-10 rounded-full bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] flex items-center justify-center shadow-lg transition-transform active:scale-95"
-          >
-            {isPlayingAudio ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2 flex items-center gap-2">
+          <button onClick={onBack} className="flex items-center gap-1.5 min-h-[40px] px-2.5 rounded-lg text-[#A3B4D0] hover:text-white hover:bg-[#162033] text-xs cursor-pointer shrink-0" data-testid="classroom-back">
+            <Back className="w-4 h-4" />
+            <span className="hidden sm:inline">{x.a_backToCourse}</span>
           </button>
-          <div>
-            <div className="font-bold text-[#E8EEF9] flex items-center gap-1.5">
-              <Volume2 className="w-4 h-4 text-[#2DD4BF]" />
-              <span>الشرح الصوتي التفاعلي للدرس</span>
-            </div>
-            <div className="text-[11px] text-[#A3B4D0]">
-              {isPlayingAudio ? 'جارٍ الاستماع للشرح المنهجي...' : 'انقر لبدء إلقاء الدرس صوتياً'}
-            </div>
+          <div className="min-w-0 flex-1 text-[12px] text-[#7B8DA8] truncate" dir="auto">
+            {schoolName(school, currentLang)} · <span className="text-[#E8EEF9]">{lecture.title}</span>
           </div>
+          <span className="text-[11px] font-mono text-[#64748B] shrink-0" dir="ltr">
+            {idx + 1}/{list.length}
+          </span>
+          <button
+            onClick={() => void finish(false)}
+            disabled={isDone || busy}
+            className={`shrink-0 min-h-[40px] px-3 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
+              isDone ? 'bg-[#22C55E]/15 text-[#22C55E] border border-[#22C55E]/40' : 'bg-[#2DD4BF] text-[#042F2E]'
+            }`}
+            data-testid="mark-complete"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span className="hidden sm:inline">{isDone ? x.a_completed : x.a_markComplete}</span>
+          </button>
         </div>
+      </div>
 
-        {isPlayingAudio && (
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#2DD4BF]/10 text-[#2DD4BF] font-mono text-[11px] animate-pulse">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>صوت نشط</span>
+      <div className={`max-w-6xl mx-auto px-4 sm:px-6 py-6 ${showToc ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-10' : ''}`}>
+        <article className="mx-auto w-full max-w-[70ch] text-[#CBD5E1]" lang="ar" dir="rtl" data-testid="lecture-article">
+          <header className="space-y-2 mb-6" dir={rtl ? 'rtl' : 'ltr'} lang={currentLang === 'en-US' ? 'en' : currentLang}>
+            <div className="flex items-center gap-2 text-[#2DD4BF] text-[12px] font-semibold">
+              <BookOpen className="w-4 h-4" />
+              <span>{fmt(x.a_lectureN, { n: idx + 1, total: list.length })}</span>
+            </div>
+            <h1 className="text-2xl sm:text-[28px] font-bold text-[#E8EEF9] leading-snug" dir="auto">
+              {lecture.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-3 text-[12px] text-[#7B8DA8]">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> {fmt(x.a_minutes, { n: lecture.duration_min })}
+              </span>
+              {canSpeak() && (
+                <button
+                  onClick={() => (speaking === null ? speakFrom(0) : stopSpeaking())}
+                  className="flex items-center gap-1.5 min-h-[34px] px-3 rounded-full border border-[#2DD4BF]/40 text-[#2DD4BF] hover:bg-[#2DD4BF]/10 cursor-pointer"
+                  data-testid="listen-btn"
+                >
+                  {speaking === null ? <Volume2 className="w-3.5 h-3.5" /> : <Square className="w-3 h-3 fill-current" />}
+                  {speaking === null ? x.a_listen : x.a_stopListen}
+                </button>
+              )}
+            </div>
+          </header>
+
+          {showToc && (
+            <div className="lg:hidden mb-6 rounded-xl border border-[#1E283D] bg-[#0F1828]" dir={rtl ? 'rtl' : 'ltr'}>
+              <button onClick={() => setTocOpen((v) => !v)} aria-expanded={tocOpen} className="w-full flex items-center justify-between px-4 min-h-[46px] text-[13px] font-bold text-[#E8EEF9] cursor-pointer" data-testid="toc-toggle">
+                <span className="flex items-center gap-2">
+                  <ListOrdered className="w-4 h-4 text-[#2DD4BF]" /> {x.a_toc}
+                </span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${tocOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {tocOpen && <div className="px-2 pb-3">{toc}</div>}
+            </div>
+          )}
+
+          {lecture.outline.length > 0 && (
+            <section className="mb-8 rounded-xl bg-[#0F1828] border border-[#1E283D] p-4">
+              <h2 className="text-[13px] font-bold text-[#E8EEF9] mb-2" dir={rtl ? 'rtl' : 'ltr'}>
+                {x.a_outline}
+              </h2>
+              <ol className="list-decimal ps-5 space-y-1 text-[14px] leading-[1.9]">
+                {lecture.outline.map((o, i) => (
+                  <li key={i}>{o}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          <div className="mb-8">
+            <ConceptDiagram concept={lecture.chartConcept} />
           </div>
+
+          {lecture.script_segments.map((seg, i) => (
+            <section key={seg.id} id={`sec-${i}`} className="scroll-mt-20 mb-8" data-testid="lecture-section">
+              <h2 className={`text-[19px] font-bold mb-3 flex items-center gap-2 ${speaking === i ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'}`}>
+                <span className="w-7 h-7 rounded-full bg-[#13283A] text-[#2DD4BF] text-[12px] font-mono flex items-center justify-center shrink-0">{i + 1}</span>
+                {seg.title}
+              </h2>
+              <p className={`text-[16px] leading-[1.9] ${speaking === i ? 'text-white' : ''}`}>{seg.narration}</p>
+            </section>
+          ))}
+
+          {lecture.quiz && (
+            <section id="sec-quiz" className="scroll-mt-20 mb-8 rounded-2xl bg-[#121A2B] border border-[#243049] p-5 space-y-4" data-testid="quiz">
+              <h2 className="text-[17px] font-bold text-[#E8EEF9] flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-[#F59E0B]" /> {x.a_quiz}
+              </h2>
+              <p className="text-[15px] leading-[1.9] text-[#E8EEF9]">{lecture.quiz.question}</p>
+              <div className="space-y-2" role="radiogroup">
+                {lecture.quiz.options.map((opt, i) => {
+                  const correct = i === lecture.quiz!.correctAnswer;
+                  const chosen = quizChoice === i;
+                  let cls = 'bg-[#0F1828] border-[#24344E] text-[#E8EEF9]';
+                  if (quizDone && correct) cls = 'bg-[#22C55E]/15 border-[#22C55E] text-[#86EFAC] font-bold';
+                  else if (quizDone && chosen) cls = 'bg-[#EF4444]/15 border-[#EF4444] text-[#FCA5A5]';
+                  else if (chosen) cls = 'bg-[#2DD4BF]/15 border-[#2DD4BF] text-[#CFFAFE] font-bold';
+                  return (
+                    <button
+                      key={i}
+                      role="radio"
+                      aria-checked={chosen}
+                      onClick={() => !quizDone && setQuizChoice(i)}
+                      className={`w-full text-start min-h-[46px] px-4 py-2.5 rounded-xl border text-[14px] cursor-pointer ${cls}`}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+              {!quizDone ? (
+                <button
+                  disabled={quizChoice === null}
+                  onClick={() => setQuizDone(true)}
+                  className="min-h-[42px] px-5 rounded-xl bg-[#2DD4BF] text-[#042F2E] font-bold text-[13px] disabled:opacity-50 cursor-pointer"
+                  data-testid="quiz-submit"
+                >
+                  {x.a_checkAnswer}
+                </button>
+              ) : (
+                <div className="rounded-xl bg-[#0F1828] border border-[#24344E] p-4 text-[14px] leading-[1.9]" data-testid="quiz-result">
+                  <strong className={quizChoice === lecture.quiz.correctAnswer ? 'text-[#86EFAC]' : 'text-[#FCA5A5]'}>
+                    {quizChoice === lecture.quiz.correctAnswer ? x.a_correct : x.a_wrong}
+                  </strong>{' '}
+                  {lecture.quiz.explanation}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Completion + prev / next */}
+          <footer className="mt-10 pt-6 border-t border-[#1E283D] space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
+            {!isDone && (
+              <button
+                onClick={() => void finish(true)}
+                disabled={busy}
+                className="w-full min-h-[50px] rounded-xl bg-[#2DD4BF] text-[#042F2E] font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                data-testid="complete-next"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                {next && nextUnlockedIfDone ? x.a_completeAndNext : x.a_markComplete}
+              </button>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => prev && onOpenLecture(prev)}
+                disabled={!prev}
+                className="min-h-[64px] rounded-xl border border-[#24344E] bg-[#0F1828] px-4 text-start disabled:opacity-40 cursor-pointer hover:border-[#2DD4BF]/50"
+                data-testid="prev-lecture"
+              >
+                <span className="flex items-center gap-1 text-[11px] text-[#7B8DA8]">
+                  <Back className="w-3.5 h-3.5" /> {x.a_prev}
+                </span>
+                <span className="block text-[13px] text-[#E8EEF9] font-semibold truncate" dir="auto">
+                  {prev ? prev.title : '—'}
+                </span>
+              </button>
+              <button
+                onClick={() => next && nextUnlocked && onOpenLecture(next)}
+                disabled={!next || !nextUnlocked}
+                className="min-h-[64px] rounded-xl border border-[#24344E] bg-[#0F1828] px-4 text-end disabled:opacity-40 cursor-pointer hover:border-[#2DD4BF]/50"
+                data-testid="next-lecture"
+              >
+                <span className="flex items-center justify-end gap-1 text-[11px] text-[#7B8DA8]">
+                  {next && !nextUnlocked && <Lock className="w-3 h-3" />} {x.a_next} <Fwd className="w-3.5 h-3.5" />
+                </span>
+                <span className="block text-[13px] text-[#E8EEF9] font-semibold truncate" dir="auto">
+                  {next ? next.title : x.a_courseEnd}
+                </span>
+              </button>
+            </div>
+            {next && !nextUnlocked && <p className="text-[11px] text-[#7B8DA8] text-center">{x.a_nextLocked}</p>}
+            <p className="text-[11px] text-[#64748B] text-center hidden md:block">{rtl ? x.a_kbdHintRtl : x.a_kbdHintLtr}</p>
+          </footer>
+        </article>
+
+        {showToc && (
+          <aside className="hidden lg:block" dir={rtl ? 'rtl' : 'ltr'}>
+            <div className="sticky top-20">
+              <div className="text-[11px] font-semibold text-[#64748B] mb-2 px-3">{x.a_toc}</div>
+              {toc}
+            </div>
+          </aside>
         )}
       </div>
-
-      {/* Lecture Outline & Key Points */}
-      <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-3">
-        <h3 className="font-bold text-sm text-[#E8EEF9]">محاور ومخطط المحاضرة</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {lecture.outline.map((item, idx) => (
-            <div
-              key={idx}
-              className="p-3 bg-[#0B1220] rounded-lg border border-[#243049] flex items-center gap-2.5"
-            >
-              <span className="w-5 h-5 rounded-full bg-[#162033] text-[#2DD4BF] font-mono font-bold flex items-center justify-center shrink-0">
-                {idx + 1}
-              </span>
-              <span className="text-[#E8EEF9] font-medium leading-tight">{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Concept Diagram */}
-      {renderConceptDiagram(lecture.chartConcept)}
-
-      {/* Detailed Syllables & Narration Segments */}
-      <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4">
-        <h3 className="font-bold text-sm text-[#E8EEF9]">المحتوى التفصيلي والتحليلي</h3>
-
-        <div className="space-y-3">
-          {lecture.script_segments.map((seg, idx) => (
-            <div
-              key={seg.id}
-              onClick={() => setActiveSegmentIndex(idx)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                activeSegmentIndex === idx
-                  ? 'bg-[#162033] border-[#2DD4BF]'
-                  : 'bg-[#0B1220]/70 border-[#243049] hover:border-[#7B8DA8]'
-              }`}
-            >
-              <div className="flex items-center gap-2 font-bold text-[#E8EEF9] mb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
-                <span>{seg.title}</span>
-              </div>
-              <p className="text-[#A3B4D0] leading-relaxed text-[12px]">{seg.narration}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Comprehension Quiz (if available) */}
-      {lecture.quiz && (
-        <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-4">
-          <div className="flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-[#F59E0B]" />
-            <h3 className="font-bold text-sm text-[#E8EEF9]">اختبار فهم واستيعاب الدرس</h3>
-          </div>
-
-          <div className="p-4 bg-[#0B1220] rounded-xl border border-[#243049] space-y-3">
-            <p className="font-medium text-[#E8EEF9] text-sm">{lecture.quiz.question}</p>
-
-            <div className="space-y-2">
-              {lecture.quiz.options.map((option, optIdx) => {
-                const isSelected = selectedQuizOption === optIdx;
-                const isCorrect = optIdx === lecture.quiz?.correctAnswer;
-
-                let optClass = 'bg-[#162033] border-[#243049] text-[#E8EEF9]';
-                if (quizSubmitted) {
-                  if (isCorrect) optClass = 'bg-[#22C55E]/20 border-[#22C55E] text-[#22C55E] font-bold';
-                  else if (isSelected) optClass = 'bg-[#EF4444]/20 border-[#EF4444] text-[#EF4444]';
-                } else if (isSelected) {
-                  optClass = 'bg-[#2DD4BF]/20 border-[#2DD4BF] text-[#2DD4BF] font-bold';
-                }
-
-                return (
-                  <button
-                    key={optIdx}
-                    onClick={() => !quizSubmitted && setSelectedQuizOption(optIdx)}
-                    className={`w-full p-3 rounded-lg border text-right transition-colors ${optClass}`}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
-            </div>
-
-            {!quizSubmitted ? (
-              <button
-                disabled={selectedQuizOption === null}
-                onClick={() => setQuizSubmitted(true)}
-                className="mt-2 px-4 py-2 rounded-lg bg-[#2DD4BF] disabled:opacity-50 text-[#042F2E] font-bold"
-              >
-                تأكيد الإجابة
-              </button>
-            ) : (
-              <div className="mt-3 p-3 rounded-lg bg-[#162033] border border-[#243049] text-[#A3B4D0] leading-relaxed">
-                <strong>التوضيح الفني:</strong> {lecture.quiz.explanation}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
