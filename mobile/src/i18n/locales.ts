@@ -271,6 +271,30 @@ export type Dict = {
   chanRejected: string;
   chanPlaceholder: string;
   chanFlagged: string;
+  iapTitle: string;
+  iapCurrent: string;
+  iapDaysLeft: string;
+  iapPerMonth: string;
+  iapCharts: string;
+  iapIndicators: string;
+  iapAlerts: string;
+  iapAi: string;
+  iapUnlimited: string;
+  iapSubscribe: string;
+  iapCurrentBtn: string;
+  iapUnavailable: string;
+  iapLoginFirst: string;
+  iapActivating: string;
+  iapActivated: string;
+  iapActivatingSlow: string;
+  iapFailed: string;
+  iapRestore: string;
+  iapRestored: string;
+  iapRestoreFailed: string;
+  iapDisclosureIos: string;
+  iapDisclosureAndroid: string;
+  iapTerms: string;
+  iapPrivacy: string;
   chatInputPlaceholder: string;
   chatInputA11y: string;
   chatSendA11y: string;
@@ -1954,6 +1978,30 @@ const ar: Dict = {
   chanRejected: "لم تُنشر الرسالة: النص فارغ أو أطول من 1000 حرف.",
   chanPlaceholder: "اكتب في «{ch}»…",
   chanFlagged: "قيد المراجعة",
+  iapTitle: "باقات MATRIX",
+  iapCurrent: "باقتك الحالية: {plan}",
+  iapDaysLeft: "تنتهي بعد {n} يوم",
+  iapPerMonth: "/ شهر",
+  iapCharts: "شارتات في الشاشة: {n}",
+  iapIndicators: "مؤشرات لكل شارت: {n}",
+  iapAlerts: "تنبيهات أسعار: {n}",
+  iapAi: "أسئلة المساعد الذكي يومياً: {n}",
+  iapUnlimited: "بلا حد",
+  iapSubscribe: "اشترك",
+  iapCurrentBtn: "باقتك الحالية",
+  iapUnavailable: "غير متاح في المتجر حالياً",
+  iapLoginFirst: "سجّل الدخول أولاً حتى تُربط الباقة بحسابك.",
+  iapActivating: "تم الدفع، جارٍ تفعيل الباقة…",
+  iapActivated: "تم تفعيل الباقة. شكراً لاشتراكك!",
+  iapActivatingSlow: "وصل الدفع وسيُفعَّل خلال دقائق. إن لم يحدث فاضغط «استعادة المشتريات».",
+  iapFailed: "لم يكتمل الشراء. لم يُخصم أي مبلغ.",
+  iapRestore: "استعادة المشتريات",
+  iapRestored: "تمت مزامنة مشترياتك مع حسابك.",
+  iapRestoreFailed: "تعذّرت الاستعادة الآن. حاول لاحقاً.",
+  iapDisclosureIos: "الاشتراك شهري ويتجدد تلقائياً ويُخصم من حساب Apple الخاص بك ما لم تلغه قبل 24 ساعة على الأقل من نهاية الفترة. يمكنك إدارة الاشتراك وإلغاؤه من إعدادات حساب App Store.",
+  iapDisclosureAndroid: "الاشتراك شهري ويتجدد تلقائياً عبر Google Play حتى تلغيه. يمكنك إدارة الاشتراك وإلغاؤه من Google Play ← الدفعات والاشتراكات.",
+  iapTerms: "شروط الاستخدام",
+  iapPrivacy: "سياسة الخصوصية",
   chatInputPlaceholder: 'اكتب رسالة…',
   chatInputA11y: 'رسالة الدردشة الجماعية',
   chatSendA11y: 'إرسال رسالة الدردشة الجماعية',
@@ -3276,6 +3324,30 @@ const enUS: Dict = {
   chanRejected: "Not posted: the text is empty or longer than 1000 characters.",
   chanPlaceholder: "Write in “{ch}”…",
   chanFlagged: "Under review",
+  iapTitle: "MATRIX plans",
+  iapCurrent: "Your plan: {plan}",
+  iapDaysLeft: "ends in {n} days",
+  iapPerMonth: "/ month",
+  iapCharts: "Charts on screen: {n}",
+  iapIndicators: "Indicators per chart: {n}",
+  iapAlerts: "Price alerts: {n}",
+  iapAi: "AI assistant questions a day: {n}",
+  iapUnlimited: "unlimited",
+  iapSubscribe: "Subscribe",
+  iapCurrentBtn: "Current plan",
+  iapUnavailable: "Not available in the store yet",
+  iapLoginFirst: "Sign in first so the plan is linked to your account.",
+  iapActivating: "Payment done, activating your plan…",
+  iapActivated: "Your plan is active. Thank you!",
+  iapActivatingSlow: "Payment received; activation can take a few minutes. If it does not appear, tap “Restore purchases”.",
+  iapFailed: "The purchase did not complete. You were not charged.",
+  iapRestore: "Restore purchases",
+  iapRestored: "Your purchases are synced with your account.",
+  iapRestoreFailed: "Could not restore right now. Try again later.",
+  iapDisclosureIos: "Monthly subscription that renews automatically and is charged to your Apple ID unless cancelled at least 24 hours before the end of the period. Manage or cancel it in your App Store account settings.",
+  iapDisclosureAndroid: "Monthly subscription that renews automatically through Google Play until you cancel. Manage or cancel it in Google Play → Payments & subscriptions.",
+  iapTerms: "Terms of use",
+  iapPrivacy: "Privacy policy",
   chatInputPlaceholder: 'Type a message…',
   chatInputA11y: 'Group chat message',
   chatSendA11y: 'Send group chat message',
@@ -4647,6 +4719,30 @@ const ku: Dict = {
   chanRejected: "نامەکە بڵاو نەکرایەوە: دەقەکە بەتاڵە یان لە 1000 پیت درێژترە.",
   chanPlaceholder: "لە «{ch}» بنووسە…",
   chanFlagged: "لە پشکنیندایە",
+  iapTitle: "پاکێجەکانی MATRIX",
+  iapCurrent: "پاکێجی ئێستات: {plan}",
+  iapDaysLeft: "{n} ڕۆژی ماوە",
+  iapPerMonth: "/ مانگ",
+  iapCharts: "چارت لە شاشەدا: {n}",
+  iapIndicators: "پێوەر بۆ هەر چارتێک: {n}",
+  iapAlerts: "ئاگادارکردنەوەی نرخ: {n}",
+  iapAi: "پرسیاری یاریدەدەری زیرەک لە ڕۆژێکدا: {n}",
+  iapUnlimited: "بێ سنوور",
+  iapSubscribe: "بەشداربە",
+  iapCurrentBtn: "پاکێجی ئێستا",
+  iapUnavailable: "ئێستا لە فرۆشگا بەردەست نییە",
+  iapLoginFirst: "سەرەتا بچۆ ژوورەوە تا پاکێجەکە بە هەژمارەکەتەوە ببەسترێت.",
+  iapActivating: "پارەدان تەواو بوو، پاکێجەکە چالاک دەکرێت…",
+  iapActivated: "پاکێجەکە چالاک کرا. سوپاس!",
+  iapActivatingSlow: "پارەدان گەیشت و لە چەند خولەکێکدا چالاک دەبێت. ئەگەر نەبوو «گەڕاندنەوەی کڕینەکان» دابگرە.",
+  iapFailed: "کڕینەکە تەواو نەبوو. هیچ پارەیەک نەبڕدرا.",
+  iapRestore: "گەڕاندنەوەی کڕینەکان",
+  iapRestored: "کڕینەکانت لەگەڵ هەژمارەکەت هاوکات کران.",
+  iapRestoreFailed: "ئێستا گەڕاندنەوە نەکرا. دواتر هەوڵ بدەرەوە.",
+  iapDisclosureIos: "بەشدارییەکی مانگانەیە و خۆکارانە نوێ دەبێتەوە و لە هەژماری Apple ـەکەت دەبڕدرێت مەگەر لانیکەم 24 کاتژمێر پێش کۆتایی ماوەکە هەڵیبوەشێنیتەوە. لە ڕێکخستنەکانی App Store بەڕێوەی ببە.",
+  iapDisclosureAndroid: "بەشدارییەکی مانگانەیە و لە ڕێگەی Google Play خۆکارانە نوێ دەبێتەوە تا هەڵیدەوەشێنیتەوە. لە Google Play ← پارەدان و بەشدارییەکان بەڕێوەی ببە.",
+  iapTerms: "مەرجەکانی بەکارهێنان",
+  iapPrivacy: "سیاسەتی تایبەتمەندی",
   chatInputPlaceholder: 'نامەیەک بنووسە…',
   chatInputA11y: 'نامەی گفتوگۆی گروپی',
   chatSendA11y: 'ناردنی نامەی گفتوگۆی گروپی',

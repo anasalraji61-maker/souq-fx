@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import mailer
+import revenuecat
 import stripe_billing
 from core.auth import _auth_user
 
@@ -65,4 +66,30 @@ async def billing_webhook(request: Request):
         result = stripe_billing.handle_event(payload, request.headers.get("stripe-signature"))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="invalid signature") from exc
+    return {"received": True, **{k: v for k, v in result.items() if k in ("type", "duplicate", "plan", "ignored")}}
+
+
+# ---------------------------------------------------------------------------------------------
+# Mobile in-app subscriptions (RevenueCat)
+
+
+@router.get("/api/billing/mobile-config")
+def billing_mobile_config():
+    """Public SDK keys and product ids for the iPhone / Android app (the keys are public by design)."""
+    return revenuecat.mobile_config()
+
+
+@router.post("/api/billing/revenuecat/webhook")
+async def revenuecat_webhook(request: Request):
+    if not revenuecat.configured():
+        raise HTTPException(status_code=404, detail="not found")
+    if not revenuecat.check_auth(request.headers.get("authorization")):
+        raise HTTPException(status_code=401, detail="unauthorized")
+    body = await request.body()
+    if len(body) > 200_000:
+        raise HTTPException(status_code=413, detail="too large")
+    try:
+        result = revenuecat.handle(body)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"received": True, **{k: v for k, v in result.items() if k in ("type", "duplicate", "plan", "ignored")}}

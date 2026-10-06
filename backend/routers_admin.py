@@ -286,4 +286,5 @@ def admin_system():
         "moderation_token": bool((os.getenv("MATRIX_MODERATION_TOKEN") or "").strip()),
         "stripe": __import__("stripe_billing").configured(),
         "stripe_test_mode": __import__("stripe_billing").test_mode(),
+        "iap": __import__("revenuecat").mobile_config()["enabled"],
     }

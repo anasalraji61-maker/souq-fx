@@ -17,6 +17,8 @@ PLAN_ORDER = ("free", "basic", "pro", "vip")
 PRICES_USD = {"free": 0, "basic": 10, "pro": 15, "vip": 20}
 LABELS_AR = {"free": "المجانية", "basic": "الأساسية", "pro": "المحترف", "vip": "النخبة"}
 PAYMENT_METHODS = ("zaincash", "fib", "qi", "asiahawala", "cash", "bank", "other")
+# methods written by the billing integrations (not choosable in the admin activation form)
+AUTO_METHODS = ("stripe", "appstore", "playstore")
 
 # None = unlimited. Mirrors the pricing screen (SubscriptionPlansScreen.tsx).
 LIMITS: dict[str, dict[str, int | None]] = {
@@ -191,8 +193,11 @@ def activate(
         expires = start + int(days) * 86400
         c.execute("UPDATE users SET plan=?, plan_expires_at=? WHERE id=?", (plan, expires, user_id))
         # A manual activation now owns the plan: a Stripe subscription ending later must not reset it.
-        if any(r[1] == "stripe_subscription_id" for r in c.execute("PRAGMA table_info(users)").fetchall()):
+        ucols = {r[1] for r in c.execute("PRAGMA table_info(users)").fetchall()}
+        if "stripe_subscription_id" in ucols:
             c.execute("UPDATE users SET stripe_subscription_id=NULL WHERE id=?", (user_id,))
+        if "iap_original_id" in ucols:  # same for an App Store / Google Play subscription ending later
+            c.execute("UPDATE users SET iap_original_id=NULL WHERE id=?", (user_id,))
         c.execute(
             """INSERT INTO payments(user_id, plan, days, amount_iqd, method, reference, note, starts_at, expires_at, created_at)
                VALUES(?,?,?,?,?,?,?,?,?,?)""",

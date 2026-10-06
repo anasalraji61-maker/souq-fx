@@ -490,6 +490,7 @@
       '<div>مفتاح بيانات الأسعار</div><div>' + yesNo(s.market_data_key) + (s.market_rpm ? ' <span class="small ltr">(' + esc(s.market_rpm) + ' req/min)</span>' : '') + '</div>' +
       '<div>البريد الإلكتروني (SMTP)</div><div>' + yesNo(s.email) + '</div>' +
       '<div>الدفع بالبطاقة (Stripe)</div><div>' + yesNo(s.stripe) + (s.stripe && s.stripe_test_mode ? ' <span class="pill warn">وضع تجريبي</span>' : '') + '</div>' +
+      '<div>اشتراكات تطبيق الهاتف (RevenueCat)</div><div>' + yesNo(s.iap) + '</div>' +
       '<div>العنوان العام</div><div class="ltr">' + esc(s.public_base_url || '— (لم يُضبط نطاق بعد)') + '</div>' +
       '<div>التداول الحقيقي</div><div>' + (s.live_trading_enabled ? '<span class="pill bad">مفعّل!</span>' : '<span class="pill ok">مقفل (آمن)</span>') + '</div>';
     var p = s.provider_stats || {};
@@ -566,7 +567,7 @@
 
   // ---------------------------------------------------------------------------- plans
   var PLAN_AR = { free: 'المجانية', basic: 'الأساسية', pro: 'المحترف', vip: 'النخبة' };
-  var METHOD_AR = { zaincash: 'زين كاش', fib: 'FIB', qi: 'كي كارد', asiahawala: 'آسيا حوالة', cash: 'نقداً', bank: 'بنك', other: 'أخرى', stripe: 'Stripe (بطاقة)' };
+  var METHOD_AR = { zaincash: 'زين كاش', fib: 'FIB', qi: 'كي كارد', asiahawala: 'آسيا حوالة', cash: 'نقداً', bank: 'بنك', other: 'أخرى', stripe: 'Stripe (بطاقة)', appstore: 'App Store', playstore: 'Google Play' };
   function planCell(u) {
     if (!u.plan || u.plan === 'free') return '<span class="small">مجانية</span>';
     return '<span class="pill ok">' + esc(PLAN_AR[u.plan] || u.plan) + '</span><div class="small">حتى ' + fmtDate(u.plan_expires_at).split(' ')[0] + '</div>';

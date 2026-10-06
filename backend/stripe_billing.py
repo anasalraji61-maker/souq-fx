@@ -211,6 +211,8 @@ def _set_plan_until(user_id: int, plan: str | None, until: float | None, subscri
                 "UPDATE users SET plan=?, plan_expires_at=?, stripe_subscription_id=? WHERE id=?",
                 (plan, until, subscription_id, user_id),
             )
+            if any(r[1] == "iap_original_id" for r in c.execute("PRAGMA table_info(users)").fetchall()):
+                c.execute("UPDATE users SET iap_original_id=NULL WHERE id=?", (user_id,))
         else:
             # Ended: only clear when this subscription is the one that set the plan (a manual Zain Cash
             # activation recorded afterwards must not be wiped by an old Stripe subscription ending).

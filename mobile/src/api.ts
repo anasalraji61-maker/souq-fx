@@ -385,7 +385,20 @@ async function deleteJson<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export type PlanInfo = {
+  plan: 'free' | 'basic' | 'pro' | 'vip';
+  label: string;
+  expires_at: number | null;
+  days_left: number | null;
+  enforcement: boolean;
+  plan_limits: Record<string, Record<string, number | null>>;
+  prices_usd: Record<string, number>;
+  labels: Record<string, string>;
+};
+
 export const api = {
+  plan: () => getJson<PlanInfo>('/api/plan'),
+  mobileBillingConfig: () => getJson<import('./iap').MobileBillingConfig>('/api/billing/mobile-config'),
   baseUrl: API_URL,
   login: (usernameOrEmail: string, password: string, email?: string) =>
     postJson<{ token: string; user_id: number; username: string; email?: string | null }>(

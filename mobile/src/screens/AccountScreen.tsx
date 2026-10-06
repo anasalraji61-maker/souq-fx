@@ -302,9 +302,10 @@ export function AccountScreen() {
         }}
       />
 
+      {/* In-app subscriptions: the panel shows itself only when store billing is configured on the server */}
+      <SubscriptionPlansPanel />
       {SHOW_REFERRAL_AND_PLANS ? (
         <>
-          <SubscriptionPlansPanel />
           <CommissionPlanPanel />
           <NetworkTreePanel
             enabled={!!user}
