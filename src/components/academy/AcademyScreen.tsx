@@ -19,6 +19,7 @@ import {
   CheckCircle,
   ChevronLeft,
   Award,
+  Sparkles,
   Layers,
   Printer,
   Calendar,
@@ -118,7 +119,18 @@ export const AcademyScreen: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6 select-none text-xs">
+    <div className="h-full overflow-y-auto p-4 sm:p-6 max-w-5xl mx-auto space-y-6 select-none text-xs pb-28 md:pb-10">
+      {/* Educational Disclaimer Banner */}
+      <div className="px-3.5 py-2 rounded-xl bg-[#0B1528] border border-[#1E293B] text-[11px] text-[#94A3B8] flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+          <span>منهاج تدريبي تحليلي لأغراض تعليمية بحتة • لا تمثل أي مادة تدريبية توصية استثمارية أو مالية.</span>
+        </div>
+        <span className="text-[10px] text-amber-400 font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 shrink-0">
+          تعليمي 100%
+        </span>
+      </div>
+
       {/* Title & Progress Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#243049]">
         <div className="flex items-center gap-3">
@@ -159,7 +171,7 @@ export const AcademyScreen: React.FC = () => {
             setActiveTab('courses');
             setSelectedSchool(null);
           }}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold text-xs transition-colors ${
+          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors min-h-[44px] cursor-pointer ${
             activeTab === 'courses'
               ? 'bg-[#1C2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
               : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
@@ -171,7 +183,7 @@ export const AcademyScreen: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('certificates')}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold text-xs transition-colors ${
+          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors min-h-[44px] cursor-pointer ${
             activeTab === 'certificates'
               ? 'bg-[#1C2E4A] text-[#E8B86D] border border-[#E8B86D]/40'
               : 'text-[#7B8DA8] hover:text-[#E8EEF9]'
@@ -235,10 +247,10 @@ export const AcademyScreen: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedCertificate(cert)}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#1C2740] hover:bg-[#233554] text-[#E8B86D] hover:text-white font-bold text-xs transition-colors border border-[#E8B86D]/30"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1C2740] hover:bg-[#233554] text-[#E8B86D] hover:text-white font-bold text-xs transition-colors border border-[#E8B86D]/30 min-h-[44px] cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>عرض الشهادة وطباعتها (Print)</span>
+                    <span>عرض الشهادة وطباعتها</span>
                   </button>
                 </div>
               ))}
@@ -253,7 +265,7 @@ export const AcademyScreen: React.FC = () => {
               <div className="flex items-center gap-2 text-[#2DD4BF] font-semibold text-xs mb-1">
                 <button
                   onClick={() => setSelectedSchool(null)}
-                  className="hover:underline flex items-center gap-1"
+                  className="hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   المدارس التعليمية
                 </button>
@@ -269,16 +281,16 @@ export const AcademyScreen: React.FC = () => {
               {(courseProgressMap[selectedSchool.id]?.progress_pct ?? 0) >= 100 && (
                 <button
                   onClick={() => handleClaimCertificate(selectedSchool)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#E8B86D] to-[#F59E0B] text-[#0B1220] font-bold text-xs shadow-md hover:brightness-110 active:scale-95 transition-all animate-pulse"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-gradient-to-r from-[#E8B86D] to-[#F59E0B] text-[#0B1220] font-bold text-xs shadow-md hover:brightness-110 active:scale-95 transition-all animate-pulse min-h-[44px] cursor-pointer"
                 >
                   <Award className="w-4 h-4" />
-                  <span>استلم الشهادة (Claim Certificate)</span>
+                  <span>استلام الشهادة المعتمدة</span>
                 </button>
               )}
 
               <button
                 onClick={() => setSelectedSchool(null)}
-                className="px-3 py-1.5 rounded-lg bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#E8EEF9]"
+                className="px-3.5 py-2 rounded-lg bg-[#162033] hover:bg-[#1E293B] border border-[#243049] text-[#E8EEF9] min-h-[44px] cursor-pointer"
               >
                 الرجوع لكافة المدارس
               </button>
@@ -306,7 +318,7 @@ export const AcademyScreen: React.FC = () => {
                       <div
                         key={lec.id}
                         onClick={() => setActiveLecture(lec)}
-                        className="p-4 flex items-center justify-between hover:bg-[#162033]/60 cursor-pointer transition-colors"
+                        className="p-4 min-h-[56px] flex items-center justify-between hover:bg-[#162033]/60 cursor-pointer transition-colors active:bg-[#1C283D]"
                       >
                         <div className="flex items-center gap-3">
                           <div

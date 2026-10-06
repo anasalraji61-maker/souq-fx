@@ -150,7 +150,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-[#E8EEF9]">
-                حاسبة حجم اللوت وإدارة المخاطر (Position Sizer)
+                حاسبة حجم اللوت وإدارة المخاطر
               </h2>
               {isDemoPrice && (
                 <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
@@ -166,7 +166,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#162033] border border-[#243049] text-xs">
           <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
-          <span className="text-[#A3B4D0]">حماية من نداء الهامش (Margin Call Guard)</span>
+          <span className="text-[#A3B4D0]">حماية رأس المال من نداء الهامش</span>
         </div>
       </div>
 
@@ -292,7 +292,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
 
             {/* Recommended Lot Size Highlight */}
             <div className="p-5 bg-gradient-to-br from-[#162740] to-[#0E1626] rounded-xl border border-[#2DD4BF]/40 text-center space-y-1 shadow-inner">
-              <span className="text-[#A3B4D0] text-xs font-semibold">حجم العقد الموصى به (Lot Size)</span>
+              <span className="text-[#A3B4D0] text-xs font-semibold">حجم العقد الموصى به</span>
               <div className="text-4xl font-extrabold font-mono text-[#2DD4BF] tracking-tight">
                 {calculatedLot.toFixed(2)} <span className="text-sm font-sans">لوت</span>
               </div>

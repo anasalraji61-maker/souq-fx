@@ -8,6 +8,7 @@ import {
 } from '../../api/toolsApi';
 import { Eye, TrendingUp, TrendingDown, Compass, RefreshCw, AlertCircle, Filter } from 'lucide-react';
 import { OfflineBadge } from '../common/OfflineBadge';
+import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
 
 interface MarketScreenerProps {
   symbols: MarketSymbol[];
@@ -109,31 +110,31 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
       case 'strong_buy':
         return (
           <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#22C55E] text-[#051329] shadow-xs">
-            شراء قوي (Strong Buy)
+            شراء قوي
           </span>
         );
       case 'buy':
         return (
           <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-[#22C55E] border border-emerald-500/30">
-            شراء (Buy)
+            شراء
           </span>
         );
       case 'strong_sell':
         return (
           <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EF4444] text-white shadow-xs">
-            بيع قوي (Strong Sell)
+            بيع قوي
           </span>
         );
       case 'sell':
         return (
           <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/15 text-[#EF4444] border border-rose-500/30">
-            بيع (Sell)
+            بيع
           </span>
         );
       default:
         return (
           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#162033] text-[#A3B4D0]">
-            حيادي (Neutral)
+            حيادي
           </span>
         );
     }
@@ -149,7 +150,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-[#E8EEF9]">ماسح السوق الفني (Technical Screener)</h2>
+              <h2 className="text-base font-bold text-[#E8EEF9]">ماسح السوق الفني</h2>
               {isOffline && <OfflineBadge forceShow />}
             </div>
             <p className="text-[#7B8DA8]">
@@ -163,7 +164,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
           <select
             value={selectedTimeframe}
             onChange={(e) => setSelectedTimeframe(e.target.value)}
-            className="bg-[#121A2B] border border-[#243049] rounded-lg px-2.5 py-1.5 text-xs text-[#E8EEF9] font-mono focus:outline-hidden"
+            className="bg-[#121A2B] border border-[#243049] rounded-xl px-3 py-2 text-xs text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
           >
             <option value="5m">إطار 5 دقائق (5m)</option>
             <option value="15m">إطار 15 دقيقة (15m)</option>
@@ -175,7 +176,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
           <button
             onClick={executeScan}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer min-h-[44px] shadow-md"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>مسح السوق</span>
@@ -187,7 +188,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
       <div className="flex items-center gap-1.5 bg-[#121A2B] p-1.5 rounded-xl border border-[#243049] overflow-x-auto no-scrollbar">
         <button
           onClick={() => setSelectedFilterId('all')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+          className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer min-h-[40px] ${
             selectedFilterId === 'all'
               ? 'bg-[#2DD4BF] text-[#042F2E]'
               : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162238]'
@@ -200,7 +201,7 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
           <button
             key={f.id}
             onClick={() => setSelectedFilterId(f.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer min-h-[40px] ${
               selectedFilterId === f.id
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/50'
                 : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162238]'
@@ -214,16 +215,24 @@ export const MarketScreener: React.FC<MarketScreenerProps> = ({
       {/* Screener Results Table */}
       <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden shadow-lg">
         {isLoading ? (
-          <div className="p-12 text-center text-[#7B8DA8] space-y-3 font-mono">
-            <div className="w-8 h-8 rounded-full border-2 border-[#2DD4BF] border-t-transparent animate-spin mx-auto" />
-            <p>جاري مسح الأزواج وحساب المؤشرات الفنية...</p>
-          </div>
+          <LoadingSkeleton rows={6} className="py-6" />
         ) : results.length === 0 ? (
-          <div className="p-12 text-center text-[#7B8DA8] space-y-2">
-            <AlertCircle className="w-8 h-8 mx-auto text-amber-400" />
-            <p className="font-semibold text-[#E8EEF9]">لا توجد أزواج تطابق هذا الفلتر حالياً</p>
-            <p className="text-xs">جرّب اختيار إطار زمني مختلف أو فلاتر أخرى لرصد الفرص.</p>
-          </div>
+          <EmptyState
+            icon={<Compass className="w-8 h-8 text-[#2DD4BF]" />}
+            title="لا توجد أزواج تطابق هذا الفلتر حالياً"
+            message="جرّب اختيار إطار زمني مختلف أو فلاتر أخرى لرصد الفرص الفنية."
+            action={
+              <button
+                onClick={() => {
+                  setSelectedFilterId('all');
+                  executeScan();
+                }}
+                className="px-4 py-2.5 rounded-xl bg-[#16233B] hover:bg-[#203352] text-[#2DD4BF] font-bold text-xs min-h-[44px] cursor-pointer inline-flex items-center justify-center transition-colors"
+              >
+                عرض كل الأزواج
+              </button>
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             {/* Desktop Table View */}

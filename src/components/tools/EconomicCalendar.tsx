@@ -3,6 +3,7 @@ import { getEconomicCalendar, EconomicCalendarEvent, getMarketNews, NewsItem } f
 import { newsImpactAPI, VolatilityPreAlert } from '../../api/newsImpact';
 import { Calendar, AlertTriangle, RefreshCw, Globe, ShieldAlert, Newspaper, ExternalLink } from 'lucide-react';
 import { OfflineBadge } from '../common/OfflineBadge';
+import { LoadingSkeleton, EmptyState, ErrorState } from '../common/ScreenState';
 
 export const EconomicCalendar: React.FC = () => {
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium'>('all');
@@ -143,7 +144,7 @@ export const EconomicCalendar: React.FC = () => {
           <div className="flex items-center bg-[#121A2B] p-1 rounded-xl border border-[#243049]">
             <button
               onClick={() => setActiveTab('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[44px] ${
                 activeTab === 'calendar'
                   ? 'bg-[#2DD4BF] text-[#042F2E]'
                   : 'text-[#A3B4D0] hover:text-white'
@@ -154,7 +155,7 @@ export const EconomicCalendar: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('news')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[44px] ${
                 activeTab === 'news'
                   ? 'bg-[#2DD4BF] text-[#042F2E]'
                   : 'text-[#A3B4D0] hover:text-white'
@@ -168,7 +169,7 @@ export const EconomicCalendar: React.FC = () => {
           <button
             onClick={loadData}
             disabled={isLoading}
-            className="p-2 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] cursor-pointer"
+            className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="تحديث البيانات"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -181,11 +182,11 @@ export const EconomicCalendar: React.FC = () => {
           {/* Calendar Filters */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#121A2B] rounded-xl border border-[#243049]">
             <div className="flex items-center gap-2">
-              <span className="text-[#7B8DA8] text-[11px]">مستوى التأثير:</span>
-              <div className="flex items-center bg-[#0B1220] p-0.5 rounded-lg border border-[#243049]">
+              <span className="text-[#7B8DA8] text-xs">مستوى التأثير:</span>
+              <div className="flex items-center bg-[#0B1220] p-1 rounded-xl border border-[#243049]">
                 <button
                   onClick={() => setImpactFilter('all')}
-                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[40px] ${
                     impactFilter === 'all' ? 'bg-[#2DD4BF] text-[#042F2E]' : 'text-[#A3B4D0]'
                   }`}
                 >
@@ -193,7 +194,7 @@ export const EconomicCalendar: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setImpactFilter('high')}
-                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[40px] ${
                     impactFilter === 'high' ? 'bg-rose-500 text-white' : 'text-[#A3B4D0]'
                   }`}
                 >
@@ -201,7 +202,7 @@ export const EconomicCalendar: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setImpactFilter('medium')}
-                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[40px] ${
                     impactFilter === 'medium' ? 'bg-amber-500 text-[#042F2E]' : 'text-[#A3B4D0]'
                   }`}
                 >
@@ -211,11 +212,11 @@ export const EconomicCalendar: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[#7B8DA8] text-[11px]">العملة:</span>
+              <span className="text-[#7B8DA8] text-xs">العملة:</span>
               <select
                 value={currencyFilter}
                 onChange={(e) => setCurrencyFilter(e.target.value)}
-                className="bg-[#0B1220] border border-[#243049] rounded-lg px-3 py-1.5 text-xs text-[#E8EEF9] font-mono focus:outline-hidden"
+                className="bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-xs text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
               >
                 <option value="all">كل العملات الرئيسية</option>
                 <option value="USD">USD (الدولار الأمريكي)</option>
@@ -231,15 +232,24 @@ export const EconomicCalendar: React.FC = () => {
           {/* Calendar Events Table */}
           <div className="bg-[#121A2B] rounded-xl border border-[#243049] overflow-hidden shadow-lg">
             {isLoading ? (
-              <div className="p-12 text-center text-[#7B8DA8] space-y-3 font-mono">
-                <div className="w-8 h-8 rounded-full border-2 border-[#2DD4BF] border-t-transparent animate-spin mx-auto" />
-                <p>جاري مزامنة بيانات المفكرة الاقتصادية...</p>
-              </div>
+              <LoadingSkeleton rows={6} className="py-6" />
             ) : filteredEvents.length === 0 ? (
-              <div className="p-12 text-center text-[#7B8DA8] space-y-2">
-                <p className="font-semibold text-[#E8EEF9]">لا توجد أحداث اقتصادية مسجلة لهذه الفلاتر</p>
-                <p className="text-xs">اختر &quot;كل العملات&quot; أو فلاتر تأثير أوسع.</p>
-              </div>
+              <EmptyState
+                icon={<Calendar className="w-8 h-8 text-[#2DD4BF]" />}
+                title="لا توجد أحداث اقتصادية مسجلة لهذه الفلاتر"
+                message="اختر 'كل العملات' أو فلاتر تأثير أوسع لعرض المزيد من البيانات."
+                action={
+                  <button
+                    onClick={() => {
+                      setImpactFilter('all');
+                      setCurrencyFilter('all');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-[#16233B] hover:bg-[#203352] text-[#2DD4BF] font-bold text-xs min-h-[44px] cursor-pointer inline-flex items-center justify-center transition-colors"
+                  >
+                    إعادة ضبط الفلاتر
+                  </button>
+                }
+              />
             ) : (
               <div className="overflow-x-auto">
                 {/* Desktop Table View */}
@@ -328,14 +338,21 @@ export const EconomicCalendar: React.FC = () => {
         /* 2.3 News Panel from /api/news */
         <div className="space-y-3">
           {isLoading ? (
-            <div className="p-12 text-center text-[#7B8DA8] space-y-3 font-mono">
-              <div className="w-8 h-8 rounded-full border-2 border-[#2DD4BF] border-t-transparent animate-spin mx-auto" />
-              <p>جاري تحميل أخبار الأسواق العالمية...</p>
-            </div>
+            <LoadingSkeleton rows={5} className="py-6" />
           ) : newsList.length === 0 ? (
-            <div className="p-12 text-center text-[#7B8DA8] bg-[#121A2B] rounded-xl border border-[#243049]">
-              لا توجد أخبار حديثة حالياً من المصدر.
-            </div>
+            <EmptyState
+              icon={<Newspaper className="w-8 h-8 text-[#2DD4BF]" />}
+              title="لا توجد أخبار حديثة حالياً"
+              message="يتم فحص وتحديث مصادر الأخبار الاقتصادية اللحظية باستمرار."
+              action={
+                <button
+                  onClick={loadData}
+                  className="px-4 py-2.5 rounded-xl bg-[#16233B] hover:bg-[#203352] text-[#2DD4BF] font-bold text-xs min-h-[44px] cursor-pointer inline-flex items-center justify-center transition-colors"
+                >
+                  تحديث الأخبار
+                </button>
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {newsList.map((item, idx) => (

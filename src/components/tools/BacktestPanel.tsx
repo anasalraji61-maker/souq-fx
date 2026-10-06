@@ -77,7 +77,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-[#E8EEF9]">
-                محاكي واختبار الاستراتيجيات الفنية (Backtest Engine)
+                محاكي واختبار الاستراتيجيات الفنية
               </h2>
               {isOffline && <OfflineBadge forceShow />}
             </div>
@@ -88,9 +88,9 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
         </div>
 
         {/* 2.4 Disclaimer label */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs">
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs min-h-[44px]">
           <ShieldAlert className="w-4 h-4 shrink-0" />
-          <span>نتائج تاريخية لا تضمن المستقبل</span>
+          <span>نتائج تاريخية لا تضمن المستقبل (محاكاة تعليمية)</span>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             <select
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
-              className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] font-mono focus:outline-hidden"
+              className="w-full bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
             >
               {symbols.map((s) => (
                 <option key={s.symbol} value={s.symbol}>
@@ -121,7 +121,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             <select
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
-              className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] font-mono focus:outline-hidden"
+              className="w-full bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-[#E8EEF9] font-mono focus:outline-hidden min-h-[44px] cursor-pointer"
             >
               <option value="5m">5 دقائق (5m)</option>
               <option value="15m">15 دقيقة (15m)</option>
@@ -138,11 +138,11 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             <select
               value={strategy}
               onChange={(e) => setStrategy(e.target.value as any)}
-              className="w-full bg-[#0B1220] border border-[#243049] rounded-lg p-2 text-[#E8EEF9] focus:outline-hidden font-semibold"
+              className="w-full bg-[#0B1220] border border-[#243049] rounded-xl px-3 py-2.5 text-[#E8EEF9] focus:outline-hidden font-semibold min-h-[44px] cursor-pointer"
             >
-              <option value="sma_cross">تقاطع المتوسطات المتحركة (SMA Cross)</option>
-              <option value="rsi_reversal">ارتداد مؤشر القوة النسبية (RSI Reversal)</option>
-              <option value="breakout">كسر مستويات الدعم والمقاومة (Breakout)</option>
+              <option value="sma_cross">تقاطع المتوسطات المتحركة</option>
+              <option value="rsi_reversal">ارتداد مؤشر القوة النسبية</option>
+              <option value="breakout">كسر مستويات الدعم والمقاومة</option>
             </select>
           </div>
 
@@ -151,7 +151,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             <button
               onClick={handleRun}
               disabled={isRunning}
-              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-md"
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-md min-h-[44px]"
             >
               <Play className={`w-4 h-4 fill-current ${isRunning ? 'animate-spin' : ''}`} />
               <span>{isRunning ? 'جاري الاختبار...' : 'تشغيل الاختبار التاريخي'}</span>
@@ -223,7 +223,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             </div>
 
             <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">نسبة النجاح (Win Rate)</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">نسبة النجاح بالصفقات</span>
               <div
                 className={`text-2xl font-bold font-mono ${
                   result.stats.win_rate >= 50 ? 'text-[#22C55E]' : 'text-[#EF4444]'
@@ -235,7 +235,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             </div>
 
             <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">عامل الربح (Profit Factor)</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">معامل الربحية</span>
               <div className="text-2xl font-bold font-mono text-[#2DD4BF]">
                 {result.stats.profit_factor.toFixed(2)}
               </div>
@@ -243,7 +243,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
             </div>
 
             <div className="p-4 bg-[#121A2B] rounded-xl border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">أقصى تراجع (Max Drawdown)</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">أقصى تراجع للمحفظة</span>
               <div className="text-2xl font-bold font-mono text-[#EF4444]">
                 {result.stats.max_drawdown_pct.toFixed(1)}%
               </div>
@@ -255,7 +255,7 @@ export const BacktestPanel: React.FC<BacktestPanelProps> = ({ symbols }) => {
           {equityPoints.length > 1 && (
             <div className="p-5 bg-[#121A2B] rounded-xl border border-[#243049] space-y-3">
               <div className="flex items-center justify-between text-xs font-semibold text-[#E8EEF9]">
-                <span>منحنى نمو رأس المال الافتراضي (Equity Curve)</span>
+                <span>منحنى نمو رأس المال الافتراضي (محاكاة)</span>
                 <span className="font-mono text-[#2DD4BF]">
                   ${equityPoints[equityPoints.length - 1].toLocaleString()}
                 </span>

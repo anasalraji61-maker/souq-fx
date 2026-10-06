@@ -61,9 +61,9 @@ export const ErrorState: React.FC<{
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1C2E4A] hover:bg-[#253D63] text-[#2DD4BF] text-xs font-bold transition-all shadow-sm active:scale-95"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1C2E4A] hover:bg-[#253D63] text-[#2DD4BF] text-xs font-bold transition-all shadow-sm active:scale-95 min-h-[44px] cursor-pointer"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-4 h-4" />
           <span>إعادة المحاولة</span>
         </button>
       )}

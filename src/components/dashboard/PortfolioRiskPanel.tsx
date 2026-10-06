@@ -93,7 +93,7 @@ export const PortfolioRiskPanel: React.FC = () => {
 
           <button
             onClick={loadData}
-            className="p-2 rounded-lg bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>تحديث الحسابات</span>
@@ -132,7 +132,7 @@ export const PortfolioRiskPanel: React.FC = () => {
 
         <button
           onClick={loadData}
-          className="p-2 rounded-lg bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>تحديث الحسابات</span>

@@ -204,14 +204,15 @@ export const CommunityScreen: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-            className="p-1.5 rounded-lg bg-[#141F33] text-[#2DD4BF] border border-[#24334E]"
+            aria-label="قائمة الغرف"
+            className="p-2.5 rounded-lg bg-[#141F33] text-[#2DD4BF] border border-[#24334E] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
           >
-            {isMobileSidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            {isMobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           <div>
             <span className="font-bold text-white text-xs">{activeChannel?.name_ar}</span>
             <span className="text-[10px] text-[#7B8DA8] block">
-              {activeChannel?.online_count} متصل
+              {activeChannel?.online_count} متصل <span className="text-amber-400 font-semibold">(مثال)</span>
             </span>
           </div>
         </div>
@@ -239,9 +240,10 @@ export const CommunityScreen: React.FC = () => {
           {isMobileSidebarOpen && (
             <button
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="md:hidden p-1 rounded bg-[#162033] text-[#7B8DA8]"
+              aria-label="إغلاق القائمة"
+              className="md:hidden p-2 rounded-lg bg-[#162033] text-[#7B8DA8] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -260,7 +262,7 @@ export const CommunityScreen: React.FC = () => {
                     setActiveChannelId(chan.id);
                     setIsMobileSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-right ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-right min-h-[46px] cursor-pointer ${
                     isActive
                       ? 'bg-[#2DD4BF]/15 text-[#2DD4BF] border border-[#2DD4BF]/40 font-bold shadow-xs'
                       : 'text-[#94A3B8] hover:bg-[#132038] hover:text-white border border-transparent'
@@ -269,13 +271,16 @@ export const CommunityScreen: React.FC = () => {
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Hash className="w-4 h-4 shrink-0 text-[#2DD4BF]" />
                     <div className="truncate">
-                      <span className="block truncate">{chan.name_ar}</span>
-                      <span className="text-[9px] text-[#64748B] block truncate">
-                        {chan.name}
+                      <span className="block truncate font-bold">{chan.name_ar}</span>
+                      <span className="text-[10px] text-[#64748B] block truncate">
+                        {chan.description}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] bg-[#1E293B] px-1.5 py-0.5 rounded text-[#94A3B8] font-mono shrink-0">
+                  <span
+                    title="عدد المتصلين (تقديري - مثال)"
+                    className="text-[10px] bg-[#1E293B] px-1.5 py-0.5 rounded text-[#94A3B8] font-mono shrink-0"
+                  >
                     {chan.online_count}
                   </span>
                 </button>
@@ -312,9 +317,12 @@ export const CommunityScreen: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
-            <Users className="w-3.5 h-3.5" />
+            <Users className="w-3.5 h-3.5 text-[#2DD4BF]" />
             <span className="hidden sm:inline">المتداولون النشطون:</span>
             <span className="font-mono text-white font-bold">{activeChannel?.online_count || 120}</span>
+            <span className="text-[10px] text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 shrink-0">
+              (تقديري - مثال)
+            </span>
           </div>
         </div>
 
@@ -333,6 +341,14 @@ export const CommunityScreen: React.FC = () => {
               icon={<MessageSquare className="w-8 h-8 text-[#2DD4BF]" />}
               title="لا توجد رسائل في هذه الغرفة بعد"
               message="كن أول من يشارك تحليله الفني أو يطرح فكرة تداول في هذه الغرفة!"
+              action={
+                <button
+                  onClick={() => composerInputRef.current?.focus()}
+                  className="px-5 py-2.5 rounded-xl bg-[#2DD4BF] text-[#042F2E] font-bold text-xs hover:brightness-110 min-h-[44px] inline-flex items-center justify-center cursor-pointer shadow-md"
+                >
+                  كتابة أول مشاركة
+                </button>
+              }
             />
           ) : (
             messages.map((msg) => {
@@ -373,7 +389,7 @@ export const CommunityScreen: React.FC = () => {
                           <span className="text-xs font-bold text-white">{msg.sender_name}</span>
                           {msg.badge && (
                             <span
-                              className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
+                              className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
                                 msg.badge === 'AI Sentinel'
                                   ? 'bg-cyan-950 text-cyan-400 border border-cyan-800'
                                   : msg.badge === 'Pro Analyst'
@@ -381,7 +397,11 @@ export const CommunityScreen: React.FC = () => {
                                   : 'bg-amber-950 text-amber-400 border border-amber-800'
                               }`}
                             >
-                              {msg.badge}
+                              {msg.badge === 'AI Sentinel'
+                                ? 'حارس آلي (مثال)'
+                                : msg.badge === 'Pro Analyst'
+                                ? 'محلل فني (مثال)'
+                                : `${msg.badge} (مثال)`}
                             </span>
                           )}
                         </div>
@@ -418,9 +438,9 @@ export const CommunityScreen: React.FC = () => {
                   <div className="flex items-center justify-between pr-9 pt-1 text-[11px] text-[#64748B]">
                     <button
                       onClick={() => handleLike(msg.id)}
-                      className="flex items-center gap-1 hover:text-[#2DD4BF] transition-colors cursor-pointer"
+                      className="flex items-center gap-1.5 hover:text-[#2DD4BF] transition-colors cursor-pointer min-h-[44px] min-w-[44px] px-2 py-1 -mr-2 rounded-lg"
                     >
-                      <ThumbsUp className="w-3 h-3" />
+                      <ThumbsUp className="w-3.5 h-3.5" />
                       <span className="font-mono">{msg.likes}</span>
                     </button>
                     <span className="text-[10px] text-[#475569]">نقاش فني تحليلي</span>
@@ -436,43 +456,43 @@ export const CommunityScreen: React.FC = () => {
         {/* 2.1 Composer: Enter to send, tags and sentiment */}
         <form
           onSubmit={handleSendMessage}
-          className="p-3 bg-[#0B1528] border-t border-[#1E293B] flex flex-col gap-2 shrink-0"
+          className="p-3 bg-[#0B1528] border-t border-[#1E293B] flex flex-col gap-2 shrink-0 pb-3 md:pb-3"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="text-[#94A3B8]">النظرة الفنية:</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[#94A3B8]">النظرة:</span>
               <button
                 type="button"
                 onClick={() => setUserSentiment('bullish')}
-                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] flex items-center ${
                   userSentiment === 'bullish'
                     ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-[#16233B] text-[#94A3B8]'
+                    : 'bg-[#16233B] text-[#94A3B8] hover:text-white'
                 }`}
               >
-                صاعد (Bullish)
+                صاعد
               </button>
               <button
                 type="button"
                 onClick={() => setUserSentiment('bearish')}
-                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] flex items-center ${
                   userSentiment === 'bearish'
                     ? 'bg-rose-600 text-white shadow-xs'
-                    : 'bg-[#16233B] text-[#94A3B8]'
+                    : 'bg-[#16233B] text-[#94A3B8] hover:text-white'
                 }`}
               >
-                هابط (Bearish)
+                هابط
               </button>
               <button
                 type="button"
                 onClick={() => setUserSentiment('neutral')}
-                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px] flex items-center ${
                   userSentiment === 'neutral'
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-[#16233B] text-[#94A3B8]'
+                    : 'bg-[#16233B] text-[#94A3B8] hover:text-white'
                 }`}
               >
-                محايد (Neutral)
+                محايد
               </button>
             </div>
 
@@ -481,7 +501,7 @@ export const CommunityScreen: React.FC = () => {
               <select
                 value={selectedTag}
                 onChange={(e) => setSelectedTag(e.target.value)}
-                className="bg-[#16233B] border border-[#243657] rounded px-2 py-0.5 text-[10px] text-white focus:outline-none cursor-pointer"
+                className="bg-[#16233B] border border-[#243657] rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer min-h-[44px]"
               >
                 <option value="EURUSD">EURUSD</option>
                 <option value="GBPUSD">GBPUSD</option>
@@ -508,14 +528,14 @@ export const CommunityScreen: React.FC = () => {
                   handleSendMessage();
                 }
               }}
-              placeholder="اكتب تحليلك الفني أو وجهة نظرك (اضغط Enter للإرسال، استخدم @ للإشارة للمتداولين)..."
+              placeholder="اكتب تحليلك الفني أو وجهة نظرك (اضغط Enter للإرسال)..."
               disabled={isSending}
-              className="flex-1 bg-[#070E1C] border border-[#1E293B] rounded-lg px-3.5 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-[#2DD4BF] transition-colors"
+              className="flex-1 bg-[#070E1C] border border-[#1E293B] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-[#2DD4BF] transition-colors min-h-[44px]"
             />
             <button
               type="submit"
               disabled={!inputText.trim() || isSending}
-              className="px-4 py-2 bg-[#2DD4BF] hover:bg-[#14B8A6] disabled:opacity-40 disabled:pointer-events-none text-[#042F2E] font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+              className="px-4 py-2.5 bg-[#2DD4BF] hover:bg-[#14B8A6] disabled:opacity-40 disabled:pointer-events-none text-[#042F2E] font-black text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer min-h-[44px] shrink-0"
             >
               <span>{isSending ? 'جارٍ الإرسال...' : 'إرسال'}</span>
               <Send className="w-3.5 h-3.5" />

@@ -37,12 +37,15 @@ export default function App() {
     return (localStorage.getItem('matrix_lang') as LangId) || 'ar';
   });
 
-  // Keep HTML document dir in sync with language
+  // Keep HTML document and body dir in sync with language (ar/ku = rtl, en = ltr)
   useEffect(() => {
     localStorage.setItem('matrix_lang', currentLang);
     const isRtl = currentLang === 'ar' || currentLang === 'ku';
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = currentLang === 'ar' ? 'ar' : currentLang === 'ku' ? 'ku' : 'en';
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.dir = isRtl ? 'rtl' : 'ltr';
+    }
   }, [currentLang]);
 
   // Market Symbols State
@@ -294,7 +297,10 @@ export default function App() {
   const isNewYorkOpen = nowUtcHour >= 13 && nowUtcHour < 21;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#070D18] text-[#E8EEF9]">
+    <div
+      dir={currentLang === 'ar' || currentLang === 'ku' ? 'rtl' : 'ltr'}
+      className="flex flex-col h-screen w-screen overflow-hidden bg-[#070D18] text-[#E8EEF9]"
+    >
       {/* Visual Price Alert Banner */}
       {activeNotificationAlert && (
         <PriceAlertNotificationBanner
@@ -501,8 +507,11 @@ export default function App() {
         onInstallApp={handleInstallApp}
       />
 
-      {/* Onboarding Tour */}
-      <OnboardingOverlay isOpen={showOnboarding} onClose={handleCloseOnboarding} />
+      {/* Onboarding Tour (shown only once per device and never on top of modals) */}
+      <OnboardingOverlay
+        isOpen={showOnboarding && !isAlertsModalOpen && !isAiChatOpen && !activeNotificationAlert}
+        onClose={handleCloseOnboarding}
+      />
     </div>
   );
 }

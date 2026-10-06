@@ -149,19 +149,19 @@ export const AnalyticsDashboardPanel: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold text-white">
-                  لوحة تحليلات الأداء ومنحنى رأس المال (Performance Analytics)
+                  لوحة تحليلات الأداء ومنحنى رأس المال
                 </h1>
                 {isOffline && <OfflineBadge forceShow />}
               </div>
               <p className="text-[#7B8DA8]">
-                تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع Drawdown، وتوزيع الأرباح.
+                تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع، وتوزيع الأرباح.
               </p>
             </div>
           </div>
 
           <button
             onClick={loadData}
-            className="p-2 rounded-lg bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>تحديث</span>
@@ -172,7 +172,7 @@ export const AnalyticsDashboardPanel: React.FC = () => {
           <EmptyState
             icon={<BarChart3 className="w-10 h-10 text-[#2DD4BF]" />}
             title="لا توجد بيانات صفقات مغلقة للتحليل"
-            message="سجل صفقاتك المكتملة في دفتر الصفقات لتوليد منحنى رأس المال (Equity Curve) وحساب نسبة النجاح ومعامل Sharpe الحقيقي دون أي بيانات وهمية أو افتراضية."
+            message="سجل صفقاتك المكتملة في دفتر الصفقات لتوليد منحنى رأس المال الفعلي وحساب نسبة النجاح الحقيقية دون أي بيانات وهمية أو افتراضية."
           />
         </div>
       </div>
@@ -190,19 +190,19 @@ export const AnalyticsDashboardPanel: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold text-white">
-                لوحة تحليلات الأداء ومنحنى رأس المال (Performance Analytics)
+                لوحة تحليلات الأداء ومنحنى رأس المال
               </h1>
               {isOffline && <OfflineBadge forceShow />}
             </div>
             <p className="text-[#7B8DA8]">
-              تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع Drawdown، وتوزيع الأرباح.
+              تحليل إحصائي دقيق لمنحنى النمو، مؤشر Sharpe، أقصى تراجع، وتوزيع الأرباح.
             </p>
           </div>
         </div>
 
         <button
           onClick={loadData}
-          className="p-2 rounded-lg bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          className="p-2.5 rounded-xl bg-[#141E30] hover:bg-[#1E2B44] text-[#A3B4D0] hover:text-white transition-colors border border-[#243049] flex items-center gap-1.5 self-start sm:self-auto cursor-pointer min-h-[44px]"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>تحديث</span>
@@ -219,7 +219,7 @@ export const AnalyticsDashboardPanel: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             {/* Win Rate */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">معدل الفوز (Win Rate)</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">معدل الفوز بالصفقات</span>
               <div
                 className={`text-2xl font-bold font-mono ${
                   data.win_rate >= 50 ? 'text-[#22C55E]' : 'text-[#EF4444]'
@@ -235,7 +235,7 @@ export const AnalyticsDashboardPanel: React.FC = () => {
             {/* Profit Factor */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
               <span className="text-[#7B8DA8] text-[11px] font-semibold">
-                معامل الربحية (Profit Factor)
+                معامل الربحية
               </span>
               <div className="text-2xl font-bold font-mono text-[#38BDF8]">
                 {data.profit_factor}
@@ -245,7 +245,7 @@ export const AnalyticsDashboardPanel: React.FC = () => {
 
             {/* Sharpe Ratio */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
-              <span className="text-[#7B8DA8] text-[11px] font-semibold">مؤشر شارب (Sharpe Ratio)</span>
+              <span className="text-[#7B8DA8] text-[11px] font-semibold">مؤشر شارب للمخاطر</span>
               <div
                 className={`text-2xl font-bold font-mono ${
                   data.sharpe_ratio >= 1.0 ? 'text-[#22C55E]' : 'text-amber-400'
@@ -261,7 +261,7 @@ export const AnalyticsDashboardPanel: React.FC = () => {
             {/* Max Drawdown */}
             <div className="p-4 rounded-xl bg-[#121A2B] border border-[#243049] space-y-1">
               <span className="text-[#7B8DA8] text-[11px] font-semibold">
-                أقصى تراجع (Max Drawdown)
+                أقصى تراجع للمحفظة
               </span>
               <div className="text-2xl font-bold font-mono text-rose-400">
                 {data.max_drawdown_pct}%
@@ -277,7 +277,7 @@ export const AnalyticsDashboardPanel: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="font-bold text-sm text-white">
-                  منحنى نمو رأس المال (Portfolio Equity Curve)
+                  منحنى نمو رأس المال
                 </h3>
                 <p className="text-[11px] text-[#7B8DA8]">
                   تطور رصيد الحساب مع كل صفقة مغلقة مبني على نتائج الدفتر الفعلية
@@ -304,29 +304,29 @@ export const AnalyticsDashboardPanel: React.FC = () => {
             <div className="flex items-center justify-between border-b border-[#1E283D] pb-3">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#2DD4BF]" />
-                <h3 className="font-bold text-sm text-white">توزيع الأرباح والصفقات (P&L Breakdown)</h3>
+                <h3 className="font-bold text-sm text-white">توزيع الأرباح والخسائر</h3>
               </div>
 
-              <div className="flex items-center gap-1.5 bg-[#0B1220] p-1 rounded-lg border border-[#243049]">
+              <div className="flex items-center gap-1.5 bg-[#0B1220] p-1 rounded-xl border border-[#243049]">
                 <button
                   onClick={() => setActiveTab('symbol')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[38px] cursor-pointer ${
                     activeTab === 'symbol'
                       ? 'bg-[#2DD4BF] text-[#042F2E]'
                       : 'text-[#7B8DA8] hover:text-white'
                   }`}
                 >
-                  حسب الرمز (By Symbol)
+                  حسب الزوج
                 </button>
                 <button
                   onClick={() => setActiveTab('timeframe')}
-                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[38px] cursor-pointer ${
                     activeTab === 'timeframe'
                       ? 'bg-[#2DD4BF] text-[#042F2E]'
                       : 'text-[#7B8DA8] hover:text-white'
                   }`}
                 >
-                  حسب الفريم (By Timeframe)
+                  حسب الفاصل الزمني
                 </button>
               </div>
             </div>

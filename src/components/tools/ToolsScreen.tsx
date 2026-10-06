@@ -69,9 +69,9 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
           <button
             key={tool.id}
             onClick={() => setActiveTool(tool.id as any)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer min-h-[44px] ${
               activeTool === tool.id
-                ? 'bg-[#2DD4BF] text-[#042F2E] shadow-sm'
+                ? 'bg-[#2DD4BF] text-[#042F2E] shadow-sm font-bold'
                 : 'text-[#A3B4D0] hover:text-[#E8EEF9] hover:bg-[#162033]'
             }`}
           >

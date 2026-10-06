@@ -11,6 +11,13 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    try {
+      localStorage.setItem('matrix_onboarding_seen', 'true');
+    } catch {}
+    onClose();
+  };
+
   // 1.5: 5 steps highlighting chart, watchlist, indicators, academy, alerts. Skip / next / back.
   const steps = [
     {
@@ -43,8 +50,8 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
   const current = steps[step];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs select-none">
-      <div className="w-[460px] bg-[#121A2B] border border-[#243049] rounded-2xl shadow-2xl overflow-hidden p-6 space-y-6 text-xs text-right">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs select-none">
+      <div className="w-full max-w-[460px] bg-[#121A2B] border border-[#243049] rounded-2xl shadow-2xl overflow-hidden p-5 sm:p-6 space-y-6 text-xs text-right">
         {/* Header with Step Counter & Skip */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#7B8DA8]">
@@ -53,16 +60,17 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
             <span>{steps.length}</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
-              onClick={onClose}
-              className="text-[11px] text-[#7B8DA8] hover:text-[#2DD4BF] transition-colors"
+              onClick={handleClose}
+              className="text-[11px] text-[#7B8DA8] hover:text-[#2DD4BF] transition-colors px-2 py-1.5 min-h-[44px] flex items-center cursor-pointer font-semibold"
             >
-              تخطي الجولة (Skip)
+              تخطي الجولة
             </button>
             <button
-              onClick={onClose}
-              className="p-1 rounded text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740]"
+              onClick={handleClose}
+              aria-label="إغلاق"
+              className="p-2 rounded-lg text-[#7B8DA8] hover:text-[#E8EEF9] hover:bg-[#1C2740] min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -104,15 +112,15 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ isOpen, on
           {step < steps.length - 1 ? (
             <button
               onClick={() => setStep(step + 1)}
-              className="px-5 py-2 rounded-lg bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold flex items-center gap-1 shadow-md cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#2DD4BF] hover:bg-[#26bba8] text-[#042F2E] font-bold flex items-center gap-1 shadow-md cursor-pointer min-h-[44px]"
             >
               <span>التالي</span>
               <ChevronLeft className="w-4 h-4" />
             </button>
           ) : (
             <button
-              onClick={onClose}
-              className="px-5 py-2 rounded-lg bg-[#22C55E] hover:bg-[#1eb354] text-[#051329] font-bold flex items-center gap-1 shadow-md cursor-pointer"
+              onClick={handleClose}
+              className="px-5 py-2.5 rounded-xl bg-[#22C55E] hover:bg-[#1eb354] text-[#051329] font-bold flex items-center gap-1 shadow-md cursor-pointer min-h-[44px]"
             >
               <Check className="w-4 h-4" />
               <span>بدء استخدام المنصة</span>

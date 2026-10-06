@@ -18,6 +18,7 @@ import {
   Award,
   CreditCard,
   Wrench,
+  Check,
 } from 'lucide-react';
 
 export type AppTab = 'home' | 'community' | 'academy' | 'pricing' | 'tools' | 'account' | 'watchlist';
@@ -51,6 +52,20 @@ export const Header: React.FC<HeaderProps> = ({
   const [timeStr, setTimeStr] = useState('');
   const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+
+  // Close menus on outside click or esc
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMoreMenuOpen(false);
+        setIsLangMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     getMarketStatus().then(setMarketStatus);
@@ -111,77 +126,140 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="w-[1px] h-5 bg-[#1E293B] hidden md:block" />
 
-        {/* 1. Commercial End-User Navigation Tabs (collapsed to icons with tooltips on tablet 768-1100px, hidden on phones) */}
-        <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar">
+        {/* 1. Commercial End-User Navigation Tabs (compact single line on tablet 768-1100px, full labels on desktop > 1100px, hidden on phones) */}
+        <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 flex-nowrap shrink-0">
           <button
             onClick={() => onTabChange('home')}
             title="الشارت الفني"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'home'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+            <span className="inline min-[1101px]:hidden">الشارت</span>
             <span className="hidden min-[1101px]:inline">الشارت الفني</span>
           </button>
 
           <button
             onClick={() => onTabChange('community')}
             title="مجتمع المتداولين"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'community'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+            <span className="inline min-[1101px]:hidden">المجتمع</span>
             <span className="hidden min-[1101px]:inline">مجتمع المتداولين</span>
           </button>
 
           <button
             onClick={() => onTabChange('academy')}
             title="الأكاديمية والدروس"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'academy'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+            <span className="inline min-[1101px]:hidden">الأكاديمية</span>
             <span className="hidden min-[1101px]:inline">الأكاديمية والدروس</span>
           </button>
 
+          {/* Desktop Only Tabs (> 1100px) */}
           <button
             onClick={() => onTabChange('tools')}
             title="أدوات التحليل والتقويم"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`hidden min-[1101px]:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'tools'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <Wrench className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden min-[1101px]:inline">أدوات التحليل والتقويم</span>
+            <span>أدوات التحليل والتقويم</span>
           </button>
 
           <button
             onClick={() => onTabChange('pricing')}
             title="الباقات والترقية"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`hidden min-[1101px]:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'pricing'
                 ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
                 : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
             }`}
           >
             <CreditCard className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden min-[1101px]:inline">الباقات والترقية</span>
+            <span>الباقات والترقية</span>
           </button>
+
+          {/* Tablet "المزيد" (More) Menu (768px – 1100px) */}
+          <div className="relative min-[1101px]:hidden">
+            <button
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+              title="المزيد من الأقسام والأدوات"
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                currentTab === 'tools' || currentTab === 'pricing' || currentTab === 'account'
+                  ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
+                  : 'text-[#94A3B8] hover:text-white hover:bg-[#131F33]'
+              }`}
+            >
+              <span>
+                {currentTab === 'tools'
+                  ? 'الأدوات'
+                  : currentTab === 'pricing'
+                  ? 'الباقات'
+                  : currentTab === 'account'
+                  ? 'حسابي'
+                  : 'المزيد'}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isMoreMenuOpen && (
+              <div
+                className="absolute top-full mt-1.5 right-0 z-50 bg-[#0E1726] border border-[#1E283D] rounded-xl shadow-2xl py-1.5 w-44 text-xs animate-in fade-in"
+                onClick={() => setIsMoreMenuOpen(false)}
+              >
+                <button
+                  onClick={() => onTabChange('tools')}
+                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer ${
+                    currentTab === 'tools' ? 'text-[#2DD4BF] font-bold bg-[#16233B]/50' : 'text-[#E8EEF9]'
+                  }`}
+                >
+                  <Wrench className="w-3.5 h-3.5 text-[#2DD4BF]" />
+                  <span>أدوات التحليل والتقويم</span>
+                </button>
+                <button
+                  onClick={() => onTabChange('pricing')}
+                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer ${
+                    currentTab === 'pricing' ? 'text-[#2DD4BF] font-bold bg-[#16233B]/50' : 'text-[#E8EEF9]'
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5 text-[#2DD4BF]" />
+                  <span>الباقات والترقية</span>
+                </button>
+                <button
+                  onClick={() => onTabChange('account')}
+                  className={`w-full px-3 py-2 text-right flex items-center gap-2 hover:bg-[#16233B] cursor-pointer ${
+                    currentTab === 'account' ? 'text-[#2DD4BF] font-bold bg-[#16233B]/50' : 'text-[#E8EEF9]'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5 text-[#2DD4BF]" />
+                  <span>حسابي والإعدادات</span>
+                </button>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
         {/* Offline Status Badge (Desktop & Tablet) */}
         <OfflineBadge className="hidden md:inline-flex" />
 
@@ -192,7 +270,7 @@ export const Header: React.FC<HeaderProps> = ({
               ? `الجلسة الحالية: ${marketStatus.currentSession} • الجلسة القادمة: ${marketStatus.nextSession}`
               : 'جاري فحص حالة السوق...'
           }
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#070D18] border border-[#16233B] text-[11px] font-mono cursor-default shrink-0"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#070D18] border border-[#16233B] text-[11px] font-mono cursor-default shrink-0 whitespace-nowrap"
         >
           <span
             className={`w-2 h-2 rounded-full ${
@@ -210,9 +288,64 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* GMT Clock - Desktop > 1100px only */}
-        <div className="hidden min-[1101px]:flex items-center gap-1.5 font-mono text-[11px] text-[#64748B] bg-[#070D18] px-2.5 py-1 rounded border border-[#16233B] shrink-0">
+        <div className="hidden min-[1101px]:flex items-center gap-1.5 font-mono text-[11px] text-[#64748B] bg-[#070D18] px-2.5 py-1 rounded border border-[#16233B] shrink-0 whitespace-nowrap">
           <Clock className="w-3 h-3 text-[#2DD4BF]" />
           <span>{timeStr}</span>
+        </div>
+
+        {/* 3.2 Language Switcher Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+            title="تغيير لغة المنصة"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white transition-colors cursor-pointer text-xs shrink-0 whitespace-nowrap"
+          >
+            <Globe className="w-3.5 h-3.5 text-[#2DD4BF]" />
+            <span className="hidden sm:inline font-sans font-medium text-[11px]">
+              {currentLang === 'ar' ? 'العربية' : currentLang === 'en-US' ? 'EN' : 'کوردی'}
+            </span>
+            <ChevronDown className="w-3 h-3 text-[#64748B]" />
+          </button>
+          {isLangMenuOpen && (
+            <div className="absolute top-full mt-1.5 left-0 z-50 bg-[#0E1726] border border-[#1E283D] rounded-xl shadow-2xl py-1 w-28 text-xs text-right animate-in fade-in">
+              <button
+                onClick={() => {
+                  onLanguageChange('ar');
+                  setIsLangMenuOpen(false);
+                }}
+                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer ${
+                  currentLang === 'ar' ? 'text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
+                }`}
+              >
+                <span>العربية</span>
+                {currentLang === 'ar' && <Check className="w-3.5 h-3.5 text-[#2DD4BF]" />}
+              </button>
+              <button
+                onClick={() => {
+                  onLanguageChange('en-US');
+                  setIsLangMenuOpen(false);
+                }}
+                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer ${
+                  currentLang === 'en-US' ? 'text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
+                }`}
+              >
+                <span>English</span>
+                {currentLang === 'en-US' && <Check className="w-3.5 h-3.5 text-[#2DD4BF]" />}
+              </button>
+              <button
+                onClick={() => {
+                  onLanguageChange('ku');
+                  setIsLangMenuOpen(false);
+                }}
+                className={`w-full px-3 py-1.5 text-right flex items-center justify-between hover:bg-[#16233B] cursor-pointer ${
+                  currentLang === 'ku' ? 'text-[#2DD4BF] font-bold' : 'text-[#E8EEF9]'
+                }`}
+              >
+                <span>کوردی</span>
+                {currentLang === 'ku' && <Check className="w-3.5 h-3.5 text-[#2DD4BF]" />}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 3.2 Notifications center (bell in header) - Visible on phone, tablet and desktop */}
@@ -233,7 +366,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={() => onTabChange('account')}
           title="حسابي وإعدادات المنصة"
-          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
             currentTab === 'account'
               ? 'bg-[#1E2E4A] text-[#2DD4BF] border border-[#2DD4BF]/40'
               : 'bg-[#111C2E] hover:bg-[#182842] border border-[#1E2E4A] text-[#94A3B8] hover:text-white'
