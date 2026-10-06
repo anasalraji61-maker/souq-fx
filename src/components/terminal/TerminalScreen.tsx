@@ -1400,7 +1400,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
 
         {/* Center: Chart Grid */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#050B14]">
+        <div className={`flex-1 flex-col h-full overflow-hidden bg-[#050B14] ${isPhone && (!isWatchlistCollapsed || currentTab !== 'home') ? 'hidden' : 'flex'}`}>
           <ChartLayoutGrid
             spec={layoutSpec}
             sizes={layoutSizes}
@@ -1611,19 +1611,21 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           </ChartLayoutGrid>
         </div>
 
-        {/* 1.2 Floating Drawing Tools Button for Phone (< 768px) */}
-        <button
-          onClick={() => setIsMobileDrawingSheetOpen(true)}
-          title="أدوات الرسم الفني"
-          className="md:hidden fixed bottom-16 right-4 z-30 w-11 h-11 rounded-full bg-[#132034] border border-[#2DD4BF]/60 text-[#2DD4BF] shadow-2xl flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
-        >
-          <PenTool className="w-5 h-5" />
-          {activeTool !== 'none' && (
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#2DD4BF] text-[#042F2E] font-bold text-[9px] flex items-center justify-center shadow-xs">
-              ✓
-            </span>
-          )}
-        </button>
+        {/* 1.2 Floating Drawing Tools Button for Phone (< 768px) - strictly on chart tab */}
+        {(!isPhone || (currentTab === 'home' && isWatchlistCollapsed)) && (
+          <button
+            onClick={() => setIsMobileDrawingSheetOpen(true)}
+            title="أدوات الرسم الفني"
+            className="md:hidden fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] right-4 z-30 w-11 h-11 rounded-full bg-[#132034] border border-[#2DD4BF]/60 text-[#2DD4BF] shadow-2xl flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
+          >
+            <PenTool className="w-5 h-5" />
+            {activeTool !== 'none' && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#2DD4BF] text-[#042F2E] font-bold text-[9px] flex items-center justify-center shadow-xs">
+                ✓
+              </span>
+            )}
+          </button>
+        )}
 
         {/* 1.2 Mobile Drawing Tools Bottom Sheet */}
         {isMobileDrawingSheetOpen && (
@@ -1791,12 +1793,17 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               className="md:hidden fixed inset-0 bg-black/50 z-20 backdrop-blur-xs"
               onClick={() => setIsWatchlistCollapsed(true)}
             />
-            <div className="fixed md:relative inset-y-0 right-0 z-30 md:z-10 w-72 md:w-[300px] min-[1101px]:w-[325px] xl:w-[340px] min-w-[300px] border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-hidden flex flex-col shadow-2xl md:shadow-none">
+            <div className="fixed md:relative inset-y-0 right-0 z-30 md:z-10 w-full md:w-[300px] min-[1101px]:w-[325px] xl:w-[340px] md:min-w-[300px] border-l border-[#1E283D] bg-[#0B1220] shrink-0 h-full overflow-hidden flex flex-col shadow-2xl md:shadow-none">
               <WatchlistPanel
                 symbols={symbols}
                 activeSymbol={activeCell.symbol}
-                onSelectSymbol={handleSelectSymbol}
+                onSelectSymbol={(sym) => {
+                  handleSelectSymbol(sym);
+                  if (isPhone) setIsWatchlistCollapsed(true);
+                }}
                 priceFlashMap={priceFlashMap}
+                isMobileMode={isPhone}
+                onCloseMobile={() => setIsWatchlistCollapsed(true)}
               />
             </div>
           </>
@@ -1935,14 +1942,17 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
         </div>
       )}
 
-      {/* 4.3 Order-Flow Panel under the chart (toggle) */}
-      <OrderFlowPanel
-        isOpen={isOrderFlowOpen}
-        onToggle={() => setIsOrderFlowOpen(!isOrderFlowOpen)}
-        candles={activeCell.candles}
-        symbol={activeCell.symbol}
-        timeframe={activeCell.timeframe}
-      />
+      {/* 4.3 Order-Flow Panel under the chart (toggle) - strictly on chart tab */}
+      {(!isPhone || currentTab === 'home') && (
+        <OrderFlowPanel
+          isOpen={isOrderFlowOpen}
+          onToggle={() => setIsOrderFlowOpen(!isOrderFlowOpen)}
+          candles={activeCell.candles}
+          symbol={activeCell.symbol}
+          timeframe={activeCell.timeframe}
+          currentTab={currentTab}
+        />
+      )}
     </div>
   );
 };

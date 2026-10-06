@@ -21,6 +21,7 @@ interface OrderFlowPanelProps {
   candles: Candle[];
   symbol: string;
   timeframe: string;
+  currentTab?: string;
 }
 
 export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
@@ -29,6 +30,7 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
   candles,
   symbol,
   timeframe,
+  currentTab = 'home',
 }) => {
   const [data, setData] = useState<OrderFlowBar[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,10 +129,11 @@ export const OrderFlowPanel: React.FC<OrderFlowPanelProps> = ({
   }, [isOpen, data]);
 
   if (!isOpen) {
+    if (currentTab && currentTab !== 'home') return null;
     return (
       <button
         onClick={onToggle}
-        className="fixed bottom-16 md:bottom-8 left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A]/90 hover:bg-[#1E293B] border border-[#2DD4BF]/40 text-[#2DD4BF] text-xs font-bold shadow-lg backdrop-blur-sm transition-all"
+        className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:bottom-8 left-3 md:left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A]/90 hover:bg-[#1E293B] border border-[#2DD4BF]/40 text-[#2DD4BF] text-xs font-bold shadow-lg backdrop-blur-sm transition-all"
         title="فتح لوحة تدفق الأوامر التقديرية"
       >
         <Activity className="w-3.5 h-3.5" />

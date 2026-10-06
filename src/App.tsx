@@ -161,6 +161,15 @@ export default function App() {
     localStorage.setItem('matrix_onboarding_seen', 'true');
   };
 
+  // Mobile viewport detection for unmounting non-active tab elements on phones
+  const [isPhone, setIsPhone] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
+
+  useEffect(() => {
+    const handleResize = () => setIsPhone(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Generate initial candles
   useEffect(() => {
     const sym = symbols.find((s) => s.symbol === activeSymbol) || symbols[0];
@@ -352,25 +361,27 @@ export default function App() {
                 />
               </div>
 
-              {/* Desktop Fallback: Standard TerminalScreen with integrated watchlist */}
-              <div className="hidden md:block w-full h-full">
-                <TerminalScreen
-                  symbols={symbols}
-                  activeSymbol={activeSymbol}
-                  onSelectSymbol={setActiveSymbol}
-                  candles={candles}
-                  timeframe={timeframe}
-                  onTimeframeChange={setTimeframe}
-                  chartType={chartType}
-                  onChartTypeChange={setChartType}
-                  indicators={indicators}
-                  onUpdateIndicators={setIndicators}
-                  priceFlashMap={priceFlashMap}
-                  showGrid={showGrid}
-                  onTabChange={setCurrentTab}
-                  currentTab={currentTab}
-                />
-              </div>
+              {/* Desktop Fallback: Standard TerminalScreen with integrated watchlist (unmounted on phones) */}
+              {!isPhone && (
+                <div className="hidden md:block w-full h-full">
+                  <TerminalScreen
+                    symbols={symbols}
+                    activeSymbol={activeSymbol}
+                    onSelectSymbol={setActiveSymbol}
+                    candles={candles}
+                    timeframe={timeframe}
+                    onTimeframeChange={setTimeframe}
+                    chartType={chartType}
+                    onChartTypeChange={setChartType}
+                    indicators={indicators}
+                    onUpdateIndicators={setIndicators}
+                    priceFlashMap={priceFlashMap}
+                    showGrid={showGrid}
+                    onTabChange={setCurrentTab}
+                    currentTab={currentTab}
+                  />
+                </div>
+              )}
             </>
           )}
 
