@@ -38,23 +38,17 @@ export function getPipSize(symbol: string): number {
 }
 
 export function formatSpread(item: MarketSymbol, realBid?: number | null, realAsk?: number | null): string {
+  // Only a real bid/ask from the provider gives a real spread. The free data plan returns no bid/ask,
+  // so we show "—" instead of an invented number (simulated item.bid/ask are never used).
+  void item;
   const pipSize = getPipSize(item.symbol);
-  if (realAsk !== undefined && realBid !== undefined && realAsk !== null && realBid !== null && realAsk > realBid) {
+  if (typeof realAsk === 'number' && typeof realBid === 'number' && realAsk > realBid) {
     const pips = (realAsk - realBid) / pipSize;
     if (pips > 0 && pips < 500) {
       return `${pips.toFixed(1)}p`;
     }
   }
-  if (item.ask !== undefined && item.bid !== undefined && item.ask > item.bid) {
-    const pips = (item.ask - item.bid) / pipSize;
-    if (pips > 0 && pips < 500) {
-      return `${pips.toFixed(1)}p`;
-    }
-  }
-  if (item.spread !== undefined && item.spread > 0 && item.spread < 100) {
-    return `${item.spread.toFixed(1)}p`;
-  }
-  return '0.8p';
+  return '—';
 }
 
 export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
@@ -127,7 +121,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
 
   const currentList = watchlists.find((w) => w.id === activeListId) || watchlists[0];
 
-  // Staggered quote polling loop: 1 request every 250ms (never > 4 req/sec)
+  // Staggered quote polling loop: one symbol every 5 s (backend caches quotes; the data provider allows only 8 req/min)
   useEffect(() => {
     const symbolsToPoll = currentList.symbols;
     if (symbolsToPoll.length === 0) return;
@@ -148,7 +142,7 @@ export const WatchlistPanel: React.FC<WatchlistPanelProps> = ({
       } catch {
         // Silently continue
       }
-    }, 250);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [currentList.symbols]);

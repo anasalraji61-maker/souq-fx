@@ -927,6 +927,12 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
         "timezone": "UTC",
         "order": "ASC",
     }
+    if not take_provider_slot():
+        stale = _serve_stale(cache_key, now)
+        if stale:
+            candles, as_of = stale
+            return candles, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}
+        raise RuntimeError("Twelve Data pacing — over the per-minute request budget")
     try:
         with httpx.Client(timeout=25.0) as client:
             r = client.get(f"{API_BASE}/time_series", params=params)
@@ -1055,12 +1061,48 @@ def _price_only(matrix_symbol: str, p: float) -> dict:
             "price_only": True}
 
 
+# ـــ تنظيم معدّل الطلبات للمزوّد (Pacing) ـــ
+# الخطة المجانية: 8 طلبات/دقيقة. عدة شارتات + قائمة المتابعة كانت تتجاوزها ⇒ 429 ⇒ «بيانات تجريبية».
+# TWELVE_DATA_RPM=N يحجز N طلباً في كل نافذة 60 ثانية لكل العمليات معاً؛ الطلب الزائد لا يُرسَل
+# (يُخدم الكاش/القديم كما في مسار 429 تماماً). 0 أو غير مضبوط = بلا تنظيم (السلوك القديم، والاختبارات).
+import collections as _collections
+import threading as _threading
+
+_PACE_LOCK = _threading.Lock()
+_PACE_TIMES: "_collections.deque[float]" = _collections.deque()
+
+
+def _pace_rpm() -> int:
+    try:
+        return max(0, int(os.getenv("TWELVE_DATA_RPM", "0") or 0))
+    except ValueError:
+        return 0
+
+
+def take_provider_slot() -> bool:
+    """True إن سُمح بطلب واحد للمزوّد الآن ضمن حدّ الدقيقة (ويُحتسب)، وإلا False."""
+    rpm = _pace_rpm()
+    if rpm <= 0:
+        return True
+    now = time.time()
+    with _PACE_LOCK:
+        while _PACE_TIMES and now - _PACE_TIMES[0] >= 60.0:
+            _PACE_TIMES.popleft()
+        if len(_PACE_TIMES) >= rpm:
+            _stats["paced"] = int(_stats.get("paced") or 0) + 1
+            return False
+        _PACE_TIMES.append(now)
+        return True
+
+
 def fetch_quote_book(matrix_symbol: str) -> dict | None:
     """Price + bid/ask when Twelve Data quote endpoint provides them."""
     key = _api_key()
     if not key or unavailable_reason(matrix_symbol):
         return None
     td_sym = td_symbol(canonical_symbol(matrix_symbol))
+    if not take_provider_slot():
+        return None  # فوق حدّ الدقيقة ⇒ المسار يعود لإغلاق الشموع المخزَّنة بوقتها الحقيقي
     with httpx.Client(timeout=15.0) as client:
         r = client.get(f"{API_BASE}/quote", params={"symbol": td_sym, "apikey": key})
         if r.status_code == 429:
@@ -1068,11 +1110,15 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
             _stats["rate_limited"] = int(_stats["rate_limited"] or 0) + 1
             # fallback to /price
             p = None
+            if not take_provider_slot():
+                return None
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code == 200:
                 p = _pos(r2.json().get("price"))
             return _price_only(matrix_symbol, p) if p and not in_weekend_close(matrix_symbol, _session_now(), 0) else None
         if r.status_code >= 400:
+            if not take_provider_slot():
+                return None
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code != 200:
                 return None

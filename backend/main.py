@@ -1784,7 +1784,7 @@ def _series_price_at(series: ChartSeries) -> float | None:
 # كاش الاقتباس: الدفتر وحاسبة المخاطرة وقائمة المتابعة تطلب الرمز نفسه مرّات بالدقيقة، وكل طلب
 # كان يصرف من حدّ المزوّد المشترك (~8/دقيقة بالخطة المجانية) ⇒ 429 ثم أسعار احتياطية للجميع.
 # المُخزَّن يُعاد `data_kind: cache` مع `as_of` = وقت جلبه الحقيقي، لا «الآن».
-QUOTE_TTL = 30.0
+QUOTE_TTL = float(os.getenv("MATRIX_QUOTE_TTL", "30") or 30)
 _QUOTE_CACHE: dict[str, tuple[float, dict]] = {}
 
 

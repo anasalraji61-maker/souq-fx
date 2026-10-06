@@ -65,6 +65,7 @@ interface ChartCellState {
   marketStatus: 'Closed' | 'Open';
   isDemo?: boolean;
   isLoading?: boolean;
+  changePct?: number | null;
 }
 
 interface SavedLayout {
@@ -372,6 +373,7 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
               ...c,
               candles: res.candles,
               isDemo: res.isDemo,
+              changePct: res.isDemo ? null : res.changePct,
               providerStatus,
               isLoading: false,
             };
@@ -411,14 +413,14 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
     });
   }, [cells, loadCellCandles]);
 
-  // 1.3 Live updates: poll getQuote every 2s while tab is visible
+  // 1.3 Live updates: poll getQuote every 10s while tab is visible (backend caches quotes; provider allows 8 req/min)
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     let isCancelled = false;
 
     const pollQuotes = async () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-        timer = setTimeout(pollQuotes, 2000);
+        timer = setTimeout(pollQuotes, 10000);
         return;
       }
 
@@ -495,11 +497,11 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
       }
 
       if (!isCancelled) {
-        timer = setTimeout(pollQuotes, 2000);
+        timer = setTimeout(pollQuotes, 10000);
       }
     };
 
-    timer = setTimeout(pollQuotes, 2000);
+    timer = setTimeout(pollQuotes, 10000);
 
     return () => {
       isCancelled = true;
@@ -1439,6 +1441,15 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
           <div className={`flex-1 grid ${getGridClass()} gap-[3px] p-[2px] h-full w-full overflow-hidden bg-[#050B14]`}>
             {visibleCells.map((cell) => {
               const symObj = symbols.find((s) => s.symbol === cell.symbol) || symbols[0];
+              // Header price/change come from the cell's real data; the simulated symbol list is only a fallback.
+              const lastCandle = cell.candles[cell.candles.length - 1];
+              const headPrice = !cell.isDemo && lastCandle ? lastCandle.close : symObj.price;
+              const headChange =
+                !cell.isDemo && typeof cell.changePct === 'number'
+                  ? Number(cell.changePct.toFixed(2))
+                  : cell.isDemo
+                  ? symObj.change24h
+                  : null;
               const isMax = maximizedCellId === cell.id;
               const isActive = activeCellId === cell.id;
 
@@ -1467,15 +1478,13 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                       </select>
 
                       <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                        <span className="text-[#E8EEF9] font-bold">{symObj.price.toFixed(symObj.precision)}</span>
-                        <span
-                          className={`font-semibold ${
-                            symObj.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
-                          }`}
-                        >
-                          {symObj.change24h >= 0 ? '+' : ''}
-                          {symObj.change24h}%
-                        </span>
+                        <span className="text-[#E8EEF9] font-bold">{headPrice.toFixed(symObj.precision)}</span>
+                        {headChange !== null && (
+                          <span className={`font-semibold ${headChange >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                            {headChange >= 0 ? '+' : ''}
+                            {headChange}%
+                          </span>
+                        )}
                         {cell.isDemo ? (
                           <span className="px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold font-sans">
                             بيانات تجريبية
@@ -1588,17 +1597,15 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
                     <div className="flex flex-col min-w-0 pr-1">
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-white font-mono text-xs">{symObj.symbol}</span>
-                        <span
-                          className={`text-[11px] font-mono font-bold ${
-                            symObj.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'
-                          }`}
-                        >
-                          {symObj.change24h >= 0 ? '+' : ''}
-                          {symObj.change24h}%
-                        </span>
+                        {headChange !== null && (
+                          <span className={`text-[11px] font-mono font-bold ${headChange >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                            {headChange >= 0 ? '+' : ''}
+                            {headChange}%
+                          </span>
+                        )}
                       </div>
                       <span className="text-[10px] text-[#7B8DA8] font-mono">
-                        {symObj.price.toFixed(symObj.precision)}
+                        {headPrice.toFixed(symObj.precision)}
                       </span>
                     </div>
 
