@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة الإدارة — MATRIX</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#050b14">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/legal/legal.css">
+<style>
+  main { max-width: 1180px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+  .tabs button { background: transparent; color: var(--muted); border: 0; min-height: 36px; padding: 6px 14px; border-radius: 9px; font-weight: 700; font-size: 14px; }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+  .tabs .count { display: inline-block; min-width: 20px; padding: 0 6px; margin-inline-start: 6px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; line-height: 18px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .kpi .v { font-size: 26px; font-weight: 900; color: var(--text); direction: ltr; text-align: start; }
+  .kpi .l { font-size: 12px; color: var(--muted); }
+  .kpi .s { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }
+  .panel h3 { margin: 0 0 10px; color: var(--text); font-size: 15px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row input[type="search"], .row select, .row input[type="text"] {
+    background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 8px 10px; min-height: 40px; font-size: 14px;
+  }
+  .row input[type="search"] { flex: 1; min-width: 200px; }
+  .small { font-size: 12px; color: var(--dim); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid var(--line); color: var(--muted); }
+  .pill.ok { color: #86efac; border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.08); }
+  .pill.bad { color: #fca5a5; border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.08); }
+  .pill.warn { color: #fcd34d; border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.08); }
+  td.ltr, .ltr { direction: ltr; text-align: start; unicode-bidi: plaintext; }
+  table { font-size: 13px; }
+  td button, .btn-sm { min-height: 32px; padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 8px; }
+  .report-text { white-space: pre-wrap; word-break: break-word; color: var(--text); }
+  .chart svg { width: 100%; height: 180px; display: block; }
+  #toast { position: fixed; bottom: 18px; inset-inline-start: 50%; transform: translateX(50%); background: var(--panel-2); border: 1px solid var(--line); color: var(--text); padding: 10px 16px; border-radius: 12px; display: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  #toast.show { display: block; }
+  .hidden { display: none !important; }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; }
+  .kv div:nth-child(odd) { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <section id="login" class="panel" style="max-width:520px;margin:40px auto">
+    <h1 style="font-size:24px">لوحة الإدارة</h1>
+    <p class="small">أدخل مفتاح الإدارة (MATRIX_ADMIN_TOKEN). يُحفظ في هذه النافذة فقط، ويُمسح عند إغلاقها.</p>
+    <form id="loginForm">
+      <label>مفتاح الإدارة
+        <input type="password" id="tokenInput" autocomplete="off" dir="ltr" required>
+      </label>
+      <div id="loginMsg" class="msg" role="status"></div>
+      <div><button type="submit" class="btn-primary">دخول</button></div>
+    </form>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="bar">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="overview" aria-selected="true">نظرة عامة</button>
+        <button role="tab" data-tab="users" aria-selected="false">المستخدمون</button>
+        <button role="tab" data-tab="reports" aria-selected="false">البلاغات <span id="repCount" class="count hidden">0</span></button>
+        <button role="tab" data-tab="waitlist" aria-selected="false">قائمة الانتظار</button>
+        <button role="tab" data-tab="system" aria-selected="false">النظام</button>
+      </div>
+      <div class="row">
+        <button class="btn-ghost btn-sm" id="refreshBtn" title="تحديث">↻ تحديث</button>
+        <button class="btn-ghost btn-sm" id="logoutBtn">خروج</button>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div data-pane="overview">
+      <div class="kpis" id="kpis"></div>
+      <div class="panel chart">
+        <h3>التسجيلات اليومية — آخر <span id="chartDays">30</span> يوماً</h3>
+        <div id="signupChart"></div>
+      </div>
+      <div class="panel">
+        <h3>المحتوى والنشاط</h3>
+        <div class="kpis" id="contentKpis"></div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div data-pane="users" class="hidden">
+      <div class="panel">
+        <div class="row">
+          <input type="search" id="userQ" placeholder="بحث بالاسم أو البريد…">
+          <select id="userStatus">
+            <option value="all">الكل</option>
+            <option value="active">نشط</option>
+            <option value="suspended">موقوف</option>
+            <option value="unverified">بريد غير مؤكد</option>
+          </select>
+          <span class="small" id="userTotal"></span>
+        </div>
+        <div class="table-wrap" style="margin-top:10px">
+          <table>
+            <thead><tr><th>#</th><th>المستخدم</th><th>البريد</th><th>الحالة</th><th>التسجيل</th><th>آخر دخول</th><th>صفقات/تنبيهات</th><th></th></tr></thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+        <div class="pager"><button class="btn-ghost btn-sm" id="userPrev">السابق</button><span class="small" id="userPage"></span><button class="btn-ghost btn-sm" id="userNext">التالي</button></div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div data-pane="reports" class="hidden">
+      <div class="card warn"><strong>تنبيه:</strong> تشترط Apple وGoogle مراجعة البلاغات خلال 24 ساعة. العنصر الذي يصل <span id="hideThreshold">3</span> بلاغات يُخفى عن الجميع تلقائياً حتى تراجعه.</div>
+      <div id="reportList"></div>
+    </div>
+
+    <!-- Waitlist -->
+    <div data-pane="waitlist" class="hidden">
+      <div class="kpis" id="wlKpis"></div>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between">
+          <h3 style="margin:0">المسجّلون لإشعار الإطلاق</h3>
+          <button class="btn-primary btn-sm" id="wlCsv">تنزيل CSV</button>
+        </div>
+        <div class="table-wrap" style="margin-top:10px">
+          <table>
+            <thead><tr><th>البريد</th><th>الباقة</th><th>اللغة</th><th>المصدر</th><th>حساب</th><th>التاريخ</th></tr></thead>
+            <tbody id="wlRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- System -->
+    <div data-pane="system" class="hidden">
+      <div class="panel"><h3>حالة الخادم</h3><div class="kv" id="sysKv"></div></div>
+      <div class="panel"><h3>إحصاءات مزوّد الأسعار</h3><div class="kv" id="provKv"></div></div>
+    </div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'matrix.admin.token';
+  var token = '';
+  try { token = sessionStorage.getItem(KEY) || ''; } catch (e) { token = ''; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var fmtNum = function (n) { return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US'); };
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    var d = new Date(Number(ts) * 1000);
+    return d.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric', numberingSystem: 'latn' }) + ' ' +
+      d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', numberingSystem: 'latn' });
+  }
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+  function toast(text) {
+    var t = $('toast'); t.textContent = text; t.className = 'show';
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = ''; }, 2600);
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = { 'Accept': 'application/json', 'X-Admin-Token': token, 'X-Moderation-Token': token };
+    if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
+    return fetch(path, { method: opts.method || 'GET', headers: headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined })
+      .then(function (res) {
+        if (res.status === 403 || res.status === 404) {
+          var err = new Error(res.status === 404 ? 'لوحة الإدارة غير مفعّلة على الخادم (MATRIX_ADMIN_TOKEN غير مضبوط).' : 'مفتاح الإدارة غير صحيح.');
+          err.auth = true; throw err;
+        }
+        if (!res.ok) throw new Error('خطأ من الخادم (' + res.status + ')');
+        return opts.raw ? res : res.json();
+      });
+  }
+
+  // ---------------------------------------------------------------------------- login
+  function showApp(on) {
+    $('login').classList.toggle('hidden', on);
+    $('app').classList.toggle('hidden', !on);
+  }
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    token = $('tokenInput').value.trim();
+    var msg = $('loginMsg');
+    api('/api/admin/overview').then(function (data) {
+      try { sessionStorage.setItem(KEY, token); } catch (err) { /* ignore */ }
+      $('tokenInput').value = '';
+      showApp(true);
+      renderOverview(data);
+      loadReportsCount();
+    }).catch(function (err) {
+      msg.textContent = err.message; msg.className = 'msg show err';
+    });
+  });
+  $('logoutBtn').addEventListener('click', function () {
+    token = '';
+    try { sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+    showApp(false);
+  });
+
+  // ---------------------------------------------------------------------------- tabs
+  var current = 'overview';
+  function selectTab(name) {
+    current = name;
+    document.querySelectorAll('.tabs [role=tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === name)); });
+    document.querySelectorAll('[data-pane]').forEach(function (p) { p.classList.toggle('hidden', p.dataset.pane !== name); });
+    load(name);
+  }
+  document.querySelectorAll('.tabs [role=tab]').forEach(function (b) {
+    b.addEventListener('click', function () { selectTab(b.dataset.tab); });
+  });
+  $('refreshBtn').addEventListener('click', function () { load(current); loadReportsCount(); });
+
+  function onError(err) {
+    if (err.auth) { showApp(false); var m = $('loginMsg'); m.textContent = err.message; m.className = 'msg show err'; return; }
+    toast(err.message || 'حدث خطأ');
+  }
+
+  function load(name) {
+    if (name === 'overview') api('/api/admin/overview').then(renderOverview).catch(onError);
+    if (name === 'users') loadUsers();
+    if (name === 'reports') loadReports();
+    if (name === 'waitlist') api('/api/admin/waitlist?limit=1000').then(renderWaitlist).catch(onError);
+    if (name === 'system') api('/api/admin/system').then(renderSystem).catch(onError);
+  }
+
+  // ---------------------------------------------------------------------------- overview
+  function kpi(label, value, sub) {
+    return '<div class="kpi"><div class="l">' + esc(label) + '</div><div class="v">' + esc(value) + '</div>' + (sub ? '<div class="s">' + esc(sub) + '</div>' : '') + '</div>';
+  }
+  function renderOverview(d) {
+    var u = d.users || {}, s = d.signups || {}, w = d.waitlist || {};
+    $('kpis').innerHTML =
+      kpi('المستخدمون', fmtNum(u.total), 'بريد مؤكد: ' + fmtNum(u.verified_email)) +
+      kpi('تسجيلات اليوم', fmtNum(s.today), '7 أيام: ' + fmtNum(s['7d']) + ' · 30 يوماً: ' + fmtNum(s['30d'])) +
+      kpi('نشطون (7 أيام)', fmtNum(u.active_7d), 'جلسات حيّة: ' + fmtNum(u.live_sessions)) +
+      kpi('قائمة الانتظار', fmtNum(w.total), planSummary(w.by_plan)) +
+      kpi('بلاغات معلّقة', fmtNum(d.reports_pending), d.reports_pending ? 'راجعها خلال 24 ساعة' : 'لا شيء معلّق') +
+      kpi('موقوفون / محذوفون', fmtNum(u.suspended) + ' / ' + fmtNum(u.deleted));
+    var c = d.content || {};
+    $('contentKpis').innerHTML =
+      kpi('رسائل المجموعة (24 ساعة)', fmtNum(c.group_messages_24h)) +
+      kpi('أفكار التداول', fmtNum(c.ideas)) +
+      kpi('تنبيهات نشطة', fmtNum(c.alerts_active)) +
+      kpi('صفقات في السجل', fmtNum(c.journal_trades)) +
+      kpi('شارتات عليها رسومات', fmtNum(c.drawing_charts)) +
+      kpi('أجهزة إشعارات', fmtNum(c.push_devices));
+    var series = d.signups_per_day || { counts: [], start: 0, days: 30 };
+    $('chartDays').textContent = series.days;
+    $('signupChart').innerHTML = barChart(series.counts, series.start);
+    setReportsCount(d.reports_pending);
+  }
+  function planSummary(by) {
+    if (!by) return '';
+    var names = { free: 'مجانية', basic: 'أساسية', pro: 'محترف', vip: 'نخبة', unknown: 'غير محدد' };
+    return Object.keys(by).map(function (k) { return (names[k] || k) + ': ' + by[k]; }).join(' · ');
+  }
+  function barChart(counts, start) {
+    if (!counts || !counts.length) return '<p class="small">لا بيانات بعد.</p>';
+    var W = 760, H = 170, pad = 22, n = counts.length;
+    var max = Math.max(1, Math.max.apply(null, counts));
+    var bw = (W - pad * 2) / n;
+    var out = '<svg viewBox="0 0 ' + W + ' ' + (H + 20) + '" role="img" aria-label="التسجيلات اليومية" preserveAspectRatio="none" style="direction:ltr">';
+    out += '<line x1="' + pad + '" y1="' + H + '" x2="' + (W - pad) + '" y2="' + H + '" stroke="#1e283d"/>';
+    for (var i = 0; i < n; i++) {
+      var h = Math.round((counts[i] / max) * (H - 18));
+      var x = pad + i * bw + 2;
+      var day = new Date((start + (i + 1) * 86400 - 1) * 1000); // bucket i ends at start+(i+1) days
+      var label = day.getUTCDate() + '/' + (day.getUTCMonth() + 1);
+      out += '<rect x="' + x.toFixed(1) + '" y="' + (H - h) + '" width="' + Math.max(2, bw - 4).toFixed(1) + '" height="' + h + '" rx="2" fill="#2dd4bf"><title>' + label + ': ' + counts[i] + '</title></rect>';
+      if (counts[i] > 0 && bw > 14) out += '<text x="' + (x + (bw - 4) / 2).toFixed(1) + '" y="' + (H - h - 4) + '" fill="#94a3b8" font-size="10" text-anchor="middle">' + counts[i] + '</text>';
+      if (i % Math.ceil(n / 10) === 0 || i === n - 1) out += '<text x="' + (x + (bw - 4) / 2).toFixed(1) + '" y="' + (H + 14) + '" fill="#64748b" font-size="10" text-anchor="middle">' + label + '</text>';
+    }
+    out += '<text x="' + pad + '" y="12" fill="#64748b" font-size="10">max ' + max + '</text>';
+    return out + '</svg>';
+  }
+
+  // ---------------------------------------------------------------------------- users
+  var userOffset = 0, userLimit = 50, userTotal = 0, userTimer = null;
+  $('userQ').addEventListener('input', function () { clearTimeout(userTimer); userTimer = setTimeout(function () { userOffset = 0; loadUsers(); }, 300); });
+  $('userStatus').addEventListener('change', function () { userOffset = 0; loadUsers(); });
+  $('userPrev').addEventListener('click', function () { if (userOffset > 0) { userOffset = Math.max(0, userOffset - userLimit); loadUsers(); } });
+  $('userNext').addEventListener('click', function () { if (userOffset + userLimit < userTotal) { userOffset += userLimit; loadUsers(); } });
+
+  function loadUsers() {
+    var q = encodeURIComponent($('userQ').value.trim());
+    var st = $('userStatus').value;
+    api('/api/admin/users?q=' + q + '&status=' + st + '&limit=' + userLimit + '&offset=' + userOffset).then(function (d) {
+      userTotal = d.total;
+      $('userTotal').textContent = 'العدد: ' + fmtNum(d.total);
+      $('userPage').textContent = d.total ? (userOffset + 1) + '–' + Math.min(userOffset + userLimit, d.total) + ' من ' + d.total : '';
+      $('userRows').innerHTML = d.users.length ? d.users.map(userRow).join('') : '<tr><td colspan="8" class="small">لا نتائج.</td></tr>';
+    }).catch(onError);
+  }
+  function userRow(u) {
+    var status = u.suspended_at ? '<span class="pill bad" title="' + esc(u.suspend_reason || '') + '">موقوف</span>'
+      : (u.email_verified ? '<span class="pill ok">مؤكد</span>' : '<span class="pill warn">غير مؤكد</span>');
+    var action = u.suspended_at
+      ? '<button class="btn-ghost" data-act="unsuspend" data-id="' + u.id + '">رفع الإيقاف</button>'
+      : '<button class="btn-danger" data-act="suspend" data-id="' + u.id + '" data-name="' + esc(u.username) + '">إيقاف</button>';
+    return '<tr><td class="ltr">' + u.id + '</td><td class="ltr">' + esc(u.username) + (u.role ? ' <span class="small">(' + esc(u.role) + ')</span>' : '') + '</td>' +
+      '<td class="ltr">' + esc(u.email) + '</td><td>' + status + '</td><td>' + fmtDate(u.created_at) + '</td><td>' + fmtDate(u.last_login_at) + '</td>' +
+      '<td class="ltr">' + u.trades + ' / ' + u.alerts + '</td><td>' + action + '</td></tr>';
+  }
+  $('userRows').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var id = b.dataset.id;
+    if (b.dataset.act === 'suspend') {
+      var reason = prompt('سبب إيقاف ' + b.dataset.name + ' (يظهر لك فقط):', 'مخالفة قواعد المجتمع');
+      if (reason === null) return;
+      api('/api/admin/users/' + id + '/suspend', { method: 'POST', body: { suspended: true, reason: reason } })
+        .then(function () { toast('تم إيقاف الحساب وتسجيل خروجه من كل الأجهزة.'); loadUsers(); }).catch(onError);
+    } else {
+      api('/api/admin/users/' + id + '/suspend', { method: 'POST', body: { suspended: false } })
+        .then(function () { toast('تم رفع الإيقاف.'); loadUsers(); }).catch(onError);
+    }
+  });
+
+  // ---------------------------------------------------------------------------- reports
+  function setReportsCount(n) {
+    var el = $('repCount');
+    el.textContent = n || 0;
+    el.classList.toggle('hidden', !n);
+  }
+  function loadReportsCount() {
+    api('/api/moderation/reports').then(function (d) { setReportsCount(d.pending_total); }).catch(function () { /* ignore */ });
+  }
+  function loadReports() {
+    api('/api/moderation/reports').then(function (d) {
+      setReportsCount(d.pending_total);
+      $('hideThreshold').textContent = d.hide_threshold;
+      var kinds = { group_message: 'رسالة مجموعة', vote: 'فكرة تداول' };
+      $('reportList').innerHTML = d.reports.length ? d.reports.map(function (r) {
+        return '<div class="panel">' +
+          '<div class="row" style="justify-content:space-between">' +
+          '<div><span class="pill">' + esc(kinds[r.kind] || r.kind) + '</span> ' +
+          (r.hidden_for_all ? '<span class="pill bad">مخفي عن الجميع</span> ' : '') +
+          '<span class="small">' + r.reports + ' بلاغ · الأسباب: ' + esc((r.reasons || []).join('، ')) + '</span></div>' +
+          '<div class="row"><button class="btn-danger btn-sm" data-mod="remove" data-kind="' + esc(r.kind) + '" data-id="' + esc(r.target_id) + '">حذف المحتوى</button>' +
+          '<button class="btn-ghost btn-sm" data-mod="dismiss" data-kind="' + esc(r.kind) + '" data-id="' + esc(r.target_id) + '">إبقاؤه (رفض البلاغ)</button></div></div>' +
+          '<p class="small" style="margin:8px 0 2px">الكاتب: <span class="ltr">' + esc(r.author || '—') + '</span></p>' +
+          '<div class="report-text">' + (r.exists ? esc(r.text) : '<span class="small">المحتوى محذوف مسبقاً</span>') + '</div></div>';
+      }).join('') : '<div class="panel small">لا بلاغات معلّقة. 👍</div>';
+    }).catch(onError);
+  }
+  $('reportList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-mod]');
+    if (!b) return;
+    var action = b.dataset.mod;
+    if (action === 'remove' && !confirm('حذف هذا المحتوى نهائياً؟')) return;
+    api('/api/moderation/action', { method: 'POST', body: { kind: b.dataset.kind, target_id: b.dataset.id, action: action } })
+      .then(function () { toast(action === 'remove' ? 'تم حذف المحتوى.' : 'تم رفض البلاغ وإعادة المحتوى.'); loadReports(); })
+      .catch(onError);
+  });
+
+  // ---------------------------------------------------------------------------- waitlist
+  function renderWaitlist(d) {
+    var by = (d.counts && d.counts.by_plan) || {};
+    $('wlKpis').innerHTML = kpi('المجموع', fmtNum(d.counts.total)) + kpi('الأساسية', fmtNum(by.basic || 0)) +
+      kpi('المحترف', fmtNum(by.pro || 0)) + kpi('النخبة', fmtNum(by.vip || 0));
+    var plans = { free: 'مجانية', basic: 'الأساسية', pro: 'المحترف', vip: 'النخبة' };
+    $('wlRows').innerHTML = d.items.length ? d.items.map(function (it) {
+      return '<tr><td class="ltr">' + esc(it.email) + '</td><td>' + esc(plans[it.plan] || it.plan || '—') + '</td><td class="ltr">' + esc(it.lang || '—') +
+        '</td><td class="ltr">' + esc(it.source || '—') + '</td><td class="ltr">' + (it.user_id || '—') + '</td><td>' + fmtDate(it.created_at) + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="small">لا أحد بعد.</td></tr>';
+  }
+  $('wlCsv').addEventListener('click', function () {
+    api('/api/admin/waitlist.csv', { raw: true }).then(function (res) { return res.blob(); }).then(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'matrix-waitlist.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    }).catch(onError);
+  });
+
+  // ---------------------------------------------------------------------------- system
+  function yesNo(v) { return v ? '<span class="pill ok">مفعّل</span>' : '<span class="pill bad">غير مفعّل</span>'; }
+  function renderSystem(s) {
+    var up = s.uptime_s || 0;
+    var upTxt = Math.floor(up / 86400) + 'ي ' + Math.floor((up % 86400) / 3600) + 'س ' + Math.floor((up % 3600) / 60) + 'د';
+    $('sysKv').innerHTML =
+      '<div>النسخة</div><div class="ltr">' + esc(s.version || '—') + '</div>' +
+      '<div>مدة التشغيل</div><div>' + upTxt + '</div>' +
+      '<div>حجم قاعدة البيانات</div><div class="ltr">' + (s.db_bytes ? (s.db_bytes / 1048576).toFixed(1) + ' MB' : '—') + '</div>' +
+      '<div>مفتاح بيانات الأسعار</div><div>' + yesNo(s.market_data_key) + (s.market_rpm ? ' <span class="small ltr">(' + esc(s.market_rpm) + ' req/min)</span>' : '') + '</div>' +
+      '<div>البريد الإلكتروني (SMTP)</div><div>' + yesNo(s.email) + '</div>' +
+      '<div>العنوان العام</div><div class="ltr">' + esc(s.public_base_url || '— (لم يُضبط نطاق بعد)') + '</div>' +
+      '<div>التداول الحقيقي</div><div>' + (s.live_trading_enabled ? '<span class="pill bad">مفعّل!</span>' : '<span class="pill ok">مقفل (آمن)</span>') + '</div>';
+    var p = s.provider_stats || {};
+    var keys = Object.keys(p);
+    $('provKv').innerHTML = keys.length ? keys.map(function (k) {
+      var v = p[k];
+      if (k.indexOf('_at') > -1 && typeof v === 'number') v = fmtDate(v);
+      return '<div class="ltr">' + esc(k) + '</div><div class="ltr">' + esc(v === null ? '—' : v) + '</div>';
+    }).join('') : '<div class="small">لا إحصاءات بعد.</div><div></div>';
+  }
+
+  // ---------------------------------------------------------------------------- start
+  if (token) {
+    api('/api/admin/overview').then(function (d) { showApp(true); renderOverview(d); loadReportsCount(); })
+      .catch(function () { showApp(false); });
+  }
+  setInterval(function () { if (token && !$('app').classList.contains('hidden')) loadReportsCount(); }, 60000);
+})();
+</script>
+</body>
+</html>

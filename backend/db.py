@@ -342,6 +342,7 @@ def init_db() -> None:
         _migrate_content_reports(c)
         _migrate_owner_key(c)
         _migrate_password_resets(c)
+        _migrate_admin(c)
 
 
 def _migrate_owner_key(c: sqlite3.Connection) -> None:
@@ -1249,10 +1250,12 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
         # الترقية تكتب تجزئة الكلمة القديمة فوق الجديدة/الميتة، والجلسة تُنشأ بعد أن أُلغيت الجلسات.
         # الآن التجزئة يجب أن تبقى هي التي تحقّقنا منها، والترقية والجلسة بالمعاملة نفسها.
         c.execute("BEGIN IMMEDIATE")
-        cur = c.execute("SELECT username, email, password_hash FROM users WHERE id=?", (uid,)).fetchone()
+        cur = c.execute("SELECT username, email, password_hash, suspended_at FROM users WHERE id=?", (uid,)).fetchone()
         if not cur or str(cur["password_hash"]) != stored:
             _record_login_failure(ident)
             raise ValueError("invalid credentials")
+        if cur["suspended_at"] is not None:
+            raise ValueError("account suspended")
         if new_hash:
             c.execute("UPDATE users SET password_hash=? WHERE id=?", (new_hash, uid))
         token = _insert_session(c, uid)
@@ -1290,7 +1293,7 @@ def user_from_token(token: str | None) -> dict[str, Any] | None:
         row = c.execute(
             """SELECT s.user_id, u.username, u.email FROM sessions s
                JOIN users u ON u.id=s.user_id
-               WHERE s.token=? AND s.expires_at>?""",
+               WHERE s.token=? AND s.expires_at>? AND u.suspended_at IS NULL""",
             (token, time.time()),
         ).fetchone()
     if not row:
@@ -1869,6 +1872,92 @@ def change_password(
             c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND owner_key IS NOT ?", (user_id, owner_key))
         else:
             c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=?", (user_id,))
+
+
+def _migrate_admin(c: sqlite3.Connection) -> None:
+    """Admin features: account suspension and the launch waitlist."""
+    cols = {r[1] for r in c.execute("PRAGMA table_info(users)").fetchall()}
+    if "suspended_at" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN suspended_at REAL")
+    if "suspend_reason" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN suspend_reason TEXT")
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS waitlist (
+            email TEXT PRIMARY KEY,
+            plan TEXT,
+            lang TEXT,
+            source TEXT,
+            user_id INTEGER,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        )"""
+    )
+
+
+WAITLIST_PLANS = ("free", "basic", "pro", "vip")
+
+
+def waitlist_join(email: str, plan: str | None, lang: str | None, source: str | None, user_id: int | None) -> bool:
+    """Add (or update) an e-mail on the launch waitlist. Returns True when the address is new."""
+    em = (email or "").strip().lower()
+    if not re.fullmatch(r"[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,24}", em):
+        raise ValueError("invalid email")
+    pl = (plan or "").strip().lower() or None
+    if pl is not None and pl not in WAITLIST_PLANS:
+        pl = None
+    lg = (lang or "").strip()[:8] or None
+    src = (source or "").strip()[:32] or None
+    now = time.time()
+    with _conn() as c:
+        c.execute("BEGIN IMMEDIATE")
+        existed = c.execute("SELECT 1 FROM waitlist WHERE email=?", (em,)).fetchone() is not None
+        c.execute(
+            """INSERT INTO waitlist(email, plan, lang, source, user_id, created_at, updated_at)
+               VALUES(?,?,?,?,?,?,?)
+               ON CONFLICT(email) DO UPDATE SET plan=COALESCE(excluded.plan, waitlist.plan),
+                 lang=COALESCE(excluded.lang, waitlist.lang), user_id=COALESCE(excluded.user_id, waitlist.user_id),
+                 updated_at=excluded.updated_at""",
+            (em, pl, lg, src, user_id, now, now),
+        )
+    return not existed
+
+
+def waitlist_list(limit: int = 1000, offset: int = 0) -> list[dict]:
+    with _conn() as c:
+        rows = c.execute(
+            "SELECT email, plan, lang, source, user_id, created_at, updated_at FROM waitlist ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def waitlist_counts() -> dict:
+    with _conn() as c:
+        total = int(c.execute("SELECT COUNT(*) FROM waitlist").fetchone()[0])
+        by_plan = {
+            (r["plan"] or "unknown"): int(r["n"])
+            for r in c.execute("SELECT plan, COUNT(*) AS n FROM waitlist GROUP BY plan").fetchall()
+        }
+    return {"total": total, "by_plan": by_plan}
+
+
+def admin_set_suspended(user_id: int, suspended: bool, reason: str | None = None) -> bool:
+    """Suspend: sign the account out everywhere and refuse new sign-ins. Unsuspend restores sign-in."""
+    with _conn() as c:
+        c.execute("BEGIN IMMEDIATE")
+        row = c.execute("SELECT id, email FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row:
+            return False
+        if suspended:
+            c.execute(
+                "UPDATE users SET suspended_at=?, suspend_reason=? WHERE id=?",
+                (time.time(), (reason or "").strip()[:200] or None, user_id),
+            )
+            c.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
+            c.execute("UPDATE push_tokens SET user_id=NULL WHERE user_id=?", (user_id,))
+        else:
+            c.execute("UPDATE users SET suspended_at=NULL, suspend_reason=NULL WHERE id=?", (user_id,))
+    return True
 
 
 PASSWORD_RESET_TTL = 30 * 60  # seconds a reset link stays valid

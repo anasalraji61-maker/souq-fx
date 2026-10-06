@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Bell, Check, Sparkles, AlertCircle, Shield, Clock } from 'lucide-react';
+import { joinWaitlist, planIdFrom } from '../../api/waitlist';
 
 interface LaunchNotifyModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const LaunchNotifyModal: React.FC<LaunchNotifyModalProps> = ({
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
   // Fallback to extract USD number if planPriceUsd not passed explicitly
   const numericUsd =
@@ -43,11 +45,21 @@ export const LaunchNotifyModal: React.FC<LaunchNotifyModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim();
     if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
       setError('يرجى إدخال عنوان بريد إلكتروني صحيح.');
+      return;
+    }
+
+    setIsSending(true);
+    setError(null);
+    // Saved on the server (launch waitlist), so the address actually reaches us.
+    const failure = await joinWaitlist(cleanEmail, planIdFrom(planName, numericUsd));
+    setIsSending(false);
+    if (failure) {
+      setError(failure);
       return;
     }
 
@@ -58,7 +70,6 @@ export const LaunchNotifyModal: React.FC<LaunchNotifyModalProps> = ({
     } catch {}
 
     setIsSubmitted(true);
-    setError(null);
   };
 
   return (
@@ -159,10 +170,11 @@ export const LaunchNotifyModal: React.FC<LaunchNotifyModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#2DD4BF] to-[#0284C7] hover:from-[#14B8A6] hover:to-[#0369A1] text-[#042F2E] font-black text-xs transition-all shadow-lg active:scale-98 cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
+                disabled={isSending}
+                className="disabled:opacity-60 disabled:cursor-wait w-full py-3 rounded-xl bg-gradient-to-r from-[#2DD4BF] to-[#0284C7] hover:from-[#14B8A6] hover:to-[#0369A1] text-[#042F2E] font-black text-xs transition-all shadow-lg active:scale-98 cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <Bell className="w-4 h-4" />
-                <span>أبلغني عند الإطلاق</span>
+                <span>{isSending ? 'جارٍ التسجيل…' : 'أبلغني عند الإطلاق'}</span>
               </button>
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#64748B] pt-1">

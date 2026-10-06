@@ -64,6 +64,10 @@ def try_serve_spa(path: str, method: str) -> FileResponse | None:
         return None
     if candidate.is_file() and candidate.is_relative_to(dist_resolved):
         return FileResponse(candidate)
+    # A folder with its own index.html (e.g. /admin/, /legal/) serves that page, not the app shell.
+    folder_index = candidate / "index.html"
+    if candidate.is_dir() and candidate != dist_resolved and folder_index.is_file() and folder_index.is_relative_to(dist_resolved):
+        return FileResponse(folder_index)
 
     # If the last segment has a ".", treat as a missing asset
     last_segment = candidate_path.rsplit("/", 1)[-1]

@@ -93,6 +93,9 @@ app.include_router(journal_router)
 
 from routers_drawings import router as drawings_router
 app.include_router(drawings_router)
+from routers_admin import router as admin_router, admin_token_configured
+
+app.include_router(admin_router)
 
 from routers_alerts_compat import router as alerts_compat_router
 app.include_router(alerts_compat_router)
@@ -3147,13 +3150,13 @@ class ModerationAction(BaseModel):
 def _require_moderator(x_moderation_token: str | None) -> None:
     # أبل تشترط أن يتصرّف المطوّر على البلاغات خلال 24 ساعة. مسار مراجعة بسيط بتوكن من متغيّر
     # بيئة MATRIX_MODERATION_TOKEN (بلا توكن مضبوط = المسار غير موجود أصلاً → 404، لا باب مفتوح).
-    expected = os.getenv("MATRIX_MODERATION_TOKEN", "")
-    if not expected:
+    # The admin token (MATRIX_ADMIN_TOKEN, admin panel) is also accepted, so one secret runs everything.
+    tokens = [t for t in (os.getenv("MATRIX_MODERATION_TOKEN", ""), admin_token_configured()) if t]
+    if not tokens:
         raise HTTPException(404, "not found")
     # بايتات: `compare_digest` على نصّين يرمي TypeError لأي حرف غير ASCII (رأس «é») ⇒ 500 بدل 403
-    if not x_moderation_token or not secrets.compare_digest(
-        x_moderation_token.encode("utf-8", "surrogateescape"), expected.encode("utf-8", "surrogateescape")
-    ):
+    got = (x_moderation_token or "").encode("utf-8", "surrogateescape")
+    if not got or not any(secrets.compare_digest(got, t.encode("utf-8", "surrogateescape")) for t in tokens):
         raise HTTPException(403, "forbidden")
 
 

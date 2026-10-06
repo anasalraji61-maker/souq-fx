@@ -18,6 +18,7 @@ from __future__ import annotations
 import html
 import logging
 import os
+import re
 import smtplib
 import ssl
 from email.message import EmailMessage
@@ -34,8 +35,24 @@ def _env(name: str, default: str = "") -> str:
     return (os.getenv(name) or default).strip()
 
 
+_HOST_RE = re.compile(r"^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$|^\d{1,3}(\.\d{1,3}){3}$|^localhost$")
+
+
+def _port() -> int | None:
+    raw = _env("SMTP_PORT", "587") or "587"
+    try:
+        port = int(raw)
+    except ValueError:
+        return None
+    return port if 0 < port < 65536 else None
+
+
 def configured() -> bool:
-    return bool(_env("SMTP_HOST") and _env("SMTP_USER") and _env("SMTP_PASSWORD"))
+    """SMTP settings present AND plausible: a mistyped host or port must not turn on "forgot password"
+    buttons that can never work."""
+    return bool(
+        _HOST_RE.match(_env("SMTP_HOST")) and _port() is not None and _env("SMTP_USER") and _env("SMTP_PASSWORD")
+    )
 
 
 def public_base_url(fallback: str = "") -> str:
@@ -71,7 +88,7 @@ def send(to: str, subject: str, text: str, html_body: str | None = None) -> bool
         return False
 
     host = _env("SMTP_HOST")
-    port = int(_env("SMTP_PORT", "587") or 587)
+    port = _port() or 587
     user = _env("SMTP_USER")
     password = _env("SMTP_PASSWORD")
     sender = _env("SMTP_FROM") or user

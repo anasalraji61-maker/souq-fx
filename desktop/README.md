@@ -18,6 +18,8 @@ Priority: Live → Bundled → Dev. `--dev` always uses Dev.
 - No trading: the desktop shell never places orders (real trading is disabled in MATRIX).
 
 ## Build the Windows installer (on a Windows PC)
+Easiest: double-click `build-windows.bat` (installs the build tools, creates `desktop-config.json` from the
+example, builds, and opens the `dist` folder). Manual steps:
 ```
 cd desktop
 npm install
