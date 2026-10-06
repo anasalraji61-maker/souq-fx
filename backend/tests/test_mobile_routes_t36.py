@@ -52,9 +52,22 @@ def get_backend_route_paths() -> list[str]:
     from main import app
 
     routes = []
-    for route in app.routes:
-        if hasattr(route, "path") and route.path.startswith("/api"):
-            routes.append(route.path)
+
+    def walk(items, prefix=""):
+        for route in items:
+            # newer FastAPI keeps included routers as lazy `_IncludedRouter` entries
+            inner = getattr(route, "original_router", None)
+            if inner is not None:
+                ctx = getattr(route, "include_context", None)
+                walk(inner.routes, prefix + (getattr(ctx, "prefix", "") or ""))
+                continue
+            path = getattr(route, "path", None)
+            if path is not None:
+                full = prefix + path
+                if full.startswith("/api"):
+                    routes.append(full)
+
+    walk(app.routes)
     return routes
 
 
@@ -79,7 +92,7 @@ def mobile_path_matches_route(mobile_path: str, route_path: str, route_pattern: 
         # Check if route_path is prefix + / + {param}
         if route_path.startswith(prefix + "/"):
             rest = route_path[len(prefix) + 1:]
-            if rest.startswith("{") and rest.endswith("}"):
+            if rest.startswith("{"):  # {param} or {param}/sub-path
                 return True
     
     return False
