@@ -114,6 +114,10 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
   // View state: visible candles count and pan offset
   const [visibleCount, setVisibleCount] = useState(70);
   const [panOffset, setPanOffset] = useState(0); // 0 = anchored to latest candle; < 0 = empty space after it
+  const panOffsetRef = useRef(0);
+  panOffsetRef.current = panOffset;
+  const visibleCountRef = useRef(70);
+  visibleCountRef.current = visibleCount;
   // Like TradingView: the chart can be dragged left past the latest candle, leaving empty space on the right.
   const clampPan = (value: number, count: number) =>
     Math.max(-Math.floor(count * 0.6), Math.min(Math.max(0, candles.length - count), value));
@@ -254,6 +258,25 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
   const pinchStartDistRef = useRef<number | null>(null);
   const pinchStartVisibleRef = useRef(60);
   const pinchStartOffsetRef = useRef(0);
+
+  // Pointer-based gestures (mouse, pen and touch share one path):
+  //  - two pointers = pinch zoom, a still finger for 450 ms = crosshair, a fast release = kinetic scroll.
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchRef = useRef<{ dist: number; visible: number; offset: number; ratio: number } | null>(null);
+  const touchHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchCrosshairRef = useRef(false);
+  const panSamplesRef = useRef<{ t: number; x: number }[]>([]);
+  const kineticRafRef = useRef<number | null>(null);
+  const stopKinetic = () => {
+    if (kineticRafRef.current !== null) {
+      cancelAnimationFrame(kineticRafRef.current);
+      kineticRafRef.current = null;
+    }
+  };
+  useEffect(() => () => {
+    stopKinetic();
+    if (touchHoldTimerRef.current) clearTimeout(touchHoldTimerRef.current);
+  }, []);
 
   // Handle Resize with ResizeObserver
   const [dimensions, setDimensions] = useState({ width: 400, height: 350 });
@@ -1008,10 +1031,32 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
   // Pointer Down (Mouse & Touch unified)
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     onFocusCell?.();
+    stopKinetic();
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const { chartWidth } = transformRef.current;
+
+    pointersRef.current.set(e.pointerId, { x, y });
+    // Second finger: switch to pinch zoom (cancels pan / drawing in progress)
+    if (pointersRef.current.size === 2) {
+      const [p1, p2] = Array.from(pointersRef.current.values());
+      isDraggingRef.current = false;
+      dragHandleRef.current = null;
+      dragBodyRef.current = null;
+      setTempDrawing(null);
+      if (touchHoldTimerRef.current) clearTimeout(touchHoldTimerRef.current);
+      touchCrosshairRef.current = false;
+      pinchRef.current = {
+        dist: Math.max(10, Math.hypot(p1.x - p2.x, p1.y - p2.y)),
+        visible: visibleCount,
+        offset: panOffset,
+        ratio: Math.max(0, Math.min(1, (p1.x + p2.x) / 2 / Math.max(1, chartWidth))),
+      };
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+    if (pointersRef.current.size > 2) return;
 
     // Check if clicking on price scale to stretch
     if (x >= chartWidth) {
@@ -1056,7 +1101,19 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     dragStartYRef.current = y;
     dragStartPriceOffsetRef.current = isAutoScale ? 0 : priceOffset;
     verticalPanRef.current = !isAutoScale;
-    setCrosshair(null);
+    panSamplesRef.current = [{ t: performance.now(), x }];
+    if (e.pointerType === 'touch') {
+      // Finger held still → crosshair mode (like TradingView mobile)
+      touchCrosshairRef.current = false;
+      if (touchHoldTimerRef.current) clearTimeout(touchHoldTimerRef.current);
+      touchHoldTimerRef.current = setTimeout(() => {
+        touchCrosshairRef.current = true;
+        isDraggingRef.current = false;
+        setPanOffset(dragStartOffsetRef.current);
+      }, 450);
+    } else {
+      setCrosshair(null);
+    }
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -1065,6 +1122,31 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    if (pointersRef.current.has(e.pointerId)) pointersRef.current.set(e.pointerId, { x, y });
+
+    // Pinch zoom
+    if (pinchRef.current && pointersRef.current.size >= 2) {
+      const [p1, p2] = Array.from(pointersRef.current.values());
+      const dist = Math.max(10, Math.hypot(p1.x - p2.x, p1.y - p2.y));
+      const pz = pinchRef.current;
+      const nextVisible = Math.round(Math.max(20, Math.min(Math.max(20, candles.length), pz.visible * (pz.dist / dist))));
+      const offsetAdj = Math.round((nextVisible - pz.visible) * (1 - pz.ratio));
+      setVisibleCount(nextVisible);
+      setPanOffset(clampPan(pz.offset - offsetAdj, nextVisible));
+      return;
+    }
+
+    // Finger moved before the hold timer fired → it is a pan, not a crosshair
+    if (touchHoldTimerRef.current && isDraggingRef.current && Math.hypot(x - dragStartXRef.current, y - dragStartYRef.current) > 8) {
+      clearTimeout(touchHoldTimerRef.current);
+      touchHoldTimerRef.current = null;
+    }
+    if (isDraggingRef.current) {
+      const samples = panSamplesRef.current;
+      samples.push({ t: performance.now(), x });
+      if (samples.length > 6) samples.shift();
+    }
 
     const {
       chartWidth,
@@ -1125,7 +1207,7 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     }
 
     // Panning chart
-    if (isDraggingRef.current) {
+    if (isDraggingRef.current && !touchCrosshairRef.current) {
       const dx = x - dragStartXRef.current;
       const candleShift = Math.round(dx / candleWidth);
       const newOffset = clampPan(dragStartOffsetRef.current + candleShift, visibleCount);
@@ -1164,6 +1246,57 @@ const MatrixChartCanvasComponent: React.FC<MatrixChartCanvasProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    pointersRef.current.delete(e.pointerId);
+    if (touchHoldTimerRef.current) {
+      clearTimeout(touchHoldTimerRef.current);
+      touchHoldTimerRef.current = null;
+    }
+    if (pinchRef.current) {
+      // Lifting one finger of a pinch must not start a pan with the other one
+      if (pointersRef.current.size < 2) pinchRef.current = null;
+      isDraggingRef.current = false;
+      return;
+    }
+    if (touchCrosshairRef.current) {
+      touchCrosshairRef.current = false;
+      isDraggingRef.current = false;
+      setCrosshair(null);
+      onCrosshairTimeChange?.(null);
+      return;
+    }
+
+    // Kinetic scroll after a fast horizontal release
+    if (isDraggingRef.current && e.type === 'pointerup') {
+      const samples = panSamplesRef.current;
+      const now = performance.now();
+      const recent = samples.filter((sm) => now - sm.t < 120);
+      if (recent.length >= 2) {
+        const first = recent[0];
+        const last = recent[recent.length - 1];
+        let velocity = (last.x - first.x) / Math.max(1, last.t - first.t); // px per ms
+        const cw = transformRef.current.candleWidth || 8;
+        if (Math.abs(velocity) > 0.35 && now - last.t < 60) {
+          let acc = 0;
+          let base = panOffsetRef.current;
+          let prevT = now;
+          const step = (t: number) => {
+            const dt = t - prevT;
+            prevT = t;
+            acc += (velocity * dt) / cw;
+            velocity *= Math.pow(0.94, dt / 16);
+            const next = clampPan(Math.round(base + acc), visibleCountRef.current);
+            setPanOffset(next);
+            if (Math.abs(velocity) < 0.03 || next !== Math.round(base + acc)) {
+              kineticRafRef.current = null;
+              return;
+            }
+            kineticRafRef.current = requestAnimationFrame(step);
+          };
+          kineticRafRef.current = requestAnimationFrame(step);
+        }
+      }
+    }
 
     if (isDraggingPriceScale) {
       setIsDraggingPriceScale(false);

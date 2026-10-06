@@ -20,7 +20,7 @@ export const DrawingStyleBar: React.FC<DrawingStyleBarProps> = ({
   if (!drawing) return null;
 
   return (
-    <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-[#0F172A]/95 backdrop-blur border border-[#334155] px-3 py-1.5 rounded-lg shadow-2xl text-xs select-none animate-in fade-in zoom-in-95">
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-[#0F172A]/95 backdrop-blur border border-[#334155] px-3 py-1.5 rounded-lg shadow-2xl text-xs select-none animate-in fade-in zoom-in-95">
       {/* Color options */}
       <div className="flex items-center gap-1 pl-2 border-l border-[#334155]">
         {COLORS.map((c) => (
