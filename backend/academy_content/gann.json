@@ -1,0 +1,495 @@
+{
+ "school_id": "gann",
+ "lectures": {
+  "gann-l1-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "من هو جان",
+     "narration": "ويليام ديلبرت جان متداول أمريكي عاش في أوائل القرن العشرين، وتداول الأسهم والسلع، وكتب عن علاقة الزمن بالسعر مستلهماً أفكاراً من الهندسة والفلك والدورات الطبيعية. كثير مما يُروى عن نتائجه المذهلة غير قابل للتحقق، لذلك ندرس أدواته هنا كأدوات تحليلية تاريخية تساعد على تنظيم الشارت وطرح الأسئلة، لا كقوانين ثابتة تتنبأ بالسوق. هذا المدخل يشرح الفكرتين الأساسيتين: التوازن والدورات."
+    },
+    {
+     "id": "s2",
+     "title": "فكرة التوازن",
+     "narration": "الفكرة المحورية عند جان أن السعر والزمن مترابطان، وأن السوق يكون في حالة توازن عندما تتناسب المسافة السعرية مع المسافة الزمنية. فإذا تحرك السعر عدداً من الوحدات يساوي عدد الوحدات الزمنية التي مرت، قيل إن السعر والزمن قد تربّعا. وعندها يتوقع أتباع جان احتمال تغيّر في سرعة الاتجاه أو اتجاهه. لكن هذا يتطلب أن نختار مقياساً، أي كم نقطة سعرية تقابل شمعة واحدة."
+    },
+    {
+     "id": "s3",
+     "title": "فكرة الدورات",
+     "narration": "الفكرة الثانية هي الدورات الزمنية. كان جان يقسم الدائرة ذات الثلاثمئة وستين درجة إلى أجزاء، ويعدّ الأيام من قمة أو قاع مهم، فيراقب نوافذ مثل خمسة وأربعين يوماً، وتسعين، ومئة وثمانين، وثلاثمئة وستين، إضافة إلى ذكرى القمم والقيعان السنوية. الفكرة أن السوق قد يُظهر رد فعل قرب هذه النوافذ. والمقصود نافذة زمنية لزيادة الانتباه، لا تاريخاً محدداً يجب أن ينعكس فيه السعر."
+    },
+    {
+     "id": "s4",
+     "title": "على الشارت",
+     "narration": "لتطبيق الفكرتين على الشارت، ابدأ بتحديد قمة أو قاع رئيسي واضح على الإطار اليومي، فهو نقطة الانطلاق لكل القياسات. ثم استخدم أداة عدّ الأيام أو خطوط الدورات لتعليم النوافذ الزمنية المهمة بعد تلك النقطة. وبالتوازي، حدّد مقياساً سعرياً ثابتاً لكل شمعة، وارسم المسار الذي يمثّل توازن السعر والزمن. بعدها راقب سلوك السعر عندما يقترب من هذه النوافذ والمسارات."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على اليورو",
+     "narration": "لنأخذ مثالاً توضيحياً. لنفترض أن اليورو دولار سجّل قاعاً مهماً عند 1.0500، واخترنا مقياساً قدره عشر نقاط لكل يوم. بعد عشرين يوماً يكون مسار التوازن عند 1.0700. فإذا كان السعر أعلى من ذلك فالصعود أسرع من التوازن ويُعدّ قوياً، وإذا كان أدنى فالصعود أبطأ. ثم نعلّم نافذة التسعين يوماً من القاع، ونراقب عندها شموع الإغلاق اليومية بحثاً عن رد فعل، دون افتراض أنه سيحدث."
+    },
+    {
+     "id": "s6",
+     "title": "الحدود والقاعدة",
+     "narration": "لهذه الأفكار حدود واضحة. المقياس السعري اختيار شخصي يغيّر كل النتائج، وسوق العملات يعمل خمسة أيام في الأسبوع فيختلف عدّ الأيام التقويمية عن أيام التداول، وكثرة النوافذ تجعل بعضها يصادف انعكاسات بالصدفة. القاعدة العملية: استخدم أفكار جان لتحديد متى وأين تنتبه، ثم انتظر تأكيداً من سلوك السعر على شموع مغلقة، وحافظ على وقف الخسارة والمخاطرة الصغيرة في كل الأحوال."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Who Was Gann",
+     "narration": "William Delbert Gann was an American trader of the early twentieth century who traded stocks and commodities and wrote about the relationship between time and price, drawing ideas from geometry, astronomy and natural cycles. Much of what is told about his remarkable results cannot be verified, so we study his tools here as historical analytical tools that help organise the chart and raise questions, not as fixed laws that predict the market. This introduction explains the two core ideas: balance and cycles."
+    },
+    {
+     "id": "s2",
+     "title": "The Idea of Balance",
+     "narration": "Gann's central idea is that price and time are linked, and that the market is in balance when the price distance is proportional to the time distance. If price moves a number of units equal to the number of time units that have passed, price and time are said to have squared. At that point Gann followers expect a possible change in the speed or direction of the trend. But this requires choosing a scale, that is, how many price points correspond to one candle."
+    },
+    {
+     "id": "s3",
+     "title": "The Idea of Cycles",
+     "narration": "The second idea is time cycles. Gann divided the three-hundred-and-sixty-degree circle into parts and counted days from an important high or low, watching windows such as forty-five days, ninety, one hundred and eighty and three hundred and sixty, as well as the yearly anniversaries of highs and lows. The idea is that the market may show a reaction near these windows. What is meant is a time window for heightened attention, not a precise date on which price must reverse."
+    },
+    {
+     "id": "s4",
+     "title": "On the Chart",
+     "narration": "To apply both ideas on the chart, start by identifying a clear major high or low on the daily timeframe; it is the starting point for all measurements. Then use a day-counting tool or cycle lines to mark the important time windows after that point. In parallel, set a fixed price scale per candle and draw the path that represents the balance of price and time. Then watch how price behaves as it approaches these windows and paths."
+    },
+    {
+     "id": "s5",
+     "title": "EURUSD Example",
+     "narration": "Let us take an illustrative example. Suppose EURUSD made an important low at 1.0500, and we chose a scale of ten pips per day. After twenty days the balance path is at 1.0700. If price is above it, the rise is faster than balance and is considered strong; if it is below, the rise is slower. Then we mark the ninety-day window from the low and watch the daily closing candles there for a reaction, without assuming it will happen."
+    },
+    {
+     "id": "s6",
+     "title": "Limits and Rule",
+     "narration": "These ideas have clear limits. The price scale is a personal choice that changes all the results, the currency market trades five days a week so counting calendar days differs from trading days, and the large number of windows means some will coincide with reversals by chance. The practical rule: use Gann's ideas to decide when and where to pay attention, then wait for confirmation from price behaviour on closed candles, and keep your stop loss and small risk in all cases."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Gann کێ بوو",
+     "narration": "William Delbert Gann بازرگانێکی ئەمریکی بوو لە سەرەتای سەدەی بیستەمدا، مامەڵەی بە پشک و کاڵاکانەوە دەکرد و دەربارەی پەیوەندیی کات و نرخ نووسیویەتی، بە سوود وەرگرتن لە بیرۆکەکانی ئەندازە و ئەستێرەناسی و خولە سروشتییەکان. زۆرێک لەوەی دەربارەی ئەنجامە سەرسوڕهێنەرەکانی دەگێڕدرێتەوە ناتوانرێت بسەلمێنرێت، بۆیە لێرەدا ئامرازەکانی وەک ئامرازی شیکاریی مێژوویی دەخوێنین کە یارمەتی ڕێکخستنی چارت و هێنانەگۆڕی پرسیار دەدەن، نەک وەک یاسای جێگیر کە پێشبینیی بازاڕ دەکەن. ئەم دەروازەیە دوو بیرۆکەی بنەڕەتی ڕوون دەکاتەوە: هاوسەنگی و خولەکان."
+    },
+    {
+     "id": "s2",
+     "title": "بیرۆکەی هاوسەنگی",
+     "narration": "بیرۆکەی سەرەکیی Gann ئەوەیە کە نرخ و کات بەیەکەوە بەستراون، و بازاڕ لە دۆخی هاوسەنگیدایە کاتێک دووریی نرخ لەگەڵ دووریی کات گونجاو بێت. ئەگەر نرخ ژمارەیەک یەکە بجووڵێت کە یەکسان بێت بە ژمارەی ئەو یەکە کاتییانەی تێپەڕیون، دەوترێت نرخ و کات چوارگۆشە بوون. لەو کاتەدا شوێنکەوتووانی Gann ئەگەری گۆڕانێک لە خێرایی یان ئاراستەی ترێند چاوەڕێ دەکەن. بەڵام ئەمە پێویستی بە هەڵبژاردنی پێوەرێکە، واتە چەند خاڵی نرخ بەرامبەر یەک مۆم دەبێت."
+    },
+    {
+     "id": "s3",
+     "title": "بیرۆکەی خولەکان",
+     "narration": "بیرۆکەی دووەم خولە کاتییەکانە. Gann بازنەی سێ سەد و شەست پلەیی دابەش دەکرد بۆ چەند بەشێک، و ڕۆژەکانی لە لووتکە یان نزمترین خاڵێکی گرنگەوە دەژمارد، و چاودێری پەنجەرەی وەک چل و پێنج ڕۆژ و نەوەد و سەد و هەشتا و سێ سەد و شەست ڕۆژی دەکرد، لەگەڵ یادی ساڵانەی لووتکە و نزمییەکان. بیرۆکەکە ئەوەیە کە لەوانەیە بازاڕ نزیکی ئەم پەنجەرانە کاردانەوەیەک پیشان بدات. مەبەست پەنجەرەیەکی کاتییە بۆ زیادکردنی سەرنج، نەک ڕێکەوتێکی دیاریکراو کە دەبێت نرخ تێیدا بگەڕێتەوە."
+    },
+    {
+     "id": "s4",
+     "title": "لەسەر چارت",
+     "narration": "بۆ جێبەجێکردنی هەردوو بیرۆکە لەسەر چارت، سەرەتا لووتکە یان نزمییەکی سەرەکیی ڕوون لەسەر چوارچێوەی ڕۆژانە دیاری بکە، چونکە ئەوە خاڵی دەستپێکی هەموو پێوانەکانە. پاشان ئامرازی ژماردنی ڕۆژەکان یان هێڵەکانی خول بەکاربهێنە بۆ نیشانکردنی پەنجەرە کاتییە گرنگەکان دوای ئەو خاڵە. هاوکات، پێوەرێکی نرخیی جێگیر بۆ هەر مۆمێک دیاری بکە و ئەو ڕێڕەوە بکێشە کە هاوسەنگیی نرخ و کات پیشان دەدات. دواتر چاودێری ڕەفتاری نرخ بکە کاتێک لەم پەنجەرە و ڕێڕەوانە نزیک دەبێتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی EURUSD",
+     "narration": "با نموونەیەکی ڕوونکەرەوە وەربگرین. وا دابنێ EURUSD نزمییەکی گرنگی لە 1.0500 تۆمار کرد، و پێوەری دە Pip مان بۆ هەر ڕۆژێک هەڵبژارد. دوای بیست ڕۆژ ڕێڕەوی هاوسەنگی لە 1.0700 دەبێت. ئەگەر نرخ لەوە بەرزتر بێت، بەرزبوونەوەکە خێراترە لە هاوسەنگی و بە بەهێز دادەنرێت، و ئەگەر نزمتر بێت بەرزبوونەوەکە هێواشترە. پاشان پەنجەرەی نەوەد ڕۆژ لە نزمییەکەوە نیشان دەکەین، و لەوێدا چاودێری مۆمە داخراوە ڕۆژانەکان دەکەین بۆ کاردانەوەیەک، بێ ئەوەی وا دابنێین کە ڕوو دەدات."
+    },
+    {
+     "id": "s6",
+     "title": "سنوور و یاسا",
+     "narration": "ئەم بیرۆکانە سنووری ڕوونیان هەیە. پێوەری نرخ هەڵبژاردنێکی کەسییە کە هەموو ئەنجامەکان دەگۆڕێت، بازاڕی دراو پێنج ڕۆژ لە هەفتەدا کار دەکات بۆیە ژماردنی ڕۆژە ساڵنامەییەکان جیاوازە لە ڕۆژەکانی بازرگانی، و زۆریی پەنجەرەکان وا دەکات هەندێکیان بە ڕێکەوت لەگەڵ گەڕانەوەکاندا یەک بگرنەوە. یاسای کردەیی: بیرۆکەکانی Gann بەکاربهێنە بۆ دیاریکردنی کەی و لە کوێ سەرنج بدەیت، پاشان چاوەڕێی پشتڕاستکردنەوە بکە لە ڕەفتاری نرخ لەسەر مۆمە داخراوەکان، و لە هەموو حاڵەتێکدا stop loss و مەترسیی بچووک بپارێزە."
+    }
+   ]
+  },
+  "gann-l2-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو مربع 9",
+     "narration": "مربع التسعة، أو الـ Square of Nine، جدول أرقام حلزوني ارتبط اسمه بجان، ويُستخدم لاستخراج مستويات سعرية محتملة من سعر مرجعي مهم. الفكرة أن الأرقام التي تقع على الزوايا نفسها في الحلزون تربطها علاقة هندسية، وقد تُظهر عندها الأسعار ردود فعل. من المهم أن نفهم من البداية أن المربع يعطي مستويات مرشّحة للمراقبة، لا نقاط انعكاس مؤكدة، وأن قيمته تظهر عند دمجه مع أدوات أخرى."
+    },
+    {
+     "id": "s2",
+     "title": "بناء المربع",
+     "narration": "يُبنى المربع بوضع الرقم واحد في المركز، ثم نكتب الأرقام بالتتابع في حلقات تدور حوله. الحلقة الأولى تضم الأرقام من اثنين إلى تسعة، والثانية من عشرة إلى خمسة وعشرين، وهكذا. ستلاحظ أن المربعات الفردية مثل تسعة وخمسة وعشرين وتسعة وأربعين تقع على قطر واحد. ثم نرسم صليبين فوق المربع: صليباً أساسياً أفقياً وعمودياً، وصليباً قطرياً، فيقسمان كل دورة كاملة إلى زوايا من خمس وأربعين درجة."
+    },
+    {
+     "id": "s3",
+     "title": "الحساب الرياضي",
+     "narration": "بدلاً من رسم المربع يدوياً، يمكن حساب مستوياته رياضياً. نأخذ الجذر التربيعي للسعر المرجعي، ثم نضيف إليه أو نطرح منه قيمة تمثل الدوران: اثنان لدورة كاملة من ثلاثمئة وستين درجة، وواحد لنصف دورة، ونصف لتسعين درجة، وربع لخمس وأربعين درجة. ثم نربّع الناتج فنحصل على المستوى السعري. هذه الطريقة تعطي النتائج نفسها تقريباً، وهي أسهل وأدق من العد على الجدول."
+    },
+    {
+     "id": "s4",
+     "title": "مثال على الذهب",
+     "narration": "لنطبق ذلك على الذهب. لنفترض أن قمة مهمة تكوّنت عند 2350 دولاراً. جذرها التربيعي نحو 48.48. بإضافة ربع نحصل بعد التربيع على قرابة 2374، وبإضافة نصف نحصل على قرابة 2399، أي زاوية تسعين درجة. وبطرح نصف نحصل على قرابة 2302، وبطرح واحد نحصل على قرابة 2254، أي نصف دورة. هذه مستويات نضعها على الشارت كمناطق مراقبة محتملة، ثم ننظر أيّها يتوافق مع دعوم ومقاومات سابقة."
+    },
+    {
+     "id": "s5",
+     "title": "مشكلة العملات",
+     "narration": "في العملات تظهر مشكلة المقياس. سعر اليورو دولار 1.0850 رقم صغير، فلا معنى لجذره مباشرة، لذلك يحوّله المحللون عادة إلى 10850 بحذف الفاصلة. وبإضافة نصف إلى الجذر نحصل على نحو 1.0954، وبطرحه نحصل على نحو 1.0746. لكن لو اخترنا طريقة تحويل أخرى لتغيرت المستويات كلياً، وهذا ينطبق أيضاً على الدولار ين. هذا الاعتماد على اختيار المقياس من أهم حدود المربع، ويجب أن يبقى في ذهنك دائماً."
+    },
+    {
+     "id": "s6",
+     "title": "الأخطاء والقاعدة",
+     "narration": "من الأخطاء الشائعة الدخول في صفقة لمجرد أن السعر لمس مستوى من المربع، أو حساب عشرات المستويات حتى يصادف أحدها انعكاساً فيبدو المربع دقيقاً بأثر رجعي. القاعدة العملية: اختر سعراً مرجعياً واضحاً وطريقة مقياس ثابتة، واحسب مستويات قليلة، واحتفظ فقط بما يتوافق مع مستويات فنية أخرى. ثم انتظر تأكيداً من شمعة مغلقة، وضع وقف الخسارة خلف المستوى بمسافة منطقية."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is Square of Nine",
+     "narration": "The Square of Nine is a spiral table of numbers associated with Gann, used to derive potential price levels from an important reference price. The idea is that numbers lying on the same angles in the spiral share a geometric relationship, and prices may show reactions at them. It is important to understand from the start that the square gives candidate levels to watch, not confirmed reversal points, and that its value appears when it is combined with other tools."
+    },
+    {
+     "id": "s2",
+     "title": "Building the Square",
+     "narration": "The square is built by placing the number one at the centre, then writing numbers in sequence in rings that wind around it. The first ring holds the numbers two to nine, the second ten to twenty-five, and so on. You will notice that odd squares such as nine, twenty-five and forty-nine lie on one diagonal. Then we draw two crosses over the square: a cardinal horizontal and vertical cross, and a diagonal cross, which divide each full rotation into angles of forty-five degrees."
+    },
+    {
+     "id": "s3",
+     "title": "The Calculation",
+     "narration": "Instead of drawing the square by hand, its levels can be calculated mathematically. We take the square root of the reference price, then add or subtract a value representing the rotation: two for a full three-hundred-and-sixty-degree rotation, one for half a rotation, one half for ninety degrees, and one quarter for forty-five degrees. Then we square the result to get the price level. This method gives roughly the same results and is easier and more precise than counting on the table."
+    },
+    {
+     "id": "s4",
+     "title": "Gold Example",
+     "narration": "Let us apply this to gold. Suppose an important high formed at 2350 dollars. Its square root is about 48.48. Adding a quarter, after squaring we get about 2374, and adding a half we get about 2399, the ninety-degree angle. Subtracting a half gives about 2302, and subtracting one gives about 2254, half a rotation. These are levels we place on the chart as potential watch zones, then we check which of them align with previous supports and resistances."
+    },
+    {
+     "id": "s5",
+     "title": "The Currency Problem",
+     "narration": "In currencies the scale problem appears. The EURUSD price of 1.0850 is a small number, so taking its root directly makes no sense, which is why analysts usually convert it to 10850 by removing the decimal point. Adding a half to the root gives about 1.0954, and subtracting it gives about 1.0746. But if we chose another conversion method, the levels would change completely, and the same applies to USDJPY. This dependence on the chosen scale is one of the square's most important limits and should always stay in your mind."
+    },
+    {
+     "id": "s6",
+     "title": "Mistakes and Rule",
+     "narration": "Common mistakes include entering a trade just because price touched a level from the square, or calculating dozens of levels until one happens to match a reversal, so the square looks accurate in hindsight. The practical rule: choose a clear reference price and a fixed scaling method, calculate a few levels, and keep only those that align with other technical levels. Then wait for confirmation from a closed candle, and place the stop loss beyond the level at a sensible distance."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Square of Nine چییە",
+     "narration": "Square of Nine یان چوارگۆشەی نۆ خشتەیەکی ژمارەیی پێچاوپێچە کە ناوی بە Gann ـەوە بەستراوە، و بەکاردێت بۆ دەرهێنانی ئاستە نرخییە ئەگەرییەکان لە نرخێکی سەرچاوەی گرنگەوە. بیرۆکەکە ئەوەیە کە ئەو ژمارانەی لەسەر هەمان گۆشەکان لە پێچەکەدا دەکەون پەیوەندییەکی ئەندازەییان هەیە، و لەوانەیە نرخەکان لەوێدا کاردانەوە پیشان بدەن. گرنگە لە سەرەتاوە تێبگەین کە چوارگۆشەکە ئاستی کاندید بۆ چاودێری دەدات، نەک خاڵی گەڕانەوەی دڵنیاکراو، و بەهاکەی کاتێک دەردەکەوێت کە لەگەڵ ئامرازەکانی تر تێکەڵ بکرێت."
+    },
+    {
+     "id": "s2",
+     "title": "دروستکردنی چوارگۆشە",
+     "narration": "چوارگۆشەکە بە دانانی ژمارە یەک لە ناوەڕاستدا دروست دەکرێت، پاشان ژمارەکان بە زنجیرە لە ئەڵقەگەلێکدا دەنووسین کە بە دەوریدا دەسووڕێنەوە. ئەڵقەی یەکەم ژمارەکانی دوو تا نۆ لەخۆ دەگرێت، دووەم دە تا بیست و پێنج، و بەم شێوەیە. تێبینی دەکەیت کە چوارگۆشە تاکەکانی وەک نۆ و بیست و پێنج و چل و نۆ لەسەر یەک تیرەدا دەکەون. پاشان دوو خاچ بەسەر چوارگۆشەکەدا دەکێشین: خاچێکی سەرەکیی ئاسۆیی و ستوونی، و خاچێکی لاری، کە هەر خولێکی تەواو دابەش دەکەن بۆ گۆشەی چل و پێنج پلەیی."
+    },
+    {
+     "id": "s3",
+     "title": "حیسابی بیرکاری",
+     "narration": "لە جیاتی کێشانی چوارگۆشەکە بە دەست، دەتوانرێت ئاستەکانی بە بیرکاری حیساب بکرێن. ڕەگی دووجای نرخی سەرچاوە وەردەگرین، پاشان بەهایەکی پێوە زیاد دەکەین یان لێی کەم دەکەینەوە کە سووڕانەوەکە پیشان دەدات: دوو بۆ خولێکی تەواوی سێ سەد و شەست پلەیی، یەک بۆ نیو خول، نیو بۆ نەوەد پلە، و چارەکێک بۆ چل و پێنج پلە. پاشان ئەنجامەکە دووجا دەکەین و ئاستی نرخ وەردەگرین. ئەم ڕێگایە نزیکەی هەمان ئەنجام دەدات و ئاسانتر و وردترە لە ژماردن لەسەر خشتەکە."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی زێڕ",
+     "narration": "با ئەمە لەسەر زێڕ جێبەجێ بکەین. وا دابنێ لووتکەیەکی گرنگ لە 2350 دۆلار دروست بوو. ڕەگی دووجاکەی نزیکەی 48.48 ـە. بە زیادکردنی چارەکێک دوای دووجاکردن نزیکەی 2374 وەردەگرین، و بە زیادکردنی نیو نزیکەی 2399، واتە گۆشەی نەوەد پلە. بە کەمکردنەوەی نیو نزیکەی 2302 وەردەگرین، و بە کەمکردنەوەی یەک نزیکەی 2254، واتە نیو خول. ئەمانە ئاستگەلێکن کە وەک ناوچەی ئەگەریی چاودێری لەسەر چارت دایاندەنێین، پاشان سەیر دەکەین کامیان لەگەڵ پشتگیری و بەرگرییە پێشووەکاندا یەک دەگرێتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "کێشەی دراوەکان",
+     "narration": "لە دراوەکاندا کێشەی پێوەر دەردەکەوێت. نرخی EURUSD ی 1.0850 ژمارەیەکی بچووکە، بۆیە وەرگرتنی ڕەگەکەی ڕاستەوخۆ مانای نییە، لەبەر ئەوە شیکارەکان زۆرجار دەیگۆڕن بۆ 10850 بە لابردنی فاریزەکە. بە زیادکردنی نیو بۆ ڕەگەکە نزیکەی 1.0954 وەردەگرین، و بە کەمکردنەوەی نزیکەی 1.0746. بەڵام ئەگەر ڕێگایەکی تری گۆڕینمان هەڵبژاردایە، ئاستەکان بە تەواوی دەگۆڕان، و هەمان شت بۆ USDJPY ڕاستە. ئەم پشتبەستنە بە هەڵبژاردنی پێوەر یەکێکە لە گرنگترین سنوورەکانی چوارگۆشەکە و دەبێت هەمیشە لە بیرتدا بێت."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە و یاسا",
+     "narration": "لە هەڵە باوەکان چوونە ناو مامەڵەیەکە تەنها لەبەر ئەوەی نرخ بەر ئاستێکی چوارگۆشەکە کەوتووە، یان حیسابکردنی دەیان ئاست تا یەکێکیان بە ڕێکەوت لەگەڵ گەڕانەوەیەکدا یەک بگرێتەوە، بۆیە چوارگۆشەکە بە شێوەی پاشەکی ورد دیار دەبێت. یاسای کردەیی: نرخێکی سەرچاوەی ڕوون و ڕێگایەکی پێوەری جێگیر هەڵبژێرە، چەند ئاستێکی کەم حیساب بکە، و تەنها ئەوانە بهێڵەرەوە کە لەگەڵ ئاستە تەکنیکییەکانی تردا یەک دەگرنەوە. پاشان چاوەڕێی پشتڕاستکردنەوە بکە لە مۆمێکی داخراو، و stop loss لە ئەودیوی ئاستەکەوە بە دوورییەکی لۆژیکی دابنێ."
+    }
+   ]
+  },
+  "gann-l2-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي المروحة",
+     "narration": "مروحة جان، أو الـ Gann Fan، مجموعة خطوط مائلة تنطلق من قمة أو قاع مهم، وكل خط يمثل سرعة معينة لحركة السعر عبر الزمن. يُعبَّر عن كل خط بنسبة بين وحدات السعر ووحدات الزمن، مثل واحد إلى واحد، واثنين إلى واحد، وواحد إلى اثنين، وأربعة إلى واحد. والهدف من المروحة أن ترى بسرعة إن كان الاتجاه الحالي يتحرك بسرعة أعلى أو أقل من سرعة التوازن."
+    },
+    {
+     "id": "s2",
+     "title": "زاوية واحد إلى واحد",
+     "narration": "أهم خطوط المروحة هو خط واحد إلى واحد، الذي يعني وحدة سعرية واحدة مقابل كل وحدة زمنية واحدة، وهو يمثل عند جان توازن الزمن والسعر. يُقال عنه إنه بزاوية خمس وأربعين درجة، لكن ذلك صحيح فقط إذا كان مقياس الشارت مضبوطاً بحيث تتساوى الوحدتان على الشاشة. وفي الاتجاه الصاعد، بقاء السعر فوق هذا الخط يُعدّ علامة قوة، بينما كسره بإغلاق واضح تحته يشير إلى تباطؤ الاتجاه."
+    },
+    {
+     "id": "s3",
+     "title": "الزوايا الأخرى",
+     "narration": "خط اثنين إلى واحد يعني وحدتين سعريتين لكل وحدة زمنية، فهو أشد انحداراً ويمثل اتجاهاً سريعاً جداً. أما خط واحد إلى اثنين فيعني وحدة سعرية لكل وحدتين زمنيتين، فهو أكثر استواءً ويمثل اتجاهاً أبطأ. وتستمر الخطوط بالنسب نفسها مثل أربعة إلى واحد وواحد إلى أربعة. وانتبه إلى أن طريقة كتابة هذه النسب تختلف بين المنصات والكتب، فتحقق من تعريف منصتك قبل الاعتماد عليها."
+    },
+    {
+     "id": "s4",
+     "title": "الطبيعة الديناميكية",
+     "narration": "ما يميز خطوط المروحة أنها ديناميكية، أي أن مستوى الدعم أو المقاومة الذي تمثله يتغير مع مرور كل شمعة، على عكس الخطوط الأفقية. ومن القواعد الكلاسيكية التي تنسب إلى جان أن السعر إذا كسر خطاً من خطوط المروحة فإنه يميل إلى التحرك نحو الخط التالي. فإذا كسر في الاتجاه الصاعد خط واحد إلى واحد، يصبح خط واحد إلى اثنين هو المنطقة المرشحة التالية، وهذا احتمال وليس قاعدة مضمونة."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على الين",
+     "narration": "لنأخذ مثالاً توضيحياً على الدولار ين. لنفترض قاعاً مهماً عند 140.00 على الشارت اليومي، واخترنا مقياساً قدره عشرون نقطة لكل يوم. بعد ثلاثين يوماً يكون خط واحد إلى واحد عند 146.00، وخط اثنين إلى واحد عند 152.00، وخط واحد إلى اثنين عند 143.00. فإذا كان السعر عند 147 فهو فوق خط التوازن والاتجاه قوي. وإذا أغلقت شمعة يومية تحت 146، يصبح 143 تقريباً المنطقة المرشحة التالية للمراقبة."
+    },
+    {
+     "id": "s6",
+     "title": "الأخطاء والقاعدة",
+     "narration": "أكبر خطأ في المروحة هو تغيير المقياس أو نقطة البداية حتى تبدو الخطوط مطابقة للسعر، فهذا يجعل الأداة بلا معنى. ومن الأخطاء أيضاً الرسم على منصة لا تثبّت المقياس، فتتغير الزاوية بمجرد تكبير الشارت. القاعدة العملية: ابدأ من قمة أو قاع واضح، وثبّت المقياس قبل الرسم، واعتمد فقط على كسر مؤكد بشمعة مغلقة، وادمج الخطوط مع الدعم والمقاومة، وحدد وقف الخسارة والمخاطرة قبل أي قرار."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is the Fan",
+     "narration": "The Gann Fan is a set of sloping lines starting from an important high or low, each line representing a particular speed of price movement over time. Each line is expressed as a ratio between price units and time units, such as one by one, two by one, one by two and four by one. The goal of the fan is to see quickly whether the current trend is moving faster or slower than the speed of balance."
+    },
+    {
+     "id": "s2",
+     "title": "The One by One Angle",
+     "narration": "The most important line of the fan is the one by one line, meaning one price unit for every one time unit; for Gann it represents the balance of time and price. It is said to be at forty-five degrees, but that is only true if the chart scale is set so that both units are equal on the screen. In an uptrend, price staying above this line is considered a sign of strength, while breaking it with a clear close below indicates the trend is slowing."
+    },
+    {
+     "id": "s3",
+     "title": "Other Angles",
+     "narration": "The two by one line means two price units per time unit, so it is steeper and represents a very fast trend. The one by two line means one price unit for every two time units, so it is flatter and represents a slower trend. The lines continue with the same ratios, such as four by one and one by four. Note that the way these ratios are written differs between platforms and books, so check your platform's definition before relying on it."
+    },
+    {
+     "id": "s4",
+     "title": "Dynamic Nature",
+     "narration": "What distinguishes the fan lines is that they are dynamic: the support or resistance level they represent changes with every candle, unlike horizontal lines. One classic rule attributed to Gann is that when price breaks one of the fan lines, it tends to move toward the next line. So if, in an uptrend, the one by one line is broken, the one by two line becomes the next candidate zone, and this is a probability, not a guaranteed rule."
+    },
+    {
+     "id": "s5",
+     "title": "USDJPY Example",
+     "narration": "Let us take an illustrative example on USDJPY. Suppose an important low at 140.00 on the daily chart, and we chose a scale of twenty pips per day. After thirty days, the one by one line is at 146.00, the two by one line at 152.00, and the one by two line at 143.00. If price is at 147, it is above the balance line and the trend is strong. If a daily candle closes below 146, then around 143 becomes the next candidate zone to watch."
+    },
+    {
+     "id": "s6",
+     "title": "Mistakes and Rule",
+     "narration": "The biggest mistake with the fan is changing the scale or starting point until the lines seem to fit price, which makes the tool meaningless. Another mistake is drawing on a platform that does not lock the scale, so the angle changes as soon as you zoom the chart. The practical rule: start from a clear high or low, fix the scale before drawing, rely only on a break confirmed by a closed candle, combine the lines with support and resistance, and set the stop loss and risk before any decision."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Fan چییە",
+     "narration": "Gann Fan یان باوەشێنی Gann کۆمەڵێک هێڵی لارە کە لە لووتکە یان نزمییەکی گرنگەوە دەست پێ دەکەن، و هەر هێڵێک خێراییەکی دیاریکراوی جووڵەی نرخ بە درێژایی کات پیشان دەدات. هەر هێڵێک بە ڕێژەیەک لە نێوان یەکەکانی نرخ و یەکەکانی کات دەردەبڕدرێت، وەک یەک بە یەک، دوو بە یەک، یەک بە دوو، و چوار بە یەک. ئامانجی Fan ئەوەیە بە خێرایی ببینیت ئایا ترێندی ئێستا بە خێراییەکی زیاتر یان کەمتر لە خێرایی هاوسەنگی دەجووڵێت."
+    },
+    {
+     "id": "s2",
+     "title": "گۆشەی 1x1",
+     "narration": "گرنگترین هێڵی Fan هێڵی 1x1 ـە، واتە یەک یەکەی نرخ بۆ هەر یەک یەکەی کات، و لای Gann هاوسەنگیی کات و نرخ پیشان دەدات. دەوترێت گۆشەکەی چل و پێنج پلەیە، بەڵام ئەمە تەنها ڕاستە ئەگەر پێوەری چارتەکە بە شێوەیەک ڕێکخرابێت کە هەردوو یەکە لەسەر شاشە یەکسان بن. لە ترێندی بەرزبووندا، مانەوەی نرخ لە سەرووی ئەم هێڵەوە نیشانەی هێزە، لە کاتێکدا شکاندنی بە داخستنێکی ڕوون لە خوارییەوە ئاماژەیە بۆ هێواشبوونەوەی ترێندەکە."
+    },
+    {
+     "id": "s3",
+     "title": "گۆشەکانی تر",
+     "narration": "هێڵی 2x1 واتە دوو یەکەی نرخ بۆ هەر یەکەیەکی کات، بۆیە لێژترە و ترێندێکی زۆر خێرا پیشان دەدات. هێڵی 1x2 واتە یەک یەکەی نرخ بۆ هەر دوو یەکەی کات، بۆیە تەختترە و ترێندێکی هێواشتر پیشان دەدات. هێڵەکان بە هەمان ڕێژە بەردەوام دەبن، وەک 4x1 و 1x4. ئاگادار بە کە شێوازی نووسینی ئەم ڕێژانە لە نێوان پلاتفۆرم و کتێبەکاندا جیاوازە، بۆیە پێش پشتبەستن پێیان پێناسەی پلاتفۆرمەکەت بپشکنە."
+    },
+    {
+     "id": "s4",
+     "title": "سروشتی جووڵاو",
+     "narration": "ئەوەی هێڵەکانی Fan جیا دەکاتەوە ئەوەیە کە جووڵاون، واتە ئاستی پشتگیری یان بەرگرییەک کە پیشانی دەدەن لەگەڵ هەر مۆمێکدا دەگۆڕێت، بە پێچەوانەی هێڵە ئاسۆییەکان. یەکێک لە یاسا کلاسیکییەکان کە دەدرێتە پاڵ Gann ئەوەیە کە ئەگەر نرخ هێڵێکی Fan بشکێنێت، مەیلی هەیە بەرەو هێڵی دواتر بجووڵێت. کەواتە ئەگەر لە ترێندی بەرزبووندا هێڵی 1x1 شکا، هێڵی 1x2 دەبێتە ناوچەی کاندیدی دواتر، و ئەمە ئەگەرێکە نەک یاسایەکی زامنکراو."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی USDJPY",
+     "narration": "با نموونەیەکی ڕوونکەرەوە لەسەر USDJPY وەربگرین. وا دابنێ نزمییەکی گرنگ لە 140.00 لەسەر چارتی ڕۆژانە هەیە، و پێوەری بیست Pip مان بۆ هەر ڕۆژێک هەڵبژارد. دوای سی ڕۆژ، هێڵی 1x1 لە 146.00 دەبێت، هێڵی 2x1 لە 152.00، و هێڵی 1x2 لە 143.00. ئەگەر نرخ لە 147 بێت، لە سەرووی هێڵی هاوسەنگییەوەیە و ترێندەکە بەهێزە. ئەگەر مۆمێکی ڕۆژانە لە خوار 146 دابخرێت، ئەوا نزیکەی 143 دەبێتە ناوچەی کاندیدی دواتر بۆ چاودێری."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە و یاسا",
+     "narration": "گەورەترین هەڵە لە Fan دا گۆڕینی پێوەر یان خاڵی دەستپێکە تا هێڵەکان لەگەڵ نرخدا گونجاو دیار بن، کە ئامرازەکە بێ مانا دەکات. هەڵەیەکی تر کێشانە لەسەر پلاتفۆرمێک کە پێوەرەکە جێگیر ناکات، بۆیە گۆشەکە هەر کە چارتەکە گەورە بکەیت دەگۆڕێت. یاسای کردەیی: لە لووتکە یان نزمییەکی ڕوونەوە دەست پێ بکە، پێش کێشان پێوەرەکە جێگیر بکە، تەنها پشت بە شکاندنێک ببەستە کە بە مۆمێکی داخراو پشتڕاست کرابێتەوە، هێڵەکان لەگەڵ پشتگیری و بەرگری تێکەڵ بکە، و پێش هەر بڕیارێک stop loss و مەترسی دیاری بکە."
+    }
+   ]
+  },
+  "gann-l3-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا الدمج",
+     "narration": "أدوات جان وحدها تنتج عدداً كبيراً من الخطوط والمستويات، وكثير منها لن يكون له أي أثر على السعر. لذلك لا نتداول زاوية أو مستوى من مربع التسعة منفرداً، بل نبحث عن نقاط التقاء بين أدوات جان وأدوات التحليل الكلاسيكي، مثل الدعم والمقاومة الأفقية. عندما تشير عدة أدوات مستقلة إلى المنطقة نفسها، تزداد أهمية تلك المنطقة، وهذا ما يُسمّى التوافق أو الالتقاء."
+    },
+    {
+     "id": "s2",
+     "title": "مرحلة الفلترة",
+     "narration": "الخطوة الأولى هي الفلترة. ارسم أولاً الدعوم والمقاومات الواضحة من القمم والقيعان السابقة، ثم أضف مستويات جان. احتفظ فقط بمستويات جان التي تقع قريباً من مستوى أفقي مهم أو رقم مستدير، واحذف الباقي من الشارت. ويمكن إضافة فلتر للاتجاه العام، مثل موقع السعر من متوسط متحرك أسي طويل على الإطار اليومي، مقروءاً على شموع مغلقة، لتفضيل المناطق التي تتماشى مع الاتجاه."
+    },
+    {
+     "id": "s3",
+     "title": "مرحلة التأكيد",
+     "narration": "الخطوة الثانية هي التأكيد، أي انتظار سلوك السعر عند المنطقة قبل أي قرار. من أمثلة التأكيد شمعة رفض بذيل طويل تُغلق عائدة فوق الدعم، أو كسر لمستوى ثم إعادة اختباره والإغلاق على الجهة الأخرى. والمهم أن يكون التأكيد على شمعة مغلقة، لأن الشمعة التي لم تُغلق بعد قد تغيّر شكلها تماماً في الدقائق الأخيرة. بدون تأكيد تبقى المنطقة مجرد منطقة مراقبة."
+    },
+    {
+     "id": "s4",
+     "title": "مثال على اليورو",
+     "narration": "لنأخذ مثالاً توضيحياً على اليورو دولار. هناك قاع سابق واضح عند 1.0750، ومستوى مربع التسعة المحسوب من قمة 1.0850 بزاوية تسعين درجة يقع عند نحو 1.0746، وخط واحد إلى واحد من قاع أقدم يمر اليوم قرب 1.0755. إذن لدينا منطقة التقاء بين 1.0745 و1.0755. يصل السعر إليها، ثم تُغلق شمعة أربع ساعات بذيل سفلي طويل عند 1.0765. هنا فقط تصبح المنطقة جديرة بالدراسة."
+    },
+    {
+     "id": "s5",
+     "title": "إدارة الصفقة",
+     "narration": "لو قرر متداول دراسة صفقة شراء في هذا المثال، فسيضع وقف الخسارة خلف المنطقة كلها، مثلاً عند 1.0730، أي على بعد خمس وثلاثين نقطة من 1.0765. والهدف المنطقي هو القمة السابقة عند 1.0850، أي خمس وثمانون نقطة، فتكون نسبة المخاطرة إلى العائد أفضل من واحد إلى اثنين. ثم يحسب حجم اللوت بحيث لا تتجاوز الخسارة واحداً بالمئة من حسابه. وهذا مثال تعليمي لطريقة التفكير، لا توصية بالتداول."
+    },
+    {
+     "id": "s6",
+     "title": "الأخطاء والقاعدة",
+     "narration": "من الأخطاء الشائعة رسم الخطوط وتعديلها حتى تتوافق مع ما تريد رؤيته، وهو ما يُسمّى الانحياز التأكيدي. ومنها الدخول بمجرد لمس المنطقة دون انتظار شمعة مغلقة، أو وضع وقف الخسارة داخل المنطقة فيُضرب بسهولة. القاعدة العملية: مستوى جان وحده لا يكفي، بل نحتاج التقاء أداتين على الأقل، ثم تأكيداً بشمعة مغلقة، ثم وقف خسارة خلف المنطقة ونسبة عائد منطقية ومخاطرة لا تتجاوز اثنين بالمئة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why Combine",
+     "narration": "Gann's tools on their own produce a large number of lines and levels, and many of them will have no effect on price. So we do not trade an angle or a Square of Nine level in isolation; instead we look for meeting points between Gann tools and classic analysis tools, such as horizontal support and resistance. When several independent tools point to the same area, that area becomes more important, and this is called confluence."
+    },
+    {
+     "id": "s2",
+     "title": "The Filtering Stage",
+     "narration": "The first step is filtering. First draw clear supports and resistances from previous highs and lows, then add the Gann levels. Keep only the Gann levels that lie close to an important horizontal level or a round number, and remove the rest from the chart. You can also add a filter for the overall trend, such as price's position relative to a long exponential moving average on the daily timeframe, read on closed candles, to favour zones that align with the trend."
+    },
+    {
+     "id": "s3",
+     "title": "The Confirmation Stage",
+     "narration": "The second step is confirmation: waiting for price behaviour at the zone before any decision. Examples of confirmation include a rejection candle with a long wick that closes back above support, or a break of a level followed by a retest and a close on the other side. What matters is that confirmation comes on a closed candle, because a candle that has not yet closed can completely change shape in its final minutes. Without confirmation, the zone remains only a watch zone."
+    },
+    {
+     "id": "s4",
+     "title": "EURUSD Example",
+     "narration": "Let us take an illustrative example on EURUSD. There is a clear previous low at 1.0750, the Square of Nine level calculated from a high of 1.0850 at the ninety-degree angle lies at about 1.0746, and a one by one line from an older low passes today near 1.0755. So we have a confluence zone between 1.0745 and 1.0755. Price reaches it, then a four-hour candle closes with a long lower wick at 1.0765. Only now does the zone become worth studying."
+    },
+    {
+     "id": "s5",
+     "title": "Managing the Trade",
+     "narration": "If a trader decided to study a buy trade in this example, the stop loss would go beyond the whole zone, for example at 1.0730, thirty-five pips from 1.0765. The logical target is the previous high at 1.0850, eighty-five pips away, so the risk to reward ratio is better than one to two. The trader then calculates the lot size so the loss does not exceed one percent of the account. This is an educational example of a way of thinking, not a trading recommendation."
+    },
+    {
+     "id": "s6",
+     "title": "Mistakes and Rule",
+     "narration": "A common mistake is drawing lines and adjusting them until they match what you want to see, which is called confirmation bias. Others include entering as soon as the zone is touched without waiting for a closed candle, or placing the stop loss inside the zone where it is easily hit. The practical rule: a Gann level alone is not enough; we need at least two tools meeting, then confirmation from a closed candle, then a stop loss beyond the zone, a sensible reward ratio and risk no greater than two percent."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی تێکەڵکردن",
+     "narration": "ئامرازەکانی Gann بە تەنها ژمارەیەکی زۆر هێڵ و ئاست بەرهەم دەهێنن، و زۆرێکیان هیچ کاریگەرییەکیان لەسەر نرخ نابێت. بۆیە گۆشەیەک یان ئاستێکی Square of Nine بە تەنها مامەڵە پێ ناکەین، بەڵکو بەدوای خاڵی یەکگرتنەوەدا دەگەڕێین لە نێوان ئامرازەکانی Gann و ئامرازەکانی شیکاریی کلاسیکیدا، وەک پشتگیری و بەرگریی ئاسۆیی. کاتێک چەند ئامرازێکی سەربەخۆ ئاماژە بە هەمان ناوچە دەکەن، گرنگیی ئەو ناوچەیە زیاد دەکات، و ئەمە پێی دەوترێت یەکگرتنەوە یان confluence."
+    },
+    {
+     "id": "s2",
+     "title": "قۆناغی پاڵاوتن",
+     "narration": "هەنگاوی یەکەم پاڵاوتنە. سەرەتا پشتگیری و بەرگرییە ڕوونەکان لە لووتکە و نزمییە پێشووەکانەوە بکێشە، پاشان ئاستەکانی Gann زیاد بکە. تەنها ئەو ئاستانەی Gann بهێڵەرەوە کە نزیکی ئاستێکی ئاسۆیی گرنگ یان ژمارەیەکی خڕ دەکەون، و ئەوانی تر لە چارتەکە لابە. هەروەها دەتوانیت پاڵێوەرێک بۆ ترێندی گشتی زیاد بکەیت، وەک شوێنی نرخ بە بەراورد بە EMA ێکی درێژ لەسەر چوارچێوەی ڕۆژانە، کە لەسەر مۆمە داخراوەکان بخوێنرێتەوە، بۆ پێشخستنی ئەو ناوچانەی لەگەڵ ترێندەکەدا دەگونجێن."
+    },
+    {
+     "id": "s3",
+     "title": "قۆناغی پشتڕاستکردنەوە",
+     "narration": "هەنگاوی دووەم پشتڕاستکردنەوەیە، واتە چاوەڕوانکردنی ڕەفتاری نرخ لە ناوچەکەدا پێش هەر بڕیارێک. لە نموونەکانی پشتڕاستکردنەوە مۆمێکی ڕەتکردنەوەیە بە کلکێکی درێژ کە بە گەڕانەوە بۆ سەرووی پشتگیری دادەخرێت، یان شکاندنی ئاستێک و پاشان تاقیکردنەوەی دووبارە و داخستن لە لایەکەی تر. گرنگ ئەوەیە پشتڕاستکردنەوەکە لەسەر مۆمێکی داخراو بێت، چونکە مۆمێک کە هێشتا دانەخراوە لەوانەیە لە خولەکە کۆتاییەکانیدا شێوەی بە تەواوی بگۆڕێت. بێ پشتڕاستکردنەوە، ناوچەکە تەنها ناوچەیەکی چاودێری دەمێنێتەوە."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی EURUSD",
+     "narration": "با نموونەیەکی ڕوونکەرەوە لەسەر EURUSD وەربگرین. نزمییەکی پێشووی ڕوون لە 1.0750 هەیە، و ئاستی Square of Nine کە لە لووتکەی 1.0850 بە گۆشەی نەوەد پلە حیساب کراوە نزیکەی لە 1.0746 دایە، و هێڵێکی 1x1 لە نزمییەکی کۆنترەوە ئەمڕۆ بە نزیکی 1.0755 دا تێدەپەڕێت. کەواتە ناوچەیەکی یەکگرتنەوەمان هەیە لە نێوان 1.0745 و 1.0755. نرخ دەگاتە ئەوێ، پاشان مۆمێکی چوار کاتژمێری بە کلکێکی خوارەوەی درێژ لە 1.0765 دادەخرێت. تەنها ئێستا ناوچەکە شایەنی لێکۆڵینەوە دەبێت."
+    },
+    {
+     "id": "s5",
+     "title": "بەڕێوەبردنی مامەڵە",
+     "narration": "ئەگەر بازرگانێک بڕیاری دا لە ئەم نموونەیەدا لێکۆڵینەوە لە مامەڵەیەکی کڕین بکات، stop loss لە ئەودیوی هەموو ناوچەکەوە دادەنێت، بۆ نموونە لە 1.0730، واتە سی و پێنج Pip لە 1.0765 ەوە. ئامانجی لۆژیکی لووتکەی پێشووە لە 1.0850، واتە هەشتا و پێنج Pip، بۆیە ڕێژەی مەترسی بۆ قازانج باشترە لە یەک بۆ دوو. پاشان قەبارەی lot حیساب دەکات بە شێوەیەک کە زیان لە یەک لە سەدی هەژمارەکەی تێنەپەڕێت. ئەمە نموونەیەکی فێرکارییە بۆ شێوازی بیرکردنەوە، نەک ڕاسپاردەیەک بۆ بازرگانی."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە و یاسا",
+     "narration": "هەڵەیەکی باو کێشان و دەستکاریکردنی هێڵەکانە تا لەگەڵ ئەوەی دەتەوێت ببینیت بگونجێن، کە پێی دەوترێت لایەنگیریی پشتڕاستکردنەوە. هەڵەکانی تر چوونەژوورەوەیە هەر کە ناوچەکە بەرکەوت بێ چاوەڕوانکردنی مۆمێکی داخراو، یان دانانی stop loss لە ناو ناوچەکەدا کە بە ئاسانی لێی دەدرێت. یاسای کردەیی: ئاستێکی Gann بە تەنها بەس نییە، پێویستمان بە یەکگرتنەوەی لانیکەم دوو ئامراز هەیە، پاشان پشتڕاستکردنەوە لە مۆمێکی داخراو، پاشان stop loss لە ئەودیوی ناوچەکەوە، ڕێژەیەکی قازانجی لۆژیکی، و مەترسییەک کە لە دوو لە سەد تێنەپەڕێت."
+    }
+   ]
+  },
+  "gann-l4-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "مفهوم الدورة",
+     "narration": "الدورة الزمنية هي المسافة الزمنية المتكررة تقريباً بين قمم أو قيعان مهمة في السوق. كان جان يراقب تقسيمات الدائرة مثل ثلاثين وخمسة وأربعين وستين وتسعين ومئة وعشرين ومئة وثمانين يوماً، ويرى أن السوق قد يغيّر سلوكه قرب هذه المسافات. في هذا الدرس نتعامل مع الدورة كنافذة زمنية تقريبية يزداد فيها احتمال تغيّر الاتجاه، لا كتاريخ دقيق، ونطبّقها على اليورو دولار والذهب."
+    },
+    {
+     "id": "s2",
+     "title": "طريقة القياس",
+     "narration": "لقياس الدورات افتح الشارت اليومي وحدد القيعان والقمم الرئيسية الواضحة فقط، لا كل تذبذب صغير. ثم احسب عدد أيام التداول بين كل قاع والقاع الذي يليه، وسجّل النتائج في جدول. وقرر مسبقاً هل ستعدّ أيام التداول أم الأيام التقويمية، والتزم بطريقة واحدة. إذا لاحظت أن المسافات متقاربة، فاحسب متوسطها ونطاقها، ثم أسقط هذا النطاق من آخر قاع لتحصل على النافذة الزمنية التالية."
+    },
+    {
+     "id": "s3",
+     "title": "مثال على اليورو",
+     "narration": "لنأخذ مثالاً توضيحياً على اليورو دولار. لنفترض أنك وجدت ثلاثة قيعان رئيسية تفصل بينها ثمانية وثمانون، ثم ثلاثة وتسعون، ثم واحد وتسعون يوم تداول، أي متوسط قريب من تسعين يوماً، وهو أيضاً أحد تقسيمات جان. عندها تكون النافذة التالية بين خمسة وثمانين وخمسة وتسعين يوماً من آخر قاع. خلال هذه النافذة تراقب الشموع اليومية المغلقة بحثاً عن إشارة انعكاس، فإن واصل السعر الهبوط بقوة وتجاوز النافذة، تعتبر الدورة قد فشلت."
+    },
+    {
+     "id": "s4",
+     "title": "مثال على الذهب",
+     "narration": "الذهب يتأثر بقوة بأسعار الفائدة الأمريكية والدولار والأخبار الجيوسياسية، وهذه العوامل قد تطغى على أي دورة زمنية. لنفترض أن الذهب سجّل قمة مهمة عند 2450 دولاراً، وأن تاريخه يُظهر قمماً ثانوية متكررة بفاصل نحو خمسة وأربعين يوم تداول. تعلّم نافذة الخمسة والأربعين ثم التسعين يوماً من تلك القمة، ثم تتحقق إن كان في النافذة اجتماع مهم للبنك الفيدرالي، لأن الحدث قد يكون هو المحرك الحقيقي لا الدورة."
+    },
+    {
+     "id": "s5",
+     "title": "الحدود والأخطاء",
+     "narration": "للدورات حدود مهمة. فهي تتمدد وتنكمش، وقد تنقلب فتأتي قمة حيث توقعت قاعاً. والعينة غالباً صغيرة، فثلاث أو أربع دورات لا تكفي لإثبات نمط حقيقي. ومن الأخطاء الشائعة البحث في الماضي عن أي رقم يطابق القمم، ثم الاقتناع به بأثر رجعي، أو فتح صفقة لمجرد وصول التاريخ دون أي إشارة من السعر، أو تجاهل الفرق بين أيام التداول والأيام التقويمية."
+    },
+    {
+     "id": "s6",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية لهذا الدرس هي أن الدورة الزمنية تخبرك متى تنتبه، ومستويات السعر تخبرك أين تنتبه، والشمعة المغلقة تخبرك إن كان هناك ما يستحق الدراسة. عندما تلتقي نافذة زمنية مع منطقة سعرية مهمة ويظهر تأكيد واضح، تكون لديك فكرة مدروسة أكثر. ومع ذلك يبقى وقف الخسارة إلزامياً، والمخاطرة في حدود واحد إلى اثنين بالمئة، لأن أي دورة يمكن أن تفشل في أي وقت."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Cycle Concept",
+     "narration": "A time cycle is the roughly repeating time distance between important highs or lows in the market. Gann watched divisions of the circle such as thirty, forty-five, sixty, ninety, one hundred and twenty and one hundred and eighty days, and believed the market may change its behaviour near these distances. In this lesson we treat the cycle as an approximate time window in which the probability of a trend change increases, not as an exact date, and we apply it to EURUSD and gold."
+    },
+    {
+     "id": "s2",
+     "title": "How to Measure",
+     "narration": "To measure cycles, open the daily chart and identify only the clear major lows and highs, not every small swing. Then count the number of trading days between each low and the next one, and record the results in a table. Decide in advance whether you will count trading days or calendar days, and stick to one method. If you notice the distances are close, calculate their average and range, then project this range from the last low to get the next time window."
+    },
+    {
+     "id": "s3",
+     "title": "EURUSD Example",
+     "narration": "Let us take an illustrative example on EURUSD. Suppose you found three major lows separated by eighty-eight, then ninety-three, then ninety-one trading days, an average close to ninety days, which is also one of Gann's divisions. The next window is then between eighty-five and ninety-five days from the last low. During this window you watch the closed daily candles for a reversal signal; if price keeps falling strongly and passes the window, you consider the cycle to have failed."
+    },
+    {
+     "id": "s4",
+     "title": "Gold Example",
+     "narration": "Gold is strongly influenced by US interest rates, the dollar and geopolitical news, and these factors can overpower any time cycle. Suppose gold made an important high at 2450 dollars, and its history shows recurring secondary highs about forty-five trading days apart. You mark the forty-five and then the ninety-day window from that high, then check whether an important Federal Reserve meeting falls in the window, because the event may be the real driver, not the cycle."
+    },
+    {
+     "id": "s5",
+     "title": "Limits and Mistakes",
+     "narration": "Cycles have important limits. They stretch and contract, and they can invert, so a high comes where you expected a low. The sample is often small, and three or four cycles are not enough to prove a real pattern. Common mistakes include searching the past for any number that matches the highs and then believing it in hindsight, opening a trade just because the date arrived without any signal from price, or ignoring the difference between trading days and calendar days."
+    },
+    {
+     "id": "s6",
+     "title": "Practical Rule",
+     "narration": "The practical rule of this lesson is that the time cycle tells you when to pay attention, price levels tell you where to pay attention, and the closed candle tells you whether there is anything worth studying. When a time window meets an important price zone and clear confirmation appears, you have a better-founded idea. Even so, the stop loss remains mandatory and the risk stays within one to two percent, because any cycle can fail at any time."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چەمکی خول",
+     "narration": "خولی کاتی ئەو دوورییە کاتییەیە کە نزیکەی دووبارە دەبێتەوە لە نێوان لووتکە یان نزمییە گرنگەکانی بازاڕدا. Gann چاودێری دابەشکردنەکانی بازنەی دەکرد وەک سی و چل و پێنج و شەست و نەوەد و سەد و بیست و سەد و هەشتا ڕۆژ، و پێی وابوو لەوانەیە بازاڕ نزیکی ئەم دوورییانە ڕەفتاری بگۆڕێت. لەم وانەیەدا خول وەک پەنجەرەیەکی کاتیی نزیکەیی سەیر دەکەین کە ئەگەری گۆڕانی ترێند تێیدا زیاد دەبێت، نەک وەک ڕێکەوتێکی ورد، و لەسەر EURUSD و زێڕ جێبەجێی دەکەین."
+    },
+    {
+     "id": "s2",
+     "title": "شێوازی پێوان",
+     "narration": "بۆ پێوانی خولەکان چارتی ڕۆژانە بکەرەوە و تەنها نزمی و لووتکە سەرەکییە ڕوونەکان دیاری بکە، نەک هەموو لەرینەوەیەکی بچووک. پاشان ژمارەی ڕۆژەکانی بازرگانی لە نێوان هەر نزمییەک و نزمیی دواتردا بژمێرە، و ئەنجامەکان لە خشتەیەکدا تۆمار بکە. پێشوەختە بڕیار بدە ئایا ڕۆژەکانی بازرگانی دەژمێریت یان ڕۆژە ساڵنامەییەکان، و پابەندی یەک ڕێگا بە. ئەگەر بینیت دوورییەکان لە یەکەوە نزیکن، تێکڕا و مەودایان حیساب بکە، پاشان ئەم مەودایە لە دوایین نزمییەوە دابنێ بۆ ئەوەی پەنجەرەی کاتیی داهاتوو وەربگریت."
+    },
+    {
+     "id": "s3",
+     "title": "نموونەی EURUSD",
+     "narration": "با نموونەیەکی ڕوونکەرەوە لەسەر EURUSD وەربگرین. وا دابنێ سێ نزمیی سەرەکیت دۆزیوەتەوە کە هەشتا و هەشت، پاشان نەوەد و سێ، پاشان نەوەد و یەک ڕۆژی بازرگانی لە یەکتریان جیا دەکاتەوە، واتە تێکڕایەک نزیک لە نەوەد ڕۆژ، کە ئەویش یەکێکە لە دابەشکردنەکانی Gann. ئەو کاتە پەنجەرەی داهاتوو لە نێوان هەشتا و پێنج و نەوەد و پێنج ڕۆژدایە لە دوایین نزمییەوە. لە ماوەی ئەم پەنجەرەیەدا چاودێری مۆمە داخراوە ڕۆژانەکان دەکەیت بۆ نیشانەیەکی گەڕانەوە، و ئەگەر نرخ بە هێز بەردەوام بوو لە دابەزین و پەنجەرەکەی تێپەڕاند، خولەکە بە شکستخواردوو دادەنێیت."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی زێڕ",
+     "narration": "زێڕ بە هێز کاریگەر دەبێت بە ڕێژەی سوودی ئەمریکی و دۆلار و هەواڵە جیۆسیاسییەکان، و ئەم هۆکارانە دەتوانن بەسەر هەر خولێکی کاتیدا زاڵ بن. وا دابنێ زێڕ لووتکەیەکی گرنگی لە 2450 دۆلار تۆمار کرد، و مێژووەکەی لووتکەی لاوەکیی دووبارەبوو پیشان دەدات بە دووریی نزیکەی چل و پێنج ڕۆژی بازرگانی. پەنجەرەی چل و پێنج و پاشان نەوەد ڕۆژ لەو لووتکەیەوە نیشان دەکەیت، پاشان دەپشکنیت ئایا کۆبوونەوەیەکی گرنگی بانکی فیدراڵ دەکەوێتە ناو پەنجەرەکەوە، چونکە لەوانەیە ڕووداوەکە بزوێنەری ڕاستەقینە بێت نەک خولەکە."
+    },
+    {
+     "id": "s5",
+     "title": "سنوور و هەڵەکان",
+     "narration": "خولەکان سنووری گرنگیان هەیە. درێژ دەبنەوە و کورت دەبنەوە، و لەوانەیە پێچەوانە ببنەوە بۆیە لووتکەیەک دێت لە شوێنێکدا کە چاوەڕێی نزمییەکت دەکرد. نموونەکە زۆرجار بچووکە، و سێ یان چوار خول بەس نین بۆ سەلماندنی شێوازێکی ڕاستەقینە. لە هەڵە باوەکان گەڕانە لە ڕابردوودا بەدوای هەر ژمارەیەکدا کە لەگەڵ لووتکەکاندا بگونجێت و پاشان باوەڕکردن پێی بە شێوەی پاشەکی، یان کردنەوەی مامەڵەیەک تەنها لەبەر ئەوەی ڕێکەوتەکە هات بێ هیچ نیشانەیەک لە نرخەوە، یان پشتگوێخستنی جیاوازیی نێوان ڕۆژەکانی بازرگانی و ڕۆژە ساڵنامەییەکان."
+    },
+    {
+     "id": "s6",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی ئەم وانەیە ئەوەیە کە خولی کاتی پێت دەڵێت کەی سەرنج بدەیت، ئاستەکانی نرخ پێت دەڵێن لە کوێ سەرنج بدەیت، و مۆمی داخراو پێت دەڵێت ئایا شتێک هەیە شایەنی لێکۆڵینەوە بێت. کاتێک پەنجەرەیەکی کاتی لەگەڵ ناوچەیەکی نرخیی گرنگدا یەک دەگرێتەوە و پشتڕاستکردنەوەیەکی ڕوون دەردەکەوێت، بیرۆکەیەکی باشتر لێکۆڵراوەت هەیە. لەگەڵ ئەوەشدا stop loss هەر پێویستە و مەترسی لە سنووری یەک بۆ دوو لە سەددا دەمێنێتەوە، چونکە هەر خولێک لە هەر کاتێکدا دەتوانێت شکست بهێنێت."
+    }
+   ]
+  }
+ }
+}

@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft, CheckCircle2, HelpCircle, BookOpen, Volume2, Squ
 import { LangId, gx, fmt } from '../../i18n/locales';
 import { ConceptDiagram } from './conceptDiagrams';
 import { isLectureUnlocked, orderedLectures, schoolName } from './academyUtils';
+import { API_BASE as API_BASE_URL } from '../../api/client';
 
 interface LectureClassroomProps {
   school: AcademySchool;
@@ -113,36 +114,79 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
     return () => window.removeEventListener('keydown', onKey);
   }, [rtl, next, prev, nextUnlocked, onOpenLecture, onBack]);
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playRun = useRef(0);
+
   function stopSpeaking() {
+    playRun.current += 1;
+    audioRef.current?.pause();
+    audioRef.current = null;
     if (canSpeak()) window.speechSynthesis.cancel();
     setSpeaking(null);
   }
 
+  /** Narration: the server's ElevenLabs voice (same cached audio as the phone app); the browser's own voice
+   * only when the server has no voice configured or the request fails. */
   const speakFrom = (i: number) => {
-    if (!canSpeak()) return;
-    window.speechSynthesis.cancel();
+    stopSpeaking();
+    const run = playRun.current;
     const segs = lecture.script_segments;
-    const voices = window.speechSynthesis.getVoices();
     const want = school.content_lang === 'en' ? 'en' : 'ar';
-    const voice = voices.find((v) => v.lang?.toLowerCase().startsWith(want));
-    const sayIndex = (k: number) => {
-      if (k >= segs.length) {
+    let useBrowser = false;
+    const show = (k: number) => {
+      setSpeaking(k);
+      document.getElementById(`sec-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const browserSay = (k: number) => {
+      if (!canSpeak()) {
         setSpeaking(null);
         return;
       }
+      const voice = window.speechSynthesis.getVoices().find((v) => v.lang?.toLowerCase().startsWith(want));
       const u = new SpeechSynthesisUtterance(`${segs[k].title}. ${segs[k].narration}`);
       u.lang = want;
       if (voice) u.voice = voice;
       u.rate = 0.95;
-      u.onstart = () => {
-        setSpeaking(k);
-        document.getElementById(`sec-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      };
-      u.onend = () => sayIndex(k + 1);
+      u.onstart = () => show(k);
+      u.onend = () => run === playRun.current && sayIndex(k + 1);
       u.onerror = () => setSpeaking(null);
       window.speechSynthesis.speak(u);
     };
-    sayIndex(i);
+    const sayIndex = async (k: number) => {
+      if (run !== playRun.current) return;
+      if (k >= segs.length) {
+        setSpeaking(null);
+        return;
+      }
+      if (!useBrowser) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/academy/tts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: segs[k].narration }),
+          });
+          if (run !== playRun.current) return;
+          if (res.ok) {
+            const data = (await res.json()) as { audio_url: string };
+            const audio = new Audio(data.audio_url.startsWith('http') ? data.audio_url : `${API_BASE_URL}${data.audio_url}`);
+            audioRef.current = audio;
+            audio.onended = () => run === playRun.current && sayIndex(k + 1);
+            audio.onerror = () => {
+              useBrowser = true;
+              browserSay(k);
+            };
+            show(k);
+            await audio.play();
+            return;
+          }
+        } catch {
+          // network / autoplay problem: fall back below
+        }
+        useBrowser = true;
+      }
+      browserSay(k);
+    };
+    void sayIndex(i);
   };
 
   const finish = async (goNext: boolean) => {
@@ -226,7 +270,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" /> {fmt(x.a_minutes, { n: lecture.duration_min })}
               </span>
-              {canSpeak() && school.content_lang !== 'ku' && (
+              {school.content_lang !== 'ku' && (
                 <button
                   onClick={() => (speaking === null ? speakFrom(0) : stopSpeaking())}
                   className="flex items-center gap-1.5 min-h-[34px] px-3 rounded-full border border-[#2DD4BF]/40 text-[#2DD4BF] hover:bg-[#2DD4BF]/10 cursor-pointer"

@@ -1,0 +1,894 @@
+{
+ "school_id": "classic",
+ "lectures": {
+  "classic-l1-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "افتتاح",
+     "narration": "أهلاً بكم في أول محاضرة في المدرسة الكلاسيكية. السوق المالي ببساطة هو مكان يلتقي فيه من يريد الشراء بمن يريد البيع، سواء كان ذلك في بورصة مركزية أو عبر شبكة من البنوك والوسطاء. ما تراه على الشاشة هو شارت، أي رسم بياني يسجّل الأسعار التي تم التداول عليها فعلاً عبر الزمن. هدفنا في هذه المحاضرة أن نفهم ما الذي يحرك هذا الخط، وكيف نقرأ وحدته الأساسية وهي الشمعة اليابانية."
+    },
+    {
+     "id": "s2",
+     "title": "أنواع الأسواق",
+     "narration": "هناك أنواع متعددة من الأسواق: سوق الأسهم حيث تُتداول حصص الشركات، وسوق المؤشرات التي تقيس أداء مجموعة من الأسهم، وسوق السلع مثل النفط، وسوق المعادن مثل الذهب، وسوق العملات أو الفوركس. في أكاديمية ماتريكس نركّز على الفوركس والمعادن. سوق الفوركس لا مركز له، ويعمل على مدار أربع وعشرين ساعة خمسة أيام في الأسبوع، وتُتداول فيه العملات على شكل أزواج مثل اليورو مقابل الدولار، أما الذهب فيُسعّر عادة بالدولار للأونصة."
+    },
+    {
+     "id": "s3",
+     "title": "العرض والطلب",
+     "narration": "لماذا يتحرك السعر؟ الفكرة المبسطة هي العرض والطلب. عندما يكون عدد المشترين المستعدين للدفع أكبر من البائعين عند السعر الحالي، يضطر المشترون لقبول أسعار أعلى فيصعد السعر. وعندما يزيد ضغط البائعين يقبلون أسعاراً أدنى فيهبط السعر. الأخبار الاقتصادية وقرارات الفائدة وتوقعات المتعاملين كلها تغيّر هذا التوازن. نحن كمحللين فنيين لا نرى نوايا الناس مباشرة، بل نرى أثرها على السعر في الشارت."
+    },
+    {
+     "id": "s4",
+     "title": "الشمعة اليابانية",
+     "narration": "الشمعة اليابانية تلخّص حركة السعر خلال فترة زمنية محددة، كساعة أو يوم. لكل شمعة أربعة أسعار: الافتتاح، والأعلى، والأدنى، والإغلاق. الجسم هو المسافة بين الافتتاح والإغلاق، والظلال أو الفتائل تمتد إلى الأعلى والأدنى. إذا أغلقت الشمعة فوق افتتاحها فهي صاعدة وتُلوَّن غالباً بالأخضر، وإذا أغلقت تحته فهي هابطة وتُلوَّن بالأحمر. الجسم الكبير يدل على سيطرة واضحة، والفتيل الطويل يدل على رفض السعر في ذلك الاتجاه."
+    },
+    {
+     "id": "s5",
+     "title": "مثال عملي",
+     "narration": "لنأخذ مثالاً على الذهب على فريم الساعة. افتتحت الشمعة عند ألفين وثلاثمئة وخمسين دولاراً، وصعدت إلى ألفين وثلاثمئة وثمانية وخمسين، ونزلت إلى ألفين وثلاثمئة وستة وأربعين، ثم أغلقت عند ألفين وثلاثمئة وستة وخمسين. هذه شمعة صاعدة جسمها ستة دولارات، وفتيلها السفلي أربعة دولارات تقريباً، ما يعني أن البائعين حاولوا الدفع للأسفل ثم سيطر المشترون. وعلى اليورو دولار، الحركة من 1.0850 إلى 1.0870 تساوي عشرين نقطة أو بيب."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة عند المبتدئ الحكم على شمعة لم تُغلق بعد. الشمعة الحية قد تبدو صاعدة قوية ثم تنقلب تماماً قبل إغلاقها، لذلك نقرأ الشموع المغلقة فقط. خطأ آخر هو قراءة شمعة واحدة بمعزل عن السياق، فالشمعة نفسها قد تعني شيئاً مختلفاً عند قمة أو عند قاع. وخطأ ثالث هو الدخول في السوق قبل فهم قيمة النقطة وحجم العقد، فتصبح الخسارة أكبر مما يتحمله الحساب."
+    },
+    {
+     "id": "s7",
+     "title": "الخلاصة",
+     "narration": "الخلاصة العملية لهذه المحاضرة بسيطة. السعر نتيجة توازن متغير بين العرض والطلب، والشارت سجل لهذا التوازن. اقرأ كل شمعة من خلال أسعارها الأربعة، وانتبه لحجم الجسم وطول الفتائل، ولا تعتمد إلا على الشموع المغلقة. قبل أي صفقة، حتى على حساب تجريبي، اعرف قيمة النقطة على الزوج الذي تتداوله وكم ستخسر إن لم يسر السعر كما توقعت. في المحاضرة القادمة نتعلم كيف نحدد اتجاه السوق."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Introduction",
+     "narration": "Welcome to the first lecture of the Classical School. A financial market is simply a place where those who want to buy meet those who want to sell, whether on a central exchange or through a network of banks and brokers. What you see on the screen is a chart, a graph that records the prices actually traded over time. Our goal in this lecture is to understand what moves this line, and how to read its basic unit, the Japanese candlestick."
+    },
+    {
+     "id": "s2",
+     "title": "Types of Markets",
+     "narration": "There are several types of markets: the stock market, where shares of companies are traded; indices, which measure the performance of a group of stocks; commodities such as oil; metals such as gold; and the currency market, or forex. At the MATRIX academy we focus on forex and metals. The forex market has no central exchange and runs twenty-four hours a day, five days a week. Currencies trade in pairs such as the euro against the dollar, while gold is usually priced in dollars per ounce."
+    },
+    {
+     "id": "s3",
+     "title": "Supply and Demand",
+     "narration": "Why does price move? The simplified idea is supply and demand. When buyers willing to pay outnumber sellers at the current price, buyers have to accept higher prices and price rises. When selling pressure grows, sellers accept lower prices and price falls. Economic news, interest-rate decisions and traders' expectations all shift this balance. As technical analysts we do not see people's intentions directly; we see their effect on price in the chart."
+    },
+    {
+     "id": "s4",
+     "title": "The Candlestick",
+     "narration": "A Japanese candlestick summarises price movement over a set period, such as an hour or a day. Each candle has four prices: the open, the high, the low and the close. The body is the distance between the open and the close, and the shadows, or wicks, extend to the high and the low. If the candle closes above its open it is bullish, usually coloured green; if it closes below its open it is bearish, usually red. A large body shows clear control, and a long wick shows rejection of price in that direction."
+    },
+    {
+     "id": "s5",
+     "title": "Worked Example",
+     "narration": "Let us take an example on gold on the one-hour chart. The candle opened at 2350 dollars, rose to 2358, dipped to 2346, then closed at 2356. This is a bullish candle with a six-dollar body and a lower wick of about four dollars, meaning sellers tried to push price down and then buyers took control. On EURUSD, a move from 1.0850 to 1.0870 equals twenty points, or pips."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common beginner mistake is judging a candle that has not closed yet. A live candle may look strongly bullish and then reverse completely before it closes, so we read closed candles only. Another mistake is reading one candle in isolation from context, because the same candle can mean something different at a top or at a bottom. A third mistake is entering the market before understanding pip value and lot size, so the loss becomes larger than the account can bear."
+    },
+    {
+     "id": "s7",
+     "title": "Summary",
+     "narration": "The practical summary of this lecture is simple. Price is the result of a shifting balance between supply and demand, and the chart is a record of that balance. Read each candle through its four prices, pay attention to body size and wick length, and rely only on closed candles. Before any trade, even on a demo account, know the pip value on the pair you trade and how much you would lose if price does not move as you expected. In the next lecture we learn how to identify the market trend."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "دەستپێک",
+     "narration": "بەخێربێن بۆ یەکەم وانەی قوتابخانەی کلاسیکی. بازاڕی دارایی بە سادەیی شوێنێکە کە تێیدا ئەوەی دەیەوێت بکڕێت بەوەی دەیەوێت بفرۆشێت دەگات، جا لە بۆرسەیەکی ناوەندیدا بێت یان لە ڕێگەی تۆڕێک لە بانک و بریکەرەکانەوە. ئەوەی لەسەر شاشە دەیبینیت چارتە، واتە هێڵکارییەک کە ئەو نرخانە تۆمار دەکات کە بە ڕاستی مامەڵەیان پێکراوە بە درێژایی کات. ئامانجمان لەم وانەیەدا ئەوەیە تێبگەین چی ئەم هێڵە دەجووڵێنێت، و چۆن یەکە بنەڕەتییەکەی بخوێنینەوە کە مۆمی ژاپۆنییە."
+    },
+    {
+     "id": "s2",
+     "title": "جۆرەکانی بازاڕ",
+     "narration": "چەند جۆرێکی بازاڕ هەن: بازاڕی پشکەکان کە پشکی کۆمپانیاکانی تێدا مامەڵە دەکرێت، پێوەرەکان کە ئەدای کۆمەڵێک پشک دەپێون، کاڵاکان وەک نەوت، کانزاکان وەک زێڕ، و بازاڕی دراوەکان یان فۆرێکس. لە ئەکادیمیای ماتریکس سەرنج دەخەینە سەر فۆرێکس و کانزاکان. بازاڕی فۆرێکس ناوەندێکی نییە و بیست و چوار کاتژمێر لە ڕۆژدا، پێنج ڕۆژ لە هەفتەدا کار دەکات. دراوەکان بە شێوەی جووت مامەڵە دەکرێن وەک یۆرۆ بەرامبەر دۆلار، بەڵام زێڕ زۆرجار بە دۆلار بۆ هەر ئۆنسەیەک نرخی بۆ دادەنرێت."
+    },
+    {
+     "id": "s3",
+     "title": "خستنەڕوو و داواکاری",
+     "narration": "بۆچی نرخ دەجووڵێت؟ بیرۆکە سادەکراوەکە خستنەڕوو و داواکارییە. کاتێک ژمارەی کڕیارانی ئامادە بۆ پارەدان لە فرۆشیاران زیاترە لە نرخی ئێستادا، کڕیاران ناچار دەبن نرخی بەرزتر قبوڵ بکەن و نرخ بەرز دەبێتەوە. کاتێک فشاری فرۆشتن زیاد دەکات، فرۆشیاران نرخی نزمتر قبوڵ دەکەن و نرخ دادەبەزێت. هەواڵە ئابوورییەکان، بڕیارەکانی ڕێژەی سوود و چاوەڕوانیی بازرگانان هەموویان ئەم هاوسەنگییە دەگۆڕن. ئێمە وەک شیکەرەوەی تەکنیکی نیازی خەڵک ڕاستەوخۆ نابینین، بەڵکو کاریگەرییان لەسەر نرخ لە چارتدا دەبینین."
+    },
+    {
+     "id": "s4",
+     "title": "مۆمی ژاپۆنی",
+     "narration": "مۆمی ژاپۆنی جووڵەی نرخ لە ماوەیەکی دیاریکراودا کورت دەکاتەوە، وەک کاتژمێرێک یان ڕۆژێک. هەر مۆمێک چوار نرخی هەیە: کردنەوە، بەرزترین، نزمترین و داخستن. جەستە ئەو مەودایەیە کە لە نێوان کردنەوە و داخستندایە، و سێبەرەکان یان فتیلەکان تا بەرزترین و نزمترین درێژ دەبنەوە. ئەگەر مۆمەکە لە سەرووی کردنەوەکەیەوە دابخرێت ئەوا بەرزبووەوەیە و زۆرجار سەوزە، ئەگەر لە خوارەوەی دابخرێت ئەوا دابەزیوە و زۆرجار سوورە. جەستەی گەورە کۆنترۆڵی ڕوون پیشان دەدات، و فتیلی درێژ ڕەتکردنەوەی نرخ لەو ئاراستەیەدا پیشان دەدات."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی کرداری",
+     "narration": "با نموونەیەک لەسەر زێڕ لە چوارچێوەی یەک کاتژمێردا وەربگرین. مۆمەکە لە 2350 دۆلار کرایەوە، بەرزبووەوە بۆ 2358، دابەزی بۆ 2346، پاشان لە 2356 داخرا. ئەمە مۆمێکی بەرزبووەوەیە کە جەستەکەی شەش دۆلارە و فتیلی خوارەوەی نزیکەی چوار دۆلارە، واتە فرۆشیاران هەوڵیاندا نرخ دابەزێنن پاشان کڕیاران کۆنترۆڵیان گرتەدەست. لەسەر EURUSD، جووڵە لە 1.0850 بۆ 1.0870 یەکسانە بە بیست pip."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەیەکی باوی سەرەتاییەکان حوکمدانە لەسەر مۆمێک کە هێشتا دانەخراوە. مۆمی زیندوو لەوانەیە بەهێز و بەرزبووەوە دەربکەوێت پاشان پێش داخستنی بە تەواوی وەرگەڕێت، بۆیە تەنها مۆمە داخراوەکان دەخوێنینەوە. هەڵەیەکی تر خوێندنەوەی یەک مۆمە جیا لە دۆخەکە، چونکە هەمان مۆم لە لووتکەیەک یان لە بنێکدا دەتوانێت مانای جیاوازی هەبێت. هەڵەی سێیەم چوونە ناو بازاڕە پێش تێگەیشتن لە بەهای pip و قەبارەی lot، بەم شێوەیە زیان لەوە گەورەتر دەبێت کە هەژمارەکە بەرگەی بگرێت."
+    },
+    {
+     "id": "s7",
+     "title": "کورتە",
+     "narration": "کورتەی کرداریی ئەم وانەیە سادەیە. نرخ ئەنجامی هاوسەنگییەکی گۆڕاوە لە نێوان خستنەڕوو و داواکاریدا، و چارت تۆماری ئەو هاوسەنگییەیە. هەر مۆمێک لە ڕێگەی چوار نرخەکەیەوە بخوێنەوە، ئاگات لە قەبارەی جەستە و درێژیی فتیلەکان بێت، و تەنها پشت بە مۆمە داخراوەکان ببەستە. پێش هەر مامەڵەیەک، تەنانەت لەسەر هەژماری تاقیکاری، بەهای pip لەسەر ئەو جووتەی مامەڵەی پێوە دەکەیت بزانە و بزانە چەند زیان دەکەیت ئەگەر نرخ وەک چاوەڕوانت نەجووڵا. لە وانەی داهاتوودا فێر دەبین چۆن ئاراستەی بازاڕ دیاری بکەین."
+    }
+   ]
+  },
+  "classic-l1-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "تعريف الاتجاه",
+     "narration": "الاتجاه هو الوجهة العامة لحركة السعر عبر فترة من الزمن. للسوق ثلاث حالات رئيسية: اتجاه صاعد يميل فيه السعر إلى الارتفاع، واتجاه هابط يميل فيه إلى الانخفاض، وحالة عرضية يتحرك فيها السعر بين حدين دون وجهة واضحة. السعر لا يتحرك في خط مستقيم أبداً، بل في موجات من الاندفاع والتصحيح. تحديد الحالة التي يمر بها السوق هو الخطوة الأولى قبل أي قرار، لأن الأداة التي تنفع في الاتجاه قد تضر في السوق العرضي."
+    },
+    {
+     "id": "s2",
+     "title": "القمم والقيعان",
+     "narration": "نتعرف على الاتجاه من خلال القمم والقيعان. القمة نقطة يرتفع إليها السعر ثم يتراجع، والقاع نقطة ينزل إليها ثم يرتد. في الاتجاه الصاعد نرى قمماً أعلى وقيعاناً أعلى، أي أن كل تصحيح يتوقف فوق القاع السابق. في الاتجاه الهابط نرى قمماً أدنى وقيعاناً أدنى. أما في السوق العرضي فتتكرر القمم والقيعان عند المستويات نفسها تقريباً. ركّز على القمم والقيعان الواضحة التي يراها أي متداول، وتجاهل التذبذبات الصغيرة."
+    },
+    {
+     "id": "s3",
+     "title": "رسم خط الاتجاه",
+     "narration": "خط الاتجاه أداة بصرية تساعدنا على رؤية ميل الحركة. في الاتجاه الصاعد نربط بين قاعين واضحين على الأقل ونمد الخط إلى اليمين، وفي الاتجاه الهابط نربط بين قمتين. نقطتان ترسمان الخط، والنقطة الثالثة تؤكد صلاحيته. اختر طريقة ثابتة، إما الربط عبر أطراف الفتائل أو عبر الأجسام، ولا تخلط بينهما. ولا تحاول أن يمر الخط بكل شمعة بدقة، فالسوق ليس آلة هندسية، والخط يمثل منطقة تقريبية وليس سعراً دقيقاً."
+    },
+    {
+     "id": "s4",
+     "title": "مثال عملي",
+     "narration": "لنطبّق ذلك على الباوند دولار على فريم الأربع ساعات. لنفترض أن السعر صنع قاعاً عند 1.2600، ثم صعد إلى 1.2720، ثم صحّح إلى قاع أعلى عند 1.2660، ثم صعد إلى قمة أعلى عند 1.2790. نربط القاعين 1.2600 و1.2660 ونمد الخط. عندما يصحح السعر مرة ثالثة ويلمس الخط قرب 1.2710 ثم تغلق شمعة صاعدة فوقه، يصبح الخط مؤكداً بثلاث لمسات. هذا لا يعني أن السعر سيصعد حتماً، بل يعني أن الاتجاه ما زال قائماً حتى الآن."
+    },
+    {
+     "id": "s5",
+     "title": "الكسر والأخطاء",
+     "narration": "متى نعتبر الخط مكسوراً؟ عندما تغلق شمعة بوضوح على الجانب الآخر منه، لا عندما يخترقه فتيل لثوانٍ. الكسر بإغلاق واضح إشارة مبكرة لتغيّر النية، لكنه ليس انعكاساً مؤكداً، فالانعكاس يحتاج قمماً وقيعاناً جديدة. من الأخطاء الشائعة رسم الخط بزاوية حادة جداً فيُكسر سريعاً، وإعادة رسمه بعد كل كسر لتبرير صفقة قائمة، ورسم خطوط على فريم الدقيقة الواحدة ومعاملتها كأنها خطوط يومية."
+    },
+    {
+     "id": "s6",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية هي أن تبدأ دائماً بتحديد الاتجاه من خلال القمم والقيعان على فريم أكبر، مثل اليومي أو الأربع ساعات، ثم ترسم خط الاتجاه على نقاط واضحة دون إجبار. اعتبر الخط منطقة اهتمام لا أمر دخول، وانتظر إغلاق الشمعة قبل الحكم على أي ارتداد أو كسر. وعند التفكير في أي صفقة، حدد مسبقاً أين يصبح تحليلك خاطئاً، فذلك هو مكان وقف الخسارة المنطقي، وليس رقماً عشوائياً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Defining the Trend",
+     "narration": "The trend is the general direction of price movement over a period of time. The market has three main states: an uptrend, where price tends to rise; a downtrend, where it tends to fall; and a sideways range, where price moves between two boundaries with no clear direction. Price never moves in a straight line, but in waves of impulse and correction. Identifying which state the market is in is the first step before any decision, because a tool that works in a trend can hurt you in a range."
+    },
+    {
+     "id": "s2",
+     "title": "Highs and Lows",
+     "narration": "We recognise the trend through highs and lows. A high is a point price rises to and then pulls back from, and a low is a point it drops to and then bounces from. In an uptrend we see higher highs and higher lows, meaning each correction stops above the previous low. In a downtrend we see lower highs and lower lows. In a sideways market, highs and lows repeat at roughly the same levels. Focus on clear highs and lows that any trader can see, and ignore small fluctuations."
+    },
+    {
+     "id": "s3",
+     "title": "Drawing a Trendline",
+     "narration": "A trendline is a visual tool that helps us see the slope of the move. In an uptrend we connect at least two clear lows and extend the line to the right; in a downtrend we connect two highs. Two points draw the line, and a third point confirms it. Choose a consistent method, connecting either the wick tips or the bodies, and do not mix them. Do not try to make the line pass precisely through every candle; the market is not a geometric machine, and the line represents an approximate zone, not an exact price."
+    },
+    {
+     "id": "s4",
+     "title": "Worked Example",
+     "narration": "Let us apply this to GBPUSD on the four-hour chart. Suppose price made a low at 1.2600, rose to 1.2720, corrected to a higher low at 1.2660, then rose to a higher high at 1.2790. We connect the two lows at 1.2600 and 1.2660 and extend the line. When price corrects a third time, touches the line near 1.2710 and a bullish candle closes above it, the line is confirmed by three touches. This does not mean price will certainly rise; it means the trend is still intact for now."
+    },
+    {
+     "id": "s5",
+     "title": "Breaks and Mistakes",
+     "narration": "When do we consider the line broken? When a candle closes clearly on the other side of it, not when a wick pierces it for a few seconds. A break with a clear close is an early signal of changing intent, but it is not a confirmed reversal; a reversal needs new highs and lows. Common mistakes include drawing the line at a very steep angle so it breaks quickly, redrawing it after every break to justify an open trade, and drawing lines on the one-minute chart and treating them like daily lines."
+    },
+    {
+     "id": "s6",
+     "title": "Practical Rule",
+     "narration": "The practical rule is to always start by identifying the trend through highs and lows on a higher timeframe, such as the daily or the four-hour, and then draw the trendline on clear points without forcing it. Treat the line as an area of interest, not an order to enter, and wait for the candle to close before judging any bounce or break. When considering any trade, decide in advance where your analysis becomes wrong; that is the logical place for the stop loss, not a random number."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پێناسەی ئاراستە",
+     "narration": "ئاراستە بریتییە لە ئاراستەی گشتیی جووڵەی نرخ لە ماوەیەکی کاتدا. بازاڕ سێ دۆخی سەرەکی هەیە: ئاراستەی بەرزبوونەوە کە نرخ مەیلی بەرزبوونەوەی هەیە، ئاراستەی دابەزین کە مەیلی دابەزینی هەیە، و دۆخی لاتەنیشت کە نرخ لە نێوان دوو سنووردا بەبێ ئاراستەیەکی ڕوون دەجووڵێت. نرخ هەرگیز بە هێڵێکی ڕاست ناجووڵێت، بەڵکو بە شەپۆلی پاڵنان و ڕاستکردنەوە. دیاریکردنی ئەو دۆخەی بازاڕ تێیدایە یەکەم هەنگاوە پێش هەر بڕیارێک، چونکە ئامرازێک کە لە ئاراستەدا سوودی هەیە لەوانەیە لە بازاڕی لاتەنیشتدا زیانت پێبگەیەنێت."
+    },
+    {
+     "id": "s2",
+     "title": "لووتکە و بنەکان",
+     "narration": "ئاراستە لە ڕێگەی لووتکە و بنەکانەوە دەناسینەوە. لووتکە خاڵێکە کە نرخ بۆی بەرز دەبێتەوە پاشان دەکشێتەوە، و بن خاڵێکە کە نرخ بۆی دادەبەزێت پاشان دەگەڕێتەوە. لە ئاراستەی بەرزبوونەوەدا لووتکەی بەرزتر و بنی بەرزتر دەبینین، واتە هەر ڕاستکردنەوەیەک لە سەرووی بنی پێشووەوە دەوەستێت. لە ئاراستەی دابەزیندا لووتکەی نزمتر و بنی نزمتر دەبینین. لە بازاڕی لاتەنیشتدا لووتکە و بنەکان نزیکەی لە هەمان ئاستدا دووبارە دەبنەوە. سەرنج بخەرە سەر ئەو لووتکە و بنە ڕوونانەی هەر بازرگانێک دەیانبینێت، و لەرینەوە بچووکەکان پشتگوێ بخە."
+    },
+    {
+     "id": "s3",
+     "title": "کێشانی هێڵی ئاراستە",
+     "narration": "هێڵی ئاراستە ئامرازێکی بینراوە کە یارمەتیمان دەدات لاریی جووڵەکە ببینین. لە ئاراستەی بەرزبوونەوەدا لانیکەم دوو بنی ڕوون بەیەکەوە دەبەستینەوە و هێڵەکە بەرەو ڕاست درێژ دەکەینەوە، لە ئاراستەی دابەزیندا دوو لووتکە بەیەکەوە دەبەستینەوە. دوو خاڵ هێڵەکە دەکێشن، و خاڵی سێیەم دروستیی دەسەلمێنێت. ڕێگایەکی جێگیر هەڵبژێرە، یان بە سەری فتیلەکان یان بە جەستەکان، و تێکەڵیان مەکە. هەوڵ مەدە هێڵەکە بە وردی بە هەموو مۆمێکدا تێپەڕێت، بازاڕ ئامێرێکی ئەندازەیی نییە، و هێڵەکە ناوچەیەکی نزیکەیی نیشان دەدات نەک نرخێکی ورد."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی کرداری",
+     "narration": "با ئەمە لەسەر GBPUSD لە چوارچێوەی چوار کاتژمێردا جێبەجێ بکەین. وای دابنێ نرخ بنێکی لە 1.2600 دروست کرد، بەرزبووەوە بۆ 1.2720، ڕاستکرایەوە بۆ بنێکی بەرزتر لە 1.2660، پاشان بەرزبووەوە بۆ لووتکەیەکی بەرزتر لە 1.2790. دوو بنەکەی 1.2600 و 1.2660 بەیەکەوە دەبەستینەوە و هێڵەکە درێژ دەکەینەوە. کاتێک نرخ بۆ جاری سێیەم ڕاست دەکرێتەوە و نزیک 1.2710 بەر هێڵەکە دەکەوێت و مۆمێکی بەرزبووەوە لە سەرووی دادەخرێت، هێڵەکە بە سێ بەرکەوتن دەسەلمێنرێت. ئەمە مانای ئەوە نییە نرخ بە دڵنیاییەوە بەرز دەبێتەوە، بەڵکو مانای ئەوەیە ئاراستەکە تا ئێستا هەر بەردەوامە."
+    },
+    {
+     "id": "s5",
+     "title": "شکاندن و هەڵەکان",
+     "narration": "کەی هێڵەکە بە شکاو دادەنێین؟ کاتێک مۆمێک بە ڕوونی لە لایەکەی ترییەوە دادەخرێت، نەک کاتێک فتیلێک بۆ چەند چرکەیەک تێیدا دەچێت. شکاندن بە داخستنێکی ڕوون نیشانەیەکی زووی گۆڕانی نیازە، بەڵام وەرگەڕانێکی سەلمێنراو نییە، وەرگەڕان پێویستی بە لووتکە و بنی نوێ هەیە. هەڵە باوەکان بریتین لە کێشانی هێڵەکە بە گۆشەیەکی زۆر تیژ کە زوو دەشکێت، دووبارە کێشانەوەی دوای هەر شکاندنێک بۆ پاساودانی مامەڵەیەکی کراوە، و کێشانی هێڵ لەسەر چوارچێوەی یەک خولەک و مامەڵەکردن لەگەڵیان وەک هێڵی ڕۆژانە."
+    },
+    {
+     "id": "s6",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری ئەوەیە هەمیشە بە دیاریکردنی ئاراستە لە ڕێگەی لووتکە و بنەکانەوە لەسەر چوارچێوەیەکی گەورەتر دەست پێ بکەیت، وەک ڕۆژانە یان چوار کاتژمێر، پاشان هێڵی ئاراستە لەسەر خاڵە ڕوونەکان بەبێ زۆرکردن بکێشیت. هێڵەکە وەک ناوچەی سەرنج دابنێ نەک فەرمانی چوونەژوورەوە، و چاوەڕێی داخستنی مۆم بکە پێش حوکمدان لەسەر هەر گەڕانەوە یان شکاندنێک. کاتێک بیر لە هەر مامەڵەیەک دەکەیتەوە، پێشوەختە دیاری بکە شیکارییەکەت لە کوێدا هەڵە دەبێت، ئەوە شوێنی لۆجیکیی stop loss ـە، نەک ژمارەیەکی هەڕەمەکی."
+    }
+   ]
+  },
+  "classic-l1-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "المفهوم",
+     "narration": "الدعم منطقة سعرية يميل السعر إلى التوقف عندها أو الارتداد منها صعوداً، لأن المشترين يرونها سعراً مغرياً. والمقاومة منطقة يميل السعر إلى التوقف عندها أو الارتداد منها هبوطاً، لأن البائعين ينشطون فيها. هذه المناطق تتكون من ذاكرة السوق، فالمتعاملون يتذكرون الأسعار التي حدثت عندها انعكاسات سابقة ويتصرفون عندها مجدداً. الدعم والمقاومة من أهم أدوات التحليل الكلاسيكي، وتُستخدم في كل الأسواق وعلى كل الفريمات."
+    },
+    {
+     "id": "s2",
+     "title": "مناطق لا خطوط",
+     "narration": "أول درس مهم هو أن الدعم والمقاومة مناطق وليست خطوطاً دقيقة. السعر نادراً ما يرتد من الرقم نفسه تماماً، بل يتفاعل داخل نطاق. لذلك نرسم مستطيلاً يغطي المنطقة بين أجسام الشموع وأطراف فتائلها عند نقاط الارتداد. عرض المنطقة يختلف حسب الأداة والفريم، فقد يكون عشر نقاط على اليورو دولار في فريم الساعة، وقد يكون خمسة دولارات أو أكثر على الذهب. التفكير بالمناطق يحميك من الإحباط عندما يتجاوز السعر خطك ببضع نقاط ثم يعود."
+    },
+    {
+     "id": "s3",
+     "title": "كيف نحددها",
+     "narration": "لتحديد المناطق على الشارت ابدأ من فريم كبير كاليومي أو الأربع ساعات، وابحث عن الأماكن التي ارتد منها السعر بقوة أكثر من مرة، أو التي انطلقت منها حركة سريعة. الأرقام المستديرة مثل 1.1000 على اليورو دولار أو 2400 على الذهب تجذب انتباه المتعاملين كثيراً. القمم والقيعان السابقة الواضحة هي أفضل المرشحين. لا تملأ الشارت بعشرات المناطق، بل اكتفِ بالأقرب والأوضح فوق السعر الحالي وتحته."
+    },
+    {
+     "id": "s4",
+     "title": "إعادة الاختبار",
+     "narration": "من أهم الظواهر تبادل الأدوار. عندما يكسر السعر مقاومة بإغلاق واضح فوقها، كثيراً ما يعود إليها لاحقاً ليختبرها من الأعلى، وقد تتحول عندها إلى دعم. ويحدث العكس مع الدعم المكسور الذي قد يتحول إلى مقاومة. هذه العودة تسمى إعادة الاختبار. سبب ذلك أن من فاتهم الكسر يرون في العودة فرصة، ومن كانوا عالقين يريدون الخروج بأقل خسارة. لكن إعادة الاختبار لا تحدث دائماً، وقد تفشل فيعود السعر داخل النطاق القديم."
+    },
+    {
+     "id": "s5",
+     "title": "مثال عملي",
+     "narration": "لنأخذ مثالاً على الدولار ين على فريم الأربع ساعات. لنفترض أن السعر اصطدم ثلاث مرات بمنطقة مقاومة بين 151.80 و152.00 وتراجع منها. ثم جاءت شمعة أغلقت عند 152.40، أي فوق المنطقة بوضوح. بعد عدة شموع عاد السعر إلى 152.00 وظهرت شمعة بفتيل سفلي طويل أغلقت عند 152.30. هنا نقول إن المقاومة القديمة تصرفت كدعم في إعادة الاختبار. لو أغلق السعر تحت 151.80 لكان الكسر قد فشل، ولتغيّرت القراءة كلياً."
+    },
+    {
+     "id": "s6",
+     "title": "القوة والضعف",
+     "narration": "ليست كل المناطق متساوية في القوة. المنطقة تكون أقوى عندما تظهر على فريم كبير، وعندما يبتعد عنها السعر بحركة سريعة وواضحة، وعندما تتوافق مع رقم مستدير أو خط اتجاه. في المقابل، كثرة لمس المنطقة في وقت قصير قد تضعفها، لأن الطلبات المتراكمة عندها تُستهلك تدريجياً. وإذا لاحظت أن ارتدادات السعر من الدعم تصبح أضعف في كل مرة، والقمم تنخفض نحوه، فهذه علامة على احتمال كسره."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "من الأخطاء الشائعة الشراء عند أول لمسة للدعم دون انتظار أي رد فعل، ووضع وقف الخسارة داخل المنطقة تماماً حيث يسهل ضربه. القاعدة العملية: ارسم مناطق قليلة وواضحة من فريم كبير، وانتظر إغلاق شمعة تُظهر رد فعل حقيقي قبل أن تفكر في أي قرار، وضع وقف الخسارة خارج المنطقة لا داخلها، واحسب حجم الصفقة بحيث لا تتجاوز خسارتك نسبة صغيرة من حسابك، مثل واحد بالمئة، إذا فشلت المنطقة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Concept",
+     "narration": "Support is a price zone where price tends to stall or bounce upward, because buyers see it as an attractive price. Resistance is a zone where price tends to stall or turn downward, because sellers become active there. These zones form from market memory: traders remember prices where earlier reversals happened and act there again. Support and resistance are among the most important tools of classical analysis, and they are used in every market and on every timeframe."
+    },
+    {
+     "id": "s2",
+     "title": "Zones, Not Lines",
+     "narration": "The first important lesson is that support and resistance are zones, not precise lines. Price rarely bounces from exactly the same number; it reacts within a range. So we draw a rectangle covering the area between the candle bodies and the wick tips at the reaction points. The width of the zone varies by instrument and timeframe: it may be ten pips on EURUSD on the hourly chart, and five dollars or more on gold. Thinking in zones protects you from frustration when price overshoots your line by a few pips and then returns."
+    },
+    {
+     "id": "s3",
+     "title": "How to Find Them",
+     "narration": "To identify zones on the chart, start from a higher timeframe such as the daily or the four-hour, and look for places where price reversed strongly more than once, or where a fast move began. Round numbers such as 1.1000 on EURUSD or 2400 on gold attract a lot of traders' attention. Clear previous highs and lows are the best candidates. Do not fill the chart with dozens of zones; keep only the nearest and clearest ones above and below the current price."
+    },
+    {
+     "id": "s4",
+     "title": "The Retest",
+     "narration": "One of the most important phenomena is role reversal. When price breaks resistance with a clear close above it, it often returns later to test it from above, and it may turn into support. The opposite happens with broken support, which may turn into resistance. This return is called a retest. The reason is that traders who missed the break see the return as an opportunity, while those who were trapped want to exit with the smallest loss. But a retest does not always happen, and it can fail, sending price back inside the old range."
+    },
+    {
+     "id": "s5",
+     "title": "Worked Example",
+     "narration": "Let us take an example on USDJPY on the four-hour chart. Suppose price hit a resistance zone between 151.80 and 152.00 three times and pulled back each time. Then a candle closed at 152.40, clearly above the zone. A few candles later price returned to 152.00, and a candle with a long lower wick closed at 152.30. Here we say the old resistance acted as support on the retest. Had price closed below 151.80, the breakout would have failed and the reading would have changed completely."
+    },
+    {
+     "id": "s6",
+     "title": "Strength and Weakness",
+     "narration": "Not all zones are equally strong. A zone is stronger when it appears on a higher timeframe, when price leaves it with a fast and clear move, and when it lines up with a round number or a trendline. On the other hand, touching a zone many times in a short period can weaken it, because the orders resting there are gradually used up. And if you notice that bounces from support get weaker each time while the highs keep falling toward it, that is a sign it may break."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "Common mistakes include buying at the first touch of support without waiting for any reaction, and placing the stop loss right inside the zone where it is easily hit. The practical rule: draw a few clear zones from a higher timeframe, wait for a closed candle that shows a real reaction before considering any decision, place the stop loss outside the zone rather than inside it, and size the position so that your loss does not exceed a small percentage of your account, such as one percent, if the zone fails."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چەمکەکە",
+     "narration": "پاڵپشت ناوچەیەکی نرخییە کە نرخ مەیلی وەستان یان گەڕانەوەی بەرەو سەرەوەی لێی هەیە، چونکە کڕیاران بە نرخێکی سەرنجڕاکێشی دەبینن. بەرگری ناوچەیەکە کە نرخ مەیلی وەستان یان گەڕانەوەی بەرەو خوارەوەی لێی هەیە، چونکە فرۆشیاران تێیدا چالاک دەبن. ئەم ناوچانە لە یادەوەریی بازاڕەوە دروست دەبن، بازرگانان ئەو نرخانەیان لە بیرە کە وەرگەڕانی پێشوویان لێ ڕوویداوە و دووبارە لەوێ کاردانەوە دەنوێنن. پاڵپشت و بەرگری لە گرنگترین ئامرازەکانی شیکاریی کلاسیکین، و لە هەموو بازاڕێک و لەسەر هەموو چوارچێوەیەک بەکاردێن."
+    },
+    {
+     "id": "s2",
+     "title": "ناوچە نەک هێڵ",
+     "narration": "یەکەم وانەی گرنگ ئەوەیە پاڵپشت و بەرگری ناوچەن نەک هێڵی ورد. نرخ بە دەگمەن ڕێک لە هەمان ژمارەوە دەگەڕێتەوە، بەڵکو لە ناو مەودایەکدا کاردانەوە دەنوێنێت. بۆیە لاکێشەیەک دەکێشین کە ناوچەی نێوان جەستەی مۆمەکان و سەری فتیلەکان لە خاڵەکانی گەڕانەوەدا دادەپۆشێت. پانیی ناوچەکە بەپێی ئامراز و چوارچێوە جیاوازە، لەوانەیە دە pip بێت لەسەر EURUSD لە چوارچێوەی کاتژمێردا، و پێنج دۆلار یان زیاتر لەسەر زێڕ. بیرکردنەوە بە ناوچە دەتپارێزێت لە بێهیوابوون کاتێک نرخ چەند pip ـێک لە هێڵەکەت تێدەپەڕێت پاشان دەگەڕێتەوە."
+    },
+    {
+     "id": "s3",
+     "title": "چۆن دیارییان بکەین",
+     "narration": "بۆ دیاریکردنی ناوچەکان لەسەر چارت، لە چوارچێوەیەکی گەورەوە دەست پێ بکە وەک ڕۆژانە یان چوار کاتژمێر، و بەدوای ئەو شوێنانەدا بگەڕێ کە نرخ زیاتر لە جارێک بە بەهێزی لێیانەوە گەڕاوەتەوە، یان جووڵەیەکی خێرا لێیانەوە دەستی پێکردووە. ژمارە خڕەکان وەک 1.1000 لەسەر EURUSD یان 2400 لەسەر زێڕ سەرنجی زۆری بازرگانان ڕادەکێشن. لووتکە و بنە ڕوونەکانی پێشوو باشترین کاندیدن. چارتەکە پڕ مەکە لە دەیان ناوچە، بەڵکو تەنها نزیکترین و ڕوونترینەکان لە سەرەوە و خوارەوەی نرخی ئێستا بهێڵەرەوە."
+    },
+    {
+     "id": "s4",
+     "title": "دووبارە تاقیکردنەوە",
+     "narration": "یەکێک لە گرنگترین دیاردەکان ئاڵوگۆڕی ڕۆڵەکانە. کاتێک نرخ بەرگرییەک بە داخستنێکی ڕوون لە سەرووی دەشکێنێت، زۆرجار دواتر بۆی دەگەڕێتەوە بۆ ئەوەی لە سەرەوە تاقیی بکاتەوە، و لەوانەیە ببێت بە پاڵپشت. پێچەوانەکەی لەگەڵ پاڵپشتی شکاو ڕوودەدات کە لەوانەیە ببێت بە بەرگری. ئەم گەڕانەوەیە پێی دەوترێت دووبارە تاقیکردنەوە. هۆکارەکەی ئەوەیە ئەوانەی شکاندنەکەیان لەدەستچووە گەڕانەوەکە بە دەرفەت دەبینن، و ئەوانەی گیریان خواردووە دەیانەوێت بە کەمترین زیان دەربچن. بەڵام دووبارە تاقیکردنەوە هەمیشە ڕوونادات، و لەوانەیە شکست بهێنێت و نرخ بگەڕێتەوە ناو مەودا کۆنەکە."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی کرداری",
+     "narration": "با نموونەیەک لەسەر USDJPY لە چوارچێوەی چوار کاتژمێردا وەربگرین. وای دابنێ نرخ سێ جار بەر ناوچەیەکی بەرگری کەوت لە نێوان 151.80 و 152.00 و هەر جارێک کشایەوە. پاشان مۆمێک لە 152.40 داخرا، واتە بە ڕوونی لە سەرووی ناوچەکەوە. دوای چەند مۆمێک نرخ گەڕایەوە بۆ 152.00 و مۆمێک بە فتیلێکی درێژی خوارەوە دەرکەوت کە لە 152.30 داخرا. لێرەدا دەڵێین بەرگرییە کۆنەکە لە دووبارە تاقیکردنەوەدا وەک پاڵپشت ڕەفتاری کرد. ئەگەر نرخ لە خوارەوەی 151.80 دابخرایە، شکاندنەکە شکستی دەهێنا و خوێندنەوەکە بە تەواوی دەگۆڕا."
+    },
+    {
+     "id": "s6",
+     "title": "بەهێزی و لاوازی",
+     "narration": "هەموو ناوچەکان لە بەهێزیدا وەک یەک نین. ناوچەیەک بەهێزترە کاتێک لەسەر چوارچێوەیەکی گەورە دەردەکەوێت، کاتێک نرخ بە جووڵەیەکی خێرا و ڕوون لێی دوور دەکەوێتەوە، و کاتێک لەگەڵ ژمارەیەکی خڕ یان هێڵی ئاراستەیەک یەکدەگرێتەوە. لە بەرامبەردا، بەرکەوتنی زۆری ناوچەکە لە ماوەیەکی کورتدا لەوانەیە لاوازی بکات، چونکە ئەو داواکارییانەی لەوێ کەڵەکە بوون بە هێواشی بەکاردەبرێن. و ئەگەر تێبینیت کرد گەڕانەوەکانی نرخ لە پاڵپشتەوە هەر جارە لاوازتر دەبن و لووتکەکان بەرەو ڕووی دادەبەزن، ئەوە نیشانەی ئەگەری شکاندنیەتی."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "هەڵە باوەکان بریتین لە کڕین لە یەکەم بەرکەوتنی پاڵپشت بەبێ چاوەڕوانیی هیچ کاردانەوەیەک، و دانانی stop loss ڕێک لە ناو ناوچەکەدا کە بە ئاسانی لێی دەدرێت. یاسای کرداری: چەند ناوچەیەکی کەم و ڕوون لە چوارچێوەیەکی گەورەوە بکێشە، چاوەڕێی مۆمێکی داخراو بکە کە کاردانەوەیەکی ڕاستەقینە پیشان بدات پێش ئەوەی بیر لە هەر بڕیارێک بکەیتەوە، stop loss لە دەرەوەی ناوچەکە دابنێ نەک لە ناویدا، و قەبارەی مامەڵەکە وا حیساب بکە کە زیانەکەت لە ڕێژەیەکی بچووکی هەژمارەکەت تێنەپەڕێت، وەک یەک لە سەد، ئەگەر ناوچەکە شکستی هێنا."
+    }
+   ]
+  },
+  "classic-l2-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو EMA",
+     "narration": "المتوسط المتحرك خط يحسب متوسط أسعار الإغلاق لعدد محدد من الشموع، ويتحرك مع كل شمعة جديدة. المتوسط البسيط يعطي كل الشموع الوزن نفسه، أما المتوسط الأسي أو EMA فيعطي وزناً أكبر للأسعار الحديثة، لذلك يتفاعل أسرع مع تغيّر الحركة. وظيفة المتوسط تنعيم الضجيج حتى نرى الاتجاه بوضوح أكبر. لكن تذكر أنه مبني على أسعار ماضية، فهو مؤشر متأخر بطبيعته، يصف ما حدث ولا يتنبأ بما سيحدث."
+    },
+    {
+     "id": "s2",
+     "title": "الفترات الشائعة",
+     "narration": "أشهر الفترات المستخدمة هي تسعة وواحد وعشرون وخمسون ومئتان. المتوسط تسعة سريع جداً ويتبع الحركة القصيرة، والمتوسط واحد وعشرون يمثل الاتجاه قصير المدى، والخمسون يمثل الاتجاه المتوسط، والمئتان يراقبه كثير من المتعاملين كمقياس للاتجاه طويل المدى خاصة على الفريم اليومي. كلما زادت الفترة أصبح الخط أنعم وأبطأ. لا توجد فترة سحرية، المهم أن تختار مجموعة ثابتة وتفهم دور كل متوسط فيها بدل التنقل بين الإعدادات."
+    },
+    {
+     "id": "s3",
+     "title": "القراءة على الشارت",
+     "narration": "كيف نقرأ المتوسطات على الشارت؟ أولاً ننظر إلى ميل الخط، فالمتوسط المائل للأعلى يدل على اتجاه صاعد، والمائل للأسفل على اتجاه هابط، والأفقي على سوق عرضي. ثانياً ننظر إلى موقع السعر، فالإغلاق المستمر فوق المتوسط خمسين يعكس قوة المشترين. ثالثاً ننظر إلى ترتيب المتوسطات، فعندما يكون تسعة فوق واحد وعشرين فوق خمسين فوق مئتين، ومتباعدة عن بعضها، فهذا اتجاه صاعد منظم. وعندما تتشابك المتوسطات فالسوق غالباً بلا اتجاه."
+    },
+    {
+     "id": "s4",
+     "title": "التقاطع",
+     "narration": "التقاطع يحدث عندما يعبر متوسط سريع متوسطاً أبطأ. عبور المتوسط تسعة فوق واحد وعشرين يدل على تحسن الزخم قصير المدى، وعبوره تحته يدل على ضعفه. وعلى الفريم اليومي يراقب كثيرون تقاطع الخمسين مع المئتين. لكن التقاطع أداة تأكيد لا إشارة وحيدة، لأنه يحدث متأخراً بعد أن يكون جزء من الحركة قد تم. والأهم أن التقاطع لا يُعتمد إلا بعد إغلاق الشمعة، فالتقاطع الذي يظهر أثناء تكوّن الشمعة قد يختفي عند إغلاقها."
+    },
+    {
+     "id": "s5",
+     "title": "الدعم الديناميكي",
+     "narration": "في الاتجاه الواضح يتصرف المتوسط أحياناً كدعم أو مقاومة متحركة، ويسمى ذلك الدعم الديناميكي. مثال على اليورو دولار في فريم الساعة: السعر في اتجاه صاعد والمتوسط خمسون مائل للأعلى. يصحح السعر من 1.0920 إلى 1.0885 حيث يمر المتوسط خمسون، ثم تغلق شمعة صاعدة عند 1.0898. هذا رد فعل على منطقة ديناميكية في سياق صاعد. ولو أغلقت عدة شموع تحت المتوسط وبدأ يميل أفقياً، لضعفت هذه القراءة."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "أكثر خطأ شائع هو استخدام تقاطعات المتوسطات في سوق عرضي، حيث تتكرر التقاطعات الكاذبة وتتوالى الخسائر الصغيرة. خطأ آخر هو وضع عدد كبير من المتوسطات حتى يصبح الشارت مزدحماً ومتناقضاً. وخطأ ثالث هو اعتبار لمس المتوسط سبباً كافياً للدخول دون النظر إلى الاتجاه ومناطق الدعم والمقاومة. وتذكّر أن المتوسط لا يعرف الأخبار، فبيانات اقتصادية مهمة قد تخترقه بقوة في ثوانٍ."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: استخدم المتوسطات لتحديد السياق أولاً، هل الاتجاه صاعد أم هابط أم لا اتجاه، ثم استخدمها كمناطق اهتمام ديناميكية تُضاف إلى الدعم والمقاومة الأفقية. اعتمد التقاطعات والارتدادات على الشموع المغلقة فقط، وتجنب الاعتماد عليها في السوق العرضي. وإذا بنيت قراراً على ارتداد من متوسط، فضع وقف الخسارة في مكان يبطل الفكرة، كإغلاق واضح تحت قاع التصحيح، لا مجرد لمسة للخط."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is an EMA",
+     "narration": "A moving average is a line that calculates the average closing price over a set number of candles and moves with each new candle. The simple average gives all candles the same weight, while the exponential moving average, or EMA, gives more weight to recent prices, so it reacts faster to changes in movement. Its job is to smooth out noise so we can see the trend more clearly. But remember it is built on past prices, so it is a lagging indicator by nature: it describes what happened and does not predict what will happen."
+    },
+    {
+     "id": "s2",
+     "title": "Common Periods",
+     "narration": "The most popular periods are 9, 21, 50 and 200. The 9 EMA is very fast and follows short moves; the 21 represents the short-term trend; the 50 represents the medium-term trend; and the 200 is watched by many traders as a gauge of the long-term trend, especially on the daily chart. The longer the period, the smoother and slower the line. There is no magic period; what matters is choosing a fixed set and understanding the role of each average in it instead of jumping between settings."
+    },
+    {
+     "id": "s3",
+     "title": "Reading the Chart",
+     "narration": "How do we read moving averages on the chart? First, we look at the slope: an average angled upward points to an uptrend, one angled downward to a downtrend, and a flat one to a sideways market. Second, we look at where price is: consistent closes above the 50 EMA reflect buyer strength. Third, we look at the order of the averages: when the 9 is above the 21, above the 50, above the 200, and they are spread apart, that is an orderly uptrend. When the averages are tangled together, the market usually has no trend."
+    },
+    {
+     "id": "s4",
+     "title": "The Crossover",
+     "narration": "A crossover happens when a fast average crosses a slower one. The 9 crossing above the 21 shows improving short-term momentum, and crossing below shows weakening momentum. On the daily chart, many traders watch the 50 crossing the 200. But a crossover is a confirmation tool, not a standalone signal, because it happens late, after part of the move is already done. Most importantly, a crossover only counts after the candle closes; a crossover that appears while the candle is still forming can disappear when it closes."
+    },
+    {
+     "id": "s5",
+     "title": "Dynamic Support",
+     "narration": "In a clear trend, the average sometimes acts as moving support or resistance; this is called dynamic support. An example on EURUSD on the hourly chart: price is in an uptrend and the 50 EMA is angled upward. Price corrects from 1.0920 to 1.0885, where the 50 EMA is passing, then a bullish candle closes at 1.0898. That is a reaction at a dynamic zone within a bullish context. If several candles closed below the average and it started to flatten, this reading would weaken."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "The most common mistake is using moving-average crossovers in a sideways market, where false crossovers repeat and small losses pile up. Another mistake is putting so many averages on the chart that it becomes cluttered and contradictory. A third mistake is treating a touch of the average as a sufficient reason to enter without looking at the trend and the support and resistance zones. And remember that the average does not know about news: important economic data can cut through it in seconds."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: use moving averages first to define the context, whether the trend is up, down or absent, then use them as dynamic areas of interest added to horizontal support and resistance. Base crossovers and bounces on closed candles only, and avoid relying on them in a sideways market. If you build a decision on a bounce from an average, place the stop loss at a point that invalidates the idea, such as a clear close below the correction low, not just a touch of the line."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "EMA چییە",
+     "narration": "تێکڕای جووڵاو هێڵێکە کە تێکڕای نرخەکانی داخستن بۆ ژمارەیەکی دیاریکراو لە مۆمەکان حیساب دەکات، و لەگەڵ هەر مۆمێکی نوێدا دەجووڵێت. تێکڕای سادە هەمان کێش دەداتە هەموو مۆمەکان، بەڵام تێکڕای ئەکسپۆنێنشیاڵ یان EMA کێشی زیاتر دەداتە نرخە نوێیەکان، بۆیە خێراتر کاردانەوە بەرامبەر گۆڕانی جووڵە دەنوێنێت. ئەرکەکەی ئەوەیە ژاوەژاو نەرم بکاتەوە تاکو ئاراستە ڕوونتر ببینین. بەڵام لەبیرت بێت لەسەر نرخە ڕابردووەکان بنیات نراوە، بۆیە بە سروشتی خۆی پێوەرێکی دواکەوتووە، ئەوەی ڕوویداوە وەسف دەکات و پێشبینیی ئەوەی ڕوودەدات ناکات."
+    },
+    {
+     "id": "s2",
+     "title": "ماوە باوەکان",
+     "narration": "بەناوبانگترین ماوەکانی بەکارهاتوو نۆ و بیست و یەک و پەنجا و دووسەدن. EMA نۆ زۆر خێرایە و دوای جووڵە کورتەکان دەکەوێت، بیست و یەک ئاراستەی کورتخایەن نیشان دەدات، پەنجا ئاراستەی مامناوەند نیشان دەدات، و دووسەد زۆرێک لە بازرگانان وەک پێوەری ئاراستەی درێژخایەن چاودێری دەکەن بە تایبەتی لەسەر چوارچێوەی ڕۆژانە. تا ماوەکە درێژتر بێت هێڵەکە نەرمتر و هێواشتر دەبێت. هیچ ماوەیەکی سیحراوی نییە، گرنگ ئەوەیە کۆمەڵەیەکی جێگیر هەڵبژێریت و ڕۆڵی هەر تێکڕایەک تێیدا تێبگەیت لە جیاتی هەڵبەزینەوە لە نێوان ڕێکخستنەکاندا."
+    },
+    {
+     "id": "s3",
+     "title": "خوێندنەوە لەسەر چارت",
+     "narration": "چۆن تێکڕا جووڵاوەکان لەسەر چارت دەخوێنینەوە؟ یەکەم، سەیری لاریی هێڵەکە دەکەین، تێکڕایەک کە بەرەو سەرەوە لارە ئاراستەی بەرزبوونەوە نیشان دەدات، ئەوەی بەرەو خوارەوە لارە ئاراستەی دابەزین، و ئەوەی ئاسۆییە بازاڕی لاتەنیشت. دووەم، سەیری شوێنی نرخ دەکەین، داخستنی بەردەوام لە سەرووی EMA پەنجاوە بەهێزیی کڕیاران نیشان دەدات. سێیەم، سەیری ڕیزبەندیی تێکڕاکان دەکەین، کاتێک نۆ لە سەرووی بیست و یەک، لە سەرووی پەنجا، لە سەرووی دووسەدە و لە یەکتری دوورن، ئەوە ئاراستەیەکی بەرزبوونەوەی ڕێکخراوە. کاتێک تێکڕاکان تێکەڵ دەبن، بازاڕ زۆرجار بێ ئاراستەیە."
+    },
+    {
+     "id": "s4",
+     "title": "یەکتربڕین",
+     "narration": "یەکتربڕین ڕوودەدات کاتێک تێکڕایەکی خێرا بە تێکڕایەکی هێواشتردا تێدەپەڕێت. تێپەڕینی نۆ بۆ سەرووی بیست و یەک باشبوونی مۆمێنتەمی کورتخایەن نیشان دەدات، و تێپەڕینی بۆ خوارەوەی لاوازبوونی نیشان دەدات. لەسەر چوارچێوەی ڕۆژانە زۆرێک چاودێریی یەکتربڕینی پەنجا لەگەڵ دووسەد دەکەن. بەڵام یەکتربڕین ئامرازی پشتڕاستکردنەوەیە نەک نیشانەیەکی تەنها، چونکە بە دواکەوتوویی ڕوودەدات دوای ئەوەی بەشێک لە جووڵەکە تەواو بووە. گرنگتر ئەوەیە یەکتربڕین تەنها دوای داخستنی مۆم حیساب دەکرێت، یەکتربڕینێک کە لە کاتی دروستبوونی مۆمدا دەردەکەوێت لەوانەیە لە کاتی داخستنیدا نەمێنێت."
+    },
+    {
+     "id": "s5",
+     "title": "پاڵپشتی داینامیکی",
+     "narration": "لە ئاراستەیەکی ڕووندا تێکڕاکە هەندێک جار وەک پاڵپشت یان بەرگرییەکی جووڵاو ڕەفتار دەکات، ئەمە پێی دەوترێت پاڵپشتی داینامیکی. نموونەیەک لەسەر EURUSD لە چوارچێوەی کاتژمێردا: نرخ لە ئاراستەی بەرزبوونەوەدایە و EMA پەنجا بەرەو سەرەوە لارە. نرخ لە 1.0920 ڕاستدەکرێتەوە بۆ 1.0885 کە EMA پەنجا لەوێدا تێدەپەڕێت، پاشان مۆمێکی بەرزبووەوە لە 1.0898 دادەخرێت. ئەمە کاردانەوەیەکە لەسەر ناوچەیەکی داینامیکی لە دۆخێکی بەرزبوونەوەدا. ئەگەر چەند مۆمێک لە خوارەوەی تێکڕاکە دابخرانایە و دەستی بە ئاسۆیی بوون بکردایە، ئەم خوێندنەوەیە لاواز دەبوو."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "باوترین هەڵە بەکارهێنانی یەکتربڕینی تێکڕاکانە لە بازاڕی لاتەنیشتدا، کە یەکتربڕینی درۆینە دووبارە دەبنەوە و زیانە بچووکەکان لەسەر یەک کەڵەکە دەبن. هەڵەیەکی تر دانانی ژمارەیەکی زۆر تێکڕایە تاکو چارتەکە قەرەباڵغ و دژبەیەک دەبێت. هەڵەی سێیەم ئەوەیە بەرکەوتنی تێکڕاکە بە هۆکارێکی بەس بۆ چوونەژوورەوە دابنرێت بەبێ سەیرکردنی ئاراستە و ناوچەکانی پاڵپشت و بەرگری. و لەبیرت بێت تێکڕاکە هەواڵەکان نازانێت، داتای ئابووریی گرنگ لەوانەیە لە چەند چرکەیەکدا بە بەهێزی تێیدا تێپەڕێت."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: یەکەمجار تێکڕا جووڵاوەکان بۆ دیاریکردنی دۆخەکە بەکاربهێنە، ئایا ئاراستە بەرزبوونەوەیە یان دابەزین یان بێ ئاراستە، پاشان وەک ناوچەی سەرنجی داینامیکی بەکاریان بهێنە کە بۆ پاڵپشت و بەرگریی ئاسۆیی زیاد دەکرێن. یەکتربڕین و گەڕانەوەکان تەنها لەسەر مۆمی داخراو پشت پێ ببەستە، و لە بازاڕی لاتەنیشتدا خۆت لە پشتبەستن پێیان بپارێزە. ئەگەر بڕیارێکت لەسەر گەڕانەوە لە تێکڕایەک بنیات نا، stop loss لە شوێنێک دابنێ کە بیرۆکەکە پووچەڵ بکاتەوە، وەک داخستنێکی ڕوون لە خوارەوەی بنی ڕاستکردنەوەکە، نەک تەنها بەرکەوتنێکی هێڵەکە."
+    }
+   ]
+  },
+  "classic-l2-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "مفهوم الزخم",
+     "narration": "الزخم هو سرعة حركة السعر وقوتها، وليس اتجاهها فقط. تخيل سيارة تصعد تلاً: قد تبقى صاعدة لكن سرعتها تتباطأ قبل أن تتوقف. مؤشرات الزخم مثل RSI و MACD تقيس هذا التسارع والتباطؤ. هي مشتقة من السعر نفسه، فلا تحمل معلومة جديدة من خارج الشارت، لكنها تعرض المعلومة بطريقة تسهّل ملاحظة الضعف أو القوة. لذلك نستخدمها لفهم الحركة، لا لتوقيت دخول أعمى."
+    },
+    {
+     "id": "s2",
+     "title": "RSI والتشبع",
+     "narration": "مؤشر القوة النسبية RSI يتحرك بين صفر ومئة، وإعداده الشائع أربع عشرة شمعة. القراءة فوق سبعين تسمى تشبعاً شرائياً، وتحت ثلاثين تسمى تشبعاً بيعياً. لكن انتبه، التشبع لا يعني أن السعر سينعكس فوراً. في الاتجاه الصاعد القوي قد يبقى المؤشر فوق سبعين فترة طويلة بينما يواصل السعر الصعود. لهذا يعامل كثير من المحللين مستوى الخمسين كخط فاصل، فبقاء المؤشر فوقه يعكس زخماً صاعداً، وتحته يعكس زخماً هابطاً."
+    },
+    {
+     "id": "s3",
+     "title": "MACD",
+     "narration": "مؤشر MACD يقيس الفرق بين متوسطين أسيين، عادة اثنا عشر وستة وعشرون. يتكون من خط MACD، وخط الإشارة وهو متوسط تسع فترات له، والهيستوجرام الذي يعرض المسافة بينهما على شكل أعمدة. عندما يكون الخط فوق الصفر فالمتوسط السريع فوق البطيء، وهذا يميل لصالح الصعود. وعندما تتقلص أعمدة الهيستوجرام تدريجياً فهذا يعني أن الزخم يضعف، حتى لو كان السعر ما زال يتحرك في الاتجاه نفسه."
+    },
+    {
+     "id": "s4",
+     "title": "الدايفرجنس",
+     "narration": "الدايفرجنس أو الانحراف هو اختلاف بين ما يفعله السعر وما يفعله المؤشر. الانحراف الهبوطي يحدث عندما يصنع السعر قمة أعلى بينما يصنع المؤشر قمة أدنى، وهذا يدل على أن الصعود الجديد جاء بزخم أضعف. والانحراف الصعودي يحدث عندما يصنع السعر قاعاً أدنى بينما يصنع المؤشر قاعاً أعلى. نقارن دائماً قمماً بقمم وقيعاناً بقيعان، ونحددها على الشموع المغلقة، لأن قمة المؤشر على شمعة حية قد تتغير قبل إغلاقها."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على الذهب",
+     "narration": "مثال على الذهب في فريم الأربع ساعات: صعد السعر إلى قمة عند 2380 دولاراً وكان RSI عند ثمانية وسبعين. ثم صحّح وصعد مجدداً إلى قمة أعلى عند 2392، لكن RSI بلغ أربعة وستين فقط، وأعمدة هيستوجرام MACD كانت أقصر من المرة الأولى. هذا انحراف هبوطي يخبرنا أن الزخم يضعف. لكنه ليس أمر بيع، فقد يستمر الصعود. الإشارة تكتسب وزناً فقط إذا تبعها كسر واضح، مثل إغلاق تحت آخر قاع عند 2370."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "أشهر خطأ هو البيع لمجرد أن RSI تجاوز سبعين، أو الشراء لمجرد أنه تحت ثلاثين، عكس اتجاه قوي. خطأ آخر هو البحث عن الانحراف في كل مكان وعلى فريمات صغيرة جداً، حيث يظهر كثيراً ويفشل كثيراً. وخطأ ثالث هو الاعتماد على تقاطع خط MACD مع خط الإشارة قبل إغلاق الشمعة. وأخيراً، كثير من المبتدئين يضعون عدة مؤشرات زخم معاً ظناً أنها تؤكد بعضها، وهي في الحقيقة تقيس الشيء نفسه."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: اقرأ RSI و MACD كمقياس لصحة الحركة، لا كإشارات دخول مستقلة. ابدأ بالاتجاه والمناطق، ثم اسأل المؤشر هل الزخم يدعم الحركة أم يضعف. اعتبر الانحراف تحذيراً يدعوك للحذر أو لتقليل المخاطرة، وانتظر تأكيداً من السعر نفسه قبل أي قرار. واعتمد دائماً على الشموع المغلقة. مؤشر واحد للزخم يكفي، والوقت الذي توفره من كثرة المؤشرات استثمره في إدارة المخاطر وتحديد وقف الخسارة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Momentum Is",
+     "narration": "Momentum is the speed and strength of price movement, not just its direction. Imagine a car climbing a hill: it may keep going up while slowing down before it stops. Momentum indicators such as RSI and MACD measure this acceleration and deceleration. They are derived from price itself, so they carry no new information from outside the chart, but they present the information in a way that makes weakness or strength easier to notice. That is why we use them to understand the move, not for blind entry timing."
+    },
+    {
+     "id": "s2",
+     "title": "RSI and Extremes",
+     "narration": "The Relative Strength Index, RSI, moves between zero and one hundred, and its common setting is fourteen candles. A reading above seventy is called overbought, and below thirty is called oversold. But be careful: being overbought does not mean price will reverse immediately. In a strong uptrend the indicator can stay above seventy for a long time while price keeps rising. That is why many analysts treat the fifty level as a dividing line: staying above it reflects bullish momentum, and below it reflects bearish momentum."
+    },
+    {
+     "id": "s3",
+     "title": "MACD",
+     "narration": "The MACD measures the difference between two exponential averages, usually twelve and twenty-six. It consists of the MACD line, the signal line, which is a nine-period average of it, and the histogram, which shows the distance between them as bars. When the line is above zero, the fast average is above the slow one, which leans bullish. When the histogram bars gradually shrink, momentum is weakening, even if price is still moving in the same direction."
+    },
+    {
+     "id": "s4",
+     "title": "Divergence",
+     "narration": "Divergence is a disagreement between what price is doing and what the indicator is doing. Bearish divergence happens when price makes a higher high while the indicator makes a lower high, showing that the new rise came with weaker momentum. Bullish divergence happens when price makes a lower low while the indicator makes a higher low. We always compare highs with highs and lows with lows, and we mark them on closed candles, because an indicator peak on a live candle can change before it closes."
+    },
+    {
+     "id": "s5",
+     "title": "Gold Example",
+     "narration": "An example on gold on the four-hour chart: price rose to a high at 2380 dollars with RSI at seventy-eight. It then corrected and rose again to a higher high at 2392, but RSI reached only sixty-four, and the MACD histogram bars were shorter than the first time. This is bearish divergence, telling us momentum is weakening. But it is not a sell order; the rise may continue. The signal gains weight only if it is followed by a clear break, such as a close below the last low at 2370."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "The most famous mistake is selling just because RSI went above seventy, or buying just because it is below thirty, against a strong trend. Another mistake is looking for divergence everywhere and on very small timeframes, where it appears often and fails often. A third mistake is relying on the MACD line crossing the signal line before the candle closes. Finally, many beginners stack several momentum indicators together, thinking they confirm each other, when in reality they measure the same thing."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: read RSI and MACD as a gauge of the health of the move, not as independent entry signals. Start with the trend and the zones, then ask the indicator whether momentum supports the move or is fading. Treat divergence as a warning that calls for caution or for reducing risk, and wait for confirmation from price itself before any decision. Always rely on closed candles. One momentum indicator is enough; invest the time you save from piling up indicators in risk management and setting your stop loss."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چەمکی مۆمێنتەم",
+     "narration": "مۆمێنتەم خێرایی و بەهێزیی جووڵەی نرخە، نەک تەنها ئاراستەکەی. ئۆتۆمبێلێک بهێنە بەرچاوت کە بەسەر گردێکدا سەردەکەوێت: لەوانەیە هەر بەرەو سەرەوە بڕوات بەڵام خێراییەکەی کەم دەبێتەوە پێش ئەوەی بوەستێت. پێوەرەکانی مۆمێنتەم وەک RSI و MACD ئەم خێرابوون و هێواشبوونە دەپێون. لە خودی نرخەوە وەرگیراون، بۆیە هیچ زانیارییەکی نوێ لە دەرەوەی چارتەوە ناهێنن، بەڵام زانیارییەکە بە شێوەیەک پیشان دەدەن کە تێبینیکردنی لاوازی یان بەهێزی ئاسانتر دەکات. بۆیە بۆ تێگەیشتن لە جووڵەکە بەکاریان دەهێنین، نەک بۆ کاتدیاریکردنی کوێرانەی چوونەژوورەوە."
+    },
+    {
+     "id": "s2",
+     "title": "RSI و تێربوون",
+     "narration": "پێوەری بەهێزیی ڕێژەیی RSI لە نێوان سفر و سەددا دەجووڵێت، و ڕێکخستنە باوەکەی چواردە مۆمە. خوێندنەوەی سەرووی حەفتا پێی دەوترێت تێربوونی کڕین، و خوارەوەی سی پێی دەوترێت تێربوونی فرۆشتن. بەڵام ئاگادار بە، تێربوون مانای ئەوە نییە نرخ دەستبەجێ وەردەگەڕێت. لە ئاراستەیەکی بەرزبوونەوەی بەهێزدا پێوەرەکە لەوانەیە ماوەیەکی درێژ لە سەرووی حەفتاوە بمێنێتەوە لە کاتێکدا نرخ بەردەوامە لە بەرزبوونەوە. بۆیە زۆرێک لە شیکەرەوەکان ئاستی پەنجا وەک هێڵێکی جیاکەرەوە دادەنێن، مانەوە لە سەرووی مۆمێنتەمی بەرزبوونەوە نیشان دەدات، و لە خوارەوەی مۆمێنتەمی دابەزین."
+    },
+    {
+     "id": "s3",
+     "title": "MACD",
+     "narration": "پێوەری MACD جیاوازیی نێوان دوو تێکڕای ئەکسپۆنێنشیاڵ دەپێوێت، زۆرجار دوازدە و بیست و شەش. پێکدێت لە هێڵی MACD، هێڵی نیشانە کە تێکڕای نۆ ماوەیەی ئەوە، و هیستۆگرام کە مەودای نێوانیان بە شێوەی ستوون پیشان دەدات. کاتێک هێڵەکە لە سەرووی سفرەوەیە، تێکڕا خێراکە لە سەرووی هێواشەکەوەیە، و ئەمە بەلای بەرزبوونەوەدا دەشکێتەوە. کاتێک ستوونەکانی هیستۆگرام بە هێواشی بچووک دەبنەوە، ئەوە مانای ئەوەیە مۆمێنتەم لاواز دەبێت، تەنانەت ئەگەر نرخ هێشتا بە هەمان ئاراستەدا بجووڵێت."
+    },
+    {
+     "id": "s4",
+     "title": "دایڤێرجێنس",
+     "narration": "دایڤێرجێنس یان لادان جیاوازییە لە نێوان ئەوەی نرخ دەیکات و ئەوەی پێوەرەکە دەیکات. لادانی دابەزین ڕوودەدات کاتێک نرخ لووتکەیەکی بەرزتر دروست دەکات لە کاتێکدا پێوەرەکە لووتکەیەکی نزمتر دروست دەکات، ئەمە نیشان دەدات بەرزبوونەوە نوێیەکە بە مۆمێنتەمێکی لاوازتر هاتووە. لادانی بەرزبوونەوە ڕوودەدات کاتێک نرخ بنێکی نزمتر دروست دەکات لە کاتێکدا پێوەرەکە بنێکی بەرزتر دروست دەکات. هەمیشە لووتکە بە لووتکە و بن بە بن بەراورد دەکەین، و لەسەر مۆمی داخراو دیارییان دەکەین، چونکە لووتکەی پێوەر لەسەر مۆمێکی زیندوو لەوانەیە پێش داخستنی بگۆڕێت."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی زێڕ",
+     "narration": "نموونەیەک لەسەر زێڕ لە چوارچێوەی چوار کاتژمێردا: نرخ بەرزبووەوە بۆ لووتکەیەک لە 2380 دۆلار و RSI لە حەفتا و هەشت بوو. پاشان ڕاستکرایەوە و دووبارە بەرزبووەوە بۆ لووتکەیەکی بەرزتر لە 2392، بەڵام RSI تەنها گەیشتە شەست و چوار، و ستوونەکانی هیستۆگرامی MACD لە جاری یەکەم کورتتر بوون. ئەمە لادانی دابەزینە کە پێمان دەڵێت مۆمێنتەم لاواز دەبێت. بەڵام فەرمانی فرۆشتن نییە، لەوانەیە بەرزبوونەوەکە بەردەوام بێت. نیشانەکە تەنها کاتێک گرنگی وەردەگرێت کە شکاندنێکی ڕوونی بەدوادا بێت، وەک داخستن لە خوارەوەی دوایین بن لە 2370."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "بەناوبانگترین هەڵە فرۆشتنە تەنها لەبەر ئەوەی RSI لە حەفتا تێپەڕیوە، یان کڕینە تەنها لەبەر ئەوەی لە خوارەوەی سییە، دژی ئاراستەیەکی بەهێز. هەڵەیەکی تر گەڕانە بەدوای لاداندا لە هەموو شوێنێک و لەسەر چوارچێوەی زۆر بچووک، کە زۆر دەردەکەوێت و زۆر شکست دەهێنێت. هەڵەی سێیەم پشتبەستنە بە یەکتربڕینی هێڵی MACD لەگەڵ هێڵی نیشانە پێش داخستنی مۆم. لە کۆتاییدا، زۆرێک لە سەرەتاییەکان چەند پێوەرێکی مۆمێنتەم پێکەوە دادەنێن بە گومانی ئەوەی یەکتری پشتڕاست دەکەنەوە، لە کاتێکدا لە ڕاستیدا هەمان شت دەپێون."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: RSI و MACD وەک پێوەری تەندروستیی جووڵەکە بخوێنەوە، نەک وەک نیشانەی سەربەخۆی چوونەژوورەوە. بە ئاراستە و ناوچەکان دەست پێ بکە، پاشان لە پێوەرەکە بپرسە ئایا مۆمێنتەم پشتگیریی جووڵەکە دەکات یان لاواز دەبێت. لادان وەک ئاگادارکردنەوەیەک دابنێ کە بانگت دەکات بۆ وریایی یان کەمکردنەوەی مەترسی، و چاوەڕێی پشتڕاستکردنەوە لە خودی نرخەوە بکە پێش هەر بڕیارێک. هەمیشە پشت بە مۆمی داخراو ببەستە. یەک پێوەری مۆمێنتەم بەسە، ئەو کاتەی لە زۆریی پێوەرەکان پاشەکەوتی دەکەیت لە بەڕێوەبردنی مەترسی و دیاریکردنی stop loss ـدا وەبەری بهێنە."
+    }
+   ]
+  },
+  "classic-l2-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "مفهوم النماذج",
+     "narration": "النماذج الكلاسيكية أشكال تتكرر على الشارت لأنها تعكس سلوكاً بشرياً متكرراً من التردد والتجمع ثم الانطلاق. تنقسم إلى نوعين: نماذج انعكاسية تظهر عادة في نهاية اتجاه، مثل الرأس والكتفين، ونماذج استمرارية تظهر كاستراحة داخل اتجاه، مثل الأعلام وكثير من المثلثات. لكل نموذج شرطان أساسيان: أن يسبقه اتجاه واضح يعطيه معنى، وأن يكتمل بإغلاق شمعة خارج حدوده. قبل الإغلاق يبقى النموذج مجرد احتمال."
+    },
+    {
+     "id": "s2",
+     "title": "الرأس والكتفين",
+     "narration": "نموذج الرأس والكتفين من أشهر النماذج الانعكاسية. في نهاية اتجاه صاعد يصنع السعر قمة تسمى الكتف الأيسر، ثم قمة أعلى هي الرأس، ثم قمة أدنى من الرأس هي الكتف الأيمن. نربط القاعين بين هذه القمم بخط يسمى خط العنق. النموذج لا يكتمل إلا عندما تغلق شمعة تحت خط العنق. الكتف الأيمن الأدنى يعكس فشل المشترين في صنع قمة جديدة. ويوجد نموذج معكوس في نهاية الاتجاه الهابط بالمنطق نفسه."
+    },
+    {
+     "id": "s3",
+     "title": "المثلثات",
+     "narration": "المثلثات تتكون عندما يضيق نطاق الحركة تدريجياً. في المثلث المتماثل تنخفض القمم وترتفع القيعان، ويعكس ذلك توازناً مؤقتاً، وغالباً ما يكون الخروج منه في اتجاه الحركة السابقة لكن ليس دائماً. في المثلث الصاعد تكون القمم أفقية عند مقاومة والقيعان ترتفع، وهذا يميل لصالح الكسر للأعلى. وفي المثلث الهابط يكون الدعم أفقياً والقمم تنخفض. نحتاج لمستين على الأقل لكل ضلع، وننتظر إغلاقاً واضحاً خارج المثلث."
+    },
+    {
+     "id": "s4",
+     "title": "الأعلام",
+     "narration": "العلم نموذج استمراري يظهر بعد حركة قوية وسريعة تسمى سارية العلم. بعدها يدخل السعر في تصحيح قصير ومنظم داخل قناة صغيرة مائلة عكس الحركة الأصلية، وكأن السوق يلتقط أنفاسه. عندما يغلق السعر خارج القناة في اتجاه السارية، يعتبر النموذج مكتملاً. من علامات العلم الجيد أن يكون التصحيح قصيراً زمنياً، وألا يسترجع أكثر من نصف السارية تقريباً. التصحيح الطويل والعميق يُضعف فكرة الاستمرار."
+    },
+    {
+     "id": "s5",
+     "title": "مثال عملي",
+     "narration": "مثال على اليورو دولار في فريم الأربع ساعات بعد اتجاه صاعد: كتف أيسر عند 1.0950، ورأس عند 1.1000، وكتف أيمن عند 1.0955، وخط عنق قرب 1.0900. المسافة من الرأس إلى خط العنق مئة نقطة. إذا أغلقت شمعة تحت 1.0900، يقيس كثير من المحللين المسافة نفسها من نقطة الكسر لتقدير هدف محتمل قرب 1.0800. هذا تقدير تقريبي وليس وعداً. ومنطق إبطال النموذج واضح، فالإغلاق فوق الكتف الأيمن يلغي القراءة."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة رؤية النماذج في كل مكان، أو رسمها قبل اكتمالها والدخول على أساس توقع شكل لم يتكون بعد. خطأ آخر هو تجاهل الاتجاه السابق، فرأس وكتفان صغيران داخل سوق عرضي لا يحملان المعنى نفسه. وخطأ ثالث هو التعامل مع الهدف المقاس كأنه مضمون، فالأسواق كثيراً ما تتوقف قبله أو تتجاوزه. وأخيراً، الكسور الكاذبة شائعة، لذلك فإن انتظار إغلاق واضح وتحديد مكان الإبطال مسبقاً جزء من النموذج نفسه."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ابحث عن النموذج في سياقه، أي بعد اتجاه واضح وعلى فريم لا يقل عن الساعة للمبتدئ. لا تعتبر النموذج مكتملاً إلا بإغلاق شمعة خارج خط العنق أو ضلع المثلث أو قناة العلم. حدد قبل أي قرار نقطة الإبطال التي تلغي الفكرة، وضع وقف الخسارة عندها، واحسب حجم الصفقة على أساسها. واستخدم الهدف المقاس كمرجع تقريبي لإدارة الصفقة، مع الاستعداد لأن السوق قد لا يصل إليه."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Patterns Are",
+     "narration": "Classical patterns are shapes that repeat on the chart because they reflect recurring human behaviour: hesitation, accumulation, then a breakout. They fall into two types: reversal patterns, which usually appear at the end of a trend, such as head and shoulders; and continuation patterns, which appear as a pause within a trend, such as flags and many triangles. Every pattern has two basic conditions: a clear prior trend that gives it meaning, and completion by a candle closing outside its boundaries. Before that close, the pattern is only a possibility."
+    },
+    {
+     "id": "s2",
+     "title": "Head and Shoulders",
+     "narration": "The head and shoulders is one of the best-known reversal patterns. At the end of an uptrend, price makes a peak called the left shoulder, then a higher peak, the head, then a peak lower than the head, the right shoulder. We connect the two lows between these peaks with a line called the neckline. The pattern is complete only when a candle closes below the neckline. The lower right shoulder reflects the buyers' failure to make a new high. An inverse pattern appears at the end of a downtrend with the same logic."
+    },
+    {
+     "id": "s3",
+     "title": "Triangles",
+     "narration": "Triangles form when the range of movement narrows gradually. In a symmetrical triangle, highs fall and lows rise, reflecting a temporary balance, and the breakout is often in the direction of the previous move, though not always. In an ascending triangle, the highs are flat at resistance and the lows rise, which leans toward an upside break. In a descending triangle, support is flat and the highs fall. We need at least two touches for each side, and we wait for a clear close outside the triangle."
+    },
+    {
+     "id": "s4",
+     "title": "Flags",
+     "narration": "The flag is a continuation pattern that appears after a strong, fast move called the flagpole. Price then enters a short, orderly correction inside a small channel sloping against the original move, as if the market is catching its breath. When price closes outside the channel in the direction of the pole, the pattern is considered complete. Signs of a good flag are that the correction is short in time and does not retrace more than roughly half of the pole. A long, deep correction weakens the continuation idea."
+    },
+    {
+     "id": "s5",
+     "title": "Worked Example",
+     "narration": "An example on EURUSD on the four-hour chart after an uptrend: a left shoulder at 1.0950, a head at 1.1000, a right shoulder at 1.0955, and a neckline near 1.0900. The distance from the head to the neckline is one hundred pips. If a candle closes below 1.0900, many analysts project the same distance from the break point to estimate a possible target near 1.0800. This is a rough estimate, not a promise. The invalidation logic is clear: a close above the right shoulder cancels the reading."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "Common mistakes include seeing patterns everywhere, or drawing them before they are complete and entering on the expectation of a shape that has not formed yet. Another mistake is ignoring the prior trend: a small head and shoulders inside a sideways market does not carry the same meaning. A third mistake is treating the measured target as guaranteed, since markets often stop before it or go beyond it. Finally, false breakouts are common, so waiting for a clear close and defining the invalidation point in advance is part of the pattern itself."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: look for the pattern in its context, that is, after a clear trend and on a timeframe of at least one hour for a beginner. Do not consider the pattern complete until a candle closes outside the neckline, the triangle's side or the flag's channel. Before any decision, define the invalidation point that cancels the idea, place the stop loss there, and calculate the position size based on it. Use the measured target as a rough reference for managing the trade, while being prepared for the market not to reach it."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چەمکی شێوەکان",
+     "narration": "شێوە کلاسیکییەکان ئەو شێوانەن کە لەسەر چارت دووبارە دەبنەوە چونکە ڕەفتارێکی مرۆیی دووبارەبووەوە نیشان دەدەن لە دوودڵی و کۆبوونەوە پاشان دەرچوون. دابەش دەبن بۆ دوو جۆر: شێوەی وەرگەڕان کە زۆرجار لە کۆتایی ئاراستەیەکدا دەردەکەون، وەک سەر و دوو شان، و شێوەی بەردەوامی کە وەک پشوویەک لە ناو ئاراستەیەکدا دەردەکەون، وەک ئاڵاکان و زۆرێک لە سێگۆشەکان. هەر شێوەیەک دوو مەرجی بنەڕەتی هەیە: ئاراستەیەکی ڕوونی پێشوو کە مانای پێ بدات، و تەواوبوون بە داخستنی مۆمێک لە دەرەوەی سنوورەکانی. پێش ئەو داخستنە، شێوەکە تەنها ئەگەرێکە."
+    },
+    {
+     "id": "s2",
+     "title": "سەر و دوو شان",
+     "narration": "شێوەی سەر و دوو شان یەکێکە لە بەناوبانگترین شێوەکانی وەرگەڕان. لە کۆتایی ئاراستەیەکی بەرزبوونەوەدا، نرخ لووتکەیەک دروست دەکات کە پێی دەوترێت شانی چەپ، پاشان لووتکەیەکی بەرزتر کە سەرەکەیە، پاشان لووتکەیەک نزمتر لە سەر کە شانی ڕاستە. دوو بنەکەی نێوان ئەم لووتکانە بە هێڵێک بەیەکەوە دەبەستینەوە کە پێی دەوترێت هێڵی مل. شێوەکە تەنها کاتێک تەواو دەبێت کە مۆمێک لە خوارەوەی هێڵی مل دابخرێت. شانی ڕاستی نزمتر شکستی کڕیاران لە دروستکردنی لووتکەیەکی نوێ نیشان دەدات. شێوەیەکی پێچەوانەش لە کۆتایی ئاراستەی دابەزیندا بە هەمان لۆجیک دەردەکەوێت."
+    },
+    {
+     "id": "s3",
+     "title": "سێگۆشەکان",
+     "narration": "سێگۆشەکان دروست دەبن کاتێک مەودای جووڵە بە هێواشی تەسک دەبێتەوە. لە سێگۆشەی هاوشێوەدا لووتکەکان نزم دەبنەوە و بنەکان بەرز دەبنەوە، ئەمە هاوسەنگییەکی کاتی نیشان دەدات، و زۆرجار دەرچوون لێی بە ئاراستەی جووڵەی پێشوودایە بەڵام نەک هەمیشە. لە سێگۆشەی بەرزبوونەوەدا لووتکەکان لە بەرگرییەکدا ئاسۆیین و بنەکان بەرز دەبنەوە، ئەمە بەلای شکاندن بەرەو سەرەوەدا دەشکێتەوە. لە سێگۆشەی دابەزیندا پاڵپشت ئاسۆییە و لووتکەکان نزم دەبنەوە. بۆ هەر لایەک لانیکەم دوو بەرکەوتنمان پێویستە، و چاوەڕێی داخستنێکی ڕوون لە دەرەوەی سێگۆشەکە دەکەین."
+    },
+    {
+     "id": "s4",
+     "title": "ئاڵاکان",
+     "narration": "ئاڵا شێوەیەکی بەردەوامییە کە دوای جووڵەیەکی بەهێز و خێرا دەردەکەوێت کە پێی دەوترێت داری ئاڵا. پاشان نرخ دەچێتە ناو ڕاستکردنەوەیەکی کورت و ڕێکخراو لە ناو کەناڵێکی بچووکدا کە بە پێچەوانەی جووڵە سەرەکییەکە لارە، وەک ئەوەی بازاڕ پشوو بدات. کاتێک نرخ لە دەرەوەی کەناڵەکە بە ئاراستەی دارەکە دادەخرێت، شێوەکە بە تەواوبوو دادەنرێت. لە نیشانەکانی ئاڵایەکی باش ئەوەیە ڕاستکردنەوەکە لە ڕووی کاتەوە کورت بێت، و نزیکەی زیاتر لە نیوەی دارەکە نەگەڕێنێتەوە. ڕاستکردنەوەی درێژ و قووڵ بیرۆکەی بەردەوامی لاواز دەکات."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی کرداری",
+     "narration": "نموونەیەک لەسەر EURUSD لە چوارچێوەی چوار کاتژمێردا دوای ئاراستەیەکی بەرزبوونەوە: شانی چەپ لە 1.0950، سەر لە 1.1000، شانی ڕاست لە 1.0955، و هێڵی مل نزیک 1.0900. مەودای نێوان سەر و هێڵی مل سەد pip ـە. ئەگەر مۆمێک لە خوارەوەی 1.0900 دابخرێت، زۆرێک لە شیکەرەوەکان هەمان مەودا لە خاڵی شکاندنەوە دەپێون بۆ خەمڵاندنی ئامانجێکی ئەگەری نزیک 1.0800. ئەمە خەمڵاندنێکی نزیکەییە نەک بەڵێن. لۆجیکی پووچەڵکردنەوەی شێوەکە ڕوونە، داخستن لە سەرووی شانی ڕاستەوە خوێندنەوەکە هەڵدەوەشێنێتەوە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵە باوەکان بریتین لە بینینی شێوەکان لە هەموو شوێنێک، یان کێشانیان پێش تەواوبوونیان و چوونەژوورەوە لەسەر بنەمای چاوەڕوانیی شێوەیەک کە هێشتا دروست نەبووە. هەڵەیەکی تر پشتگوێخستنی ئاراستەی پێشووە، سەر و دوو شانێکی بچووک لە ناو بازاڕێکی لاتەنیشتدا هەمان مانا هەڵناگرێت. هەڵەی سێیەم مامەڵەکردنە لەگەڵ ئامانجی پێوراو وەک ئەوەی گەرەنتی کرابێت، چونکە بازاڕەکان زۆرجار پێش ئەو دەوەستن یان لێی تێدەپەڕن. لە کۆتاییدا، دەرچوونی درۆینە باوە، بۆیە چاوەڕوانیی داخستنێکی ڕوون و دیاریکردنی خاڵی پووچەڵبوونەوە پێشوەختە بەشێکە لە خودی شێوەکە."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: بەدوای شێوەکەدا لە دۆخی خۆیدا بگەڕێ، واتە دوای ئاراستەیەکی ڕوون و لەسەر چوارچێوەیەک کە بۆ سەرەتاییەک لە کاتژمێرێک کەمتر نەبێت. شێوەکە بە تەواوبوو دامەنێ تا مۆمێک لە دەرەوەی هێڵی مل یان لای سێگۆشەکە یان کەناڵی ئاڵاکە دانەخرێت. پێش هەر بڕیارێک خاڵی پووچەڵبوونەوە دیاری بکە کە بیرۆکەکە هەڵدەوەشێنێتەوە، stop loss لەوێ دابنێ، و قەبارەی مامەڵەکە لەسەر بنەمای ئەو حیساب بکە. ئامانجی پێوراو وەک سەرچاوەیەکی نزیکەیی بۆ بەڕێوەبردنی مامەڵەکە بەکاربهێنە، لەگەڵ ئامادەبوون بۆ ئەوەی لەوانەیە بازاڕ نەگاتە ئەوێ."
+    }
+   ]
+  },
+  "classic-l3-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا الخطة",
+     "narration": "في هذه المحاضرة نجمع كل ما تعلمناه في خطة واحدة متكاملة. الخطة ليست توقعاً لاتجاه السعر، بل مجموعة قواعد مكتوبة مسبقاً تحدد متى تنظر إلى الصفقة، ومتى تدخل، وأين تخرج إن كنت مخطئاً، وكم تخاطر. الهدف من الخطة أن تتخذ قراراتك بهدوء قبل أن يتحرك السعر، لا تحت ضغط الشمعة الحية. الخطة الكلاسيكية تتكون من أربعة عناصر: الاتجاه، والمنطقة، والتأكيد، وإدارة المخاطر."
+    },
+    {
+     "id": "s2",
+     "title": "اختيار الزوج",
+     "narration": "الخطوة الأولى اختيار الأداة. للمبتدئ يُفضّل التركيز على عدد قليل من الأزواج الأكثر سيولة، مثل اليورو دولار والباوند دولار والدولار ين، أو الذهب مع إدراك أن حركته أوسع وأسرع. السيولة العالية تعني فروقات سعرية أقل وحركة أنظف. تعلّم شخصية كل أداة، متوسط حركتها اليومية، والأوقات التي تنشط فيها كجلستي لندن ونيويورك. ولا تتداول قبيل الأخبار الكبيرة كقرارات الفائدة إذا لم تكن خطتك مصممة لذلك."
+    },
+    {
+     "id": "s3",
+     "title": "الاتجاه والمنطقة",
+     "narration": "الخطوة الثانية التحليل من الفريم الأكبر إلى الأصغر. على الفريم اليومي تحدد الاتجاه من خلال القمم والقيعان والمتوسط مئتين. على فريم الأربع ساعات ترسم مناطق الدعم والمقاومة القريبة وخطوط الاتجاه. ثم تسأل سؤالاً بسيطاً: هل السعر يقترب من منطقة مهمة في اتجاه الترند الرئيسي؟ إذا كان الجواب لا، فلا توجد صفقة، وهذا قرار صحيح أيضاً. المتداول المنضبط يقضي معظم وقته في الانتظار لا في التنفيذ."
+    },
+    {
+     "id": "s4",
+     "title": "التأكيد",
+     "narration": "الخطوة الثالثة التأكيد. وصول السعر إلى المنطقة لا يكفي، بل نريد دليلاً على أن الطرف المتوقع بدأ يتدخل. قد يكون التأكيد شمعة رفض بفتيل طويل، أو شمعة ابتلاعية تغلق بقوة، أو كسر خط اتجاه صغير على فريم الساعة، أو عودة RSI فوق الخمسين. المهم أن تختار نوعاً واحداً أو اثنين وتكتبهما في خطتك، وأن يكون التأكيد على شمعة مغلقة. التأكيد لا يجعل الصفقة مضمونة، بل يحسّن احتمالاتها فقط."
+    },
+    {
+     "id": "s5",
+     "title": "إدارة المخاطر",
+     "narration": "الخطوة الرابعة والأهم إدارة المخاطر. حدد أولاً مكان وقف الخسارة حيث تصبح فكرتك خاطئة، ثم احسب حجم الصفقة. القاعدة الشائعة ألا تخاطر بأكثر من واحد بالمئة من الحساب في الصفقة الواحدة. مثال: حساب خمسة آلاف دولار، المخاطرة خمسون دولاراً، ووقف الخسارة على اليورو دولار خمس وعشرون نقطة. قيمة النقطة في العقد القياسي عشرة دولارات تقريباً، إذن الحجم المناسب 0.2 لوت. وتحقق من مواصفات العقد لدى وسيطك، فهي قد تختلف."
+    },
+    {
+     "id": "s6",
+     "title": "مثال كامل",
+     "narration": "لنطبّق الخطة كاملة على الذهب. على اليومي الاتجاه صاعد والسعر فوق المتوسط مئتين. على الأربع ساعات توجد منطقة دعم سابقة بين 2330 و2335. يهبط السعر إلى المنطقة، ثم تغلق شمعة ساعة ابتلاعية صاعدة عند 2341. نضع وقف الخسارة تحت المنطقة عند 2326، أي خمسة عشر دولاراً من الدخول. بمخاطرة خمسين دولاراً، وبما أن كل 0.01 لوت يساوي عادة أونصة واحدة، يكون الحجم نحو 0.03 لوت. والهدف الأول عند القمة السابقة قرب 2370."
+    },
+    {
+     "id": "s7",
+     "title": "الانضباط والمراجعة",
+     "narration": "القاعدة الأخيرة: اكتب خطتك قبل الجلسة، ونفذها كما هي، وسجل كل صفقة في دفتر تداول يتضمن السبب والدخول والوقف والنتيجة وشعورك أثناءها. لا تحرك وقف الخسارة بعيداً عندما يقترب السعر منه، ولا تضاعف الحجم لتعويض خسارة. الحكم على الخطة يكون بعد عدد كاف من الصفقات، مثل خمسين صفقة على حساب تجريبي، لا بعد صفقة واحدة. الاتجاه والمنطقة والتأكيد والمخاطرة، أربعة شروط في قرار واحد، وإذا غاب أحدها فلا صفقة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why a Plan",
+     "narration": "In this lecture we bring together everything we have learned into one complete plan. A plan is not a prediction of where price will go; it is a set of rules written in advance that define when you look at a trade, when you enter, where you exit if you are wrong, and how much you risk. The aim of a plan is to make your decisions calmly before price moves, not under the pressure of a live candle. The classical plan has four elements: trend, zone, confirmation and risk management."
+    },
+    {
+     "id": "s2",
+     "title": "Choosing the Pair",
+     "narration": "The first step is choosing the instrument. For a beginner it is better to focus on a few of the most liquid pairs, such as EURUSD, GBPUSD and USDJPY, or gold, while being aware that its moves are wider and faster. High liquidity means lower spreads and cleaner movement. Learn each instrument's personality: its average daily range and the times it is most active, such as the London and New York sessions. And do not trade just before major news such as interest-rate decisions unless your plan is designed for it."
+    },
+    {
+     "id": "s3",
+     "title": "Trend and Zone",
+     "narration": "The second step is analysing from the higher timeframe down to the lower. On the daily chart you define the trend through highs and lows and the 200 EMA. On the four-hour chart you draw nearby support and resistance zones and trendlines. Then you ask a simple question: is price approaching an important zone in the direction of the main trend? If the answer is no, there is no trade, and that is a correct decision too. A disciplined trader spends most of their time waiting, not executing."
+    },
+    {
+     "id": "s4",
+     "title": "Confirmation",
+     "narration": "The third step is confirmation. Price reaching the zone is not enough; we want evidence that the expected side has started to step in. Confirmation could be a rejection candle with a long wick, an engulfing candle that closes strongly, a break of a small trendline on the hourly chart, or RSI returning above fifty. What matters is choosing one or two types and writing them into your plan, and that the confirmation is on a closed candle. Confirmation does not make the trade guaranteed; it only improves its odds."
+    },
+    {
+     "id": "s5",
+     "title": "Risk Management",
+     "narration": "The fourth and most important step is risk management. First set the stop loss where your idea becomes wrong, then calculate the position size. A common rule is not to risk more than one percent of the account on a single trade. Example: a five-thousand-dollar account, a fifty-dollar risk, and a stop loss of twenty-five pips on EURUSD. The pip value on a standard lot is about ten dollars, so the appropriate size is 0.2 lot. Check the contract specifications with your broker, as they can differ."
+    },
+    {
+     "id": "s6",
+     "title": "Full Example",
+     "narration": "Let us apply the full plan to gold. On the daily chart the trend is up and price is above the 200 EMA. On the four-hour chart there is a previous support zone between 2330 and 2335. Price drops into the zone, then an hourly bullish engulfing candle closes at 2341. We place the stop loss below the zone at 2326, fifteen dollars from entry. With a fifty-dollar risk, and since each 0.01 lot usually equals one ounce, the size is about 0.03 lot. The first target is at the previous high near 2370."
+    },
+    {
+     "id": "s7",
+     "title": "Discipline and Review",
+     "narration": "The final rule: write your plan before the session, execute it as written, and record every trade in a trading journal including the reason, entry, stop, result and how you felt during it. Do not move the stop loss further away when price approaches it, and do not increase size to recover a loss. Judge the plan after a sufficient number of trades, such as fifty trades on a demo account, not after a single trade. Trend, zone, confirmation and risk: four conditions in one decision, and if one is missing, there is no trade."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی پلان",
+     "narration": "لەم وانەیەدا هەموو ئەوەی فێری بووین لە یەک پلانی تەواودا کۆدەکەینەوە. پلان پێشبینیی ئاراستەی نرخ نییە، بەڵکو کۆمەڵێک یاسای پێشوەختە نووسراوە کە دیاری دەکات کەی سەیری مامەڵەیەک دەکەیت، کەی دەچیتە ژوورەوە، لە کوێ دەردەچیت ئەگەر هەڵە بیت، و چەند مەترسی دەکەیت. ئامانجی پلان ئەوەیە بڕیارەکانت بە هێمنی پێش جووڵەی نرخ بدەیت، نەک لە ژێر فشاری مۆمێکی زیندوودا. پلانی کلاسیکی لە چوار توخم پێکدێت: ئاراستە، ناوچە، پشتڕاستکردنەوە و بەڕێوەبردنی مەترسی."
+    },
+    {
+     "id": "s2",
+     "title": "هەڵبژاردنی جووت",
+     "narration": "یەکەم هەنگاو هەڵبژاردنی ئامرازەکەیە. بۆ سەرەتاییەک باشترە سەرنج بخاتە سەر ژمارەیەکی کەم لە جووتە هەرە شلەکان، وەک EURUSD و GBPUSD و USDJPY، یان زێڕ لەگەڵ ئاگاداربوون لەوەی جووڵەکانی فراوانتر و خێراترن. شلەیی بەرز مانای spread ـی کەمتر و جووڵەی پاکترە. کەسایەتیی هەر ئامرازێک فێربە، تێکڕای جووڵەی ڕۆژانەی و ئەو کاتانەی تێیدا چالاکە وەک دانیشتنەکانی لەندەن و نیویۆرک. و پێش هەواڵە گەورەکان وەک بڕیارەکانی ڕێژەی سوود مامەڵە مەکە ئەگەر پلانەکەت بۆ ئەوە دانەنرابێت."
+    },
+    {
+     "id": "s3",
+     "title": "ئاراستە و ناوچە",
+     "narration": "هەنگاوی دووەم شیکارییە لە چوارچێوەی گەورەترەوە بۆ بچووکتر. لەسەر چوارچێوەی ڕۆژانە ئاراستە لە ڕێگەی لووتکە و بنەکان و EMA دووسەدەوە دیاری دەکەیت. لەسەر چوارچێوەی چوار کاتژمێر ناوچە نزیکەکانی پاڵپشت و بەرگری و هێڵەکانی ئاراستە دەکێشیت. پاشان پرسیارێکی سادە دەکەیت: ئایا نرخ لە ناوچەیەکی گرنگ نزیک دەبێتەوە بە ئاراستەی ترێندی سەرەکی؟ ئەگەر وەڵامەکە نەخێر بوو، هیچ مامەڵەیەک نییە، و ئەمەش بڕیارێکی دروستە. بازرگانی دیسپلینکراو زۆربەی کاتەکەی لە چاوەڕوانیدا بەسەر دەبات نەک لە جێبەجێکردندا."
+    },
+    {
+     "id": "s4",
+     "title": "پشتڕاستکردنەوە",
+     "narration": "هەنگاوی سێیەم پشتڕاستکردنەوەیە. گەیشتنی نرخ بۆ ناوچەکە بەس نییە، بەڵکو بەڵگەمان دەوێت کە لایەنی چاوەڕوانکراو دەستی کردووە بە دەستێوەردان. پشتڕاستکردنەوە لەوانەیە مۆمێکی ڕەتکردنەوە بێت بە فتیلێکی درێژ، یان مۆمێکی قووتدەر کە بە بەهێزی دادەخرێت، یان شکاندنی هێڵێکی ئاراستەی بچووک لەسەر چوارچێوەی کاتژمێر، یان گەڕانەوەی RSI بۆ سەرووی پەنجا. گرنگ ئەوەیە یەک یان دوو جۆر هەڵبژێریت و لە پلانەکەتدا بیاننووسیت، و پشتڕاستکردنەوەکە لەسەر مۆمێکی داخراو بێت. پشتڕاستکردنەوە مامەڵەکە گەرەنتی ناکات، تەنها ئەگەرەکانی باشتر دەکات."
+    },
+    {
+     "id": "s5",
+     "title": "بەڕێوەبردنی مەترسی",
+     "narration": "هەنگاوی چوارەم و گرنگترین بەڕێوەبردنی مەترسییە. یەکەمجار شوێنی stop loss دیاری بکە لەو شوێنەی بیرۆکەکەت هەڵە دەبێت، پاشان قەبارەی مامەڵەکە حیساب بکە. یاسایەکی باو ئەوەیە زیاتر لە یەک لە سەدی هەژمارەکە لە یەک مامەڵەدا نەخەیتە مەترسییەوە. نموونە: هەژمارێکی پێنج هەزار دۆلاری، مەترسیی پەنجا دۆلار، و stop loss ـی بیست و پێنج pip لەسەر EURUSD. بەهای pip لە lot ـی ستاندارددا نزیکەی دە دۆلارە، کەواتە قەبارەی گونجاو 0.2 lot ـە. تایبەتمەندییەکانی گرێبەستەکە لای بریکەرەکەت بپشکنە، چونکە لەوانەیە جیاواز بن."
+    },
+    {
+     "id": "s6",
+     "title": "نموونەی تەواو",
+     "narration": "با پلانەکە بە تەواوی لەسەر زێڕ جێبەجێ بکەین. لەسەر ڕۆژانە ئاراستە بەرزبوونەوەیە و نرخ لە سەرووی EMA دووسەدەوەیە. لەسەر چوار کاتژمێر ناوچەیەکی پاڵپشتی پێشوو هەیە لە نێوان 2330 و 2335. نرخ دادەبەزێت بۆ ناوچەکە، پاشان مۆمێکی کاتژمێریی قووتدەری بەرزبووەوە لە 2341 دادەخرێت. stop loss لە خوارەوەی ناوچەکە لە 2326 دادەنێین، واتە پازدە دۆلار لە خاڵی چوونەژوورەوە. بە مەترسیی پەنجا دۆلار، و لەبەر ئەوەی هەر 0.01 lot زۆرجار یەکسانە بە یەک ئۆنسە، قەبارەکە نزیکەی 0.03 lot دەبێت. یەکەم ئامانج لە لووتکەی پێشوو نزیک 2370 ـە."
+    },
+    {
+     "id": "s7",
+     "title": "دیسپلین و پێداچوونەوە",
+     "narration": "دوایین یاسا: پلانەکەت پێش دانیشتنەکە بنووسە، وەک خۆی جێبەجێی بکە، و هەموو مامەڵەیەک لە دەفتەری بازرگانیدا تۆمار بکە کە هۆکار و چوونەژوورەوە و stop و ئەنجام و هەستت لە کاتیدا لەخۆبگرێت. stop loss دوور مەخەرەوە کاتێک نرخ لێی نزیک دەبێتەوە، و قەبارە زیاد مەکە بۆ قەرەبووکردنەوەی زیانێک. حوکمدان لەسەر پلانەکە دوای ژمارەیەکی بەس لە مامەڵەکان دەبێت، وەک پەنجا مامەڵە لەسەر هەژماری تاقیکاری، نەک دوای یەک مامەڵە. ئاراستە، ناوچە، پشتڕاستکردنەوە و مەترسی، چوار مەرج لە یەک بڕیاردا، و ئەگەر یەکێکیان نەبوو، مامەڵە نییە."
+    }
+   ]
+  },
+  "classic-l3-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "مقدمة",
+     "narration": "في هذه المحاضرة الأخيرة من المدرسة الكلاسيكية نتحدث عن الأخطاء التي تتكرر عند معظم المبتدئين. المشكلة غالباً ليست في الأدوات نفسها، فالترند والدعم والمقاومة والمؤشرات أدوات مفيدة، بل في طريقة استخدامها. أكثر الخسائر تأتي من ثلاثة أخطاء رئيسية: كثرة الإشارات دون فلتر، ومطاردة السعر بعد أن يتحرك، وتجاهل السياق العام للسوق. فهم هذه الأخطاء والتعرف عليها في تداولك الشخصي أهم من تعلم أي مؤشر جديد."
+    },
+    {
+     "id": "s2",
+     "title": "كثرة الإشارات",
+     "narration": "الخطأ الأول هو كثرة الإشارات. يضع المبتدئ خمسة مؤشرات وعشرة خطوط وعدة فريمات، فيجد دائماً سبباً للشراء وسبباً للبيع في الوقت نفسه. والنتيجة صفقات كثيرة متناقضة وتردد مستمر. كيف تتعرف على هذا الخطأ؟ إذا كان شارتك مزدحماً لدرجة أنك لا ترى الشموع بوضوح، أو إذا كنت تفتح أكثر من بضع صفقات يومياً دون خطة، فأنت غالباً تعاني منه. الحل هو الفلتر: شروط قليلة ثابتة يجب أن تجتمع معاً قبل أي قرار."
+    },
+    {
+     "id": "s3",
+     "title": "المطاردة",
+     "narration": "الخطأ الثاني هو مطاردة السعر. يرى المتداول شمعة كبيرة قوية فيخاف أن تفوته الحركة، فيدخل متأخراً بعد أن يكون السعر قد ابتعد كثيراً عن أي منطقة منطقية. المشكلة أن وقف الخسارة المنطقي يصبح بعيداً جداً، فإما أن يخاطر بمبلغ كبير، أو يضع وقفاً قريباً بلا معنى. وغالباً ما يحدث تصحيح طبيعي بعد الحركة القوية، فيخرج المطارد بخسارة قبل أن يكمل السعر طريقه. الحركة التي فاتتك ليست خسارة، بل مجرد فرصة لم تكن لك."
+    },
+    {
+     "id": "s4",
+     "title": "مثال عملي",
+     "narration": "مثال على الباوند دولار في فريم الساعة: بعد صدور بيانات اقتصادية قفز السعر من 1.2700 إلى 1.2780 في شمعتين. يدخل المطارد شراءً عند 1.2780، وأقرب منطقة منطقية لوقف الخسارة تحت بداية الحركة قرب 1.2690، أي تسعون نقطة. ولأن الوقف بعيد يختار وقفاً عشوائياً بعشرين نقطة عند 1.2760. يصحح السعر بشكل طبيعي إلى 1.2740 فيضرب الوقف، ثم يكمل الصعود لاحقاً. الخطأ لم يكن في التحليل، بل في توقيت الدخول ومكانه."
+    },
+    {
+     "id": "s5",
+     "title": "تجاهل السياق",
+     "narration": "الخطأ الثالث تجاهل السياق. السياق هو الصورة الكبيرة: اتجاه الفريم اليومي، وموقع السعر من المناطق الرئيسية، وهل السوق في ترند أم في نطاق عرضي، وهل هناك أخبار مهمة قريبة. شمعة ابتلاعية صاعدة على فريم خمس دقائق تفقد قيمتها إذا كانت تحت مقاومة يومية قوية في اتجاه هابط. وقراءة التشبع البيعي لها معنى مختلف في السوق العرضي عنه في هبوط حاد. الإشارة نفسها قد تكون جيدة في سياق وسيئة في آخر."
+    },
+    {
+     "id": "s6",
+     "title": "المخاطرة والانفعال",
+     "narration": "هذه الأخطاء الثلاثة تتضخم عندما يغيب ضبط المخاطرة. بعد خسارة أو خسارتين يحاول المبتدئ التعويض بسرعة، فيرفع حجم الصفقة أو يدخل صفقة انتقامية بلا شروط. ويستخدم رافعة مالية عالية تجعل حركة صغيرة ضده مؤلمة جداً. ويحرك وقف الخسارة أملاً في عودة السعر. هذه السلوكيات تحوّل خسارة عادية إلى ضرر كبير في الحساب. تذكر أن الخسائر جزء طبيعي من أي أسلوب تداول، والمهم أن تبقى صغيرة ومحسوبة."
+    },
+    {
+     "id": "s7",
+     "title": "قائمة التحقق",
+     "narration": "القاعدة العملية قائمة تحقق قصيرة تراجعها قبل أي صفقة. أولاً، ما هو اتجاه الفريم الأكبر؟ ثانياً، هل السعر عند منطقة واضحة أم في منتصف الحركة؟ ثالثاً، هل ظهر التأكيد على شمعة مغلقة؟ رابعاً، أين وقف الخسارة، وهل الخسارة المحتملة ضمن واحد بالمئة من حسابك؟ خامساً، هل هناك خبر مهم قريب؟ إذا لم تستطع الإجابة بوضوح عن هذه الأسئلة، فالقرار الأفضل هو الانتظار. الصبر والانضباط هما ما يصنع الفارق، لا كثرة الأدوات."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Introduction",
+     "narration": "In this final lecture of the Classical School we talk about the mistakes most beginners repeat. The problem is usually not the tools themselves; trend, support and resistance and indicators are useful tools. The problem is how they are used. Most losses come from three main mistakes: too many signals without a filter, chasing price after it has moved, and ignoring the overall market context. Understanding these mistakes and recognising them in your own trading matters more than learning any new indicator."
+    },
+    {
+     "id": "s2",
+     "title": "Too Many Signals",
+     "narration": "The first mistake is too many signals. A beginner puts five indicators, ten lines and several timeframes on the screen, so there is always a reason to buy and a reason to sell at the same time. The result is many contradictory trades and constant hesitation. How do you recognise this mistake? If your chart is so cluttered that you cannot see the candles clearly, or if you open more than a few trades a day without a plan, you are probably suffering from it. The solution is a filter: a few fixed conditions that must all line up before any decision."
+    },
+    {
+     "id": "s3",
+     "title": "Chasing Price",
+     "narration": "The second mistake is chasing price. A trader sees a big, strong candle, fears missing the move, and enters late after price has moved far from any logical zone. The problem is that the logical stop loss becomes very far away, so either they risk a large amount, or they place a close stop that means nothing. A normal correction often follows a strong move, and the chaser exits with a loss before price continues on its way. A move you missed is not a loss; it is just an opportunity that was not yours."
+    },
+    {
+     "id": "s4",
+     "title": "Worked Example",
+     "narration": "An example on GBPUSD on the hourly chart: after economic data was released, price jumped from 1.2700 to 1.2780 in two candles. The chaser buys at 1.2780, and the nearest logical place for a stop loss is below the start of the move near 1.2690, ninety pips away. Because that stop is far, he picks a random twenty-pip stop at 1.2760. Price corrects normally to 1.2740, hits the stop, and later continues higher. The mistake was not in the analysis but in the timing and location of the entry."
+    },
+    {
+     "id": "s5",
+     "title": "Ignoring Context",
+     "narration": "The third mistake is ignoring context. Context is the big picture: the daily trend, where price is relative to the major zones, whether the market is trending or ranging, and whether important news is coming up. A bullish engulfing candle on the five-minute chart loses its value if it sits under strong daily resistance in a downtrend. An oversold reading means something different in a sideways market than in a sharp decline. The same signal can be good in one context and bad in another."
+    },
+    {
+     "id": "s6",
+     "title": "Risk and Emotion",
+     "narration": "These three mistakes grow worse when risk control is missing. After one or two losses, a beginner tries to recover quickly, raising position size or entering a revenge trade with no conditions. They use high leverage, which makes a small move against them very painful. They move the stop loss hoping price will return. These behaviours turn a normal loss into serious damage to the account. Remember that losses are a normal part of any trading approach; what matters is keeping them small and calculated."
+    },
+    {
+     "id": "s7",
+     "title": "Checklist",
+     "narration": "The practical rule is a short checklist to review before any trade. First, what is the trend on the higher timeframe? Second, is price at a clear zone or in the middle of a move? Third, has confirmation appeared on a closed candle? Fourth, where is the stop loss, and is the potential loss within one percent of your account? Fifth, is important news coming up? If you cannot answer these questions clearly, the best decision is to wait. Patience and discipline make the difference, not the number of tools."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پێشەکی",
+     "narration": "لەم دوایین وانەیەی قوتابخانەی کلاسیکیدا باسی ئەو هەڵانە دەکەین کە لای زۆربەی سەرەتاییەکان دووبارە دەبنەوە. کێشەکە زۆرجار لە خودی ئامرازەکاندا نییە، ترێند و پاڵپشت و بەرگری و پێوەرەکان ئامرازی بەسوودن، بەڵکو لە شێوازی بەکارهێنانیاندایە. زۆربەی زیانەکان لە سێ هەڵەی سەرەکییەوە دێن: زۆریی نیشانەکان بەبێ فلتەر، ڕاوەدوونانی نرخ دوای ئەوەی جووڵاوە، و پشتگوێخستنی دۆخی گشتیی بازاڕ. تێگەیشتن لەم هەڵانە و ناسینەوەیان لە بازرگانیی خۆتدا گرنگترە لە فێربوونی هەر پێوەرێکی نوێ."
+    },
+    {
+     "id": "s2",
+     "title": "زۆریی نیشانەکان",
+     "narration": "یەکەم هەڵە زۆریی نیشانەکانە. سەرەتاییەک پێنج پێوەر و دە هێڵ و چەند چوارچێوەیەک دادەنێت، بۆیە هەمیشە هۆکارێک بۆ کڕین و هۆکارێک بۆ فرۆشتن لە هەمان کاتدا دەدۆزێتەوە. ئەنجامەکەی مامەڵەی زۆری دژبەیەک و دوودڵیی بەردەوامە. چۆن ئەم هەڵەیە دەناسیتەوە؟ ئەگەر چارتەکەت هێندە قەرەباڵغە کە مۆمەکان بە ڕوونی نابینیت، یان ئەگەر ڕۆژانە زیاتر لە چەند مامەڵەیەک بەبێ پلان دەکەیتەوە، ئەوا بە ئەگەری زۆر تووشی ئەم هەڵەیە بوویت. چارەسەر فلتەرە: چەند مەرجێکی کەمی جێگیر کە دەبێت هەموویان پێکەوە کۆببنەوە پێش هەر بڕیارێک."
+    },
+    {
+     "id": "s3",
+     "title": "ڕاوەدوونانی نرخ",
+     "narration": "هەڵەی دووەم ڕاوەدوونانی نرخە. بازرگانێک مۆمێکی گەورە و بەهێز دەبینێت و دەترسێت جووڵەکەی لەدەست بچێت، بۆیە بە درەنگەوە دەچێتە ژوورەوە دوای ئەوەی نرخ زۆر لە هەر ناوچەیەکی لۆجیکی دوورکەوتووەتەوە. کێشەکە ئەوەیە stop loss ـی لۆجیکی زۆر دوور دەبێت، بۆیە یان بڕێکی زۆر دەخاتە مەترسییەوە، یان stop ـێکی نزیکی بێ مانا دادەنێت. زۆرجار ڕاستکردنەوەیەکی سروشتی دوای جووڵەی بەهێز ڕوودەدات، و ڕاوەدوونەرەکە بە زیانەوە دەردەچێت پێش ئەوەی نرخ ڕێگاکەی تەواو بکات. جووڵەیەک کە لەدەستت چوو زیان نییە، تەنها دەرفەتێکە کە هی تۆ نەبوو."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی کرداری",
+     "narration": "نموونەیەک لەسەر GBPUSD لە چوارچێوەی کاتژمێردا: دوای بڵاوبوونەوەی داتای ئابووری، نرخ لە دوو مۆمدا لە 1.2700 بازیدا بۆ 1.2780. ڕاوەدوونەرەکە لە 1.2780 دەکڕێت، و نزیکترین شوێنی لۆجیکی بۆ stop loss لە خوارەوەی سەرەتای جووڵەکەیە نزیک 1.2690، واتە نەوەد pip. لەبەر ئەوەی ئەو stop ـە دوورە، stop ـێکی هەڕەمەکیی بیست pip لە 1.2760 هەڵدەبژێرێت. نرخ بە شێوەیەکی سروشتی ڕاستدەکرێتەوە بۆ 1.2740، لە stop ـەکە دەدات، پاشان دواتر بەرزبوونەوەکە بەردەوام دەبێت. هەڵەکە لە شیکارییەکەدا نەبوو، بەڵکو لە کات و شوێنی چوونەژوورەوەدا بوو."
+    },
+    {
+     "id": "s5",
+     "title": "پشتگوێخستنی دۆخ",
+     "narration": "هەڵەی سێیەم پشتگوێخستنی دۆخەکەیە. دۆخ وێنە گەورەکەیە: ئاراستەی چوارچێوەی ڕۆژانە، شوێنی نرخ بەرامبەر ناوچە سەرەکییەکان، ئایا بازاڕ لە ترێنددایە یان لە مەودایەکی لاتەنیشتدا، و ئایا هەواڵی گرنگ نزیکە. مۆمێکی قووتدەری بەرزبووەوە لەسەر چوارچێوەی پێنج خولەک بەهاکەی لەدەست دەدات ئەگەر لە خوارەوەی بەرگرییەکی ڕۆژانەی بەهێزدا بێت لە ئاراستەیەکی دابەزیندا. خوێندنەوەی تێربوونی فرۆشتن لە بازاڕی لاتەنیشتدا مانایەکی جیاوازی هەیە لەوەی لە دابەزینێکی تونددا. هەمان نیشانە لەوانەیە لە دۆخێکدا باش بێت و لە دۆخێکی تردا خراپ."
+    },
+    {
+     "id": "s6",
+     "title": "مەترسی و هەست",
+     "narration": "ئەم سێ هەڵەیە گەورەتر دەبن کاتێک کۆنترۆڵی مەترسی نەبێت. دوای یەک یان دوو زیان، سەرەتاییەک هەوڵ دەدات بە خێرایی قەرەبوو بکاتەوە، بۆیە قەبارەی مامەڵە بەرز دەکاتەوە یان مامەڵەیەکی تۆڵەسەندنەوە بەبێ مەرج دەکاتەوە. leverage ـی بەرز بەکاردەهێنێت کە جووڵەیەکی بچووک دژی ئەو زۆر بە ئازار دەکات. stop loss دەجووڵێنێت بە هیوای گەڕانەوەی نرخ. ئەم ڕەفتارانە زیانێکی ئاسایی دەگۆڕن بۆ زیانێکی گەورە لە هەژمارەکەدا. لەبیرت بێت زیانەکان بەشێکی سروشتین لە هەر شێوازێکی بازرگانی، گرنگ ئەوەیە بچووک و حیسابکراو بمێننەوە."
+    },
+    {
+     "id": "s7",
+     "title": "لیستی پشکنین",
+     "narration": "یاسای کرداری لیستێکی پشکنینی کورتە کە پێش هەر مامەڵەیەک پێیدا بچیتەوە. یەکەم، ئاراستەی چوارچێوە گەورەترەکە چییە؟ دووەم، ئایا نرخ لە ناوچەیەکی ڕووندایە یان لە ناوەڕاستی جووڵەیەکدا؟ سێیەم، ئایا پشتڕاستکردنەوە لەسەر مۆمێکی داخراو دەرکەوتووە؟ چوارەم، stop loss لە کوێیە، و ئایا زیانی ئەگەری لە ناو یەک لە سەدی هەژمارەکەتدایە؟ پێنجەم، ئایا هەواڵێکی گرنگ نزیکە؟ ئەگەر نەتتوانی بە ڕوونی وەڵامی ئەم پرسیارانە بدەیتەوە، باشترین بڕیار چاوەڕوانییە. ئارامی و دیسپلین جیاوازییەکە دروست دەکەن، نەک زۆریی ئامرازەکان."
+    }
+   ]
+  }
+ }
+}

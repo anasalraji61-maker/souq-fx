@@ -180,7 +180,10 @@ def test_progress_for_a_lecture_that_does_not_exist_or_past_its_end_is_refused(c
     body = {"school_id": "basics", "lecture_id": "basics-l1-01", "segment_index": 0}
     assert client.post("/api/academy/progress", json={**body, "lecture_id": "zzz"}, headers=headers).status_code == 404
     assert client.post("/api/academy/progress", json={**body, "school_id": "no-such"}, headers=headers).status_code == 404
-    for bad in (3, 99, 2**63):
+    import academy_data
+
+    n = len(academy_data.get_lecture("basics", "basics-l1-01")["script_segments"])
+    for bad in (n, 99, 2**63):
         assert client.post("/api/academy/progress", json={**body, "segment_index": bad}, headers=headers).status_code == 422
     assert client.post("/api/academy/progress", json={**body, "segment_index": 2}, headers=headers).status_code == 200
     assert [p["lecture_id"] for p in client.get("/api/academy/progress", headers=headers).json()["progress"]] == ["basics-l1-01"]

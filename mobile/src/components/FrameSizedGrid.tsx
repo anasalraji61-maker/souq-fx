@@ -30,7 +30,7 @@ export const FRAME_BOX_H_PHONE_GRID = FRAME_CHART_H_PHONE_GRID + 110;
  * جنب، صغيرة) أو مستطيلات (فريم واحد عمودي بكل صف، بعرض الشاشة وأطول).
  * كلا الوضعين عمودي التمرير (لا تمرير أفقي)، ويُحفظ الاختيار محلياً.
  */
-type PhoneMode = 'grid' | 'stack';
+type PhoneMode = 'single' | 'grid' | 'stack';
 
 export type GridItem = {
   id: string;
@@ -52,6 +52,8 @@ type Props = {
   showAll?: boolean;
   /** ترتيب البداية للمتداول الجديد */
   defaultOrder?: string[];
+  /** phone "one large chart" mode shows this item (default: the first one) */
+  singleId?: string;
 };
 
 type CellLayout = { x: number; y: number; w: number; h: number };
@@ -100,9 +102,10 @@ export function FrameSizedGrid({
   shape = 'square',
   showAll = false,
   defaultOrder,
+  singleId,
 }: Props) {
   const { t } = useI18n();
-  const { width } = useWindowDimensions();
+  const { width, height: windowH } = useWindowDimensions();
   const phone = width < 700;
   /** تعبئة الشاشة لشارتات المحطة فقط — ليست لشبكة الأدوات متعددة اللوحات (showAll) */
   const fillRect = !phone && !showAll && shape === 'rect' && layoutCount > 1;
@@ -181,8 +184,9 @@ export function FrameSizedGrid({
   );
 
   /** وضع عرض الهاتف: شبكة (اثنان بكل صف) أو قائمة (واحد بكل صف) — بحسب اختيار المتداول */
-  const phoneModeKey = storageKey ? `${storageKey}.phoneMode` : null;
-  const [phoneMode, setPhoneMode] = useState<PhoneMode>('grid');
+  // v2: the phone now opens on one large chart (four small frames left the candles hard to read).
+  const phoneModeKey = storageKey ? `${storageKey}.phoneMode.v2` : null;
+  const [phoneMode, setPhoneMode] = useState<PhoneMode>('single');
 
   useEffect(() => {
     if (!phoneModeKey) return;
@@ -190,7 +194,7 @@ export function FrameSizedGrid({
     (async () => {
       try {
         const raw = await AsyncStorage.getItem(phoneModeKey);
-        if (alive && (raw === 'grid' || raw === 'stack')) setPhoneMode(raw);
+        if (alive && (raw === 'single' || raw === 'grid' || raw === 'stack')) setPhoneMode(raw);
       } catch {
         /* ignore */
       }
@@ -420,6 +424,21 @@ export function FrameSizedGrid({
         <Text style={styles.phoneModeTagText}>{t.gridFramesWord}</Text>
       </View>
       <Pressable
+        accessibilityState={{ selected: phoneMode === 'single' }}
+        accessibilityRole="button"
+        onPress={() => choosePhoneMode('single')}
+        style={({ pressed }) => [
+          styles.phoneModeBtn,
+          phoneMode === 'single' && styles.phoneModeBtnActive,
+          pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+        ]}
+        accessibilityLabel={t.gridSingleA11y}
+      >
+        <Text style={[styles.phoneModeText, phoneMode === 'single' && styles.phoneModeTextActive]}>
+          {t.gridSingleWord}
+        </Text>
+      </Pressable>
+      <Pressable
         accessibilityState={{ selected: phoneMode === 'grid' }}
         accessibilityRole="button"
         onPress={() => choosePhoneMode('grid')}
@@ -452,6 +471,18 @@ export function FrameSizedGrid({
     </View>
   );
 
+  // Phone, one large chart: the first frame fills most of the screen (switch its pair from its own symbol menu).
+  const singleItem = (singleId && items.find((it) => it.id === singleId)) || displayed[0];
+  if (phone && !showAll && phoneMode === 'single' && singleItem) {
+    const bigH = Math.max(420, Math.round(windowH * 0.64));
+    return (
+      <View>
+        {phoneModeToggle}
+        <View style={[styles.grid, styles.gridCol]}>{renderCell(singleItem, 0, [styles.cellPhone, { height: bigH }])}</View>
+      </View>
+    );
+  }
+
   // الهاتف + وضع المربعات: فريمان بكل صف (نفس فكرة الفريمات المربعة على اللابتوب)
   if (phone && !showAll && phoneMode === 'grid') {
     return (
@@ -474,7 +505,7 @@ export function FrameSizedGrid({
         {phoneModeToggle}
         <View style={[styles.grid, styles.gridCol]}>
           {displayed.map((item, index) =>
-            renderCell(item, index, [styles.cellPhone, { height: FRAME_BOX_H_PHONE }])
+            renderCell(item, index, [styles.cellPhone, { height: Math.max(FRAME_BOX_H_PHONE, Math.round(windowH * 0.5)) }])
           )}
         </View>
       </View>

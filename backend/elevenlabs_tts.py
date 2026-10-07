@@ -8,8 +8,19 @@ from pathlib import Path
 
 import httpx
 
-CACHE_DIR = Path(__file__).resolve().parent / "audio_cache"
-CACHE_DIR.mkdir(exist_ok=True)
+def _cache_dir() -> Path:
+    """Generated narration is kept next to the database (survives redeploys; each segment is paid for once).
+    `MATRIX_AUDIO_CACHE` overrides; without `MATRIX_DB_PATH` (local runs, tests) it stays in the backend folder."""
+    env = (os.getenv("MATRIX_AUDIO_CACHE") or "").strip()
+    if env:
+        return Path(env).expanduser()
+    if (os.getenv("MATRIX_DB_PATH") or "").strip():
+        return Path(os.environ["MATRIX_DB_PATH"]).expanduser().parent / "audio_cache"
+    return Path(__file__).resolve().parent / "audio_cache"
+
+
+CACHE_DIR = _cache_dir()
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 ELEVEN_API = "https://api.elevenlabs.io/v1"
 _voice_cache: str | None = None

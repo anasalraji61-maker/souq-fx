@@ -1,0 +1,1067 @@
+{
+ "school_id": "ict-smc",
+ "lectures": {
+  "smc-l1-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "مفهوم السيولة",
+     "narration": "في منهج SMC نقصد بالسيولة تجمّعات الأوامر المعلّقة عند مستويات سعرية معروفة. عندما يتداول كثير من الناس بالطريقة نفسها، تتكدّس أوامرهم في الأماكن نفسها، مثل أوامر وقف الخسارة وأوامر الدخول عند الاختراق. هذه التجمعات تعمل كالمغناطيس، لأن السعر يحتاج إلى أوامر مقابلة كي يتحرك بأحجام كبيرة. لذلك نتعامل مع السيولة كإطار لقراءة السوق، وليس كدليل على أن جهة معينة تحرّك السعر عن قصد."
+    },
+    {
+     "id": "s2",
+     "title": "أوامر الوقف",
+     "narration": "أين توجد أوامر الوقف عادة؟ المشتري يضع وقف خسارته تحت آخر قاع واضح، والبائع يضعه فوق آخر قمة واضحة. وهناك أيضاً من ينتظر اختراق القمة ليشتري بأمر معلّق فوقها. عندما يصل السعر إلى هذه المنطقة تتفعّل هذه الأوامر دفعة واحدة، فيظهر ذيل سريع أو حركة حادة. نسمّي المنطقة فوق القمم سيولة الشراء، ونسمّي المنطقة تحت القيعان سيولة البيع، وهما أول ما نحدده على الشارت."
+    },
+    {
+     "id": "s3",
+     "title": "القمم والقيعان المتساوية",
+     "narration": "أوضح أماكن السيولة على الشارت هي القمم المتساوية والقيعان المتساوية. عندما يلمس السعر المستوى نفسه مرتين أو ثلاثاً دون اختراقه، يراه كثير من المتداولين مقاومة أو دعماً قوياً، فيضعون أوامرهم خلفه مباشرة. لا يشترط أن تكون القمم متطابقة تماماً، فالفارق البسيط ببضع نقاط مقبول. ارسم خطاً أفقياً على هذه المستويات، واعتبرها أهدافاً محتملة للسعر قبل أن تعتبرها جداراً لا يُخترق."
+    },
+    {
+     "id": "s4",
+     "title": "الإغراء Inducement",
+     "narration": "الإغراء أو Inducement هو قمة أو قاع داخلي صغير يتكوّن قبل منطقة اهتمام أكبر، مثل Order Block. يبدو هذا المستوى الصغير فرصة دخول مبكرة، فيدخل عنده متداولون كثيرون ويضعون أوقافهم قريبة منه. وكثيراً ما يكسر السعر هذا المستوى الداخلي أولاً ويأخذ سيولته، ثم يصل إلى المنطقة الأهم. لذلك نفضّل أن نرى سيولة الإغراء قد أُخذت قبل أن نثق بالمنطقة التي نراقبها."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على EURUSD",
+     "narration": "لنأخذ مثالاً على زوج اليورو دولار. افترض أن السعر صنع قمتين متساويتين تقريباً عند 1.0950 و1.0952 خلال الجلسة الآسيوية. في بداية جلسة لندن صعد السعر إلى 1.0966، أي فوق القمتين بنحو أربع عشرة نقطة، ثم أغلقت شمعة الربع ساعة عائدة تحت 1.0950. هذا ما نسمّيه صيد سيولة. لكن الصيد وحده لا يكفي للدخول، بل ننتظر كسراً هيكلياً في الاتجاه المعاكس على شمعة مغلقة، لأن الشمعة التي لم تغلق قد تتغير."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة أن تعتبر كل ذيل يتجاوز قمة صيداً للسيولة، فأحياناً يكون الاختراق حقيقياً ويستمر السعر في الاتجاه نفسه. وخطأ آخر هو الدخول عكس الحركة فور لمس المستوى، قبل أن تغلق الشمعة وقبل ظهور أي تأكيد. ومن الأخطاء أيضاً وضع وقف الخسارة في المكان الواضح نفسه الذي يضعه معظم المتداولين، مباشرة فوق القمة المتساوية أو تحت القاع المتساوي، دون أي هامش."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية لهذه المحاضرة بسيطة. أولاً حدّد أين تتجمع السيولة: القمم والقيعان المتساوية، وقمم الجلسات السابقة وقيعانها، ومستويات الإغراء الداخلية. ثانياً انتظر أن يأخذ السعر هذه السيولة. ثالثاً لا تتصرف إلا بعد تأكيد هيكلي على شمعة مغلقة. وأخيراً اجعل المخاطرة في كل صفقة نسبة صغيرة وثابتة من حسابك، مثل واحد بالمئة، لأن أي نموذج مهما بدا واضحاً يمكن أن يفشل."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Liquidity Is",
+     "narration": "In the SMC approach, liquidity means clusters of resting orders at well-known price levels. When many people trade the same way, their orders pile up in the same places, such as stop-loss orders and breakout entry orders. These clusters act like a magnet, because price needs opposing orders in order to move in large size. So we treat liquidity as a framework for reading the market, not as proof that some specific party is deliberately moving price."
+    },
+    {
+     "id": "s2",
+     "title": "Stop Orders",
+     "narration": "Where do stop orders usually sit? A buyer places the stop loss below the last clear low, and a seller places it above the last clear high. There are also traders waiting for a breakout who place pending buy orders above the high. When price reaches that area, these orders trigger all at once, producing a fast wick or a sharp move. We call the area above highs buy-side liquidity and the area below lows sell-side liquidity, and they are the first things we mark on the chart."
+    },
+    {
+     "id": "s3",
+     "title": "Equal Highs and Lows",
+     "narration": "The clearest liquidity on the chart sits at equal highs and equal lows. When price touches the same level two or three times without breaking it, many traders see it as strong resistance or support and place their orders right behind it. The highs do not need to match exactly; a difference of a few pips is acceptable. Draw a horizontal line at these levels and treat them as possible targets for price before you treat them as a wall that cannot be broken."
+    },
+    {
+     "id": "s4",
+     "title": "Inducement",
+     "narration": "Inducement is a small internal high or low that forms before a larger area of interest, such as an Order Block. This small level looks like an early entry opportunity, so many traders enter there and place their stops close to it. Price often breaks this internal level first and takes its liquidity, and only then reaches the more important zone. That is why we prefer to see the inducement liquidity taken before we trust the zone we are watching."
+    },
+    {
+     "id": "s5",
+     "title": "EURUSD Example",
+     "narration": "Let us take an example on EURUSD. Suppose price made two roughly equal highs at 1.0950 and 1.0952 during the Asian session. At the start of the London session, price rose to 1.0966, about fourteen pips above the two highs, and then the fifteen-minute candle closed back below 1.0950. This is what we call a liquidity sweep. But the sweep alone is not enough to enter. We wait for a structure break in the opposite direction on a closed candle, because a candle that has not closed can still change."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is treating every wick above a high as a liquidity sweep; sometimes the breakout is real and price keeps going in the same direction. Another mistake is entering against the move the moment the level is touched, before the candle closes and before any confirmation appears. A further mistake is placing your stop loss in the same obvious spot as most traders, right above the equal high or right below the equal low, with no buffer at all."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule of this lecture is simple. First, identify where liquidity pools: equal highs and lows, previous session highs and lows, and internal inducement levels. Second, wait for price to take that liquidity. Third, act only after a structural confirmation on a closed candle. Finally, keep the risk on each trade a small, fixed percentage of your account, such as one percent, because any model, however clear it looks, can fail."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چەمکی لیکویدیتی",
+     "narration": "لە ڕێبازی SMC مەبەستمان لە لیکویدیتی کۆبوونەوەی ئەو فەرمانە هەڵپەسێردراوانەیە کە لە ئاستە نرخییە ناسراوەکاندا هەن. کاتێک زۆر کەس بە هەمان شێوە بازرگانی دەکەن، فەرمانەکانیان لە هەمان شوێن کەڵەکە دەبن، وەک فەرمانی stop loss و فەرمانی چوونەژوورەوە لە کاتی شکاندندا. ئەم کۆبوونەوانە وەک موگناتیس کار دەکەن، چونکە نرخ پێویستی بە فەرمانی بەرامبەر هەیە بۆ ئەوەی بە قەبارەی گەورە بجووڵێت. بۆیە لیکویدیتی وەک چوارچێوەیەک بۆ خوێندنەوەی بازاڕ بەکاردەهێنین، نەک وەک بەڵگەیەک کە لایەنێکی دیاریکراو بە ئەنقەست نرخ دەجووڵێنێت."
+    },
+    {
+     "id": "s2",
+     "title": "فەرمانەکانی وەستان",
+     "narration": "فەرمانەکانی وەستان بە زۆری لە کوێن؟ کڕیار stop lossەکەی لە ژێر دوایین نزمترین خاڵی ڕوون دادەنێت، و فرۆشیار لە سەرووی دوایین بەرزترین خاڵی ڕوون. هەروەها کەسانێک هەن چاوەڕێی شکاندنی لووتکە دەکەن و فەرمانی کڕینی هەڵپەسێردراو لە سەرووی دادەنێن. کاتێک نرخ دەگاتە ئەو ناوچەیە، ئەم فەرمانانە پێکەوە چالاک دەبن، و کلکێکی خێرا یان جووڵەیەکی تیژ دەردەکەوێت. ناوچەی سەرووی لووتکەکان ناودەنێین لیکویدیتی کڕین، و ناوچەی ژێر نزمییەکان لیکویدیتی فرۆشتن، و ئەمانە یەکەم شتن کە لەسەر چارت دیاریان دەکەین."
+    },
+    {
+     "id": "s3",
+     "title": "لووتکە و نزمییە یەکسانەکان",
+     "narration": "ڕوونترین شوێنی لیکویدیتی لەسەر چارت لووتکە یەکسانەکان و نزمییە یەکسانەکانن. کاتێک نرخ دوو یان سێ جار هەمان ئاست دەگرێت بەبێ ئەوەی بیشکێنێت، زۆرێک لە بازرگانان وەک بەرگری یان پاڵپشتییەکی بەهێز دەیبینن، و فەرمانەکانیان ڕاستەوخۆ لە پشتییەوە دادەنێن. پێویست ناکات لووتکەکان تەواو وەک یەک بن، جیاوازییەکی کەمی چەند خاڵێک قبووڵکراوە. هێڵێکی ئاسۆیی لەسەر ئەم ئاستانە بکێشە، و پێش ئەوەی وەک دیوارێکی نەشکاو سەیریان بکەیت، وەک ئامانجی ئەگەری نرخ سەیریان بکە."
+    },
+    {
+     "id": "s4",
+     "title": "Inducement",
+     "narration": "Inducement یان هاندان لووتکە یان نزمییەکی ناوخۆیی بچووکە کە پێش ناوچەیەکی گرنگتر دروست دەبێت، وەک Order Block. ئەم ئاستە بچووکە وەک دەرفەتێکی زووی چوونەژوورەوە دەردەکەوێت، بۆیە زۆر بازرگان لێی دەچنە ژوورەوە و stop lossەکانیان نزیک لێی دادەنێن. زۆرجار نرخ یەکەمجار ئەم ئاستە ناوخۆییە دەشکێنێت و لیکویدیتییەکەی دەبات، پاشان دەگاتە ناوچە گرنگترەکە. بۆیە پێمان باشترە ببینین لیکویدیتی Inducement براوە پێش ئەوەی متمانە بەو ناوچەیە بکەین کە چاودێری دەکەین."
+    },
+    {
+     "id": "s5",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "با نموونەیەک لەسەر جووتی یۆرۆ دۆلار وەربگرین. وا دابنێ نرخ لە ماوەی دانیشتنی ئاسیادا دوو لووتکەی نزیکەی یەکسانی لە 1.0950 و 1.0952 دروست کرد. لە سەرەتای دانیشتنی لەندەن نرخ بەرز بووەوە بۆ 1.0966، واتە نزیکەی چواردە خاڵ لە سەرووی هەردوو لووتکەکە، پاشان مۆمی پازدە خولەکی لە ژێر 1.0950 داخرا. ئەمە ئەوەیە کە پێی دەڵێین liquidity sweep. بەڵام sweep بە تەنها بەس نییە بۆ چوونەژوورەوە، بەڵکو چاوەڕێی شکاندنێکی پێکهاتەیی بە ئاڕاستەی پێچەوانە دەکەین لەسەر مۆمێکی داخراو، چونکە مۆمێک کە دانەخرابێت دەکرێت بگۆڕێت."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان ئەوەیە هەموو کلکێک کە لە لووتکەیەک تێدەپەڕێت بە liquidity sweep دابنێیت، چونکە هەندێک جار شکاندنەکە ڕاستەقینەیە و نرخ بە هەمان ئاڕاستە بەردەوام دەبێت. هەڵەیەکی تر چوونەژوورەوەیە پێچەوانەی جووڵەکە هەر کە ئاستەکە گیرا، پێش داخرانی مۆمەکە و پێش دەرکەوتنی هیچ پشتڕاستکردنەوەیەک. هەروەها دانانی stop loss لە هەمان شوێنی ئاشکرا کە زۆربەی بازرگانان دایدەنێن، ڕاستەوخۆ لە سەرووی لووتکە یەکسانەکە یان لە ژێر نزمییە یەکسانەکە، بەبێ هیچ مەودایەک."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری ئەم وانەیە سادەیە. یەکەم، دیاری بکە لیکویدیتی لە کوێ کۆدەبێتەوە: لووتکە و نزمییە یەکسانەکان، لووتکە و نزمی دانیشتنەکانی پێشوو، و ئاستەکانی Inducementی ناوخۆیی. دووەم، چاوەڕێ بکە تا نرخ ئەو لیکویدیتییە دەبات. سێیەم، تەنها دوای پشتڕاستکردنەوەیەکی پێکهاتەیی لەسەر مۆمێکی داخراو کار بکە. لە کۆتاییدا، مەترسی هەر مامەڵەیەک ڕێژەیەکی بچووک و جێگیر بێت لە حسابەکەت، وەک یەک لە سەد، چونکە هەر مۆدێلێک هەرچەندە ڕوون دیار بێت دەکرێت شکست بهێنێت."
+    }
+   ]
+  },
+  "smc-l1-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا التوقيت",
+     "narration": "السوق لا يتحرك بالنشاط نفسه طوال اليوم. حجم التداول يرتفع عندما تفتح المراكز المالية الكبرى، وينخفض في ساعات الهدوء. في منهج ICT تُسمّى النوافذ الزمنية الأكثر نشاطاً Killzones، وهي الفترات التي يكثر فيها أخذ السيولة وظهور الحركات الاندفاعية. فهم التوقيت لا يخبرك باتجاه السعر، لكنه يساعدك على معرفة متى تكون للنموذج فرصة أفضل، ومتى يكون الأفضل أن تبقى خارج السوق."
+    },
+    {
+     "id": "s2",
+     "title": "نطاق آسيا",
+     "narration": "قبل لندن تأتي الجلسة الآسيوية، وغالباً ما تكون هادئة في أزواج اليورو والجنيه، فتصنع نطاقاً ضيقاً له قمة وقاع واضحان. هذا النطاق مهم جداً، لأن قمته وقاعه يصبحان مخزناً للسيولة، حيث تتجمع أوامر الوقف وأوامر الاختراق. لذلك ارسم في بداية كل يوم قمة آسيا وقاعها، وأضف إليهما قمة اليوم السابق وقاعه، فهذه من أول المستويات التي يختبرها السعر عند افتتاح لندن."
+    },
+    {
+     "id": "s3",
+     "title": "نافذة لندن",
+     "narration": "نافذة لندن تمتد تقريباً من الساعة الثانية إلى الخامسة صباحاً بتوقيت نيويورك، أي قرابة السابعة إلى العاشرة بتوقيت لندن. في هذه الفترة يدخل حجم كبير إلى السوق، وكثيراً ما يأخذ السعر سيولة أحد طرفي نطاق آسيا ثم يتحرك في الاتجاه المعاكس. انتبه إلى أن التوقيت الصيفي يغيّر هذه الساعات بالنسبة لبلدك، لذلك حوّل الأوقات إلى توقيتك المحلي، وراجعها كلما تغيّرت الساعة في أوروبا أو أمريكا."
+    },
+    {
+     "id": "s4",
+     "title": "نيويورك والتداخل",
+     "narration": "نافذة نيويورك تمتد تقريباً من السابعة إلى العاشرة صباحاً بتوقيت نيويورك، وفيها تصدر كثير من البيانات الأمريكية المهمة عند الثامنة والنصف. أما فترة التداخل فهي الساعات التي تكون فيها لندن ونيويورك مفتوحتين معاً، تقريباً من الثامنة صباحاً حتى الظهر بتوقيت نيويورك. هذه من أعلى فترات السيولة في اليوم، وقد تستكمل فيها نيويورك حركة لندن، أو تعكسها بعد أخذ قمة اليوم أو قاعه."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على الذهب",
+     "narration": "مثال على الذهب. افترض أن نطاق آسيا كان بين 3318 و3326 دولاراً للأونصة. عند افتتاح لندن نزل السعر إلى 3313، أي تحت قاع آسيا، ثم أغلقت شمعة الخمس عشرة دقيقة فوق 3318، وبعدها كسر السعر قمة داخلية على شمعة مغلقة. هذا يجعل الصعود سيناريو مرجّحاً للمراقبة، وليس وعداً. وعند افتتاح نيويورك نراقب هل يكمل السعر نحو قمة آسيا عند 3326 وما فوقها، أم يرفض ويعود إلى الأسفل."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة الاعتقاد بأن كل حركة داخل الـ Killzone فرصة دخول، فالتوقيت شرط مساعد وليس إشارة بحد ذاته. وخطأ آخر هو التداول قبل الأخبار القوية مباشرة، حيث يتسع الفارق السعري ويحدث انزلاق في التنفيذ. ومن الأخطاء أيضاً نسيان فرق التوقيت الصيفي، فيراقب المتداول الساعة الخطأ أسابيع كاملة. وأخيراً، مطاردة السعر خارج النوافذ النشطة كثيراً ما تنتهي بصفقات بطيئة ومتعبة."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: في بداية كل يوم حدّد قمة آسيا وقاعها، وقمة اليوم السابق وقاعه، واكتب أوقات لندن ونيويورك بتوقيتك المحلي. راجع جدول الأخبار الاقتصادية، وتجنّب الدخول قبل الأخبار القوية بدقائق. ركّز مراقبتك على نوافذ النشاط، وانتظر فيها أخذ السيولة ثم كسراً هيكلياً على شمعة مغلقة. وإذا مرّت النافذة دون نموذج واضح، فعدم التداول قرار صحيح يحمي رأس مالك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why Timing Matters",
+     "narration": "The market does not move with the same activity all day. Volume rises when the major financial centres open and falls during quiet hours. In the ICT approach, the most active time windows are called Killzones, the periods when liquidity is most often taken and impulsive moves appear. Understanding timing does not tell you the direction of price, but it helps you know when a model has a better chance, and when it is better to stay out of the market."
+    },
+    {
+     "id": "s2",
+     "title": "The Asian Range",
+     "narration": "Before London comes the Asian session, which is often quiet on the euro and pound pairs, so it builds a narrow range with a clear high and low. This range matters a lot, because its high and low become pools of liquidity where stop orders and breakout orders gather. So at the start of each day, mark the Asian high and low, and add the previous day's high and low, because these are among the first levels price tests when London opens."
+    },
+    {
+     "id": "s3",
+     "title": "London Window",
+     "narration": "The London window runs roughly from two to five in the morning New York time, which is about seven to ten London time. During this period large volume enters the market, and price often takes the liquidity on one side of the Asian range and then moves in the opposite direction. Note that daylight saving time shifts these hours relative to your country, so convert the times to your local time and review them whenever the clocks change in Europe or America."
+    },
+    {
+     "id": "s4",
+     "title": "New York and Overlap",
+     "narration": "The New York window runs roughly from seven to ten in the morning New York time, and many important US data releases come out at eight thirty. The overlap is the hours when London and New York are open together, roughly from eight in the morning until noon New York time. This is one of the most liquid periods of the day, and New York may continue the London move, or reverse it after taking the high or low of the day."
+    },
+    {
+     "id": "s5",
+     "title": "Gold Example",
+     "narration": "An example on gold. Suppose the Asian range was between 3318 and 3326 dollars per ounce. At the London open, price dropped to 3313, below the Asian low, then the fifteen-minute candle closed back above 3318, and after that price broke an internal high on a closed candle. This makes a move up a likely scenario to watch, not a promise. At the New York open, we watch whether price continues toward the Asian high at 3326 and beyond, or rejects and returns lower."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is believing that every move inside a Killzone is an entry opportunity; timing is a supporting condition, not a signal on its own. Another mistake is trading right before high-impact news, when spreads widen and execution slips. A further mistake is forgetting the daylight saving shift, so the trader watches the wrong hour for weeks. Finally, chasing price outside the active windows often ends in slow, exhausting trades."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: at the start of each day, mark the Asian high and low and the previous day's high and low, and write down the London and New York times in your local time. Check the economic calendar and avoid entering minutes before high-impact news. Focus your attention on the active windows, and inside them wait for liquidity to be taken and then a structure break on a closed candle. If the window passes without a clear model, not trading is a correct decision that protects your capital."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی کات گرنگە",
+     "narration": "بازاڕ بە درێژایی ڕۆژ بە هەمان چالاکی ناجووڵێت. قەبارەی بازرگانی بەرز دەبێتەوە کاتێک ناوەندە دارایییە گەورەکان دەکرێنەوە، و لە کاتژمێرە ئارامەکاندا دادەبەزێت. لە ڕێبازی ICT ئەو پەنجەرە کاتییانەی کە زۆرترین چالاکییان تێدایە پێیان دەوترێت Killzones، ئەو ماوانەن کە تێیاندا زۆرتر لیکویدیتی دەبرێت و جووڵەی بەهێز دەردەکەوێت. تێگەیشتن لە کات ئاڕاستەی نرخت پێ ناڵێت، بەڵام یارمەتیت دەدات بزانیت کەی مۆدێلەکە دەرفەتی باشتری هەیە، و کەی باشترە لە دەرەوەی بازاڕ بمێنیتەوە."
+    },
+    {
+     "id": "s2",
+     "title": "مەودای ئاسیا",
+     "narration": "پێش لەندەن دانیشتنی ئاسیا دێت، کە زۆرجار لە جووتەکانی یۆرۆ و پاوەند ئارامە، بۆیە مەودایەکی تەسک بە لووتکە و نزمییەکی ڕوون دروست دەکات. ئەم مەودایە زۆر گرنگە، چونکە لووتکە و نزمییەکەی دەبنە کۆگای لیکویدیتی، کە فەرمانەکانی وەستان و فەرمانەکانی شکاندن تێیاندا کۆدەبنەوە. بۆیە لە سەرەتای هەموو ڕۆژێک لووتکە و نزمی ئاسیا بکێشە، و لووتکە و نزمی ڕۆژی پێشووشیان بخە سەر، چونکە ئەمانە لە یەکەم ئاستەکانن کە نرخ لە کاتی کرانەوەی لەندەن تاقییان دەکاتەوە."
+    },
+    {
+     "id": "s3",
+     "title": "پەنجەرەی لەندەن",
+     "narration": "پەنجەرەی لەندەن نزیکەی لە کاتژمێر دووەوە تا پێنجی بەیانی بە کاتی نیویۆرک درێژ دەبێتەوە، واتە نزیکەی حەوت تا دە بە کاتی لەندەن. لەم ماوەیەدا قەبارەیەکی گەورە دێتە ناو بازاڕەوە، و زۆرجار نرخ لیکویدیتی یەکێک لە لاکانی مەودای ئاسیا دەبات پاشان بە ئاڕاستەی پێچەوانە دەجووڵێت. ئاگاداربە کە کاتی هاوینە ئەم کاتژمێرانە بە بەراورد بە وڵاتەکەت دەگۆڕێت، بۆیە کاتەکان بگۆڕە بۆ کاتی ناوخۆیی خۆت، و هەر کاتێک کاتژمێر لە ئەوروپا یان ئەمریکا گۆڕا پێیاندا بچۆرەوە."
+    },
+    {
+     "id": "s4",
+     "title": "نیویۆرک و تێکەڵبوون",
+     "narration": "پەنجەرەی نیویۆرک نزیکەی لە حەوتەوە تا دەی بەیانی بە کاتی نیویۆرک درێژ دەبێتەوە، و زۆرێک لە داتا گرنگە ئەمریکییەکان لە هەشت و نیودا بڵاودەکرێنەوە. ماوەی تێکەڵبوونیش ئەو کاتژمێرانەیە کە لەندەن و نیویۆرک پێکەوە کراوەن، نزیکەی لە هەشتی بەیانییەوە تا نیوەڕۆ بە کاتی نیویۆرک. ئەمە یەکێکە لە پڕ لیکویدیتیترین ماوەکانی ڕۆژ، و لەوانەیە نیویۆرک جووڵەی لەندەن تەواو بکات، یان دوای بردنی لووتکە یان نزمی ڕۆژ پێچەوانەی بکاتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "نموونە لەسەر زێڕ",
+     "narration": "نموونەیەک لەسەر زێڕ. وا دابنێ مەودای ئاسیا لە نێوان 3318 و 3326 دۆلار بۆ هەر ئۆنسەیەک بوو. لە کرانەوەی لەندەن نرخ دابەزی بۆ 3313، واتە ژێر نزمی ئاسیا، پاشان مۆمی پازدە خولەکی لە سەرووی 3318 داخرا، و دواتر نرخ لووتکەیەکی ناوخۆیی لەسەر مۆمێکی داخراو شکاند. ئەمە بەرزبوونەوە دەکاتە سیناریۆیەکی ئەگەری بۆ چاودێری، نەک بەڵێن. لە کرانەوەی نیویۆرک چاودێری دەکەین ئایا نرخ بەرەو لووتکەی ئاسیا لە 3326 و سەرووتر بەردەوام دەبێت، یان ڕەت دەکاتەوە و دادەبەزێتەوە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان ئەوەیە باوەڕ بکەیت هەموو جووڵەیەک لە ناو Killzone دەرفەتی چوونەژوورەوەیە، کات مەرجێکی یارمەتیدەرە نەک ئاماژەیەکی سەربەخۆ. هەڵەیەکی تر بازرگانییە ڕاستەوخۆ پێش هەواڵە بەهێزەکان، کاتێک spread فراوان دەبێت و جێبەجێکردن دەخلیسکێت. هەروەها لەبیرکردنی گۆڕانی کاتی هاوینە، بۆیە بازرگان بۆ چەند هەفتەیەک چاودێری کاتژمێرێکی هەڵە دەکات. لە کۆتاییدا، ڕاوەدوونانی نرخ لە دەرەوەی پەنجەرە چالاکەکان زۆرجار بە مامەڵەی خاو و ماندووکەر کۆتایی دێت."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: لە سەرەتای هەموو ڕۆژێک لووتکە و نزمی ئاسیا و لووتکە و نزمی ڕۆژی پێشوو دیاری بکە، و کاتەکانی لەندەن و نیویۆرک بە کاتی ناوخۆیی خۆت بنووسە. سەیری خشتەی هەواڵە ئابوورییەکان بکە، و چەند خولەکێک پێش هەواڵە بەهێزەکان مەچۆ ژوورەوە. سەرنجت لەسەر پەنجەرە چالاکەکان بێت، و لە ناویاندا چاوەڕێی بردنی لیکویدیتی بکە پاشان شکاندنێکی پێکهاتەیی لەسەر مۆمێکی داخراو. ئەگەر پەنجەرەکە بەبێ مۆدێلێکی ڕوون تێپەڕی، بازرگانی نەکردن بڕیارێکی دروستە کە سەرمایەکەت دەپارێزێت."
+    }
+   ]
+  },
+  "smc-l2-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "التعريف",
+     "narration": "الـ Order Block هو آخر شمعة معاكسة قبل حركة اندفاعية قوية تكسر الهيكل. الفكرة أن هذه المنطقة شهدت تراكم أوامر قبل الحركة، وقد يعود إليها السعر لاحقاً فيتفاعل معها. لكن ليست كل شمعة معاكسة Order Block صالحاً. الشروط الأساسية ثلاثة: أن تتبعها حركة اندفاعية واضحة، وأن تكسر هذه الحركة قمة أو قاعاً مهماً على شمعة مغلقة، ويُفضّل أن تترك خلفها فجوة سعرية من نوع FVG."
+    },
+    {
+     "id": "s2",
+     "title": "الصاعد والهابط",
+     "narration": "الـ Bullish Order Block هو آخر شمعة هابطة قبل صعود قوي يكسر قمة سابقة. نحدد منطقته من قمة هذه الشمعة إلى قاعها، ونتوقع أن يتفاعل السعر معها عند العودة إليها من الأعلى. أما الـ Bearish Order Block فهو آخر شمعة صاعدة قبل هبوط قوي يكسر قاعاً سابقاً، ونراقبه كمنطقة بيع محتملة عند عودة السعر إليه من الأسفل. والاتجاه على الإطار الأكبر هو الذي يحدد أي نوع نعطيه الأولوية."
+    },
+    {
+     "id": "s3",
+     "title": "التنقية",
+     "narration": "التنقية تعني تضييق منطقة الـ Order Block كي يصبح وقف الخسارة أصغر ونسبة العائد إلى المخاطرة أفضل. هناك طريقتان شائعتان. الأولى أن تستخدم جسم الشمعة بدلاً من كامل نطاقها مع الذيول، أو أن تراقب منتصف المنطقة. والثانية أن تنزل إلى إطار زمني أصغر داخل المنطقة نفسها، فتجد Order Block أصغر وأدق. التنقية تحسّن الدقة، لكنها تزيد احتمال أن يرتد السعر من المنطقة دون أن يصل إلى نقطة دخولك."
+    },
+    {
+     "id": "s4",
+     "title": "الدخول",
+     "narration": "هناك أسلوبان للدخول. الأول هو الأمر المعلّق عند حافة المنطقة مع وقف خلفها مباشرة، وهو أسرع لكنه بلا تأكيد. والثاني هو انتظار وصول السعر إلى المنطقة، ثم ظهور رفض واضح أو كسر هيكلي صغير على إطار أصغر بشمعة مغلقة، وهو أبطأ لكنه أكثر حذراً. وتذكّر أن الـ Order Block الذي تفاعل معه السعر مرة يصبح عادة أضعف في المرات التالية، لأن جزءاً كبيراً من أوامره قد استُهلك."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على GBPUSD",
+     "narration": "مثال على الجنيه دولار على إطار الساعة. آخر شمعة هابطة قبل الصعود كانت بين 1.2705 و1.2722، ثم اندفع السعر إلى 1.2790 وأغلق فوق قمة سابقة عند 1.2765، تاركاً فجوة سعرية. بعد يومين عاد السعر إلى 1.2718 وظهر رفض على إطار الخمس عشرة دقيقة. وقف الخسارة المنطقي تحت المنطقة عند 1.2698 تقريباً، أي نحو عشرين نقطة، والهدف الأول عند قمة 1.2790، أي أكثر من ثلاثة أضعاف المخاطرة إذا تحقق السيناريو."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "أكثر الأخطاء شيوعاً هو تسمية كل شمعة معاكسة Order Block، حتى لو لم تتبعها حركة قوية ولم يُكسر أي هيكل. وخطأ آخر هو التداول عكس اتجاه الإطار الأكبر اعتماداً على منطقة صغيرة. ومن الأخطاء أيضاً الدخول في منطقة سبق أن تفاعل معها السعر أكثر من مرة، أو وضع وقف الخسارة داخل المنطقة نفسها بدلاً من خلفها. وأخيراً، تجاهل حجم الصفقة يجعل الخسارة العادية خسارة مؤلمة."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ابحث عن آخر شمعة معاكسة قبل حركة اندفاعية كسرت الهيكل على شمعة مغلقة، ويفضّل أن تكون تركت فجوة FVG. تأكد أن نوع المنطقة يتوافق مع اتجاه الإطار الأكبر، وأنها لم تُستهلك بعد. قرّر مسبقاً أسلوب دخولك، بأمر معلّق أو بعد تأكيد، وضع وقفك خلف المنطقة لا داخلها. واحسب حجم الصفقة بحيث تبقى المخاطرة نسبة صغيرة وثابتة من حسابك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Definition",
+     "narration": "An Order Block is the last opposing candle before a strong impulsive move that breaks structure. The idea is that orders built up in this area before the move, and price may later return to it and react. But not every opposing candle is a valid Order Block. There are three basic conditions: a clear impulsive move must follow it, that move must break an important high or low on a closed candle, and preferably it leaves behind an FVG price gap."
+    },
+    {
+     "id": "s2",
+     "title": "Bullish and Bearish",
+     "narration": "A Bullish Order Block is the last bearish candle before a strong rally that breaks a previous high. We mark its zone from that candle's high to its low, and we expect price to react when it returns to it from above. A Bearish Order Block is the last bullish candle before a strong drop that breaks a previous low, and we watch it as a possible selling zone when price returns to it from below. The higher-timeframe trend decides which type gets priority."
+    },
+    {
+     "id": "s3",
+     "title": "Refinement",
+     "narration": "Refinement means narrowing the Order Block zone so that the stop loss becomes smaller and the reward-to-risk ratio improves. There are two common methods. The first is to use the candle's body instead of its full range with wicks, or to watch the midpoint of the zone. The second is to drop to a lower timeframe inside the same zone and find a smaller, more precise Order Block. Refinement improves precision, but it raises the chance that price reacts from the zone without reaching your entry."
+    },
+    {
+     "id": "s4",
+     "title": "Entry",
+     "narration": "There are two entry styles. The first is a pending order at the edge of the zone with a stop right behind it; it is faster but has no confirmation. The second is waiting for price to reach the zone and then for a clear rejection or a small structure break on a lower timeframe with a closed candle; it is slower but more cautious. Remember that an Order Block price has already reacted to is usually weaker the next times, because much of its orders have been used up."
+    },
+    {
+     "id": "s5",
+     "title": "GBPUSD Example",
+     "narration": "An example on GBPUSD on the one-hour chart. The last bearish candle before the rally was between 1.2705 and 1.2722, then price surged to 1.2790 and closed above a previous high at 1.2765, leaving a price gap. Two days later price returned to 1.2718 and a rejection appeared on the fifteen-minute chart. A logical stop loss sits below the zone around 1.2698, about twenty pips, and the first target is the 1.2790 high, more than three times the risk if the scenario plays out."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "The most common mistake is calling every opposing candle an Order Block, even when no strong move followed it and no structure was broken. Another mistake is trading against the higher-timeframe trend based on a small zone. Further mistakes are entering a zone that price has already reacted to more than once, or placing the stop loss inside the zone instead of behind it. Finally, ignoring position size turns a normal loss into a painful one."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: look for the last opposing candle before an impulsive move that broke structure on a closed candle, ideally one that left an FVG. Make sure the zone type agrees with the higher-timeframe trend and that it has not been used up yet. Decide your entry style in advance, a pending order or entry after confirmation, and place your stop behind the zone, not inside it. Size the position so that risk stays a small, fixed percentage of your account."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پێناسە",
+     "narration": "Order Block دوایین مۆمی پێچەوانەیە پێش جووڵەیەکی بەهێز کە پێکهاتە دەشکێنێت. بیرۆکەکە ئەوەیە کە لەم ناوچەیەدا پێش جووڵەکە فەرمان کەڵەکە بووە، و لەوانەیە نرخ دواتر بگەڕێتەوە بۆی و کاردانەوەی هەبێت. بەڵام هەموو مۆمێکی پێچەوانە Order Blockێکی دروست نییە. سێ مەرجی سەرەکی هەن: دەبێت جووڵەیەکی بەهێزی ڕوون بەدوایدا بێت، ئەو جووڵەیە لووتکە یان نزمییەکی گرنگ لەسەر مۆمێکی داخراو بشکێنێت، و باشترە بۆشاییەکی نرخی لە جۆری FVG بەجێ بهێڵێت."
+    },
+    {
+     "id": "s2",
+     "title": "بەرزبوو و نزمبوو",
+     "narration": "Bullish Order Block دوایین مۆمی دابەزینە پێش بەرزبوونەوەیەکی بەهێز کە لووتکەیەکی پێشوو دەشکێنێت. ناوچەکەی لە لووتکەی ئەو مۆمەوە تا نزمییەکەی دیاری دەکەین، و چاوەڕێ دەکەین نرخ کاتێک لە سەرەوە دەگەڕێتەوە بۆی کاردانەوەی هەبێت. Bearish Order Blockیش دوایین مۆمی بەرزبوونەوەیە پێش دابەزینێکی بەهێز کە نزمییەکی پێشوو دەشکێنێت، و وەک ناوچەیەکی ئەگەری فرۆشتن چاودێری دەکەین کاتێک نرخ لە خوارەوە دەگەڕێتەوە بۆی. ئاڕاستەی چوارچێوەی کاتی گەورەتر بڕیار دەدات کام جۆر لە پێشترە."
+    },
+    {
+     "id": "s3",
+     "title": "پاڵاوتن",
+     "narration": "پاڵاوتن واتە تەسککردنەوەی ناوچەی Order Block بۆ ئەوەی stop loss بچووکتر بێت و ڕێژەی قازانج بۆ مەترسی باشتر بێت. دوو ڕێگای باو هەن. یەکەم، جەستەی مۆمەکە بەکاربهێنە لە جیاتی هەموو مەوداکەی لەگەڵ کلکەکان، یان چاودێری ناوەڕاستی ناوچەکە بکە. دووەم، بچۆ بۆ چوارچێوەیەکی کاتی بچووکتر لە ناو هەمان ناوچەدا، و Order Blockێکی بچووکتر و وردتر بدۆزەرەوە. پاڵاوتن وردی باشتر دەکات، بەڵام ئەگەری ئەوە زیاد دەکات کە نرخ لە ناوچەکەوە بگەڕێتەوە بەبێ ئەوەی بگاتە خاڵی چوونەژوورەوەت."
+    },
+    {
+     "id": "s4",
+     "title": "چوونەژوورەوە",
+     "narration": "دوو شێوازی چوونەژوورەوە هەن. یەکەم فەرمانی هەڵپەسێردراوە لە لێواری ناوچەکە لەگەڵ stop loss ڕاستەوخۆ لە پشتییەوە، ئەمە خێراترە بەڵام بێ پشتڕاستکردنەوەیە. دووەم چاوەڕێکردنە تا نرخ دەگاتە ناوچەکە، پاشان ڕەتکردنەوەیەکی ڕوون یان شکاندنێکی پێکهاتەیی بچووک لەسەر چوارچێوەیەکی بچووکتر بە مۆمێکی داخراو دەردەکەوێت، ئەمە خاوترە بەڵام وریاترە. لەبیرت بێت ئەو Order Blockەی نرخ جارێک کاردانەوەی لەگەڵی هەبووە، بە زۆری لە جارەکانی دواتردا لاوازترە، چونکە بەشێکی زۆری فەرمانەکانی بەکارهاتوون."
+    },
+    {
+     "id": "s5",
+     "title": "نموونە لەسەر GBPUSD",
+     "narration": "نموونەیەک لەسەر پاوەند دۆلار لەسەر چارتی یەک کاتژمێری. دوایین مۆمی دابەزین پێش بەرزبوونەوەکە لە نێوان 1.2705 و 1.2722 بوو، پاشان نرخ بە خێرایی گەیشتە 1.2790 و لە سەرووی لووتکەیەکی پێشوو لە 1.2765 داخرا، و بۆشاییەکی نرخی بەجێهێشت. دوای دوو ڕۆژ نرخ گەڕایەوە بۆ 1.2718 و ڕەتکردنەوەیەک لەسەر چارتی پازدە خولەکی دەرکەوت. stop lossی لۆژیکی لە ژێر ناوچەکەیە نزیکەی 1.2698، واتە نزیکەی بیست خاڵ، و ئامانجی یەکەم لووتکەی 1.2790یە، واتە زیاتر لە سێ هێندەی مەترسی ئەگەر سیناریۆکە هاتەدی."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "باوترین هەڵە ئەوەیە هەموو مۆمێکی پێچەوانە ناوبنێیت Order Block، تەنانەت ئەگەر هیچ جووڵەیەکی بەهێز بەدوایدا نەهاتبێت و هیچ پێکهاتەیەک نەشکابێت. هەڵەیەکی تر بازرگانییە پێچەوانەی ئاڕاستەی چوارچێوەی گەورەتر لەسەر بنەمای ناوچەیەکی بچووک. هەروەها چوونەژوورەوە لە ناوچەیەک کە نرخ پێشتر زیاتر لە جارێک کاردانەوەی لەگەڵی هەبووە، یان دانانی stop loss لە ناو خودی ناوچەکەدا لە جیاتی پشتییەوە. لە کۆتاییدا، پشتگوێخستنی قەبارەی مامەڵە زیانێکی ئاسایی دەکاتە زیانێکی ئازاربەخش."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: بەدوای دوایین مۆمی پێچەوانەدا بگەڕێ پێش جووڵەیەکی بەهێز کە پێکهاتەی لەسەر مۆمێکی داخراو شکاندبێت، و باشترە FVGی بەجێهێشتبێت. دڵنیابە جۆری ناوچەکە لەگەڵ ئاڕاستەی چوارچێوەی گەورەتر دەگونجێت و هێشتا بەکارنەهاتووە. پێشوەختە شێوازی چوونەژوورەوەت دیاری بکە، فەرمانی هەڵپەسێردراو یان دوای پشتڕاستکردنەوە، و stop lossەکەت لە پشت ناوچەکە دابنێ نەک لە ناویدا. قەبارەی مامەڵە بە شێوەیەک حیساب بکە کە مەترسی ڕێژەیەکی بچووک و جێگیر بمێنێتەوە لە حسابەکەت."
+    }
+   ]
+  },
+  "smc-l2-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "الفجوة السعرية",
+     "narration": "الـ Fair Value Gap أو الفجوة السعرية العادلة تظهر عندما يتحرك السعر بسرعة كبيرة في اتجاه واحد، فيترك منطقة لم يحدث فيها تداول متوازن بين المشترين والبائعين. نراها في نموذج من ثلاث شموع، تكون الشمعة الوسطى فيه كبيرة واندفاعية، بينما لا تتداخل ذيول الشمعة الأولى مع ذيول الشمعة الثالثة. هذه المساحة الفارغة بينهما هي الفجوة، وكثيراً ما يعود السعر إليها لاحقاً ليملأها جزئياً أو كلياً."
+    },
+    {
+     "id": "s2",
+     "title": "رسم الفجوة",
+     "narration": "في الفجوة الصاعدة نرسم المنطقة من قمة الشمعة الأولى إلى قاع الشمعة الثالثة، ونتوقع أن تعمل كمنطقة دعم محتملة عند عودة السعر إليها. وفي الفجوة الهابطة نرسمها من قاع الشمعة الأولى إلى قمة الشمعة الثالثة، ونراقبها كمنطقة مقاومة محتملة. تأكد دائماً أن الشمعة الثالثة قد أغلقت قبل رسم الفجوة، لأن الشمعة المفتوحة قد يمتد ذيلها فيغلق الفجوة قبل أن تكتمل."
+    },
+    {
+     "id": "s3",
+     "title": "الامتلاء الجزئي",
+     "narration": "السعر لا يملأ الفجوة دائماً بالكامل. كثيراً ما يدخلها جزئياً ثم يرتد، ولذلك يراقب متداولو ICT منتصف الفجوة، ويسمّونه Consequent Encroachment، كنقطة مرجعية مهمة لمراقبة رد الفعل. إذا لمس السعر المنتصف وارتد بقوة، تبقى الفجوة فعّالة. أما إذا أغلقت شمعة بجسمها خلف الطرف البعيد للفجوة، فهذه إشارة إلى أن الفجوة لم تعد صالحة، وأن الحركة الاندفاعية فقدت قوتها."
+    },
+    {
+     "id": "s4",
+     "title": "الفلترة",
+     "narration": "الشارت مليء بالفجوات الصغيرة، لذلك لا بد من فلترة. أفضل الفجوات هي التي تتكوّن في اتجاه الإطار الأكبر، وتنتج عن حركة اندفاعية كسرت هيكلاً على شمعة مغلقة، ويفضّل أن تأتي بعد أخذ سيولة واضح. ومن الفلاتر المفيدة أيضاً أن تقع الفجوة في منطقة الخصم عند الشراء، أو العلاوة عند البيع، وأن تتكوّن داخل نافذة لندن أو نيويورك، وألا تكون قد مُلئت من قبل."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على USDJPY",
+     "narration": "مثال على الدولار ين على إطار الساعة. بعد أخذ قاع سابق، صعد السعر بثلاث شموع: قمة الشمعة الأولى عند 151.20، وقاع الشمعة الثالثة عند 151.45، فتكوّنت فجوة صاعدة بنحو خمس وعشرين نقطة، ومنتصفها قرابة 151.33. لاحقاً عاد السعر إلى 151.33 وارتد. وقف منطقي تحت قاع الشمعة الأولى عند 151.00، والهدف قمة سابقة عند 152.10، أي عائد يقارب ضعفي المخاطرة إذا نجح السيناريو."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة الدخول في كل فجوة دون النظر إلى الاتجاه أو الهيكل، فالفجوة عكس الاتجاه الأكبر أضعف بكثير. وخطأ آخر هو رسم الفجوة قبل إغلاق الشمعة الثالثة، أو اعتبار الفجوة صالحة بعد أن أغلق السعر خلفها. ومن الأخطاء أيضاً توقّع أن يملأ السعر الفجوة بالكامل في كل مرة، فيضيع المتداول فرصة واضحة حدثت عند المنتصف، أو يضع أمراً عميقاً جداً لا يُنفّذ."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ارسم الفجوة بعد إغلاق الشمعة الثالثة فقط، واحتفظ بالفجوات التي جاءت من حركة اندفاعية كسرت الهيكل في اتجاه الإطار الأكبر. راقب منتصف الفجوة كمرجع للدخول، واعتبرها ملغاة إذا أغلق جسم شمعة خلف طرفها البعيد. ضع وقف الخسارة خلف الفجوة أو خلف الشمعة الأولى، واحسب حجمك قبل الدخول بحيث تبقى المخاطرة صغيرة وثابتة. وبعد كل صفقة سجّل في مجلتك نوع الفجوة ونتيجتها، كي تعرف أي الفلاتر تعمل معك فعلاً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Price Gap",
+     "narration": "A Fair Value Gap appears when price moves very fast in one direction and leaves an area where no balanced trading took place between buyers and sellers. We see it in a three-candle pattern in which the middle candle is large and impulsive, while the wicks of the first candle do not overlap the wicks of the third candle. That empty space between them is the gap, and price often returns to it later to fill it partly or fully."
+    },
+    {
+     "id": "s2",
+     "title": "Drawing the Gap",
+     "narration": "In a bullish gap we draw the zone from the high of the first candle to the low of the third candle, and we expect it to act as possible support when price returns to it. In a bearish gap we draw it from the low of the first candle to the high of the third candle, and we watch it as possible resistance. Always make sure the third candle has closed before drawing the gap, because an open candle may extend its wick and close the gap before it is complete."
+    },
+    {
+     "id": "s3",
+     "title": "Partial Fill",
+     "narration": "Price does not always fill the gap completely. It often enters it partly and then bounces, which is why ICT traders watch the midpoint of the gap, called Consequent Encroachment, as an important reference point for watching the reaction. If price touches the midpoint and bounces strongly, the gap remains active. But if a candle body closes beyond the far edge of the gap, that signals the gap is no longer valid and that the impulsive move has lost its strength."
+    },
+    {
+     "id": "s4",
+     "title": "Filtering",
+     "narration": "The chart is full of small gaps, so filtering is essential. The best gaps form in the direction of the higher timeframe, come from an impulsive move that broke structure on a closed candle, and preferably appear after a clear liquidity sweep. Other useful filters are that the gap sits in the discount zone when buying, or the premium zone when selling, that it forms inside the London or New York window, and that it has not already been filled."
+    },
+    {
+     "id": "s5",
+     "title": "USDJPY Example",
+     "narration": "An example on USDJPY on the one-hour chart. After taking a previous low, price rose in three candles: the first candle's high at 151.20 and the third candle's low at 151.45, creating a bullish gap of about twenty-five pips, with its midpoint near 151.33. Later price returned to 151.33 and bounced. A logical stop sits below the first candle's low at 151.00, and the target is a previous high at 152.10, a reward of nearly twice the risk if the scenario works."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is entering every gap without looking at trend or structure; a gap against the higher-timeframe trend is much weaker. Another mistake is drawing the gap before the third candle closes, or treating the gap as valid after price has closed beyond it. A further mistake is expecting price to fill the gap completely every time, so the trader misses a clear opportunity at the midpoint, or places an order so deep that it never fills."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: draw the gap only after the third candle closes, and keep the gaps that came from an impulsive move that broke structure in the higher-timeframe direction. Watch the midpoint of the gap as your entry reference, and consider the gap invalid if a candle body closes beyond its far edge. Place the stop loss behind the gap or behind the first candle, and calculate your size before entering so that risk stays small and fixed. After each trade, record the gap type and its outcome in your journal, so you learn which filters actually work for you."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆشایی نرخ",
+     "narration": "Fair Value Gap یان بۆشایی نرخی دادپەروەرانە دەردەکەوێت کاتێک نرخ بە خێرایییەکی زۆر بە یەک ئاڕاستە دەجووڵێت، و ناوچەیەک بەجێدەهێڵێت کە تێیدا بازرگانی هاوسەنگ لە نێوان کڕیار و فرۆشیاردا ڕووی نەداوە. لە نموونەیەکی سێ مۆمیدا دەیبینین، کە مۆمی ناوەڕاست گەورە و بەهێزە، لە کاتێکدا کلکەکانی مۆمی یەکەم لەگەڵ کلکەکانی مۆمی سێیەم یەک ناگرنەوە. ئەو بۆشاییە بەتاڵەی نێوانیان FVGەکەیە، و زۆرجار نرخ دواتر دەگەڕێتەوە بۆی بۆ ئەوەی بەشێکی یان هەمووی پڕ بکاتەوە."
+    },
+    {
+     "id": "s2",
+     "title": "کێشانی بۆشایی",
+     "narration": "لە بۆشایی بەرزبوونەوەدا ناوچەکە لە لووتکەی مۆمی یەکەمەوە تا نزمی مۆمی سێیەم دەکێشین، و چاوەڕێ دەکەین وەک پاڵپشتییەکی ئەگەری کار بکات کاتێک نرخ دەگەڕێتەوە بۆی. لە بۆشایی دابەزیندا لە نزمی مۆمی یەکەمەوە تا لووتکەی مۆمی سێیەم دەیکێشین، و وەک بەرگرییەکی ئەگەری چاودێری دەکەین. هەمیشە دڵنیابە کە مۆمی سێیەم داخراوە پێش کێشانی بۆشاییەکە، چونکە مۆمی کراوە لەوانەیە کلکەکەی درێژ ببێتەوە و بۆشاییەکە دابخات پێش ئەوەی تەواو بێت."
+    },
+    {
+     "id": "s3",
+     "title": "پڕبوونەوەی بەشی",
+     "narration": "نرخ هەمیشە بۆشاییەکە بە تەواوی پڕ ناکاتەوە. زۆرجار بەشێکی دەچێتە ناوی پاشان دەگەڕێتەوە، بۆیە بازرگانانی ICT چاودێری ناوەڕاستی بۆشاییەکە دەکەن، کە پێی دەڵێن Consequent Encroachment، وەک خاڵێکی سەرچاوەی گرنگ بۆ چاودێریکردنی کاردانەوە. ئەگەر نرخ ناوەڕاستەکەی گرت و بە بەهێزی گەڕایەوە، بۆشاییەکە چالاک دەمێنێتەوە. بەڵام ئەگەر جەستەی مۆمێک لە دواوەی لێواری دووری بۆشاییەکە داخرا، ئەمە ئاماژەیە کە بۆشاییەکە ئیتر دروست نییە، و جووڵە بەهێزەکە هێزی خۆی لەدەستداوە."
+    },
+    {
+     "id": "s4",
+     "title": "پاڵاوتن",
+     "narration": "چارت پڕە لە بۆشایی بچووک، بۆیە پاڵاوتن پێویستە. باشترین بۆشاییەکان ئەوانەن کە بە ئاڕاستەی چوارچێوەی گەورەتر دروست دەبن، لە جووڵەیەکی بەهێزەوە دێن کە پێکهاتەی لەسەر مۆمێکی داخراو شکاندووە، و باشترە دوای بردنی لیکویدیتییەکی ڕوون دەربکەون. فلتەری بەسوودی تریش ئەوەیە کە بۆشاییەکە لە ناوچەی discount بێت لە کاتی کڕیندا، یان premium لە کاتی فرۆشتندا، لە ناو پەنجەرەی لەندەن یان نیویۆرک دروست بووبێت، و پێشتر پڕ نەکرابێتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "نموونە لەسەر USDJPY",
+     "narration": "نموونەیەک لەسەر دۆلار یەن لەسەر چارتی یەک کاتژمێری. دوای بردنی نزمییەکی پێشوو، نرخ بە سێ مۆم بەرز بووەوە: لووتکەی مۆمی یەکەم لە 151.20 و نزمی مۆمی سێیەم لە 151.45، بەمەش بۆشاییەکی بەرزبوونەوە بە نزیکەی بیست و پێنج خاڵ دروست بوو، و ناوەڕاستەکەی نزیکەی 151.33یە. دواتر نرخ گەڕایەوە بۆ 151.33 و هەڵگەڕایەوە. stopی لۆژیکی لە ژێر نزمی مۆمی یەکەمە لە 151.00، و ئامانج لووتکەیەکی پێشووە لە 152.10، واتە قازانجێک نزیکەی دوو هێندەی مەترسی ئەگەر سیناریۆکە سەرکەوتوو بێت."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان چوونەژوورەوەیە لە هەموو بۆشاییەک بەبێ سەیرکردنی ئاڕاستە یان پێکهاتە، بۆشایی پێچەوانەی ئاڕاستەی گەورەتر زۆر لاوازترە. هەڵەیەکی تر کێشانی بۆشاییەکەیە پێش داخرانی مۆمی سێیەم، یان بە دروست دانانی بۆشاییەکە دوای ئەوەی نرخ لە دواوەیدا داخراوە. هەروەها چاوەڕوانکردنی ئەوەی نرخ هەموو جارێک بۆشاییەکە بە تەواوی پڕ بکاتەوە، بەمەش بازرگان دەرفەتێکی ڕوون لە ناوەڕاستدا لەدەست دەدات، یان فەرمانێکی ئەوەندە قووڵ دادەنێت کە هەرگیز جێبەجێ نابێت."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: بۆشاییەکە تەنها دوای داخرانی مۆمی سێیەم بکێشە، و ئەو بۆشاییانە بهێڵەرەوە کە لە جووڵەیەکی بەهێزەوە هاتوون و پێکهاتەیان بە ئاڕاستەی چوارچێوەی گەورەتر شکاندووە. ناوەڕاستی بۆشاییەکە وەک سەرچاوەی چوونەژوورەوە چاودێری بکە، و ئەگەر جەستەی مۆمێک لە دواوەی لێوارە دوورەکەی داخرا بە هەڵوەشاوەی دابنێ. stop loss لە پشت بۆشاییەکە یان لە پشت مۆمی یەکەم دابنێ، و پێش چوونەژوورەوە قەبارەکەت حیساب بکە بە شێوەیەک کە مەترسی بچووک و جێگیر بمێنێتەوە. دوای هەر مامەڵەیەک جۆری بۆشاییەکە و ئەنجامەکەی لە ڕۆژنامەکەتدا تۆمار بکە، بۆ ئەوەی بزانیت کام فلتەر بە ڕاستی بۆ تۆ کار دەکات."
+    }
+   ]
+  },
+  "smc-l2-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "تصنيف مهم",
+     "narration": "قبل أن نبدأ، نوضح نقطة تنظيمية مهمة. BOS وCHOCH ليسا مدرسة مستقلة، بل هما أداتان لقراءة هيكل السوق ضمن مجموعة Order Block وFair Value Gap في منهج ICT وSMC. فائدتهما الحقيقية تظهر عندما نربطهما بالمناطق التي درسناها. الكسر يخبرنا ماذا حدث للهيكل، والـ Order Block والفجوة السعرية يخبراننا أين قد نبحث عن دخول بعد هذا الكسر. لذلك نتعلمهما هنا كجزء من منظومة واحدة."
+    },
+    {
+     "id": "s2",
+     "title": "أساس الهيكل",
+     "narration": "الهيكل الصاعد يتكوّن من قمم أعلى وقيعان أعلى، والهيكل الهابط يتكوّن من قمم أدنى وقيعان أدنى. في الهيكل الصاعد يكون آخر قاع أعلى هو النقطة التي تحمي الاتجاه، وفي الهيكل الهابط تكون آخر قمة أدنى هي النقطة الحامية. ابدأ دائماً بتحديد الهيكل على الإطار الأكبر، مثل الأربع ساعات، ثم انزل إلى الإطار الأصغر، كربع الساعة، للبحث عن التفاصيل والدخول."
+    },
+    {
+     "id": "s3",
+     "title": "BOS استمرار الهيكل",
+     "narration": "الـ Break of Structure أو BOS يعني كسر قمة في الاتجاه الصاعد، أو كسر قاع في الاتجاه الهابط، أي كسراً في اتجاه الترند الحالي. هو إشارة إلى أن الاتجاه ما زال مستمراً. نعتمد الكسر عندما يغلق جسم الشمعة خلف المستوى، وليس عندما يتجاوزه ذيل فقط، لأن الشمعة التي لم تغلق قد تعود. بعد الـ BOS نبحث عادة عن Order Block أو فجوة FVG تركتها الحركة، لننتظر عودة السعر إليها."
+    },
+    {
+     "id": "s4",
+     "title": "CHOCH تغيّر النية",
+     "narration": "الـ Change of Character أو CHOCH هو أول كسر ضد الاتجاه السابق. في الاتجاه الهابط، يحدث عندما يغلق السعر فوق آخر قمة أدنى، وفي الاتجاه الصاعد عندما يغلق تحت آخر قاع أعلى. هذا الكسر يعني أن طابع السوق قد يكون تغيّر، لكنه لا يضمن انعكاساً كاملاً. لذلك نعتبره إنذاراً أولياً، ونبحث بعده عن Order Block جديد أو فجوة FVG في الاتجاه الجديد، وننتظر أن يؤكده BOS لاحق."
+    },
+    {
+     "id": "s5",
+     "title": "ربط الكسر بالمناطق",
+     "narration": "السيناريو المتكامل يسير بهذا الترتيب. أولاً يأخذ السعر سيولة واضحة، مثل قاع متساوٍ أو قاع جلسة آسيا. ثانياً تظهر حركة اندفاعية تصنع CHOCH أو BOS على شمعة مغلقة. ثالثاً تترك هذه الحركة خلفها Order Block أو فجوة FVG أو كليهما. رابعاً ننتظر عودة السعر إلى هذه المنطقة للدخول، مع وقف خسارة خلف نقطة صيد السيولة. كل خطوة تقوّي ما بعدها، وغياب خطوة يضعف السيناريو."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار على إطار ربع الساعة في هيكل هابط. نزل السعر إلى 1.0812 أي تحت قاع متساوٍ عند 1.0820، ثم صعد بقوة وأغلق فوق آخر قمة أدنى عند 1.0848، وهذا CHOCH. تركت الحركة فجوة بين 1.0832 و1.0838. عاد السعر إلى 1.0836، فكان الوقف المنطقي تحت 1.0810 بنحو ست وعشرين نقطة، والهدف 1.0890 بضعفي المخاطرة تقريباً. ثم جاء BOS فوق 1.0870 ليؤكد الاستمرار."
+    },
+    {
+     "id": "s7",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة اعتماد الكسر بذيل الشمعة فقط، أو قبل إغلاقها. وخطأ آخر هو الخلط بين الهيكل الداخلي الصغير والهيكل الرئيسي، فيرى المتداول CHOCH على دقيقة واحدة ويعتبره انعكاساً للاتجاه اليومي. ومن الأخطاء أيضاً الدخول مباشرة عند لحظة الكسر بدلاً من انتظار العودة إلى Order Block أو فجوة، فيصبح الوقف بعيداً جداً ونسبة العائد إلى المخاطرة ضعيفة."
+    },
+    {
+     "id": "s8",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: حدّد الهيكل على الإطار الأكبر أولاً. اعتمد أي كسر فقط بإغلاق جسم الشمعة خلف المستوى. اعتبر الـ BOS دليل استمرار، واعتبر الـ CHOCH إنذاراً أولياً بتغيّر محتمل يحتاج إلى تأكيد. بعد الكسر لا تطارد السعر، بل حدّد الـ Order Block أو الفجوة التي تركتها الحركة وانتظر العودة إليها. ضع وقفك خلف نقطة صيد السيولة، واجعل المخاطرة نسبة صغيرة من حسابك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Important Classification",
+     "narration": "Before we start, let us clarify an important organisational point. BOS and CHOCH are not a separate school; they are two tools for reading market structure within the Order Block and Fair Value Gap group of the ICT and SMC approach. Their real value appears when we connect them to the zones we have studied. The break tells us what happened to structure, and the Order Block and the price gap tell us where we might look for an entry after that break. So we learn them here as part of one system."
+    },
+    {
+     "id": "s2",
+     "title": "Structure Basics",
+     "narration": "A bullish structure is made of higher highs and higher lows, and a bearish structure is made of lower highs and lower lows. In a bullish structure, the last higher low is the point that protects the trend, and in a bearish structure, the last lower high is the protective point. Always start by identifying structure on the higher timeframe, such as the four-hour chart, then drop to a lower timeframe, such as fifteen minutes, to look for details and entries."
+    },
+    {
+     "id": "s3",
+     "title": "BOS Continuation",
+     "narration": "A Break of Structure, or BOS, means breaking a high in an uptrend or breaking a low in a downtrend, that is, a break in the direction of the current trend. It signals that the trend is still continuing. We accept the break when a candle body closes beyond the level, not when only a wick passes it, because a candle that has not closed can come back. After a BOS we usually look for an Order Block or an FVG left by the move, and wait for price to return to it."
+    },
+    {
+     "id": "s4",
+     "title": "CHOCH Change of Intent",
+     "narration": "A Change of Character, or CHOCH, is the first break against the previous trend. In a downtrend, it happens when price closes above the last lower high, and in an uptrend when it closes below the last higher low. This break means the character of the market may have changed, but it does not guarantee a full reversal. So we treat it as an early warning, look afterwards for a new Order Block or FVG in the new direction, and wait for a later BOS to confirm it."
+    },
+    {
+     "id": "s5",
+     "title": "Linking Break and Zones",
+     "narration": "The complete scenario follows this order. First, price takes clear liquidity, such as an equal low or the Asian session low. Second, an impulsive move creates a CHOCH or BOS on a closed candle. Third, this move leaves behind an Order Block, an FVG, or both. Fourth, we wait for price to return to this zone to enter, with a stop loss behind the liquidity sweep point. Each step strengthens the next, and a missing step weakens the scenario."
+    },
+    {
+     "id": "s6",
+     "title": "EURUSD Example",
+     "narration": "An example on EURUSD on the fifteen-minute chart in a bearish structure. Price dropped to 1.0812, below an equal low at 1.0820, then rallied strongly and closed above the last lower high at 1.0848, which is a CHOCH. The move left a gap between 1.0832 and 1.0838. Price returned to 1.0836, so a logical stop was below 1.0810, about twenty-six pips, and the target 1.0890, roughly twice the risk. Then a BOS above 1.0870 confirmed continuation."
+    },
+    {
+     "id": "s7",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is accepting a break on the candle wick alone, or before the candle closes. Another mistake is confusing small internal structure with the main structure, so the trader sees a CHOCH on the one-minute chart and treats it as a reversal of the daily trend. A further mistake is entering right at the moment of the break instead of waiting for the return to an Order Block or gap, which makes the stop very far and the reward-to-risk ratio weak."
+    },
+    {
+     "id": "s8",
+     "title": "Practical Rule",
+     "narration": "The practical rule: identify structure on the higher timeframe first. Accept any break only when a candle body closes beyond the level. Treat a BOS as evidence of continuation, and treat a CHOCH as an early warning of a possible change that needs confirmation. After the break, do not chase price; mark the Order Block or gap the move left and wait for the return to it. Place your stop behind the liquidity sweep point, and keep the risk a small percentage of your account."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پۆلێنێکی گرنگ",
+     "narration": "پێش ئەوەی دەست پێبکەین، خاڵێکی ڕێکخستنی گرنگ ڕوون دەکەینەوە. BOS و CHOCH قوتابخانەیەکی سەربەخۆ نین، بەڵکو دوو ئامرازن بۆ خوێندنەوەی پێکهاتەی بازاڕ لە ناو کۆمەڵەی Order Block و Fair Value Gap لە ڕێبازی ICT و SMC. سوودی ڕاستەقینەیان دەردەکەوێت کاتێک بە ناوچەکانەوە دەیانبەستینەوە کە خوێندمانن. شکاندنەکە پێمان دەڵێت چی بەسەر پێکهاتەکەدا هات، و Order Block و بۆشایی نرخ پێمان دەڵێن لە کوێ بەدوای چوونەژوورەوەدا بگەڕێین دوای ئەو شکاندنە. بۆیە لێرە وەک بەشێک لە یەک سیستەم فێریان دەبین."
+    },
+    {
+     "id": "s2",
+     "title": "بنەمای پێکهاتە",
+     "narration": "پێکهاتەی بەرزبوونەوە لە لووتکەی بەرزتر و نزمی بەرزتر پێکدێت، و پێکهاتەی دابەزین لە لووتکەی نزمتر و نزمی نزمتر. لە پێکهاتەی بەرزبوونەوەدا دوایین نزمی بەرزتر ئەو خاڵەیە کە ئاڕاستەکە دەپارێزێت، و لە پێکهاتەی دابەزیندا دوایین لووتکەی نزمتر خاڵی پارێزەرە. هەمیشە بە دیاریکردنی پێکهاتە لەسەر چوارچێوەی کاتی گەورەتر دەست پێبکە، وەک چارتی چوار کاتژمێری، پاشان بچۆ بۆ چوارچێوەیەکی بچووکتر، وەک پازدە خولەک، بۆ گەڕان بەدوای وردەکاری و چوونەژوورەوەدا."
+    },
+    {
+     "id": "s3",
+     "title": "BOS بەردەوامی پێکهاتە",
+     "narration": "Break of Structure یان BOS واتە شکاندنی لووتکەیەک لە ئاڕاستەی بەرزبوونەوەدا، یان شکاندنی نزمییەک لە ئاڕاستەی دابەزیندا، واتە شکاندنێک بە ئاڕاستەی ترێندی ئێستا. ئاماژەیە کە ئاڕاستەکە هێشتا بەردەوامە. شکاندنەکە قبووڵ دەکەین کاتێک جەستەی مۆم لە دواوەی ئاستەکە دادەخرێت، نەک کاتێک تەنها کلکێک لێی تێدەپەڕێت، چونکە مۆمێک کە دانەخرابێت دەکرێت بگەڕێتەوە. دوای BOS بە زۆری بەدوای Order Block یان FVGدا دەگەڕێین کە جووڵەکە بەجێی هێشتووە، و چاوەڕێی گەڕانەوەی نرخ دەکەین بۆی."
+    },
+    {
+     "id": "s4",
+     "title": "CHOCH گۆڕانی نیاز",
+     "narration": "Change of Character یان CHOCH یەکەم شکاندنە دژی ئاڕاستەی پێشوو. لە ئاڕاستەی دابەزیندا ڕوودەدات کاتێک نرخ لە سەرووی دوایین لووتکەی نزمتر دادەخرێت، و لە ئاڕاستەی بەرزبوونەوەدا کاتێک لە ژێر دوایین نزمی بەرزتر دادەخرێت. ئەم شکاندنە واتای ئەوەیە کە سروشتی بازاڕ لەوانەیە گۆڕابێت، بەڵام گەرەنتی پێچەوانەبوونەوەیەکی تەواو ناکات. بۆیە وەک ئاگادارکردنەوەیەکی سەرەتایی سەیری دەکەین، دواتر بەدوای Order Block یان FVGی نوێدا دەگەڕێین بە ئاڕاستە نوێیەکە، و چاوەڕێی BOSێکی دواتر دەکەین بۆ پشتڕاستکردنەوەی."
+    },
+    {
+     "id": "s5",
+     "title": "بەستنەوەی شکاندن بە ناوچەکان",
+     "narration": "سیناریۆی تەواو بەم ڕیزبەندییە دەڕوات. یەکەم، نرخ لیکویدیتییەکی ڕوون دەبات، وەک نزمییەکی یەکسان یان نزمی دانیشتنی ئاسیا. دووەم، جووڵەیەکی بەهێز CHOCH یان BOS لەسەر مۆمێکی داخراو دروست دەکات. سێیەم، ئەم جووڵەیە Order Block یان FVG یان هەردووکیان بەجێدەهێڵێت. چوارەم، چاوەڕێی گەڕانەوەی نرخ دەکەین بۆ ئەم ناوچەیە بۆ چوونەژوورەوە، لەگەڵ stop loss لە پشت خاڵی liquidity sweep. هەر هەنگاوێک هەنگاوی دواتر بەهێز دەکات، و نەبوونی هەنگاوێک سیناریۆکە لاواز دەکات."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار لەسەر چارتی پازدە خولەکی لە پێکهاتەیەکی دابەزیندا. نرخ دابەزی بۆ 1.0812، واتە ژێر نزمییەکی یەکسان لە 1.0820، پاشان بە بەهێزی بەرز بووەوە و لە سەرووی دوایین لووتکەی نزمتر لە 1.0848 داخرا، ئەمە CHOCHە. جووڵەکە بۆشاییەکی لە نێوان 1.0832 و 1.0838 بەجێهێشت. نرخ گەڕایەوە بۆ 1.0836، بۆیە stopی لۆژیکی لە ژێر 1.0810 بوو، نزیکەی بیست و شەش خاڵ، و ئامانج 1.0890، نزیکەی دوو هێندەی مەترسی. پاشان BOSێک لە سەرووی 1.0870 بەردەوامییەکەی پشتڕاست کردەوە."
+    },
+    {
+     "id": "s7",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان قبووڵکردنی شکاندنە تەنها بە کلکی مۆم، یان پێش داخرانی مۆمەکە. هەڵەیەکی تر تێکەڵکردنی پێکهاتەی ناوخۆیی بچووکە لەگەڵ پێکهاتەی سەرەکی، بۆیە بازرگان CHOCHێک لەسەر چارتی یەک خولەکی دەبینێت و بە پێچەوانەبوونەوەی ئاڕاستەی ڕۆژانەی دادەنێت. هەروەها چوونەژوورەوە ڕاستەوخۆ لە ساتی شکاندندا لە جیاتی چاوەڕێکردنی گەڕانەوە بۆ Order Block یان بۆشایی، ئەمەش stop زۆر دوور دەکات و ڕێژەی قازانج بۆ مەترسی لاواز دەکات."
+    },
+    {
+     "id": "s8",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: یەکەمجار پێکهاتە لەسەر چوارچێوەی گەورەتر دیاری بکە. هەر شکاندنێک تەنها کاتێک قبووڵ بکە کە جەستەی مۆم لە دواوەی ئاستەکە دادەخرێت. BOS وەک بەڵگەی بەردەوامی سەیر بکە، و CHOCH وەک ئاگادارکردنەوەیەکی سەرەتایی بۆ گۆڕانێکی ئەگەری کە پێویستی بە پشتڕاستکردنەوە هەیە. دوای شکاندن ڕاوەدووی نرخ مەکەوە، بەڵکو ئەو Order Block یان بۆشاییەی جووڵەکە بەجێی هێشتووە دیاری بکە و چاوەڕێی گەڕانەوە بکە بۆی. stopەکەت لە پشت خاڵی liquidity sweep دابنێ، و مەترسی بە ڕێژەیەکی بچووک لە حسابەکەت بهێڵەرەوە."
+    }
+   ]
+  },
+  "smc-l3-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "فكرة الخداع",
+     "narration": "في هذه المحاضرة نتعمق في نموذجين مترابطين: الإغراء وصيد السيولة. الفكرة أن السعر كثيراً ما يتحرك أولاً في الاتجاه الذي يبدو واضحاً للجميع، فيكسر مستوى معروفاً ويُفعّل الأوامر المتجمعة خلفه، ثم ينعكس. نسمّي هذا خداعاً من زاوية المتداول الذي دخل مبكراً، لكنه في الحقيقة نتيجة طبيعية لحاجة السوق إلى سيولة مقابلة. لا نحتاج إلى افتراض نية أحد، يكفي أن نقرأ أين تقع الأوامر."
+    },
+    {
+     "id": "s2",
+     "title": "الصيد أم الاختراق",
+     "narration": "كيف تفرّق بين صيد السيولة والاختراق الحقيقي؟ في الصيد يتجاوز السعر المستوى بذيل أو بحركة قصيرة، ثم تغلق الشمعة عائدة داخل النطاق، وغالباً لا يستمر السعر خلف المستوى. أما في الاختراق الحقيقي فتغلق الشموع خلف المستوى وتبقى هناك، وكثيراً ما يعود السعر لاختبار المستوى من الجهة الأخرى ثم يكمل. لهذا لا نحكم على الحركة إلا بعد إغلاق الشمعة، وأحياناً بعد إغلاق شمعتين."
+    },
+    {
+     "id": "s3",
+     "title": "التأكيد",
+     "narration": "الصيد وحده ليس إشارة دخول. التأكيد الذي نبحث عنه هو تغيّر في الهيكل بعد الصيد، أي CHOCH على إطار أصغر بإغلاق جسم شمعة خلف آخر قمة أو قاع داخلي. ويقوى التأكيد إذا جاء الصيد عند منطقة مهمة من الإطار الأكبر، مثل Order Block أو فجوة FVG، وإذا حدث داخل نافذة لندن أو نيويورك. كلما اجتمعت هذه العناصر، زادت جودة السيناريو، دون أن يصبح مضموناً."
+    },
+    {
+     "id": "s4",
+     "title": "الدخول المتأخر",
+     "narration": "المشكلة العملية مع التأكيد أنه يأتي متأخراً، فعندما يغلق السعر خلف القمة الداخلية يكون قد ابتعد عن نقطة الصيد، فيكبر الوقف. الحل الشائع هو عدم مطاردة شمعة التأكيد، بل انتظار عودة السعر إلى فجوة أو Order Block صغير تركته حركة التأكيد نفسها. وإذا لم يعد السعر وانطلق مباشرة، فالأفضل ترك الصفقة. الفرصة الضائعة لا تكلّفك شيئاً، أما الدخول المتأخر بوقف بعيد فقد يكلّفك كثيراً."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على GBPUSD",
+     "narration": "مثال على الجنيه دولار في اتجاه صاعد على إطار الساعة. هناك Order Block صاعد بين 1.2640 و1.2652، وفوقه قاع داخلي صغير عند 1.2670 يمثّل الإغراء. نزل السعر وكسر 1.2670، فخرج المشترون المبكرون، ثم وصل إلى 1.2648 داخل المنطقة. على إطار ربع الساعة أغلق السعر فوق قمة داخلية عند 1.2662، وترك فجوة صغيرة. عاد إلى 1.2655، والوقف تحت 1.2635، والهدف قمة 1.2720."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة الدخول عند مستوى الإغراء نفسه، أي في المكان الذي يتوقع فيه الجميع الارتداد. وخطأ آخر هو اعتبار أي اختراق فاشل صيداً للسيولة دون انتظار إغلاق الشمعة. ومن الأخطاء أيضاً مطاردة شمعة التأكيد بعد أن ابتعدت، ثم وضع وقف قريب جداً حتى تبدو النسبة جيدة على الورق، فيخرج السعر بالصفقة بتذبذب طبيعي. وأخيراً، زيادة حجم الصفقة لأن النموذج يبدو مثالياً."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: حدّد مستويات الإغراء قبل المنطقة التي تهتم بها، ولا تدخل عندها. انتظر صيد السيولة، ثم انتظر تغيّر الهيكل بإغلاق شمعة على إطار أصغر. لا تطارد شمعة التأكيد، بل انتظر العودة إلى الفجوة أو الـ Order Block الذي تركته. ضع وقفك خلف نقطة الصيد، وإذا أصبح الوقف أكبر من خطتك أو فاتك السعر، فاترك الصفقة واحمِ رأس مالك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Idea of Deception",
+     "narration": "In this lecture we go deeper into two related models: inducement and the liquidity sweep. The idea is that price often moves first in the direction that looks obvious to everyone, breaks a well-known level and triggers the orders gathered behind it, and then reverses. We call this deception from the point of view of the trader who entered early, but in reality it is a natural result of the market's need for opposing liquidity. We do not need to assume anyone's intent; it is enough to read where the orders sit."
+    },
+    {
+     "id": "s2",
+     "title": "Sweep or Breakout",
+     "narration": "How do you tell a liquidity sweep from a real breakout? In a sweep, price passes the level with a wick or a short move, then the candle closes back inside the range, and price usually does not stay beyond the level. In a real breakout, candles close beyond the level and stay there, and price often comes back to test the level from the other side and then continues. That is why we judge the move only after the candle closes, and sometimes after two candles close."
+    },
+    {
+     "id": "s3",
+     "title": "Confirmation",
+     "narration": "A sweep alone is not an entry signal. The confirmation we look for is a change in structure after the sweep, meaning a CHOCH on a lower timeframe with a candle body closing beyond the last internal high or low. The confirmation is stronger if the sweep happens at an important higher-timeframe zone, such as an Order Block or an FVG, and if it happens inside the London or New York window. The more of these elements come together, the higher the quality of the scenario, without it ever becoming guaranteed."
+    },
+    {
+     "id": "s4",
+     "title": "Late Entry",
+     "narration": "The practical problem with confirmation is that it comes late. When price closes beyond the internal high, it has already moved away from the sweep point, so the stop grows. The common solution is not to chase the confirmation candle, but to wait for price to return to a gap or a small Order Block left by the confirmation move itself. If price does not return and runs straight away, it is better to leave the trade. A missed opportunity costs you nothing, but a late entry with a distant stop can cost you a lot."
+    },
+    {
+     "id": "s5",
+     "title": "GBPUSD Example",
+     "narration": "An example on GBPUSD in an uptrend on the one-hour chart. There is a bullish Order Block between 1.2640 and 1.2652, and above it a small internal low at 1.2670 that acts as inducement. Price dropped and broke 1.2670, so the early buyers were stopped out, and then it reached 1.2648 inside the zone. On the fifteen-minute chart, price closed above an internal high at 1.2662 and left a small gap. It returned to 1.2655, with the stop below 1.2635 and the target the 1.2720 high."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is entering at the inducement level itself, the place where everyone expects the bounce. Another mistake is treating any failed breakout as a liquidity sweep without waiting for the candle to close. A further mistake is chasing the confirmation candle after it has moved away, then placing a very tight stop so the ratio looks good on paper, only to be stopped out by normal fluctuation. Finally, increasing position size because the model looks perfect."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: mark the inducement levels before the zone you care about, and do not enter at them. Wait for the liquidity sweep, then wait for a change in structure with a candle close on a lower timeframe. Do not chase the confirmation candle; wait for the return to the gap or Order Block it left. Place your stop behind the sweep point, and if the stop becomes larger than your plan allows or price leaves without you, skip the trade and protect your capital."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بیرۆکەی فریودان",
+     "narration": "لەم وانەیەدا قووڵتر دەچینە ناو دوو مۆدێلی پەیوەندیدار: Inducement و liquidity sweep. بیرۆکەکە ئەوەیە کە نرخ زۆرجار یەکەمجار بەو ئاڕاستەیە دەجووڵێت کە بۆ هەمووان ڕوون دیارە، ئاستێکی ناسراو دەشکێنێت و ئەو فەرمانانەی لە پشتییەوە کۆبوونەتەوە چالاک دەکات، پاشان پێچەوانە دەبێتەوە. لە ڕوانگەی ئەو بازرگانەی زوو چووەتە ژوورەوە ناوی دەنێین فریودان، بەڵام لە ڕاستیدا ئەنجامێکی سروشتی پێویستی بازاڕە بە لیکویدیتی بەرامبەر. پێویست ناکات نیازی کەس گریمانە بکەین، بەسە بخوێنینەوە کە فەرمانەکان لە کوێن."
+    },
+    {
+     "id": "s2",
+     "title": "sweep یان شکاندن",
+     "narration": "چۆن liquidity sweep لە شکاندنی ڕاستەقینە جیا دەکەیتەوە؟ لە sweepدا نرخ بە کلکێک یان جووڵەیەکی کورت لە ئاستەکە تێدەپەڕێت، پاشان مۆمەکە دەگەڕێتەوە ناو مەوداکە و دادەخرێت، و بە زۆری نرخ لە دواوەی ئاستەکە نامێنێتەوە. بەڵام لە شکاندنی ڕاستەقینەدا مۆمەکان لە دواوەی ئاستەکە دادەخرێن و لەوێ دەمێننەوە، و زۆرجار نرخ دەگەڕێتەوە بۆ تاقیکردنەوەی ئاستەکە لە لایەکەی ترەوە پاشان بەردەوام دەبێت. بۆیە تەنها دوای داخرانی مۆم حوکم لەسەر جووڵەکە دەدەین، و هەندێک جار دوای داخرانی دوو مۆم."
+    },
+    {
+     "id": "s3",
+     "title": "پشتڕاستکردنەوە",
+     "narration": "sweep بە تەنها ئاماژەی چوونەژوورەوە نییە. ئەو پشتڕاستکردنەوەیەی بەدوایدا دەگەڕێین گۆڕانێکە لە پێکهاتەدا دوای sweep، واتە CHOCH لەسەر چوارچێوەیەکی بچووکتر بە داخرانی جەستەی مۆم لە دواوەی دوایین لووتکە یان نزمی ناوخۆیی. پشتڕاستکردنەوەکە بەهێزتر دەبێت ئەگەر sweepەکە لە ناوچەیەکی گرنگی چوارچێوەی گەورەتر ڕوویدا، وەک Order Block یان FVG، و ئەگەر لە ناو پەنجەرەی لەندەن یان نیویۆرک ڕوویدا. هەتا ئەم توخمانە زیاتر کۆببنەوە، کوالیتی سیناریۆکە بەرزتر دەبێت، بەبێ ئەوەی هەرگیز گەرەنتی بێت."
+    },
+    {
+     "id": "s4",
+     "title": "چوونەژوورەوەی دواکەوتوو",
+     "narration": "کێشەی کرداری پشتڕاستکردنەوە ئەوەیە کە دواکەوتوو دێت. کاتێک نرخ لە دواوەی لووتکە ناوخۆییەکە دادەخرێت، پێشتر لە خاڵی sweep دوورکەوتووەتەوە، بۆیە stop گەورە دەبێت. چارەسەری باو ئەوەیە ڕاوەدووی مۆمی پشتڕاستکردنەوە نەکەویت، بەڵکو چاوەڕێی گەڕانەوەی نرخ بکەیت بۆ بۆشایی یان Order Blockێکی بچووک کە خودی جووڵەی پشتڕاستکردنەوە بەجێی هێشتووە. ئەگەر نرخ نەگەڕایەوە و ڕاستەوخۆ ڕۆیشت، باشترە مامەڵەکە جێبهێڵیت. دەرفەتی لەدەستچوو هیچت لێ ناکەوێت، بەڵام چوونەژوورەوەی دواکەوتوو بە stopێکی دوور دەکرێت زۆرت لێ بکەوێت."
+    },
+    {
+     "id": "s5",
+     "title": "نموونە لەسەر GBPUSD",
+     "narration": "نموونەیەک لەسەر پاوەند دۆلار لە ئاڕاستەیەکی بەرزبوونەوەدا لەسەر چارتی یەک کاتژمێری. Order Blockێکی بەرزبوونەوە لە نێوان 1.2640 و 1.2652 هەیە، و لە سەرووییەوە نزمییەکی ناوخۆیی بچووک لە 1.2670 کە وەک Inducement کار دەکات. نرخ دابەزی و 1.2670ی شکاند، بۆیە کڕیارە زووەکان بە stop دەرچوون، پاشان گەیشتە 1.2648 لە ناو ناوچەکەدا. لەسەر چارتی پازدە خولەکی نرخ لە سەرووی لووتکەیەکی ناوخۆیی لە 1.2662 داخرا و بۆشاییەکی بچووکی بەجێهێشت. گەڕایەوە بۆ 1.2655، stop لە ژێر 1.2635، و ئامانج لووتکەی 1.2720."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان چوونەژوورەوەیە لە خودی ئاستی Inducement، واتە ئەو شوێنەی هەمووان چاوەڕێی گەڕانەوەی تێدا دەکەن. هەڵەیەکی تر ئەوەیە هەر شکاندنێکی شکستخواردوو بە liquidity sweep دابنێیت بەبێ چاوەڕێکردنی داخرانی مۆم. هەروەها ڕاوەدوونانی مۆمی پشتڕاستکردنەوە دوای ئەوەی دوورکەوتووەتەوە، پاشان دانانی stopێکی زۆر نزیک بۆ ئەوەی ڕێژەکە لەسەر کاغەز باش دیار بێت، و دواتر بە لەرزینێکی ئاسایی دەردەچێت. لە کۆتاییدا، زیادکردنی قەبارەی مامەڵە چونکە مۆدێلەکە تەواو دیارە."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: ئاستەکانی Inducement پێش ئەو ناوچەیەی گرنگە بۆت دیاری بکە، و لێیان مەچۆ ژوورەوە. چاوەڕێی liquidity sweep بکە، پاشان چاوەڕێی گۆڕانی پێکهاتە بکە بە داخرانی مۆم لەسەر چوارچێوەیەکی بچووکتر. ڕاوەدووی مۆمی پشتڕاستکردنەوە مەکەوە، بەڵکو چاوەڕێی گەڕانەوە بکە بۆ ئەو بۆشایی یان Order Blockەی بەجێی هێشتووە. stopەکەت لە پشت خاڵی sweep دابنێ، و ئەگەر stop لە پلانەکەت گەورەتر بوو یان نرخ بەبێ تۆ ڕۆیشت، مامەڵەکە جێبهێڵە و سەرمایەکەت بپارێزە."
+    }
+   ]
+  },
+  "smc-l3-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "فكرة التسعير",
+     "narration": "كل حركة سعرية لها نطاق، من قاع واضح إلى قمة واضحة. في منهج ICT نقسم هذا النطاق إلى نصفين. النصف العلوي يسمى Premium أو منطقة العلاوة، حيث يكون السعر مرتفعاً نسبياً، والنصف السفلي يسمى Discount أو منطقة الخصم، حيث يكون السعر منخفضاً نسبياً. الفكرة بسيطة ومنطقية: في الاتجاه الصاعد نفضّل الشراء من منطقة الخصم، وفي الاتجاه الهابط نفضّل البيع من منطقة العلاوة."
+    },
+    {
+     "id": "s2",
+     "title": "رسم النطاق",
+     "narration": "لرسم النطاق نختار آخر حركة اندفاعية واضحة على الإطار الذي نعمل عليه. في الاتجاه الصاعد نشد أداة فيبوناتشي من القاع الذي بدأت منه الحركة إلى القمة التي وصلت إليها، وفي الاتجاه الهابط من القمة إلى القاع. يجب أن تكون نقطتا النطاق مؤكدتين، أي أن السعر ابتعد عنهما فعلاً. وعندما يصنع السعر قمة جديدة بإغلاق واضح، نعيد رسم النطاق على الحركة الجديدة."
+    },
+    {
+     "id": "s3",
+     "title": "توازن النطاق",
+     "narration": "منتصف النطاق، أي مستوى خمسين بالمئة، يسمى نقطة التوازن أو Equilibrium. هذا المستوى هو الحد الفاصل بين العلاوة والخصم. عندما يكون السعر فوق التوازن في اتجاه صاعد، فهو غالٍ نسبياً للشراء، وعندما يكون تحته يصبح أرخص نسبياً. كثيراً ما يتفاعل السعر مع نقطة التوازن نفسها، لذلك لا نعتبرها نقطة دخول بحد ذاتها، بل خطاً يساعدنا على تصنيف المناطق التي تحته وفوقه."
+    },
+    {
+     "id": "s4",
+     "title": "نقطة الدخول الأفضل",
+     "narration": "داخل منطقة الخصم يحدد ICT منطقة أدق تسمى Optimal Trade Entry، وتقع تقريباً بين مستويي اثنين وستين وتسعة وسبعين بالمئة من التصحيح. لكن هذه المنطقة وحدها ليست سبباً للدخول. أفضل نقطة هي التي يجتمع فيها أكثر من عنصر: Order Block أو فجوة FVG داخل منطقة الخصم، بعد أخذ سيولة، مع تأكيد هيكلي على شمعة مغلقة. التوافق بين هذه العناصر هو ما يرفع جودة الدخول."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على الذهب",
+     "narration": "مثال على الذهب على إطار الأربع ساعات. صعد السعر من 3300 إلى 3380 دولاراً، فيكون التوازن عند 3340، وكل ما تحته منطقة خصم. منطقة الدخول الأمثل تقع تقريباً بين 3330 و3317. افترض أن هناك Order Block صاعداً بين 3322 و3328 داخل هذه المنطقة. عاد السعر إلى 3325 وأخذ قاعاً داخلياً، ثم أغلق فوق قمة صغيرة على إطار ربع الساعة. الوقف تحت 3312، والهدف الأول قمة 3380."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة الشراء في منطقة العلاوة لمجرد أن الاتجاه صاعد، فيكون الوقف بعيداً والعائد محدوداً. وخطأ آخر هو رسم النطاق على حركة صغيرة غير مهمة، أو على نقاط لم تتأكد بعد. ومن الأخطاء أيضاً اعتبار منطقة الخصم سبباً كافياً للشراء حتى لو انكسر الهيكل نزولاً، فالسعر الرخيص يمكن أن يصبح أرخص. وأخيراً، نسيان إعادة رسم النطاق بعد كسر هيكلي جديد."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ارسم النطاق على آخر حركة اندفاعية مؤكدة، وحدد نقطة التوازن عند منتصفه. في الاتجاه الصاعد ابحث عن الشراء في منطقة الخصم فقط، وفي الاتجاه الهابط ابحث عن البيع في منطقة العلاوة فقط. لا تدخل لمجرد الوصول إلى منطقة، بل اطلب Order Block أو فجوة FVG وتأكيداً على شمعة مغلقة. وضع وقفك خلف المنطقة، مع مخاطرة صغيرة وثابتة في كل صفقة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Pricing Idea",
+     "narration": "Every price move has a range, from a clear low to a clear high. In the ICT approach, we divide this range into two halves. The upper half is called Premium, where price is relatively expensive, and the lower half is called Discount, where price is relatively cheap. The idea is simple and logical: in an uptrend we prefer to buy from the discount zone, and in a downtrend we prefer to sell from the premium zone."
+    },
+    {
+     "id": "s2",
+     "title": "Drawing the Range",
+     "narration": "To draw the range, we choose the last clear impulsive move on the timeframe we are working on. In an uptrend we drag the Fibonacci tool from the low where the move started to the high it reached, and in a downtrend from the high to the low. Both points of the range must be confirmed, meaning price has actually moved away from them. When price makes a new high with a clear close, we redraw the range on the new move."
+    },
+    {
+     "id": "s3",
+     "title": "Range Equilibrium",
+     "narration": "The middle of the range, the fifty percent level, is called the equilibrium. This level is the dividing line between premium and discount. When price is above equilibrium in an uptrend, it is relatively expensive to buy, and when it is below, it becomes relatively cheaper. Price often reacts at the equilibrium itself, so we do not treat it as an entry point on its own, but as a line that helps us classify the zones below and above it."
+    },
+    {
+     "id": "s4",
+     "title": "Best Entry Point",
+     "narration": "Inside the discount zone, ICT defines a more precise area called the Optimal Trade Entry, roughly between the sixty-two and seventy-nine percent retracement levels. But this area alone is not a reason to enter. The best point is where several elements come together: an Order Block or an FVG inside the discount zone, after liquidity has been taken, with a structural confirmation on a closed candle. The agreement of these elements is what raises the quality of the entry."
+    },
+    {
+     "id": "s5",
+     "title": "Gold Example",
+     "narration": "An example on gold on the four-hour chart. Price rose from 3300 to 3380 dollars, so equilibrium is at 3340, and everything below it is discount. The optimal entry area lies roughly between 3330 and 3317. Suppose there is a bullish Order Block between 3322 and 3328 inside this area. Price returned to 3325, took an internal low, then closed above a small high on the fifteen-minute chart. The stop is below 3312, and the first target is the 3380 high."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is buying in the premium zone just because the trend is up, so the stop is far and the reward is limited. Another mistake is drawing the range on a small, unimportant move, or on points that are not confirmed yet. A further mistake is treating the discount zone as enough reason to buy even when structure has broken down, because a cheap price can get cheaper. Finally, forgetting to redraw the range after a new structure break."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule: draw the range on the last confirmed impulsive move, and mark the equilibrium at its midpoint. In an uptrend, look to buy only in the discount zone, and in a downtrend, look to sell only in the premium zone. Do not enter just because price reached a zone; require an Order Block or an FVG and a confirmation on a closed candle. Place your stop behind the zone, with small, fixed risk on every trade."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بیرۆکەی نرخاندن",
+     "narration": "هەموو جووڵەیەکی نرخ مەودایەکی هەیە، لە نزمییەکی ڕوونەوە بۆ لووتکەیەکی ڕوون. لە ڕێبازی ICT ئەم مەودایە دەکەین بە دوو نیوە. نیوەی سەرەوە پێی دەوترێت Premium، کە نرخ بە بەراورد گرانە، و نیوەی خوارەوە پێی دەوترێت Discount، کە نرخ بە بەراورد هەرزانە. بیرۆکەکە سادە و لۆژیکییە: لە ئاڕاستەی بەرزبوونەوەدا پێمان باشترە لە ناوچەی Discount بکڕین، و لە ئاڕاستەی دابەزیندا پێمان باشترە لە ناوچەی Premium بفرۆشین."
+    },
+    {
+     "id": "s2",
+     "title": "کێشانی مەودا",
+     "narration": "بۆ کێشانی مەوداکە دوایین جووڵەی بەهێزی ڕوون لەسەر ئەو چوارچێوە کاتییەی کاری لەسەر دەکەین هەڵدەبژێرین. لە ئاڕاستەی بەرزبوونەوەدا ئامرازی فیبۆناچی لەو نزمییەوە کە جووڵەکە لێی دەستی پێکرد دەکێشین بۆ ئەو لووتکەیەی پێی گەیشت، و لە ئاڕاستەی دابەزیندا لە لووتکەوە بۆ نزمی. دەبێت هەردوو خاڵی مەوداکە پشتڕاستکرابنەوە، واتە نرخ بە ڕاستی لێیان دوورکەوتبێتەوە. کاتێک نرخ لووتکەیەکی نوێ بە داخرانێکی ڕوون دروست دەکات، مەوداکە لەسەر جووڵە نوێیەکە دووبارە دەکێشینەوە."
+    },
+    {
+     "id": "s3",
+     "title": "هاوسەنگی مەودا",
+     "narration": "ناوەڕاستی مەوداکە، واتە ئاستی پەنجا لە سەد، پێی دەوترێت خاڵی هاوسەنگی یان Equilibrium. ئەم ئاستە هێڵی جیاکەرەوەیە لە نێوان Premium و Discount. کاتێک نرخ لە ئاڕاستەی بەرزبوونەوەدا لە سەرووی هاوسەنگییە، بۆ کڕین بە بەراورد گرانە، و کاتێک لە ژێریدایە بە بەراورد هەرزانتر دەبێت. زۆرجار نرخ لەگەڵ خودی خاڵی هاوسەنگی کاردانەوەی هەیە، بۆیە بە تەنها وەک خاڵی چوونەژوورەوە سەیری ناکەین، بەڵکو وەک هێڵێک کە یارمەتیمان دەدات ناوچەکانی ژێر و سەرووی پۆلێن بکەین."
+    },
+    {
+     "id": "s4",
+     "title": "باشترین خاڵی چوونەژوورەوە",
+     "narration": "لە ناو ناوچەی Discountدا ICT ناوچەیەکی وردتر دیاری دەکات بە ناوی Optimal Trade Entry، کە نزیکەی لە نێوان ئاستەکانی شەست و دوو و حەفتا و نۆ لە سەدی گەڕانەوەدایە. بەڵام ئەم ناوچەیە بە تەنها هۆکار نییە بۆ چوونەژوورەوە. باشترین خاڵ ئەوەیە کە چەند توخمێک تێیدا کۆدەبنەوە: Order Block یان FVG لە ناو ناوچەی Discount، دوای بردنی لیکویدیتی، لەگەڵ پشتڕاستکردنەوەیەکی پێکهاتەیی لەسەر مۆمێکی داخراو. گونجانی ئەم توخمانە ئەوەیە کە کوالیتی چوونەژوورەوە بەرز دەکاتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "نموونە لەسەر زێڕ",
+     "narration": "نموونەیەک لەسەر زێڕ لەسەر چارتی چوار کاتژمێری. نرخ لە 3300ەوە بەرز بووەوە بۆ 3380 دۆلار، بۆیە هاوسەنگی لە 3340ە، و هەموو ئەوەی لە ژێریدایە Discountە. ناوچەی چوونەژوورەوەی گونجاو نزیکەی لە نێوان 3330 و 3317دایە. وا دابنێ Order Blockێکی بەرزبوونەوە لە نێوان 3322 و 3328 لە ناو ئەم ناوچەیەدا هەیە. نرخ گەڕایەوە بۆ 3325، نزمییەکی ناوخۆیی برد، پاشان لە سەرووی لووتکەیەکی بچووک لەسەر چارتی پازدە خولەکی داخرا. stop لە ژێر 3312ە، و ئامانجی یەکەم لووتکەی 3380ە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان کڕینە لە ناوچەی Premium تەنها لەبەر ئەوەی ئاڕاستەکە بەرزبوونەوەیە، بەمەش stop دوور دەبێت و قازانج سنووردار. هەڵەیەکی تر کێشانی مەوداکەیە لەسەر جووڵەیەکی بچووکی ناگرنگ، یان لەسەر خاڵگەلێک کە هێشتا پشتڕاست نەکراونەتەوە. هەروەها بە هۆکاری بەس دانانی ناوچەی Discount بۆ کڕین تەنانەت ئەگەر پێکهاتە بەرەو خوار شکابێت، چونکە نرخی هەرزان دەکرێت هەرزانتر ببێت. لە کۆتاییدا، لەبیرکردنی دووبارە کێشانەوەی مەوداکە دوای شکاندنێکی پێکهاتەیی نوێ."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: مەوداکە لەسەر دوایین جووڵەی بەهێزی پشتڕاستکراو بکێشە، و خاڵی هاوسەنگی لە ناوەڕاستەکەی دیاری بکە. لە ئاڕاستەی بەرزبوونەوەدا تەنها لە ناوچەی Discount بەدوای کڕیندا بگەڕێ، و لە ئاڕاستەی دابەزیندا تەنها لە ناوچەی Premium بەدوای فرۆشتندا بگەڕێ. تەنها لەبەر گەیشتنی نرخ بە ناوچەیەک مەچۆ ژوورەوە، بەڵکو داوای Order Block یان FVG و پشتڕاستکردنەوە لەسەر مۆمێکی داخراو بکە. stopەکەت لە پشت ناوچەکە دابنێ، لەگەڵ مەترسییەکی بچووک و جێگیر لە هەموو مامەڵەیەکدا."
+    }
+   ]
+  },
+  "smc-l4-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو DXY",
+     "narration": "مؤشر الدولار DXY يقيس قيمة الدولار الأمريكي مقابل سلة من ست عملات رئيسية. اليورو وحده يمثّل نحو سبعة وخمسين بالمئة من وزن المؤشر، ثم الين الياباني والجنيه الإسترليني والدولار الكندي والكرونة السويدية والفرنك السويسري. لهذا يعطينا DXY صورة عامة عن قوة الدولار أو ضعفه. وبما أن معظم الأزواج التي ندرسها فيها الدولار، يصبح المؤشر نقطة بداية منطقية لبناء سيناريو اليوم."
+    },
+    {
+     "id": "s2",
+     "title": "ارتباط الدولار",
+     "narration": "عندما يرتفع DXY يميل اليورو دولار والجنيه دولار إلى الهبوط، لأن الدولار هو العملة الثانية في هذين الزوجين، فالارتباط عكسي. أما الدولار ين فيميل إلى الصعود مع المؤشر، لأن الدولار هو العملة الأولى فيه. والذهب يتحرك غالباً عكس الدولار، لكن هذا الارتباط ليس ثابتاً، فقد يرتفعان معاً في أوقات القلق. لذلك نتعامل مع الارتباط كميل عام نتحقق منه، لا كقانون."
+    },
+    {
+     "id": "s3",
+     "title": "اختيار الاتجاه",
+     "narration": "نبدأ بتحليل DXY نفسه بالأدوات التي تعلمناها. على الإطار اليومي أو الأربع ساعات نحدد الهيكل، ونبحث عن السيولة التي يُرجّح أن يتجه إليها المؤشر، مثل قمة اليوم السابق أو قاع متساوٍ. إذا أخذ المؤشر سيولة تحت قاع ثم صنع CHOCH صاعداً على شمعة مغلقة، يصبح ارتفاع الدولار هو السيناريو الذي نراقبه، وبالتالي نبحث عن البيع في اليورو دولار والجنيه دولار، وعن الشراء في الدولار ين."
+    },
+    {
+     "id": "s4",
+     "title": "اختيار الزوج",
+     "narration": "بعد تحديد الاتجاه نختار الزوج الأوضح. نقارن الأزواج المرتبطة ببعضها، فإذا صنع اليورو دولار قمة جديدة بينما فشل الجنيه دولار في صنع قمة جديدة، فهذا تباين يسميه ICT باسم SMT Divergence، ويشير إلى ضعف في الحركة. ونفضّل الزوج الذي يملك هيكلاً نظيفاً، وسيولة واضحة قريبة، ومنطقة Order Block أو فجوة FVG متوافقة مع اتجاه الدولار. الزوج المتردد أو المتداخل نتركه لذلك اليوم."
+    },
+    {
+     "id": "s5",
+     "title": "التنفيذ",
+     "narration": "التنفيذ يكون على الزوج نفسه، وليس على المؤشر. ننتظر نافذة لندن أو نيويورك، ثم ننتظر أن يأخذ الزوج سيولة في عكس اتجاه سيناريو الدولار، كأن يصعد اليورو دولار فوق قمة آسيا بينما نتوقع قوة الدولار. بعدها نطلب CHOCH على إطار ربع الساعة بإغلاق شمعة، ثم ندخل عند العودة إلى الفجوة أو الـ Order Block الذي تركته الحركة، مع وقف خلف قمة الصيد وحجم مدروس."
+    },
+    {
+     "id": "s6",
+     "title": "مثال عملي",
+     "narration": "مثال عملي. على إطار الأربع ساعات أخذ DXY قاعاً عند 98.90 ثم أغلق فوق قمة داخلية، فأصبح صعود الدولار سيناريو مرجحاً. في لندن صعد اليورو دولار فوق قمة 1.1720 إلى 1.1731، بينما لم يصنع الجنيه دولار قمة جديدة. ثم أغلق اليورو دولار تحت 1.1702 على ربع الساعة، تاركاً فجوة بين 1.1710 و1.1716. الدخول عند 1.1713، والوقف فوق 1.1735، والهدف 1.1660، أي أكثر من ضعفي المخاطرة."
+    },
+    {
+     "id": "s7",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة الدخول على الزوج لمجرد أن DXY تحرك، دون انتظار نموذج كامل على الزوج نفسه. وخطأ آخر هو فتح صفقات في اليورو دولار والجنيه دولار والذهب معاً في الاتجاه نفسه، ظناً أنها فرص مختلفة، بينما هي في الحقيقة رهان واحد على الدولار بمخاطرة مضاعفة. ومن الأخطاء أيضاً تجاهل الأخبار الأمريكية القوية التي قد تقلب حركة الدولار في دقائق."
+    },
+    {
+     "id": "s8",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ابدأ يومك بقراءة هيكل DXY وسيولته على الإطار الأكبر، وحدد هل تراقب قوة الدولار أم ضعفه. اختر زوجاً واحداً أو اثنين بأوضح هيكل وأنظف منطقة، واستفد من المقارنة بين الأزواج. نفّذ على الزوج نفسه بعد صيد سيولة وكسر هيكلي على شمعة مغلقة. وتذكّر أن الصفقات المرتبطة بالدولار تجمع المخاطرة، فاحسب مخاطرتك الكلية لا مخاطرة كل صفقة وحدها."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What DXY Is",
+     "narration": "The dollar index, DXY, measures the value of the US dollar against a basket of six major currencies. The euro alone makes up about fifty-seven percent of the index weight, followed by the Japanese yen, the British pound, the Canadian dollar, the Swedish krona and the Swiss franc. That is why DXY gives us a general picture of dollar strength or weakness. And since most of the pairs we study include the dollar, the index becomes a logical starting point for building the day's scenario."
+    },
+    {
+     "id": "s2",
+     "title": "Dollar Correlation",
+     "narration": "When DXY rises, EURUSD and GBPUSD tend to fall, because the dollar is the second currency in these two pairs, so the correlation is inverse. USDJPY tends to rise with the index, because the dollar is its first currency. Gold often moves against the dollar, but this correlation is not fixed; both can rise together in times of worry. So we treat correlation as a general tendency that we verify, not as a law."
+    },
+    {
+     "id": "s3",
+     "title": "Choosing Direction",
+     "narration": "We start by analysing DXY itself with the tools we have learned. On the daily or four-hour chart, we identify structure and look for the liquidity the index is likely to move toward, such as the previous day's high or an equal low. If the index takes liquidity below a low and then makes a bullish CHOCH on a closed candle, dollar strength becomes the scenario we watch, so we look for sells in EURUSD and GBPUSD, and for buys in USDJPY."
+    },
+    {
+     "id": "s4",
+     "title": "Choosing the Pair",
+     "narration": "After setting the direction, we choose the clearest pair. We compare correlated pairs with each other: if EURUSD makes a new high while GBPUSD fails to make a new high, that is a divergence ICT calls SMT Divergence, and it points to weakness in the move. We prefer the pair with clean structure, clear nearby liquidity, and an Order Block or FVG zone that agrees with the dollar direction. A hesitant or choppy pair we leave alone for that day."
+    },
+    {
+     "id": "s5",
+     "title": "Execution",
+     "narration": "Execution happens on the pair itself, not on the index. We wait for the London or New York window, then wait for the pair to take liquidity against the dollar scenario, such as EURUSD rising above the Asian high while we expect dollar strength. After that we require a CHOCH on the fifteen-minute chart with a candle close, then enter on the return to the gap or Order Block the move left, with a stop behind the sweep high and a measured position size."
+    },
+    {
+     "id": "s6",
+     "title": "Worked Example",
+     "narration": "A worked example. On the four-hour chart, DXY took a low at 98.90 and then closed above an internal high, so dollar strength became a likely scenario. In London, EURUSD rose above the 1.1720 high to 1.1731, while GBPUSD did not make a new high. Then EURUSD closed below 1.1702 on the fifteen-minute chart, leaving a gap between 1.1710 and 1.1716. Entry at 1.1713, stop above 1.1735, and target 1.1660, more than twice the risk."
+    },
+    {
+     "id": "s7",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is entering a pair just because DXY moved, without waiting for a complete model on the pair itself. Another mistake is opening trades in EURUSD, GBPUSD and gold together in the same direction, thinking they are different opportunities, when in reality they are one bet on the dollar with multiplied risk. A further mistake is ignoring high-impact US news that can flip the dollar's move within minutes."
+    },
+    {
+     "id": "s8",
+     "title": "Practical Rule",
+     "narration": "The practical rule: start your day by reading DXY structure and liquidity on the higher timeframe, and decide whether you are watching dollar strength or weakness. Choose one or two pairs with the clearest structure and cleanest zone, and use comparison between pairs. Execute on the pair itself after a liquidity sweep and a structure break on a closed candle. And remember that dollar-linked trades stack risk, so calculate your total risk, not just the risk of each trade alone."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "DXY چییە",
+     "narration": "پێوەری دۆلار DXY بەهای دۆلاری ئەمریکی دەپێوێت بەرامبەر بە سەبەتەیەک لە شەش دراوی سەرەکی. یۆرۆ بە تەنها نزیکەی پەنجا و حەوت لە سەدی کێشی پێوەرەکە پێکدەهێنێت، پاشان یەنی ژاپۆنی و پاوەندی بەریتانی و دۆلاری کەنەدی و کرۆنای سویدی و فرانکی سویسری. بۆیە DXY وێنەیەکی گشتیمان دەداتێ لەسەر بەهێزی یان لاوازی دۆلار. و چونکە زۆربەی ئەو جووتانەی دەیانخوێنین دۆلاریان تێدایە، پێوەرەکە دەبێتە خاڵێکی دەستپێکی لۆژیکی بۆ دروستکردنی سیناریۆی ڕۆژ."
+    },
+    {
+     "id": "s2",
+     "title": "پەیوەندی دۆلار",
+     "narration": "کاتێک DXY بەرز دەبێتەوە، EURUSD و GBPUSD مەیلیان بۆ دابەزینە، چونکە دۆلار دراوی دووەمە لەم دوو جووتەدا، بۆیە پەیوەندییەکە پێچەوانەیە. بەڵام USDJPY مەیلی بۆ بەرزبوونەوەیە لەگەڵ پێوەرەکە، چونکە دۆلار دراوی یەکەمیەتی. زێڕ زۆرجار پێچەوانەی دۆلار دەجووڵێت، بەڵام ئەم پەیوەندییە جێگیر نییە، و لەوانەیە هەردووکیان لە کاتی نیگەرانیدا پێکەوە بەرز ببنەوە. بۆیە پەیوەندی وەک مەیلێکی گشتی سەیر دەکەین کە پشتڕاستی دەکەینەوە، نەک وەک یاسا."
+    },
+    {
+     "id": "s3",
+     "title": "هەڵبژاردنی ئاڕاستە",
+     "narration": "بە شیکردنەوەی خودی DXY دەست پێدەکەین بەو ئامرازانەی فێریان بووین. لەسەر چارتی ڕۆژانە یان چوار کاتژمێری پێکهاتە دیاری دەکەین، و بەدوای ئەو لیکویدیتییەدا دەگەڕێین کە ئەگەری زۆرە پێوەرەکە بەرەوی بچێت، وەک لووتکەی ڕۆژی پێشوو یان نزمییەکی یەکسان. ئەگەر پێوەرەکە لیکویدیتی لە ژێر نزمییەک برد پاشان CHOCHێکی بەرزبوونەوەی لەسەر مۆمێکی داخراو دروست کرد، بەهێزبوونی دۆلار دەبێتە ئەو سیناریۆیەی چاودێری دەکەین، بۆیە لە EURUSD و GBPUSD بەدوای فرۆشتندا دەگەڕێین، و لە USDJPY بەدوای کڕیندا."
+    },
+    {
+     "id": "s4",
+     "title": "هەڵبژاردنی جووت",
+     "narration": "دوای دیاریکردنی ئاڕاستە، ڕوونترین جووت هەڵدەبژێرین. جووتە پەیوەندیدارەکان بەراورد دەکەین: ئەگەر EURUSD لووتکەیەکی نوێ دروست بکات لە کاتێکدا GBPUSD نەتوانێت لووتکەیەکی نوێ دروست بکات، ئەمە جیاوازییەکە کە ICT پێی دەڵێت SMT Divergence، و ئاماژە بە لاوازی لە جووڵەکەدا دەکات. ئەو جووتەمان پێ باشترە کە پێکهاتەیەکی پاک، لیکویدیتییەکی ڕوونی نزیک، و ناوچەیەکی Order Block یان FVGی هەیە کە لەگەڵ ئاڕاستەی دۆلار دەگونجێت. جووتی دوودڵ یان تێکەڵ بۆ ئەو ڕۆژە وازی لێدەهێنین."
+    },
+    {
+     "id": "s5",
+     "title": "جێبەجێکردن",
+     "narration": "جێبەجێکردن لەسەر خودی جووتەکە دەبێت، نەک لەسەر پێوەرەکە. چاوەڕێی پەنجەرەی لەندەن یان نیویۆرک دەکەین، پاشان چاوەڕێ دەکەین جووتەکە لیکویدیتی پێچەوانەی سیناریۆی دۆلار ببات، وەک ئەوەی EURUSD بەرز ببێتەوە بۆ سەرووی لووتکەی ئاسیا لە کاتێکدا چاوەڕێی بەهێزبوونی دۆلار دەکەین. دواتر داوای CHOCH لەسەر چارتی پازدە خولەکی دەکەین بە داخرانی مۆم، پاشان لە کاتی گەڕانەوە بۆ ئەو بۆشایی یان Order Blockەی جووڵەکە بەجێی هێشتووە دەچینە ژوورەوە، لەگەڵ stop لە پشت لووتکەی sweep و قەبارەیەکی لێکۆڵراوە."
+    },
+    {
+     "id": "s6",
+     "title": "نموونەی کرداری",
+     "narration": "نموونەیەکی کرداری. لەسەر چارتی چوار کاتژمێری DXY نزمییەکی لە 98.90 برد پاشان لە سەرووی لووتکەیەکی ناوخۆیی داخرا، بۆیە بەهێزبوونی دۆلار بووە سیناریۆیەکی ئەگەری. لە لەندەن EURUSD لە سەرووی لووتکەی 1.1720 بەرز بووەوە بۆ 1.1731، لە کاتێکدا GBPUSD لووتکەیەکی نوێی دروست نەکرد. پاشان EURUSD لەسەر چارتی پازدە خولەکی لە ژێر 1.1702 داخرا، و بۆشاییەکی لە نێوان 1.1710 و 1.1716 بەجێهێشت. چوونەژوورەوە لە 1.1713، stop لە سەرووی 1.1735، و ئامانج 1.1660، واتە زیاتر لە دوو هێندەی مەترسی."
+    },
+    {
+     "id": "s7",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان چوونەژوورەوەیە لە جووتێک تەنها لەبەر ئەوەی DXY جووڵاوە، بەبێ چاوەڕێکردنی مۆدێلێکی تەواو لەسەر خودی جووتەکە. هەڵەیەکی تر کردنەوەی مامەڵەیە لە EURUSD و GBPUSD و زێڕ پێکەوە بە هەمان ئاڕاستە، بە گومانی ئەوەی دەرفەتی جیاوازن، لە کاتێکدا لە ڕاستیدا یەک گرەون لەسەر دۆلار بە مەترسی چەندقات. هەروەها پشتگوێخستنی هەواڵە بەهێزە ئەمریکییەکان کە دەکرێت لە چەند خولەکێکدا جووڵەی دۆلار هەڵبگەڕێنەوە."
+    },
+    {
+     "id": "s8",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: ڕۆژەکەت بە خوێندنەوەی پێکهاتە و لیکویدیتی DXY لەسەر چوارچێوەی گەورەتر دەست پێبکە، و بڕیار بدە ئایا چاودێری بەهێزی دۆلار دەکەیت یان لاوازی. یەک یان دوو جووت هەڵبژێرە کە ڕوونترین پێکهاتە و پاکترین ناوچەیان هەیە، و سوود لە بەراوردکردنی جووتەکان وەربگرە. لەسەر خودی جووتەکە جێبەجێ بکە دوای liquidity sweep و شکاندنێکی پێکهاتەیی لەسەر مۆمێکی داخراو. و لەبیرت بێت مامەڵە پەیوەستەکان بە دۆلارەوە مەترسی کۆدەکەنەوە، بۆیە مەترسی گشتیت حیساب بکە نەک تەنها مەترسی هەر مامەڵەیەک بە جیا."
+    }
+   ]
+  },
+  "smc-l5-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا المجلة",
+     "narration": "بعد أن تعلمت السيولة والـ Order Block والفجوات والهيكل، يبقى سؤال مهم: أي هذه النماذج يعمل فعلاً مع أسلوبك وأوقاتك وأزواجك؟ لا يمكن الإجابة من الذاكرة، لأن الذاكرة تحتفظ بالصفقات المميزة وتنسى الباقي. مجلة التداول هي سجل منظّم لكل صفقة، وهي الأداة التي تحوّل الإحساس إلى أرقام. بدون مجلة ستبقى تغيّر طريقتك كل أسبوع، دون أن تعرف ما الذي يحتاج فعلاً إلى تغيير."
+    },
+    {
+     "id": "s2",
+     "title": "تسجيل السيناريو",
+     "narration": "سجّل السيناريو قبل الدخول، لا بعده. اكتب الزوج والإطار الزمني والجلسة، واتجاه الإطار الأكبر، والسيولة التي أُخذت، ونوع الكسر، هل هو BOS أم CHOCH، والمنطقة التي تدخل منها، Order Block أو فجوة FVG، وهل هي في الخصم أم العلاوة. ثم اكتب سعر الدخول والوقف والهدف ونسبة المخاطرة من الحساب. وأرفق صورة للشارت قبل الدخول. هذا التسجيل المسبق يمنعك من تبرير الصفقة بعد معرفة النتيجة."
+    },
+    {
+     "id": "s3",
+     "title": "بعد الإغلاق",
+     "narration": "بعد إغلاق الصفقة أضف النتيجة بوحدة R، أي بمضاعفات المخاطرة. فإذا خاطرت بمئة دولار وربحت مئتين، فالنتيجة زائد اثنين R، وإذا ضرب الوقف فالنتيجة ناقص واحد R. هذه الوحدة تجعل الصفقات قابلة للمقارنة مهما تغيّر حجم الحساب. ثم أجب بصدق: هل التزمت بالخطة؟ هل دخلت قبل إغلاق الشمعة؟ هل حرّكت الوقف؟ وسجّل حالتك النفسية في كلمة أو كلمتين، وأرفق صورة بعد الإغلاق."
+    },
+    {
+     "id": "s4",
+     "title": "نسب النجاح",
+     "narration": "نسبة النجاح وحدها لا تكفي للحكم على النموذج. المهم هو التوقع الرياضي، أي متوسط ما تربحه أو تخسره في الصفقة الواحدة بوحدة R. مثلاً، إذا كانت نسبة نجاحك أربعين بالمئة، ومتوسط ربحك اثنين ونصف R، ومتوسط خسارتك واحد R، فالتوقع موجب بنحو أربعة أعشار R لكل صفقة. ولا تحكم على نموذج قبل عينة معقولة، ثلاثين صفقة على الأقل، لأن العينة الصغيرة تخدع."
+    },
+    {
+     "id": "s5",
+     "title": "المراجعة الأسبوعية",
+     "narration": "خصص وقتاً ثابتاً في نهاية كل أسبوع لمراجعة المجلة. صنّف الصفقات حسب النموذج والجلسة والزوج، واحسب لكل مجموعة عدد الصفقات ونسبة النجاح ومجموع R. ابحث عن الأنماط: هل خسائرك تتركز في جلسة معينة؟ هل الصفقات التي دخلتها دون صيد سيولة أضعف؟ ثم راجع صفقات مخالفة الخطة وحدها، فهي غالباً مصدر الخسائر الذي يمكن إصلاحه. واختم المراجعة بقرار واحد واضح للأسبوع القادم."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على المراجعة",
+     "narration": "مثال على مراجعة شهر. النموذج الأول، صيد سيولة في لندن ثم دخول من فجوة FVG: اثنتا عشرة صفقة، خمس رابحة بمتوسط اثنين وأربعة أعشار R، أي نسبة نجاح تقارب اثنين وأربعين بالمئة ومجموع زائد خمسة R. النموذج الثاني، Order Block في نيويورك دون صيد سيولة: ثماني صفقات، اثنتان رابحتان بمتوسط اثنين R، أي مجموع ناقص اثنين R. العينة ما زالت صغيرة، لكنها تبرّر التركيز على النموذج الأول ومواصلة جمع البيانات."
+    },
+    {
+     "id": "s7",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة تسجيل الصفقات الرابحة فقط، أو التوقف عن الكتابة بعد سلسلة خسائر، وهي بالضبط الفترة التي تحتاج فيها إلى البيانات أكثر. وخطأ آخر هو تغيير النموذج بعد خمس صفقات خاسرة، قبل أن تكتمل عينة كافية. ومن الأخطاء أيضاً الحكم بنسبة النجاح وحدها وتجاهل حجم الربح والخسارة، أو تعديل القواعد في منتصف الأسبوع بناءً على صفقة واحدة مؤلمة."
+    },
+    {
+     "id": "s8",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: سجّل كل صفقة قبل الدخول وبعد الإغلاق، بلا استثناء. قِس النتائج بوحدة R، واحكم على كل نموذج بالتوقع الرياضي على عينة لا تقل عن ثلاثين صفقة. راجع مجلتك أسبوعياً في موعد ثابت، وخرج من كل مراجعة بتعديل واحد فقط. تذكّر أن النتائج الماضية لا تضمن المستقبل، لكن المجلة هي أفضل وسيلة لمعرفة نقاط قوتك وضعفك، وللحفاظ على انضباطك وإدارة مخاطرك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why a Journal",
+     "narration": "After learning liquidity, Order Blocks, gaps and structure, one important question remains: which of these models actually works with your style, your hours and your pairs? You cannot answer from memory, because memory keeps the remarkable trades and forgets the rest. A trading journal is an organised record of every trade, and it is the tool that turns feelings into numbers. Without a journal you will keep changing your method every week, without knowing what really needs to change."
+    },
+    {
+     "id": "s2",
+     "title": "Recording the Scenario",
+     "narration": "Record the scenario before entering, not after. Write the pair, the timeframe and the session, the higher-timeframe direction, the liquidity that was taken, the type of break, BOS or CHOCH, and the zone you enter from, Order Block or FVG, and whether it is in discount or premium. Then write the entry price, the stop, the target and the percentage of the account at risk. Attach a screenshot of the chart before entry. This advance record stops you from justifying the trade after you know the result."
+    },
+    {
+     "id": "s3",
+     "title": "After the Close",
+     "narration": "After the trade closes, add the result in R, that is, in multiples of your risk. If you risked one hundred dollars and made two hundred, the result is plus two R, and if the stop was hit, the result is minus one R. This unit makes trades comparable no matter how the account size changes. Then answer honestly: did I follow the plan? Did I enter before the candle closed? Did I move the stop? Record your mental state in a word or two, and attach a screenshot after the close."
+    },
+    {
+     "id": "s4",
+     "title": "Success Rates",
+     "narration": "Win rate alone is not enough to judge a model. What matters is expectancy, the average amount you win or lose per trade in R. For example, if your win rate is forty percent, your average win is two and a half R, and your average loss is one R, the expectancy is positive at about four tenths of an R per trade. And do not judge a model before a reasonable sample, at least thirty trades, because a small sample is misleading."
+    },
+    {
+     "id": "s5",
+     "title": "Weekly Review",
+     "narration": "Set a fixed time at the end of each week to review the journal. Group trades by model, session and pair, and for each group calculate the number of trades, the win rate and the total R. Look for patterns: are your losses concentrated in a certain session? Are trades taken without a liquidity sweep weaker? Then review the trades that broke the plan on their own, because they are often the fixable source of losses. Finish the review with one clear decision for the next week."
+    },
+    {
+     "id": "s6",
+     "title": "Review Example",
+     "narration": "An example of a monthly review. Model one, a London liquidity sweep followed by an FVG entry: twelve trades, five winners averaging two point four R, a win rate of about forty-two percent and a total of plus five R. Model two, a New York Order Block without a liquidity sweep: eight trades, two winners averaging two R, a total of minus two R. The sample is still small, but it justifies focusing on model one and continuing to collect data."
+    },
+    {
+     "id": "s7",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is recording only winning trades, or stopping writing after a losing streak, which is exactly when you need the data most. Another mistake is changing the model after five losing trades, before a sufficient sample is complete. Further mistakes are judging by win rate alone while ignoring the size of wins and losses, or changing the rules in the middle of the week because of one painful trade."
+    },
+    {
+     "id": "s8",
+     "title": "Practical Rule",
+     "narration": "The practical rule: record every trade before entry and after the close, without exception. Measure results in R, and judge each model by its expectancy over a sample of at least thirty trades. Review your journal weekly at a fixed time, and come out of each review with only one adjustment. Remember that past results do not guarantee the future, but the journal is the best way to learn your strengths and weaknesses, and to keep your discipline and your risk management."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی ڕۆژنامە",
+     "narration": "دوای فێربوونی لیکویدیتی و Order Block و بۆشاییەکان و پێکهاتە، پرسیارێکی گرنگ دەمێنێتەوە: کام لەم مۆدێلانە بە ڕاستی لەگەڵ شێواز و کات و جووتەکانی تۆدا کار دەکات؟ ناتوانیت لە یادەوەرییەوە وەڵام بدەیتەوە، چونکە یادەوەری مامەڵە دیارەکان دەهێڵێتەوە و ئەوانی تر لەبیر دەکات. ڕۆژنامەی بازرگانی تۆمارێکی ڕێکخراوی هەموو مامەڵەیەکە، و ئەو ئامرازەیە کە هەست دەگۆڕێت بۆ ژمارە. بەبێ ڕۆژنامە هەموو هەفتەیەک شێوازەکەت دەگۆڕیت، بەبێ ئەوەی بزانیت چی بە ڕاستی پێویستی بە گۆڕانە."
+    },
+    {
+     "id": "s2",
+     "title": "تۆمارکردنی سیناریۆ",
+     "narration": "سیناریۆکە پێش چوونەژوورەوە تۆمار بکە، نەک دواتر. جووتەکە و چوارچێوەی کاتی و دانیشتنەکە بنووسە، ئاڕاستەی چوارچێوەی گەورەتر، ئەو لیکویدیتییەی براوە، جۆری شکاندنەکە، BOS یان CHOCH، و ئەو ناوچەیەی لێیەوە دەچیتە ژوورەوە، Order Block یان FVG، و ئایا لە Discount دایە یان Premium. پاشان نرخی چوونەژوورەوە و stop و ئامانج و ڕێژەی مەترسی لە حسابەکە بنووسە. وێنەیەکی چارتەکە پێش چوونەژوورەوە هاوپێچ بکە. ئەم تۆمارە پێشوەختەیە ڕێگرت دەبێت لە پاساودانی مامەڵەکە دوای زانینی ئەنجامەکە."
+    },
+    {
+     "id": "s3",
+     "title": "دوای داخستن",
+     "narration": "دوای داخستنی مامەڵەکە ئەنجامەکە بە یەکەی R زیاد بکە، واتە بە چەندقاتی مەترسی. ئەگەر سەد دۆلارت خستە مەترسییەوە و دووسەدت قازانج کرد، ئەنجامەکە دوو Rی پۆزەتیڤە، و ئەگەر stop لێیدا ئەنجامەکە یەک Rی نێگەتیڤە. ئەم یەکەیە مامەڵەکان بەراوردکراو دەکات هەرچەندە قەبارەی حساب بگۆڕێت. پاشان بە ڕاستگۆیی وەڵام بدەرەوە: ئایا پابەندی پلانەکە بووم؟ ئایا پێش داخرانی مۆم چوومە ژوورەوە؟ ئایا stopم جووڵاند؟ باری دەروونیت بە یەک یان دوو وشە تۆمار بکە، و وێنەیەک دوای داخستن هاوپێچ بکە."
+    },
+    {
+     "id": "s4",
+     "title": "ڕێژەی سەرکەوتن",
+     "narration": "ڕێژەی سەرکەوتن بە تەنها بەس نییە بۆ حوکمدان لەسەر مۆدێلێک. ئەوەی گرنگە چاوەڕوانی بیرکارییە، واتە تێکڕای ئەوەی لە هەر مامەڵەیەکدا بە یەکەی R دەیبەیتەوە یان دەیدۆڕێنیت. بۆ نموونە، ئەگەر ڕێژەی سەرکەوتنت چل لە سەد بێت، و تێکڕای قازانجت دوو و نیو R، و تێکڕای زیانت یەک R، ئەوا چاوەڕوانییەکە پۆزەتیڤە بە نزیکەی چوار لە دەی R بۆ هەر مامەڵەیەک. و پێش نموونەیەکی گونجاو حوکم لەسەر مۆدێلێک مەدە، لانیکەم سی مامەڵە، چونکە نموونەی بچووک چەواشەکارە."
+    },
+    {
+     "id": "s5",
+     "title": "پێداچوونەوەی هەفتانە",
+     "narration": "کاتێکی جێگیر لە کۆتایی هەموو هەفتەیەک تەرخان بکە بۆ پێداچوونەوەی ڕۆژنامەکە. مامەڵەکان بەپێی مۆدێل و دانیشتن و جووت پۆلێن بکە، و بۆ هەر گرووپێک ژمارەی مامەڵەکان و ڕێژەی سەرکەوتن و کۆی R حیساب بکە. بەدوای نەخشەکاندا بگەڕێ: ئایا زیانەکانت لە دانیشتنێکی دیاریکراودا کۆبوونەتەوە؟ ئایا ئەو مامەڵانەی بەبێ liquidity sweep چوویتە ناویان لاوازترن؟ پاشان مامەڵەکانی سەرپێچی پلان بە جیا پێدا بچۆرەوە، چونکە زۆرجار سەرچاوەی ئەو زیانانەن کە چاکدەکرێن. پێداچوونەوەکە بە یەک بڕیاری ڕوون بۆ هەفتەی داهاتوو کۆتایی پێبهێنە."
+    },
+    {
+     "id": "s6",
+     "title": "نموونەی پێداچوونەوە",
+     "narration": "نموونەیەک لە پێداچوونەوەی مانگێک. مۆدێلی یەکەم، liquidity sweep لە لەندەن پاشان چوونەژوورەوە لە FVG: دوازدە مامەڵە، پێنجیان براوە بە تێکڕای دوو و چوار لە دەی R، واتە ڕێژەی سەرکەوتن نزیکەی چل و دوو لە سەد و کۆی گشتی پێنج Rی پۆزەتیڤ. مۆدێلی دووەم، Order Block لە نیویۆرک بەبێ liquidity sweep: هەشت مامەڵە، دوویان براوە بە تێکڕای دوو R، واتە کۆی گشتی دوو Rی نێگەتیڤ. نموونەکە هێشتا بچووکە، بەڵام پاساو دەدات بۆ تەرکیزکردن لەسەر مۆدێلی یەکەم و بەردەوامبوون لە کۆکردنەوەی داتا."
+    },
+    {
+     "id": "s7",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە هەڵە باوەکان تۆمارکردنی تەنها مامەڵە براوەکانە، یان وەستانی نووسین دوای زنجیرەیەک زیان، کە ڕێک ئەو کاتەیە زیاترین پێویستیت بە داتا هەیە. هەڵەیەکی تر گۆڕینی مۆدێلەکەیە دوای پێنج مامەڵەی دۆڕاو، پێش ئەوەی نموونەیەکی بەس تەواو بێت. هەروەها حوکمدان تەنها بە ڕێژەی سەرکەوتن و پشتگوێخستنی قەبارەی قازانج و زیان، یان گۆڕینی یاساکان لە ناوەڕاستی هەفتەدا لەسەر بنەمای یەک مامەڵەی ئازاربەخش."
+    },
+    {
+     "id": "s8",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: هەموو مامەڵەیەک پێش چوونەژوورەوە و دوای داخستن تۆمار بکە، بەبێ هیچ ڕیزپەڕێک. ئەنجامەکان بە یەکەی R بپێوە، و حوکم لەسەر هەر مۆدێلێک بدە بە چاوەڕوانی بیرکاری لەسەر نموونەیەک کە کەمتر نەبێت لە سی مامەڵە. هەفتانە لە کاتێکی جێگیردا پێداچوونەوە بە ڕۆژنامەکەتدا بکە، و لە هەر پێداچوونەوەیەک تەنها یەک گۆڕانکاری دەربهێنە. لەبیرت بێت ئەنجامەکانی ڕابردوو گەرەنتی داهاتوو ناکەن، بەڵام ڕۆژنامە باشترین ڕێگایە بۆ ناسینی خاڵە بەهێز و لاوازەکانت، و بۆ پاراستنی دیسیپلین و بەڕێوەبردنی مەترسییەکانت."
+    }
+   ]
+  }
+ }
+}

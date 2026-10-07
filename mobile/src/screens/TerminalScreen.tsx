@@ -1200,6 +1200,8 @@ export function TerminalScreen() {
 
   const pickSymbol = (sym: string, timeframe?: Timeframe) => {
     setSymbol(sym);
+    // phone: the pair strip above the chart switches the large chart itself
+    if (phone && sym !== heroSymbol) void changeHeroSymbol(sym);
     if (timeframe) setTf(timeframe);
   };
 
@@ -2159,10 +2161,13 @@ export function TerminalScreen() {
               />
             }
           >
-            <Text style={[styles.section, { textAlign: align }]}>
-              {phone ? 4 : layoutCount} {t.termSquareFramesHintSuffix}
-            </Text>
+            {!phone ? (
+              <Text style={[styles.section, { textAlign: align }]}>
+                {layoutCount} {t.termSquareFramesHintSuffix}
+              </Text>
+            ) : null}
             <FrameSizedGrid
+              singleId="DXY"
               storageKey="matrix.home.frames.order.v1"
               layoutCount={phone ? 4 : layoutCount}
               shape="square"

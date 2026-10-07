@@ -40,6 +40,18 @@ def test_api_lang_param_and_arabic_default():
     assert en["levels"][0]["lectures"][0]["title"] == "What is a pip?" and en["content_lang"] == "en"
     assert ku["levels"][0]["title"] == "چەمکە بنەڕەتییەکان"
     lec = client.get("/api/academy/schools/basics/lectures/basics-l1-02?lang=en").json()
-    assert lec["title"] == "Lots and position size" and lec["script_segments"][0]["title"] == "Lot types"
+    full_en = academy_data.LESSON_CONTENT["basics-l1-02"]["en"]
+    assert lec["title"] == "Lots and position size" and lec["script_segments"][0]["title"] == full_en[0]["title"]
+    assert len(lec["script_segments"]) == len(full_en) >= 6
     # the shared data is not modified by translating
     assert academy_data.get_school("basics")["levels"][0]["lectures"][0]["title"] == "ما هو الـ Pip (النقطة)؟"
+
+
+def test_full_lessons_loaded_for_every_lecture():
+    for school in academy_data.ACADEMY_SCHOOLS:
+        for lv in school["levels"]:
+            for l in lv["lectures"]:
+                c = academy_data.LESSON_CONTENT.get(l["id"])
+                assert c, l["id"]
+                assert len(c["ar"]) >= 6 and [x["id"] for x in c["ar"]] == [x["id"] for x in c["en"]] == [x["id"] for x in c["ku"]]
+                assert len(l["script_segments"]) == len(c["ar"]) and l["duration_min"] >= 2, l["id"]

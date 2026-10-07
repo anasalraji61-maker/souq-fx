@@ -298,6 +298,8 @@ export type Dict = {
   certProgress: string;
   certFailed: string;
   certSignIn: string;
+  lectureVoiceOff: string;
+  lectureVoiceNoKu: string;
   iapDisclosureIos: string;
   iapDisclosureAndroid: string;
   iapTerms: string;
@@ -1156,6 +1158,8 @@ export type Dict = {
   gridHandlePosA11y: string;
   gridRectanglesWord: string;
   gridRectanglesA11y: string;
+  gridSingleWord: string;
+  gridSingleA11y: string;
   quadCloseA11y: string;
   quadTitlePrefix: string;
   spmCloseA11y: string;
@@ -2012,6 +2016,8 @@ const ar: Dict = {
   certProgress: "أنجزت {p}%",
   certFailed: "أكمل كل دروس المدرسة أولاً.",
   certSignIn: "سجّل الدخول من «حسابي» لحفظ تقدمك والحصول على الشهادات.",
+  lectureVoiceOff: "الشرح الصوتي غير مفعّل على الخادم بعد. نصّ الدرس كامل أمامك.",
+  lectureVoiceNoKu: "الشرح الصوتي متاح بالعربية والإنجليزية.",
   iapDisclosureIos: "الاشتراك شهري ويتجدد تلقائياً ويُخصم من حساب Apple الخاص بك ما لم تلغه قبل 24 ساعة على الأقل من نهاية الفترة. يمكنك إدارة الاشتراك وإلغاؤه من إعدادات حساب App Store.",
   iapDisclosureAndroid: "الاشتراك شهري ويتجدد تلقائياً عبر Google Play حتى تلغيه. يمكنك إدارة الاشتراك وإلغاؤه من Google Play ← الدفعات والاشتراكات.",
   iapTerms: "شروط الاستخدام",
@@ -2672,6 +2678,8 @@ const ar: Dict = {
   gridHandlePosA11y: 'الفريم {n} من {total}',
   gridRectanglesWord: 'المستطيلات',
   gridRectanglesA11y: 'عرض الفريمات كمستطيلات',
+  gridSingleWord: "شارت كبير",
+  gridSingleA11y: "عرض شارت واحد كبير",
   quadCloseA11y: 'إغلاق عرض 2×2',
   quadTitlePrefix: 'محطة 2×2',
   spmCloseA11y: 'إغلاق قائمة الأزواج',
@@ -3365,6 +3373,8 @@ const enUS: Dict = {
   certProgress: "{p}% done",
   certFailed: "Finish every lesson of the school first.",
   certSignIn: "Sign in from \"Account\" to save progress and earn certificates.",
+  lectureVoiceOff: "Voice narration is not enabled on the server yet. The full lesson text is in front of you.",
+  lectureVoiceNoKu: "Voice narration is available in Arabic and English.",
   iapDisclosureIos: "Monthly subscription that renews automatically and is charged to your Apple ID unless cancelled at least 24 hours before the end of the period. Manage or cancel it in your App Store account settings.",
   iapDisclosureAndroid: "Monthly subscription that renews automatically through Google Play until you cancel. Manage or cancel it in Google Play → Payments & subscriptions.",
   iapTerms: "Terms of use",
@@ -4026,6 +4036,8 @@ const enUS: Dict = {
   gridHandlePosA11y: 'Frame {n} of {total}',
   gridRectanglesWord: 'Rectangles',
   gridRectanglesA11y: 'View frames as rectangles',
+  gridSingleWord: "One chart",
+  gridSingleA11y: "View one large chart",
   quadCloseA11y: 'Close 2×2 view',
   quadTitlePrefix: '2×2 Station',
   spmCloseA11y: 'Close pairs menu',
@@ -4767,6 +4779,8 @@ const ku: Dict = {
   certProgress: "{p}% تەواو",
   certFailed: "سەرەتا هەموو وانەکانی قوتابخانەکە تەواو بکە.",
   certSignIn: "لە «هەژمار» بچۆ ژوورەوە بۆ پاشەکەوتکردنی پێشکەوتن و وەرگرتنی بڕوانامە.",
+  lectureVoiceOff: "ڕوونکردنەوەی دەنگی هێشتا لەسەر ڕاژەکار چالاک نییە. دەقی تەواوی وانەکە لەبەردەمتە.",
+  lectureVoiceNoKu: "ڕوونکردنەوەی دەنگی بە عەرەبی و ئینگلیزی بەردەستە؛ وانەکە لێرە بە کوردی بخوێنەوە.",
   iapDisclosureIos: "بەشدارییەکی مانگانەیە و خۆکارانە نوێ دەبێتەوە و لە هەژماری Apple ـەکەت دەبڕدرێت مەگەر لانیکەم 24 کاتژمێر پێش کۆتایی ماوەکە هەڵیبوەشێنیتەوە. لە ڕێکخستنەکانی App Store بەڕێوەی ببە.",
   iapDisclosureAndroid: "بەشدارییەکی مانگانەیە و لە ڕێگەی Google Play خۆکارانە نوێ دەبێتەوە تا هەڵیدەوەشێنیتەوە. لە Google Play ← پارەدان و بەشدارییەکان بەڕێوەی ببە.",
   iapTerms: "مەرجەکانی بەکارهێنان",
@@ -5438,6 +5452,8 @@ const ku: Dict = {
   gridHandlePosA11y: 'چوارچێوەی {n} لە {total}',
   gridRectanglesWord: 'لاکێشراوەکان',
   gridRectanglesA11y: 'پیشاندانی چوارچێوەکان وەک لاکێشراو',
+  gridSingleWord: "یەک چارت",
+  gridSingleA11y: "پیشاندانی یەک چارتی گەورە",
   quadCloseA11y: 'داخستنی دیمەنی 2×2',
   quadTitlePrefix: 'وێستگەی 2×2',
   spmCloseA11y: 'داخستنی لیستی جووتەکان',

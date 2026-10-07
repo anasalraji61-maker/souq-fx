@@ -1,0 +1,555 @@
+{
+ "school_id": "basics",
+ "lectures": {
+  "basics-l1-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي النقطة",
+     "narration": "النقطة، أو ما يُعرف بالـ Pip، هي الوحدة القياسية التي نقيس بها تغيّر سعر زوج العملات. في معظم الأزواج مثل اليورو دولار والجنيه دولار تقع النقطة في الخانة العشرية الرابعة، أي أن قيمتها تساوي واحداً من عشرة آلاف. أما في الأزواج التي يكون الين الياباني طرفها الثاني، مثل الدولار ين، فالنقطة هي الخانة العشرية الثانية. وكثير من المنصات تعرض خانة خامسة إضافية تُسمّى البيبيت، وهي عُشر النقطة فقط."
+    },
+    {
+     "id": "s2",
+     "title": "قراءة النقاط",
+     "narration": "لنتعرّف على النقاط عملياً على الشارت أو في نافذة الأسعار. إذا تحرك اليورو دولار من 1.08500 إلى 1.08750 فالفرق هو 0.00250، أي خمس وعشرون نقطة، لأن الخانة الخامسة هنا بيبيت وليست نقطة كاملة. وإذا تحرك الدولار ين من 150.20 إلى 150.80 فهذه ستون نقطة. ومعظم المنصات توفّر أداة قياس تعرض عدد النقاط مباشرة بين أي سعرين، وهي طريقة جيدة للتحقق من حساباتك اليدوية."
+    },
+    {
+     "id": "s3",
+     "title": "قيمة النقطة",
+     "narration": "قيمة النقطة بالمال تعتمد على حجم الصفقة وعلى العملة المسعَّرة في الزوج. في الأزواج التي ينتهي اسمها بالدولار، مثل اليورو دولار والجنيه دولار، تساوي النقطة عشرة دولارات للوت القياسي، ودولاراً واحداً للوت المصغّر بحجم عشرة آلاف وحدة. أما في الدولار ين فالنقطة تساوي ألف ين للوت القياسي، أي نحو ستة دولارات وسبعة وستين سنتاً عندما يكون السعر قرب مئة وخمسين، وتتغير هذه القيمة مع تغيّر السعر نفسه."
+    },
+    {
+     "id": "s4",
+     "title": "مثال عملي",
+     "narration": "لنفترض أنك فتحت صفقة شراء على الجنيه دولار بحجم عُشر لوت عند سعر 1.2650، وأغلقتها عند 1.2700. الحركة هنا خمسون نقطة، وقيمة النقطة لعُشر لوت دولار واحد تقريباً، فتكون النتيجة نحو خمسين دولاراً قبل احتساب السبريد والعمولة. ولو تحرك السعر ضدك خمسين نقطة لخسرت المبلغ نفسه. أما في الذهب فكثير من الوسطاء يعتبرون حركة عشرة سنتات نقطة واحدة، لكن التعريف يختلف، لذا تحقق دائماً من مواصفات العقد لدى وسيطك."
+    },
+    {
+     "id": "s5",
+     "title": "أخطاء شائعة",
+     "narration": "من أكثر الأخطاء شيوعاً لدى المبتدئين الخلط بين النقطة والبيبيت، فيظن المتداول أن وقف خسارته خمسون نقطة بينما هو خمس نقاط فقط، أو العكس. ومن الأخطاء أيضاً افتراض أن قيمة النقطة واحدة في كل الأزواج، بينما تختلف بين اليورو دولار والدولار ين والذهب. وخطأ ثالث هو تجاهل السبريد، وهو الفرق بين سعر الشراء وسعر البيع، والذي يُقاس أيضاً بالنقاط ويُخصم من نتيجة كل صفقة."
+    },
+    {
+     "id": "s6",
+     "title": "القاعدة العملية",
+     "narration": "نقيس الحركة بالنقاط لأنها لغة موحّدة لا تتأثر بحجم الحساب، فتستطيع مقارنة صفقاتك وتحديد وقف الخسارة والهدف بدقة قبل الدخول. القاعدة العملية لهذا الدرس هي: قبل أي صفقة احسب المسافة إلى وقف الخسارة بالنقاط، ثم اضربها في قيمة النقطة لحجم اللوت الذي اخترته، لتعرف بالضبط كم من المال قد تخسر إن لم تسر الصفقة كما توقعت. هذه الخطوة البسيطة هي أساس كل إدارة مخاطر سليمة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is a Pip",
+     "narration": "A point, known as a pip, is the standard unit we use to measure a change in the price of a currency pair. In most pairs, such as EURUSD and GBPUSD, the pip sits in the fourth decimal place, meaning it equals one ten-thousandth. In pairs where the Japanese yen is the second currency, such as USDJPY, the pip is the second decimal place. Many platforms also show an extra fifth digit called a pipette, which is only one tenth of a pip."
+    },
+    {
+     "id": "s2",
+     "title": "Reading Pips",
+     "narration": "Let us recognise pips in practice on the chart or in the price window. If EURUSD moves from 1.08500 to 1.08750, the difference is 0.00250, which is twenty-five pips, because the fifth digit here is a pipette, not a full pip. If USDJPY moves from 150.20 to 150.80, that is sixty pips. Most platforms provide a measuring tool that shows the number of pips between any two prices directly, which is a good way to check your manual calculations."
+    },
+    {
+     "id": "s3",
+     "title": "Pip Value",
+     "narration": "The monetary value of a pip depends on the trade size and on the quote currency of the pair. In pairs that end in the dollar, such as EURUSD and GBPUSD, a pip is worth ten dollars for a standard lot and one dollar for a mini lot of ten thousand units. In USDJPY a pip is worth one thousand yen per standard lot, about six dollars and sixty-seven cents when the price is near one hundred and fifty, and this value changes as the price itself changes."
+    },
+    {
+     "id": "s4",
+     "title": "Worked Example",
+     "narration": "Suppose you opened a buy trade on GBPUSD with a size of one tenth of a lot at 1.2650 and closed it at 1.2700. The move is fifty pips, and the pip value for a tenth of a lot is about one dollar, so the result is about fifty dollars before spread and commission. Had the price moved fifty pips against you, you would have lost the same amount. In gold, many brokers treat a ten-cent move as one pip, but the definition varies, so always check your broker's contract specifications."
+    },
+    {
+     "id": "s5",
+     "title": "Common Mistakes",
+     "narration": "One of the most common beginner mistakes is confusing a pip with a pipette, so the trader thinks the stop loss is fifty pips when it is only five, or the opposite. Another mistake is assuming the pip value is the same for every pair, while it differs between EURUSD, USDJPY and gold. A third mistake is ignoring the spread, the difference between the buy price and the sell price, which is also measured in pips and is deducted from the result of every trade."
+    },
+    {
+     "id": "s6",
+     "title": "Practical Rule",
+     "narration": "We measure movement in pips because it is a common language that does not depend on account size, so you can compare your trades and set your stop loss and target precisely before entering. The practical rule of this lesson is: before any trade, calculate the distance to your stop loss in pips, then multiply it by the pip value for the lot size you chose, so you know exactly how much money you could lose if the trade does not go as expected. This simple step is the foundation of sound risk management."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Pip چییە",
+     "narration": "خاڵ، یان ئەوەی بە Pip ناسراوە، یەکەی ستانداردە کە گۆڕانی نرخی جووتە دراوێکی پێ دەپێوین. لە زۆربەی جووتەکاندا وەک EURUSD و GBPUSD، Pip لە خانەی چوارەمی دوای فاریزەدایە، واتە بەهاکەی یەکسانە بە یەک لە دە هەزار. بەڵام لەو جووتانەدا کە یەنی ژاپۆنی دراوی دووەمیانە، وەک USDJPY، Pip خانەی دووەمی دوای فاریزەیە. زۆرێک لە پلاتفۆرمەکان خانەیەکی پێنجەمی زیادەش پیشان دەدەن کە پێی دەوترێت pipette، و تەنها یەک لە دەی Pip ـە."
+    },
+    {
+     "id": "s2",
+     "title": "خوێندنەوەی Pip",
+     "narration": "با بە کردەوە Pip لەسەر چارت یان لە پەنجەرەی نرخەکاندا بناسینەوە. ئەگەر EURUSD لە 1.08500 بۆ 1.08750 بجوڵێت، جیاوازییەکە 0.00250 ـە، واتە بیست و پێنج Pip، چونکە خانەی پێنجەم لێرەدا pipette ـە نەک Pip ی تەواو. ئەگەر USDJPY لە 150.20 بۆ 150.80 بجوڵێت، ئەوە شەست Pip ـە. زۆربەی پلاتفۆرمەکان ئامرازێکی پێوانەیان هەیە کە ڕاستەوخۆ ژمارەی Pip لە نێوان هەر دوو نرخێکدا پیشان دەدات، و ئەمە ڕێگایەکی باشە بۆ پشکنینی حیسابە دەستییەکانت."
+    },
+    {
+     "id": "s3",
+     "title": "بەهای Pip",
+     "narration": "بەهای پارەیی Pip پشت بە قەبارەی مامەڵەکە و بە دراوی نرخدانانی جووتەکە دەبەستێت. لەو جووتانەدا کە ناوەکەیان بە دۆلار کۆتایی دێت، وەک EURUSD و GBPUSD، هەر Pip ێک بۆ lot ی ستاندارد دە دۆلارە و بۆ mini lot ی دە هەزار یەکەیی یەک دۆلارە. لە USDJPY دا هەر Pip ێک بۆ lot ی ستاندارد هەزار یەنە، واتە نزیکەی شەش دۆلار و شەست و حەوت سەنت کاتێک نرخەکە نزیکی سەد و پەنجا بێت، و ئەم بەهایە لەگەڵ گۆڕانی نرخەکەدا دەگۆڕێت."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی کردەیی",
+     "narration": "وا دابنێ مامەڵەیەکی کڕینت لەسەر GBPUSD بە قەبارەی یەک لە دەی lot لە نرخی 1.2650 کردەوە و لە 1.2700 دات خست. جووڵەکە پەنجا Pip ـە، و بەهای Pip بۆ یەک لە دەی lot نزیکەی یەک دۆلارە، کەواتە ئەنجامەکە نزیکەی پەنجا دۆلارە پێش ژماردنی spread و کۆمیسیۆن. ئەگەر نرخەکە پەنجا Pip بە پێچەوانەتەوە بجووڵایە، هەمان بڕت لەدەست دەدا. لە زێڕدا زۆرێک لە بڕۆکەرەکان جووڵەی دە سەنت بە یەک Pip دادەنێن، بەڵام پێناسەکە جیاوازە، بۆیە هەمیشە تایبەتمەندییەکانی گرێبەستەکە لای بڕۆکەرەکەت بپشکنە."
+    },
+    {
+     "id": "s5",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە باوترین هەڵەکانی سەرەتاکاران تێکەڵکردنی Pip و pipette ـە، بۆیە بازرگان وا دەزانێت stop loss ەکەی پەنجا Pip ـە لە کاتێکدا تەنها پێنج Pip ـە، یان بە پێچەوانەوە. هەڵەیەکی تر ئەوەیە وا دابنرێت بەهای Pip لە هەموو جووتەکاندا یەکسانە، لە کاتێکدا لە نێوان EURUSD و USDJPY و زێڕدا جیاوازە. هەڵەی سێیەم پشتگوێخستنی spread ـە، کە جیاوازیی نێوان نرخی کڕین و فرۆشتنە و ئەویش بە Pip دەپێورێت و لە ئەنجامی هەموو مامەڵەیەک دەبڕدرێت."
+    },
+    {
+     "id": "s6",
+     "title": "یاسای کردەیی",
+     "narration": "جووڵە بە Pip دەپێوین چونکە زمانێکی یەکگرتووە و پەیوەندی بە قەبارەی هەژمارەوە نییە، بۆیە دەتوانیت مامەڵەکانت بەراورد بکەیت و stop loss و ئامانج پێش چوونەژوورەوە بە وردی دیاری بکەیت. یاسای کردەیی ئەم وانەیە ئەمەیە: پێش هەر مامەڵەیەک، دووری stop loss بە Pip حیساب بکە، پاشان لێکی بدە لە بەهای Pip بۆ ئەو قەبارە lot ەی هەڵتبژاردووە، تا بە وردی بزانیت چەند پارە لەدەست دەدەیت ئەگەر مامەڵەکە وەک چاوەڕوانی نەڕوات. ئەم هەنگاوە سادەیە بنەمای هەموو بەڕێوەبردنێکی دروستی مەترسییە."
+    }
+   ]
+  },
+  "basics-l1-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "أنواع اللوت",
+     "narration": "اللوت هو وحدة قياس حجم الصفقة في سوق العملات. اللوت القياسي يساوي مئة ألف وحدة من العملة الأساسية، وهي العملة الأولى في اسم الزوج. واللوت المصغّر، أو الميني، يساوي عشرة آلاف وحدة، أي عُشر اللوت القياسي. أما اللوت المصغّر جداً، أو المايكرو، فيساوي ألف وحدة فقط، أي جزءاً من مئة من اللوت القياسي. وبعض الوسطاء يقدّمون أحجاماً أصغر من ذلك للحسابات الصغيرة جداً."
+    },
+    {
+     "id": "s2",
+     "title": "اللوت في المنصة",
+     "narration": "في منصة التداول لا تكتب عدد الوحدات، بل تكتب الحجم كرقم عشري في خانة الكمية. الرقم واحد يعني لوتاً قياسياً، والرقم صفر فاصلة واحد يعني لوتاً مصغّراً، والرقم صفر فاصلة صفر واحد يعني لوت مايكرو. وانتبه إلى أن الذهب يختلف عن العملات، فاللوت الواحد منه يساوي غالباً مئة أونصة، وبعض الوسطاء يستخدمون أحجاماً مختلفة، لذلك راجع مواصفات العقد قبل أن تفتح أي صفقة على الذهب."
+    },
+    {
+     "id": "s3",
+     "title": "اللوت والمخاطرة",
+     "narration": "حجم اللوت يحدد قيمة كل نقطة بالمال، وبالتالي يحدد سرعة نمو الربح أو الخسارة. فعلى اليورو دولار، حركة ثلاثين نقطة ضدك تعني خسارة ثلاثمئة دولار بلوت قياسي، وثلاثين دولاراً بلوت مصغّر، وثلاثة دولارات فقط بلوت مايكرو. الحركة نفسها والتحليل نفسه، لكن الأثر على حسابك مختلف تماماً. لهذا فإن حجم اللوت هو أداتك الأساسية للتحكم في المخاطرة، وليس مجرد رقم تختاره عشوائياً."
+    },
+    {
+     "id": "s4",
+     "title": "مثال على العملات",
+     "narration": "لنحسب حجماً مناسباً بمثال واقعي. لديك حساب بألفي دولار، وقررت ألا تخاطر بأكثر من واحد بالمئة، أي عشرين دولاراً. تريد الشراء على اليورو دولار عند 1.0850، ووقف الخسارة المنطقي حسب الشارت عند 1.0825، أي على بعد خمس وعشرين نقطة. نقسم عشرين دولاراً على خمس وعشرين نقطة فنحصل على ثمانين سنتاً لكل نقطة، وهذا يعادل حجماً قدره صفر فاصلة صفر ثمانية لوت."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على الذهب",
+     "narration": "والآن مثال على الذهب. حسابك خمسة آلاف دولار، والمخاطرة واحد بالمئة أي خمسون دولاراً. السعر 2350 دولاراً للأونصة، ووقف الخسارة المنطقي عند 2345، أي على بعد خمسة دولارات. بما أن اللوت الواحد يساوي مئة أونصة، فإن حركة خمسة دولارات تعني خمسمئة دولار للوت الكامل. إذن الحجم المناسب هو عُشر لوت، لأن خمسمئة مضروبة في عُشر تساوي خمسين دولاراً، وهي بالضبط المخاطرة التي حددتها."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ شائع هو اختيار حجم اللوت حسب الرغبة في ربح سريع، لا حسب رأس المال والمخاطرة المقبولة. والخطأ الثاني هو استخدام حجم ثابت في كل الصفقات مع أن مسافة وقف الخسارة تتغير، فتخاطر أحياناً بنصف بالمئة وأحياناً بخمسة بالمئة دون أن تشعر. والخطأ الثالث هو مضاعفة الحجم بعد الخسارة لتعويضها بسرعة، وهذا السلوك من أسرع الطرق لاستنزاف الحساب."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية بسيطة: حدّد أولاً مقدار المال الذي تقبل خسارته في الصفقة، ثم حدّد مكان وقف الخسارة من الشارت، ثم احسب حجم اللوت بقسمة مبلغ المخاطرة على حاصل ضرب عدد نقاط الوقف في قيمة النقطة للوت الواحد. بهذا الترتيب يصبح حجم اللوت نتيجة للحساب لا قراراً عاطفياً. وإن خرج الحجم أصغر من أدنى حجم متاح، فهذا يعني أن الصفقة أكبر من حسابك ويجب تركها."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Lot Types",
+     "narration": "A lot is the unit used to measure trade size in the currency market. A standard lot equals one hundred thousand units of the base currency, which is the first currency in the pair's name. A mini lot equals ten thousand units, one tenth of a standard lot. A micro lot equals only one thousand units, one hundredth of a standard lot. Some brokers offer even smaller sizes for very small accounts."
+    },
+    {
+     "id": "s2",
+     "title": "Lots on the Platform",
+     "narration": "On a trading platform you do not type the number of units; you enter the size as a decimal number in the volume field. The number one means a standard lot, zero point one means a mini lot, and zero point zero one means a micro lot. Note that gold differs from currencies: one lot usually equals one hundred ounces, and some brokers use different sizes, so check the contract specifications before opening any trade on gold."
+    },
+    {
+     "id": "s3",
+     "title": "Lots and Risk",
+     "narration": "Lot size determines the money value of each pip, and therefore how fast profit or loss grows. On EURUSD, a thirty-pip move against you means a loss of three hundred dollars with a standard lot, thirty dollars with a mini lot, and only three dollars with a micro lot. The same move and the same analysis, yet the effect on your account is completely different. That is why lot size is your main tool for controlling risk, not just a number you pick at random."
+    },
+    {
+     "id": "s4",
+     "title": "Currency Example",
+     "narration": "Let us calculate a suitable size with a realistic example. You have an account of two thousand dollars and you decided not to risk more than one percent, which is twenty dollars. You want to buy EURUSD at 1.0850, and the logical stop loss according to the chart is at 1.0825, twenty-five pips away. We divide twenty dollars by twenty-five pips and get eighty cents per pip, which corresponds to a size of zero point zero eight lots."
+    },
+    {
+     "id": "s5",
+     "title": "Gold Example",
+     "narration": "Now an example on gold. Your account is five thousand dollars and the risk is one percent, fifty dollars. The price is 2350 dollars per ounce, and the logical stop loss is at 2345, five dollars away. Since one lot equals one hundred ounces, a five-dollar move means five hundred dollars for a full lot. So the suitable size is one tenth of a lot, because five hundred multiplied by one tenth equals fifty dollars, exactly the risk you set."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "The first common mistake is choosing the lot size based on the desire for a quick profit rather than on capital and acceptable risk. The second mistake is using a fixed size for every trade even though the stop loss distance changes, so you sometimes risk half a percent and sometimes five percent without noticing. The third mistake is doubling the size after a loss to recover it quickly, and this behaviour is one of the fastest ways to drain an account."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule is simple: first decide how much money you accept to lose on the trade, then set the stop loss location from the chart, then calculate the lot size by dividing the risk amount by the number of stop pips multiplied by the pip value per lot. In this order, lot size becomes the result of a calculation, not an emotional decision. If the size comes out smaller than the minimum available, the trade is too large for your account and should be skipped."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "جۆرەکانی lot",
+     "narration": "lot یەکەی پێوانی قەبارەی مامەڵەیە لە بازاڕی دراودا. lot ی ستاندارد یەکسانە بە سەد هەزار یەکە لە دراوی بنەڕەت، کە دراوی یەکەمە لە ناوی جووتەکەدا. mini lot یەکسانە بە دە هەزار یەکە، واتە یەک لە دەی lot ی ستاندارد. micro lot تەنها یەکسانە بە هەزار یەکە، واتە یەک لە سەدی lot ی ستاندارد. هەندێک بڕۆکەر قەبارەی بچووکتریش بۆ هەژمارە زۆر بچووکەکان پێشکەش دەکەن."
+    },
+    {
+     "id": "s2",
+     "title": "lot لە پلاتفۆرمدا",
+     "narration": "لە پلاتفۆرمی بازرگانیدا ژمارەی یەکەکان نانووسیت، بەڵکو قەبارەکە وەک ژمارەیەکی دەیی لە خانەی بڕدا دەنووسیت. ژمارە یەک واتە lot ی ستاندارد، سفر فاریزە یەک واتە mini lot، و سفر فاریزە سفر یەک واتە micro lot. ئاگادار بە کە زێڕ جیاوازە لە دراوەکان، یەک lot ی زێڕ زۆرجار یەکسانە بە سەد ئۆنس، و هەندێک بڕۆکەر قەبارەی جیاواز بەکاردەهێنن، بۆیە پێش کردنەوەی هەر مامەڵەیەک لەسەر زێڕ تایبەتمەندییەکانی گرێبەستەکە بپشکنە."
+    },
+    {
+     "id": "s3",
+     "title": "lot و مەترسی",
+     "narration": "قەبارەی lot بەهای پارەیی هەر Pip ێک دیاری دەکات، و بەمەش خێرایی گەشەی قازانج یان زیان دیاری دەکات. لەسەر EURUSD، جووڵەی سی Pip بە پێچەوانەتەوە واتە زیانی سێ سەد دۆلار بە lot ی ستاندارد، سی دۆلار بە mini lot، و تەنها سێ دۆلار بە micro lot. هەمان جووڵە و هەمان شیکاری، بەڵام کاریگەرییەکەی لەسەر هەژمارەکەت بە تەواوی جیاوازە. بۆیە قەبارەی lot ئامرازی سەرەکیتە بۆ کۆنترۆڵکردنی مەترسی، نەک تەنها ژمارەیەک کە بە هەڕەمەکی هەڵیدەبژێریت."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی دراو",
+     "narration": "با بە نموونەیەکی واقیعی قەبارەیەکی گونجاو حیساب بکەین. هەژمارێکی دوو هەزار دۆلاریت هەیە و بڕیارت داوە زیاتر لە یەک لە سەد مەترسی نەکەیت، واتە بیست دۆلار. دەتەوێت EURUSD لە 1.0850 بکڕیت، و stop loss ی لۆژیکی بەپێی چارتەکە لە 1.0825 ـە، واتە بیست و پێنج Pip دوورە. بیست دۆلار دابەش دەکەین بەسەر بیست و پێنج Pip دا و هەشتا سەنت بۆ هەر Pip ێک دەردەچێت، کە بەرامبەرە بە قەبارەی سفر فاریزە سفر هەشت lot."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی زێڕ",
+     "narration": "ئێستا نموونەیەک لەسەر زێڕ. هەژمارەکەت پێنج هەزار دۆلارە و مەترسی یەک لە سەدە، واتە پەنجا دۆلار. نرخەکە 2350 دۆلارە بۆ هەر ئۆنسێک، و stop loss ی لۆژیکی لە 2345 ـە، واتە پێنج دۆلار دوورە. چونکە یەک lot یەکسانە بە سەد ئۆنس، جووڵەی پێنج دۆلار واتە پێنج سەد دۆلار بۆ lot ێکی تەواو. کەواتە قەبارەی گونجاو یەک لە دەی lot ـە، چونکە پێنج سەد لێکدان لە یەک لە دە یەکسانە بە پەنجا دۆلار، کە ڕێک ئەو مەترسییەیە کە دیاریت کردووە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵەی باو هەڵبژاردنی قەبارەی lot ـە بەپێی ئارەزووی قازانجی خێرا، نەک بەپێی سەرمایە و مەترسیی پەسەندکراو. هەڵەی دووەم بەکارهێنانی قەبارەیەکی جێگیرە لە هەموو مامەڵەکاندا لەگەڵ ئەوەی دووری stop loss دەگۆڕێت، بۆیە هەندێک جار نیو لە سەد و هەندێک جار پێنج لە سەد مەترسی دەکەیت بێ ئەوەی هەست پێ بکەیت. هەڵەی سێیەم دوو هێندەکردنی قەبارەیە دوای زیان بۆ قەرەبووکردنەوەی خێرا، و ئەم ڕەفتارە یەکێکە لە خێراترین ڕێگاکانی بەتاڵکردنی هەژمار."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی سادەیە: یەکەم دیاری بکە چەند پارە قبووڵ دەکەیت لەم مامەڵەیەدا لەدەستی بدەیت، پاشان شوێنی stop loss لە چارتەکەوە دیاری بکە، پاشان قەبارەی lot حیساب بکە بە دابەشکردنی بڕی مەترسی بەسەر لێکدانی ژمارەی Pip ەکانی stop لە بەهای Pip بۆ یەک lot. بەم ڕیزبەندییە قەبارەی lot دەبێتە ئەنجامی حیساب نەک بڕیارێکی هەستی. ئەگەر قەبارەکە لە کەمترین قەبارەی بەردەست بچووکتر دەرچوو، واتە مامەڵەکە لە هەژمارەکەت گەورەترە و دەبێت وازی لێ بهێنیت."
+    }
+   ]
+  },
+  "basics-l1-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي الرافعة",
+     "narration": "الرافعة المالية، أو الـ Leverage، هي تسهيل يقدّمه الوسيط يسمح لك بفتح صفقة قيمتها أكبر بكثير من المال الموجود في حسابك. فالرافعة واحد إلى مئة تعني أن كل دولار في حسابك يمكنه التحكم في صفقة بقيمة مئة دولار. الرافعة ليست قرضاً تدفع عليه فائدة بالمعنى التقليدي، لكنها تسمح بأحجام كبيرة، وتختلف حدودها حسب الوسيط والجهة الرقابية ونوع الأصل المتداول."
+    },
+    {
+     "id": "s2",
+     "title": "الهامش المطلوب",
+     "narration": "الهامش، أو الـ Margin، هو المبلغ الذي يحجزه الوسيط من حسابك كضمان طالما الصفقة مفتوحة. ويُحسب بقسمة القيمة الكاملة للصفقة على الرافعة. مثلاً، لوت قياسي على اليورو دولار عند سعر 1.0850 قيمته مئة وثمانية آلاف وخمسمئة دولار، وبرافعة واحد إلى مئة يكون الهامش المطلوب ألفاً وخمسة وثمانين دولاراً. أما عُشر لوت فيحتاج مئة وثمانية دولارات ونصف فقط."
+    },
+    {
+     "id": "s3",
+     "title": "قراءة الحساب",
+     "narration": "في المنصة ستجد عدة أرقام يجب أن تفهمها. الرصيد هو المال قبل احتساب الصفقات المفتوحة، والملكية أو الـ Equity هي الرصيد مضافاً إليه الربح أو الخسارة العائمة. والهامش المستخدم هو المحجوز للصفقات، والهامش الحر هو المتبقي. ومستوى الهامش هو الملكية مقسومة على الهامش المستخدم مضروبة في مئة. وعندما ينخفض هذا المستوى إلى حد يحدده الوسيط، يبدأ إغلاق الصفقات تلقائياً."
+    },
+    {
+     "id": "s4",
+     "title": "مثال عملي",
+     "narration": "لنفترض حساباً بألف دولار ورافعة واحد إلى خمسمئة. يمكن لهذا الحساب فتح لوت قياسي كامل على اليورو دولار بهامش لا يتجاوز مئتين وسبعة عشر دولاراً تقريباً. لكن قيمة النقطة هنا عشرة دولارات، فحركة خمسين نقطة ضدك تساوي خمسمئة دولار، أي نصف الحساب، وحركة أقل من مئة نقطة قد تؤدي إلى إغلاق إجباري. بينما لو فتح الحساب نفسه صفقة بحجم صفر فاصلة صفر خمسة لوت، لكانت خسارة الخمسين نقطة خمسة وعشرين دولاراً فقط."
+    },
+    {
+     "id": "s5",
+     "title": "الرافعة الحقيقية",
+     "narration": "الفكرة المهمة هنا أن الرافعة التي يمنحها الوسيط لا تغيّر قيمة النقطة، بل تغيّر الحجم الأقصى الذي يسمح لك بفتحه. الخطر الحقيقي يأتي من حجم الصفقة مقارنة برأس مالك، وهو ما يُسمّى الرافعة الفعلية. فحساب برافعة واحد إلى خمسمئة يفتح صفقات صغيرة قد يكون أكثر أماناً من حساب برافعة واحد إلى ثلاثين يستخدم كل هامشه. لذلك راقب دائماً القيمة الكاملة لصفقاتك مقارنة بحسابك."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة النظر إلى الهامش الحر كأنه دعوة لفتح مزيد من الصفقات، فيمتلئ الحساب بمراكز كبيرة في وقت واحد. ومنها التداول برافعة عالية دون وقف خسارة، على أمل أن يعود السعر، فيصل الحساب إلى الإغلاق الإجباري. ومنها أيضاً إضافة صفقات جديدة على صفقة خاسرة لتحسين متوسط السعر، وهو ما يضاعف الخطر بدل أن يقلّله، خصوصاً في الذهب الذي يتحرك بقوة وقت الأخبار."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية لهذا الدرس هي أن تتعامل مع الرافعة كأداة مرونة لا كدعوة للمخاطرة. احسب حجم صفقتك من قاعدة المخاطرة ووقف الخسارة أولاً، ثم تحقق أن الهامش المطلوب جزء صغير من حسابك، واترك دائماً هامشاً حراً كبيراً يتحمل تقلبات السوق. وإذا لاحظت أن مستوى الهامش ينخفض بسرعة، فهذا إنذار بأن حجمك أكبر مما يحتمله الحساب، وعليك مراجعة خطتك قبل الصفقة التالية."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is Leverage",
+     "narration": "Leverage is a facility offered by the broker that lets you open a trade whose value is much larger than the money in your account. Leverage of one to one hundred means that every dollar in your account can control a position worth one hundred dollars. Leverage is not a loan on which you pay interest in the traditional sense, but it allows large sizes, and its limits differ by broker, regulator and the type of asset traded."
+    },
+    {
+     "id": "s2",
+     "title": "Required Margin",
+     "narration": "Margin is the amount the broker holds from your account as collateral while the trade is open. It is calculated by dividing the full value of the trade by the leverage. For example, a standard lot of EURUSD at 1.0850 is worth one hundred and eight thousand five hundred dollars, and with one to one hundred leverage the required margin is one thousand and eighty-five dollars. A tenth of a lot needs only one hundred and eight and a half dollars."
+    },
+    {
+     "id": "s3",
+     "title": "Reading the Account",
+     "narration": "On the platform you will find several numbers you must understand. The balance is the money before counting open trades, and equity is the balance plus the floating profit or loss. Used margin is what is held for trades, and free margin is what remains. The margin level is equity divided by used margin, multiplied by one hundred. When this level falls to a limit set by the broker, trades start to be closed automatically."
+    },
+    {
+     "id": "s4",
+     "title": "Worked Example",
+     "narration": "Suppose an account of one thousand dollars with one to five hundred leverage. This account can open a full standard lot on EURUSD with a margin of only about two hundred and seventeen dollars. But the pip value here is ten dollars, so a fifty-pip move against you equals five hundred dollars, half the account, and a move of less than one hundred pips may lead to a forced close. If the same account opened a trade of zero point zero five lots, the fifty-pip loss would be only twenty-five dollars."
+    },
+    {
+     "id": "s5",
+     "title": "Real Leverage",
+     "narration": "The important idea here is that the leverage the broker grants does not change the pip value; it changes the maximum size you are allowed to open. The real danger comes from the trade size compared with your capital, which is called effective leverage. An account with one to five hundred leverage that opens small trades can be safer than an account with one to thirty leverage that uses all its margin. So always watch the full value of your trades compared with your account."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is seeing free margin as an invitation to open more trades, so the account fills with large positions at once. Another is trading with high leverage and no stop loss, hoping the price will come back, until the account reaches a forced close. Another is adding new trades to a losing trade to improve the average price, which multiplies the risk instead of reducing it, especially in gold, which moves strongly during news."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule of this lesson is to treat leverage as a tool for flexibility, not an invitation to take risk. Calculate your trade size from the risk rule and the stop loss first, then check that the required margin is a small part of your account, and always leave a large free margin that can absorb market swings. If you notice the margin level dropping quickly, that is a warning that your size is larger than the account can bear, and you should review your plan before the next trade."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Leverage چییە",
+     "narration": "Leverage یان ڕافیعەی دارایی ئاسانکارییەکە کە بڕۆکەر پێشکەشی دەکات و ڕێگەت پێ دەدات مامەڵەیەک بکەیتەوە کە بەهاکەی زۆر گەورەترە لەو پارەیەی لە هەژمارەکەتدایە. Leverage ی یەک بۆ سەد واتە هەر دۆلارێک لە هەژمارەکەتدا دەتوانێت کۆنترۆڵی پێگەیەکی سەد دۆلاری بکات. Leverage قەرزێک نییە کە سوودی لەسەر بدەیت بە مانا باوەکەی، بەڵام ڕێگە بە قەبارەی گەورە دەدات، و سنوورەکانی بەپێی بڕۆکەر و دەزگای چاودێری و جۆری کاڵای مامەڵەپێکراو جیاوازن."
+    },
+    {
+     "id": "s2",
+     "title": "Margin ی پێویست",
+     "narration": "Margin ئەو بڕەیە کە بڕۆکەر لە هەژمارەکەتدا وەک زامن دەیگرێتەوە تا مامەڵەکە کراوە بێت. بە دابەشکردنی بەهای تەواوی مامەڵەکە بەسەر Leverage دا حیساب دەکرێت. بۆ نموونە، lot ێکی ستانداردی EURUSD لە نرخی 1.0850 بەهاکەی سەد و هەشت هەزار و پێنج سەد دۆلارە، و بە Leverage ی یەک بۆ سەد Margin ی پێویست هەزار و هەشتا و پێنج دۆلارە. یەک لە دەی lot تەنها سەد و هەشت دۆلار و نیوی پێویستە."
+    },
+    {
+     "id": "s3",
+     "title": "خوێندنەوەی هەژمار",
+     "narration": "لە پلاتفۆرمەکەدا چەند ژمارەیەک دەبینیت کە دەبێت تێیان بگەیت. Balance پارەیە پێش ژماردنی مامەڵە کراوەکان، و Equity بریتییە لە Balance لەگەڵ قازانج یان زیانی سەرئاو. Used margin ئەوەیە کە بۆ مامەڵەکان گیراوە، و Free margin ئەوەیە کە ماوەتەوە. Margin level بریتییە لە Equity دابەشکراو بەسەر Used margin لێکدراو لە سەد. کاتێک ئەم ئاستە دادەبەزێت بۆ سنوورێک کە بڕۆکەر دیاری کردووە، مامەڵەکان بە شێوەی خۆکار دادەخرێن."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی کردەیی",
+     "narration": "وا دابنێ هەژمارێکی هەزار دۆلاری هەیە بە Leverage ی یەک بۆ پێنج سەد. ئەم هەژمارە دەتوانێت lot ێکی ستانداردی تەواو لەسەر EURUSD بکاتەوە بە Margin ی تەنها نزیکەی دوو سەد و حەڤدە دۆلار. بەڵام بەهای Pip لێرەدا دە دۆلارە، بۆیە جووڵەی پەنجا Pip بە پێچەوانەتەوە یەکسانە بە پێنج سەد دۆلار، واتە نیوەی هەژمارەکە، و جووڵەیەکی کەمتر لە سەد Pip لەوانەیە ببێتە هۆی داخستنی ناچاری. ئەگەر هەمان هەژمار مامەڵەیەکی سفر فاریزە سفر پێنج lot ی بکردایەتەوە، زیانی پەنجا Pip تەنها بیست و پێنج دۆلار دەبوو."
+    },
+    {
+     "id": "s5",
+     "title": "Leverage ی ڕاستەقینە",
+     "narration": "بیرۆکە گرنگەکە ئەوەیە کە ئەو Leverage ەی بڕۆکەر دەیدات بەهای Pip ناگۆڕێت، بەڵکو زۆرترین قەبارە دەگۆڕێت کە ڕێگەت پێ دەدرێت بیکەیتەوە. مەترسیی ڕاستەقینە لە قەبارەی مامەڵەکەوە دێت بە بەراورد بە سەرمایەکەت، کە پێی دەوترێت Leverage ی کاریگەر. هەژمارێک بە Leverage ی یەک بۆ پێنج سەد کە مامەڵەی بچووک دەکاتەوە لەوانەیە سەلامەتتر بێت لە هەژمارێک بە Leverage ی یەک بۆ سی کە هەموو Margin ەکەی بەکاردەهێنێت. بۆیە هەمیشە چاودێری بەهای تەواوی مامەڵەکانت بکە بە بەراورد بە هەژمارەکەت."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەیەکی باو ئەوەیە Free margin وەک بانگهێشتێک بۆ کردنەوەی مامەڵەی زیاتر سەیر بکرێت، بۆیە هەژمارەکە لە یەک کاتدا پڕ دەبێت لە پێگەی گەورە. هەڵەیەکی تر مامەڵەکردنە بە Leverage ی بەرز بێ stop loss، بە هیوای گەڕانەوەی نرخەکە، تا هەژمارەکە دەگاتە داخستنی ناچاری. هەروەها زیادکردنی مامەڵەی نوێ بۆ سەر مامەڵەیەکی زەرەرمەند بۆ باشترکردنی تێکڕای نرخ، کە مەترسییەکە چەند هێندە دەکات لە جیاتی کەمکردنەوەی، بەتایبەتی لە زێڕدا کە لە کاتی هەواڵەکاندا بە هێز دەجووڵێت."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی ئەم وانەیە ئەوەیە کە Leverage وەک ئامرازێکی نەرمی مامەڵە لەگەڵ بکەیت نەک بانگهێشتێک بۆ مەترسی. یەکەم قەبارەی مامەڵەکەت لە یاسای مەترسی و stop loss ەوە حیساب بکە، پاشان دڵنیا بەرەوە کە Margin ی پێویست بەشێکی بچووکە لە هەژمارەکەت، و هەمیشە Free margin ێکی گەورە بهێڵەرەوە کە بەرگەی هەڵبەزین و دابەزینی بازاڕ بگرێت. ئەگەر بینیت Margin level بە خێرایی دادەبەزێت، ئەوە ئاگادارکردنەوەیەکە کە قەبارەکەت لەوە گەورەترە کە هەژمارەکە بەرگەی بگرێت، و دەبێت پێش مامەڵەی داهاتوو پلانەکەت پێدا بچیتەوە."
+    }
+   ]
+  },
+  "basics-l1-04": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا إدارة المخاطر",
+     "narration": "إدارة المخاطر هي ما يسمح لك بالبقاء في السوق مدة كافية لتتعلم وتتحسن. والسبب رياضي قبل أن يكون نفسياً: إذا خسرت عشرة بالمئة من حسابك فأنت تحتاج نحو أحد عشر بالمئة لتعود إلى نقطة البداية، أما إذا خسرت خمسين بالمئة فأنت تحتاج مئة بالمئة كاملة لتعويضها. كلما كبرت الخسارة صار التعافي أصعب بكثير، ولهذا نحمي رأس المال أولاً، ثم نفكر في الربح."
+    },
+    {
+     "id": "s2",
+     "title": "قاعدة واحد إلى اثنين",
+     "narration": "القاعدة التي يتبعها كثير من المتداولين المنضبطين هي ألا يخاطروا بأكثر من واحد إلى اثنين بالمئة من رأس المال في الصفقة الواحدة. في حساب بخمسة آلاف دولار يعني ذلك خسارة قصوى بين خمسين ومئة دولار للصفقة. قد يبدو المبلغ صغيراً، لكنه يعني أن سلسلة من عشر خسائر متتالية، وهي أمر يحدث فعلاً، لن تُفقدك أكثر من نحو عُشر حسابك أو خُمسه، فتبقى قادراً على الاستمرار."
+    },
+    {
+     "id": "s3",
+     "title": "وقف الخسارة",
+     "narration": "أمر وقف الخسارة يُحدَّد قبل فتح الصفقة، لا بعدها. ومكانه الصحيح هو النقطة التي تصبح عندها فكرة الصفقة خاطئة، مثل ما وراء آخر قاع واضح في صفقة الشراء، وليس رقماً عشوائياً من النقاط. وتذكّر أن وقف الخسارة لا يضمن السعر دائماً، فعند الأخبار القوية أو فجوات افتتاح الأسبوع قد يُنفَّذ بسعر أسوأ، وهذا ما يُسمّى الانزلاق السعري، ولذلك تبقى المخاطرة الصغيرة ضرورية."
+    },
+    {
+     "id": "s4",
+     "title": "حساب الصفقة",
+     "narration": "لنجمع كل شيء في مثال على الدولار ين. حسابك خمسة آلاف دولار، والمخاطرة واحد بالمئة أي خمسون دولاراً. تفكر في الشراء عند 151.00، وآخر قاع واضح يجعل وقف الخسارة المنطقي عند 150.60، أي على بعد أربعين نقطة. نقسم خمسين دولاراً على أربعين نقطة فنحصل على دولار وربع لكل نقطة. وبما أن النقطة للوت القياسي تساوي نحو ستة دولارات وستين سنتاً عند هذا السعر، فالحجم المناسب نحو صفر فاصلة ثمانية عشر لوت."
+    },
+    {
+     "id": "s5",
+     "title": "المخاطرة إلى العائد",
+     "narration": "نسبة المخاطرة إلى العائد تقارن ما قد تخسره بما تستهدف ربحه. في المثال السابق، لو كان الهدف عند 151.80 فالمسافة ثمانون نقطة مقابل أربعين، أي نسبة واحد إلى اثنين. ومعنى ذلك أن من ينجح في أربعين بالمئة فقط من صفقاته بهذه النسبة يمكن أن يكون رابحاً على المدى الطويل قبل التكاليف. لكن هذا ليس ضماناً، فالهدف يجب أن يكون واقعياً بحسب مستويات الشارت لا مجرد رقم مرغوب."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "أخطر الأخطاء هو تحريك وقف الخسارة إلى مسافة أبعد عندما يقترب السعر منه، أو إلغاؤه تماماً على أمل الانعكاس. ومنها رفع المخاطرة بعد خسارتين لتعويضهما بسرعة، وهو ما يُسمّى تداول الانتقام. ومنها أيضاً فتح صفقات متشابهة في وقت واحد، كشراء اليورو دولار والجنيه دولار معاً، فهما يتحركان غالباً في الاتجاه نفسه، فتتضاعف المخاطرة الفعلية دون أن تنتبه."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية لهذا الدرس تتلخص في ثلاث خطوات قبل كل صفقة. أولاً، حدّد وقف الخسارة من الشارت في مكان يُبطل فكرتك. ثانياً، احسب حجم اللوت بحيث لا تتجاوز الخسارة واحداً إلى اثنين بالمئة من حسابك. ثالثاً، تأكد أن الهدف المنطقي يعطيك نسبة واحد إلى اثنين أو أفضل، وإلا فاترك الصفقة. وضع أيضاً حداً أقصى لخسارة اليوم أو الأسبوع، وسجّل كل صفقة في دفتر لتتعلم من نتائجك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why Manage Risk",
+     "narration": "Risk management is what lets you stay in the market long enough to learn and improve. The reason is mathematical before it is psychological: if you lose ten percent of your account, you need about eleven percent to get back to where you started, but if you lose fifty percent, you need a full one hundred percent to recover it. The larger the loss, the much harder the recovery, which is why we protect capital first and think about profit second."
+    },
+    {
+     "id": "s2",
+     "title": "The One to Two Rule",
+     "narration": "The rule followed by many disciplined traders is not to risk more than one to two percent of capital on a single trade. In a five-thousand-dollar account, that means a maximum loss of between fifty and one hundred dollars per trade. The amount may seem small, but it means that a series of ten consecutive losses, which really does happen, will not cost you more than about a tenth or a fifth of your account, so you remain able to continue."
+    },
+    {
+     "id": "s3",
+     "title": "Stop Loss",
+     "narration": "The stop loss order is set before opening the trade, not after. Its correct place is the point where the trade idea becomes wrong, such as beyond the last clear low in a buy trade, not a random number of pips. Remember that a stop loss does not always guarantee the price: during strong news or weekly opening gaps it may be filled at a worse price, which is called slippage, and that is why small risk remains essential."
+    },
+    {
+     "id": "s4",
+     "title": "Sizing the Trade",
+     "narration": "Let us bring everything together in an example on USDJPY. Your account is five thousand dollars and the risk is one percent, fifty dollars. You are considering buying at 151.00, and the last clear low makes the logical stop loss 150.60, forty pips away. We divide fifty dollars by forty pips and get one and a quarter dollars per pip. Since a pip for a standard lot is worth about six dollars and sixty cents at this price, the suitable size is about zero point one eight lots."
+    },
+    {
+     "id": "s5",
+     "title": "Risk to Reward",
+     "narration": "The risk to reward ratio compares what you may lose with what you aim to gain. In the previous example, if the target is at 151.80, the distance is eighty pips against forty, a ratio of one to two. This means that someone who succeeds in only forty percent of trades at this ratio could be profitable in the long run before costs. But this is not a guarantee: the target must be realistic according to chart levels, not just a desired number."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "The most dangerous mistake is moving the stop loss further away when the price approaches it, or cancelling it entirely in the hope of a reversal. Another is increasing risk after two losses to recover them quickly, which is called revenge trading. Another is opening similar trades at the same time, such as buying EURUSD and GBPUSD together; they often move in the same direction, so the real risk doubles without you noticing."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical rule of this lesson comes down to three steps before every trade. First, set the stop loss from the chart at a place that invalidates your idea. Second, calculate the lot size so the loss does not exceed one to two percent of your account. Third, make sure the logical target gives you a ratio of one to two or better; otherwise skip the trade. Also set a maximum loss for the day or week, and record every trade in a journal so you learn from your results."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی بەڕێوەبردنی مەترسی",
+     "narration": "بەڕێوەبردنی مەترسی ئەو شتەیە کە ڕێگەت پێ دەدات ماوەیەکی پێویست لە بازاڕدا بمێنیتەوە بۆ ئەوەی فێر ببیت و باشتر ببیت. هۆکارەکە پێش ئەوەی دەروونی بێت بیرکارییە: ئەگەر دە لە سەدی هەژمارەکەت لەدەست بدەیت، پێویستت بە نزیکەی یازدە لە سەد هەیە بۆ گەڕانەوە بۆ خاڵی سەرەتا، بەڵام ئەگەر پەنجا لە سەد لەدەست بدەیت، پێویستت بە سەد لە سەدی تەواو هەیە بۆ قەرەبووکردنەوەی. هەتا زیانەکە گەورەتر بێت چاکبوونەوە زۆر قورستر دەبێت، بۆیە یەکەم سەرمایە دەپارێزین و پاشان بیر لە قازانج دەکەینەوە."
+    },
+    {
+     "id": "s2",
+     "title": "یاسای یەک بۆ دوو",
+     "narration": "ئەو یاسایەی زۆرێک لە بازرگانە ڕێکخراوەکان پەیڕەوی دەکەن ئەوەیە کە لە یەک مامەڵەدا زیاتر لە یەک بۆ دوو لە سەدی سەرمایە مەترسی نەکەن. لە هەژمارێکی پێنج هەزار دۆلاریدا ئەمە واتە زۆرترین زیان لە نێوان پەنجا و سەد دۆلاردا بۆ هەر مامەڵەیەک. لەوانەیە بڕەکە بچووک دیار بێت، بەڵام واتای ئەوەیە کە زنجیرەیەک لە دە زیانی یەک لە دوای یەک، کە بە ڕاستی ڕوو دەدات، زیاتر لە نزیکەی یەک لە دە یان یەک لە پێنجی هەژمارەکەت لێ ناستێنێت، و توانای بەردەوامبوونت دەمێنێت."
+    },
+    {
+     "id": "s3",
+     "title": "Stop loss",
+     "narration": "فەرمانی stop loss پێش کردنەوەی مامەڵەکە دیاری دەکرێت نەک دوای. شوێنی دروستی ئەو خاڵەیە کە بیرۆکەی مامەڵەکە تێیدا هەڵە دەردەچێت، وەک ئەودیوی دوایین نزمترین خاڵی ڕوون لە مامەڵەی کڕیندا، نەک ژمارەیەکی هەڕەمەکی Pip. لەبیرت بێت stop loss هەمیشە نرخەکە زامن ناکات، لە کاتی هەواڵی بەهێز یان بۆشاییەکانی کردنەوەی هەفتەدا لەوانەیە بە نرخێکی خراپتر جێبەجێ بکرێت، کە پێی دەوترێت slippage، بۆیە مەترسیی بچووک هەر پێویستە."
+    },
+    {
+     "id": "s4",
+     "title": "حیسابی مامەڵە",
+     "narration": "با هەموو شتێک لە نموونەیەکدا لەسەر USDJPY کۆ بکەینەوە. هەژمارەکەت پێنج هەزار دۆلارە و مەترسی یەک لە سەدە، واتە پەنجا دۆلار. بیر لە کڕین دەکەیتەوە لە 151.00، و دوایین نزمترین خاڵی ڕوون stop loss ی لۆژیکی دەکاتە 150.60، واتە چل Pip دوورە. پەنجا دۆلار دابەش دەکەین بەسەر چل Pip دا و یەک دۆلار و چارەکێک بۆ هەر Pip ێک دەردەچێت. چونکە Pip بۆ lot ی ستاندارد لەم نرخەدا نزیکەی شەش دۆلار و شەست سەنتە، قەبارەی گونجاو نزیکەی سفر فاریزە هەژدە lot ـە."
+    },
+    {
+     "id": "s5",
+     "title": "مەترسی بۆ قازانج",
+     "narration": "ڕێژەی مەترسی بۆ قازانج ئەوەی لەوانەیە لەدەستی بدەیت بەراورد دەکات بەوەی ئامانجتە بیبەیتەوە. لە نموونەی پێشوودا، ئەگەر ئامانج لە 151.80 بێت، دوورییەکە هەشتا Pip ـە بەرامبەر چل، واتە ڕێژەی یەک بۆ دوو. ئەمە واتای ئەوەیە کەسێک کە تەنها لە چل لە سەدی مامەڵەکانیدا بەم ڕێژەیە سەرکەوتوو بێت، لەوانەیە لە ماوەی درێژدا پێش تێچووەکان قازانجکار بێت. بەڵام ئەمە زامن نییە، ئامانج دەبێت بەپێی ئاستەکانی چارت واقیعی بێت نەک تەنها ژمارەیەکی ئارەزووکراو."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "مەترسیدارترین هەڵە دوورخستنەوەی stop loss ـە کاتێک نرخەکە لێی نزیک دەبێتەوە، یان هەڵوەشاندنەوەی بە تەواوی بە هیوای گەڕانەوە. هەڵەیەکی تر بەرزکردنەوەی مەترسییە دوای دوو زیان بۆ قەرەبووکردنەوەی خێرایان، کە پێی دەوترێت بازرگانیی تۆڵەسەندنەوە. هەروەها کردنەوەی مامەڵەی هاوشێوە لە یەک کاتدا، وەک کڕینی EURUSD و GBPUSD پێکەوە، کە زۆرجار بە هەمان ئاراستە دەجووڵێن، بۆیە مەترسیی ڕاستەقینە دوو هێندە دەبێت بێ ئەوەی ئاگات لێ بێت."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی ئەم وانەیە لە سێ هەنگاودا کورت دەبێتەوە پێش هەموو مامەڵەیەک. یەکەم، stop loss لە چارتەکەوە لە شوێنێک دابنێ کە بیرۆکەکەت پووچەڵ دەکاتەوە. دووەم، قەبارەی lot حیساب بکە بە شێوەیەک کە زیان لە یەک بۆ دوو لە سەدی هەژمارەکەت تێنەپەڕێت. سێیەم، دڵنیا بەرەوە کە ئامانجی لۆژیکی ڕێژەی یەک بۆ دوو یان باشترت دەداتێ، ئەگەرنا وازی لێ بهێنە. هەروەها سنوورێکی زۆرترین زیان بۆ ڕۆژ یان هەفتە دابنێ، و هەموو مامەڵەیەک لە دەفتەرێکدا تۆمار بکە بۆ ئەوەی لە ئەنجامەکانت فێر ببیت."
+    }
+   ]
+  },
+  "basics-l1-05": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "فائدة الحساب التجريبي",
+     "narration": "الحساب التجريبي، أو الـ Demo، هو حساب بأموال افتراضية يعمل بأسعار السوق الحقيقية تقريباً. فائدته الأولى أنه يتيح لك تعلّم المنصة نفسها: كيف تفتح صفقة، وكيف تضع وقف الخسارة والهدف، وكيف تقرأ الهامش والملكية، دون أن يكلّفك أي خطأ تقني مالاً حقيقياً. وفائدته الثانية أنه مكان لاختبار خطة تداول مكتوبة، ومعرفة إن كنت قادراً على تطبيق قواعدها باستمرار."
+    },
+    {
+     "id": "s2",
+     "title": "حدود التجريبي",
+     "narration": "لكن للحساب التجريبي حدوداً يجب أن تعرفها. أولها غياب الضغط النفسي، فخسارة مئة دولار افتراضية لا تؤلم كما تؤلم الحقيقية، ولذلك قد يكون أداؤك فيه أفضل من أدائك لاحقاً. وثانيها أن التنفيذ قد يختلف، فالسبريد والانزلاق السعري في الحساب الحقيقي قد يكونان أكبر، خصوصاً على الذهب وقت الأخبار. لذلك اعتبر نتائج التجريبي مؤشراً على فهمك للقواعد، لا وعداً بنتائج مماثلة."
+    },
+    {
+     "id": "s3",
+     "title": "استخدام جاد",
+     "narration": "حتى يكون الحساب التجريبي مفيداً فعلاً، عامِله كأنه حقيقي. اجعل رصيده قريباً من المبلغ الذي تنوي إيداعه لاحقاً، فلا معنى للتدرب على مئة ألف دولار إذا كنت ستبدأ بألف. طبّق قاعدة المخاطرة بواحد بالمئة في كل صفقة، وضع وقف الخسارة دائماً، وسجّل كل صفقة في دفتر يتضمن سبب الدخول ومكان الوقف والهدف والنتيجة وما تعلمته منها."
+    },
+    {
+     "id": "s4",
+     "title": "متى تنتقل",
+     "narration": "لا يوجد رقم سحري، لكن إليك معياراً منطقياً. لنفترض أنك نفّذت ستين صفقة على اليورو دولار والذهب خلال ثلاثة أشهر، والتزمت بقاعدة المخاطرة في كل صفقة منها، ولم يتجاوز أكبر تراجع في الحساب ستة بالمئة، وتفهم سبب كل خسارة. عندها يمكنك التفكير في حساب حقيقي صغير، مثلاً خمسمئة دولار، مع لوت مايكرو بحجم صفر فاصلة صفر واحد، بحيث تبقى المخاطرة نحو خمسة دولارات للصفقة."
+    },
+    {
+     "id": "s5",
+     "title": "توقعات واقعية",
+     "narration": "التوقعات الواقعية تحميك من القرارات المتهورة. الخسائر جزء طبيعي من التداول، وحتى المتداولون المحترفون يمرّون بسلاسل خسائر متتالية. لا تضع هدفاً مثل مضاعفة الحساب في شهر، فهذا الهدف يدفعك تلقائياً إلى مخاطرة مفرطة. ركّز في الأشهر الأولى على جودة التنفيذ والالتزام بالخطة، لا على حجم الربح. فالتداول مهارة تُبنى بالوقت والممارسة والانضباط، وليس طريقاً سريعاً إلى المال."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة التدرب على حساب تجريبي برصيد ضخم وأحجام كبيرة، ثم الصدمة عند الانتقال إلى حساب صغير. ومنها البقاء في التجريبي إلى ما لا نهاية خوفاً من الخسارة، دون التدرج نحو التجربة الحقيقية بمبالغ صغيرة. ومنها العكس تماماً: الانتقال إلى حساب حقيقي كبير بعد أسبوع واحد محظوظ، قبل أن تتضح القدرة على الالتزام بالقواعد في ظروف سوق مختلفة."
+    },
+    {
+     "id": "s7",
+     "title": "الخلاصة",
+     "narration": "الخلاصة العملية هي أن تبدأ بالحساب التجريبي لتتقن المنصة وتختبر خطتك، ثم تنتقل تدريجياً إلى حساب حقيقي صغير عندما تصبح قواعدك عادة ثابتة، لا عندما تحقق ربحاً سريعاً. واستخدم في الحقيقي مالاً لا تحتاجه في حياتك اليومية، وحافظ على المخاطرة الصغيرة نفسها. ثم راجع دفترك كل أسبوع، فهو الذي سيخبرك متى يمكنك زيادة الحجم بحذر ومتى يجب أن تتوقف وتراجع."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why a Demo Account",
+     "narration": "A demo account is an account with virtual money that runs on roughly real market prices. Its first benefit is that it lets you learn the platform itself: how to open a trade, how to set a stop loss and a target, and how to read margin and equity, without any technical mistake costing you real money. Its second benefit is that it is a place to test a written trading plan and find out whether you can apply its rules consistently."
+    },
+    {
+     "id": "s2",
+     "title": "Demo Limits",
+     "narration": "But a demo account has limits you must know. The first is the absence of psychological pressure: losing one hundred virtual dollars does not hurt like losing real ones, so your performance there may be better than it will be later. The second is that execution may differ: spread and slippage on a real account can be larger, especially on gold during news. So treat demo results as a sign that you understand the rules, not as a promise of similar results."
+    },
+    {
+     "id": "s3",
+     "title": "Serious Practice",
+     "narration": "For a demo account to be truly useful, treat it as if it were real. Make its balance close to the amount you plan to deposit later; there is no point practising with one hundred thousand dollars if you will start with one thousand. Apply the one percent risk rule on every trade, always set a stop loss, and record every trade in a journal that includes the reason for entry, the stop, the target, the result and what you learned from it."
+    },
+    {
+     "id": "s4",
+     "title": "When to Move",
+     "narration": "There is no magic number, but here is a sensible criterion. Suppose you executed sixty trades on EURUSD and gold over three months, followed the risk rule on every one of them, your largest account drawdown did not exceed six percent, and you understand the reason for every loss. Then you can consider a small real account, for example five hundred dollars, with a micro lot of zero point zero one, so that the risk stays around five dollars per trade."
+    },
+    {
+     "id": "s5",
+     "title": "Realistic Expectations",
+     "narration": "Realistic expectations protect you from reckless decisions. Losses are a normal part of trading, and even professional traders go through streaks of consecutive losses. Do not set a goal such as doubling the account in a month; such a goal automatically pushes you toward excessive risk. In the first months, focus on the quality of execution and sticking to the plan, not on the size of profit. Trading is a skill built with time, practice and discipline, not a fast road to money."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "A common mistake is practising on a demo with a huge balance and large sizes, then being shocked when moving to a small account. Another is staying on demo forever out of fear of losing, without gradually moving to real experience with small amounts. Another is the exact opposite: moving to a large real account after one lucky week, before the ability to follow the rules in different market conditions has become clear."
+    },
+    {
+     "id": "s7",
+     "title": "Summary",
+     "narration": "The practical summary is to start with a demo account to master the platform and test your plan, then move gradually to a small real account when your rules have become a stable habit, not when you make a quick profit. On the real account, use money you do not need for daily life, and keep the same small risk. Then review your journal every week; it will tell you when you can carefully increase size and when you should stop and review."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "سوودی هەژماری Demo",
+     "narration": "هەژماری Demo هەژمارێکە بە پارەی خەیاڵی کە نزیکەی بە نرخەکانی ڕاستەقینەی بازاڕ کار دەکات. یەکەم سوودی ئەوەیە کە ڕێگەت پێ دەدات خودی پلاتفۆرمەکە فێر ببیت: چۆن مامەڵەیەک بکەیتەوە، چۆن stop loss و ئامانج دابنێیت، و چۆن Margin و Equity بخوێنیتەوە، بێ ئەوەی هیچ هەڵەیەکی تەکنیکی پارەی ڕاستەقینەت لەسەر بکەوێت. سوودی دووەمی ئەوەیە کە شوێنێکە بۆ تاقیکردنەوەی پلانێکی نووسراوی بازرگانی، و زانینی ئەوەی ئایا دەتوانیت بە بەردەوامی یاساکانی جێبەجێ بکەیت."
+    },
+    {
+     "id": "s2",
+     "title": "سنوورەکانی Demo",
+     "narration": "بەڵام هەژماری Demo سنووری هەیە کە دەبێت بیانزانیت. یەکەمیان نەبوونی فشاری دەروونییە، لەدەستدانی سەد دۆلاری خەیاڵی وەک ڕاستەقینە ئازار نادات، بۆیە لەوانەیە ئەدات لەوێدا باشتر بێت لە ئەدای دواترت. دووەمیان ئەوەیە کە جێبەجێکردن لەوانەیە جیاواز بێت، spread و slippage لە هەژماری ڕاستەقینەدا لەوانەیە گەورەتر بن، بەتایبەتی لەسەر زێڕ لە کاتی هەواڵەکاندا. بۆیە ئەنجامەکانی Demo وەک نیشانەیەک بۆ تێگەیشتنت لە یاساکان سەیر بکە، نەک بەڵێنێک بە ئەنجامی هاوشێوە."
+    },
+    {
+     "id": "s3",
+     "title": "بەکارهێنانی جددی",
+     "narration": "بۆ ئەوەی هەژماری Demo بە ڕاستی بەسوود بێت، وەک ڕاستەقینە مامەڵەی لەگەڵ بکە. باڵانسەکەی نزیک بکەرەوە لەو بڕەی کە دواتر نیازتە دایبنێیت، هیچ مانایەکی نییە لەسەر سەد هەزار دۆلار ڕاهێنان بکەیت ئەگەر بە هەزار دەست پێ بکەیت. یاسای مەترسیی یەک لە سەد لە هەموو مامەڵەیەکدا جێبەجێ بکە، هەمیشە stop loss دابنێ، و هەموو مامەڵەیەک لە دەفتەرێکدا تۆمار بکە کە هۆکاری چوونەژوورەوە و شوێنی stop و ئامانج و ئەنجام و ئەوەی لێی فێر بوویت لەخۆ بگرێت."
+    },
+    {
+     "id": "s4",
+     "title": "کەی بگوازیتەوە",
+     "narration": "ژمارەیەکی سیحراوی نییە، بەڵام ئەمە پێوەرێکی لۆژیکییە. وا دابنێ شەست مامەڵەت لەسەر EURUSD و زێڕ لە ماوەی سێ مانگدا جێبەجێ کردووە، و لە هەموویاندا پابەندی یاسای مەترسی بوویت، و گەورەترین دابەزینی هەژمارەکە لە شەش لە سەد تێنەپەڕیوە، و لە هۆکاری هەموو زیانێک تێدەگەیت. ئەو کاتە دەتوانیت بیر لە هەژمارێکی ڕاستەقینەی بچووک بکەیتەوە، بۆ نموونە پێنج سەد دۆلار، لەگەڵ micro lot ی سفر فاریزە سفر یەک، بە شێوەیەک کە مەترسی نزیکەی پێنج دۆلار بمێنێتەوە بۆ هەر مامەڵەیەک."
+    },
+    {
+     "id": "s5",
+     "title": "چاوەڕوانیی واقیعی",
+     "narration": "چاوەڕوانیی واقیعی لە بڕیاری بێباکانە دەتپارێزێت. زیان بەشێکی ئاساییە لە بازرگانی، و تەنانەت بازرگانە پیشەگەرەکانیش بە زنجیرەی زیانی یەک لە دوای یەکدا تێدەپەڕن. ئامانجێکی وەک دوو هێندەکردنی هەژمار لە مانگێکدا دامەنێ، چونکە ئەم ئامانجە بە شێوەی خۆکار بەرەو مەترسیی زیادەڕۆیی پاڵت پێوە دەنێت. لە مانگەکانی یەکەمدا سەرنج بخە سەر کوالیتیی جێبەجێکردن و پابەندبوون بە پلانەوە، نەک قەبارەی قازانج. بازرگانی لێهاتووییەکە بە کات و ڕاهێنان و ڕێکوپێکی دروست دەبێت، نەک ڕێگایەکی خێرا بۆ پارە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەیەکی باو ڕاهێنانە لەسەر هەژماری Demo بە باڵانسێکی زەبەلاح و قەبارەی گەورە، پاشان شۆکبوون لە کاتی گواستنەوە بۆ هەژمارێکی بچووک. هەڵەیەکی تر مانەوەیە لە Demo بۆ هەمیشە لە ترسی زیان، بێ ئەوەی بە پلە بەرەو ئەزموونی ڕاستەقینە بە بڕی بچووک بچیت. هەڵەیەکی تریش پێچەوانەی تەواوە: گواستنەوە بۆ هەژمارێکی ڕاستەقینەی گەورە دوای یەک هەفتەی بەختدار، پێش ئەوەی توانای پابەندبوون بە یاساکان لە بارودۆخی جیاوازی بازاڕدا ڕوون ببێتەوە."
+    },
+    {
+     "id": "s7",
+     "title": "پوختە",
+     "narration": "پوختەی کردەیی ئەوەیە کە بە هەژماری Demo دەست پێ بکەیت بۆ لێهاتووبوون لە پلاتفۆرمەکە و تاقیکردنەوەی پلانەکەت، پاشان بە پلە بگوازیتەوە بۆ هەژمارێکی ڕاستەقینەی بچووک کاتێک یاساکانت بوونە خوویەکی جێگیر، نەک کاتێک قازانجێکی خێرات کرد. لە هەژماری ڕاستەقینەدا پارەیەک بەکاربهێنە کە بۆ ژیانی ڕۆژانەت پێویستت پێی نییە، و هەمان مەترسیی بچووک بپارێزە. پاشان هەموو هەفتەیەک دەفتەرەکەت پێدا بچۆوە، چونکە ئەوە پێت دەڵێت کەی دەتوانیت بە وریاییەوە قەبارە زیاد بکەیت و کەی دەبێت بوەستیت و پێداچوونەوە بکەیت."
+    }
+   ]
+  }
+ }
+}

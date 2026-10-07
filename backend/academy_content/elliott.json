@@ -1,0 +1,653 @@
+{
+ "school_id": "elliott",
+ "lectures": {
+  "ew-l1-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي الدافعة",
+     "narration": "تقول نظرية إليوت إن السعر يتحرك مع الاتجاه الرئيسي في خمس موجات تسمى الموجة الدافعة، ثم يصحح في ثلاث موجات. الموجات واحد وثلاثة وخمسة تسير مع الاتجاه، بينما الموجتان اثنان وأربعة تصحيحان صغيرتان داخلها. هذه البنية تعكس تناوب التفاؤل والتشاؤم بين المتداولين. تذكّر من البداية أن العدّ الموجي تفسير للحركة وليس حقيقة مؤكدة، ولذلك نحتاج إلى قواعد واضحة تساعدنا على رفض العدّ الخاطئ."
+    },
+    {
+     "id": "s2",
+     "title": "القواعد الثلاث",
+     "narration": "هناك ثلاث قواعد صارمة لا يجوز كسرها في الموجة الدافعة. القاعدة الأولى: الموجة الثانية لا ترتد أبداً إلى ما بعد بداية الموجة الأولى. القاعدة الثانية: الموجة الثالثة لا تكون أبداً الأقصر بين الموجات واحد وثلاثة وخمسة، وغالباً ما تكون الأطول. القاعدة الثالثة: الموجة الرابعة لا تدخل منطقة سعر الموجة الأولى في الدافعة القياسية. إذا كُسرت أي قاعدة من هذه القواعد فالعدّ خاطئ ويجب تعديله فوراً دون تردد."
+    },
+    {
+     "id": "s3",
+     "title": "التعرّف على الرسم",
+     "narration": "كيف نرى الدافعة على الرسم البياني؟ ابدأ من قاع أو قمة واضحة على إطار زمني أكبر، ثم ابحث عن حركة قوية تتبعها حركة تصحيحية أبطأ. الموجة الثالثة عادة تكسر قمة الموجة الأولى بزخم واضح وشموع كبيرة، والموجة الرابعة غالباً جانبية ومملة. يساعد مبدأ التناوب أيضاً: إذا كانت الموجة الثانية حادة وعميقة فالرابعة غالباً جانبية وضحلة. اعتمد دائماً على الشموع المغلقة عند تحديد القمم والقيعان."
+    },
+    {
+     "id": "s4",
+     "title": "الامتدادات",
+     "narration": "الامتداد يعني أن إحدى الموجات الدافعة الثلاث تصبح أطول بكثير من الأخريين وتظهر داخلها موجات فرعية واضحة. في سوق العملات يكون الامتداد غالباً في الموجة الثالثة، بينما يُلاحظ امتداد الموجة الخامسة أحياناً في الذهب والسلع عند نهاية الاتجاهات القوية. عادة تمتد موجة واحدة فقط، فإذا امتدت الثالثة توقّع أن تكون الأولى والخامسة متقاربتين في الطول. هذه ملاحظة إرشادية وليست قاعدة ملزمة."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على EURUSD",
+     "narration": "لنأخذ مثالاً تعليمياً على اليورو دولار. الموجة الأولى ترتفع من 1.0500 إلى 1.0620، أي مئة وعشرين نقطة. الموجة الثانية تهبط إلى 1.0545 وتبقى فوق 1.0500، فالقاعدة الأولى سليمة. الموجة الثالثة تصعد إلى 1.0780، أي مئتين وخمساً وثلاثين نقطة، وهي الأطول. الموجة الرابعة تهبط إلى 1.0700 وتبقى فوق 1.0620، فلا تداخل. ثم الخامسة تصل إلى 1.0820. هنا امتدت الثالثة، وتساوت الأولى والخامسة تقريباً."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "أكثر الأخطاء شيوعاً هو إجبار السعر على عدّ نريده بدلاً من قراءة ما يحدث فعلاً. ومن الأخطاء أيضاً تسمية موجة رابعة وهي تتداخل مع الموجة الأولى، أو تجاهل أن الثالثة صارت الأقصر. خطأ آخر هو العدّ على إطار زمني صغير جداً تكثر فيه الضوضاء. وأخيراً، يخطئ كثيرون حين يدخلون صفقة بناء على العدّ وحده دون وقف خسارة واضح وحجم مركز مدروس."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "الخلاصة العملية: الدافعة خمس موجات، وثلاث قواعد تحكمها لا تقبل الاستثناء في الدافعة القياسية. افحص كل عدّ بالقواعد الثلاث قبل أي تحليل آخر، وحدد مستوى إبطال واضحاً، فإذا كسر السعر هذا المستوى بإغلاق شمعة فاترك العدّ وابحث عن بديل. تذكّر أن الامتداد يظهر عادة في موجة واحدة، وأن كل ما يتعلق بالنسب إرشادات لا قواعد. والأهم أن تبقى المخاطرة في كل صفقة صغيرة ومحددة مسبقاً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What an Impulse Is",
+     "narration": "Elliott theory says that price moves with the main trend in five waves, called an impulse, and then corrects in three waves. Waves one, three and five travel with the trend, while waves two and four are smaller corrections inside it. This structure reflects the alternation of optimism and pessimism among traders. Remember from the start that a wave count is an interpretation of the movement, not a confirmed fact, which is why we need clear rules that help us reject a wrong count."
+    },
+    {
+     "id": "s2",
+     "title": "The Three Rules",
+     "narration": "There are three strict rules that must never be broken in an impulse wave. Rule one: wave two never retraces beyond the start of wave one. Rule two: wave three is never the shortest of waves one, three and five, and it is often the longest. Rule three: wave four does not enter the price territory of wave one in a standard impulse. If any of these rules is broken, the count is wrong and must be revised immediately without hesitation."
+    },
+    {
+     "id": "s3",
+     "title": "Spotting It on the Chart",
+     "narration": "How do we see an impulse on the chart? Start from a clear low or high on a higher timeframe, then look for a strong move followed by a slower corrective move. Wave three usually breaks the top of wave one with clear momentum and large candles, and wave four is often sideways and dull. The principle of alternation also helps: if wave two is sharp and deep, wave four is often sideways and shallow. Always rely on closed candles when marking highs and lows."
+    },
+    {
+     "id": "s4",
+     "title": "Extensions",
+     "narration": "An extension means that one of the three impulse waves becomes much longer than the other two, with clear sub-waves visible inside it. In the currency market the extension is most often in wave three, while a wave-five extension is sometimes seen in gold and commodities at the end of strong trends. Usually only one wave extends, so if wave three extends, expect waves one and five to be close in length. This is a guideline, not a binding rule."
+    },
+    {
+     "id": "s5",
+     "title": "EURUSD Example",
+     "narration": "Let us take an educational example on the euro-dollar. Wave one rises from 1.0500 to 1.0620, that is one hundred and twenty pips. Wave two falls to 1.0545 and stays above 1.0500, so rule one holds. Wave three climbs to 1.0780, two hundred and thirty-five pips, and it is the longest. Wave four drops to 1.0700 and stays above 1.0620, so there is no overlap. Then wave five reaches 1.0820. Here wave three extended, and waves one and five are roughly equal."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "The most common mistake is forcing price into the count we want instead of reading what is actually happening. Other mistakes include labelling a wave four that overlaps wave one, or ignoring that wave three has become the shortest. Another error is counting on a very small timeframe full of noise. Finally, many traders go wrong when they enter a trade based on the count alone, without a clear stop loss and a carefully considered position size."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical summary: an impulse is five waves, governed by three rules that allow no exception in a standard impulse. Check every count against the three rules before any other analysis, and set a clear invalidation level; if price breaks that level on a candle close, drop the count and look for an alternative. Remember that an extension usually appears in one wave only, and that everything about ratios is guidance, not rules. Most importantly, keep the risk in every trade small and defined in advance."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پاڵنەر چییە",
+     "narration": "تیۆری ئێلیۆت دەڵێت نرخ لەگەڵ ئاراستەی سەرەکیدا بە پێنج شەپۆل دەجووڵێت کە پێی دەوترێت شەپۆلی پاڵنەر، پاشان بە سێ شەپۆل ڕاست دەکرێتەوە. شەپۆلەکانی یەک و سێ و پێنج لەگەڵ ئاراستەکەدا دەڕۆن، لە کاتێکدا شەپۆلەکانی دوو و چوار ڕاستکردنەوەی بچووکن لەناویدا. ئەم پێکهاتەیە گۆڕانی گەشبینی و ڕەشبینی نێوان بازرگانان پیشان دەدات. لە سەرەتاوە لەبیرت بێت کە ژماردنی شەپۆل لێکدانەوەیەکی جووڵەکەیە نەک ڕاستییەکی دڵنیا، بۆیە پێویستمان بە یاسای ڕوون هەیە بۆ ڕەتکردنەوەی ژماردنی هەڵە."
+    },
+    {
+     "id": "s2",
+     "title": "سێ یاساکە",
+     "narration": "سێ یاسای توند هەن کە نابێت هەرگیز لە شەپۆلی پاڵنەردا بشکێنرێن. یاسای یەکەم: شەپۆلی دووەم هەرگیز لە خاڵی دەستپێکی شەپۆلی یەکەم تێناپەڕێت. یاسای دووەم: شەپۆلی سێیەم هەرگیز کورتترینی شەپۆلەکانی یەک و سێ و پێنج نییە، و زۆرجار درێژترینیانە. یاسای سێیەم: شەپۆلی چوارەم لە پاڵنەری ستانداردا ناچێتە ناو ناوچەی نرخی شەپۆلی یەکەم. ئەگەر هەر یەکێک لەم یاسایانە شکێنرا، ژماردنەکە هەڵەیە و دەبێت دەستبەجێ بێ دوودڵی چاک بکرێتەوە."
+    },
+    {
+     "id": "s3",
+     "title": "ناسینەوە لەسەر چارت",
+     "narration": "چۆن پاڵنەر لەسەر چارت دەبینین؟ لە نزمترین یان بەرزترین خاڵێکی ڕوون لەسەر کاتێکی گەورەتر دەست پێبکە، پاشان بەدوای جووڵەیەکی بەهێزدا بگەڕێ کە جووڵەیەکی ڕاستکەرەوەی خاوتر بەدوایدا دێت. شەپۆلی سێیەم بە زۆری لووتکەی شەپۆلی یەکەم بە خێرایی ڕوون و مۆمی گەورە دەشکێنێت، و شەپۆلی چوارەم زۆرجار لاتەنیشت و بێتامە. بنەمای ئاڵوگۆڕ (alternation) یارمەتیش دەدات: ئەگەر شەپۆلی دووەم تیژ و قووڵ بێت، چوارەم زۆرجار لاتەنیشت و تەنکە. هەمیشە پشت بە مۆمە داخراوەکان ببەستە کاتێک لووتکە و نزمییەکان دیاری دەکەیت."
+    },
+    {
+     "id": "s4",
+     "title": "درێژبوونەوەکان",
+     "narration": "درێژبوونەوە (extension) واتە یەکێک لە سێ شەپۆلە پاڵنەرەکان زۆر درێژتر دەبێت لە دووانەکەی تر و شەپۆلی لاوەکی ڕوونی تێدا دەردەکەوێت. لە بازاڕی دراودا درێژبوونەوە زۆرجار لە شەپۆلی سێیەمدایە، لە کاتێکدا درێژبوونەوەی شەپۆلی پێنجەم هەندێکجار لە زێڕ و کاڵاکاندا لە کۆتایی ئاراستە بەهێزەکاندا دەبینرێت. بە زۆری تەنها یەک شەپۆل درێژ دەبێتەوە، بۆیە ئەگەر سێیەم درێژ بووەوە، چاوەڕێ بکە یەکەم و پێنجەم لە درێژیدا نزیک بن. ئەمە ڕێنماییە نەک یاسایەکی پابەندکەر."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی EURUSD",
+     "narration": "با نموونەیەکی فێرکاری لەسەر یۆرۆ دۆلار وەربگرین. شەپۆلی یەکەم لە 1.0500 بۆ 1.0620 بەرز دەبێتەوە، واتە سەد و بیست پیپ. شەپۆلی دووەم دادەبەزێت بۆ 1.0545 و لە سەرووی 1.0500 دەمێنێتەوە، کەواتە یاسای یەکەم سەلامەتە. شەپۆلی سێیەم بەرز دەبێتەوە بۆ 1.0780، واتە دوو سەد و سی و پێنج پیپ، و درێژترینە. شەپۆلی چوارەم دادەبەزێت بۆ 1.0700 و لە سەرووی 1.0620 دەمێنێتەوە، کەواتە تێکەڵبوون نییە. پاشان شەپۆلی پێنجەم دەگاتە 1.0820. لێرەدا سێیەم درێژ بووەوە، و یەکەم و پێنجەم نزیکەی یەکسانن."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "باوترین هەڵە ئەوەیە نرخ ناچار بکەین بچێتە ناو ئەو ژماردنەی ئێمە دەمانەوێت لە جیاتی خوێندنەوەی ئەوەی بەڕاستی ڕوودەدات. هەڵەی تریش ئەوەیە شەپۆلێکی چوارەم ناو بنێین کە لەگەڵ شەپۆلی یەکەمدا تێکەڵ دەبێت، یان پشتگوێ بخەین کە سێیەم بووەتە کورترین. هەڵەیەکی تر ژماردنە لەسەر کاتێکی زۆر بچووک کە دەنگەدەنگی زۆری تێدایە. لە کۆتاییدا، زۆر کەس هەڵە دەکەن کاتێک تەنها لەسەر بنەمای ژماردنەکە دەچنە ناو مامەڵەیەک بێ stop loss ی ڕوون و قەبارەی پۆزیشنی لێکۆڵراوە."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "پوختەی کرداری: پاڵنەر پێنج شەپۆلە، و سێ یاسا فەرمانڕەوایی دەکەن کە لە پاڵنەری ستانداردا هیچ ئیستیسنایەک وەرناگرن. هەموو ژماردنێک بە سێ یاساکە بپشکنە پێش هەر شیکارییەکی تر، و ئاستێکی هەڵوەشاندنەوەی ڕوون دیاری بکە؛ ئەگەر نرخ ئەو ئاستەی بە داخستنی مۆمێک شکاند، ژماردنەکە وازلێبهێنە و بەدوای جێگرەوەدا بگەڕێ. لەبیرت بێت درێژبوونەوە بە زۆری تەنها لە یەک شەپۆلدا دەردەکەوێت، و هەموو شتێکی پەیوەست بە ڕێژەکان ڕێنماییە نەک یاسا. گرنگتر لە هەموو، مەترسی هەر مامەڵەیەک بچووک و پێشوەختە دیاریکراو بهێڵەوە."
+    }
+   ]
+  },
+  "ew-l1-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "طبيعة التصحيح",
+     "narration": "بعد كل حركة دافعة يأتي تصحيح يعيد التوازن إلى السوق، ويُرمز له غالباً بالحروف A وB وC. التصحيح يتحرك عكس الاتجاه الأكبر، ويكون عادة أبطأ وأكثر تعقيداً من الدافعة، ولهذا يصعب عدّه أثناء تشكّله. سندرس ثلاثة أشكال رئيسية هي الزيجزاج والفلات والمثلث. الهدف ليس التنبؤ الدقيق، بل معرفة متى يُحتمل أن ينتهي التصحيح ويُستأنف الاتجاه الأكبر."
+    },
+    {
+     "id": "s2",
+     "title": "الزيجزاج",
+     "narration": "الزيجزاج تصحيح حاد بنيته خمسة ثلاثة خمسة، أي أن الموجة A تتكون من خمس موجات فرعية، والموجة B من ثلاث، والموجة C من خمس. الموجة B ترتد عادة بين ثمانية وثلاثين وتسعة وسبعين بالمئة من A، ولا تقترب من بدايتها. وكثيراً ما تساوي C طول A تقريباً. يظهر الزيجزاج كثيراً في الموجة الثانية من الدافعة، ويبدو على الرسم كحركة واضحة الاتجاه ضد الترند."
+    },
+    {
+     "id": "s3",
+     "title": "الفلات",
+     "narration": "الفلات تصحيح جانبي بنيته ثلاثة ثلاثة خمسة. الموجة A تتكون من ثلاث موجات، ثم ترتد B بعمق كبير يقارب تسعين بالمئة من A أو أكثر، وقد تتجاوز بدايتها فيما يسمى الفلات الممتد، ثم تأتي C في خمس موجات وتنتهي غالباً قرب نهاية A أو بعدها بقليل. يظهر الفلات كثيراً في الموجة الرابعة، ويخدع المتداولين لأن ارتداد B القوي يبدو وكأنه عودة الاتجاه."
+    },
+    {
+     "id": "s4",
+     "title": "المثلث",
+     "narration": "المثلث تصحيح أفقي من خمس موجات A وB وC وD وE، وكل موجة منها تتكون من ثلاث موجات فرعية. خطا المثلث يتقاربان عادة، ويضيق نطاق السعر وينخفض الزخم مع الوقت. يظهر المثلث غالباً في الموجة الرابعة أو في الموجة B، أي قبل الحركة الأخيرة في الاتجاه. بعد انتهاء E يخرج السعر عادة بحركة سريعة، لكن هذا الخروج يحتاج تأكيداً بإغلاق شمعة خارج المثلث."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على GBPUSD",
+     "narration": "مثال تعليمي على الجنيه دولار: بعد صعود دافع انتهى عند 1.2800، يبدأ تصحيح. الموجة A تهبط إلى 1.2650، أي مئة وخمسين نقطة، في خمس موجات فرعية. الموجة B ترتد إلى 1.2730، أي نحو ثلاثة وخمسين بالمئة من A. ثم تهبط C إلى 1.2580، وهو طول يساوي A تماماً. البنية خمسة ثلاثة خمسة وارتداد B متوسط، لذلك نسميه زيجزاج. لو ارتدت B إلى 1.2790 لفكرنا في الفلات بدلاً منه."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من أكثر الأخطاء شيوعاً اعتبار نهاية الموجة A نهاية التصحيح كله، ثم الدخول مبكراً فتأتي C وتضرب وقف الخسارة. ومن الأخطاء أيضاً الخلط بين ارتداد B القوي في الفلات وبين بداية دافعة جديدة. وفي المثلث يتسرع البعض في الدخول قبل اكتمال الموجة E. التصحيحات بطبيعتها متعددة الاحتمالات، لذلك اجعل حجم صفقاتك أصغر خلالها، أو انتظر حتى يتضح الشكل."
+    },
+    {
+     "id": "s7",
+     "title": "الخلاصة",
+     "narration": "الخلاصة العملية: الزيجزاج حاد وبنيته خمسة ثلاثة خمسة، والفلات جانبي وبنيته ثلاثة ثلاثة خمسة مع ارتداد عميق للموجة B، والمثلث متقارب من خمس موجات ويسبق غالباً الحركة الأخيرة. حدد نوع التصحيح من عمق الموجة B وبنية الموجة A. لا تعتبر التصحيح منتهياً إلا بعد تأكيد واضح على شموع مغلقة، وضع دائماً مستوى إبطال، وتذكّر أن نسب الموجات إرشادات لا قواعد."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Nature of Corrections",
+     "narration": "After every impulsive move comes a correction that restores balance to the market, usually labelled with the letters A, B and C. A correction moves against the larger trend, and it is usually slower and more complex than the impulse, which is why it is hard to count while it is forming. We will study three main shapes: the zigzag, the flat and the triangle. The goal is not precise prediction, but knowing when the correction is likely to end and the larger trend to resume."
+    },
+    {
+     "id": "s2",
+     "title": "Zigzag",
+     "narration": "A zigzag is a sharp correction with a five-three-five structure, meaning wave A consists of five sub-waves, wave B of three, and wave C of five. Wave B usually retraces between thirty-eight and seventy-nine percent of A and does not approach its start. Wave C is often roughly equal in length to A. The zigzag appears frequently in wave two of an impulse, and on the chart it looks like a clearly directional move against the trend."
+    },
+    {
+     "id": "s3",
+     "title": "Flat",
+     "narration": "A flat is a sideways correction with a three-three-five structure. Wave A consists of three waves, then B retraces deeply, around ninety percent of A or more, and it may exceed A's start in what is called an expanded flat. Then C comes in five waves and usually ends near the end of A or slightly beyond it. The flat often appears in wave four, and it fools traders because B's strong rebound looks like the trend resuming."
+    },
+    {
+     "id": "s4",
+     "title": "Triangle",
+     "narration": "A triangle is a horizontal correction of five waves, A, B, C, D and E, each made of three sub-waves. The triangle's two lines usually converge, the price range narrows and momentum fades over time. A triangle usually appears in wave four or in wave B, that is, before the final move in the direction of the trend. After E ends, price usually exits with a fast move, but this breakout needs confirmation by a candle closing outside the triangle."
+    },
+    {
+     "id": "s5",
+     "title": "GBPUSD Example",
+     "narration": "An educational example on the pound-dollar: after an impulsive rally that ended at 1.2800, a correction begins. Wave A falls to 1.2650, one hundred and fifty pips, in five sub-waves. Wave B rebounds to 1.2730, about fifty-three percent of A. Then C falls to 1.2580, a length exactly equal to A. The structure is five-three-five and B's retracement is moderate, so we call it a zigzag. Had B rebounded to 1.2790, we would have considered a flat instead."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "One of the most common mistakes is treating the end of wave A as the end of the whole correction, entering early, and then C arrives and hits the stop loss. Another mistake is confusing B's strong rebound in a flat with the start of a new impulse. In a triangle, some traders rush in before wave E is complete. Corrections by nature have many possible outcomes, so keep your position sizes smaller during them, or wait until the shape becomes clear."
+    },
+    {
+     "id": "s7",
+     "title": "Summary",
+     "narration": "The practical summary: a zigzag is sharp with a five-three-five structure, a flat is sideways with a three-three-five structure and a deep wave B, and a triangle is a converging five-wave pattern that usually precedes the final move. Identify the type of correction from the depth of wave B and the structure of wave A. Do not consider a correction finished until there is clear confirmation on closed candles, always set an invalidation level, and remember that wave ratios are guidelines, not rules."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "سروشتی ڕاستکردنەوە",
+     "narration": "دوای هەر جووڵەیەکی پاڵنەر ڕاستکردنەوەیەک دێت کە هاوسەنگی بۆ بازاڕ دەگەڕێنێتەوە، و بە زۆری بە پیتەکانی A و B و C نیشان دەدرێت. ڕاستکردنەوە پێچەوانەی ئاراستە گەورەکە دەجووڵێت، و بە زۆری خاوتر و ئاڵۆزترە لە پاڵنەر، بۆیە ژماردنی لە کاتی دروستبووندا قورسە. سێ شێوەی سەرەکی دەخوێنین: zigzag و flat و triangle. ئامانج پێشبینی وردی نییە، بەڵکو زانینی ئەوەیە کەی ئەگەری هەیە ڕاستکردنەوەکە کۆتایی بێت و ئاراستە گەورەکە دەست پێبکاتەوە."
+    },
+    {
+     "id": "s2",
+     "title": "Zigzag",
+     "narration": "zigzag ڕاستکردنەوەیەکی تیژە بە پێکهاتەی پێنج سێ پێنج، واتە شەپۆلی A لە پێنج شەپۆلی لاوەکی پێکدێت، شەپۆلی B لە سێ، و شەپۆلی C لە پێنج. شەپۆلی B بە زۆری لە نێوان سی و هەشت بۆ حەفتا و نۆ لەسەدی A دەگەڕێتەوە و لە دەستپێکەکەی نزیک نابێتەوە. زۆرجار درێژی C نزیکەی یەکسانە بە A. zigzag زۆر لە شەپۆلی دووەمی پاڵنەردا دەردەکەوێت، و لەسەر چارت وەک جووڵەیەکی ئاراستەدار و ڕوون دژی ترێند دەبینرێت."
+    },
+    {
+     "id": "s3",
+     "title": "Flat",
+     "narration": "flat ڕاستکردنەوەیەکی لاتەنیشتە بە پێکهاتەی سێ سێ پێنج. شەپۆلی A لە سێ شەپۆل پێکدێت، پاشان B بە قووڵییەکی زۆر دەگەڕێتەوە، نزیکەی نەوەد لەسەدی A یان زیاتر، و لەوانەیە لە دەستپێکی A تێپەڕێت کە پێی دەوترێت expanded flat. پاشان C بە پێنج شەپۆل دێت و بە زۆری لە نزیک کۆتایی A یان کەمێک دوای ئەو کۆتایی دێت. flat زۆرجار لە شەپۆلی چوارەمدا دەردەکەوێت، و بازرگانان هەڵدەخەڵەتێنێت چونکە گەڕانەوەی بەهێزی B وەک گەڕانەوەی ترێند دەردەکەوێت."
+    },
+    {
+     "id": "s4",
+     "title": "Triangle",
+     "narration": "triangle ڕاستکردنەوەیەکی ئاسۆییە لە پێنج شەپۆل A و B و C و D و E، و هەر یەکێکیان لە سێ شەپۆلی لاوەکی پێکدێت. دوو هێڵی triangle بە زۆری لە یەک نزیک دەبنەوە، مەودای نرخ تەسک دەبێتەوە و خێرایی بە تێپەڕبوونی کات کەم دەبێتەوە. triangle بە زۆری لە شەپۆلی چوارەم یان لە شەپۆلی B دا دەردەکەوێت، واتە پێش جووڵەی کۆتایی لە ئاراستەی ترێنددا. دوای کۆتاییهاتنی E، نرخ بە زۆری بە جووڵەیەکی خێرا دەردەچێت، بەڵام ئەم دەرچوونە پێویستی بە سەلماندن هەیە بە داخستنی مۆمێک لە دەرەوەی triangle."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی GBPUSD",
+     "narration": "نموونەیەکی فێرکاری لەسەر پاوەند دۆلار: دوای بەرزبوونەوەیەکی پاڵنەر کە لە 1.2800 کۆتایی هات، ڕاستکردنەوەیەک دەست پێدەکات. شەپۆلی A دادەبەزێت بۆ 1.2650، واتە سەد و پەنجا پیپ، بە پێنج شەپۆلی لاوەکی. شەپۆلی B دەگەڕێتەوە بۆ 1.2730، نزیکەی پەنجا و سێ لەسەدی A. پاشان C دادەبەزێت بۆ 1.2580، کە درێژییەکەی ڕێک یەکسانە بە A. پێکهاتەکە پێنج سێ پێنجە و گەڕانەوەی B مامناوەندە، بۆیە پێی دەڵێین zigzag. ئەگەر B بگەڕایەتەوە بۆ 1.2790، بیرمان لە flat دەکردەوە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکێک لە باوترین هەڵەکان ئەوەیە کۆتایی شەپۆلی A بە کۆتایی هەموو ڕاستکردنەوەکە دابنرێت، پاشان زوو بچیتە ناو مامەڵە و C بێت و stop loss بپێکێت. هەڵەیەکی تر تێکەڵکردنی گەڕانەوەی بەهێزی B لە flat دایە لەگەڵ دەستپێکی پاڵنەرێکی نوێ. لە triangle دا، هەندێک کەس پەلە دەکەن پێش تەواوبوونی شەپۆلی E. ڕاستکردنەوەکان لە سروشتی خۆیاندا ئەگەری زۆریان هەیە، بۆیە قەبارەی مامەڵەکانت لەو ماوەیەدا بچووکتر بکە، یان چاوەڕێ بکە تا شێوەکە ڕوون دەبێتەوە."
+    },
+    {
+     "id": "s7",
+     "title": "پوختە",
+     "narration": "پوختەی کرداری: zigzag تیژە و پێکهاتەکەی پێنج سێ پێنجە، flat لاتەنیشتە و پێکهاتەکەی سێ سێ پێنجە لەگەڵ شەپۆلی B ی قووڵ، و triangle شێوەیەکی پێنج شەپۆلی لێکنزیکبووەوەیە کە بە زۆری پێش جووڵەی کۆتایی دێت. جۆری ڕاستکردنەوەکە لە قووڵی شەپۆلی B و پێکهاتەی شەپۆلی A دیاری بکە. ڕاستکردنەوە بە تەواوبوو دامەنێ تا سەلماندنێکی ڕوون لەسەر مۆمە داخراوەکان نەبێت، هەمیشە ئاستی هەڵوەشاندنەوە دابنێ، و لەبیرت بێت ڕێژەکانی شەپۆل ڕێنماییین نەک یاسا."
+    }
+   ]
+  },
+  "ew-l2-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "الفيبوناتشي والموجات",
+     "narration": "تستخدم نظرية إليوت نسب فيبوناتشي لتقدير أين قد تنتهي الموجات، وأشهرها 0.618 و1.618 و2.618. هذه النسب لا تحدد المستقبل، لكنها تعطينا مناطق محتملة نراقب فيها سلوك السعر. في هذه المحاضرة نركز على الموجة الثالثة والخامسة، لأنهما تحملان أكبر جزء من الاتجاه. تذكّر من البداية أن هذه العلاقات إرشادية، وأن القواعد الثلاث للدافعة تبقى هي الحكم الأول."
+    },
+    {
+     "id": "s2",
+     "title": "نسبة 1.618",
+     "narration": "العلاقة الأكثر شيوعاً للموجة الثالثة أن يبلغ طولها نحو 1.618 من طول الموجة الأولى. نقيس طول الموجة الأولى من بدايتها إلى نهايتها، ثم نضربه في 1.618 ونضيف الناتج إلى نهاية الموجة الثانية في الاتجاه الصاعد. عندما تكون الموجة الثالثة ممتدة بقوة قد تصل إلى 2.618 أو أكثر. وإذا توقفت الثالثة قبل مستوى 1.0 من الأولى فهذا يجعلنا أكثر حذراً من العدّ نفسه."
+    },
+    {
+     "id": "s3",
+     "title": "امتداد الخامسة",
+     "narration": "للموجة الخامسة علاقتان شائعتان. عندما تكون الثالثة ممتدة، تساوي الخامسة غالباً طول الموجة الأولى، أو تبلغ نحو 0.618 من المسافة بين بداية الموجة الأولى ونهاية الثالثة، مقيسة من نهاية الرابعة. أما عندما تكون الثالثة غير ممتدة، فقد تمتد الخامسة نفسها لتصل إلى 1.618 من طول الموجة الأولى أو أكثر. هذا الامتداد يظهر أحياناً في الذهب خلال الاتجاهات العاطفية القوية."
+    },
+    {
+     "id": "s4",
+     "title": "مثال على الذهب",
+     "narration": "مثال تعليمي على الذهب: الموجة الأولى ترتفع من 2300 إلى 2350 دولاراً، أي خمسين دولاراً. الموجة الثانية تهبط إلى 2320. نضرب خمسين في 1.618 فنحصل على نحو واحد وثمانين، ونضيفها إلى 2320 فيكون الهدف قرب 2401. افترض أن الثالثة انتهت عند 2405، ثم هبطت الرابعة إلى 2375 فوق قمة الأولى. تساوي الخامسة مع الأولى يعطي 2425، ونسبة 0.618 تعطي قرابة 2440، فتصبح المنطقة بينهما منطقة مراقبة."
+    },
+    {
+     "id": "s5",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو التعامل مع مستوى فيبوناتشي كأنه نقطة انعكاس مؤكدة، فيدخل المتداول عكس الاتجاه بمجرد لمسه. الخطأ الثاني هو القياس من نقاط خاطئة، مثل استخدام ظل شمعة عشوائية بدلاً من بداية الموجة الحقيقية. والخطأ الثالث هو جمع عشرات المستويات حتى يصبح كل سعر مستوى مهماً. استخدم عدداً قليلاً من النسب، وانتظر رد فعل السعر وإغلاق الشموع قبل أي قرار."
+    },
+    {
+     "id": "s6",
+     "title": "القاعدة العملية",
+     "narration": "الخلاصة العملية: نسبة 1.618 هي الأشهر للموجة الثالثة، وقد تمتد إلى 2.618. وللخامسة نراقب مساواتها للأولى أو نسبة 0.618 من مسافة الأولى إلى الثالثة، أو امتدادها إذا لم تمتد الثالثة. هذه نسب تقريبية تساعد على رسم مناطق لا خطوط دقيقة. ابحث عن تلاقي أكثر من نسبة في منطقة واحدة، واجعل القواعد الثلاث ومستوى الإبطال ووقف الخسارة أساس قرارك، لا الرقم وحده."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Fibonacci and Waves",
+     "narration": "Elliott theory uses Fibonacci ratios to estimate where waves might end, the best known being 0.618, 1.618 and 2.618. These ratios do not determine the future, but they give us likely zones where we watch how price behaves. In this lecture we focus on waves three and five, because they carry the largest part of the trend. Remember from the start that these relationships are guidelines, and that the three impulse rules remain the first judge."
+    },
+    {
+     "id": "s2",
+     "title": "The 1.618 Ratio",
+     "narration": "The most common relationship for wave three is a length of about 1.618 times wave one. We measure wave one from its start to its end, multiply it by 1.618, and add the result to the end of wave two in an uptrend. When wave three is strongly extended, it may reach 2.618 or more. And if wave three stalls before the 1.0 level of wave one, that makes us more cautious about the count itself."
+    },
+    {
+     "id": "s3",
+     "title": "Wave Five Extension",
+     "narration": "Wave five has two common relationships. When wave three is extended, wave five often equals the length of wave one, or reaches about 0.618 of the distance from the start of wave one to the end of wave three, measured from the end of wave four. When wave three is not extended, wave five itself may extend to 1.618 of wave one's length or more. This extension sometimes appears in gold during strong emotional trends."
+    },
+    {
+     "id": "s4",
+     "title": "Gold Example",
+     "narration": "An educational example on gold: wave one rises from 2300 to 2350 dollars, that is fifty dollars. Wave two drops to 2320. We multiply fifty by 1.618 and get about eighty-one, then add it to 2320, so the target is near 2401. Suppose wave three ended at 2405, then wave four fell to 2375, above the top of wave one. Wave five equal to wave one gives 2425, and the 0.618 ratio gives about 2440, so the area between them becomes a watch zone."
+    },
+    {
+     "id": "s5",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is treating a Fibonacci level as a confirmed reversal point, so the trader enters against the trend as soon as it is touched. The second mistake is measuring from the wrong points, such as using the wick of a random candle instead of the true start of the wave. The third mistake is piling up dozens of levels until every price becomes an important level. Use a small number of ratios, and wait for price reaction and candle closes before any decision."
+    },
+    {
+     "id": "s6",
+     "title": "Practical Rule",
+     "narration": "The practical summary: 1.618 is the best-known ratio for wave three, and it may extend to 2.618. For wave five we watch for equality with wave one, the 0.618 ratio of the distance from wave one to wave three, or its own extension if wave three did not extend. These are approximate ratios that help draw zones, not precise lines. Look for several ratios converging in one area, and make the three rules, the invalidation level and the stop loss the basis of your decision, not the number alone."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Fibonacci و شەپۆلەکان",
+     "narration": "تیۆری ئێلیۆت ڕێژەکانی Fibonacci بەکاردەهێنێت بۆ خەمڵاندنی ئەوەی شەپۆلەکان لەوانەیە لە کوێ کۆتایی بێن، ناسراوترینیان 0.618 و 1.618 و 2.618 ن. ئەم ڕێژانە داهاتوو دیاری ناکەن، بەڵام ناوچەی ئەگەرداری پێدەدەین کە تێیدا ڕەفتاری نرخ چاودێری دەکەین. لەم وانەیەدا سەرنج دەخەینە سەر شەپۆلی سێیەم و پێنجەم، چونکە گەورەترین بەشی ترێند هەڵدەگرن. لە سەرەتاوە لەبیرت بێت ئەم پەیوەندییانە ڕێنماییین، و سێ یاساکەی پاڵنەر دادوەری یەکەم دەمێننەوە."
+    },
+    {
+     "id": "s2",
+     "title": "ڕێژەی 1.618",
+     "narration": "باوترین پەیوەندی بۆ شەپۆلی سێیەم ئەوەیە درێژییەکەی نزیکەی 1.618 ئەوەندەی شەپۆلی یەکەم بێت. درێژی شەپۆلی یەکەم لە دەستپێکەوە تا کۆتایی دەپێوین، پاشان لە 1.618 دا لێکی دەدەین و ئەنجامەکە لە ئاراستەی بەرزبوونەوەدا دەخەینە سەر کۆتایی شەپۆلی دووەم. کاتێک شەپۆلی سێیەم بە بەهێزی درێژ دەبێتەوە، لەوانەیە بگاتە 2.618 یان زیاتر. و ئەگەر سێیەم پێش ئاستی 1.0 ی یەکەم وەستا، ئەوە وامان لێدەکات زیاتر ئاگادار بین لە خودی ژماردنەکە."
+    },
+    {
+     "id": "s3",
+     "title": "درێژبوونەوەی پێنجەم",
+     "narration": "شەپۆلی پێنجەم دوو پەیوەندی باوی هەیە. کاتێک سێیەم درێژبووەتەوە، پێنجەم زۆرجار یەکسانە بە درێژی شەپۆلی یەکەم، یان دەگاتە نزیکەی 0.618 ی مەودای نێوان دەستپێکی شەپۆلی یەکەم و کۆتایی سێیەم، کە لە کۆتایی چوارەمەوە دەپێورێت. بەڵام کاتێک سێیەم درێژ نەبووەتەوە، لەوانەیە خودی پێنجەم درێژ ببێتەوە تا 1.618 ی درێژی شەپۆلی یەکەم یان زیاتر. ئەم درێژبوونەوەیە هەندێکجار لە زێڕدا لە کاتی ترێندە بەهێز و هەستییەکاندا دەردەکەوێت."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی زێڕ",
+     "narration": "نموونەیەکی فێرکاری لەسەر زێڕ: شەپۆلی یەکەم لە 2300 بۆ 2350 دۆلار بەرز دەبێتەوە، واتە پەنجا دۆلار. شەپۆلی دووەم دادەبەزێت بۆ 2320. پەنجا لە 1.618 دا لێکدەدەین و نزیکەی هەشتا و یەک دەستدەکەوێت، و دەیخەینە سەر 2320، کەواتە ئامانجەکە نزیک 2401 ە. وا دابنێ سێیەم لە 2405 کۆتایی هات، پاشان چوارەم دابەزی بۆ 2375 لە سەرووی لووتکەی یەکەم. یەکسانبوونی پێنجەم لەگەڵ یەکەم 2425 دەدات، و ڕێژەی 0.618 نزیکەی 2440 دەدات، بۆیە ناوچەی نێوانیان دەبێتە ناوچەی چاودێری."
+    },
+    {
+     "id": "s5",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم ئەوەیە ئاستێکی Fibonacci وەک خاڵێکی سەلمێنراوی گەڕانەوە مامەڵە بکرێت، بۆیە بازرگان هەر کە نرخ دەیگاتێ دژی ترێند دەچێتە ناو مامەڵە. هەڵەی دووەم پێوانە لە خاڵی هەڵەوەیە، وەک بەکارهێنانی سێبەری مۆمێکی هەڕەمەکی لە جیاتی دەستپێکی ڕاستەقینەی شەپۆلەکە. هەڵەی سێیەم کۆکردنەوەی دەیان ئاستە تا هەموو نرخێک دەبێتە ئاستێکی گرنگ. ژمارەیەکی کەم لە ڕێژەکان بەکاربهێنە، و چاوەڕێی کاردانەوەی نرخ و داخستنی مۆمەکان بکە پێش هەر بڕیارێک."
+    },
+    {
+     "id": "s6",
+     "title": "یاسای کرداری",
+     "narration": "پوختەی کرداری: 1.618 ناسراوترین ڕێژەیە بۆ شەپۆلی سێیەم، و لەوانەیە تا 2.618 درێژ ببێتەوە. بۆ پێنجەم چاودێری یەکسانبوونی لەگەڵ یەکەم دەکەین، یان ڕێژەی 0.618 ی مەودای یەکەم تا سێیەم، یان درێژبوونەوەی خۆی ئەگەر سێیەم درێژ نەبووبێتەوە. ئەمانە ڕێژەی نزیکەیین کە یارمەتی کێشانی ناوچە دەدەن نەک هێڵی ورد. بەدوای کۆبوونەوەی چەند ڕێژەیەک لە یەک ناوچەدا بگەڕێ، و سێ یاساکە و ئاستی هەڵوەشاندنەوە و stop loss بکە بنەمای بڕیارەکەت، نەک تەنها ژمارەکە."
+    }
+   ]
+  },
+  "ew-l3-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "مشكلة الانحياز",
+     "narration": "العدّ الموجي ذاتي بطبيعته، فقد ينظر محللان إلى الرسم نفسه ويخرجان بعدّين مختلفين. الخطر الحقيقي ليس في الاختلاف، بل في الانحياز، أي أن نقرر الاتجاه أولاً ثم نرسم الموجات لتوافق رأينا. لتجنب ذلك نتعامل مع العدّ كفرضية قابلة للاختبار، نحمل معها بديلاً واحداً على الأقل، ونحدد لكل منهما مستوى إبطال واضحاً يخبرنا متى نكون مخطئين."
+    },
+    {
+     "id": "s2",
+     "title": "من أين نبدأ",
+     "narration": "ابدأ العدّ دائماً من الإطار الزمني الأكبر، مثل اليومي أو الأسبوعي، وحدد قمة أو قاعاً بارزاً لا خلاف عليه كنقطة انطلاق. بعد ذلك انزل إلى الإطار الأصغر لتفصيل الموجات الفرعية. لا تبدأ من منتصف حركة عشوائية، ولا تعتمد على الشموع غير المكتملة. اسأل نفسك: هل الحركة الحالية اندفاعية من خمس موجات، أم متداخلة ومتعرجة من ثلاث؟ هذا السؤال وحده يحدد نصف العمل."
+    },
+    {
+     "id": "s3",
+     "title": "بدائل العدّ",
+     "narration": "بعد تحديد العدّ الأساسي، اكتب عدّاً بديلاً يفسر الحركة نفسها بطريقة مختلفة. مثلاً، ما تراه موجة ثالثة صاعدة قد يكون في الحقيقة الموجة C من تصحيح داخل اتجاه هابط. لا يكفي أن تذكر البديل في ذهنك، بل حدد السعر الذي يرجح أحدهما على الآخر. وأحياناً يكون التصرف الأفضل أن تعترف بأن الصورة غير واضحة، فتنتظر ولا تتداول حتى تتضح البنية."
+    },
+    {
+     "id": "s4",
+     "title": "مستوى الإبطال",
+     "narration": "مستوى الإبطال هو السعر الذي إذا تجاوزه السعر أصبح العدّ مستحيلاً حسب القواعد. خلال الموجة الثانية، الإبطال هو بداية الموجة الأولى. وخلال الموجة الرابعة، الإبطال هو قمة الموجة الأولى في الدافعة القياسية. وإذا كانت الثالثة أقصر من الأولى، فيجب أن تبقى الخامسة أقصر من الثالثة. هذه المستويات ليست آراء، بل نتائج مباشرة للقواعد الثلاث، ولذلك هي أقوى أدوات العدّ الموضوعي."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على USDJPY",
+     "narration": "مثال تعليمي على الدولار ين: السعر يصعد من 145.00 إلى 147.20، ثم يهبط إلى 146.10، ثم يصعد بقوة إلى 149.50. العدّ الأساسي: موجة أولى ثم ثانية، والسعر الآن في الثالثة، وأي موجة رابعة يجب أن تبقى فوق 147.20. العدّ البديل: الحركة كلها تصحيح ABC داخل اتجاه هابط أكبر. إذا أغلقت الشموع تحت 147.20، يسقط العدّ الأساسي ويصبح البديل هو المرجح، فنعدّل خطتنا فوراً."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة تحريك مستوى الإبطال كلما اقترب السعر منه، وكأن العدّ يجب أن ينجح بأي ثمن. ومنها أيضاً إعادة تسمية الموجات بعد كل شمعة حتى يصبح العدّ بلا معنى، أو تجاهل العدّ البديل لأنه لا يعجبنا. والخطأ الأخطر هو ربط وقف الخسارة بالأمل بدلاً من ربطه بمستوى الإبطال. إذا لم تستطع تحديد سعر يثبت خطأك، فلا تملك عدّاً قابلاً للتداول."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "الخلاصة العملية: ابدأ من إطار زمني كبير ونقطة واضحة، واكتب عدّاً أساسياً وعدّاً بديلاً، وحدد لكل منهما مستوى إبطال مأخوذاً من القواعد الثلاث. راقب السعر على الشموع المغلقة، ودع السوق يختار بين السيناريوهين بدلاً من أن تختار أنت مسبقاً. اجعل وقف الخسارة مرتبطاً بمستوى الإبطال، وحجم الصفقة مرتبطاً بالمسافة إليه. وعندما تكون الصورة غامضة، فعدم التداول قرار سليم."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Bias Problem",
+     "narration": "Wave counting is subjective by nature: two analysts can look at the same chart and come out with two different counts. The real danger is not the disagreement but bias, meaning that we decide the direction first and then draw the waves to fit our opinion. To avoid this, we treat the count as a testable hypothesis, carry at least one alternative with it, and set for each a clear invalidation level that tells us when we are wrong."
+    },
+    {
+     "id": "s2",
+     "title": "Where to Start",
+     "narration": "Always start counting from the higher timeframe, such as the daily or weekly, and pick a prominent, undisputed high or low as the starting point. After that, move down to the lower timeframe to detail the sub-waves. Do not start from the middle of a random move, and do not rely on incomplete candles. Ask yourself: is the current move impulsive in five waves, or overlapping and choppy in three? That question alone settles half the work."
+    },
+    {
+     "id": "s3",
+     "title": "Alternative Counts",
+     "narration": "After setting the primary count, write an alternative count that explains the same move differently. For example, what you see as a rising wave three may in fact be wave C of a correction inside a downtrend. It is not enough to keep the alternative in your head; define the price that favours one over the other. And sometimes the best action is to admit that the picture is unclear, so you wait and do not trade until the structure becomes clear."
+    },
+    {
+     "id": "s4",
+     "title": "Invalidation Level",
+     "narration": "The invalidation level is the price which, if exceeded, makes the count impossible under the rules. During wave two, the invalidation is the start of wave one. During wave four, the invalidation is the top of wave one in a standard impulse. And if wave three is shorter than wave one, wave five must stay shorter than wave three. These levels are not opinions but direct consequences of the three rules, which is why they are the strongest tools of objective counting."
+    },
+    {
+     "id": "s5",
+     "title": "USDJPY Example",
+     "narration": "An educational example on the dollar-yen: price rises from 145.00 to 147.20, then drops to 146.10, then climbs strongly to 149.50. Primary count: wave one, then wave two, and price is now in wave three, so any wave four must stay above 147.20. Alternative count: the whole move is an ABC correction inside a larger downtrend. If candles close below 147.20, the primary count falls and the alternative becomes favoured, so we adjust our plan immediately."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "Common mistakes include moving the invalidation level every time price approaches it, as if the count must succeed at any cost. They also include relabelling the waves after every candle until the count becomes meaningless, or ignoring the alternative count because we do not like it. The most dangerous mistake is tying the stop loss to hope instead of to the invalidation level. If you cannot define a price that proves you wrong, you do not have a tradable count."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical summary: start from a higher timeframe and a clear point, write a primary count and an alternative count, and set for each an invalidation level taken from the three rules. Watch price on closed candles, and let the market choose between the two scenarios rather than choosing in advance yourself. Tie the stop loss to the invalidation level, and the trade size to the distance from it. And when the picture is unclear, not trading is a sound decision."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "کێشەی لایەنگیری",
+     "narration": "ژماردنی شەپۆل لە سروشتی خۆیدا خودییە: دوو شیکەرەوە دەتوانن سەیری هەمان چارت بکەن و دوو ژماردنی جیاواز دەربهێنن. مەترسی ڕاستەقینە لە جیاوازییەکەدا نییە، بەڵکو لە لایەنگیرییدایە، واتە سەرەتا ئاراستەکە بڕیار بدەین پاشان شەپۆلەکان بکێشین تا لەگەڵ ڕاکەماندا بگونجێن. بۆ دوورکەوتنەوە لەمە، ژماردنەکە وەک گریمانەیەکی تاقیکراوە مامەڵە دەکەین، لانیکەم یەک جێگرەوەی لەگەڵ هەڵدەگرین، و بۆ هەر یەکێکیان ئاستێکی هەڵوەشاندنەوەی ڕوون دیاری دەکەین کە پێمان دەڵێت کەی هەڵەین."
+    },
+    {
+     "id": "s2",
+     "title": "لە کوێوە دەست پێبکەین",
+     "narration": "هەمیشە ژماردن لە کاتی گەورەترەوە دەست پێبکە، وەک ڕۆژانە یان هەفتانە، و لووتکە یان نزمییەکی دیار و بێ ناکۆکی وەک خاڵی دەستپێک هەڵبژێرە. دوای ئەوە بڕۆ بۆ کاتی بچووکتر بۆ وردەکاری شەپۆلە لاوەکییەکان. لە ناوەڕاستی جووڵەیەکی هەڕەمەکییەوە دەست پێمەکە، و پشت بە مۆمی تەواونەبوو مەبەستە. لە خۆت بپرسە: ئایا جووڵەی ئێستا پاڵنەرە بە پێنج شەپۆل، یان تێکەڵ و پێچاوپێچە بە سێ شەپۆل؟ تەنها ئەم پرسیارە نیوەی کارەکە یەکلا دەکاتەوە."
+    },
+    {
+     "id": "s3",
+     "title": "ژماردنی جێگرەوە",
+     "narration": "دوای دیاریکردنی ژماردنی سەرەکی، ژماردنێکی جێگرەوە بنووسە کە هەمان جووڵە بە شێوەیەکی جیاواز ڕوون بکاتەوە. بۆ نموونە، ئەوەی تۆ وەک شەپۆلی سێیەمی بەرزبوونەوە دەیبینیت لەوانەیە لە ڕاستیدا شەپۆلی C ی ڕاستکردنەوەیەک بێت لەناو ترێندێکی دابەزیندا. بەس نییە جێگرەوەکە لە مێشکتدا بێت، بەڵکو ئەو نرخە دیاری بکە کە یەکێکیان بەسەر ئەوی تردا پەسەند دەکات. و هەندێکجار باشترین هەڵوێست ئەوەیە دان بەوەدا بنێیت کە وێنەکە ڕوون نییە، بۆیە چاوەڕێ دەکەیت و بازرگانی ناکەیت تا پێکهاتەکە ڕوون دەبێتەوە."
+    },
+    {
+     "id": "s4",
+     "title": "ئاستی هەڵوەشاندنەوە",
+     "narration": "ئاستی هەڵوەشاندنەوە ئەو نرخەیە کە ئەگەر نرخ لێی تێپەڕی، ژماردنەکە بەپێی یاساکان مەحاڵ دەبێت. لە کاتی شەپۆلی دووەمدا، هەڵوەشاندنەوە دەستپێکی شەپۆلی یەکەمە. لە کاتی شەپۆلی چوارەمدا، هەڵوەشاندنەوە لووتکەی شەپۆلی یەکەمە لە پاڵنەری ستانداردا. و ئەگەر سێیەم کورتتر بوو لە یەکەم، دەبێت پێنجەم کورتتر بمێنێتەوە لە سێیەم. ئەم ئاستانە ڕا نین، بەڵکو ئەنجامی ڕاستەوخۆی سێ یاساکەن، بۆیە بەهێزترین ئامرازەکانی ژماردنی بابەتین."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی USDJPY",
+     "narration": "نموونەیەکی فێرکاری لەسەر دۆلار یەن: نرخ لە 145.00 بۆ 147.20 بەرز دەبێتەوە، پاشان دادەبەزێت بۆ 146.10، پاشان بە بەهێزی بەرز دەبێتەوە بۆ 149.50. ژماردنی سەرەکی: شەپۆلی یەکەم، پاشان دووەم، و نرخ ئێستا لە سێیەمدایە، بۆیە هەر شەپۆلێکی چوارەم دەبێت لە سەرووی 147.20 بمێنێتەوە. ژماردنی جێگرەوە: هەموو جووڵەکە ڕاستکردنەوەیەکی ABC یە لەناو ترێندێکی دابەزینی گەورەتردا. ئەگەر مۆمەکان لە خوارووی 147.20 داخران، ژماردنی سەرەکی دەکەوێت و جێگرەوەکە پەسەندتر دەبێت، بۆیە دەستبەجێ پلانەکەمان دەگۆڕین."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "لە هەڵە باوەکان جووڵاندنی ئاستی هەڵوەشاندنەوەیە هەر جارێک نرخ لێی نزیک دەبێتەوە، وەک ئەوەی ژماردنەکە دەبێت بە هەر نرخێک سەرکەوتوو بێت. هەروەها ناونانەوەی شەپۆلەکانە دوای هەر مۆمێک تا ژماردنەکە بێ مانا دەبێت، یان پشتگوێخستنی ژماردنی جێگرەوە چونکە بەدڵمان نییە. مەترسیدارترین هەڵە بەستنەوەی stop loss ە بە هیواوە لە جیاتی بەستنەوەی بە ئاستی هەڵوەشاندنەوە. ئەگەر نەتوانیت نرخێک دیاری بکەیت کە هەڵەبوونت بسەلمێنێت، ژماردنێکی شیاوی بازرگانیت نییە."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "پوختەی کرداری: لە کاتێکی گەورە و خاڵێکی ڕوونەوە دەست پێبکە، ژماردنێکی سەرەکی و ژماردنێکی جێگرەوە بنووسە، و بۆ هەر یەکێکیان ئاستێکی هەڵوەشاندنەوە دیاری بکە کە لە سێ یاساکەوە وەرگیرابێت. نرخ لەسەر مۆمە داخراوەکان چاودێری بکە، و ڕێگە بدە بازاڕ لە نێوان دوو سیناریۆکەدا هەڵبژێرێت لە جیاتی ئەوەی تۆ پێشوەختە هەڵبژێریت. stop loss بە ئاستی هەڵوەشاندنەوەوە ببەستە، و قەبارەی مامەڵەکە بە مەودای نێوانیانەوە. و کاتێک وێنەکە ناڕوونە، بازرگانی نەکردن بڕیارێکی دروستە."
+    }
+   ]
+  },
+  "ew-l4-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "فكرة التوافق",
+     "narration": "مدرسة SMC أو مفاهيم الأموال الذكية تركز على السيولة، أي أماكن تجمع أوامر وقف الخسارة فوق القمم الواضحة وتحت القيعان الواضحة. ونظرية إليوت تركز على بنية الموجات. عندما ينتهي تصحيح أو موجة، يحدث كثيراً أن يتجاوز السعر قمة أو قاعاً سابقاً لفترة قصيرة ثم يعود. الجمع بين المدرستين قد يساعدنا على تحديد نهاية الموجة بدقة أكبر، لكنه لا يلغي احتمال الخطأ."
+    },
+    {
+     "id": "s2",
+     "title": "نهاية الموجة",
+     "narration": "أين نبحث عن هذا التوافق؟ أهم الأماكن هي نهاية الموجة الثانية ونهاية الموجة الرابعة ونهاية الموجة C في التصحيح، لأنها نقاط يُتوقع بعدها استئناف الاتجاه. وفي نهاية الموجة الخامسة، يتجاوز السعر غالباً قمة الثالثة ليصطاد السيولة فوقها قبل أن يضعف. لكن تذكّر أن مستوى الإبطال لا يتغير: صيد السيولة في الموجة الرابعة يجب ألا يدخل منطقة سعر الموجة الأولى."
+    },
+    {
+     "id": "s3",
+     "title": "علامات السيولة",
+     "narration": "كيف نتعرف على صيد السيولة على الرسم؟ ابحث أولاً عن قيعان متساوية أو قاع سابق واضح يراه الجميع. ثم راقب شمعة تكسر هذا المستوى بظل ثم تغلق عائدة فوقه. بعد ذلك ننتظر تغيراً في البنية على إطار أصغر، أي إغلاق شمعة فوق آخر قمة صغرى، وهو ما يسمى تغير الطابع. اجتماع هذه العلامات مع نهاية موجة متوقعة يعطي فرضية أقوى، لكنه يبقى احتمالاً وليس يقيناً."
+    },
+    {
+     "id": "s4",
+     "title": "مثال على الذهب",
+     "narration": "مثال تعليمي على الذهب: الموجة الأولى انتهت عند 2318، والثالثة عند 2395، والسعر الآن في الموجة الرابعة. تشكل قاعان متساويان تقريباً عند 2330. تهبط شمعة إلى 2324 ثم تغلق فوق 2330، وبقي السعر فوق 2318 فالعدّ سليم. على إطار الخمس عشرة دقيقة، تغلق شمعة فوق آخر قمة صغرى عند 2341. هنا تتوافق نهاية الموجة الرابعة المحتملة مع صيد السيولة، ويكون الإبطال تحت 2318."
+    },
+    {
+     "id": "s5",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو اعتبار كل كسر لقاع صيداً للسيولة، بينما قد يكون بداية هبوط حقيقي. لذلك لا نحكم إلا بعد إغلاق الشمعة وعودة السعر وتغير البنية. الخطأ الثاني هو الخلط بين الأطر الزمنية، كأن نبحث عن نهاية موجة يومية بصيد سيولة على دقيقة واحدة. والخطأ الثالث هو نسيان قواعد إليوت تماماً لأن إشارة السيولة بدت مقنعة. المدرستان تفسيريتان، والتوافق بينهما لا يلغي إدارة المخاطر."
+    },
+    {
+     "id": "s6",
+     "title": "القاعدة العملية",
+     "narration": "الخلاصة العملية: حدد أولاً أين يُحتمل أن تنتهي الموجة حسب العدّ ونسب فيبوناتشي، ثم ابحث في تلك المنطقة عن سيولة واضحة يمكن صيدها. انتظر الكسر بالظل، ثم الإغلاق عائداً، ثم تغير البنية على إطار أصغر بشموع مغلقة. ضع وقف الخسارة خلف المستوى الذي يُبطل الفكرة فعلاً، وهو غالباً الأبعد بين مستوى إبطال العدّ وقاع الصيد، واحسب حجم الصفقة على أساس هذه المسافة. التوافق يرفع الاحتمال، لكنه لا يضمن النتيجة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The Confluence Idea",
+     "narration": "The SMC school, or smart money concepts, focuses on liquidity, meaning the places where stop-loss orders cluster above obvious highs and below obvious lows. Elliott theory focuses on wave structure. When a correction or a wave ends, it often happens that price briefly exceeds a previous high or low and then returns. Combining the two schools may help us pinpoint the end of a wave more precisely, but it does not remove the possibility of error."
+    },
+    {
+     "id": "s2",
+     "title": "End of the Wave",
+     "narration": "Where do we look for this confluence? The most important places are the end of wave two, the end of wave four and the end of wave C in a correction, because these are points after which the trend is expected to resume. At the end of wave five, price often exceeds the top of wave three to take the liquidity above it before weakening. But remember that the invalidation level does not change: a liquidity sweep in wave four must not enter wave one's price territory."
+    },
+    {
+     "id": "s3",
+     "title": "Liquidity Signs",
+     "narration": "How do we recognise a liquidity sweep on the chart? First look for equal lows or a clear previous low that everyone can see. Then watch for a candle that breaks this level with a wick and closes back above it. After that, we wait for a change in structure on a lower timeframe, that is, a candle close above the last minor high, which is called a change of character. When these signs coincide with an expected wave end, the hypothesis is stronger, but it remains a probability, not a certainty."
+    },
+    {
+     "id": "s4",
+     "title": "Gold Example",
+     "narration": "An educational example on gold: wave one ended at 2318, wave three at 2395, and price is now in wave four. Two roughly equal lows form at 2330. A candle drops to 2324 and then closes above 2330, and price stayed above 2318, so the count remains valid. On the fifteen-minute timeframe, a candle closes above the last minor high at 2341. Here the possible end of wave four coincides with a liquidity sweep, and the invalidation is below 2318."
+    },
+    {
+     "id": "s5",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is treating every break of a low as a liquidity sweep, when it may be the start of a genuine decline. That is why we judge only after the candle closes, price returns and the structure changes. The second mistake is mixing timeframes, such as looking for the end of a daily wave with a liquidity sweep on the one-minute chart. The third mistake is forgetting Elliott's rules entirely because the liquidity signal looked convincing. Both schools are interpretive, and their agreement does not replace risk management."
+    },
+    {
+     "id": "s6",
+     "title": "Practical Rule",
+     "narration": "The practical summary: first determine where the wave is likely to end according to the count and Fibonacci ratios, then look in that area for clear liquidity that could be taken. Wait for the break with a wick, then the close back inside, then a change in structure on a lower timeframe with closed candles. Place the stop loss beyond the level that truly invalidates the idea, usually whichever is farther of the count's invalidation level and the sweep low, and calculate the trade size from that distance. Confluence raises the probability, but it does not guarantee the outcome."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بیرۆکەی گونجان",
+     "narration": "قوتابخانەی SMC یان چەمکەکانی پارەی زیرەک سەرنج دەخاتە سەر شلەیی (liquidity)، واتە ئەو شوێنانەی فەرمانەکانی stop loss لە سەرووی لووتکە ڕوونەکان و لە خوارووی نزمییە ڕوونەکان کۆدەبنەوە. تیۆری ئێلیۆت سەرنج دەخاتە سەر پێکهاتەی شەپۆلەکان. کاتێک ڕاستکردنەوەیەک یان شەپۆلێک کۆتایی دێت، زۆرجار ڕوودەدات کە نرخ بۆ ماوەیەکی کورت لە لووتکە یان نزمییەکی پێشوو تێدەپەڕێت پاشان دەگەڕێتەوە. کۆکردنەوەی هەردوو قوتابخانەکە لەوانەیە یارمەتیمان بدات کۆتایی شەپۆل وردتر دیاری بکەین، بەڵام ئەگەری هەڵە لانابات."
+    },
+    {
+     "id": "s2",
+     "title": "کۆتایی شەپۆل",
+     "narration": "لە کوێ بەدوای ئەم گونجانەدا دەگەڕێین؟ گرنگترین شوێنەکان کۆتایی شەپۆلی دووەم و کۆتایی شەپۆلی چوارەم و کۆتایی شەپۆلی C ن لە ڕاستکردنەوەدا، چونکە ئەمانە ئەو خاڵانەن کە چاوەڕێ دەکرێت دوایان ترێند دەست پێبکاتەوە. لە کۆتایی شەپۆلی پێنجەمدا، نرخ زۆرجار لە لووتکەی سێیەم تێدەپەڕێت بۆ ڕاوکردنی شلەیی سەرووی پێش ئەوەی لاواز ببێت. بەڵام لەبیرت بێت ئاستی هەڵوەشاندنەوە ناگۆڕێت: ڕاوکردنی شلەیی لە شەپۆلی چوارەمدا نابێت بچێتە ناو ناوچەی نرخی شەپۆلی یەکەم."
+    },
+    {
+     "id": "s3",
+     "title": "نیشانەکانی شلەیی",
+     "narration": "چۆن ڕاوکردنی شلەیی لەسەر چارت دەناسینەوە؟ سەرەتا بەدوای نزمی یەکسان یان نزمییەکی پێشووی ڕووندا بگەڕێ کە هەمووان دەیبینن. پاشان چاودێری مۆمێک بکە کە ئەم ئاستە بە سێبەر دەشکێنێت و دواتر بە گەڕانەوە بۆ سەرووی دادەخرێت. دوای ئەوە چاوەڕێی گۆڕانێک لە پێکهاتەدا دەکەین لەسەر کاتێکی بچووکتر، واتە داخستنی مۆمێک لە سەرووی دوایین لووتکەی بچووک، کە پێی دەوترێت change of character. کاتێک ئەم نیشانانە لەگەڵ کۆتایی شەپۆلێکی چاوەڕوانکراودا کۆدەبنەوە، گریمانەکە بەهێزتر دەبێت، بەڵام هەر ئەگەرێکە نەک دڵنیایی."
+    },
+    {
+     "id": "s4",
+     "title": "نموونەی زێڕ",
+     "narration": "نموونەیەکی فێرکاری لەسەر زێڕ: شەپۆلی یەکەم لە 2318 کۆتایی هات، سێیەم لە 2395، و نرخ ئێستا لە شەپۆلی چوارەمدایە. دوو نزمی نزیکەی یەکسان لە 2330 دروست دەبن. مۆمێک دادەبەزێت بۆ 2324 پاشان لە سەرووی 2330 دادەخرێت، و نرخ لە سەرووی 2318 مایەوە، کەواتە ژماردنەکە دروستە. لەسەر کاتی پازدە خولەکی، مۆمێک لە سەرووی دوایین لووتکەی بچووک لە 2341 دادەخرێت. لێرەدا کۆتایی ئەگەرداری شەپۆلی چوارەم لەگەڵ ڕاوکردنی شلەیی دەگونجێت، و هەڵوەشاندنەوە لە خوارووی 2318 ە."
+    },
+    {
+     "id": "s5",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم ئەوەیە هەر شکاندنێکی نزمی بە ڕاوکردنی شلەیی دابنرێت، لە کاتێکدا لەوانەیە دەستپێکی دابەزینێکی ڕاستەقینە بێت. بۆیە تەنها دوای داخستنی مۆم و گەڕانەوەی نرخ و گۆڕانی پێکهاتە حوکم دەدەین. هەڵەی دووەم تێکەڵکردنی کاتەکانە، وەک ئەوەی بەدوای کۆتایی شەپۆلێکی ڕۆژانەدا بگەڕێین بە ڕاوکردنی شلەیی لەسەر چارتی یەک خولەکی. هەڵەی سێیەم لەبیرکردنی تەواوی یاساکانی ئێلیۆتە چونکە نیشانەی شلەیی قایلکەر دەرکەوت. هەردوو قوتابخانەکە لێکدانەوەیین، و گونجانیان جێگەی بەڕێوەبردنی مەترسی ناگرێتەوە."
+    },
+    {
+     "id": "s6",
+     "title": "یاسای کرداری",
+     "narration": "پوختەی کرداری: سەرەتا دیاری بکە شەپۆلەکە بەپێی ژماردن و ڕێژەکانی Fibonacci ئەگەری هەیە لە کوێ کۆتایی بێت، پاشان لەو ناوچەیەدا بەدوای شلەیی ڕووندا بگەڕێ کە دەکرێت ڕاو بکرێت. چاوەڕێی شکاندن بە سێبەر بکە، پاشان داخستن بە گەڕانەوە، پاشان گۆڕانی پێکهاتە لەسەر کاتێکی بچووکتر بە مۆمی داخراو. stop loss لە پشت ئەو ئاستەوە دابنێ کە بەڕاستی بیرۆکەکە هەڵدەوەشێنێتەوە، بە زۆری ئەوەیان کە دوورترە لە نێوان ئاستی هەڵوەشاندنەوەی ژماردن و نزمی ڕاوکردن، و قەبارەی مامەڵە لەسەر بنەمای ئەو مەودایە حیساب بکە. گونجان ئەگەر بەرز دەکاتەوە، بەڵام ئەنجامەکە مسۆگەر ناکات."
+    }
+   ]
+  },
+  "ew-l5-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "من الرسم إلى الخطة",
+     "narration": "العدّ الموجي بلا إدارة مخاطر مجرد رسم على الشاشة. لتحويل العدّ إلى خطة تداول نحتاج إلى ثلاثة عناصر واضحة قبل الدخول: نقطة الدخول، ومستوى وقف الخسارة، والهدف. ونحتاج أيضاً إلى حجم مركز يجعل الخسارة المحتملة صغيرة ومقبولة. في هذه المحاضرة نبني خطة تعليمية كاملة من عدّ موجي، مع التذكير بأن هذا مثال للتعلم وليس توصية بالشراء أو البيع."
+    },
+    {
+     "id": "s2",
+     "title": "الدخول",
+     "narration": "أوضح الفرص في إليوت تأتي غالباً بعد نهاية الموجة الثانية، لأن الموجة الثالثة عادة هي الأقوى، ولأن مستوى الإبطال قريب وواضح. لكننا لا ندخل لمجرد وصول السعر إلى نسبة فيبوناتشي. ننتظر تأكيداً، مثل إغلاق شمعة فوق آخر قمة صغرى داخل التصحيح على إطار أصغر. هذا التأكيد يقلل احتمال الدخول المبكر، لكنه يجعل سعر الدخول أسوأ قليلاً، وهذه مقايضة مقبولة."
+    },
+    {
+     "id": "s3",
+     "title": "الوقف",
+     "narration": "وقف الخسارة في إليوت ليس رقماً عشوائياً، بل يوضع خلف مستوى الإبطال. إذا كنا ندخل في بداية الموجة الثالثة، فالإبطال هو بداية الموجة الأولى، لأن الموجة الثانية لا يجوز أن تتجاوزها. نضع الوقف خلف هذا المستوى بمسافة صغيرة تراعي الفارق السعري والتذبذب. وإذا كانت المسافة كبيرة جداً، لا نقرّب الوقف لنرتاح، بل نصغّر حجم الصفقة أو نتخلى عنها."
+    },
+    {
+     "id": "s4",
+     "title": "الهدف",
+     "narration": "نحدد الهدف من نسب فيبوناتشي التي درسناها. الهدف الأول المعقول هو أن تساوي الموجة الثالثة طول الأولى، أي نسبة 1.0، والهدف الثاني هو 1.618 من طول الأولى مقيسة من نهاية الثانية. يمكن جني جزء من الربح عند الهدف الأول ونقل الوقف إلى نقطة الدخول. ونحرص على أن تكون نسبة العائد إلى المخاطرة مقبولة، فإذا كانت أقل من واحد ونصف تقريباً، فالفرصة غالباً لا تستحق."
+    },
+    {
+     "id": "s5",
+     "title": "مثال على EURUSD",
+     "narration": "مثال تعليمي على اليورو دولار: الموجة الأولى من 1.0800 إلى 1.0880، والثانية تنتهي عند 1.0830. بعد إغلاق شمعة فوق قمة صغرى، يكون الدخول قرب 1.0850. الوقف عند 1.0790، أي ستين نقطة. الهدف الأول 1.0910 والثاني قرب 1.0960، أي مئة وعشر نقاط، فالعائد إلى المخاطرة نحو واحد وثمانية من عشرة. بحساب عشرة آلاف دولار ومخاطرة واحد بالمئة، أي مئة دولار، يكون الحجم نحو 0.16 لوت."
+    },
+    {
+     "id": "s6",
+     "title": "أخطاء شائعة",
+     "narration": "من الأخطاء الشائعة الدخول قبل التأكيد لأن السعر لمس نسبة 0.618، أو وضع الوقف داخل منطقة الإبطال حتى تبدو الصفقة أجمل. ومنها أيضاً رفع حجم الصفقة لأن العدّ يبدو مثالياً، أو إلغاء الوقف على أمل أن يعود السعر. وخطأ آخر هو تجاهل الفارق السعري والأخبار الاقتصادية المهمة التي قد تسبب انزلاقاً سعرياً. العدّ الجيد مع إدارة مخاطر سيئة يقود في النهاية إلى خسائر كبيرة."
+    },
+    {
+     "id": "s7",
+     "title": "القاعدة العملية",
+     "narration": "الخلاصة العملية: قبل أي صفقة اكتب الخطة كاملة. الدخول بعد تأكيد على شمعة مغلقة، والوقف خلف مستوى الإبطال المأخوذ من القواعد، والهدف من نسب فيبوناتشي كمنطقة لا كرقم مقدس. احسب الحجم بحيث لا تتجاوز الخسارة نسبة صغيرة من الحساب، مثل واحد بالمئة. وإذا كُسر مستوى الإبطال، فالخروج قرار تحليلي وليس فشلاً شخصياً. الالتزام بالخطة أهم من دقة العدّ."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "From Chart to Plan",
+     "narration": "A wave count without risk management is just a drawing on the screen. To turn a count into a trading plan, we need three clear elements before entering: the entry point, the stop-loss level and the target. We also need a position size that keeps the potential loss small and acceptable. In this lecture we build a complete educational plan from a wave count, with a reminder that this is an example for learning, not a recommendation to buy or sell."
+    },
+    {
+     "id": "s2",
+     "title": "Entry",
+     "narration": "The clearest opportunities in Elliott usually come after the end of wave two, because wave three is typically the strongest and because the invalidation level is close and clear. But we do not enter just because price reached a Fibonacci ratio. We wait for confirmation, such as a candle closing above the last minor high inside the correction on a lower timeframe. This confirmation reduces the chance of entering too early, but it makes the entry price slightly worse, and that is an acceptable trade-off."
+    },
+    {
+     "id": "s3",
+     "title": "Stop Loss",
+     "narration": "In Elliott, the stop loss is not a random number; it is placed beyond the invalidation level. If we enter at the start of wave three, the invalidation is the start of wave one, because wave two must not exceed it. We place the stop beyond this level by a small margin that allows for the spread and volatility. And if the distance is too large, we do not move the stop closer for comfort; instead we reduce the trade size or skip the trade."
+    },
+    {
+     "id": "s4",
+     "title": "Target",
+     "narration": "We set the target from the Fibonacci ratios we have studied. A reasonable first target is wave three equalling the length of wave one, that is the 1.0 ratio, and the second target is 1.618 of wave one's length measured from the end of wave two. Part of the profit can be taken at the first target and the stop moved to the entry point. We make sure the reward-to-risk ratio is acceptable; if it is below roughly one and a half, the opportunity is often not worth it."
+    },
+    {
+     "id": "s5",
+     "title": "EURUSD Example",
+     "narration": "An educational example on the euro-dollar: wave one runs from 1.0800 to 1.0880, and wave two ends at 1.0830. After a candle closes above a minor high, the entry is near 1.0850. The stop is at 1.0790, that is sixty pips. The first target is 1.0910 and the second is near 1.0960, that is one hundred and ten pips, so the reward-to-risk is about one point eight. With a ten-thousand-dollar account and one percent risk, that is one hundred dollars, the size is about 0.16 lots."
+    },
+    {
+     "id": "s6",
+     "title": "Common Mistakes",
+     "narration": "Common mistakes include entering before confirmation because price touched the 0.618 ratio, or placing the stop inside the invalidation zone to make the trade look nicer. They also include increasing the trade size because the count looks perfect, or cancelling the stop in the hope that price will come back. Another mistake is ignoring the spread and major economic news that can cause slippage. A good count with poor risk management eventually leads to large losses."
+    },
+    {
+     "id": "s7",
+     "title": "Practical Rule",
+     "narration": "The practical summary: before any trade, write the complete plan. Entry after confirmation on a closed candle, the stop beyond the invalidation level taken from the rules, and the target from Fibonacci ratios as a zone, not a sacred number. Calculate the size so that the loss does not exceed a small percentage of the account, such as one percent. If the invalidation level is broken, exiting is an analytical decision, not a personal failure. Sticking to the plan matters more than the accuracy of the count."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "لە چارتەوە بۆ پلان",
+     "narration": "ژماردنی شەپۆل بێ بەڕێوەبردنی مەترسی تەنها وێنەیەکە لەسەر شاشە. بۆ گۆڕینی ژماردن بۆ پلانێکی بازرگانی، پێش چوونە ناو مامەڵە پێویستمان بە سێ توخمی ڕوون هەیە: خاڵی چوونەژوورەوە، ئاستی stop loss، و ئامانج. هەروەها پێویستمان بە قەبارەیەکی پۆزیشن هەیە کە زیانی ئەگەرداری بچووک و پەسەندکراو بهێڵێتەوە. لەم وانەیەدا پلانێکی فێرکاری تەواو لە ژماردنێکی شەپۆلەوە دروست دەکەین، لەگەڵ بیرخستنەوەی ئەوەی ئەمە نموونەیەکە بۆ فێربوون نەک ڕاسپاردەی کڕین یان فرۆشتن."
+    },
+    {
+     "id": "s2",
+     "title": "چوونەژوورەوە",
+     "narration": "ڕوونترین دەرفەتەکان لە ئێلیۆتدا بە زۆری دوای کۆتایی شەپۆلی دووەم دێن، چونکە شەپۆلی سێیەم بە زۆری بەهێزترینە و چونکە ئاستی هەڵوەشاندنەوە نزیک و ڕوونە. بەڵام تەنها لەبەر ئەوەی نرخ گەیشتە ڕێژەیەکی Fibonacci ناچینە ناو مامەڵە. چاوەڕێی سەلماندن دەکەین، وەک داخستنی مۆمێک لە سەرووی دوایین لووتکەی بچووک لەناو ڕاستکردنەوەکەدا لەسەر کاتێکی بچووکتر. ئەم سەلماندنە ئەگەری زوو چوونەژوورەوە کەم دەکاتەوە، بەڵام نرخی چوونەژوورەوە کەمێک خراپتر دەکات، و ئەمە ئاڵوگۆڕێکی پەسەندکراوە."
+    },
+    {
+     "id": "s3",
+     "title": "Stop loss",
+     "narration": "لە ئێلیۆتدا stop loss ژمارەیەکی هەڕەمەکی نییە، بەڵکو لە پشت ئاستی هەڵوەشاندنەوەوە دادەنرێت. ئەگەر لە دەستپێکی شەپۆلی سێیەمدا بچینە ژوورەوە، هەڵوەشاندنەوە دەستپێکی شەپۆلی یەکەمە، چونکە شەپۆلی دووەم نابێت لێی تێپەڕێت. stop لە پشت ئەم ئاستەوە بە مەودایەکی بچووک دادەنێین کە spread و هەڵبەزودابەز لەبەرچاو بگرێت. و ئەگەر مەوداکە زۆر گەورە بوو، stop نزیک ناکەینەوە بۆ ئاسوودەیی، بەڵکو قەبارەی مامەڵەکە بچووک دەکەینەوە یان وازی لێدەهێنین."
+    },
+    {
+     "id": "s4",
+     "title": "ئامانج",
+     "narration": "ئامانج لە ڕێژەکانی Fibonacci دیاری دەکەین کە خوێندمانن. ئامانجی یەکەمی گونجاو ئەوەیە شەپۆلی سێیەم یەکسان بێت بە درێژی یەکەم، واتە ڕێژەی 1.0، و ئامانجی دووەم 1.618 ی درێژی یەکەمە کە لە کۆتایی دووەمەوە دەپێورێت. دەکرێت بەشێک لە قازانج لە ئامانجی یەکەمدا وەربگیرێت و stop بگوازرێتەوە بۆ خاڵی چوونەژوورەوە. ئاگادار دەبین کە ڕێژەی قازانج بە مەترسی پەسەندکراو بێت؛ ئەگەر لە نزیکەی یەک و نیو کەمتر بوو، دەرفەتەکە زۆرجار شایەنی نییە."
+    },
+    {
+     "id": "s5",
+     "title": "نموونەی EURUSD",
+     "narration": "نموونەیەکی فێرکاری لەسەر یۆرۆ دۆلار: شەپۆلی یەکەم لە 1.0800 بۆ 1.0880 ە، و دووەم لە 1.0830 کۆتایی دێت. دوای داخستنی مۆمێک لە سەرووی لووتکەیەکی بچووک، چوونەژوورەوە نزیک 1.0850 دەبێت. stop لە 1.0790 ە، واتە شەست پیپ. ئامانجی یەکەم 1.0910 و دووەم نزیک 1.0960 ە، واتە سەد و دە پیپ، کەواتە قازانج بە مەترسی نزیکەی یەک خاڵ هەشتە. بە هەژمارێکی دە هەزار دۆلاری و مەترسی یەک لەسەد، واتە سەد دۆلار، قەبارەکە نزیکەی 0.16 لۆتە."
+    },
+    {
+     "id": "s6",
+     "title": "هەڵە باوەکان",
+     "narration": "لە هەڵە باوەکان چوونەژوورەوەیە پێش سەلماندن چونکە نرخ ڕێژەی 0.618 ی بەرکەوت، یان دانانی stop لەناو ناوچەی هەڵوەشاندنەوەدا تا مامەڵەکە جوانتر دەربکەوێت. هەروەها زیادکردنی قەبارەی مامەڵەیە چونکە ژماردنەکە تەواو دەردەکەوێت، یان هەڵوەشاندنەوەی stop بە هیوای ئەوەی نرخ بگەڕێتەوە. هەڵەیەکی تر پشتگوێخستنی spread و هەواڵە ئابوورییە گرنگەکانە کە لەوانەیە ببنە هۆی slippage. ژماردنێکی باش لەگەڵ بەڕێوەبردنی مەترسی خراپ لە کۆتاییدا دەبێتە هۆی زیانی گەورە."
+    },
+    {
+     "id": "s7",
+     "title": "یاسای کرداری",
+     "narration": "پوختەی کرداری: پێش هەر مامەڵەیەک پلانەکە بە تەواوی بنووسە. چوونەژوورەوە دوای سەلماندن لەسەر مۆمێکی داخراو، stop لە پشت ئاستی هەڵوەشاندنەوەوە کە لە یاساکانەوە وەرگیراوە، و ئامانج لە ڕێژەکانی Fibonacci وەک ناوچەیەک نەک ژمارەیەکی پیرۆز. قەبارە بە شێوەیەک حیساب بکە کە زیان لە ڕێژەیەکی بچووکی هەژمار تێنەپەڕێت، وەک یەک لەسەد. ئەگەر ئاستی هەڵوەشاندنەوە شکێنرا، دەرچوون بڕیارێکی شیکارییە نەک شکستێکی کەسی. پابەندبوون بە پلانەوە گرنگترە لە وردی ژماردنەکە."
+    }
+   ]
+  }
+ }
+}

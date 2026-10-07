@@ -466,6 +466,50 @@ ACADEMY_SCHOOLS: list[dict] = [
 ]
 
 
+
+# ---------------------------------------------------------------- full lesson texts
+# `academy_content/<school>.json` holds the complete lessons (6–8 spoken segments each) in ar / en / ku:
+# {"school_id": ..., "lectures": {"<lecture id>": {"ar": [{"id","title","narration"}], "en": [...], "ku": [...]}}}.
+# The short segments above stay only as a fallback for a lecture without a content file.
+def _load_content() -> dict[str, dict[str, list[dict]]]:
+    import json
+    from pathlib import Path
+
+    out: dict[str, dict[str, list[dict]]] = {}
+    folder = Path(__file__).resolve().parent / "academy_content"
+    for f in sorted(folder.glob("*.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for lec_id, langs in (data.get("lectures") or {}).items():
+            if isinstance(langs, dict):
+                out[lec_id] = {
+                    k: [{"id": str(x["id"]), "title": str(x["title"]), "narration": str(x["narration"])} for x in v]
+                    for k, v in langs.items()
+                    if isinstance(v, list) and v
+                }
+    return out
+
+
+LESSON_CONTENT: dict[str, dict[str, list[dict]]] = _load_content()
+
+
+def _apply_lesson_content() -> None:
+    for school in ACADEMY_SCHOOLS:
+        for lv in school["levels"]:
+            for lec in lv["lectures"]:
+                ar = LESSON_CONTENT.get(lec["id"], {}).get("ar")
+                if not ar:
+                    continue
+                lec["script_segments"] = [_seg(x["id"], x["title"], x["narration"]) for x in ar]
+                words = sum(len(x["narration"].split()) for x in ar)
+                lec["narration_words"] = words
+                lec["duration_min"] = max(1, -(-words // NARRATION_WPM))
+
+
+_apply_lesson_content()
+
 def get_schools_summary() -> list[dict]:
     out = []
     for s in ACADEMY_SCHOOLS:

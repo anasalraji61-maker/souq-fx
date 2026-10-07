@@ -668,7 +668,16 @@ def localize_school(school: dict, lang: str | None) -> dict:
                 pair = segs.get(seg["id"])
                 if pair:
                     seg["title"], seg["narration"] = pair[0], pair[1]
+            full = _lesson(lec["id"], code)
+            if full:
+                lec["script_segments"] = [dict(x) for x in full]
     return out
+
+
+def _lesson(lecture_id: str, code: str) -> list[dict] | None:
+    import academy_data
+
+    return academy_data.LESSON_CONTENT.get(lecture_id, {}).get(code)
 
 
 def coverage(lang: str) -> dict[str, int]:
@@ -683,7 +692,8 @@ def coverage(lang: str) -> dict[str, int]:
                 lec += 1
                 t = tr.get(f"lec:{l['id']}")
                 lec_tr += 1 if t else 0
+                full = {x["id"] for x in (_lesson(l["id"], normalize_lang(lang)) or [])}
                 for g in l["script_segments"]:
                     seg += 1
-                    seg_tr += 1 if t and g["id"] in t.get("seg", {}) else 0
+                    seg_tr += 1 if (g["id"] in full) or (t and g["id"] in t.get("seg", {})) else 0
     return {"lectures": lec, "lectures_translated": lec_tr, "segments": seg, "segments_translated": seg_tr}

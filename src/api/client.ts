@@ -20,7 +20,7 @@ export interface ApiResponse<T = unknown> {
 import { getInstallId, getToken, clearSession } from './session';
 import { tl } from '../i18n/locales';
 
-const API_BASE = ((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE || '').replace(/\/$/, '');
+export const API_BASE = ((import.meta as unknown as { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE || '').replace(/\/$/, '');
 const TIMEOUT_MS = 10000;
 
 // Track global backend reachability

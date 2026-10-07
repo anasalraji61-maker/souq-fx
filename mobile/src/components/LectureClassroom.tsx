@@ -261,6 +261,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
     const playSegment = async () => {
       if (!current?.narration || paused || clarification) return;
+      // ElevenLabs has no Kurdish voice: the Kurdish lesson is read, not narrated.
+      if (lang === 'ku') {
+        setVoiceError(t.lectureVoiceNoKu);
+        return;
+      }
       setVoiceBusy(true);
       setVoiceError(null);
       try {
@@ -274,6 +279,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: current.narration }),
         });
+        if (res.status === 503) {
+          if (!cancelled) setVoiceError(t.lectureVoiceOff);
+          return;
+        }
         if (!res.ok) {
           const err = await res.text();
           throw new Error(err.slice(0, 180) || `HTTP ${res.status}`);
@@ -288,6 +297,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           sound.remove();
           return;
         }
+        // when this part finishes, the lesson moves on to the next part by itself
+        sound.addListener('playbackStatusUpdate', (st) => {
+          if (st.didJustFinish && !cancelled) void nextRef.current();
+        });
         sound.play();
         soundRef.current = sound;
       } catch {
@@ -306,7 +319,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [current?.id, current?.narration, paused, clarification, t.lectureVoicePlayError]);
+  }, [current?.id, current?.narration, paused, clarification, t.lectureVoicePlayError, t.lectureVoiceOff, t.lectureVoiceNoKu, lang]);
 
   const stopVoice = async () => {
     try {
@@ -372,6 +385,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       }
     }
   };
+
+  const nextRef = useRef(next);
+  nextRef.current = next;
 
   const prev = async () => {
     await stopVoice();
@@ -488,7 +504,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           </Text>
         </View>
         <Text style={[styles.screenTitle, { textAlign: align }]}>{current?.title || '—'}</Text>
-        <ScrollView style={{ flexGrow: 0, maxHeight: 220 }}>
+        <ScrollView style={{ flex: 1, minHeight: 140 }} nestedScrollEnabled>
           <Text style={[styles.screenBody, { textAlign: align }]}>{current?.narration}</Text>
         </ScrollView>
         <View style={styles.progressBg}>
