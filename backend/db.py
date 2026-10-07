@@ -170,6 +170,11 @@ def _check_username(username: str) -> None:
 
 def init_db() -> None:
     with _conn() as c:
+        # many users at once: readers never wait for a writer (persistent setting of the database file)
+        try:
+            c.execute("PRAGMA journal_mode=WAL")
+        except sqlite3.Error:
+            pass
         c.executescript(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -1188,11 +1193,16 @@ LOCKOUT_DURATION = 15 * 60  # 15 دقيقة بالثواني
 
 
 def _check_login_rate_limit(ident: str) -> None:
+    import shared_state
+
     now = time.time()
     key = ident.lower()
     with _login_lock:
-        attempts = [t for t in _login_failures.get(key, []) if now - t < LOCKOUT_DURATION]
-        _login_failures[key] = attempts
+        if shared_state.multi():
+            attempts = shared_state.recent("login_fail", key, LOCKOUT_DURATION)
+        else:
+            attempts = [t for t in _login_failures.get(key, []) if now - t < LOCKOUT_DURATION]
+            _login_failures[key] = attempts
         if len(attempts) >= MAX_LOGIN_ATTEMPTS:
             oldest = attempts[0]
             remaining = int(math.ceil((LOCKOUT_DURATION - (now - oldest)) / 60))
@@ -1202,8 +1212,13 @@ def _check_login_rate_limit(ident: str) -> None:
 
 
 def _record_login_failure(ident: str) -> None:
+    import shared_state
+
     now = time.time()
     key = ident.lower()
+    if shared_state.multi():
+        shared_state.record("login_fail", key)
+        return
     with _login_lock:
         attempts = [t for t in _login_failures.get(key, []) if now - t < LOCKOUT_DURATION]
         attempts.append(now)
@@ -1211,7 +1226,12 @@ def _record_login_failure(ident: str) -> None:
 
 
 def _clear_login_failures(ident: str) -> None:
+    import shared_state
+
     key = ident.lower()
+    if shared_state.multi():
+        shared_state.clear("login_fail", key)
+        return
     with _login_lock:
         _login_failures.pop(key, None)
 

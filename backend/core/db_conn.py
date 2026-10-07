@@ -42,6 +42,9 @@ def _conn() -> sqlite3.Connection:
     parent = DB_PATH.parent
     if not parent.is_dir():
         parent.mkdir(parents=True, exist_ok=True)
-    c = sqlite3.connect(DB_PATH)
+    c = sqlite3.connect(DB_PATH, timeout=15)
     c.row_factory = sqlite3.Row
+    # WAL (set once by `db.init_db`, stored in the file) lets readers and one writer work at the same time;
+    # NORMAL sync is safe with WAL and makes every write much cheaper.
+    c.execute("PRAGMA synchronous=NORMAL")
     return c

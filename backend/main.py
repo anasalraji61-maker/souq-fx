@@ -31,6 +31,7 @@ from academy_data import get_lecture, get_school, get_schools_summary
 import elevenlabs_tts as tts
 import twelve_data as market
 import twelve_data_ws as td_ws
+import shared_state
 import db
 from core.auth import _auth_user, _install_key, _owner_key
 import news_feed
@@ -56,15 +57,20 @@ API_PORT = int(os.getenv("MATRIX_PORT", "8100"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db.init_db()
-    ws_task = asyncio.create_task(td_ws.run_forever())
-    alert_task = asyncio.create_task(alert_worker.run_alert_loop(60.0))
-    backup_task = asyncio.create_task(ops.run_backup_loop())
+    with shared_state.init_lock():
+        db.init_db()
+    tasks: list[asyncio.Task] = []
+    # With several workers only one (the leader) runs the background jobs; the others serve requests.
+    if shared_state.acquire_leader():
+        tasks.append(asyncio.create_task(td_ws.run_forever()))
+        tasks.append(asyncio.create_task(alert_worker.run_alert_loop(60.0)))
+        tasks.append(asyncio.create_task(ops.run_backup_loop()))
+        if shared_state.multi():
+            tasks.append(asyncio.create_task(td_ws.publish_forever()))
     yield
-    ws_task.cancel()
-    alert_task.cancel()
-    backup_task.cancel()
-    for task in (ws_task, alert_task, backup_task):
+    for task in tasks:
+        task.cancel()
+    for task in tasks:
         try:
             await task
         except asyncio.CancelledError:
@@ -986,6 +992,8 @@ def _register_ip_allowed(ip: str) -> bool:
         cap = int(os.getenv("MATRIX_REGISTER_PER_HOUR", "20"))
     except ValueError:
         cap = 20
+    if shared_state.multi():
+        return shared_state.allow("register", ip, cap, 3600)
     now = time.time()
     hits = [t for t in _REGISTER_IP_HITS.get(ip, []) if now - t < 3600]
     ok = len(hits) < cap
@@ -1077,6 +1085,8 @@ _FORGOT_IP_MAX = 5  # requests per IP per 15 minutes
 
 
 def _forgot_ip_allowed(ip: str) -> bool:
+    if shared_state.multi():
+        return shared_state.allow("forgot", ip, _FORGOT_IP_MAX, 900)
     now = time.time()
     hits = [t for t in _FORGOT_IP_HITS.get(ip, []) if now - t < 900]
     if len(hits) >= _FORGOT_IP_MAX:

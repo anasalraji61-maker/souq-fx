@@ -29,6 +29,20 @@ def resolve_dist_dir() -> Path | None:
     return None
 
 
+def cache_headers(path: str) -> dict[str, str]:
+    """Browser/CDN caching. Built files under assets/ have a content hash in their name, so they never change:
+    cache them for a year (Cloudflare keeps them at its edge too). Pages and the service worker must always be
+    re-checked so a new release shows up at once."""
+    p = path.lstrip("/")
+    if p.startswith("assets/"):
+        return {"Cache-Control": "public, max-age=31536000, immutable"}
+    if p.endswith((".html", ".webmanifest", ".json")) or p in ("sw.js", "service-worker.js", "registerSW.js"):
+        return {"Cache-Control": "no-cache"}
+    if p.endswith((".png", ".svg", ".ico", ".jpg", ".jpeg", ".webp", ".woff2", ".woff", ".ttf", ".mp3", ".wav")):
+        return {"Cache-Control": "public, max-age=86400"}
+    return {"Cache-Control": "no-cache"}
+
+
 def try_serve_spa(path: str, method: str) -> FileResponse | None:
     """Try to serve a SPA route.
 
@@ -63,11 +77,11 @@ def try_serve_spa(path: str, method: str) -> FileResponse | None:
     if ".." in candidate_path or "%2e%2e" in candidate_path.lower() or "%2e" in candidate_path.lower():
         return None
     if candidate.is_file() and candidate.is_relative_to(dist_resolved):
-        return FileResponse(candidate)
+        return FileResponse(candidate, headers=cache_headers(candidate_path))
     # A folder with its own index.html (e.g. /admin/, /legal/) serves that page, not the app shell.
     folder_index = candidate / "index.html"
     if candidate.is_dir() and candidate != dist_resolved and folder_index.is_file() and folder_index.is_relative_to(dist_resolved):
-        return FileResponse(folder_index)
+        return FileResponse(folder_index, headers=cache_headers("index.html"))
 
     # If the last segment has a ".", treat as a missing asset
     last_segment = candidate_path.rsplit("/", 1)[-1]
@@ -75,7 +89,7 @@ def try_serve_spa(path: str, method: str) -> FileResponse | None:
         return None
 
     # SPA fallback: serve index.html for all other paths
-    return FileResponse(dist / "index.html")
+    return FileResponse(dist / "index.html", headers=cache_headers("index.html"))
 
 
 def register_spa(app) -> None:

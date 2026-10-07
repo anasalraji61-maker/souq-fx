@@ -211,7 +211,50 @@ async def run_forever() -> None:
 LIVE_MAX_AGE = 180.0
 
 
+# ـــ several server workers (`shared_state`) ـــ
+# Only the leader process holds the WebSocket. It publishes the ticks every second; the other workers copy them
+# into their own `LATEST`/`LATEST_AT` (at most once a second) before answering, so every worker sees the same prices.
+_last_sync = 0.0
+
+
+def _sync() -> None:
+    global _last_sync
+    import shared_state
+
+    if not shared_state.multi() or shared_state.is_leader():
+        return
+    now = time.time()
+    if now - _last_sync < 1.0:
+        return
+    _last_sync = now
+    for sym, price, at, pts in shared_state.load_ticks():
+        if at >= LATEST_AT.get(sym, 0.0):
+            LATEST[sym] = price
+            LATEST_AT[sym] = at
+            if pts is not None:
+                _PROVIDER_TS[sym] = pts
+
+
+async def publish_forever(every: float = 1.0) -> None:
+    """Leader only: copy the live ticks to the shared file for the other workers."""
+    import shared_state
+
+    while True:
+        try:
+            await asyncio.to_thread(shared_state.publish_ticks, dict(LATEST), dict(LATEST_AT), dict(_PROVIDER_TS))
+        except Exception:  # noqa: BLE001 — never stop publishing because of one failed write
+            pass
+        await asyncio.sleep(every)
+
+
+def _shared_reader() -> bool:
+    import shared_state
+
+    return shared_state.multi() and not shared_state.is_leader()
+
+
 def status() -> dict:
+    _sync()
     # كان `symbols_live` = كل رمز وصل سعره يوماً — حتى بعد انقطاع الـWS بساعات. الآن ما وصل خلال
     # `LIVE_MAX_AGE` فقط، والباقي بـ`symbols_stale`.
     # وتيك بعطلة الأسبوع (ملء المزوّد بعد إغلاق الجمعة) ليس «حيّاً»: البثّ والتنبيهات يُسقطانه أصلاً
@@ -219,7 +262,7 @@ def status() -> dict:
     live = {s: p for s, p in snapshot(max_age=LIVE_MAX_AGE).items()
             if not market.in_weekend_close(s, LATEST_AT.get(s) or market._session_now(), 0)}
     return {
-        "connected": _connected,
+        "connected": _connected or (_shared_reader() and bool(live)),
         "symbols_live": list(live.keys()),
         "symbols_stale": [s for s in dict(LATEST) if s not in live],
         "last_error": _last_error,
@@ -229,6 +272,7 @@ def status() -> dict:
 
 def snapshot(max_age: float | None = None) -> dict[str, float]:
     """آخر الأسعار؛ مع `max_age` (ثوانٍ) فقط ما وصل خلالها — سعر أقدم ليس «السعر الحالي»."""
+    _sync()
     if max_age is None:
         return dict(LATEST)
     cutoff = time.time() - max_age
@@ -241,6 +285,7 @@ def recent_snapshot(window: float = 120.0) -> tuple[dict[str, float], float | No
     """(الأسعار القريبة من أحدث استلام، وقت أحدث استلام) — لبثّ `/ws/ticks` بوقت حقيقي `as_of` بدل
     «الآن»: حين يتجمّد الـWS يصير as_of قديماً فيعرض العميل «آخر سعر» لا «حي». رمز تأخّر أكثر من
     `window` عن أحدث رمز يُستبعد كي لا يحمل وقت غيره."""
+    _sync()
     if not LATEST_AT:
         return dict(LATEST), None
     newest = max(dict(LATEST_AT).values())
@@ -253,6 +298,7 @@ def tick(symbol: str, max_age: float) -> tuple[float, float] | None:
     يُستدعى من خيط الـworker بينما حلقة الـWS تكتب `LATEST` ثم `LATEST_AT` (run 123): قراءتهما منفصلتين كانت
     تأخذ السعر القديم بوقت التيك الجديد ⇒ سعر قبل تسليح التنبيه يُعدّ بعده. الوقت يُقرأ قبل السعر وبعده؛
     اختلافهما = تيك وصل بينهما ⇒ إعادة. تطابقهما قد يعني سعراً أحدث بوقت أقدم — الاتجاه الآمن (لا يُطلق مبكراً)."""
+    _sync()
     for _ in range(5):
         at = LATEST_AT.get(symbol)
         p = LATEST.get(symbol)
@@ -267,4 +313,5 @@ def tick(symbol: str, max_age: float) -> tuple[float, float] | None:
 
 def received_at(symbols: list[str] | dict[str, float]) -> dict[str, float | None]:
     """وقت استلام كل رمز على حدة — `as_of` الدفعة وقت **أحدثها**، فسعرٌ أقدم منه بدقيقتين كان يحمل وقت غيره."""
+    _sync()
     return {s: LATEST_AT.get(s) for s in symbols}

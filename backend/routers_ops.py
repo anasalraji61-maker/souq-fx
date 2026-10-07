@@ -26,6 +26,10 @@ _MAX_PER_HOUR = 30
 
 
 def _ip_ok(ip: str) -> bool:
+    import shared_state
+
+    if shared_state.multi():
+        return shared_state.allow("client_errors", ip, _MAX_PER_HOUR, 3600)
     now = time.time()
     hits = [t for t in _HITS.get(ip, []) if now - t < 3600]
     ok = len(hits) < _MAX_PER_HOUR

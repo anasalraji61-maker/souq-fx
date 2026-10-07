@@ -56,6 +56,10 @@ _WAITLIST_MAX_PER_HOUR = 10
 
 
 def _waitlist_ip_ok(ip: str) -> bool:
+    import shared_state
+
+    if shared_state.multi():
+        return shared_state.allow("waitlist", ip, _WAITLIST_MAX_PER_HOUR, 3600)
     now = time.time()
     hits = [t for t in _WAITLIST_HITS.get(ip, []) if now - t < 3600]
     ok = len(hits) < _WAITLIST_MAX_PER_HOUR

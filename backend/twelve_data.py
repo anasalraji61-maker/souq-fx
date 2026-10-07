@@ -450,6 +450,10 @@ def _disk_conn() -> sqlite3.Connection | None:
         return None
     CANDLE_DISK.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(str(CANDLE_DISK), timeout=5)
+    try:
+        con.execute("PRAGMA journal_mode=WAL")  # several workers read/write the shared candle cache
+    except sqlite3.Error:
+        pass
     con.execute(
         f"CREATE TABLE IF NOT EXISTS {_DISK_TABLE} "
         "(key TEXT PRIMARY KEY, fetched_at REAL NOT NULL, base_at REAL NOT NULL, body TEXT NOT NULL)"
@@ -928,6 +932,17 @@ def _fetch_bucket(matrix_symbol: str, timeframe: str, outputsize: int) -> tuple[
     if hit and (now - hit[0] < ttl or now < (_closed_until(sym, hit[0]) or 0)):
         _stats["cache_hits"] = int(_stats["cache_hits"] or 0) + 1
         return hit[1], {"kind": "cache", "as_of": hit[0], "channel": "twelvedata"}
+    import shared_state
+
+    if shared_state.multi():
+        # another worker may have fetched this series moments ago: it is on the shared disk cache
+        disk = _disk_read(cache_key)
+        if disk and now - disk[0] < ttl and (not hit or disk[0] > hit[0]):
+            with _cache_lock:
+                _cache[cache_key] = (disk[0], disk[2])
+                _base_at[cache_key] = disk[1]
+            _stats["cache_hits"] = int(_stats["cache_hits"] or 0) + 1
+            return disk[2], {"kind": "cache", "as_of": disk[0], "channel": "twelvedata"}
 
     td_sym = td_symbol(sym)
     interval = TF_MAP[tf]
@@ -1109,6 +1124,13 @@ def take_provider_slot() -> bool:
     rpm = _pace_rpm()
     if rpm <= 0:
         return True
+    import shared_state
+
+    if shared_state.multi():
+        ok = shared_state.allow("provider_pace", "all", rpm, 60.0)
+        if not ok:
+            _stats["paced"] = int(_stats.get("paced") or 0) + 1
+        return ok
     now = time.time()
     with _PACE_LOCK:
         while _PACE_TIMES and now - _PACE_TIMES[0] >= 60.0:
