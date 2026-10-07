@@ -230,7 +230,8 @@ export const TerminalScreen: React.FC<TerminalScreenProps> = ({
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
   const [tradingDrawerTab, setTradingDrawerTab] = useState<'orders' | 'positions'>('orders');
-  const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState(false);
+  // Phone: the chart shows first (the watchlist has its own bottom tab); tablet/desktop: watchlist panel open.
+  const [isWatchlistCollapsed, setIsWatchlistCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [isChartTypeMenuOpen, setIsChartTypeMenuOpen] = useState(false);
   const [isOrderFlowOpen, setIsOrderFlowOpen] = useState(false);
 

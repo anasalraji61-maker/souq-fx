@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChartScrollLockContext } from '../chart/scrollLock';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   View,
@@ -1288,6 +1289,10 @@ export function TerminalScreen() {
   const headDailyRefs = useDailyRefs(phone ? [] : [symbol]);
   // إبقاء الزوج النشط ظاهراً بشريط الهاتف حين يتبدّل من مكان آخر (عجلة الأزواج/البحث/التنبيه).
   const phoneStripRef = useRef<ScrollView | null>(null);
+  // A chart being dragged stops the page from scrolling at once (otherwise on iPhone the page takes the finger
+  // after a few pixels and the candles never move). `chartTouch` above only turns on after a delay.
+  const [pageScrollLocked, setPageScrollLocked] = useState(false);
+  const lockPageScroll = useCallback((locked: boolean) => setPageScrollLocked(locked), []);
   const phoneStripX = useRef<Record<string, number>>({});
   useEffect(() => {
     if (!phone) return;
@@ -2135,7 +2140,10 @@ export function TerminalScreen() {
             />
           </View>
         ) : (
+          <ChartScrollLockContext.Provider value={lockPageScroll}>
           <ScrollView
+            // a chart being dragged keeps the finger: the page does not scroll until it lifts
+            scrollEnabled={!pageScrollLocked}
             style={[
               styles.mainScroll,
               Platform.OS === 'web'
@@ -2210,6 +2218,7 @@ export function TerminalScreen() {
             />
             <Text style={styles.hintMove}>{t.termHintMoveText}</Text>
           </ScrollView>
+          </ChartScrollLockContext.Provider>
         )}
 
         {!phone ? (

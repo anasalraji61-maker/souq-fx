@@ -9,12 +9,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// ملاحظة: لا نستورد expo-av بشكل ثابت (static import) — على Expo Go
-// مع SDK الحالي الوحدة الأصلية 'ExponentAV' غير مشمولة، ومجرد استيراد
-// الحزمة في أعلى الملف يُعطّل التطبيق بالكامل عند الإقلاع (حتى قبل فتح
-// هذه الشاشة). لذلك نحمّلها ديناميكياً فقط عند الاستخدام الفعلي، داخل
-// try/catch، حتى يستمر التطبيق بدون صوت إن لم تكن الوحدة متاحة.
-import type { Audio as ExpoAudioNS } from 'expo-av';
+// Narration audio: expo-audio (included in Expo Go and in store builds; expo-av was removed from Expo Go).
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { playSoftClick } from '../audio/playSoftClick';
 import { API_URL, api, type ChartSeries } from '../api';
@@ -73,7 +69,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [chartOffline, setChartOffline] = useState(false);
   const [showChart, setShowChart] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
-  const soundRef = useRef<ExpoAudioNS.Sound | null>(null);
+  const soundRef = useRef<AudioPlayer | null>(null);
   const completeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -153,8 +149,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     (async () => {
       try {
         try {
-          const { Audio } = await import('expo-av');
-          await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+          await setAudioModeAsync({ playsInSilentMode: true });
         } catch {
           // الصوت غير متاح في Expo Go لهذا الإصدار — نكمل بدون تهيئة الصوت
         }
@@ -221,7 +216,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   // والشريط يقول «الصوت يعمل» فوق صمت.
   useEffect(
     () => () => {
-      void soundRef.current?.unloadAsync().catch(() => {});
+      try {
+        soundRef.current?.remove();
+      } catch {
+        // already released
+      }
       soundRef.current = null;
     },
     [schoolId, lectureId]
@@ -266,8 +265,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       setVoiceError(null);
       try {
         if (soundRef.current) {
-          await soundRef.current.stopAsync();
-          await soundRef.current.unloadAsync();
+          soundRef.current.pause();
+          soundRef.current.remove();
           soundRef.current = null;
         }
         const res = await fetch(`${API_URL}/api/academy/tts`, {
@@ -284,12 +283,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         const uri = data.audio_url.startsWith('http')
           ? data.audio_url
           : `${API_URL}${data.audio_url}`;
-        const { Audio } = await import('expo-av');
-        const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
+        const sound = createAudioPlayer({ uri });
         if (cancelled) {
-          await sound.unloadAsync();
+          sound.remove();
           return;
         }
+        sound.play();
         soundRef.current = sound;
       } catch {
         // لا يُعرض نصّ الاستثناء أبداً: `err.slice(0,180)` أعلاه هو **جسم ردّ الخادم كما هو** (تفصيل
@@ -312,8 +311,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const stopVoice = async () => {
     try {
       if (soundRef.current) {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
+        soundRef.current.pause();
+        soundRef.current.remove();
         soundRef.current = null;
       }
     } catch {

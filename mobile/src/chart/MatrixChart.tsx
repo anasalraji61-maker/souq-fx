@@ -1,6 +1,7 @@
 import React, {
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -22,6 +23,7 @@ import {
   AppState,
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
+import { ChartScrollLockContext } from './scrollLock';
 import * as Sharing from 'expo-sharing';
 import { buttons, colors, numeric, radii, selectedMarkerWidth, spacing } from '../theme';
 import { isTimeframe, type Timeframe } from '../timeframes';
@@ -5918,7 +5920,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [schedulePublishSync, restXPan]
   );
 
+  const lockPageScroll = useContext(ChartScrollLockContext);
   const beginDrag = useCallback(() => {
+    lockPageScroll(true);
     // بالإعادة قد تكون الإزاحة المخزّنة (بعد AUTO) دون حدّ القطع — النافذة المرسومة عند الحدّ، فالسحب يبدأ منه.
     panStartOffset.current = Math.max(offsetRef.current, replayMinOffsetNow());
     // مثبَّت طوال السحب: تغيّره إطاراً إطاراً عند أوّل التاريخ يجعل السحب غير خطّي.
@@ -5933,13 +5937,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     crossPinned.current = false;
     crossFromSync.current = false;
     setCross(null);
-  }, [replayMinOffsetNow]);
+  }, [replayMinOffsetNow, lockPageScroll]);
 
   const endDrag = useCallback(() => {
+    lockPageScroll(false);
     gestureOnRef.current = false;
     foldGapNow();
     schedulePublishSync(true);
-  }, [schedulePublishSync, foldGapNow]);
+  }, [schedulePublishSync, foldGapNow, lockPageScroll]);
 
   // حول المركز (أو `focus` — موضع مؤشّر العجلة من 0 إلى 1)، إلا عند متابعة الحيّ (offset 0) فالطرف
   // الأيمن مثبَّت — `zoomWindow.ts`.
