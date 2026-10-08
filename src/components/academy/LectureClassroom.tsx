@@ -115,13 +115,13 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
   }, [rtl, next, prev, nextUnlocked, onOpenLecture, onBack]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const RATES = [1, 1.3, 1.5, 1.7];
+  const RATES = [1, 1.35, 1.5, 1.7];
   const [rate, setRate] = useState<number>(() => {
     try {
-      const n = Number(localStorage.getItem('matrix_lesson_rate_v2'));
-      return RATES.includes(n) ? n : 1.3;
+      const n = Number(localStorage.getItem('matrix_lesson_rate_v3'));
+      return RATES.includes(n) ? n : 1.35;
     } catch {
-      return 1.3;
+      return 1.35;
     }
   });
   const rateRef = useRef(rate);
@@ -130,7 +130,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
     const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
     setRate(next);
     try {
-      localStorage.setItem('matrix_lesson_rate_v2', String(next));
+      localStorage.setItem('matrix_lesson_rate_v3', String(next));
     } catch {
       /* private mode */
     }

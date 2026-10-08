@@ -72,12 +72,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [showComplete, setShowComplete] = useState(false);
   const soundRef = useRef<AudioPlayer | null>(null);
   // narration speed (the free server voice reads slowly at 1×); remembered on the device
-  const RATES = [1, 1.3, 1.5, 1.7];
-  const [rate, setRate] = useState(1.3);
-  const rateRef = useRef(1.3);
+  const RATES = [1, 1.35, 1.5, 1.7];
+  const [rate, setRate] = useState(1.35);
+  const rateRef = useRef(1.35);
   rateRef.current = rate;
   useEffect(() => {
-    AsyncStorage.getItem('matrix.lesson.rate.v2')
+    AsyncStorage.getItem('matrix.lesson.rate.v3')
       .then((v) => {
         const n = Number(v);
         if (RATES.includes(n)) setRate(n);
@@ -88,7 +88,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const cycleRate = () => {
     const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
     setRate(next);
-    AsyncStorage.setItem('matrix.lesson.rate.v2', String(next)).catch(() => {});
+    AsyncStorage.setItem('matrix.lesson.rate.v3', String(next)).catch(() => {});
     try {
       soundRef.current?.setPlaybackRate(next, 'high');
     } catch {
