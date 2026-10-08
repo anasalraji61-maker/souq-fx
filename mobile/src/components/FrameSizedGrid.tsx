@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,11 @@ export const FRAME_BOX_H_PHONE_GRID = FRAME_CHART_H_PHONE_GRID + 110;
  * كلا الوضعين عمودي التمرير (لا تمرير أفقي)، ويُحفظ الاختيار محلياً.
  */
 type PhoneMode = 'single' | 'grid' | 'stack';
+
+/** How a chart cell is shown: `column` = four tall rectangles side by side, `square` = 2×2 squares.
+ * Both are "clean" on the phone: candles only, one short line on top (no axes, no timeframe bar). */
+export type FrameCellMode = 'normal' | 'square' | 'column';
+export const FrameCellContext = createContext<FrameCellMode>('normal');
 
 export type GridItem = {
   id: string;
@@ -313,7 +318,7 @@ export function FrameSizedGrid({
 
   if (!ready) return null;
 
-  const renderCell = (item: GridItem, index: number, cellStyle?: StyleProp<ViewStyle>) => {
+  const renderCell = (item: GridItem, index: number, cellStyle?: StyleProp<ViewStyle>, compact = false) => {
     const dragging = draggingId === item.id;
     const hovered = hoverId === item.id && draggingId !== item.id;
     return (
@@ -334,7 +339,7 @@ export function FrameSizedGrid({
           },
         ]}
       >
-        {storageKey ? (
+        {storageKey && !compact ? (
           <View
             style={styles.handleBar}
             {...responders[item.id].panHandlers}
@@ -483,31 +488,35 @@ export function FrameSizedGrid({
     );
   }
 
-  // الهاتف + وضع المربعات: فريمان بكل صف (نفس فكرة الفريمات المربعة على اللابتوب)
+  // Phone, squares: a clean 2×2 that fills the screen (candles only, one short line per square).
   if (phone && !showAll && phoneMode === 'grid') {
+    const areaH = Math.max(380, windowH - 330);
+    const cellH = Math.floor((areaH - spacing.xs) / 2);
     return (
       <View>
         {phoneModeToggle}
-        <View style={styles.gridPhoneGrid}>
-          {displayed.map((item, index) =>
-            renderCell(item, index, [styles.cellPhoneGrid, { height: FRAME_BOX_H_PHONE_GRID }])
-          )}
-        </View>
+        <FrameCellContext.Provider value="square">
+          <View style={styles.compactGrid}>
+            {displayed.slice(0, 4).map((item, index) =>
+              renderCell(item, index, [styles.cellCompactSquare, { height: cellH }], true)
+            )}
+          </View>
+        </FrameCellContext.Provider>
       </View>
     );
   }
 
-  // الهاتف + وضع المستطيلات: فريم واحد عمودي بكل صف، بعرض الشاشة وأطول
-  // (نفس التمرير العمودي الطبيعي للصفحة — بلا تمرير أفقي).
+  // Phone, rectangles: four tall, thin charts side by side across the screen (all visible at once).
   if (phone && !showAll && phoneMode === 'stack') {
+    const areaH = Math.max(380, windowH - 330);
     return (
       <View>
         {phoneModeToggle}
-        <View style={[styles.grid, styles.gridCol]}>
-          {displayed.map((item, index) =>
-            renderCell(item, index, [styles.cellPhone, { height: Math.max(FRAME_BOX_H_PHONE, Math.round(windowH * 0.5)) }])
-          )}
-        </View>
+        <FrameCellContext.Provider value="column">
+          <View style={[styles.compactRow, { height: areaH }]}>
+            {displayed.slice(0, 4).map((item, index) => renderCell(item, index, styles.cellCompactColumn, true))}
+          </View>
+        </FrameCellContext.Provider>
       </View>
     );
   }
@@ -587,6 +596,29 @@ const styles = StyleSheet.create({
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
+  },
+  compactGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: spacing.xs,
+    width: '100%',
+  },
+  cellCompactSquare: {
+    width: '49.4%',
+    minWidth: 0,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  compactRow: {
+    flexDirection: 'row',
+    gap: 3,
+    width: '100%',
+  },
+  cellCompactColumn: {
+    flex: 1,
+    minWidth: 0,
+    height: '100%',
   },
   gridPhoneGrid: {
     flexDirection: 'row',

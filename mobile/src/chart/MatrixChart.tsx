@@ -611,6 +611,7 @@ function LinePreview({ width, lineStyle, color }: { width: number; lineStyle: Li
 const CHROME_DIM_DELAY_MS = 150;
 
 const PRICE_AXIS_WIDTH = 68;
+const PRICE_AXIS_WIDTH_FULL = PRICE_AXIS_WIDTH;
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -12` + سطر 14) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
 const LEVEL_LABEL_H = 14;
 /** مقبض سحب خطّ التنبيه: بعرض وسمه («⚑ ▲ 1.09250 · +23.4 pip») وارتفاع إصبع حول الخطّ. */
@@ -1636,6 +1637,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const candleBull = mutedCandles ? withAlpha(colors.bull, 0.34) : colors.bull;
   const candleBear = mutedCandles ? withAlpha(colors.bear, 0.34) : colors.bear;
   const timeAxisH = hideTimeLabels ? 0 : TIME_AXIS_HEIGHT;
+  // clean frames (phone squares / thin side-by-side rectangles): no price axis column — every pixel for candles
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : PRICE_AXIS_WIDTH_FULL;
   const syncKeyRef = useRef('');
   /** جلسة نشر نشطة: يُصفَّر المفتاح فقط عند الانتقال من غير ناشر → ناشر */
   const publisherArmedRef = useRef(false);
@@ -1875,8 +1879,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // عدد الشموع بالعرض الافتراضي من عرض اللوح (`restBarCount`) للشارت القابل للسحب؛ شارت الدرس/المصغَّر يبقى 80
   // (أمثلة الأكاديمية مبنيّة عليه). `restCountRef` آخر عدد راحة طُبِّق: ما دام العرض عليه، تغيّر العرض يعيد حسابه.
   const restWindowCount = useCallback(
-    () => (canPan && interactive ? restBarCount(chartPlotWRef.current) : 80),
-    [canPan, interactive]
+    () =>
+      canPan && interactive
+        ? restBarCount(chartPlotWRef.current)
+        : // clean thin frames: about one candle per 5px so candles stay readable (a 90px column ≈ 18 candles)
+          hidePriceLabels && canPan
+          ? Math.max(16, Math.min(80, Math.round(chartPlotWRef.current / 5)))
+          : 80,
+    [canPan, interactive, hidePriceLabels]
   );
   const restCountRef = useRef(80);
   /** سحب/قرص/سحب محور جارٍ: الطيّ (`foldRightGap`) يؤجَّل لنهايته — الإيماءة تحسب من إزاحة بدايتها. */

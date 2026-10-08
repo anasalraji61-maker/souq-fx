@@ -2221,7 +2221,7 @@ export function TerminalScreen() {
                 })),
               ]}
             />
-            <Text style={styles.hintMove}>{t.termHintMoveText}</Text>
+            {!phone ? <Text style={styles.hintMove}>{t.termHintMoveText}</Text> : null}
           </ScrollView>
           </ChartScrollLockContext.Provider>
         )}

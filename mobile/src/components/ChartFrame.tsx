@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type ChartSeries, type LiveTick } from '../api';
@@ -30,7 +30,7 @@ import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isSeriesLoading, ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
 import { isForexMarketOpen } from '../chart/marketHours';
 
-import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
+import { FRAME_CHART_H, FRAME_CHART_H_PHONE, FrameCellContext } from './FrameSizedGrid';
 import type { PanSpeedPercent } from '../chart/panSpeed';
 import { SymbolListPicker } from '../chart/SymbolListPicker';
 import { useI18n } from '../i18n/I18nContext';
@@ -115,6 +115,9 @@ export function ChartFrame({
 }: Props) {
   const { t, rtl, lang } = useI18n();
   const [wheelOpen, setWheelOpen] = useState(false);
+  // Clean cells (phone squares / four side-by-side rectangles): candles only + one short line on top.
+  const cellMode = useContext(FrameCellContext);
+  const bare = cellMode !== 'normal';
 
   // تبديل الفريم/الرمز يمرّ بجولة شبكة عند الشاشة المالكة: حتى تصل السلسلة الجديدة
   // كان الإطار يعرض **شموع الفريم السابق وسعره** بلا أي أثر، وشريط الفريمات يرتدّ
@@ -152,6 +155,12 @@ export function ChartFrame({
     onTimeframeChange?.(next);
   };
   const navigate = panControls || interactive;
+  const CYCLE_TFS: Timeframe[] = ['1m', '5m', '15m', '1H', '4H', 'D'];
+  const cycleTimeframe = () => {
+    const cur = (pendingSwitch?.tf ?? series.timeframe) as Timeframe;
+    const i = CYCLE_TFS.indexOf(cur);
+    switchTimeframe(CYCLE_TFS[(i + 1) % CYCLE_TFS.length]);
+  };
   const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
   const [measuredH, setMeasuredH] = useState(baseH);
   const chartH = fill ? measuredH : baseH;
@@ -376,7 +385,7 @@ export function ChartFrame({
       // الويب: الحاوية لا تخفي أبناءها ⇒ يبقى زرّاً للوحة المفاتيح كما كان.
       accessible={isWeb && !!onSyncActivate}
       accessibilityRole={isWeb && onSyncActivate ? 'button' : undefined}
-      style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}
+      style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill, bare && styles.wrapBare]}
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
       accessibilityState={
@@ -388,7 +397,58 @@ export function ChartFrame({
           : undefined
       }
     >
-      {showTimeframes && onTimeframeChange ? (
+      {bare ? (
+        <View style={[styles.bareHead, cellMode === 'column' && styles.bareHeadColumn]}>
+          <View style={styles.bareLine}>
+            <Pressable
+              accessibilityRole={onSymbolChange ? 'button' : 'text'}
+              onPress={() => {
+                if (onSymbolChange) setWheelOpen((v) => !v);
+              }}
+              accessibilityLabel={onSymbolChange ? `${frameSymbol} — ${t.cfChangeSymbolA11y}` : frameSymbol}
+              hitSlop={{ top: 10, bottom: 6, left: 6, right: 6 }}
+              style={styles.bareSymHit}
+            >
+              <Text style={[styles.bareSym, cellMode === 'column' && styles.bareSymColumn]} numberOfLines={1}>
+                {frameSymbol}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={cycleTimeframe}
+              disabled={!onTimeframeChange}
+              hitSlop={{ top: 10, bottom: 6, left: 6, right: 6 }}
+              accessibilityLabel={isTimeframe(headerTf) ? t.tfLabelsA11y[headerTf] : headerTf}
+            >
+              <Text style={styles.bareTf}>{headerTf}</Text>
+            </Pressable>
+          </View>
+          <View style={styles.bareLine}>
+            {headerPrice != null && !symbolSwitching && !noRealData ? (
+              <Text style={[styles.barePrice, cellMode === 'column' && styles.barePriceColumn]} numberOfLines={1}>
+                {formatPrice(headerPrice, series.symbol, priceRef)}
+                {chgPct != null && cellMode === 'square' ? (
+                  <Text style={{ color: chgColor }}>{` ${formatPct(chgPct)}`}</Text>
+                ) : null}
+              </Text>
+            ) : (
+              <Text style={styles.barePrice}>—</Text>
+            )}
+            {onFocus ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={onFocus}
+                hitSlop={8}
+                accessibilityLabel={`${frameSymbol} — ${t.termOpenFullscreenA11y}`}
+              >
+                <Text style={styles.bareFocus}>⛶</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+
+      {!bare && showTimeframes && onTimeframeChange ? (
         <View style={[styles.tfTopLeft, chartTouch && styles.chromeDim]}>
           <TimeframeBar
             value={pendingSwitch?.tf ?? series.timeframe}
@@ -402,6 +462,7 @@ export function ChartFrame({
           +النسبة+⛶ ~210) كانا يُحشران بسطر واحد ⇒ `titleRow` ينكمش إلى الصفر فيختفي اسم الزوج، والنسبة وزرّ ملء
           الشاشة يُقصّان خارج الإطار. على الهاتف يلتفّ الرأس (السعر تحت الرمز) ويلتفّ سطر السعر نفسه إن ضاق —
           لا شيء يُقصّ. بوضع المستطيلات (عرض الشاشة) يتّسع السطر فلا التفاف، كما كان. */}
+      {!bare ? (
       <View style={[styles.header, phone && styles.headerPhone]}>
         <View style={styles.titleRow}>
           {/* DESIGN-PRO §1 — نقطة زخرفية محايدة: كانت `accent` بكل إطار ⇒ أربع نقاط تأكيد بالشبكة وقت السكون. */}
@@ -569,6 +630,8 @@ export function ChartFrame({
         )}
       </View>
 
+      ) : null}
+
       {wheelOpen && onSymbolChange ? (
         <View style={styles.wheelLayer}>
           <Pressable
@@ -615,6 +678,8 @@ export function ChartFrame({
             livePrice={mergePrice}
             liveTickSource={resolvedTick?.source ?? null}
             dense={fill}
+            hidePriceLabels={bare}
+            hideTimeLabels={bare}
             panSpeed={panSpeed}
             initialLens="clean"
             initialIndicators={NO_INDICATORS}
@@ -718,6 +783,22 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
+  wrapBare: { minWidth: 0, borderRadius: radii.sm },
+  bareHead: {
+    paddingHorizontal: 6,
+    paddingTop: 4,
+    paddingBottom: 2,
+    gap: 1,
+  },
+  bareHeadColumn: { paddingHorizontal: 4 },
+  bareLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+  bareSymHit: { flexShrink: 1, minWidth: 0 },
+  bareSym: { color: colors.text, fontWeight: '700', fontSize: 12, letterSpacing: 0.2 },
+  bareSymColumn: { fontSize: 11 },
+  bareTf: { color: colors.accent, fontSize: 11, fontWeight: '700' },
+  barePrice: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '600', flexShrink: 1 },
+  barePriceColumn: { fontSize: 10 },
+  bareFocus: { color: colors.textDim, fontSize: 12 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
   priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 4, rowGap: 4 },
   // DESIGN-PRO §2: سعر رأس الشارت 15px. الهاتف يبقى 13 — الإطار بعرض 48% (~135pt) وسطر السعر فيه السبريد والنسبة وزرّ
