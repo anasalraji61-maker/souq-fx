@@ -72,12 +72,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [showComplete, setShowComplete] = useState(false);
   const soundRef = useRef<AudioPlayer | null>(null);
   // narration speed (the free server voice reads slowly at 1×); remembered on the device
-  const RATES = [1, 1.2, 1.4, 1.6];
-  const [rate, setRate] = useState(1.2);
-  const rateRef = useRef(1.2);
+  const RATES = [1, 1.3, 1.5, 1.7];
+  const [rate, setRate] = useState(1.3);
+  const rateRef = useRef(1.3);
   rateRef.current = rate;
   useEffect(() => {
-    AsyncStorage.getItem('matrix.lesson.rate.v1')
+    AsyncStorage.getItem('matrix.lesson.rate.v2')
       .then((v) => {
         const n = Number(v);
         if (RATES.includes(n)) setRate(n);
@@ -88,7 +88,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const cycleRate = () => {
     const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
     setRate(next);
-    AsyncStorage.setItem('matrix.lesson.rate.v1', String(next)).catch(() => {});
+    AsyncStorage.setItem('matrix.lesson.rate.v2', String(next)).catch(() => {});
     try {
       soundRef.current?.setPlaybackRate(next, 'high');
     } catch {
@@ -241,7 +241,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   // والشريط يقول «الصوت يعمل» فوق صمت.
   useEffect(
     () => () => {
+      // leaving the lesson (or opening another) must silence it: pause first — `remove()` alone can leave
+      // the iOS player talking under the next lesson
+      Speech.stop();
       try {
+        soundRef.current?.pause();
         soundRef.current?.remove();
       } catch {
         // already released
@@ -335,6 +339,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           : `${API_URL}${data.audio_url}`;
         const sound = createAudioPlayer({ uri });
         if (cancelled) {
+          sound.pause();
           sound.remove();
           return;
         }

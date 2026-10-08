@@ -209,6 +209,26 @@ export function FrameSizedGrid({
     };
   }, [phoneModeKey]);
 
+  // how many charts in the phone rectangles / squares modes (2, 3 or 4) — the trader picks; remembered
+  const phoneCountKey = storageKey ? `${storageKey}.phoneCount.v1` : null;
+  const [phoneCount, setPhoneCount] = useState<2 | 3 | 4>(4);
+  useEffect(() => {
+    if (!phoneCountKey) return;
+    AsyncStorage.getItem(phoneCountKey)
+      .then((raw) => {
+        const n = Number(raw);
+        if (n === 2 || n === 3 || n === 4) setPhoneCount(n);
+      })
+      .catch(() => {});
+  }, [phoneCountKey]);
+  const choosePhoneCount = useCallback(
+    (n: 2 | 3 | 4) => {
+      setPhoneCount(n);
+      if (phoneCountKey) AsyncStorage.setItem(phoneCountKey, String(n)).catch(() => {});
+    },
+    [phoneCountKey]
+  );
+
   const choosePhoneMode = useCallback(
     (mode: PhoneMode) => {
       setPhoneMode(mode);
@@ -423,7 +443,26 @@ export function FrameSizedGrid({
     );
   }
 
-  const phoneModeToggle = phone && !showAll && (
+  const countChooser =
+    phone && !showAll && (phoneMode === 'stack' || phoneMode === 'grid') ? (
+      <View style={styles.countRow}>
+        {([2, 3, 4] as const).map((n) => (
+          <Pressable
+            key={n}
+            accessibilityRole="button"
+            accessibilityState={{ selected: phoneCount === n }}
+            accessibilityLabel={String(n)}
+            onPress={() => choosePhoneCount(n)}
+            hitSlop={6}
+            style={[styles.countBtn, phoneCount === n && styles.countBtnActive]}
+          >
+            <Text style={[styles.countText, phoneCount === n && styles.countTextActive]}>{n}</Text>
+          </Pressable>
+        ))}
+      </View>
+    ) : null;
+
+  const phoneModeToggleBar = phone && !showAll && (
     <View style={styles.phoneModeSwitcher}>
       <View style={styles.phoneModeTag}>
         <Text style={styles.phoneModeTagText}>{t.gridFramesWord}</Text>
@@ -475,6 +514,12 @@ export function FrameSizedGrid({
       </Pressable>
     </View>
   );
+  const phoneModeToggle = phoneModeToggleBar ? (
+    <View>
+      {phoneModeToggleBar}
+      {countChooser}
+    </View>
+  ) : null;
 
   // Phone, one large chart: the first frame fills most of the screen (switch its pair from its own symbol menu).
   const singleItem = (singleId && items.find((it) => it.id === singleId)) || displayed[0];
@@ -490,15 +535,27 @@ export function FrameSizedGrid({
 
   // Phone, squares: a clean 2×2 that fills the screen (candles only, one short line per square).
   if (phone && !showAll && phoneMode === 'grid') {
-    const areaH = Math.max(380, windowH - 330);
-    const cellH = Math.floor((areaH - spacing.xs) / 2);
+    const areaH = Math.max(380, windowH - 360);
+    const shown = displayed.slice(0, phoneCount);
+    const rows = Math.ceil(shown.length / 2);
+    const cellH = Math.floor((areaH - spacing.xs * (rows - 1)) / rows);
     return (
       <View>
         {phoneModeToggle}
         <FrameCellContext.Provider value="square">
           <View style={styles.compactGrid}>
-            {displayed.slice(0, 4).map((item, index) =>
-              renderCell(item, index, [styles.cellCompactSquare, { height: cellH }], true)
+            {shown.map((item, index) =>
+              renderCell(
+                item,
+                index,
+                [
+                  styles.cellCompactSquare,
+                  // an odd last chart takes the whole row
+                  shown.length % 2 === 1 && index === shown.length - 1 && { width: '100%' },
+                  { height: cellH },
+                ],
+                true
+              )
             )}
           </View>
         </FrameCellContext.Provider>
@@ -508,13 +565,13 @@ export function FrameSizedGrid({
 
   // Phone, rectangles: four tall, thin charts side by side across the screen (all visible at once).
   if (phone && !showAll && phoneMode === 'stack') {
-    const areaH = Math.max(380, windowH - 330);
+    const areaH = Math.max(380, windowH - 360);
     return (
       <View>
         {phoneModeToggle}
         <FrameCellContext.Provider value="column">
           <View style={[styles.compactRow, { height: areaH }]}>
-            {displayed.slice(0, 4).map((item, index) => renderCell(item, index, styles.cellCompactColumn, true))}
+            {displayed.slice(0, phoneCount).map((item, index) => renderCell(item, index, styles.cellCompactColumn, true))}
           </View>
         </FrameCellContext.Provider>
       </View>
@@ -597,6 +654,18 @@ const styles = StyleSheet.create({
     minWidth: 0,
     maxWidth: '100%',
   },
+  countRow: { flexDirection: 'row', gap: 6, justifyContent: 'center', marginBottom: 6 },
+  countBtn: {
+    minWidth: 34,
+    paddingVertical: 4,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  countBtnActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  countText: { color: colors.textDim, fontSize: 12, fontWeight: '700' },
+  countTextActive: { color: colors.accent },
   compactGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

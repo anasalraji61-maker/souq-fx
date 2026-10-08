@@ -500,6 +500,8 @@ type Props = {
   hidePriceLabels?: boolean;
   /** بدون تواريخ محور الزمن */
   hideTimeLabels?: boolean;
+  /** small frames (phone squares): narrow price axis and a one-line time axis so the candles keep the space */
+  slimAxes?: boolean;
   /** توافق قديم */
   hideGridAndDates?: boolean;
   /** نافذة زمن مشتركة لمزامنة عدة شارتات */
@@ -1617,6 +1619,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   hideGrid = hideGridAndDates,
   hidePriceLabels = hideGridAndDates,
   hideTimeLabels = hideGridAndDates,
+  slimAxes = false,
   syncWindow = null,
   onSyncWindow,
   syncFollow = false,
@@ -1636,10 +1639,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? withAlpha(colors.bull, 0.34) : colors.bull;
   const candleBear = mutedCandles ? withAlpha(colors.bear, 0.34) : colors.bear;
-  const timeAxisH = hideTimeLabels ? 0 : TIME_AXIS_HEIGHT;
-  // clean frames (phone squares / thin side-by-side rectangles): no price axis column — every pixel for candles
+  const timeAxisH = hideTimeLabels ? 0 : slimAxes ? 22 : TIME_AXIS_HEIGHT;
+  // clean frames: thin side-by-side rectangles have no price axis; phone squares a narrow one
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : PRICE_AXIS_WIDTH_FULL;
+  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : slimAxes ? 48 : PRICE_AXIS_WIDTH_FULL;
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  const AXIS_TAG_TEXT_W = Math.max(30, PRICE_AXIS_WIDTH - 8);
   const syncKeyRef = useRef('');
   /** جلسة نشر نشطة: يُصفَّر المفتاح فقط عند الانتقال من غير ناشر → ناشر */
   const publisherArmedRef = useRef(false);
@@ -1883,10 +1888,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       canPan && interactive
         ? restBarCount(chartPlotWRef.current)
         : // clean thin frames: about one candle per 5px so candles stay readable (a 90px column ≈ 18 candles)
-          hidePriceLabels && canPan
+          (hidePriceLabels || slimAxes) && canPan
           ? Math.max(16, Math.min(80, Math.round(chartPlotWRef.current / 5)))
           : 80,
-    [canPan, interactive, hidePriceLabels]
+    [canPan, interactive, hidePriceLabels, slimAxes]
   );
   const restCountRef = useRef(80);
   /** سحب/قرص/سحب محور جارٍ: الطيّ (`foldRightGap`) يؤجَّل لنهايته — الإيماءة تحسب من إزاحة بدايتها. */
@@ -11416,11 +11421,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text
                   key={`${candle.time}-${index}`}
                   pointerEvents="none"
-                  numberOfLines={2}
+                  numberOfLines={slimAxes ? 1 : 2}
                   adjustsFontSizeToFit
                   minimumFontScale={0.8}
                   style={[
                     styles.timeAxisLabel,
+                    slimAxes && styles.timeAxisLabelSlim,
                     { width: timeLabelW, left: box.start },
                   ]}
                 >
@@ -15332,6 +15338,7 @@ const styles = StyleSheet.create({
     zIndex: 55,
     overflow: 'visible',
   },
+  timeAxisLabelSlim: { fontSize: 10, top: 3 },
   timeAxisLabel: {
     ...numeric,
     position: 'absolute',

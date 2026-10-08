@@ -678,8 +678,9 @@ export function ChartFrame({
             livePrice={mergePrice}
             liveTickSource={resolvedTick?.source ?? null}
             dense={fill}
-            hidePriceLabels={bare}
-            hideTimeLabels={bare}
+            hidePriceLabels={cellMode === 'column'}
+            hideTimeLabels={cellMode === 'column'}
+            slimAxes={cellMode === 'square'}
             panSpeed={panSpeed}
             initialLens="clean"
             initialIndicators={NO_INDICATORS}
