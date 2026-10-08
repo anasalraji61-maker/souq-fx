@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // Narration audio: expo-audio (included in Expo Go and in store builds; expo-av was removed from Expo Go).
@@ -24,6 +25,8 @@ import { normalizeProvenance } from '../chart/dataSource';
 import { mockSeries } from '../mock';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
+import { LessonStage } from '../lessonStage/LessonStage';
+import { buildScene, estimateSeconds } from '../lessonStage/scenes';
 
 type Props = {
   schoolId: string;
@@ -33,6 +36,8 @@ type Props = {
 
 export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const { t, rtl, lang } = useI18n();
+  const { height: winH } = useWindowDimensions();
+  const stageH = Math.round(Math.max(190, Math.min(300, winH * 0.28)));
   const align = rtl ? ('right' as const) : ('left' as const);
   const { user } = useAuth();
   const [lecture, setLecture] = useState<AcademyLecture | null>(null);
@@ -68,7 +73,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [chartSeries, setChartSeries] = useState<ChartSeries | null>(null);
   /** الشموع من `mockSeries` لأن الطلب فشل — لا سلسلة `demo` أرسلها الخادم (نصّ الملاحظة يقول «بلا اتصال»). */
   const [chartOffline, setChartOffline] = useState(false);
-  const [showChart, setShowChart] = useState(true);
+  // the live chart is optional now: the lesson itself is drawn on the "screen recording" stage above it
+  const [showChart, setShowChart] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
   const soundRef = useRef<AudioPlayer | null>(null);
   // narration speed (the free server voice reads slowly at 1×); remembered on the device
@@ -257,6 +263,49 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
   const segments: ScriptSegment[] = lecture?.script_segments ?? [];
   const current = segments[segIndex];
+
+  /** Stage clock: where the narration of this part is (0 → 1), so the pointer and drawings follow the voice. */
+  const clockRef = useRef({ start: 0, running: false, est: 20, frozen: 0, paused: false });
+  const stageLang = lang === 'ar' ? 'ar' : lang === 'ku' ? 'ku' : 'en';
+  const scene = useMemo(
+    () => buildScene(schoolId, lectureId, segIndex, stageLang),
+    [schoolId, lectureId, segIndex, stageLang]
+  );
+  const startClock = () => {
+    clockRef.current.start = Date.now();
+    clockRef.current.running = true;
+  };
+  useEffect(() => {
+    clockRef.current = {
+      start: Date.now(),
+      // Kurdish parts are read, not narrated: the stage plays on its own
+      running: lang === 'ku',
+      est: estimateSeconds(current?.narration ?? '') / rateRef.current,
+      frozen: 0,
+      paused: false,
+    };
+  }, [current?.id, lang]);
+  const stageProgress = (): number => {
+    const ck = clockRef.current;
+    if (ck.paused) return ck.frozen;
+    let p = 0;
+    const snd = soundRef.current;
+    try {
+      if (snd && snd.duration > 0) p = snd.currentTime / snd.duration;
+      else if (ck.running) p = (Date.now() - ck.start) / 1000 / ck.est;
+    } catch {
+      if (ck.running) p = (Date.now() - ck.start) / 1000 / ck.est;
+    }
+    ck.frozen = Math.min(1, p);
+    return ck.frozen;
+  };
+  useEffect(() => {
+    clockRef.current.paused = paused || !!clarification;
+    if (!clockRef.current.paused && !soundRef.current && clockRef.current.running) {
+      // resumed after a question: continue from where the picture stopped
+      clockRef.current.start = Date.now() - clockRef.current.frozen * clockRef.current.est * 1000;
+    }
+  }, [paused, clarification]);
   /** لا صوت يُشغَّل: فشل الـTTS، أو مقطع بلا نصّ شرح — كان الشريط «شرح صوتي نشط» و«يشرح الآن» فوق صمت. */
   const voiceSilent = !voiceBusy && (voiceError != null || !current?.narration);
 
@@ -291,6 +340,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     const speakOnDevice = (text: string) => {
       Speech.stop();
       setVoiceError(null);
+      startClock();
       Speech.speak(text, {
         language: lang === 'ar' ? 'ar' : 'en-US',
         rate: Math.min(1.5, 0.95 * rateRef.current),
@@ -355,6 +405,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         }
         sound.play();
         soundRef.current = sound;
+        startClock();
       } catch {
         // لا يُعرض نصّ الاستثناء أبداً: `err.slice(0,180)` أعلاه هو **جسم ردّ الخادم كما هو** (تفصيل
         // FastAPI أو خطأ مزوّد الـTTS)، وخطأ الشبكة رسالتُه إنجليزية ثابتة — كلاهما نصّ مطوّر يراه
@@ -496,6 +547,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       </Text>
       {voiceError ? <Text style={[styles.voiceErr, { textAlign: align }]}>{voiceError}</Text> : null}
 
+      <LessonStage scene={scene} getProgress={stageProgress} height={stageH} title={current?.title} rtl={rtl} />
+
       {showChart && chartSeries ? (
         <View style={styles.chartBox}>
           <View style={[styles.chartHead, rtl && styles.chartHeadRtl]}>
@@ -568,7 +621,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           </Pressable>
         </View>
         <Text style={[styles.screenTitle, { textAlign: align }]}>{current?.title || '—'}</Text>
-        <ScrollView style={{ flex: 1, minHeight: 140 }} nestedScrollEnabled>
+        <ScrollView style={{ flex: 1, minHeight: 60 }} nestedScrollEnabled>
           <Text style={[styles.screenBody, { textAlign: align }]}>{current?.narration}</Text>
         </ScrollView>
         <View style={styles.progressBg}>
@@ -759,7 +812,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stageBg,
     borderRadius: radii.lg,
     padding: spacing.md,
-    minHeight: 280,
+    minHeight: 130,
   },
   rateBtn: {
     marginStart: 'auto',

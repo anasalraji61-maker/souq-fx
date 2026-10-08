@@ -5,6 +5,8 @@ import { LangId, gx, fmt } from '../../i18n/locales';
 import { ConceptDiagram } from './conceptDiagrams';
 import { isLectureUnlocked, orderedLectures, schoolName } from './academyUtils';
 import { API_BASE as API_BASE_URL } from '../../api/client';
+import { LessonStage } from './lessonStage/LessonStage';
+import { buildScene, estimateSeconds } from './lessonStage/scenes';
 
 interface LectureClassroomProps {
   school: AcademySchool;
@@ -165,6 +167,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
     const want = school.content_lang === 'en' ? 'en' : 'ar';
     let useBrowser = false;
     const show = (k: number) => {
+      stageClock.current = { k, start: Date.now(), est: estimateSeconds(segs[k].narration) / rateRef.current };
       setSpeaking(k);
       document.getElementById(`sec-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
@@ -219,6 +222,28 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
       browserSay(k);
     };
     void sayIndex(i);
+  };
+
+  // ---- lesson "screen recording": the part being narrated (or the part in view) drawn on a chart
+  const stageIndex = speaking ?? Math.max(0, Math.min(lecture.script_segments.length - 1, Number((activeSection.match(/^sec-(\d+)$/) || [])[1] ?? (activeSection === 'sec-quiz' ? lecture.script_segments.length - 1 : 0))));
+  const stageLang = school.content_lang === 'en' ? 'en' : school.content_lang === 'ku' ? 'ku' : 'ar';
+  const scene = useMemo(() => buildScene(school.id, lecture.id, stageIndex, stageLang), [school.id, lecture.id, stageIndex, stageLang]);
+  const stageClock = useRef({ k: -1, start: Date.now(), est: 20 });
+  useEffect(() => {
+    if (stageClock.current.k !== stageIndex || speaking === null) {
+      stageClock.current = { k: stageIndex, start: Date.now(), est: estimateSeconds(lecture.script_segments[stageIndex]?.narration ?? '') / rateRef.current };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageIndex, lecture.id]);
+  const stageProgress = (): number => {
+    const ck = stageClock.current;
+    const a = audioRef.current;
+    if (speaking !== null && a && Number.isFinite(a.duration) && a.duration > 0) return Math.min(1, a.currentTime / a.duration);
+    const t = (Date.now() - ck.start) / 1000 / ck.est;
+    if (speaking !== null) return Math.min(1, t);
+    // not narrating: the part plays on its own as a silent preview, then starts again
+    if (t > 1.2) ck.start = Date.now();
+    return Math.min(1, t);
   };
 
   const finish = async (goNext: boolean) => {
@@ -325,6 +350,18 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
             </div>
           </header>
 
+          <div className="mb-6 md:sticky md:top-[58px] z-20" dir="ltr">
+            <LessonStage
+              scene={scene}
+              getProgress={stageProgress}
+              title={lecture.script_segments[stageIndex]?.title}
+              playing={speaking !== null}
+              onPlay={school.content_lang !== 'ku' ? () => speakFrom(stageIndex) : undefined}
+              playLabel={x.a_listen}
+              rtl={rtl}
+            />
+          </div>
+
           {showToc && (
             <div className="lg:hidden mb-6 rounded-xl border border-[#1E283D] bg-[#0F1828]" dir={rtl ? 'rtl' : 'ltr'}>
               <button onClick={() => setTocOpen((v) => !v)} aria-expanded={tocOpen} className="w-full flex items-center justify-between px-4 min-h-[46px] text-[13px] font-bold text-[#E8EEF9] cursor-pointer" data-testid="toc-toggle">
@@ -355,7 +392,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
           </div>
 
           {lecture.script_segments.map((seg, i) => (
-            <section key={seg.id} id={`sec-${i}`} className="scroll-mt-20 mb-8" data-testid="lecture-section">
+            <section key={seg.id} id={`sec-${i}`} className="scroll-mt-20 md:scroll-mt-[440px] mb-8" data-testid="lecture-section">
               <h2 className={`text-[19px] font-bold mb-3 flex items-center gap-2 ${speaking === i ? 'text-[#2DD4BF]' : 'text-[#E8EEF9]'}`}>
                 <span className="w-7 h-7 rounded-full bg-[#13283A] text-[#2DD4BF] text-[12px] font-mono flex items-center justify-center shrink-0">{i + 1}</span>
                 {seg.title}
