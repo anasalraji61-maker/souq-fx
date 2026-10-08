@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from academy_data import get_lecture, get_school, get_schools_summary
 import elevenlabs_tts as tts
+import local_tts
 import twelve_data as market
 import twelve_data_ws as td_ws
 import shared_state
@@ -3303,7 +3304,9 @@ class AcademyTtsRequest(BaseModel):
 
 @app.get("/api/academy/voice/status")
 def academy_voice_status():
-    return tts.status()
+    out = tts.status()
+    out["local"] = local_tts.status()
+    return out
 
 
 @app.get("/api/academy/audio/{file_id}")
@@ -3312,28 +3315,42 @@ def academy_audio_file(file_id: str):
     # (أو 130 «ب» = 260 بايت) ⇒ `exists()` يرمي «File name too long» ⇒ 500 لأيّ مجهول
     if not re.fullmatch(r"[0-9a-f]{32}", file_id):
         raise HTTPException(status_code=404, detail="audio not found")
-    path = tts.CACHE_DIR / f"{file_id}.mp3"
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="audio not found")
-    return FileResponse(path, media_type="audio/mpeg", filename=path.name)
+    for ext, media in ((".mp3", "audio/mpeg"), (".wav", "audio/wav")):
+        path = tts.CACHE_DIR / f"{file_id}{ext}"
+        if path.exists():
+            return FileResponse(
+                path, media_type=media, filename=path.name, headers={"Cache-Control": "public, max-age=31536000, immutable"}
+            )
+    raise HTTPException(status_code=404, detail="audio not found")
 
 
 @app.post("/api/academy/tts")
 def academy_tts(body: AcademyTtsRequest):
-    if not tts.configured():
-        raise HTTPException(status_code=503, detail="ElevenLabs not configured")
+    """Narration audio: ElevenLabs when it is configured (paid, best quality), otherwise — or when it fails
+    (no credit, provider down) — the free voice on this server (Piper). 503 when neither can speak the text."""
+    if tts.configured():
+        try:
+            path = tts.synthesize(body.text, body.voice_id)
+            return {
+                "ok": True,
+                "audio_url": f"/api/academy/audio/{path.stem}",
+                # الصوت المستعمل فعلاً (كان الافتراضي دائماً ولو طُلب غيره؛ والافتراضي مخزَّن بعد `synthesize`)
+                "voice_id": body.voice_id or tts.resolve_voice_id(),
+                "provider": "elevenlabs",
+            }
+        except Exception as exc:  # noqa: BLE001
+            # نصّ ردّ المزوّد لا يُعاد للعميل المجهول (قد يحمل تفاصيل الحساب) — يُسجَّل فقط
+            print(f"[tts] {exc}")
+            if not local_tts.available(local_tts.language_of(body.text)):
+                raise HTTPException(status_code=502, detail="tts provider error") from exc
+    if not local_tts.available(local_tts.language_of(body.text)):
+        raise HTTPException(status_code=503, detail="voice not configured")
     try:
-        path = tts.synthesize(body.text, body.voice_id)
+        path = local_tts.synthesize(body.text, tts.CACHE_DIR)
     except Exception as exc:  # noqa: BLE001
-        # نصّ ردّ المزوّد لا يُعاد للعميل المجهول (قد يحمل تفاصيل الحساب) — يُسجَّل فقط
-        print(f"[tts] {exc}")
+        print(f"[tts-local] {exc}")
         raise HTTPException(status_code=502, detail="tts provider error") from exc
-    return {
-        "ok": True,
-        "audio_url": f"/api/academy/audio/{path.stem}",
-        # الصوت المستعمل فعلاً (كان الافتراضي دائماً ولو طُلب غيره؛ والافتراضي مخزَّن بعد `synthesize`)
-        "voice_id": body.voice_id or tts.resolve_voice_id(),
-    }
+    return {"ok": True, "audio_url": f"/api/academy/audio/{path.stem}", "voice_id": None, "provider": "local"}
 
 
 @app.post("/api/academy/interrupt")

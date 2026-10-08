@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // Narration audio: expo-audio (included in Expo Go and in store builds; expo-av was removed from Expo Go).
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import * as Speech from 'expo-speech';
 import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { playSoftClick } from '../audio/playSoftClick';
 import { API_URL, api, type ChartSeries } from '../api';
@@ -259,6 +260,21 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   useEffect(() => {
     let cancelled = false;
 
+    const speakOnDevice = (text: string) => {
+      Speech.stop();
+      setVoiceError(null);
+      Speech.speak(text, {
+        language: lang === 'ar' ? 'ar' : 'en-US',
+        rate: 0.95,
+        onDone: () => {
+          if (!cancelled) void nextRef.current();
+        },
+        onError: () => {
+          if (!cancelled) setVoiceError(t.lectureVoiceOff);
+        },
+      });
+    };
+
     const playSegment = async () => {
       if (!current?.narration || paused || clarification) return;
       // ElevenLabs has no Kurdish voice: the Kurdish lesson is read, not narrated.
@@ -280,7 +296,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           body: JSON.stringify({ text: current.narration }),
         });
         if (res.status === 503) {
-          if (!cancelled) setVoiceError(t.lectureVoiceOff);
+          // no voice on the server: read the part with the phone's own voice (free, built into iOS/Android)
+          if (!cancelled) speakOnDevice(current.narration);
           return;
         }
         if (!res.ok) {
@@ -308,7 +325,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         // FastAPI أو خطأ مزوّد الـTTS)، وخطأ الشبكة رسالتُه إنجليزية ثابتة — كلاهما نصّ مطوّر يراه
         // متداول تجزئة بالمتجر وقد يسرّب داخليات المزوّد. رسالة واحدة مترجَمة تصف الحالة وتكفي.
         if (!cancelled) {
-          setVoiceError(t.lectureVoicePlayError);
+          // server voice failed: fall back to the phone's own voice instead of silence
+          speakOnDevice(current.narration);
         }
       } finally {
         if (!cancelled) setVoiceBusy(false);
@@ -318,10 +336,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     void playSegment();
     return () => {
       cancelled = true;
+      Speech.stop();
     };
   }, [current?.id, current?.narration, paused, clarification, t.lectureVoicePlayError, t.lectureVoiceOff, t.lectureVoiceNoKu, lang]);
 
   const stopVoice = async () => {
+    Speech.stop();
     try {
       if (soundRef.current) {
         soundRef.current.pause();
