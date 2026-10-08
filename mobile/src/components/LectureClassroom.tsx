@@ -71,6 +71,30 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [showChart, setShowChart] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
   const soundRef = useRef<AudioPlayer | null>(null);
+  // narration speed (the free server voice reads slowly at 1×); remembered on the device
+  const RATES = [1, 1.2, 1.4, 1.6];
+  const [rate, setRate] = useState(1.2);
+  const rateRef = useRef(1.2);
+  rateRef.current = rate;
+  useEffect(() => {
+    AsyncStorage.getItem('matrix.lesson.rate.v1')
+      .then((v) => {
+        const n = Number(v);
+        if (RATES.includes(n)) setRate(n);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const cycleRate = () => {
+    const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    setRate(next);
+    AsyncStorage.setItem('matrix.lesson.rate.v1', String(next)).catch(() => {});
+    try {
+      soundRef.current?.setPlaybackRate(next, 'high');
+    } catch {
+      /* not playing */
+    }
+  };
   const completeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -265,7 +289,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       setVoiceError(null);
       Speech.speak(text, {
         language: lang === 'ar' ? 'ar' : 'en-US',
-        rate: 0.95,
+        rate: Math.min(1.5, 0.95 * rateRef.current),
         onDone: () => {
           if (!cancelled) void nextRef.current();
         },
@@ -318,6 +342,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         sound.addListener('playbackStatusUpdate', (st) => {
           if (st.didJustFinish && !cancelled) void nextRef.current();
         });
+        try {
+          sound.shouldCorrectPitch = true;
+          sound.setPlaybackRate(rateRef.current, 'high');
+        } catch {
+          /* older runtime: normal speed */
+        }
         sound.play();
         soundRef.current = sound;
       } catch {
@@ -522,6 +552,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           <Text style={styles.voiceBarText}>
             {paused || voiceSilent ? t.lectureVoiceStopped : voiceBusy ? t.lectureGenerating : t.lectureVoiceActive}
           </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={cycleRate}
+            hitSlop={10}
+            style={styles.rateBtn}
+            accessibilityLabel={`${rate}×`}
+          >
+            <Text style={styles.rateText}>{`${rate}×`}</Text>
+          </Pressable>
         </View>
         <Text style={[styles.screenTitle, { textAlign: align }]}>{current?.title || '—'}</Text>
         <ScrollView style={{ flex: 1, minHeight: 140 }} nestedScrollEnabled>
@@ -717,6 +756,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     minHeight: 280,
   },
+  rateBtn: {
+    marginStart: 'auto',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  rateText: { color: colors.accent, fontSize: 12, fontWeight: '700' },
   voiceBar: {
     flexDirection: 'row',
     alignItems: 'center',

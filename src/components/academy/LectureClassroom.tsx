@@ -115,6 +115,27 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
   }, [rtl, next, prev, nextUnlocked, onOpenLecture, onBack]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const RATES = [1, 1.2, 1.4, 1.6];
+  const [rate, setRate] = useState<number>(() => {
+    try {
+      const n = Number(localStorage.getItem('matrix_lesson_rate'));
+      return RATES.includes(n) ? n : 1.2;
+    } catch {
+      return 1.2;
+    }
+  });
+  const rateRef = useRef(rate);
+  rateRef.current = rate;
+  const cycleRate = () => {
+    const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    setRate(next);
+    try {
+      localStorage.setItem('matrix_lesson_rate', String(next));
+    } catch {
+      /* private mode */
+    }
+    if (audioRef.current) audioRef.current.playbackRate = next;
+  };
   const playRun = useRef(0);
 
   function stopSpeaking() {
@@ -146,7 +167,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
       const u = new SpeechSynthesisUtterance(`${segs[k].title}. ${segs[k].narration}`);
       u.lang = want;
       if (voice) u.voice = voice;
-      u.rate = 0.95;
+      u.rate = Math.min(1.6, 0.95 * rateRef.current);
       u.onstart = () => show(k);
       u.onend = () => run === playRun.current && sayIndex(k + 1);
       u.onerror = () => setSpeaking(null);
@@ -170,6 +191,7 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
             const data = (await res.json()) as { audio_url: string };
             const audio = new Audio(data.audio_url.startsWith('http') ? data.audio_url : `${API_BASE_URL}${data.audio_url}`);
             audioRef.current = audio;
+            audio.playbackRate = rateRef.current;
             audio.onended = () => run === playRun.current && sayIndex(k + 1);
             audio.onerror = () => {
               useBrowser = true;
@@ -278,6 +300,16 @@ export const LectureClassroom: React.FC<LectureClassroomProps> = ({
                 >
                   {speaking === null ? <Volume2 className="w-3.5 h-3.5" /> : <Square className="w-3 h-3 fill-current" />}
                   {speaking === null ? x.a_listen : x.a_stopListen}
+                </button>
+              )}
+              {school.content_lang !== 'ku' && (
+                <button
+                  onClick={cycleRate}
+                  className="min-h-[34px] px-3 rounded-full border border-[#1E283D] text-[#2DD4BF] font-bold font-mono hover:bg-[#2DD4BF]/10 cursor-pointer"
+                  aria-label={`${rate}×`}
+                  data-testid="rate-btn"
+                >
+                  {`${rate}×`}
                 </button>
               )}
             </div>
