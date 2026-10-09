@@ -29,6 +29,7 @@ import { IndicatorForecastPanel } from '../components/IndicatorForecastPanel';
 import { AlertsPanel } from '../components/AlertsPanel';
 import { PositionSizePanel } from '../components/PositionSizePanel';
 import { NewsPanel } from '../components/NewsPanel';
+import { MyNewsPanel } from '../components/MyNewsPanel';
 import { SHOW_NEWS_FEED, SHOW_UNLICENSED_SIGNAL_PANELS } from '../featureFlags';
 import { GroupChatPanel } from '../components/GroupChatPanel';
 import { VotePanel } from '../components/VotePanel';
@@ -209,7 +210,7 @@ const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
  * يُسقط من الترتيب المحفوظ كل معرّف غائب عن `items` ⇒ ترتيب قديم يضمّ «news» لا يترك خانة فارغة.
  */
 function hubPanelVisible(id: string): boolean {
-  if (id === 'news') return SHOW_NEWS_FEED;
+  if (id === 'news') return true; // «أخباري»: تقويم اقتصادي مرخَّص يختاره المتداول، لا خلاصة RSS
   if (id === 'social' || id === 'analysts') return SHOW_UNLICENSED_SIGNAL_PANELS;
   return true;
 }
@@ -726,7 +727,7 @@ export function ToolsScreen() {
               showAll
               defaultOrder={[...HUB_COMMUNITY_ORDER]}
               items={[
-                { id: 'news', node: <NewsPanel embedded /> },
+                { id: 'news', node: SHOW_NEWS_FEED ? <NewsPanel embedded /> : <MyNewsPanel embedded /> },
                 {
                   id: 'social',
                   node: <SocialConsensusPanel embedded symbol={signalSym} timeframe={tf} />,
