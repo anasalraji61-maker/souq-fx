@@ -504,6 +504,8 @@ type Props = {
   slimAxes?: boolean;
   /** even slimmer axes for the narrow side-by-side rectangles (2/3/4 frames) */
   tinyAxes?: boolean;
+  /** متابِع بالمزامنة: لمس محوره يجعله القائد ثم يعمل السحب */
+  onAxisActivate?: () => void;
   /** توافق قديم */
   hideGridAndDates?: boolean;
   /** نافذة زمن مشتركة لمزامنة عدة شارتات */
@@ -1625,6 +1627,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   hideTimeLabels = hideGridAndDates,
   slimAxes = false,
   tinyAxes = false,
+  onAxisActivate,
   syncWindow = null,
   onSyncWindow,
   syncFollow = false,
@@ -1642,6 +1645,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // (التقاطع، الخطّ الأفقي، المنطقة، خطّ الاتجاه) بدل زرّ ينتهي بخطأ عام.
   const onCreateAlert = isNotOfferedSymbol(series.symbol) ? undefined : onCreateAlertProp;
   const canPan = syncFollow ? false : (panControls ?? interactive);
+  const axisOn = canPan || (syncFollow && !!onAxisActivate && (panControls ?? interactive));
+  const onAxisActivateRef = useRef(onAxisActivate);
+  onAxisActivateRef.current = onAxisActivate;
+  const syncFollowRef = useRef(syncFollow);
+  syncFollowRef.current = syncFollow;
   const candleBull = mutedCandles ? withAlpha(colors.bull, 0.34) : colors.bull;
   const candleBear = mutedCandles ? withAlpha(colors.bear, 0.34) : colors.bear;
   const timeAxisH = hideTimeLabels ? 0 : tinyAxes ? 20 : slimAxes ? 22 : TIME_AXIS_HEIGHT;
@@ -6407,12 +6415,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const priceAxisPan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => canPan,
-        onStartShouldSetPanResponderCapture: () => canPan,
-        onMoveShouldSetPanResponder: () => canPan,
-        onMoveShouldSetPanResponderCapture: () => canPan,
+        onStartShouldSetPanResponder: () => axisOn,
+        onStartShouldSetPanResponderCapture: () => axisOn,
+        onMoveShouldSetPanResponder: () => axisOn,
+        onMoveShouldSetPanResponderCapture: () => axisOn,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
+          if (syncFollowRef.current) onAxisActivateRef.current?.();
           beginAxisDrag();
         },
         onPanResponderMove: (_, gesture) => {
@@ -6426,18 +6435,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         },
         onPanResponderTerminate: () => endDrag(),
       }),
-    [canPan, beginAxisDrag, endDrag, scalePriceByDrag, axisTapped]
+    [axisOn, beginAxisDrag, endDrag, scalePriceByDrag, axisTapped]
   );
 
   const timeAxisPan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => canPan,
-        onStartShouldSetPanResponderCapture: () => canPan,
-        onMoveShouldSetPanResponder: () => canPan,
-        onMoveShouldSetPanResponderCapture: () => canPan,
+        onStartShouldSetPanResponder: () => axisOn,
+        onStartShouldSetPanResponderCapture: () => axisOn,
+        onMoveShouldSetPanResponder: () => axisOn,
+        onMoveShouldSetPanResponderCapture: () => axisOn,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
+          if (syncFollowRef.current) onAxisActivateRef.current?.();
           beginAxisDrag();
         },
         onPanResponderMove: (_, gesture) => {
@@ -6451,7 +6461,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         },
         onPanResponderTerminate: () => endDrag(),
       }),
-    [canPan, beginAxisDrag, endDrag, zoomTimeByDrag, axisTapped]
+    [axisOn, beginAxisDrag, endDrag, zoomTimeByDrag, axisTapped]
   );
 
   // W4 (قرار أنس ١٦): الزرّ الأيمن ⇒ قائمة بالسعر تحت المؤشّر بدل قائمة المتصفّح — تنبيه، خطّ أفقي، إعادة العرض.
@@ -11270,12 +11280,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             styles.priceAxis,
             hidePriceLabels && styles.priceAxisBare,
             { width: PRICE_AXIS_WIDTH, bottom: timeAxisH },
-            canPan ? webAxisLockStyle : null,
-            Platform.OS === 'web' && canPan
+            axisOn ? webAxisLockStyle : null,
+            Platform.OS === 'web' && axisOn
               ? ({ cursor: 'ns-resize' } as never)
               : null,
           ]}
-          {...(canPan ? priceAxisPan.panHandlers : {})}
+          {...(axisOn ? priceAxisPan.panHandlers : {})}
           {...(canPan && Platform.OS === 'web' ? priceWheelHandlers : {})}
         >
         {priceTicks.map((tick, i) =>
@@ -11295,6 +11305,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Text>
           )
         )}
+          {axisOn && (slimAxes || tinyAxes) ? <View pointerEvents="none" style={styles.gripV} /> : null}
           {!hidePriceLabels && !currentTagHidden ? (
           <View
             pointerEvents="none"
@@ -11401,14 +11412,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             style={[
               styles.timeAxis,
               { height: timeAxisH, right: PRICE_AXIS_WIDTH },
-              canPan ? webAxisLockStyle : null,
-              Platform.OS === 'web' && canPan
+              axisOn ? webAxisLockStyle : null,
+              Platform.OS === 'web' && axisOn
                 ? ({ cursor: 'ew-resize' } as never)
                 : null,
             ]}
-            {...(canPan ? timeAxisPan.panHandlers : {})}
+            {...(axisOn ? timeAxisPan.panHandlers : {})}
             {...(canPan && Platform.OS === 'web' ? timeWheelHandlers : {})}
           >
+            {axisOn && (slimAxes || tinyAxes) ? <View pointerEvents="none" style={styles.gripH} /> : null}
             {timeTickBoxes.map((box) => {
               if (box.hidden) return null;
               // السابق **المطبوع** لا السابق بالفهرس: علامة يناير المخفيّة بالتراكب كانت «السابقة» لفبراير فلا
@@ -15247,11 +15259,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-    backgroundColor: '#09131F',
+    backgroundColor: '#0A1523',
     borderLeftWidth: 1,
     borderLeftColor: colors.borderSoft,
     zIndex: 55,
   },
+  gripV: { position: 'absolute', left: 1, top: '50%', marginTop: -9, width: 3, height: 18, borderRadius: 2, backgroundColor: 'rgba(148,163,184,0.45)' },
+  gripH: { position: 'absolute', right: 6, bottom: 1, width: 18, height: 3, borderRadius: 2, backgroundColor: 'rgba(148,163,184,0.45)' },
   priceAxisBare: {
     backgroundColor: 'transparent',
     borderLeftWidth: 0,

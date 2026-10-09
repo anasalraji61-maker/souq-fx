@@ -687,6 +687,7 @@ export function ChartFrame({
               syncWindow={syncWindow}
               onSyncWindow={onSyncWindow}
               syncFollow={syncFollow}
+              onAxisActivate={onSyncActivate}
               syncTimeOnly
               onReplayPrice={onReplayPrice}
               onChartInteract={handleChartInteract}

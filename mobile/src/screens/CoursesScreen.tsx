@@ -71,19 +71,26 @@ export function CoursesScreen() {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشاشة قبل اكتمال الطلب — نفس نمط
     // ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
     let alive = true;
-    api
-      .academySchools()
-      .then((r) => {
-        if (alive) {
-          setSchools(r.schools);
-          setSchoolsStale(false);
-        }
-      })
-      .catch(() => {
-        if (alive) setSchoolsStale(true);
-      });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const load = (attempt: number) => {
+      api
+        .academySchools()
+        .then((r) => {
+          if (alive) {
+            setSchools(r.schools);
+            setSchoolsStale(false);
+          }
+        })
+        .catch(() => {
+          if (!alive) return;
+          setSchoolsStale(true);
+          if (attempt < 4) timer = setTimeout(() => load(attempt + 1), 2500 * (attempt + 1));
+        });
+    };
+    load(0);
     return () => {
       alive = false;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
