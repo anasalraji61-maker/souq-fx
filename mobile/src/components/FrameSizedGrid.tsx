@@ -6,6 +6,7 @@ import {
   StyleSheet,
   PanResponder,
   useWindowDimensions,
+  type LayoutChangeEvent,
   type GestureResponderEvent,
   type PanResponderGestureState,
   type StyleProp,
@@ -212,6 +213,13 @@ export function FrameSizedGrid({
   // how many charts in the phone rectangles / squares modes (2, 3 or 4) — the trader picks; remembered
   const phoneCountKey = storageKey ? `${storageKey}.phoneCount.v1` : null;
   const [phoneCount, setPhoneCount] = useState<2 | 3 | 4>(4);
+  // measured width of the phone rows: cells get exact pixel widths (on iPhone a flex cell could grow to its chart's
+  // own width, pushing the 3rd and 4th charts off screen)
+  const [rowW, setRowW] = useState(0);
+  const onRowLayout = (e: LayoutChangeEvent) => {
+    const w = Math.round(e.nativeEvent.layout.width);
+    setRowW((prev) => (Math.abs(prev - w) > 1 ? w : prev));
+  };
   useEffect(() => {
     if (!phoneCountKey) return;
     AsyncStorage.getItem(phoneCountKey)
@@ -539,11 +547,12 @@ export function FrameSizedGrid({
     const shown = displayed.slice(0, phoneCount);
     const rows = Math.ceil(shown.length / 2);
     const cellH = Math.floor((areaH - spacing.xs * (rows - 1)) / rows);
+    const half = rowW > 0 ? Math.floor((rowW - 4) / 2) : undefined;
     return (
       <View>
         {phoneModeToggle}
         <FrameCellContext.Provider value="square">
-          <View style={styles.compactGrid}>
+          <View style={styles.compactGrid} onLayout={onRowLayout}>
             {shown.map((item, index) =>
               renderCell(
                 item,
@@ -551,7 +560,8 @@ export function FrameSizedGrid({
                 [
                   styles.cellCompactSquare,
                   // an odd last chart takes the whole row
-                  shown.length % 2 === 1 && index === shown.length - 1 && { width: '100%' },
+                  half !== undefined && { width: half, maxWidth: half },
+                  shown.length % 2 === 1 && index === shown.length - 1 && { width: rowW > 0 ? rowW : '100%', maxWidth: rowW > 0 ? rowW : '100%' },
                   { height: cellH },
                 ],
                 true
@@ -571,7 +581,10 @@ export function FrameSizedGrid({
         {phoneModeToggle}
         <FrameCellContext.Provider value="column">
           <View style={[styles.compactRow, { height: areaH }]}>
-            {displayed.slice(0, phoneCount).map((item, index) => renderCell(item, index, styles.cellCompactColumn, true))}
+            {displayed.slice(0, phoneCount).map((item, index, arr) => {
+              const pct = `${(100 - (arr.length - 1)) / arr.length}%` as const;
+              return renderCell(item, index, [styles.cellCompactColumn, { width: pct, maxWidth: pct, flexGrow: 0, flexShrink: 0, flexBasis: pct }], true);
+            })}
           </View>
         </FrameCellContext.Provider>
       </View>
@@ -681,7 +694,7 @@ const styles = StyleSheet.create({
   },
   compactRow: {
     flexDirection: 'row',
-    gap: 3,
+    justifyContent: 'space-between',
     width: '100%',
   },
   cellCompactColumn: {

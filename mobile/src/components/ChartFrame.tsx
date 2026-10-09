@@ -336,7 +336,7 @@ export function ChartFrame({
   const onChartPadLayout = (e: LayoutChangeEvent) => {
     if (!fill) return;
     const h = e.nativeEvent.layout.height;
-    const next = Math.max(120, Math.floor(h));
+    const next = Math.max(120, Math.floor(h) - spacing.sm);
     setMeasuredH((prev) => (Math.abs(prev - next) > 2 ? next : prev));
   };
 
@@ -668,31 +668,33 @@ export function ChartFrame({
             dataSource={series.data_source}
           />
         ) : (
-          <MatrixChart
-            series={series}
-            height={chartH}
-            interactive={interactive}
-            panControls={navigate}
-            persistDrawings={interactive}
-            accent={accent}
-            livePrice={mergePrice}
-            liveTickSource={resolvedTick?.source ?? null}
-            dense={fill}
-            hidePriceLabels={cellMode === 'column'}
-            hideTimeLabels={cellMode === 'column'}
-            slimAxes={cellMode === 'square'}
-            panSpeed={panSpeed}
-            initialLens="clean"
-            initialIndicators={NO_INDICATORS}
-            syncWindow={syncWindow}
-            onSyncWindow={onSyncWindow}
-            syncFollow={syncFollow}
-            syncTimeOnly
-            onReplayPrice={onReplayPrice}
-            onChartInteract={handleChartInteract}
-            askOffset={askOffset}
-            onTimeframeKey={showTimeframes && onTimeframeChange ? switchTimeframe : undefined}
-          />
+          <View style={fill ? styles.fillAbs : undefined}>
+            <MatrixChart
+              series={series}
+              height={chartH}
+              interactive={interactive}
+              panControls={navigate}
+              persistDrawings={interactive}
+              accent={accent}
+              livePrice={mergePrice}
+              liveTickSource={resolvedTick?.source ?? null}
+              dense={fill}
+              hidePriceLabels={cellMode === 'column'}
+              hideTimeLabels={cellMode === 'column'}
+              slimAxes={cellMode === 'square'}
+              panSpeed={panSpeed}
+              initialLens="clean"
+              initialIndicators={NO_INDICATORS}
+              syncWindow={syncWindow}
+              onSyncWindow={onSyncWindow}
+              syncFollow={syncFollow}
+              syncTimeOnly
+              onReplayPrice={onReplayPrice}
+              onChartInteract={handleChartInteract}
+              askOffset={askOffset}
+              onTimeframeKey={showTimeframes && onTimeframeChange ? switchTimeframe : undefined}
+            />
+          </View>
         )}
       </View>
     </Pressable>
@@ -785,6 +787,9 @@ const styles = StyleSheet.create({
   },
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
   wrapBare: { minWidth: 0, borderRadius: radii.sm },
+  // full-height frames: the chart sits on top of the measured area, so its own height can never push the box
+  // taller (on iPhone that cut off the bottom time labels and the top candles)
+  fillAbs: { position: 'absolute', top: 0, left: spacing.sm, right: spacing.sm, bottom: spacing.sm },
   bareHead: {
     paddingHorizontal: 6,
     paddingTop: 4,
