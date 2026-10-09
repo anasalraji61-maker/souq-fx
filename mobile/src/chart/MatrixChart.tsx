@@ -502,6 +502,8 @@ type Props = {
   hideTimeLabels?: boolean;
   /** small frames (phone squares): narrow price axis and a one-line time axis so the candles keep the space */
   slimAxes?: boolean;
+  /** even slimmer axes for the narrow side-by-side rectangles (2/3/4 frames) */
+  tinyAxes?: boolean;
   /** توافق قديم */
   hideGridAndDates?: boolean;
   /** نافذة زمن مشتركة لمزامنة عدة شارتات */
@@ -614,6 +616,8 @@ const CHROME_DIM_DELAY_MS = 150;
 
 const PRICE_AXIS_WIDTH = 68;
 const PRICE_AXIS_WIDTH_FULL = PRICE_AXIS_WIDTH;
+/** shorter price text for the narrow side-by-side frames (1.08084 → 1.0808) */
+const tinyLabel = (s: string) => (s.length > 6 ? s.slice(0, Math.max(s.indexOf('.') + 3, 6)) : s);
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -12` + سطر 14) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
 const LEVEL_LABEL_H = 14;
 /** مقبض سحب خطّ التنبيه: بعرض وسمه («⚑ ▲ 1.09250 · +23.4 pip») وارتفاع إصبع حول الخطّ. */
@@ -1620,6 +1624,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   hidePriceLabels = hideGridAndDates,
   hideTimeLabels = hideGridAndDates,
   slimAxes = false,
+  tinyAxes = false,
   syncWindow = null,
   onSyncWindow,
   syncFollow = false,
@@ -1639,10 +1644,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? withAlpha(colors.bull, 0.34) : colors.bull;
   const candleBear = mutedCandles ? withAlpha(colors.bear, 0.34) : colors.bear;
-  const timeAxisH = hideTimeLabels ? 0 : slimAxes ? 22 : TIME_AXIS_HEIGHT;
+  const timeAxisH = hideTimeLabels ? 0 : tinyAxes ? 20 : slimAxes ? 22 : TIME_AXIS_HEIGHT;
   // clean frames: thin side-by-side rectangles have no price axis; phone squares a narrow one
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : slimAxes ? 48 : PRICE_AXIS_WIDTH_FULL;
+  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : tinyAxes ? 40 : slimAxes ? 48 : PRICE_AXIS_WIDTH_FULL;
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const AXIS_TAG_TEXT_W = Math.max(30, PRICE_AXIS_WIDTH - 8);
   const syncKeyRef = useRef('');
@@ -11286,7 +11291,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               minimumFontScale={0.8}
               style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start, fontSize: priceAxisLabelSize }]}
             >
-              {tick.label ?? fmtPrice(tick.price)}
+              {tinyAxes ? tinyLabel(tick.label ?? fmtPrice(tick.price)) : tick.label ?? fmtPrice(tick.price)}
             </Text>
           )
         )}
