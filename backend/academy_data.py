@@ -508,6 +508,35 @@ def _apply_lesson_content() -> None:
                 lec["duration_min"] = max(1, -(-words // NARRATION_WPM))
 
 
+
+
+def _apply_extra() -> None:
+    """Lectures added after the first release (`academy_extra.json`): placed in their level in order; new levels are created."""
+    import json
+    from pathlib import Path
+
+    f = Path(__file__).resolve().parent / "academy_extra.json"
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    titles = {(x["school"], x["level"]): x["title"]["ar"] for x in data.get("level_titles", [])}
+    for ex in data.get("lectures", []):
+        school = next((s for s in ACADEMY_SCHOOLS if s["id"] == ex["school"]), None)
+        if not school or any(l["id"] == ex["id"] for lv in school["levels"] for l in lv["lectures"]):
+            continue
+        lv = next((x for x in school["levels"] if x["level"] == ex["level"]), None)
+        if lv is None:
+            lv = _level(ex["level"], titles.get((ex["school"], ex["level"]), f"المستوى {ex['level']}"), [])
+            school["levels"].append(lv)
+            school["levels"].sort(key=lambda x: x["level"])
+        lv["lectures"].append(_lec(ex["id"], ex["title"]["ar"], 20, list(ex["outline"]["ar"]), []))
+        lv["lectures"].sort(key=lambda l: l["id"])
+        lv["lectures_count"] = len(lv["lectures"])
+        school["max_level"] = max(school["max_level"], ex["level"])
+
+
+_apply_extra()
 _apply_lesson_content()
 
 def get_schools_summary() -> list[dict]:

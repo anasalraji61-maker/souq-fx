@@ -54,7 +54,7 @@ export const LessonStage: React.FC<Props> = ({ scene, getProgress, title, playin
       <div className="flex items-center gap-2 px-3 pt-2 pb-1 text-[11px] text-[#7B8DA8]" dir={rtl ? 'rtl' : 'ltr'}>
         <span className={`w-2 h-2 rounded-full ${playing ? 'bg-[#EF4444] animate-pulse' : 'bg-[#475569]'}`} />
         <span className="truncate flex-1" dir="auto">
-          {scene.symbol}
+          {frame.symbol ?? scene.symbol}
           {title ? ` · ${title}` : ''}
         </span>
         {!playing && onPlay && (

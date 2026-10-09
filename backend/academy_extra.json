@@ -1,0 +1,1641 @@
+{
+ "level_titles": [
+  {
+   "school": "basics",
+   "level": 0,
+   "title": {
+    "ar": "قبل أن تبدأ: عالم الفوركس",
+    "en": "Before you start: the forex world",
+    "ku": "پێش دەستپێکردن: جیهانی فۆرێکس"
+   }
+  },
+  {
+   "school": "basics",
+   "level": 2,
+   "title": {
+    "ar": "التنفيذ العملي والانضباط",
+    "en": "Practical execution and discipline",
+    "ku": "جێبەجێکردنی کرداری و دیسپلین"
+   }
+  },
+  {
+   "school": "gann",
+   "level": 5,
+   "title": {
+    "ar": "خطة تداول متكاملة",
+    "en": "A complete trading plan",
+    "ku": "پلانی بازرگانی تەواو"
+   }
+  },
+  {
+   "school": "sk",
+   "level": 5,
+   "title": {
+    "ar": "علم النفس والمراجعة",
+    "en": "Psychology and review",
+    "ku": "دەروونزانی و پێداچوونەوە"
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 5,
+   "title": {
+    "ar": "حساب الهدف",
+    "en": "Calculating the target",
+    "ku": "هەژمارکردنی ئامانج"
+   }
+  }
+ ],
+ "lectures": [
+  {
+   "school": "basics",
+   "level": 0,
+   "id": "basics-l0-01",
+   "title": {
+    "ar": "ما هو سوق الفوركس ومن يتداول فيه",
+    "en": "What Is the Forex Market and Who Trades It",
+    "ku": "بازاڕی فۆرێکس چییە و کێ تێیدا بازرگانی دەکات"
+   },
+   "outline": {
+    "ar": [
+     "الفوركس سوق لتبادل العملات، لا مركزي، يعمل 24 ساعة لخمسة أيام",
+     "المشاركون: البنوك المركزية، البنوك التجارية، المؤسسات، الشركات، والمتداول الفرد",
+     "الوسيط هو بوابتك إلى السوق، واختر دائماً وسيطاً مرخصاً",
+     "السعر يتحرك بالعرض والطلب الذي تغيّره الفائدة والبيانات والمخاطرة"
+    ],
+    "en": [
+     "Forex is a decentralised currency-exchange market open 24 hours, five days a week",
+     "Participants: central banks, commercial banks, institutions, companies and retail traders",
+     "The broker is your gateway to the market; always choose a regulated one",
+     "Price moves on supply and demand, driven by interest rates, data and risk sentiment"
+    ],
+    "ku": [
+     "فۆرێکس بازاڕێکی ناناوەندیی ئاڵوگۆڕی دراوە، 24 کاتژمێر بۆ پێنج ڕۆژ کار دەکات",
+     "بەشداربووان: بانکە ناوەندییەکان، بانکە بازرگانییەکان، دامەزراوەکان، کۆمپانیاکان و بازرگانی تاک",
+     "بڕۆکەر دەروازەی تۆیە بۆ بازاڕ، هەمیشە بڕۆکەرێکی مۆڵەتدار هەڵبژێرە",
+     "نرخ بە خستنەڕوو و داواکاری دەجووڵێت کە سوود و داتا و هەستی مەترسی دەیگۆڕن"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 0,
+   "id": "basics-l0-02",
+   "title": {
+    "ar": "أزواج العملات والذهب: العملة الأساسية والمقابلة وقراءة السعر",
+    "en": "Currency Pairs and Gold: Base, Quote and Reading the Price",
+    "ku": "جووتە دراوەکان و زێڕ: دراوی بنەڕەتی و بەرامبەر و خوێندنەوەی نرخ"
+   },
+   "outline": {
+    "ar": [
+     "الزوج = عملة أساسية وعملة مقابلة، والسعر هو كم تساوي وحدة من الأساسية",
+     "الأزواج الرئيسية والثانوية، ولماذا نبدأ بالرئيسية",
+     "سعر الشراء Ask وسعر البيع Bid والفرق بينهما Spread",
+     "الشراء والبيع على الزوج، وقراءة سعر الذهب XAUUSD"
+    ],
+    "en": [
+     "A pair = base currency and quote currency; the price is what one unit of the base costs",
+     "Major and minor pairs, and why we start with the majors",
+     "The Ask (buy) price, the Bid (sell) price and the Spread between them",
+     "Buying and selling a pair, and reading the gold price XAUUSD"
+    ],
+    "ku": [
+     "جووت = دراوی بنەڕەتی و دراوی بەرامبەر، نرخ ئەوەیە یەکەیەک لە بنەڕەتی چەندە",
+     "جووتە سەرەکی و لاوەکییەکان، و بۆچی بە سەرەکییەکان دەست پێدەکەین",
+     "نرخی کڕین Ask و نرخی فرۆشتن Bid و جیاوازییان Spread",
+     "کڕین و فرۆشتن لەسەر جووت، و خوێندنەوەی نرخی زێڕ XAUUSD"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 0,
+   "id": "basics-l0-03",
+   "title": {
+    "ar": "ساعات السوق والجلسات والسيولة",
+    "en": "Market Hours, Sessions and Liquidity",
+    "ku": "کاتژمێرەکانی بازاڕ و دانیشتنەکان و لیکویدیتی"
+   },
+   "outline": {
+    "ar": [
+     "أربع جلسات: سيدني وطوكيو ولندن ونيويورك، بتوقيت GMT وتوقيت بغداد",
+     "التداخل بين لندن ونيويورك هو أعلى ساعات السيولة",
+     "أسوأ الساعات: آخر نيويورك، وقت التبييت، وعطلة نهاية الأسبوع",
+     "ساعات الأخبار: تقلب عالٍ واتساع الـ Spread، فانتظر إغلاق الشمعة"
+    ],
+    "en": [
+     "Four sessions: Sydney, Tokyo, London and New York, in GMT and Baghdad time",
+     "The London and New York overlap holds the highest liquidity",
+     "The worst hours: late New York, rollover time and the weekend",
+     "News hours: high volatility and wider spreads, so wait for the candle to close"
+    ],
+    "ku": [
+     "چوار دانیشتن: سیدنی و تۆکیۆ و لەندەن و نیویۆرک، بە کاتی GMT و کاتی بەغدا",
+     "یەکگرتنی لەندەن و نیویۆرک بەرزترین کاتژمێرەکانی لیکویدیتییە",
+     "خراپترین کاتژمێرەکان: کۆتایی نیویۆرک، کاتی ڕۆڵۆڤەر، و پشووی کۆتایی هەفتە",
+     "کاتژمێرەکانی هەواڵ: ناجێگیریی بەرز و فراوانبوونی Spread، بۆیە چاوەڕێی داخستنی مۆم بکە"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 0,
+   "id": "basics-l0-04",
+   "title": {
+    "ar": "قراءة الشارت: الشموع والأطر الزمنية",
+    "en": "Reading the Chart: Candles and Timeframes",
+    "ku": "خوێندنەوەی چارت: مۆمەکان و چوارچێوە کاتییەکان"
+   },
+   "outline": {
+    "ar": [
+     "الشارت: السعر عبر الزمن",
+     "تشريح الشمعة: الافتتاح والإغلاق والأعلى والأدنى",
+     "الخط والبار والشمعة",
+     "الأطر الزمنية من الدقيقة إلى الشهر وكيف تحتوي الشمعة الكبيرة الصغيرة"
+    ],
+    "en": [
+     "The chart: price over time",
+     "Candle anatomy: open, close, high and low",
+     "Line, bar and candlestick charts",
+     "Timeframes from one minute to monthly, and how a big candle contains smaller ones"
+    ],
+    "ku": [
+     "چارت: نرخ بە درێژایی کات",
+     "پێکهاتەی مۆم: کردنەوە و داخستن و بەرزترین و نزمترین",
+     "هێڵ و بار و مۆم",
+     "چوارچێوە کاتییەکان لە خولەکێکەوە تا مانگێک و چۆن مۆمی گەورە مۆمە بچووکەکان لەخۆ دەگرێت"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 2,
+   "id": "basics-l2-01",
+   "title": {
+    "ar": "أنواع الأوامر: Market و Limit و Stop ووقف الخسارة والهدف",
+    "en": "Order Types: Market, Limit, Stop, Stop Loss and Take Profit",
+    "ku": "جۆرەکانی فەرمان: Market و Limit و Stop و Stop Loss و Take Profit"
+   },
+   "outline": {
+    "ar": [
+     "أمر السوق والأوامر المعلّقة",
+     "Buy Limit و Sell Limit و Buy Stop و Sell Stop",
+     "وقف الخسارة والهدف",
+     "الانزلاق السعري والفجوات"
+    ],
+    "en": [
+     "Market orders and pending orders",
+     "Buy Limit, Sell Limit, Buy Stop and Sell Stop",
+     "Stop loss and take profit",
+     "Slippage and gaps"
+    ],
+    "ku": [
+     "فەرمانی بازاڕ و فەرمانە هەڵپەسێردراوەکان",
+     "Buy Limit و Sell Limit و Buy Stop و Sell Stop",
+     "Stop Loss و Take Profit",
+     "خلیسکانی نرخ و بۆشاییەکان"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 2,
+   "id": "basics-l2-02",
+   "title": {
+    "ar": "السبريد والعمولة والسواب والحسابات الإسلامية",
+    "en": "Spread, Commission, Swap and Islamic Accounts",
+    "ku": "سپرێد و کۆمیسیۆن و سواپ و حسابە ئیسلامییەکان"
+   },
+   "outline": {
+    "ar": [
+     "السبريد: الفرق بين Bid و Ask وتكلفته بالدولار",
+     "العمولة وأنواع الحسابات",
+     "اتساع السبريد وقت الأخبار والـ Rollover",
+     "السواب والحسابات الخالية من السواب"
+    ],
+    "en": [
+     "The spread: the gap between Bid and Ask and its cost in dollars",
+     "Commission and account types",
+     "Spread widening at news and rollover",
+     "Swap and swap-free accounts"
+    ],
+    "ku": [
+     "سپرێد: جیاوازی نێوان Bid و Ask و تێچووەکەی بە دۆلار",
+     "کۆمیسیۆن و جۆرەکانی حساب",
+     "فراوانبوونی سپرێد لە کاتی هەواڵ و Rollover",
+     "سواپ و حسابەکانی بێ سواپ"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 2,
+   "id": "basics-l2-03",
+   "title": {
+    "ar": "المنصة خطوة بخطوة: فتح صفقة وإدارتها",
+    "en": "The Platform Step by Step: Opening and Managing a Trade",
+    "ku": "پلاتفۆرم هەنگاو بە هەنگاو: کردنەوە و بەڕێوەبردنی مامەڵە"
+   },
+   "outline": {
+    "ar": [
+     "التعرف على نافذة الأسعار والرسم البياني",
+     "فتح صفقة من نافذة الأمر الجديد وتحديد الحجم",
+     "وضع وقف الخسارة والهدف ثم التعديل والإغلاق الجزئي",
+     "مراجعة السجل والتدرب على حساب تجريبي أولاً"
+    ],
+    "en": [
+     "Getting to know the watchlist and the chart",
+     "Opening a trade from the new order window and setting the volume",
+     "Placing stop loss and take profit, then modifying and partially closing",
+     "Reviewing the history and practising on a demo account first"
+    ],
+    "ku": [
+     "ناسینی پەنجەرەی نرخەکان و هێڵکاری",
+     "کردنەوەی مامەڵە لە پەنجەرەی فەرمانی نوێ و دیاریکردنی قەبارە",
+     "دانانی وەستانی زیان و ئامانج پاشان دەستکاری و داخستنی بەشێک",
+     "پێداچوونەوەی مێژوو و ڕاهێنان لەسەر هەژماری تاقیکاری پێشتر"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 2,
+   "id": "basics-l2-04",
+   "title": {
+    "ar": "علم نفس التداول والانضباط",
+    "en": "Trading Psychology and Discipline",
+    "ku": "دەروونناسی بازرگانی و دیسیپلین"
+   },
+   "outline": {
+    "ar": [
+     "الخوف والطمع وكيف يغيّران قراراتك",
+     "تداول الانتقام والإفراط في التداول والـ FOMO",
+     "تقبّل الخسارة كجزء طبيعي من العمل",
+     "روتين يومي وحدود ثابتة تحميك من نفسك"
+    ],
+    "en": [
+     "Fear and greed and how they change your decisions",
+     "Revenge trading, overtrading and FOMO",
+     "Accepting losses as a normal part of the work",
+     "A daily routine and fixed limits that protect you from yourself"
+    ],
+    "ku": [
+     "ترس و تەماع و چۆن بڕیارەکانت دەگۆڕن",
+     "بازرگانی تۆڵەسەندنەوە و زیادەڕەوی و FOMO",
+     "قبوڵکردنی زیان وەک بەشێکی ئاسایی کار",
+     "ڕۆتینی ڕۆژانە و سنووری جێگیر کە لە خۆت دەتپارێزن"
+    ]
+   }
+  },
+  {
+   "school": "basics",
+   "level": 2,
+   "id": "basics-l2-05",
+   "title": {
+    "ar": "خطة التداول الأولى ودفتر التداول",
+    "en": "Your First Trading Plan and Trading Journal",
+    "ku": "یەکەم پلانی بازرگانی و دەفتەری بازرگانی"
+   },
+   "outline": {
+    "ar": [
+     "ما الذي تحتويه خطة التداول ولماذا تُكتب",
+     "قواعد الدخول والخروج والمخاطرة وحد الخسارة اليومي",
+     "حقول دفتر التداول مع أمثلة مسجّلة",
+     "المراجعة الأسبوعية وقالب جاهز للاستخدام"
+    ],
+    "en": [
+     "What a trading plan contains and why it is written",
+     "Entry, exit and risk rules and the daily loss limit",
+     "Trading journal fields with recorded examples",
+     "The weekly review and a ready-to-use template"
+    ],
+    "ku": [
+     "پلانی بازرگانی چی تێدایە و بۆچی دەنووسرێت",
+     "یاساکانی چوونەژوورەوە و دەرچوون و مەترسی و سنووری زیانی ڕۆژانە",
+     "خانەکانی دەفتەری بازرگانی لەگەڵ نموونەی تۆمارکراو",
+     "پێداچوونەوەی هەفتانە و قاڵبێکی ئامادە بۆ بەکارهێنان"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 2,
+   "id": "classic-l2-04",
+   "title": {
+    "ar": "نماذج الشموع اليابانية الانعكاسية والاستمرارية",
+    "en": "Reversal and Continuation Candlestick Patterns",
+    "ku": "نموونەکانی مۆمی ژاپۆنی بۆ گەڕانەوە و بەردەوامبوون"
+   },
+   "outline": {
+    "ar": [
+     "الابتلاع والـ Pin Bar والدوجي والـ Inside Bar",
+     "نجمة الصباح ونجمة المساء",
+     "السياق أهم من الشكل: مستوى واتجاه وشمعة مغلقة",
+     "الدخول والوقف والهدف مع مثالين على EURUSD والذهب"
+    ],
+    "en": [
+     "Engulfing, Pin Bar, Doji and Inside Bar",
+     "Morning Star and Evening Star",
+     "Context beats shape: level, trend and a closed candle",
+     "Entry, stop and target with examples on EURUSD and gold"
+    ],
+    "ku": [
+     "Engulfing و Pin Bar و Doji و Inside Bar",
+     "ئەستێرەی بەیانی و ئەستێرەی ئێوارە",
+     "دۆخ لە شێوە گرنگترە: ئاست و ئاڕاستە و مۆمی داخراو",
+     "چوونەژوورەوە و stop loss و ئامانج لەگەڵ نموونە لەسەر EURUSD و زێڕ"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 2,
+   "id": "classic-l2-05",
+   "title": {
+    "ar": "القمة والقاع المزدوج والقنوات السعرية",
+    "en": "Double Tops, Double Bottoms and Price Channels",
+    "ku": "لووتکە و نزمیی دووانە و کەناڵەکانی نرخ"
+   },
+   "outline": {
+    "ar": [
+     "القمة المزدوجة M والقاع المزدوج W وخط العنق",
+     "التأكيد بإغلاق شمعة خلف خط العنق والهدف بقياس الارتفاع",
+     "رسم القناة السعرية والتداول داخلها وعند كسرها",
+     "مثالان على GBPUSD وUSDJPY وأخطاء شائعة"
+    ],
+    "en": [
+     "Double top M, double bottom W and the neckline",
+     "Confirmation by a candle close beyond the neckline, target by measured height",
+     "Drawing a price channel, trading inside it and on its break",
+     "Examples on GBPUSD and USDJPY, plus common mistakes"
+    ],
+    "ku": [
+     "لووتکەی دووانە M و نزمیی دووانە W و هێڵی مل",
+     "پشتڕاستکردنەوە بە داخستنی مۆم لە پشت هێڵی مل و ئامانج بە پێوانی بەرزی",
+     "کێشانی کەناڵی نرخ و مامەڵە لە ناوی و لە کاتی شکاندنی",
+     "نموونە لەسەر GBPUSD و USDJPY و هەڵە باوەکان"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 2,
+   "id": "classic-l2-06",
+   "title": {
+    "ar": "فيبوناتشي: الارتدادات والامتدادات",
+    "en": "Fibonacci: Retracements and Extensions",
+    "ku": "فیبۆناچی: گەڕانەوەکان و درێژکراوەکان"
+   },
+   "outline": {
+    "ar": [
+     "نسب فيبوناتشي وكيف نرسم الأداة من قاع إلى قمة",
+     "منطقة 50% إلى 61.8% والتلاقي مع الدعم والمقاومة",
+     "الامتدادات 127.2% و161.8% لتحديد الأهداف",
+     "الدخول والوقف مع مثالين على EURUSD والذهب"
+    ],
+    "en": [
+     "Fibonacci ratios and drawing the tool from low to high",
+     "The 50% to 61.8% zone and confluence with support and resistance",
+     "Extensions 127.2% and 161.8% for targets",
+     "Entry and stop with examples on EURUSD and gold"
+    ],
+    "ku": [
+     "ڕێژەکانی فیبۆناچی و کێشانی ئامرازەکە لە نزمییەوە بۆ لووتکە",
+     "ناوچەی 50% تا 61.8% و یەکگرتنی لەگەڵ پشتگیری و بەرگری",
+     "درێژکراوەکانی 127.2% و 161.8% بۆ ئامانج",
+     "چوونەژوورەوە و stop loss لەگەڵ نموونە لەسەر EURUSD و زێڕ"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 2,
+   "id": "classic-l2-07",
+   "title": {
+    "ar": "بولينجر و ATR: قياس التذبذب ووضع الوقف",
+    "en": "Bollinger Bands and ATR: Measuring Volatility and Placing Stops",
+    "ku": "Bollinger و ATR: پێوانی لەرزۆکی و دانانی stop loss"
+   },
+   "outline": {
+    "ar": [
+     "ما هو التذبذب ولماذا يهم المتداول",
+     "نطاقات بولينجر: الانضغاط والتوسع والسير على الحد",
+     "مؤشر ATR ووضع الوقف بمضاعفاته وحساب حجم الصفقة",
+     "مثالان على GBPUSD والذهب وأخطاء شائعة"
+    ],
+    "en": [
+     "What volatility is and why it matters to a trader",
+     "Bollinger Bands: squeeze, expansion and walking the band",
+     "The ATR indicator, stops by ATR multiples and position sizing",
+     "Examples on GBPUSD and gold, plus common mistakes"
+    ],
+    "ku": [
+     "لەرزۆکی چییە و بۆچی بۆ بازرگان گرنگە",
+     "Bollinger Bands: پەستان و فراوانبوون و ڕۆیشتن بە درێژایی باند",
+     "پێوەری ATR و دانانی stop loss بە چەندجارەکانی و حیسابی قەبارەی مامەڵە",
+     "نموونە لەسەر GBPUSD و زێڕ و هەڵە باوەکان"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 3,
+   "id": "classic-l3-03",
+   "title": {
+    "ar": "التحليل متعدد الأطر الزمنية",
+    "en": "Multi-Timeframe Analysis",
+    "ku": "شیکاری چەند چوارچێوەی کاتی"
+   },
+   "outline": {
+    "ar": [
+     "الإطار الكبير للاتجاه، والمتوسط للمنطقة، والصغير للتوقيت",
+     "اختيار ثلاثة أطر بنسبة 4 إلى 6 بين كل إطار والذي يليه",
+     "شروط التوافق والدخول على شمعة مغلقة مع وقف وهدف واضحين",
+     "مثالان عمليان على EURUSD و XAUUSD وأخطاء شائعة"
+    ],
+    "en": [
+     "The higher timeframe for direction, the middle one for the zone, the lower one for timing",
+     "Choosing three timeframes with a ratio of 4 to 6 between each one and the next",
+     "Alignment conditions and entry on a closed candle with a clear stop and target",
+     "Two practical examples on EURUSD and XAUUSD, plus common mistakes"
+    ],
+    "ku": [
+     "چوارچێوەی گەورە بۆ ئاراستە، ناوەند بۆ ناوچە، بچووک بۆ کات",
+     "هەڵبژاردنی سێ چوارچێوە بە ڕێژەی 4 بۆ 6 لە نێوان هەر یەکێک و دواتری",
+     "مەرجەکانی گونجان و چوونەژوورەوە لەسەر مۆمێکی داخراو لەگەڵ وەستان و ئامانجی ڕوون",
+     "دوو نموونەی کرداری لەسەر EURUSD و XAUUSD و هەڵە باوەکان"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 3,
+   "id": "classic-l3-04",
+   "title": {
+    "ar": "استراتيجية الاختراق وإعادة الاختبار",
+    "en": "The Breakout and Retest Strategy",
+    "ku": "ستراتیژی شکاندن و دووبارە تاقیکردنەوە"
+   },
+   "outline": {
+    "ar": [
+     "تحديد مستوى قوي ثم اختراقه بإغلاق شمعة واضح",
+     "إعادة الاختبار: المقاومة المكسورة تتحول إلى دعم",
+     "الدخول والوقف والهدف بطريقة الحركة المقاسة",
+     "مثالان على GBPUSD و USDJPY والتمييز بين الاختراق الحقيقي والكاذب"
+    ],
+    "en": [
+     "Identifying a strong level, then a breakout with a clear candle close",
+     "The retest: broken resistance turns into support",
+     "Entry, stop and target using the measured move",
+     "Two examples on GBPUSD and USDJPY, and telling a real breakout from a false one"
+    ],
+    "ku": [
+     "دیاریکردنی ئاستێکی بەهێز و پاشان شکاندنی بە داخستنی ڕوونی مۆم",
+     "دووبارە تاقیکردنەوە: بەرگری شکێنراو دەبێتە پشتگیری",
+     "چوونەژوورەوە و وەستان و ئامانج بە ڕێگای جووڵەی پێوراو",
+     "دوو نموونە لەسەر GBPUSD و USDJPY و جیاکردنەوەی شکاندنی ڕاستەقینە لە ساختە"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 3,
+   "id": "classic-l3-05",
+   "title": {
+    "ar": "نقاط الارتكاز Pivot Points والمستويات اليومية",
+    "en": "Pivot Points and Daily Levels",
+    "ku": "خاڵەکانی پاڵپشت Pivot Points و ئاستە ڕۆژانەکان"
+   },
+   "outline": {
+    "ar": [
+     "حساب نقطة الارتكاز P ومستويات R1 و R2 و S1 و S2 من بيانات الأمس",
+     "المستويات اليومية الأخرى: قمة الأمس وقاعه وسعر افتتاح اليوم",
+     "أسلوبان: الارتداد من المستوى في الأيام العرضية والاختراق في الأيام الاتجاهية",
+     "مثالان محسوبان على EURUSD و XAUUSD وأخطاء شائعة"
+    ],
+    "en": [
+     "Calculating the pivot P and the R1, R2, S1 and S2 levels from yesterday's data",
+     "Other daily levels: yesterday's high and low and today's opening price",
+     "Two approaches: bouncing off a level on range days and breaking through on trend days",
+     "Two calculated examples on EURUSD and XAUUSD, plus common mistakes"
+    ],
+    "ku": [
+     "حیسابکردنی خاڵی پاڵپشت P و ئاستەکانی R1 و R2 و S1 و S2 لە داتای دوێنێ",
+     "ئاستە ڕۆژانەکانی تر: لووتکە و بنکەی دوێنێ و نرخی کردنەوەی ئەمڕۆ",
+     "دوو شێواز: گەڕانەوە لە ئاست لە ڕۆژە ئاسۆییەکان و شکاندن لە ڕۆژە ئاراستەدارەکان",
+     "دوو نموونەی حیسابکراو لەسەر EURUSD و XAUUSD و هەڵە باوەکان"
+    ]
+   }
+  },
+  {
+   "school": "classic",
+   "level": 3,
+   "id": "classic-l3-06",
+   "title": {
+    "ar": "بناء نظام تداول كلاسيكي واختباره (Backtest)",
+    "en": "Building and Backtesting a Classic Trading System",
+    "ku": "دروستکردنی سیستەمێکی بازرگانی کلاسیکی و تاقیکردنەوەی (Backtest)"
+   },
+   "outline": {
+    "ar": [
+     "مكونات النظام: السوق والإطار والإعداد والدخول والوقف والهدف والحجم",
+     "حساب حجم الصفقة بمخاطرة ثابتة نحو 1%",
+     "الاختبار الرجعي اليدوي وقراءة النتائج: نسبة الربح والتوقع الرياضي والتراجع",
+     "الاختبار على حساب تجريبي وأخطاء شائعة مثل الإفراط في التحسين"
+    ],
+    "en": [
+     "The parts of a system: market, timeframe, setup, entry, stop, target and size",
+     "Calculating position size with a fixed risk of about 1%",
+     "Manual backtesting and reading the results: win rate, expectancy and drawdown",
+     "Testing on a demo account, and common mistakes such as over-optimisation"
+    ],
+    "ku": [
+     "بەشەکانی سیستەم: بازاڕ و چوارچێوە و ڕێکخستن و چوونەژوورەوە و وەستان و ئامانج و قەبارە",
+     "حیسابکردنی قەبارەی مامەڵە بە مەترسییەکی جێگیری نزیکەی 1%",
+     "تاقیکردنەوەی گەڕاوەی دەستی و خوێندنەوەی ئەنجامەکان: ڕێژەی بردنەوە و چاوەڕوانی و پاشەکشە",
+     "تاقیکردنەوە لەسەر هەژماری تاقیکاری و هەڵە باوەکانی وەک زێدەڕۆیی لە باشترکردن"
+    ]
+   }
+  },
+  {
+   "school": "elliott",
+   "level": 1,
+   "id": "ew-l1-03",
+   "title": {
+    "ar": "درجات الموجات والترقيم",
+    "en": "Wave Degrees and Labeling",
+    "ku": "پلەکانی شەپۆل و ژمارەکردن"
+   },
+   "outline": {
+    "ar": [
+     "الموجات داخل الموجات: فكرة الدرجات",
+     "سلّم الدرجات ورموز الترقيم لكل درجة",
+     "الترقيم من الإطار الأكبر إلى الأصغر",
+     "استخدام الدرجة لتحديد الدخول والوقف والهدف"
+    ],
+    "en": [
+     "Waves within waves: the idea of degrees",
+     "The degree ladder and the label style of each degree",
+     "Labeling from the higher timeframe down",
+     "Using degree to set entry, stop and target"
+    ],
+    "ku": [
+     "شەپۆل لەناو شەپۆلدا: بیرۆکەی پلەکان",
+     "پەیژەی پلەکان و هێمای ژمارەکردنی هەر پلەیەک",
+     "ژمارەکردن لە چوارچێوەی گەورەوە بۆ بچووک",
+     "بەکارهێنانی پلە بۆ چوونەژوورەوە و وەستان و ئامانج"
+    ]
+   }
+  },
+  {
+   "school": "elliott",
+   "level": 1,
+   "id": "ew-l1-04",
+   "title": {
+    "ar": "الأنماط القطرية: Leading و Ending Diagonal",
+    "en": "Diagonals: Leading and Ending Diagonal",
+    "ku": "شێوە لارەکان: Leading و Ending Diagonal"
+   },
+   "outline": {
+    "ar": [
+     "ما هو النمط القطري ولماذا يشبه الوتد",
+     "الفرق بين Leading Diagonal و Ending Diagonal",
+     "الرسم والقواعد: التداخل وتقارب الخطوط",
+     "التداول بعد الاكتمال مع الوقف والهدف"
+    ],
+    "en": [
+     "What a diagonal is and why it looks like a wedge",
+     "Leading Diagonal versus Ending Diagonal",
+     "Drawing and rules: overlap and converging lines",
+     "Trading after completion with stop and target"
+    ],
+    "ku": [
+     "شێوەی لار چییە و بۆچی لە سەبەتە دەچێت",
+     "جیاوازی نێوان Leading Diagonal و Ending Diagonal",
+     "کێشان و یاساکان: تێکەڵبوون و نزیکبوونەوەی هێڵەکان",
+     "مامەڵەکردن دوای تەواوبوون لەگەڵ وەستان و ئامانج"
+    ]
+   }
+  },
+  {
+   "school": "elliott",
+   "level": 2,
+   "id": "ew-l2-02",
+   "title": {
+    "ar": "التصحيحات المركبة: Double و Triple Three و WXY",
+    "en": "Complex Corrections: Double Three, Triple Three and WXY",
+    "ku": "ڕاستکردنەوە ئاڵۆزەکان: Double و Triple Three و WXY"
+   },
+   "outline": {
+    "ar": [
+     "ما هو التصحيح المركب ولماذا يحدث",
+     "Double Three وDouble Zigzag وTriple Three",
+     "قواعد الترقيم بحروف W وX وY وZ",
+     "التداول عند نهاية Y مع الوقف والهدف"
+    ],
+    "en": [
+     "What a complex correction is and why it happens",
+     "Double Three, Double Zigzag and Triple Three",
+     "Labeling rules with W, X, Y and Z",
+     "Trading at the end of Y with stop and target"
+    ],
+    "ku": [
+     "ڕاستکردنەوەی ئاڵۆز چییە و بۆچی ڕوودەدات",
+     "Double Three و Double Zigzag و Triple Three",
+     "یاساکانی ژمارەکردن بە W و X و Y و Z",
+     "مامەڵەکردن لە کۆتایی Y لەگەڵ وەستان و ئامانج"
+    ]
+   }
+  },
+  {
+   "school": "elliott",
+   "level": 2,
+   "id": "ew-l2-03",
+   "title": {
+    "ar": "القنوات وقاعدة التناوب وإرشادات الموجات",
+    "en": "Channels, the Alternation Guideline and Wave Guidelines",
+    "ku": "کەناڵەکان، ڕێنمایی ئاڵوگۆڕ و ڕێنماییەکانی شەپۆلەکان"
+   },
+   "outline": {
+    "ar": [
+     "رسم قناة إليوت لتوقع نهاية الموجتين 4 و5",
+     "التناوب: إذا كانت الموجة 2 حادة فالموجة 4 غالباً جانبية",
+     "الفرق بين القواعد الصارمة والإرشادات المرنة",
+     "استخدام القناة والتناوب لتحديد الدخول والوقف والهدف"
+    ],
+    "en": [
+     "Drawing the Elliott channel to anticipate the ends of waves 4 and 5",
+     "Alternation: if wave 2 is sharp, wave 4 is usually sideways",
+     "The difference between strict rules and flexible guidelines",
+     "Using the channel and alternation to plan entry, stop and target"
+    ],
+    "ku": [
+     "کێشانی کەناڵی ئێلیۆت بۆ پێشبینیی کۆتایی شەپۆلی 4 و 5",
+     "ئاڵوگۆڕ: ئەگەر شەپۆلی 2 تیژ بێت، شەپۆلی 4 زۆرجار لاتەنیشتە",
+     "جیاوازیی نێوان یاسا توندەکان و ڕێنماییە نەرمەکان",
+     "بەکارهێنانی کەناڵ و ئاڵوگۆڕ بۆ چوونەژوورەوە، وەستان و ئامانج"
+    ]
+   }
+  },
+  {
+   "school": "elliott",
+   "level": 3,
+   "id": "ew-l3-02",
+   "title": {
+    "ar": "شخصية الموجات: كيف تعرف أين أنت",
+    "en": "Wave Personality: How to Know Where You Are",
+    "ku": "کەسایەتیی شەپۆلەکان: چۆن بزانیت لە کوێیت"
+   },
+   "outline": {
+    "ar": [
+     "لكل موجة سلوك مميز في السرعة والزخم والمعنويات",
+     "الموجة 1 مشكوك فيها، الموجة 2 مخيفة، الموجة 3 قوية وواضحة",
+     "الموجة 4 مملة ومتداخلة، الموجة 5 ضعيفة الزخم، والموجة B فخ",
+     "استخدام الشخصية لاختيار الصفقة وتجنب الدخول المتأخر"
+    ],
+    "en": [
+     "Each wave has a distinct behaviour in speed, momentum and sentiment",
+     "Wave 1 is doubted, wave 2 is frightening, wave 3 is strong and obvious",
+     "Wave 4 is dull and overlapping, wave 5 has weak momentum, and wave B is a trap",
+     "Using personality to choose the trade and avoid late entries"
+    ],
+    "ku": [
+     "هەر شەپۆلێک ڕەفتارێکی تایبەتی هەیە لە خێرایی، هێز و هەستی بازاڕدا",
+     "شەپۆلی 1 گومانلێکراوە، شەپۆلی 2 ترسناکە، شەپۆلی 3 بەهێز و ڕوونە",
+     "شەپۆلی 4 بێزارکەر و تێکەڵە، شەپۆلی 5 هێزی لاوازە، و شەپۆلی B تەڵەیە",
+     "بەکارهێنانی کەسایەتی بۆ هەڵبژاردنی مامەڵە و دوورکەوتنەوە لە چوونەژوورەوەی دواکەوتوو"
+    ]
+   }
+  },
+  {
+   "school": "elliott",
+   "level": 5,
+   "id": "ew-l5-02",
+   "title": {
+    "ar": "خطة تداول كاملة بإليوت على عدة أطر زمنية",
+    "en": "A Complete Multi-Timeframe Elliott Wave Trading Plan",
+    "ku": "پلانێکی تەواوی مامەڵەکردن بە ئێلیۆت لەسەر چەند چوارچێوەیەکی کاتی"
+   },
+   "outline": {
+    "ar": [
+     "اليومي للصورة الكبيرة والعدّ الرئيسي والبديل ونقطة الإلغاء",
+     "الأربع ساعات لتحديد الموجة التي نتداولها ومنطقة نهاية التصحيح",
+     "الساعة أو 15 دقيقة للتنفيذ: خمس موجات صغيرة ثم تصحيح ثم دخول",
+     "حجم الصفقة بمخاطرة 1%، الأهداف الجزئية، وإدارة الوقف"
+    ],
+    "en": [
+     "Daily for the big picture, the primary and alternate count, and invalidation",
+     "Four-hour to choose the wave we trade and the correction's end zone",
+     "One-hour or 15-minute for execution: five small waves, a pullback, then entry",
+     "Position size at 1% risk, partial targets, and stop management"
+    ],
+    "ku": [
+     "ڕۆژانە بۆ وێنە گەورەکە، ژماردنی سەرەکی و جێگرەوە و خاڵی هەڵوەشاندنەوە",
+     "چوار کاتژمێری بۆ دیاریکردنی ئەو شەپۆلەی مامەڵەی لەسەر دەکەین و ناوچەی کۆتایی ڕاستکردنەوە",
+     "یەک کاتژمێری یان 15 خولەکی بۆ جێبەجێکردن: پێنج شەپۆلی بچووک، گەڕانەوە، پاشان چوونەژوورەوە",
+     "قەبارەی مامەڵە بە مەترسیی 1%، ئامانجە بەشییەکان و بەڕێوەبردنی وەستان"
+    ]
+   }
+  },
+  {
+   "school": "gann",
+   "level": 1,
+   "id": "gann-l1-02",
+   "title": {
+    "ar": "قواعد جان العملية للتداول بلغة اليوم",
+    "en": "Gann's Practical Trading Rules in Today's Language",
+    "ku": "یاسا کردارییەکانی گان بۆ بازرگانی بە زمانی ئەمڕۆ"
+   },
+   "outline": {
+    "ar": [
+     "مخاطرة بنحو 1% ووقف خسارة ثابت في كل صفقة",
+     "اتبع الاتجاه وابقَ خارج السوق عند الشك",
+     "احمِ الربح ولا تضف إلى صفقة خاسرة",
+     "قائمة مراجعة قصيرة قبل كل صفقة"
+    ],
+    "en": [
+     "About 1% risk and a fixed stop loss on every trade",
+     "Follow the trend and stay out when in doubt",
+     "Protect profits and never add to a losing trade",
+     "A short checklist before every trade"
+    ],
+    "ku": [
+     "نزیکەی 1% مەترسی و stop lossی جێگیر لە هەموو مامەڵەیەکدا",
+     "شوێن ئاڕاستە بکەوە و لە کاتی گوماندا لە دەرەوە بمێنەوە",
+     "قازانج بپارێزە و هەرگیز بۆ مامەڵەیەکی زیانبار زیاد مەکە",
+     "لیستێکی کورتی پشکنین پێش هەموو مامەڵەیەک"
+    ]
+   }
+  },
+  {
+   "school": "gann",
+   "level": 2,
+   "id": "gann-l2-03",
+   "title": {
+    "ar": "رسم زوايا جان بشكل صحيح: المقياس والسعر والزمن",
+    "en": "Drawing Gann Angles Correctly: Scale, Price and Time",
+    "ku": "کێشانی دروستی گۆشەکانی گان: پێوەر و نرخ و کات"
+   },
+   "outline": {
+    "ar": [
+     "خط 1x1 سرعة سعرية ثابتة لا زاوية على الشاشة",
+     "تثبيت المقياس رقمياً قبل التحليل",
+     "حساب المروحة بالأرقام وقراءة السعر حولها",
+     "الدخول عند الارتداد إلى الخط مع وقف وهدف واضحين"
+    ],
+    "en": [
+     "The 1x1 line is a fixed price speed, not a screen angle",
+     "Fix the scale numerically before analysing",
+     "Calculate the fan with numbers and read price around it",
+     "Enter on a pullback to the line with a clear stop and target"
+    ],
+    "ku": [
+     "هێڵی 1x1 خێرایی جێگیری نرخە نەک گۆشەیەک لەسەر شاشە",
+     "پێوەر بە ژمارە جێگیر بکە پێش شیکردنەوە",
+     "باوەشێن بە ژمارە حیساب بکە و نرخ لە دەوریدا بخوێنەوە",
+     "چوونەژوورەوە لە گەڕانەوە بۆ هێڵەکە لەگەڵ stop loss و ئامانجی ڕوون"
+    ]
+   }
+  },
+  {
+   "school": "gann",
+   "level": 2,
+   "id": "gann-l2-04",
+   "title": {
+    "ar": "مستويات جان الثُمنية (1/8) ونسب الارتداد",
+    "en": "Gann Eighths (1/8) Levels and Retracement Ratios",
+    "ku": "ئاستە هەشتییەکانی گان (1/8) و ڕێژەکانی گەڕانەوە"
+   },
+   "outline": {
+    "ar": [
+     "تقسيم النطاق إلى ثمانية أجزاء متساوية",
+     "مستوى 50% نقطة التوازن و3/8 و5/8 حدود التصحيح",
+     "اختيار النطاق الصحيح وتجمع المستويات",
+     "الدخول بعد شمعة مغلقة مع وقف خلف 5/8"
+    ],
+    "en": [
+     "Dividing a range into eight equal parts",
+     "50% as the balance point, 3/8 and 5/8 as pullback limits",
+     "Choosing the right range and level clusters",
+     "Entering after a closed candle with a stop beyond 5/8"
+    ],
+    "ku": [
+     "دابەشکردنی مەودا بۆ هەشت بەشی یەکسان",
+     "ئاستی 50% خاڵی هاوسەنگی و 3/8 و 5/8 سنووری ڕاستکردنەوە",
+     "هەڵبژاردنی مەودای دروست و کۆبوونەوەی ئاستەکان",
+     "چوونەژوورەوە دوای مۆمی داخراو لەگەڵ stop loss لە پشت 5/8"
+    ]
+   }
+  },
+  {
+   "school": "gann",
+   "level": 4,
+   "id": "gann-l4-02",
+   "title": {
+    "ar": "تربيع السعر مع الزمن ومواعيد الانعكاس",
+    "en": "Squaring Price with Time and Reversal Windows",
+    "ku": "چوارگۆشەکردنی نرخ لەگەڵ کات و کاتەکانی وەرگەڕان"
+   },
+   "outline": {
+    "ar": [
+     "تساوي مسافة السعر مع المدة الزمنية بمقياس ثابت",
+     "تربيع النطاق والدورات الطبيعية 90 و180 و360 يوماً",
+     "النافذة الزمنية إنذار لا إشارة دخول",
+     "الدخول بعد دليل سعري على شمعة مغلقة داخل النافذة"
+    ],
+    "en": [
+     "Price distance equal to elapsed time on a fixed scale",
+     "Squaring the range and natural cycles of 90, 180 and 360 days",
+     "A time window is an alert, not an entry signal",
+     "Entering after price evidence on a closed candle inside the window"
+    ],
+    "ku": [
+     "یەکسانبوونی دووری نرخ لەگەڵ ماوەی کات بە پێوەرێکی جێگیر",
+     "چوارگۆشەکردنی مەودا و خولە سروشتییەکانی 90 و 180 و 360 ڕۆژ",
+     "پەنجەرەی کات ئاگادارکردنەوەیە نەک ئاماژەی چوونەژوورەوە",
+     "چوونەژوورەوە دوای بەڵگەی نرخ لەسەر مۆمی داخراو لە ناو پەنجەرەکەدا"
+    ]
+   }
+  },
+  {
+   "school": "gann",
+   "level": 5,
+   "id": "gann-l5-01",
+   "title": {
+    "ar": "خطة تداول كاملة بأدوات جان",
+    "en": "A Complete Trading Plan with Gann Tools",
+    "ku": "پلانێکی تەواوی بازرگانی بە ئامرازەکانی گان"
+   },
+   "outline": {
+    "ar": [
+     "الاتجاه والحركة الرئيسية والمقياس على الإطار الأكبر",
+     "مناطق السعر من الأثمان والزوايا ونوافذ الزمن",
+     "الدخول عند تلاقي عاملين على الأقل بعد شمعة مغلقة",
+     "مخاطرة 1% وجني جزئي وسجل تداول واختبار مسبق"
+    ],
+    "en": [
+     "Trend, major move and scale on the higher timeframe",
+     "Price zones from eighths, angles and time windows",
+     "Entering when at least two factors meet, after a closed candle",
+     "1% risk, partial profits, a journal and prior testing"
+    ],
+    "ku": [
+     "ئاڕاستە و جووڵەی سەرەکی و پێوەر لەسەر چوارچێوەی گەورەتر",
+     "ناوچەکانی نرخ لە هەشتی و گۆشە و پەنجەرەکانی کاتەوە",
+     "چوونەژوورەوە کاتێک لانیکەم دوو هۆکار یەکدەگرنەوە دوای مۆمی داخراو",
+     "مەترسی 1% و وەرگرتنی بەشێک لە قازانج و دەفتەری بازرگانی و تاقیکردنەوەی پێشوەختە"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 1,
+   "id": "smc-l1-03",
+   "title": {
+    "ar": "هيكل السوق: الهيكل الداخلي والخارجي والقمم القوية والضعيفة",
+    "en": "Market Structure: Internal vs External, Strong and Weak Highs",
+    "ku": "پێکهاتەی بازاڕ: پێکهاتەی ناوەکی و دەرەکی، لووتکە بەهێز و لاوازەکان"
+   },
+   "outline": {
+    "ar": [
+     "الهيكل الخارجي Swing والهيكل الداخلي Internal",
+     "القمم والقيعان القوية والضعيفة ومعناها",
+     "رسم الهيكل وقراءة الكسر على شمعة مغلقة",
+     "الدخول مع الهيكل الخارجي بتوقيت من الداخلي"
+    ],
+    "en": [
+     "External (Swing) vs Internal structure",
+     "Strong and weak highs and lows",
+     "Drawing structure and reading breaks on closed candles",
+     "Trading with external structure, timing with internal"
+    ],
+    "ku": [
+     "پێکهاتەی دەرەکی Swing و پێکهاتەی ناوەکی Internal",
+     "لووتکە و نزمییە بەهێز و لاوازەکان",
+     "کێشانی پێکهاتە و خوێندنەوەی شکاندن لەسەر مۆمی داخراو",
+     "چوونەژوورەوە لەگەڵ پێکهاتەی دەرەکی بە کاتی ناوەکی"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 1,
+   "id": "smc-l1-04",
+   "title": {
+    "ar": "الإزاحة Displacement: كيف تميّز الحركة المؤسسية الحقيقية",
+    "en": "Displacement: How to Recognize a Genuine Institutional Move",
+    "ku": "Displacement: چۆن جووڵەی ڕاستەقینەی دامەزراوەیی بناسیتەوە"
+   },
+   "outline": {
+    "ar": [
+     "تعريف الإزاحة ولماذا تهم",
+     "علاماتها: أجسام كبيرة وذيول صغيرة وفجوة FVG",
+     "شروطها: كسر هيكل على شمعة مغلقة",
+     "الدخول بعد الإزاحة لا أثناءها"
+    ],
+    "en": [
+     "What displacement is and why it matters",
+     "Its signs: large bodies, small wicks, an FVG",
+     "Its conditions: a structure break on a closed candle",
+     "Entering after displacement, not during it"
+    ],
+    "ku": [
+     "پێناسەی Displacement و بۆچی گرنگە",
+     "نیشانەکانی: جەستەی گەورە، کلکی بچووک و FVG",
+     "مەرجەکانی: شکاندنی پێکهاتە لەسەر مۆمی داخراو",
+     "چوونەژوورەوە دوای Displacement نەک لە کاتیدا"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 2,
+   "id": "smc-l2-04",
+   "title": {
+    "ar": "Breaker Block و Mitigation Block",
+    "en": "Breaker Block and Mitigation Block",
+    "ku": "Breaker Block و Mitigation Block"
+   },
+   "outline": {
+    "ar": [
+     "الـ Breaker: Order Block فشل بعد أخذ سيولة وكسر هيكل",
+     "الـ Mitigation Block: فشل بدون أخذ سيولة",
+     "رسم المنطقة وشروطها والفرق بين النوعين",
+     "الدخول والوقف والهدف مع ثلاثة أمثلة"
+    ],
+    "en": [
+     "The Breaker: an Order Block that failed after a liquidity sweep and structure break",
+     "The Mitigation Block: failure without a sweep",
+     "Marking the zone, its conditions, and the difference",
+     "Entry, stop and target, with three examples"
+    ],
+    "ku": [
+     "Breaker: Order Blockێک کە دوای وەرگرتنی liquidity و شکاندنی پێکهاتە شکستی هێنا",
+     "Mitigation Block: شکست بەبێ وەرگرتنی liquidity",
+     "دیاریکردنی ناوچەکە، مەرجەکانی و جیاوازی نێوانیان",
+     "چوونەژوورەوە، stop loss و ئامانج لەگەڵ سێ نموونە"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 2,
+   "id": "smc-l2-05",
+   "title": {
+    "ar": "Inversion FVG و Balanced Price Range",
+    "en": "Inversion FVG and Balanced Price Range",
+    "ku": "Inversion FVG و Balanced Price Range"
+   },
+   "outline": {
+    "ar": [
+     "الفجوة التي يُغلق السعر عبرها تنقلب إلى Inversion FVG",
+     "الـ BPR هو تداخل فجوتين متعاكستين",
+     "الشروط: إغلاق بالجسم، اندفاع، توافق مع الإطار الأكبر",
+     "الدخول والوقف والهدف مع مثالين على EURUSD والذهب"
+    ],
+    "en": [
+     "A gap that price closes through flips into an Inversion FVG",
+     "A BPR is the overlap of two opposite gaps",
+     "Conditions: body close, displacement, higher-timeframe alignment",
+     "Entry, stop and target with examples on EURUSD and gold"
+    ],
+    "ku": [
+     "بۆشاییەک کە نرخ بە ناویدا دادەخرێت دەبێتە Inversion FVG",
+     "BPR یەکگرتنەوەی دوو بۆشایی پێچەوانەیە",
+     "مەرجەکان: داخستن بە جەستە، جووڵەی بەهێز، گونجان لەگەڵ چوارچێوەی گەورەتر",
+     "چوونە ژوورەوە و وەستاندن و ئامانج لەگەڵ دوو نموونە لەسەر EURUSD و زێڕ"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 2,
+   "id": "smc-l2-06",
+   "title": {
+    "ar": "Rejection Block و Propulsion Block",
+    "en": "Rejection Block and Propulsion Block",
+    "ku": "Rejection Block و Propulsion Block"
+   },
+   "outline": {
+    "ar": [
+     "الـ Rejection Block: منطقة الذيول الطويلة عند قمة أو قاع مهم",
+     "الـ Propulsion Block: شمعة لمست Order Block ثم دفعت السعر",
+     "الـ Mean Threshold والشروط قبل الدخول",
+     "الدخول والوقف والهدف مع مثالين على GBPUSD وUSDJPY"
+    ],
+    "en": [
+     "Rejection Block: the zone of long wicks at an important high or low",
+     "Propulsion Block: a candle that touched an Order Block and then pushed price",
+     "The Mean Threshold and the conditions before entry",
+     "Entry, stop and target with examples on GBPUSD and USDJPY"
+    ],
+    "ku": [
+     "Rejection Block: ناوچەی کلکە درێژەکان لە لووتکە یان نزمییەکی گرنگدا",
+     "Propulsion Block: مۆمێک کە دەستی لە Order Block دا و پاشان نرخی پاڵنا",
+     "Mean Threshold و مەرجەکان پێش چوونە ژوورەوە",
+     "چوونە ژوورەوە و وەستاندن و ئامانج لەگەڵ دوو نموونە لەسەر GBPUSD و USDJPY"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 3,
+   "id": "smc-l3-03",
+   "title": {
+    "ar": "Optimal Trade Entry (OTE)",
+    "en": "Optimal Trade Entry (OTE)",
+    "ku": "Optimal Trade Entry (OTE)"
+   },
+   "outline": {
+    "ar": [
+     "الـ OTE منطقة بين 62 و79 بالمئة من التصحيح",
+     "يبدأ من سحب سيولة واندفاع يكسر الهيكل",
+     "الرسم بفيبوناتشي والشروط والتوافق مع OB أو FVG",
+     "الدخول والوقف والهدف مع أمثلة على EURUSD والذهب وUSDJPY"
+    ],
+    "en": [
+     "The OTE is a zone between 62 and 79 percent of the retracement",
+     "It starts from a liquidity sweep and displacement that breaks structure",
+     "Drawing with Fibonacci, conditions and confluence with an OB or FVG",
+     "Entry, stop and target with examples on EURUSD, gold and USDJPY"
+    ],
+    "ku": [
+     "OTE ناوچەیەکە لە نێوان 62 و 79 لە سەدی گەڕانەوەکە",
+     "بە ڕاماڵینی لیکویدیتی و جووڵەیەکی بەهێز کە پێکهاتە دەشکێنێت دەست پێدەکات",
+     "کێشان بە فیبۆناچی و مەرجەکان و هاوئاهەنگی لەگەڵ OB یان FVG",
+     "چوونە ژوورەوە و وەستاندن و ئامانج لەگەڵ نموونە لەسەر EURUSD و زێڕ و USDJPY"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 3,
+   "id": "smc-l3-04",
+   "title": {
+    "ar": "Turtle Soup و Judas Swing",
+    "en": "Turtle Soup and Judas Swing",
+    "ku": "Turtle Soup و Judas Swing"
+   },
+   "outline": {
+    "ar": [
+     "Turtle Soup: اختراق كاذب لقمة أو قاع واضح ثم انعكاس",
+     "Judas Swing: حركة خادعة عند افتتاح لندن أو نيويورك",
+     "الشروط: إغلاق داخل النطاق ثم MSS مع FVG",
+     "الدخول عند الـ FVG والوقف خلف طرف السحب والهدف السيولة المقابلة"
+    ],
+    "en": [
+     "Turtle Soup: a false break of an obvious high or low, then a reversal",
+     "Judas Swing: a deceptive move at the London or New York open",
+     "Conditions: a close back inside the range, then an MSS with an FVG",
+     "Entry at the FVG, stop behind the sweep extreme, target the opposing liquidity"
+    ],
+    "ku": [
+     "Turtle Soup: شکاندنی ساختەی لووتکە یان نزمییەکی ڕوون و پاشان گەڕانەوە",
+     "Judas Swing: جووڵەیەکی فێڵبازانە لە کرانەوەی لەندەن یان نیویۆرک",
+     "مەرجەکان: داخران لە ناو مەوداکە، پاشان MSS لەگەڵ FVG",
+     "چوونەژوورەوە لە FVG، stop loss لە پشت لووتکەی sweep، ئامانج liquidityی بەرامبەر"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 3,
+   "id": "smc-l3-05",
+   "title": {
+    "ar": "SMT Divergence: مقارنة الأزواج المترابطة",
+    "en": "SMT Divergence: Comparing Correlated Pairs",
+    "ku": "SMT Divergence: بەراوردکردنی جووتە پەیوەندیدارەکان"
+   },
+   "outline": {
+    "ar": [
+     "الـ SMT: زوجان مترابطان، أحدهما يصنع قمة أو قاعاً جديداً والآخر يفشل",
+     "نقارن نقاطاً في التوقيت نفسه وعلى شموع مغلقة",
+     "الـ SMT تأكيد عند منطقة مهمة داخل الـ Killzone، لا إشارة وحده",
+     "الدخول على زوج واحد بعد MSS و FVG مع مخاطرة نحو 1%"
+    ],
+    "en": [
+     "SMT: two correlated pairs, one makes a new high or low and the other fails",
+     "Compare points at the same time and on closed candles",
+     "SMT is a confirmation at a key area inside the Killzone, not a signal alone",
+     "Enter one pair only after an MSS and FVG, risking about 1%"
+    ],
+    "ku": [
+     "SMT: دوو جووتی پەیوەندیدار، یەکێکیان لووتکە یان نزمییەکی نوێ دروست دەکات و ئەوی تر سەرناکەوێت",
+     "خاڵەکان لە هەمان کاتدا و لەسەر مۆمی داخراو بەراورد دەکەین",
+     "SMT پشتڕاستکردنەوەیە لە ناوچەیەکی گرنگ لە ناو Killzone، نەک نیشانە بە تەنها",
+     "چوونەژوورەوە لەسەر یەک جووت دوای MSS و FVG بە مەترسی نزیکەی 1%"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 4,
+   "id": "smc-l4-02",
+   "title": {
+    "ar": "Power of 3 (AMD): التجميع والتلاعب والتوزيع",
+    "en": "Power of 3 (AMD): Accumulation, Manipulation and Distribution",
+    "ku": "Power of 3 (AMD): کۆکردنەوە، فێڵکردن و دابەشکردن"
+   },
+   "outline": {
+    "ar": [
+     "الشمعة اليومية ثلاث مراحل: تجميع ثم تلاعب ثم توزيع",
+     "المراجع: افتتاح منتصف الليل بتوقيت نيويورك ونطاق آسيا",
+     "في اليوم الصاعد نشتري تحت الافتتاح، وفي الهابط نبيع فوقه",
+     "الدخول بعد إغلاق داخل النطاق و Displacement مع FVG، والوقف خلف طرف التلاعب"
+    ],
+    "en": [
+     "The daily candle in three phases: accumulation, manipulation, distribution",
+     "References: the New York midnight open and the Asian range",
+     "On a bullish day buy below the open, on a bearish day sell above it",
+     "Enter after a close back inside the range and a Displacement with an FVG; stop behind the manipulation extreme"
+    ],
+    "ku": [
+     "مۆمی ڕۆژانە لە سێ قۆناغدا: کۆکردنەوە، فێڵکردن، دابەشکردن",
+     "سەرچاوەکان: کرانەوەی نیوەشەوی نیویۆرک و مەودای ئاسیا",
+     "لە ڕۆژی بەرزبوونەوەدا لە ژێر کرانەوە بکڕە، لە ڕۆژی دابەزیندا لە سەرووی بفرۆشە",
+     "چوونەژوورەوە دوای داخران لە ناو مەوداکە و Displacement لەگەڵ FVG؛ stop loss لە پشت لووتکەی فێڵکردن"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 4,
+   "id": "smc-l4-03",
+   "title": {
+    "ar": "Daily Bias والتحليل من الإطار الأعلى (Top-Down)",
+    "en": "Daily Bias and Top-Down Analysis",
+    "ku": "Daily Bias و شیکردنەوە لە چوارچێوەی بەرزەوە (Top-Down)"
+   },
+   "outline": {
+    "ar": [
+     "الانحياز اليومي: إلى أي سيولة يتجه السعر اليوم",
+     "التسلسل من الإطار الأسبوعي إلى إطار التنفيذ",
+     "الهيكل والعلاوة والخصم والسيولة المستهدفة",
+     "الدخول بعد كسح وكسر هيكلي داخل الـ Killzone"
+    ],
+    "en": [
+     "Daily bias: which liquidity is price likely to reach today",
+     "The sequence from the weekly chart to the execution timeframe",
+     "Structure, premium and discount, and the targeted liquidity",
+     "Entering after a sweep and a structure break inside the Killzone"
+    ],
+    "ku": [
+     "لایەنگیری ڕۆژانە: نرخ ئەمڕۆ بەرەو کام لیکویدیتی دەچێت",
+     "زنجیرەکە لە چوارچێوەی هەفتانەوە تا چوارچێوەی جێبەجێکردن",
+     "پێکهاتە، Premium و Discount، و لیکویدیتیی ئامانج",
+     "چوونەژوورەوە دوای ماڵین و شکاندنی پێکهاتە لە ناو Killzone"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 4,
+   "id": "smc-l4-04",
+   "title": {
+    "ar": "نموذج Silver Bullet ونوافذ الوقت",
+    "en": "The Silver Bullet Model and Time Windows",
+    "ku": "مۆدێلی Silver Bullet و پەنجەرە کاتییەکان"
+   },
+   "outline": {
+    "ar": [
+     "Silver Bullet: نموذج دخول مرتبط بنوافذ وقت محددة",
+     "النوافذ الثلاث بتوقيت نيويورك ولماذا يهم الوقت",
+     "الكسح ثم الاندفاع ثم FVG في اتجاه الانحياز",
+     "الدخول والوقف والهدف ومثالان على EURUSD والذهب"
+    ],
+    "en": [
+     "Silver Bullet: an entry model tied to specific time windows",
+     "The three windows in New York time and why time matters",
+     "Sweep, then displacement, then an FVG in the direction of the bias",
+     "Entry, stop and target, with examples on EURUSD and gold"
+    ],
+    "ku": [
+     "Silver Bullet: مۆدێلێکی چوونەژوورەوە کە بە پەنجەرەی کاتی دیاریکراوەوە بەستراوە",
+     "سێ پەنجەرەکە بە کاتی نیویۆرک و بۆچی کات گرنگە",
+     "ماڵین، پاشان جووڵەی بەهێز، پاشان FVG بە ئاڕاستەی لایەنگیری",
+     "چوونەژوورەوە و stop loss و ئامانج، لەگەڵ نموونە لەسەر EURUSD و زێڕ"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 4,
+   "id": "smc-l4-05",
+   "title": {
+    "ar": "فجوات الافتتاح NWOG و NDOG",
+    "en": "Opening Gaps: NWOG and NDOG",
+    "ku": "بۆشاییەکانی کردنەوە NWOG و NDOG"
+   },
+   "outline": {
+    "ar": [
+     "فجوة افتتاح الأسبوع NWOG وفجوة افتتاح اليوم NDOG",
+     "رسم حافتي الفجوة ومنتصفها CE على الرسم",
+     "الفجوة كجاذب للسعر وكمنطقة تفاعل",
+     "الدخول بعد تأكيد على الإطار الأصغر ومثالان عمليان"
+    ],
+    "en": [
+     "The New Week Opening Gap NWOG and the New Day Opening Gap NDOG",
+     "Drawing the two edges of the gap and its midpoint, the CE",
+     "The gap as a magnet for price and as a reaction zone",
+     "Entering after lower-timeframe confirmation, with two practical examples"
+    ],
+    "ku": [
+     "بۆشایی کردنەوەی هەفتە NWOG و بۆشایی کردنەوەی ڕۆژ NDOG",
+     "کێشانی دوو لێواری بۆشاییەکە و ناوەڕاستەکەی CE لەسەر چارت",
+     "بۆشاییەکە وەک ڕاکێشەری نرخ و وەک ناوچەی کاردانەوە",
+     "چوونەژوورەوە دوای پشتڕاستکردنەوە لەسەر چوارچێوەی بچووکتر، لەگەڵ دوو نموونەی کرداری"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 5,
+   "id": "smc-l5-02",
+   "title": {
+    "ar": "نموذج الدخول الكامل: من صيد السيولة إلى الصفقة",
+    "en": "The Complete Entry Model: From Liquidity Sweep to Trade",
+    "ku": "مۆدێلی تەواوی چوونەژوورەوە: لە ڕاوکردنی لیکویدیتییەوە بۆ مامەڵە"
+   },
+   "outline": {
+    "ar": [
+     "سلسلة النموذج: انحياز ثم سيولة ثم صيد ثم اندفاع ثم FVG",
+     "قواعد الدخول ووقف الخسارة والهدف وحجم الصفقة",
+     "صفقتان كاملتان بالأرقام على EURUSD وXAUUSD",
+     "صفقة فاشلة: لماذا خسرت وما الدرس منها"
+    ],
+    "en": [
+     "The model chain: bias, liquidity, sweep, displacement, FVG",
+     "Rules for entry, stop loss, target and position size",
+     "Two complete trades with numbers on EURUSD and XAUUSD",
+     "A failed trade: why it lost and what it teaches"
+    ],
+    "ku": [
+     "زنجیرەی مۆدێل: ئاراستە، لیکویدیتی، ڕاوکردن، جووڵەی بەهێز، FVG",
+     "یاساکانی چوونەژوورەوە و ستۆپ و ئامانج و قەبارەی مامەڵە",
+     "دوو مامەڵەی تەواو بە ژمارە لەسەر EURUSD و XAUUSD",
+     "مامەڵەیەکی شکستخواردوو: بۆچی زیانی کرد و چی فێردەکات"
+    ]
+   }
+  },
+  {
+   "school": "ict-smc",
+   "level": 5,
+   "id": "smc-l5-03",
+   "title": {
+    "ar": "إدارة الصفقة في SMC: الأهداف والسيولة المقابلة والإغلاق الجزئي",
+    "en": "Trade Management in SMC: Targets, Opposing Liquidity and Partial Closes",
+    "ku": "بەڕێوەبردنی مامەڵە لە SMC: ئامانجەکان، لیکویدیتی بەرامبەر و داخستنی بەشەکی"
+   },
+   "outline": {
+    "ar": [
+     "الأهداف تُختار من السيولة المقابلة قبل الدخول",
+     "هدف داخلي أول وهدف خارجي نهائي",
+     "الإغلاق الجزئي ونقل الوقف حسب الهيكل",
+     "متى نغلق الصفقة كلها، مع مثالين بالأرقام"
+    ],
+    "en": [
+     "Targets are chosen from opposing liquidity before entry",
+     "A first internal target and a final external target",
+     "Partial closes and moving the stop by structure",
+     "When to close the whole trade, with two numeric examples"
+    ],
+    "ku": [
+     "ئامانجەکان پێش چوونەژوورەوە لە لیکویدیتی بەرامبەر هەڵدەبژێردرێن",
+     "ئامانجی ناوخۆیی یەکەم و ئامانجی دەرەکی کۆتایی",
+     "داخستنی بەشەکی و گواستنەوەی ستۆپ بەپێی پێکهاتە",
+     "کەی هەموو مامەڵەکە دادەخەین، لەگەڵ دوو نموونەی ژمارەیی"
+    ]
+   }
+  },
+  {
+   "school": "sk",
+   "level": 2,
+   "id": "sk-l2-03",
+   "title": {
+    "ar": "تقييم قوة المنطقة: الوقت والانطلاق والحداثة",
+    "en": "Rating Zone Strength: Time, Departure and Freshness",
+    "ku": "هەڵسەنگاندنی هێزی ناوچە: کات و دەرچوون و تازەیی"
+   },
+   "outline": {
+    "ar": [
+     "لماذا لا تتساوى كل المناطق في القوة",
+     "العوامل الثلاثة: الوقت في الأساس، قوة الانطلاق، الحداثة",
+     "نظام نقاط بسيط يحدد أسلوب الدخول أو الترك",
+     "مثالان على اليورو والذهب بالأرقام"
+    ],
+    "en": [
+     "Why not all zones are equally strong",
+     "The three factors: time at the base, departure strength, freshness",
+     "A simple scoring system that decides the entry style or a pass",
+     "Two worked examples on EURUSD and gold"
+    ],
+    "ku": [
+     "بۆچی هەموو ناوچەکان وەک یەک بەهێز نین",
+     "سێ هۆکارەکە: کات لە بنکەدا، هێزی دەرچوون، تازەیی",
+     "سیستەمێکی خاڵی سادە کە شێوازی چوونەژوورەوە یان وازهێنان دیاری دەکات",
+     "دوو نموونە لەسەر یۆرۆ و زێڕ بە ژمارە"
+    ]
+   }
+  },
+  {
+   "school": "sk",
+   "level": 2,
+   "id": "sk-l2-04",
+   "title": {
+    "ar": "المناطق على عدة أطر زمنية",
+    "en": "Zones Across Multiple Timeframes",
+    "ku": "ناوچەکان لەسەر چەند چوارچێوەیەکی کاتی"
+   },
+   "outline": {
+    "ar": [
+     "الإطار الأعلى يعطي المكان والإطار الأصغر يعطي الدقة",
+     "تسلسل الأطر: اليومي والأربع ساعات ثم الساعة ثم الخمس عشرة دقيقة",
+     "المناطق المتداخلة والتوافق مع الاتجاه الأكبر",
+     "مثالان على الجنيه والين"
+    ],
+    "en": [
+     "The higher timeframe gives location, the lower timeframe gives precision",
+     "The timeframe ladder: daily and four-hour, then one-hour, then fifteen-minute",
+     "Nested zones and alignment with the bigger trend",
+     "Two examples on GBPUSD and USDJPY"
+    ],
+    "ku": [
+     "چوارچێوەی گەورەتر شوێن دەدات و چوارچێوەی بچووکتر وردی دەدات",
+     "پەیژەی چوارچێوەکان: ڕۆژانە و چوار کاتژمێری، پاشان یەک کاتژمێری، پاشان پازدە خولەکی",
+     "ناوچە لەناو یەکەکان و گونجان لەگەڵ ئاڕاستەی گەورەتر",
+     "دوو نموونە لەسەر پاوەند و یەن"
+    ]
+   }
+  },
+  {
+   "school": "sk",
+   "level": 3,
+   "id": "sk-l3-02",
+   "title": {
+    "ar": "أنواع الدخول: الأمر المعلّق مقابل الدخول بالتأكيد",
+    "en": "Entry Types: Pending Order vs Confirmation Entry",
+    "ku": "جۆرەکانی چوونەژوورەوە: فەرمانی هەڵپەسێردراو بەرامبەر چوونەژوورەوە بە پشتڕاستکردنەوە"
+   },
+   "outline": {
+    "ar": [
+     "آلية الأمر المعلّق: أين نضعه ومتى نلغيه",
+     "آلية الدخول بالتأكيد: تغيّر البنية أو شمعة الرفض المغلقة",
+     "الوقف والهدف وحساب الحجم في كل أسلوب",
+     "مثالان على اليورو والذهب"
+    ],
+    "en": [
+     "How a pending order works: where to place it and when to cancel it",
+     "How a confirmation entry works: structure change or a closed rejection candle",
+     "Stop, target and position sizing in each style",
+     "Two examples on EURUSD and gold"
+    ],
+    "ku": [
+     "فەرمانی هەڵپەسێردراو چۆن کار دەکات: لە کوێ دایبنێین و کەی هەڵیبوەشێنینەوە",
+     "چوونەژوورەوە بە پشتڕاستکردنەوە: گۆڕانی پێکهاتە یان مۆمی ڕەتکردنەوەی داخراو",
+     "stop loss و ئامانج و حیسابی قەبارە لە هەر شێوازێکدا",
+     "دوو نموونە لەسەر یۆرۆ و زێڕ"
+    ]
+   }
+  },
+  {
+   "school": "sk",
+   "level": 4,
+   "id": "sk-l4-02",
+   "title": {
+    "ar": "أمثلة كاملة على الذهب والعملات",
+    "en": "Complete Examples on Gold and Currencies",
+    "ku": "نموونەی تەواو لەسەر زێڕ و دراوەکان"
+   },
+   "outline": {
+    "ar": [
+     "قائمة الفحص الكاملة قبل كل صفقة",
+     "صفقة ذهب رابحة من التحضير حتى الإدارة والخروج",
+     "صفقة يورو خاسرة نُفذت حسب الخطة",
+     "صفقة جنيه تُركت لأن العائد لم يعد كافياً"
+    ],
+    "en": [
+     "The full checklist before every trade",
+     "A winning gold trade from preparation to management and exit",
+     "A losing EURUSD trade executed according to plan",
+     "A GBPUSD trade skipped because the reward was no longer enough"
+    ],
+    "ku": [
+     "لیستی پشکنینی تەواو پێش هەر مامەڵەیەک",
+     "مامەڵەیەکی قازانجکردووی زێڕ لە ئامادەکارییەوە تا بەڕێوەبردن و دەرچوون",
+     "مامەڵەیەکی زیانکردووی یۆرۆ کە بەپێی پلان جێبەجێ کرا",
+     "مامەڵەیەکی پاوەند کە جێهێڵرا چونکە قازانج بەس نەبوو"
+    ]
+   }
+  },
+  {
+   "school": "sk",
+   "level": 5,
+   "id": "sk-l5-01",
+   "title": {
+    "ar": "علم نفس منهج SK والمراجعة",
+    "en": "SK Method Psychology and Review",
+    "ku": "دەروونناسی ڕێبازی SK و پێداچوونەوە"
+   },
+   "outline": {
+    "ar": [
+     "لماذا يفشل التنفيذ حتى مع منهج جيد",
+     "الصبر، وتقبّل الخسارة، والتفكير بسلسلة صفقات",
+     "قواعد الحماية من الانتقام والثقة الزائدة",
+     "دفتر التداول والمراجعة الأسبوعية بالأرقام"
+    ],
+    "en": [
+     "Why execution fails even with a good method",
+     "Patience, accepting losses, and thinking in series of trades",
+     "Protection rules against revenge and overconfidence",
+     "The trading journal and the weekly review in numbers"
+    ],
+    "ku": [
+     "بۆچی جێبەجێکردن شکست دەهێنێت تەنانەت لەگەڵ ڕێبازێکی باشیش",
+     "ئارامگرتن، قبوڵکردنی زیان، و بیرکردنەوە بە زنجیرەی مامەڵە",
+     "یاساکانی پاراستن لە تۆڵەسەندنەوە و متمانەی زیادە",
+     "دەفتەری بازرگانی و پێداچوونەوەی هەفتانە بە ژمارە"
+    ]
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 1,
+   "id": "wy-l1-03",
+   "title": {
+    "ar": "المشغّل المركّب Composite Operator ودورة السوق",
+    "en": "The Composite Operator and the Market Cycle",
+    "ku": "Composite Operator (ئۆپەراتۆری لێکدراو) و سووڕی بازاڕ"
+   },
+   "outline": {
+    "ar": [
+     "المشغّل المركّب: طريقة لتخيّل الأموال الكبيرة ككيان واحد",
+     "دورة السوق الأربع: تجميع، صعود، توزيع، هبوط",
+     "كيف نقرأ أثر الأموال الكبيرة من السعر والحجم (حجم التيك في الفوركس)",
+     "التداول مع المشغّل المركّب لا ضده، مع وقف ومخاطرة محدودة"
+    ],
+    "en": [
+     "The Composite Operator: imagining big money as one entity",
+     "The four-stage market cycle: accumulation, markup, distribution, markdown",
+     "Reading the footprint of big money from price and volume (tick volume in forex)",
+     "Trading with the Composite Operator, not against it, with a stop and limited risk"
+    ],
+    "ku": [
+     "Composite Operator: وێناکردنی پارەی گەورە وەک یەک قەوارە",
+     "سووڕی چوار قۆناغیی بازاڕ: کۆکردنەوە، بەرزبوونەوە، دابەشکردن، دابەزین",
+     "خوێندنەوەی شوێنپێی پارەی گەورە لە نرخ و قەبارە (Tick Volume لە فۆرێکس)",
+     "بازرگانی لەگەڵ Composite Operator نەک دژی، بە وەستان و مەترسیی سنووردار"
+    ]
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 2,
+   "id": "wy-l2-03",
+   "title": {
+    "ar": "مراحل A إلى E بالتفصيل",
+    "en": "Phases A to E in Detail",
+    "ku": "قۆناغەکانی A تا E بە وردی"
+   },
+   "outline": {
+    "ar": [
+     "المرحلة A توقف الاتجاه، والمرحلة B بناء السبب",
+     "المرحلة C الاختبار الحاسم: Spring أو UTAD",
+     "المرحلة D الخروج من النطاق، والمرحلة E الاتجاه الجديد",
+     "أين ندخل في كل مرحلة وأين نضع الوقف والهدف"
+    ],
+    "en": [
+     "Phase A stops the trend, Phase B builds the cause",
+     "Phase C is the decisive test: Spring or UTAD",
+     "Phase D leaves the range, Phase E is the new trend",
+     "Where to enter in each phase and where to place the stop and target"
+    ],
+    "ku": [
+     "قۆناغی A ڕەوت دەوەستێنێت، قۆناغی B هۆ بنیات دەنێت",
+     "قۆناغی C تاقیکردنەوەی یەکلاکەرەوەیە: Spring یان UTAD",
+     "قۆناغی D دەرچوون لە مەوداکە، قۆناغی E ڕەوتی نوێ",
+     "لە هەر قۆناغێکدا لە کوێ دەچینە ژوورەوە و وەستان و ئامانج لە کوێ دادەنێین"
+    ]
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 3,
+   "id": "wy-l3-02",
+   "title": {
+    "ar": "إعادة التجميع وإعادة التوزيع",
+    "en": "Reaccumulation and Redistribution",
+    "ku": "دووبارە کۆکردنەوە و دووبارە دابەشکردن"
+   },
+   "outline": {
+    "ar": [
+     "إعادة التجميع: استراحة داخل اتجاه صاعد قبل موجة جديدة",
+     "إعادة التوزيع: استراحة داخل اتجاه هابط قبل هبوط جديد",
+     "كيف نفرّق بين إعادة التجميع والتوزيع بالحجم والهيكل",
+     "الدخول عند الـ LPS أو الـ Backup مع الاتجاه الأكبر"
+    ],
+    "en": [
+     "Reaccumulation: a pause inside an uptrend before a new leg",
+     "Redistribution: a pause inside a downtrend before a new decline",
+     "Telling reaccumulation from distribution with volume and structure",
+     "Entering at the LPS or the Backup with the larger trend"
+    ],
+    "ku": [
+     "دووبارە کۆکردنەوە: پشوویەک لە ناو ڕەوتی سەرەوەدا پێش شەپۆلێکی نوێ",
+     "دووبارە دابەشکردن: پشوویەک لە ناو ڕەوتی خوارەوەدا پێش دابەزینێکی نوێ",
+     "جیاکردنەوەی دووبارە کۆکردنەوە لە دابەشکردن بە قەبارە و پێکهاتە",
+     "چوونەژوورەوە لە LPS یان Backup لەگەڵ ڕەوتە گەورەکە"
+    ]
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 3,
+   "id": "wy-l3-03",
+   "title": {
+    "ar": "تحليل الحجم والسبريد VSA",
+    "en": "Volume Spread Analysis (VSA)",
+    "ku": "شیکردنەوەی قەبارە و مەودای مۆم VSA"
+   },
+   "outline": {
+    "ar": [
+     "ثلاثة عناصر لكل شمعة: الحجم، والمدى أو السبريد، وموضع الإغلاق",
+     "علامات الضعف: No Demand و Upthrust، وعلامات القوة: No Supply و Stopping Volume",
+     "الجهد والنتيجة: حجم كبير بلا حركة يعني امتصاصاً",
+     "حجم التيك في الفوركس: قارن داخل الجلسة نفسها وابدأ دائماً بالسياق"
+    ],
+    "en": [
+     "Three elements in every candle: volume, spread, and closing position",
+     "Weakness signs: No Demand and Upthrust; strength signs: No Supply and Stopping Volume",
+     "Effort versus result: big volume with no movement means absorption",
+     "Tick volume in forex: compare within the same session and always start with context"
+    ],
+    "ku": [
+     "سێ توخم لە هەر مۆمێکدا: قەبارە، مەودا یان Spread، و شوێنی داخستن",
+     "نیشانەکانی لاوازی: No Demand و Upthrust، و نیشانەکانی هێز: No Supply و Stopping Volume",
+     "هەوڵ و ئەنجام: قەبارەی گەورە بێ جووڵە واتە هەڵمژین",
+     "Tick Volume لە فۆرێکس: لە ناو هەمان دانیشتندا بەراورد بکە و هەمیشە بە دۆخەکە دەست پێبکە"
+    ]
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 4,
+   "id": "wy-l4-02",
+   "title": {
+    "ar": "منهج وايكوف بخمس خطوات",
+    "en": "The Wyckoff Five-Step Approach",
+    "ku": "ڕێبازی وایکۆف بە پێنج هەنگاو"
+   },
+   "outline": {
+    "ar": [
+     "الخطوة 1 و2: اتجاه السوق العام، ثم الأداة الأقوى أو الأضعف",
+     "الخطوة 3: سبب كافٍ يبرر الهدف المطلوب",
+     "الخطوة 4 و5: جاهزية الأداة للحركة، وتوقيت الدخول مع منعطف السوق",
+     "تطبيق الخطوات على الفوركس باستخدام مؤشر الدولار DXY"
+    ],
+    "en": [
+     "Steps 1 and 2: the overall market trend, then the strongest or weakest instrument",
+     "Step 3: a cause large enough to justify the target",
+     "Steps 4 and 5: the instrument's readiness to move, and timing the entry with a market turn",
+     "Applying the steps to forex using the dollar index, DXY"
+    ],
+    "ku": [
+     "هەنگاوی 1 و 2: ڕەوتی گشتیی بازاڕ، پاشان بەهێزترین یان لاوازترین ئامراز",
+     "هەنگاوی 3: هۆیەکی بەس کە ئامانجی داواکراو ڕەوا بکات",
+     "هەنگاوی 4 و 5: ئامادەیی ئامرازەکە بۆ جووڵە، و کاتی چوونەژوورەوە لەگەڵ وەرچەرخانی بازاڕ",
+     "جێبەجێکردنی هەنگاوەکان لەسەر فۆرێکس بە بەکارهێنانی پێوەری دۆلار DXY"
+    ]
+   }
+  },
+  {
+   "school": "wyckoff",
+   "level": 5,
+   "id": "wy-l5-01",
+   "title": {
+    "ar": "حساب الهدف بالسبب والنتيجة (النقطة والرقم)",
+    "en": "Measuring Targets with Cause and Effect (Point and Figure)",
+    "ku": "حیسابکردنی ئامانج بە هۆ و ئەنجام (Point and Figure)"
+   },
+   "outline": {
+    "ar": [
+     "النطاق هو السبب، والحركة التالية هي النتيجة",
+     "أساسيات رسم النقطة والرقم: حجم المربع والانعكاس بثلاثة مربعات",
+     "العدّ الأفقي على خط الـ LPS وتحويله إلى هدف محافظ وهدف أبعد",
+     "استخدام العدّ لتصفية الصفقات ووضع الأهداف وأخذ الأرباح الجزئية"
+    ],
+    "en": [
+     "The range is the cause, and the next move is the effect",
+     "Point and Figure basics: box size and the three-box reversal",
+     "The horizontal count on the LPS line, turned into a conservative and an extended target",
+     "Using the count to filter trades, set targets and take partial profits"
+    ],
+    "ku": [
+     "مەوداکە هۆیە، و جووڵەی دواتر ئەنجامە",
+     "بنەماکانی چارتی Point and Figure: قەبارەی خانە و پێچەوانەبوونەوە بە سێ خانە",
+     "ژماردنی ئاسۆیی لەسەر هێڵی LPS و گۆڕینی بۆ ئامانجێکی پارێزکارانە و ئامانجێکی دوورتر",
+     "بەکارهێنانی ژماردن بۆ پاڵاوتنی بازرگانی، دانانی ئامانج و وەرگرتنی قازانجی بەشەکی"
+    ]
+   }
+  }
+ ]
+}

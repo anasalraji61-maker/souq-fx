@@ -38,7 +38,7 @@ export function LessonStage({ scene, getProgress, height = 250, title, rtl }: Pr
       <View style={[styles.head, rtl && styles.headRtl]}>
         <View style={styles.rec} />
         <Text style={styles.headText} numberOfLines={1}>
-          {scene.symbol}
+          {frame.symbol ?? scene.symbol}
           {title ? ` · ${title}` : ''}
         </Text>
       </View>

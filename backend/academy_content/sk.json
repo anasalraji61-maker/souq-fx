@@ -580,6 +580,736 @@
      "narration": "یاسای کرداری: سێ قۆناغ هەموو ڕۆژێک بەبێ ئاوارتە. لە ئامادەکاریدا: هەواڵەکانی ڕۆژ، یەک یان دوو ناوچە، مەودای ئاسیا و سیناریۆیەکی نووسراو. لە جێبەجێکردندا: چاوەڕوانکردنی ناوچەکە، چوونەژوورەوە تەنها بە مەرجێکی هاتووەدی لەسەر مۆمی داخراو، یەک بڕیار لە هەر دانیشتنێکدا، و دووربوون لەو خولەکانەی دەوری هەواڵە گەورەکانن. لە پێداچوونەوەدا: تۆمارکردنی هەموو شتێک و پرسیاری پابەندبوون بە پلان. هەروەها زۆرترین مەترسی ڕۆژانەت دیاری بکە، و ئەگەر گەیشتیتە ئەو، تا ڕۆژی دواتر لە مامەڵەکردن بوەستە. ئەم ڕۆتینە قازانج مسۆگەر ناکات، بەڵام ئەو دیسیپلینە بنیات دەنێت کە هەموو مامەڵەکارێک پێویستیەتی."
     }
    ]
+  },
+  "sk-l2-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا نقيّم القوة",
+     "narration": "في الدروس السابقة تعلمنا رسم منطقة العرض أو الطلب من الأساس والانطلاق. لكن بعد أسبوع من الرسم ستجد على الشارت عشر مناطق أو أكثر، ولا يمكن التداول عليها كلها. هنا يأتي تقييم القوة. نحن نسأل ثلاثة أسئلة عن كل منطقة: كم من الوقت قضى السعر في الأساس؟ وما مدى قوة الانطلاق منه؟ وهل عاد السعر إلى المنطقة من قبل أم أنها ما زالت حديثة لم تُلمس؟ الإجابة تعطينا ترتيباً واضحاً، فنركز على المنطقتين الأقوى ونتجاهل الباقي. التقييم لا يضمن نجاح الصفقة، لكنه يرفع جودة اختياراتك على المدى الطويل."
+    },
+    {
+     "id": "s2",
+     "title": "العامل الأول: الوقت في الأساس",
+     "narration": "الأساس هو الشموع الصغيرة التي توقف عندها السعر قبل الانطلاق. القاعدة هنا أن الوقت القصير أفضل. إذا كان الأساس من شمعة إلى ثلاث شموع فهذا ممتاز، لأنه يعني أن الأوامر الكبيرة دخلت بسرعة ولم يتح للسعر وقت كافٍ لتنفيذها كلها، فيبقى جزء منها في المنطقة. أما أربع إلى ست شموع فمقبول لكنه أضعف. وإذا تجاوز الأساس ست شموع فهو غالباً نطاق تذبذب عادي وليس منطقة، لأن الأوامر تم تبادلها داخله بشكل متوازن. انتبه أيضاً لعرض الأساس، فالأساس الضيق يعطي وقفاً أقرب وحجماً أفضل. ونرسم المنطقة كما تعلمنا من أدنى ذيل إلى أعلى جسم في منطقة الطلب."
+    },
+    {
+     "id": "s3",
+     "title": "العامل الثاني: قوة الانطلاق",
+     "narration": "الانطلاق هو الدليل على أن مشترين أو بائعين كباراً كانوا هنا. نريد شموعاً بأجسام كبيرة وذيول قصيرة، تخرج من الأساس دون تردد. ولنجعل التقييم قابلاً للقياس نستخدم مقياساً بسيطاً: المسافة التي قطعها الانطلاق يجب أن تساوي ثلاثة أضعاف عرض الأساس على الأقل. فإذا كان الأساس عشر نقاط، نريد انطلاقاً لا يقل عن ثلاثين نقطة. ونضيف شرطين: أن يكسر الانطلاق قمة أو قاعاً سابقاً بإغلاق شمعة كاملة، وأن يترك خللاً سعرياً، أي فجوة بين ذيول الشموع لم يتداول فيها السعر بشكل متوازن. كل شرط يتحقق يرفع قيمة المنطقة."
+    },
+    {
+     "id": "s4",
+     "title": "العامل الثالث: الحداثة",
+     "narration": "الحداثة تعني أن السعر لم يعد إلى المنطقة منذ أن انطلق منها. المنطقة الحديثة هي الأقوى، لأن الأوامر المتبقية فيها لم تُستهلك بعد. عند أول عودة، يتفاعل جزء من هذه الأوامر ويُنفَّذ. وعند العودة الثانية يبقى عدد أقل، وعند الثالثة تصبح المنطقة غالباً ضعيفة وقابلة للكسر. لذلك نعطي المنطقة الحديثة أعلى درجة، والمنطقة التي لُمست مرة واحدة درجة متوسطة، ونستبعد المنطقة التي لُمست مرتين أو أكثر. وانتبه: اللمسة تعني دخول السعر فعلاً إلى حدود المنطقة، وليس مجرد اقترابه منها بعدة نقاط. لذلك اكتب عدد اللمسات بجانب كل منطقة ترسمها."
+    },
+    {
+     "id": "s5",
+     "title": "نظام النقاط",
+     "narration": "لنحوّل العوامل الثلاثة إلى نظام نقاط بسيط. كل عامل يأخذ من صفر إلى نقطتين. الوقت: نقطتان لأساس من شمعة إلى ثلاث، ونقطة لأربع إلى ست. الانطلاق: نقطتان إذا تجاوز ثلاثة أضعاف الأساس وكسر بنية بإغلاق، ونقطة إذا تحقق أحدهما فقط. الحداثة: نقطتان للمنطقة الحديثة، ونقطة للملموسة مرة. المجموع من ست. القرار العملي: ست أو خمس نقاط مع اتجاه الإطار الأعلى تسمح بأمر معلّق من أول لمسة. ثلاث أو أربع نقاط تحتاج إلى تأكيد على إطار أصغر. وأقل من ثلاث نقاط نترك المنطقة تماماً. وتذكر أن النقاط تحدد أسلوب الدخول فقط، أما المخاطرة فتبقى نحو واحد بالمئة في كل الحالات."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على اليورو",
+     "narration": "على اليورو مقابل الدولار بإطار الساعة، توقف السعر في شمعتين صغيرتين بين 1.0812 و1.0821، أي أساس عرضه تسع نقاط. ثم خرجت أربع شموع صاعدة وصلت إلى 1.0876، أي انطلاق بأربع وستين نقطة، أكثر من سبعة أضعاف الأساس، وأغلقت فوق القمة السابقة عند 1.0860. ولم يعد السعر إلى المنطقة بعد. التقييم ست نقاط من ست، والاتجاه اليومي صاعد. الخطة: أمر شراء معلّق عند 1.0821، ووقف عند 1.0806، أي خمس عشرة نقطة، وهدف عند 1.0870، أي نحو ثلاثة أضعاف المخاطرة. بحساب عشرة آلاف دولار ومخاطرة واحد بالمئة، يكون الحجم نحو 0.66 لوت."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على الذهب: منطقتان للمقارنة",
+     "narration": "على الذهب بإطار الساعة لدينا منطقتا عرض. الأولى أساسها سبع شموع بين 2410 و2424، وهبط منها السعر ببطء إلى 2398 فقط، ولُمست مرتين. الوقت صفر، والانطلاق نقطة واحدة، والحداثة صفر، فالمجموع نقطة واحدة، فنتركها. الثانية فوقها، أساسها شمعة واحدة بين 2446 و2452، وهبط منها السعر إلى 2419 في ساعتين كاسراً قاعاً سابقاً بإغلاق، ولم تُلمس بعد. المجموع ست نقاط. الخطة: بيع معلّق عند 2446، ووقف عند 2455، أي تسعة دولارات، وهدف عند 2419، أي ثلاثة أضعاف المخاطرة. والمنطقة الأقرب إلى السعر الحالي ليست دائماً الأفضل، فالتقييم هو الذي يقرر."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو تقييم المنطقة بالعين دون نظام ثابت، فتصبح المنطقة قوية عندما تريد التداول وضعيفة عندما تخاف. الخطأ الثاني هو احتساب الانطلاق على شمعة لم تُغلق بعد، فقد تترك ذيلاً طويلاً وتفقد قوتها قبل الإغلاق. الخطأ الثالث هو نسيان عدّ اللمسات، فيدخل المتداول منطقة لُمست ثلاث مرات ظناً أنها ما زالت حديثة. الخطأ الرابع هو منح نقاط عالية لمنطقة تعاكس اتجاه الإطار الأعلى. والخطأ الخامس هو رفع حجم الصفقة لأن التقييم ستة من ستة، مع أن أقوى منطقة قد تفشل أيضاً، فالمخاطرة تبقى ثابتة."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: قيّم كل منطقة بثلاثة أسئلة قبل أن تفكر في الدخول. هل الأساس قصير، من شمعة إلى ثلاث شموع؟ هل الانطلاق قوي، يتجاوز ثلاثة أضعاف الأساس ويكسر بنية بشمعة مغلقة ويترك خللاً؟ وهل المنطقة حديثة لم تُلمس؟ اكتب النقاط بجانب كل منطقة على الشارت. خمس نقاط أو ست مع الإطار الأعلى تسمح بأمر معلّق، وثلاث أو أربع تحتاج إلى تأكيد، وأقل من ذلك نتركها. ضع الوقف خلف المنطقة دائماً، واحسب الحجم بحيث تبقى المخاطرة نحو واحد بالمئة مهما كان التقييم. وراجع التقييمات في دفترك بعد كل شهر لترى أي الدرجات تعطي أفضل النتائج."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why We Rate Strength",
+     "narration": "In earlier lessons we learned to draw a supply or demand zone from its base and its departure. But after a week of drawing you will find ten or more zones on the chart, and you cannot trade all of them. This is where strength rating comes in. We ask three questions about every zone: how much time did price spend in the base? How strong was the departure from it? And has price already returned to the zone, or is it still fresh and untouched? The answers give us a clear ranking, so we focus on the two strongest zones and ignore the rest. Rating does not guarantee that a trade will work, but it raises the quality of your choices over the long run."
+    },
+    {
+     "id": "s2",
+     "title": "Factor One: Time at the Base",
+     "narration": "The base is the small candles where price paused before the departure. The rule here is that less time is better. If the base is one to three candles, that is excellent, because it means large orders came in quickly and price did not have enough time to fill all of them, so part of them may remain in the zone. Four to six candles is acceptable but weaker. If the base goes beyond six candles, it is usually just an ordinary range and not a zone, because orders were exchanged inside it in a balanced way. Also pay attention to the width of the base, because a narrow base gives a closer stop and a better position size. We draw the zone, as learned, from lowest wick to highest body for demand."
+    },
+    {
+     "id": "s3",
+     "title": "Factor Two: Departure Strength",
+     "narration": "The departure is the evidence that large buyers or sellers were here. We want candles with big bodies and short wicks that leave the base without hesitation. To make the rating measurable we use a simple yardstick: the distance covered by the departure should be at least three times the width of the base. So if the base is ten pips wide, we want a departure of no less than thirty pips. We add two conditions: the departure should break a previous high or low with a fully closed candle, and it should leave an imbalance, meaning a gap between candle wicks where price did not trade in a balanced way. Every condition that is met raises the value of the zone."
+    },
+    {
+     "id": "s4",
+     "title": "Factor Three: Freshness",
+     "narration": "Freshness means price has not returned to the zone since it departed from it. A fresh zone is the strongest, because the orders left in it have not been used up yet. On the first return, part of those orders react and get filled. On the second return fewer are left, and by the third the zone is usually weak and easy to break. So we give a fresh zone the highest score, a zone touched once a medium score, and we exclude a zone touched twice or more. Be careful: a touch means price actually entered the boundaries of the zone, not merely came within a few pips of it. So write the number of touches next to every zone you draw."
+    },
+    {
+     "id": "s5",
+     "title": "The Scoring System",
+     "narration": "Let us turn the three factors into a simple scoring system. Each factor takes zero to two points. Time: two points for a base of one to three candles, one point for four to six. Departure: two points if it exceeds three times the base and breaks structure on a close, one point if only one of these is true. Freshness: two points for a fresh zone, one for a zone touched once. The total is out of six. The practical decision: six or five points, in line with the higher-timeframe trend, allow a pending order on the first touch. Three or four points require confirmation on a lower timeframe. Below three points we leave the zone completely. Remember: points decide only the entry style; risk stays near one percent."
+    },
+    {
+     "id": "s6",
+     "title": "EURUSD Example",
+     "narration": "On EURUSD on the one-hour chart, price paused in two small candles between 1.0812 and 1.0821, a base nine pips wide. Then four bullish candles came out and reached 1.0876, a departure of sixty-four pips, more than seven times the base, and they closed above the previous high at 1.0860. Price has not returned to the zone yet. The rating is six out of six, and the daily trend is up. The plan: a pending buy order at 1.0821, a stop at 1.0806, which is fifteen pips, and a target at 1.0870, roughly three times the risk. With a ten thousand dollar account and one percent risk, the position size is about 0.66 lots."
+    },
+    {
+     "id": "s7",
+     "title": "Gold Example: Two Zones Compared",
+     "narration": "On gold on the one-hour chart we have two supply zones. The first has a base of seven candles between 2410 and 2424, price dropped from it slowly to only 2398, and it has been touched twice. Time scores zero, departure one point, freshness zero, so the total is one point, and we leave it. The second sits above it, with a one-candle base between 2446 and 2452; price dropped from it to 2419 in two hours, breaking a previous low on a close, and it has not been touched yet. The total is six points. The plan: a pending sell at 2446, a stop at 2455, which is nine dollars, and a target at 2419, three times the risk. The zone nearest to current price is not always the best; the rating decides."
+    },
+    {
+     "id": "s8",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is rating a zone by eye without a fixed system, so the zone becomes strong when you want to trade and weak when you are afraid. The second mistake is counting the departure on a candle that has not closed yet, since it may leave a long wick and lose its strength before the close. The third mistake is forgetting to count touches, so the trader enters a zone touched three times thinking it is still fresh. The fourth mistake is giving high points to a zone that goes against the higher-timeframe trend. The fifth mistake is raising position size because the rating is six out of six, even though the strongest zone can also fail, so risk stays fixed."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "The practical rule: rate every zone with three questions before you think about entering. Is the base short, one to three candles? Is the departure strong, more than three times the base, breaking structure with a closed candle and leaving an imbalance? And is the zone fresh and untouched? Write the score next to each zone on the chart. Five or six points with the higher timeframe allow a pending order, three or four require confirmation, and anything lower we leave alone. Always place the stop behind the zone, and size the position so that risk stays around one percent whatever the rating is. Review the ratings in your journal each month to see which scores give the best results."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی هێز هەڵدەسەنگێنین",
+     "narration": "لە وانەکانی پێشوودا فێربووین ناوچەی خستنەڕوو یان خواست لە بنکە و دەرچوونەوە بکێشین. بەڵام دوای هەفتەیەک کێشان، دە ناوچە یان زیاتر لەسەر چارتەکە دەبینیت، و ناتوانیت لەسەر هەموویان بازرگانی بکەیت. لێرەدا هەڵسەنگاندنی هێز دێت. سێ پرسیار دەربارەی هەر ناوچەیەک دەکەین: نرخ چەند کاتی لە بنکەدا بەسەر برد؟ دەرچوون لێیەوە چەند بەهێز بوو؟ و ئایا نرخ پێشتر گەڕاوەتەوە بۆ ناوچەکە، یان هێشتا تازەیە و دەستی لێ نەدراوە؟ وەڵامەکان ڕیزبەندییەکی ڕوونمان پێدەدەن، بۆیە سەرنج دەخەینە سەر دوو ناوچەی بەهێزتر و ئەوانی تر پشتگوێ دەخەین. هەڵسەنگاندن سەرکەوتنی مامەڵە مسۆگەر ناکات، بەڵام لە ماوەی درێژدا کوالیتی هەڵبژاردنەکانت بەرز دەکاتەوە."
+    },
+    {
+     "id": "s2",
+     "title": "هۆکاری یەکەم: کات لە بنکەدا",
+     "narration": "بنکە ئەو مۆمە بچووکانەیە کە نرخ پێش دەرچوون لای وەستا. یاسا لێرەدا ئەوەیە کە کاتی کورت باشترە. ئەگەر بنکە لە یەک تا سێ مۆم بێت ئەوە نایابە، چونکە واتای ئەوەیە فەرمانە گەورەکان بە خێرایی هاتنە ژوورەوە و نرخ کاتی پێویستی نەبوو هەموویان جێبەجێ بکات، بۆیە بەشێکیان لەوانەیە لە ناوچەکەدا بمێنێتەوە. چوار تا شەش مۆم پەسەندە بەڵام لاوازترە. ئەگەر بنکە لە شەش مۆم تێپەڕی، زۆرجار تەنها مەودایەکی ئاساییە نەک ناوچە، چونکە فەرمانەکان بە شێوەیەکی هاوسەنگ لە ناویدا ئاڵوگۆڕ کراون. هەروەها ئاگاداری پانی بنکە بە، چونکە بنکەی تەسک stop lossی نزیکتر و قەبارەی باشتر دەدات. و ناوچەکە وەک فێربووین دەکێشین، لە نزمترین کلکەوە تا بەرزترین جەستە بۆ ناوچەی خواست."
+    },
+    {
+     "id": "s3",
+     "title": "هۆکاری دووەم: هێزی دەرچوون",
+     "narration": "دەرچوون بەڵگەیە کە کڕیار یان فرۆشیاری گەورە لێرە بوون. مۆمێکمان دەوێت جەستەی گەورە و کلکی کورتی هەبێت، و بەبێ دوودڵی لە بنکە دەربچێت. بۆ ئەوەی هەڵسەنگاندن پێوانەکراو بێت، پێوەرێکی سادە بەکاردەهێنین: ئەو مەودایەی دەرچوون بڕیویەتی دەبێت لانیکەم سێ هێندەی پانی بنکە بێت. واتە ئەگەر بنکە دە خاڵ پان بێت، دەرچوونێکمان دەوێت کەمتر نەبێت لە سی خاڵ. دوو مەرج زیاد دەکەین: دەرچوون لووتکە یان نزمییەکی پێشوو بە مۆمێکی تەواو داخراو بشکێنێت، و ناهاوسەنگییەک بەجێ بهێڵێت، واتە بۆشاییەک لە نێوان کلکی مۆمەکاندا کە نرخ بە هاوسەنگی تێیدا مامەڵەی نەکردووە. هەر مەرجێک بێتەدی بەهای ناوچەکە بەرز دەکاتەوە."
+    },
+    {
+     "id": "s4",
+     "title": "هۆکاری سێیەم: تازەیی",
+     "narration": "تازەیی واتە نرخ لەو کاتەوەی لێی دەرچووە نەگەڕاوەتەوە بۆ ناوچەکە. ناوچەی تازە بەهێزترینە، چونکە ئەو فەرمانانەی تێیدا ماونەتەوە هێشتا بەکارنەهاتوون. لە یەکەم گەڕانەوەدا، بەشێک لەو فەرمانانە کاردانەوەیان دەبێت و جێبەجێ دەکرێن. لە گەڕانەوەی دووەمدا کەمتر دەمێنێتەوە، و لە سێیەمدا ناوچەکە زۆرجار لاواز دەبێت و ئاسان دەشکێت. بۆیە بەرزترین نمرە دەدەینە ناوچەی تازە، نمرەی مامناوەند دەدەینە ناوچەیەک کە جارێک دەستی لێدراوە، و ئەو ناوچەیە دوور دەخەینەوە کە دوو جار یان زیاتر دەستی لێدراوە. ئاگاداربە: دەستلێدان واتە نرخ بەڕاستی چووبێتە ناو سنووری ناوچەکە، نەک تەنها چەند خاڵێک لێی نزیک بووبێتەوە. بۆیە ژمارەی دەستلێدانەکان لە تەنیشت هەر ناوچەیەک کە دەیکێشیت بنووسە."
+    },
+    {
+     "id": "s5",
+     "title": "سیستەمی خاڵ",
+     "narration": "با سێ هۆکارەکە بکەینە سیستەمێکی خاڵی سادە. هەر هۆکارێک لە سفرەوە تا دوو خاڵ وەردەگرێت. کات: دوو خاڵ بۆ بنکەیەک لە یەک تا سێ مۆم، و یەک خاڵ بۆ چوار تا شەش. دەرچوون: دوو خاڵ ئەگەر لە سێ هێندەی بنکە تێپەڕی و پێکهاتەی بە داخستن شکاند، و یەک خاڵ ئەگەر تەنها یەکێکیان هاتەدی. تازەیی: دوو خاڵ بۆ ناوچەی تازە، و یەک خاڵ بۆ ناوچەی یەکجار دەستلێدراو. کۆی گشتی لە شەشە. بڕیاری کرداری: شەش یان پێنج خاڵ لەگەڵ ئاڕاستەی چوارچێوەی گەورەتر ڕێگە بە فەرمانی هەڵپەسێردراو دەدات لە یەکەم دەستلێدان. سێ یان چوار خاڵ پێویستی بە پشتڕاستکردنەوە هەیە لەسەر چوارچێوەیەکی بچووکتر. و کەمتر لە سێ خاڵ، ناوچەکە جێدەهێڵین. خاڵەکان تەنها شێوازی چوونەژوورەوە دیاری دەکەن، مەترسی هەمیشە نزیکەی یەک لە سەدە."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە لەسەر یۆرۆ",
+     "narration": "لەسەر یۆرۆ بەرامبەر دۆلار لە چارتی یەک کاتژمێری، نرخ لە دوو مۆمی بچووکدا لە نێوان 1.0812 و 1.0821 وەستا، واتە بنکەیەک بە پانی نۆ خاڵ. پاشان چوار مۆمی بەرزبوونەوە دەرچوون و گەیشتنە 1.0876، واتە دەرچوونێک بە شەست و چوار خاڵ، زیاتر لە حەوت هێندەی بنکە، و لە سەرووی لووتکەی پێشوو لە 1.0860 داخران. نرخ هێشتا نەگەڕاوەتەوە بۆ ناوچەکە. هەڵسەنگاندن شەش لە شەشە، و ئاڕاستەی ڕۆژانە بەرزبوونەوەیە. پلانەکە: فەرمانی کڕینی هەڵپەسێردراو لە 1.0821، stop loss لە 1.0806، واتە پازدە خاڵ، و ئامانج لە 1.0870، نزیکەی سێ هێندەی مەترسی. بە حسابی دە هەزار دۆلار و مەترسی یەک لە سەد، قەبارەکە نزیکەی 0.66 لۆتە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر زێڕ: دوو ناوچە بۆ بەراورد",
+     "narration": "لەسەر زێڕ لە چارتی یەک کاتژمێری دوو ناوچەی خستنەڕوومان هەیە. یەکەم بنکەکەی حەوت مۆمە لە نێوان 2410 و 2424، نرخ بە هێواشی لێیەوە تەنها تا 2398 دابەزی، و دوو جار دەستی لێدراوە. کات سفرە، دەرچوون یەک خاڵ، و تازەیی سفر، کەواتە کۆی گشتی یەک خاڵە، و جێیدەهێڵین. دووەم لە سەرووی ئەوەوەیە، بنکەکەی یەک مۆمە لە نێوان 2446 و 2452، نرخ لە دوو کاتژمێردا لێیەوە دابەزی بۆ 2419 و نزمییەکی پێشووی بە داخستن شکاند، و هێشتا دەستی لێ نەدراوە. کۆی گشتی شەش خاڵە. پلانەکە: فرۆشتنی هەڵپەسێردراو لە 2446، stop loss لە 2455، واتە نۆ دۆلار، و ئامانج لە 2419، سێ هێندەی مەترسی. نزیکترین ناوچە لە نرخی ئێستاوە هەمیشە باشترین نییە، هەڵسەنگاندنەکە بڕیار دەدات."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم هەڵسەنگاندنی ناوچەیە بە چاو بەبێ سیستەمێکی جێگیر، بۆیە ناوچەکە بەهێز دەبێت کاتێک دەتەوێت بازرگانی بکەیت و لاواز دەبێت کاتێک دەترسیت. هەڵەی دووەم ژماردنی دەرچوونە لەسەر مۆمێک کە هێشتا دانەخراوە، چونکە لەوانەیە کلکێکی درێژ بەجێ بهێڵێت و پێش داخستن هێزەکەی لەدەست بدات. هەڵەی سێیەم لەبیرکردنی ژماردنی دەستلێدانەکانە، بۆیە بازرگان دەچێتە ناو ناوچەیەک کە سێ جار دەستی لێدراوە و وا دەزانێت هێشتا تازەیە. هەڵەی چوارەم دانی خاڵی بەرزە بە ناوچەیەک کە پێچەوانەی ئاڕاستەی چوارچێوەی گەورەترە. هەڵەی پێنجەم بەرزکردنەوەی قەبارەی مامەڵەیە چونکە هەڵسەنگاندن شەش لە شەشە، لە کاتێکدا بەهێزترین ناوچەش لەوانەیە شکست بهێنێت، بۆیە مەترسی جێگیر دەمێنێتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: پێش ئەوەی بیر لە چوونەژوورەوە بکەیتەوە، هەر ناوچەیەک بە سێ پرسیار هەڵبسەنگێنە. ئایا بنکە کورتە، لە یەک تا سێ مۆم؟ ئایا دەرچوون بەهێزە، لە سێ هێندەی بنکە زیاترە و پێکهاتە بە مۆمێکی داخراو دەشکێنێت و ناهاوسەنگی بەجێدەهێڵێت؟ و ئایا ناوچەکە تازەیە و دەستی لێ نەدراوە؟ خاڵەکان لە تەنیشت هەر ناوچەیەک لەسەر چارتەکە بنووسە. پێنج یان شەش خاڵ لەگەڵ چوارچێوەی گەورەتر ڕێگە بە فەرمانی هەڵپەسێردراو دەدات، سێ یان چوار پێویستی بە پشتڕاستکردنەوە هەیە، و لەوە کەمتر جێیدەهێڵین. هەمیشە stop loss لە پشت ناوچەکە دابنێ، و قەبارە بە شێوەیەک حیساب بکە کە مەترسی نزیکەی یەک لە سەد بمێنێتەوە هەر هەڵسەنگاندنێک بێت. هەر مانگێک هەڵسەنگاندنەکان لە دەفتەرەکەتدا پێدابچۆرەوە بۆ ئەوەی ببینیت کام نمرە باشترین ئەنجام دەدات."
+    }
+   ]
+  },
+  "sk-l2-04": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا أكثر من إطار",
+     "narration": "الإطار الزمني هو المدة التي تمثلها كل شمعة على الشارت، فشمعة الإطار اليومي تمثل يوماً كاملاً، وشمعة الخمس عشرة دقيقة تمثل ربع ساعة فقط. المنطقة نفسها تبدو مختلفة على كل إطار. على الإطار اليومي قد تكون منطقة الطلب بعرض خمسين نقطة، وهذا يجعل الوقف بعيداً جداً. وعلى إطار الخمس عشرة دقيقة تكون المناطق ضيقة لكنها كثيرة وضعيفة إذا أُخذت وحدها. الحل في منهج SK هو الجمع بينهما: الإطار الأعلى يخبرنا أين نتداول وفي أي اتجاه، والإطار الأصغر يخبرنا متى ندخل وأين نضع الوقف بدقة. وفي هذا الدرس سنتعلم كيف نربط الأطر خطوة بخطوة، مع مثالين كاملين على الجنيه والين."
+    },
+    {
+     "id": "s2",
+     "title": "تسلسل الأطر",
+     "narration": "نستخدم ثلاث طبقات لا أكثر. الطبقة الأولى هي الإطار اليومي أو الأربع ساعات، ومنها نحدد الاتجاه العام والمناطق الرئيسية التي نهتم بها هذا الأسبوع. الطبقة الثانية هي إطار الساعة، وفيه نرسم المنطقة التي سنعمل عليها اليوم، ونطبق عليها تقييم القوة الذي تعلمناه. الطبقة الثالثة هي إطار الخمس عشرة دقيقة أو الخمس دقائق، ونستخدمها للتنقية وللتأكيد فقط. والقاعدة المفيدة أن تكون النسبة بين كل إطار والذي يليه بين أربعة وستة أضعاف تقريباً، مثل الأربع ساعات ثم الساعة ثم الخمس عشرة دقيقة، حتى تبقى الصورة متصلة. أما فتح أطر أكثر من ذلك فيضيف ضجيجاً ولا يضيف معلومة مفيدة."
+    },
+    {
+     "id": "s3",
+     "title": "المناطق المتداخلة",
+     "narration": "المنطقة المتداخلة هي منطقة صغيرة على إطار أصغر تقع داخل منطقة كبيرة على إطار أعلى. طريقة إيجادها بسيطة. ارسم منطقة الأربع ساعات أولاً، ثم انزل إلى إطار الساعة أو الخمس عشرة دقيقة داخل حدودها نفسها، وابحث عن الأساس الصغير الذي انطلقت منه الحركة الفعلية. هذا الأساس هو قلب المنطقة الكبيرة. فائدته أنه يسمح بوقف أقرب بكثير، فتكبر نسبة العائد إلى المخاطرة. لكن له ثمن: قد يرتد السعر من الطرف الآخر للمنطقة الكبيرة دون أن يصل إلى منطقتك الصغيرة، فتفوتك الصفقة، وهذا مقبول. والقاعدة أن الأساس الصغير يجب أن يكون هو مصدر الانطلاق فعلاً، لا مجرد شموع صغيرة عشوائية داخل المنطقة."
+    },
+    {
+     "id": "s4",
+     "title": "التوافق مع الاتجاه الأكبر",
+     "narration": "أهم قاعدة في الأطر المتعددة هي التوافق. نشتري من مناطق الطلب الصغيرة فقط عندما يكون الإطار الأعلى صاعداً، أي يصنع قمماً أعلى وقيعاناً أعلى، ونبيع من مناطق العرض الصغيرة فقط عندما يكون هابطاً. منطقة طلب على الخمس عشرة دقيقة تقع تحت منطقة عرض قوية على الأربع ساعات هي تعارض، والأفضل تركها. كما يساعدنا الإطار الأعلى في تحديد الهدف: الهدف المنطقي لصفقة الشراء هو أقرب منطقة عرض معاكسة على الإطار الأعلى، لأن السعر غالباً يتباطأ عندها. فإذا كانت المسافة إليها أقل من ضعفي المخاطرة، نتجاوز الصفقة. فالتوافق يرفع الاحتمال ولا يضمنه."
+    },
+    {
+     "id": "s5",
+     "title": "قواعد الربط بين الأطر",
+     "narration": "هناك ثلاث قواعد عملية للربط بين الأطر. الأولى: قوة المنطقة الصغيرة مستمدة من المنطقة الكبيرة، فإذا كانت منطقة الأربع ساعات قد لُمست مرتين، فالمنطقة الصغيرة داخلها ضعيفة أيضاً مهما بدت جميلة. الثانية: نقيّم المنطقة الكبيرة بنظام النقاط أولاً، ولا ننزل إلى الإطار الأصغر إلا إذا نجحت. الثالثة: عند وضع الوقف لدينا خياران، خلف المنطقة الصغيرة وهو أقرب وأدق، أو خلف المنطقة الكبيرة وهو أبعد وأكثر أماناً. أي خيار تختاره، احسب حجم الصفقة حسب مسافة الوقف الفعلية بحيث تبقى المخاطرة نحو واحد بالمئة. ولا تنقل الوقف من خيار إلى آخر بعد الدخول، فهذا تغيير للخطة أثناء الحركة."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على الجنيه",
+     "narration": "على الجنيه مقابل الدولار، الإطار اليومي صاعد، وعلى الأربع ساعات منطقة طلب حديثة بين 1.2580 و1.2625، أي بعرض خمس وأربعين نقطة، وتقييمها خمس نقاط. نزلنا إلى إطار الخمس عشرة دقيقة داخلها فوجدنا الأساس الذي انطلقت منه الحركة بين 1.2590 و1.2602. الخيار الأول: شراء عند 1.2625 بوقف تحت المنطقة الكبيرة عند 1.2575، أي خمسون نقطة، والهدف منطقة العرض على الأربع ساعات عند 1.2700، أي عائد خمس وسبعين نقطة فقط، مرة ونصف. الخيار الثاني: شراء معلّق عند 1.2603 بوقف عند 1.2586، أي سبع عشرة نقطة، والهدف نفسه يعطي نحو خمسة أضعاف ونصف."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على الين",
+     "narration": "على الدولار مقابل الين، الإطار اليومي هابط، وعلى الأربع ساعات منطقة عرض حديثة بين 152.40 و152.80. داخلها على إطار الخمس عشرة دقيقة أساس صغير بين 152.55 و152.65. تقييم المنطقة الكبيرة أربع نقاط، لذلك نشترط التأكيد. في الثامنة والنصف صباحاً بتوقيت لندن صعد السعر إلى 152.62، ثم في التاسعة والربع أغلقت شمعة خمس عشرة دقيقة تحت آخر قاع داخلي عند 152.50. دخلنا بيعاً عند 152.48، بوقف فوق القمة الجديدة عند 152.70، أي اثنتين وعشرين نقطة. الهدف منطقة الطلب على الأربع ساعات عند 151.60، أي ثمان وثمانون نقطة، نحو أربعة أضعاف المخاطرة."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو استخدام أطر كثيرة، فتفتح الشهري واليومي والساعة والدقيقة، وتجد في كل منها قصة مختلفة فتتجمد. ثلاث طبقات تكفي. الخطأ الثاني هو التداول من منطقة صغيرة جميلة على إطار الخمس دقائق بعكس اتجاه الإطار اليومي. الخطأ الثالث هو التنقية المفرطة، أي تضييق المنطقة إلى بضع نقاط على إطار الدقيقة، فيفوتك معظم الصفقات ويضربك أي تذبذب بسيط. الخطأ الرابع هو تغيير الإطار بعد الدخول، كأن تدخل على الخمس عشرة دقيقة ثم تنظر إلى إطار الدقيقة فتخاف من شمعة واحدة وتغلق الصفقة قبل أوانها. والخطأ الخامس هو رسم المناطق على إطار الدقيقة أصلاً، فهي كثيرة جداً وضعيفة وتتأثر بالفروق السعرية."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ابدأ دائماً من الأعلى إلى الأسفل. من الإطار اليومي أو الأربع ساعات حدد الاتجاه والمنطقة الرئيسية وقيّمها بنظام النقاط. على إطار الساعة ارسم منطقة العمل لهذا اليوم. وعلى إطار الخمس عشرة دقيقة ابحث عن الأساس المتداخل للتنقية، أو انتظر تغيّر البنية بشمعة مغلقة للتأكيد. لا تتداول منطقة صغيرة تعاكس الإطار الأعلى، واجعل هدفك المنطقة المعاكسة على الإطار الأعلى، ولا تدخل إذا كان العائد أقل من ضعفي المخاطرة. واحسب الحجم من مسافة الوقف الفعلية حتى تبقى المخاطرة نحو واحد بالمئة. واكتب في دفترك الإطار الذي جاءت منه المنطقة والإطار الذي دخلت عليه، لتعرف لاحقاً أي تركيبة تناسبك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why More Than One Timeframe",
+     "narration": "A timeframe is the period each candle represents on the chart, so a daily candle represents a whole day, while a fifteen-minute candle represents only a quarter of an hour. The same zone looks different on each timeframe. On the daily chart a demand zone may be fifty pips wide, which puts the stop very far away. On the fifteen-minute chart zones are narrow, but they are many and weak when taken on their own. The solution in the SK method is to combine them: the higher timeframe tells us where to trade and in which direction, and the lower timeframe tells us when to enter and where to place the stop precisely. In this lesson we will learn how to link the timeframes step by step, with two complete examples on GBPUSD and USDJPY."
+    },
+    {
+     "id": "s2",
+     "title": "The Timeframe Ladder",
+     "narration": "We use three layers and no more. The first layer is the daily or four-hour chart, and from it we set the overall direction and the main zones we care about this week. The second layer is the one-hour chart, where we draw the zone we will work on today and apply the strength rating we learned. The third layer is the fifteen-minute or five-minute chart, and we use it only for refinement and confirmation. A useful rule is that the ratio between each timeframe and the next should be roughly four to six times, such as four-hour, then one-hour, then fifteen-minute, so the picture stays connected. Opening more timeframes than that adds noise, not useful information."
+    },
+    {
+     "id": "s3",
+     "title": "Nested Zones",
+     "narration": "A nested zone is a small zone on a lower timeframe that sits inside a large zone on a higher timeframe. Finding it is simple. Draw the four-hour zone first, then drop to the one-hour or fifteen-minute chart inside the same boundaries, and look for the small base from which the actual move departed. That base is the heart of the large zone. Its benefit is that it allows a much closer stop, so the reward-to-risk ratio grows. But it has a price: price may react from the other edge of the large zone without reaching your small zone, and you miss the trade, which is acceptable. The rule is that the small base must truly be the source of the departure, not just random small candles inside the zone."
+    },
+    {
+     "id": "s4",
+     "title": "Alignment With the Bigger Trend",
+     "narration": "The most important rule with multiple timeframes is alignment. We buy from small demand zones only when the higher timeframe is rising, meaning it makes higher highs and higher lows, and we sell from small supply zones only when it is falling. A fifteen-minute demand zone that sits just under a strong four-hour supply zone is a conflict, and it is better left alone. The higher timeframe also helps us set the target: the logical target for a buy is the nearest opposing supply zone on the higher timeframe, because price often slows down there. If the distance to it is less than twice the risk, we skip the trade. Alignment raises the odds; it does not guarantee anything."
+    },
+    {
+     "id": "s5",
+     "title": "Rules for Linking Timeframes",
+     "narration": "There are three practical rules for linking timeframes. First: the strength of the small zone comes from the large zone, so if the four-hour zone has been touched twice, the small zone inside it is weak too, however good it looks. Second: we rate the large zone with the points system first, and we only drop to the lower timeframe if it passes. Third: when placing the stop we have two options, behind the small zone, which is closer and more precise, or behind the large zone, which is farther and safer. Whichever option you choose, size the position according to the actual stop distance so that risk stays around one percent. And do not switch the stop from one option to the other after entry, because that is changing the plan mid-move."
+    },
+    {
+     "id": "s6",
+     "title": "GBPUSD Example",
+     "narration": "On GBPUSD the daily chart is rising, and on the four-hour chart there is a fresh demand zone between 1.2580 and 1.2625, forty-five pips wide, rated five points. We dropped to the fifteen-minute chart inside it and found the base the move departed from, between 1.2590 and 1.2602. Option one: buy at 1.2625 with a stop under the large zone at 1.2575, which is fifty pips, and the target is the four-hour supply zone at 1.2700, a reward of only seventy-five pips, one and a half times. Option two: a pending buy at 1.2603 with a stop at 1.2586, which is seventeen pips, and the same target gives about five and a half times."
+    },
+    {
+     "id": "s7",
+     "title": "USDJPY Example",
+     "narration": "On USDJPY the daily chart is falling, and on the four-hour chart there is a fresh supply zone between 152.40 and 152.80. Inside it on the fifteen-minute chart there is a small base between 152.55 and 152.65. The large zone rates four points, so we require confirmation. At eight thirty in the morning London time price rose to 152.62, then at nine fifteen a fifteen-minute candle closed below the last internal low at 152.50. We entered a sell at 152.48, with a stop above the new high at 152.70, which is twenty-two pips. The target is the four-hour demand zone at 151.60, which is eighty-eight pips, about four times the risk."
+    },
+    {
+     "id": "s8",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is using too many timeframes, opening the monthly, daily, hourly and one-minute charts, and finding a different story on each until you freeze. Three layers are enough. The second mistake is trading from a nice small zone on the five-minute chart against the direction of the daily chart. The third mistake is over-refining, meaning narrowing the zone to a few pips on the one-minute chart, so you miss most trades and any small fluctuation hits you. The fourth mistake is changing timeframe after entry, such as entering on the fifteen-minute chart, then looking at the one-minute chart, getting scared by a single candle and closing the trade too early. The fifth mistake is drawing zones on the one-minute chart at all, since they are too many, weak, and affected by the spread."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "The practical rule: always work from the top down. From the daily or four-hour chart, set the direction and the main zone and rate it with the points system. On the one-hour chart, draw today's working zone. On the fifteen-minute chart, look for the nested base for refinement, or wait for a structure change on a closed candle for confirmation. Do not trade a small zone that goes against the higher timeframe, make your target the opposing zone on the higher timeframe, and do not enter if the reward is less than twice the risk. Size the position from the actual stop distance so that risk stays around one percent. Write in your journal the timeframe the zone came from and the timeframe you entered on, so you later learn which combination suits you."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی زیاتر لە یەک چوارچێوە",
+     "narration": "چوارچێوەی کاتی ئەو ماوەیەیە کە هەر مۆمێک لەسەر چارتەکە نوێنەرایەتی دەکات، بۆیە مۆمی ڕۆژانە ڕۆژێکی تەواو نیشان دەدات، و مۆمی پازدە خولەکی تەنها چارەکە کاتژمێرێک. هەمان ناوچە لەسەر هەر چوارچێوەیەک جیاواز دەردەکەوێت. لەسەر چارتی ڕۆژانە لەوانەیە ناوچەی خواست پەنجا خاڵ پان بێت، و ئەمە stop loss زۆر دوور دەخات. لەسەر چارتی پازدە خولەکی ناوچەکان تەسکن، بەڵام زۆرن و ئەگەر بە تەنها وەربگیرێن لاوازن. چارەسەر لە ڕێبازی SK کۆکردنەوەی هەردووکیانە: چوارچێوەی گەورەتر پێمان دەڵێت لە کوێ و بە کام ئاڕاستە بازرگانی بکەین، و چوارچێوەی بچووکتر پێمان دەڵێت کەی بچینە ژوورەوە و stop loss بە وردی لە کوێ دابنێین. لەم وانەیەدا فێر دەبین چۆن چوارچێوەکان هەنگاو بە هەنگاو بە یەکەوە ببەستینەوە، لەگەڵ دوو نموونەی تەواو لەسەر پاوەند و یەن."
+    },
+    {
+     "id": "s2",
+     "title": "پەیژەی چوارچێوەکان",
+     "narration": "سێ چین بەکاردەهێنین نەک زیاتر. چینی یەکەم چارتی ڕۆژانە یان چوار کاتژمێرییە، و لێیەوە ئاڕاستەی گشتی و ئەو ناوچە سەرەکییانە دیاری دەکەین کە ئەم هەفتەیە گرنگن بۆمان. چینی دووەم چارتی یەک کاتژمێرییە، کە تێیدا ئەو ناوچەیە دەکێشین کە ئەمڕۆ کاری لەسەر دەکەین، و ئەو هەڵسەنگاندنی هێزەی فێری بووین لەسەری جێبەجێ دەکەین. چینی سێیەم چارتی پازدە خولەکی یان پێنج خولەکییە، و تەنها بۆ پاڵاوتن و پشتڕاستکردنەوە بەکاری دەهێنین. یاسایەکی بەسوود ئەوەیە کە ڕێژەی نێوان هەر چوارچێوەیەک و دواتر نزیکەی چوار تا شەش هێندە بێت، وەک چوار کاتژمێری پاشان یەک کاتژمێری پاشان پازدە خولەکی، بۆ ئەوەی وێنەکە پەیوەست بمێنێتەوە. کردنەوەی چوارچێوەی زیاتر لەوە تەنها ژاوەژاو زیاد دەکات نەک زانیاری بەسوود."
+    },
+    {
+     "id": "s3",
+     "title": "ناوچە لەناو یەکەکان",
+     "narration": "ناوچەی لەناو یەک ناوچەیەکی بچووکە لەسەر چوارچێوەیەکی بچووکتر کە لە ناو ناوچەیەکی گەورەدا لەسەر چوارچێوەیەکی بەرزتر هەیە. دۆزینەوەی سادەیە. سەرەتا ناوچەی چوار کاتژمێری بکێشە، پاشان بچۆ بۆ چارتی یەک کاتژمێری یان پازدە خولەکی لە ناو هەمان سنووردا، و بەدوای ئەو بنکە بچووکەدا بگەڕێ کە جووڵەی ڕاستەقینە لێیەوە دەرچوو. ئەو بنکەیە دڵی ناوچە گەورەکەیە. سوودەکەی ئەوەیە ڕێگە بە stop lossێکی زۆر نزیکتر دەدات، بۆیە ڕێژەی قازانج بۆ مەترسی گەورەتر دەبێت. بەڵام نرخێکی هەیە: لەوانەیە نرخ لە لێواری تری ناوچە گەورەکەوە بگەڕێتەوە بەبێ ئەوەی بگاتە ناوچە بچووکەکەت، و مامەڵەکەت لەدەست دەچێت، و ئەمە پەسەندە. یاساکە ئەوەیە کە بنکە بچووکەکە دەبێت بەڕاستی سەرچاوەی دەرچوونەکە بێت، نەک تەنها چەند مۆمێکی بچووکی هەڕەمەکی لە ناو ناوچەکەدا."
+    },
+    {
+     "id": "s4",
+     "title": "گونجان لەگەڵ ئاڕاستەی گەورەتر",
+     "narration": "گرنگترین یاسا لە چەند چوارچێوەدا گونجانە. تەنها کاتێک لە ناوچە بچووکەکانی خواست دەکڕین کە چوارچێوەی بەرزتر بەرزبوونەوە بێت، واتە لووتکەی بەرزتر و نزمی بەرزتر دروست بکات، و تەنها کاتێک لە ناوچە بچووکەکانی خستنەڕوو دەفرۆشین کە دابەزین بێت. ناوچەیەکی خواستی پازدە خولەکی کە ڕاستەوخۆ لە ژێر ناوچەیەکی خستنەڕووی بەهێزی چوار کاتژمێریدایە ناکۆکییە، و باشترە جێبهێڵدرێت. چوارچێوەی بەرزتر یارمەتیشمان دەدات ئامانج دیاری بکەین: ئامانجی لۆژیکی بۆ کڕین نزیکترین ناوچەی خستنەڕووی پێچەوانەیە لەسەر چوارچێوەی بەرزتر، چونکە نرخ زۆرجار لەوێ خاو دەبێتەوە. ئەگەر مەودای پێی کەمتر بێت لە دوو هێندەی مەترسی، مامەڵەکە جێدەهێڵین. گونجان ئەگەر بەرز دەکاتەوە بەڵام هیچ مسۆگەر ناکات."
+    },
+    {
+     "id": "s5",
+     "title": "یاساکانی بەستنەوەی چوارچێوەکان",
+     "narration": "سێ یاسای کرداری هەن بۆ بەستنەوەی چوارچێوەکان. یەکەم: هێزی ناوچە بچووکەکە لە ناوچە گەورەکەوە دێت، بۆیە ئەگەر ناوچەی چوار کاتژمێری دوو جار دەستی لێدرابێت، ناوچە بچووکەکەی ناویشی لاوازە هەرچەندە جوان دەربکەوێت. دووەم: سەرەتا ناوچە گەورەکە بە سیستەمی خاڵ هەڵدەسەنگێنین، و تەنها ئەگەر سەرکەوتوو بوو دەچینە سەر چوارچێوەی بچووکتر. سێیەم: لە کاتی دانانی stop loss دوو بژاردەمان هەیە، لە پشت ناوچە بچووکەکە کە نزیکتر و وردترە، یان لە پشت ناوچە گەورەکە کە دوورتر و سەلامەتترە. هەر بژاردەیەک هەڵبژێریت، قەبارەی مامەڵە بەپێی مەودای ڕاستەقینەی stop loss حیساب بکە بۆ ئەوەی مەترسی نزیکەی یەک لە سەد بمێنێتەوە. و دوای چوونەژوورەوە stop loss لە بژاردەیەکەوە مەگوازەرەوە بۆ بژاردەکەی تر، چونکە ئەمە گۆڕینی پلانە لە ناو جووڵەکەدا."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە لەسەر پاوەند",
+     "narration": "لەسەر پاوەند بەرامبەر دۆلار، چارتی ڕۆژانە بەرزبوونەوەیە، و لەسەر چوار کاتژمێری ناوچەیەکی خواستی تازە هەیە لە نێوان 1.2580 و 1.2625، واتە بە پانی چل و پێنج خاڵ، و هەڵسەنگاندنەکەی پێنج خاڵە. چووینە سەر چارتی پازدە خولەکی لە ناویدا و ئەو بنکەیەمان دۆزییەوە کە جووڵەکە لێیەوە دەرچوو، لە نێوان 1.2590 و 1.2602. بژاردەی یەکەم: کڕین لە 1.2625 بە stop loss لە ژێر ناوچە گەورەکە لە 1.2575، واتە پەنجا خاڵ، و ئامانج ناوچەی خستنەڕووی چوار کاتژمێرییە لە 1.2700، واتە قازانجی تەنها حەفتا و پێنج خاڵ، یەک و نیو هێندە. بژاردەی دووەم: کڕینی هەڵپەسێردراو لە 1.2603 بە stop loss لە 1.2586، واتە حەڤدە خاڵ، و هەمان ئامانج نزیکەی پێنج و نیو هێندە دەدات."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر یەن",
+     "narration": "لەسەر دۆلار بەرامبەر یەن، چارتی ڕۆژانە دابەزینە، و لەسەر چوار کاتژمێری ناوچەیەکی خستنەڕووی تازە هەیە لە نێوان 152.40 و 152.80. لە ناویدا لەسەر چارتی پازدە خولەکی بنکەیەکی بچووک هەیە لە نێوان 152.55 و 152.65. هەڵسەنگاندنی ناوچە گەورەکە چوار خاڵە، بۆیە پشتڕاستکردنەوە بە مەرج دادەنێین. لە کاتژمێر هەشت و نیوی بەیانی بە کاتی لەندەن نرخ بەرزبووەوە بۆ 152.62، پاشان لە نۆ و چارەکدا مۆمێکی پازدە خولەکی لە خوار دوایین نزمی ناوخۆیی لە 152.50 داخرا. فرۆشتنمان کرد لە 152.48، بە stop loss لە سەرووی لووتکە نوێیەکە لە 152.70، واتە بیست و دوو خاڵ. ئامانج ناوچەی خواستی چوار کاتژمێرییە لە 151.60، واتە هەشتا و هەشت خاڵ، نزیکەی چوار هێندەی مەترسی."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم بەکارهێنانی چوارچێوەی زۆرە، کە چارتی مانگانە و ڕۆژانە و کاتژمێری و خولەکی دەکەیتەوە، و لە هەر یەکێکیاندا چیرۆکێکی جیاواز دەبینیت تا دەوەستیت. سێ چین بەسە. هەڵەی دووەم بازرگانییە لە ناوچەیەکی بچووکی جوان لەسەر چارتی پێنج خولەکی بە پێچەوانەی ئاڕاستەی چارتی ڕۆژانە. هەڵەی سێیەم پاڵاوتنی زیادەیە، واتە تەسککردنەوەی ناوچەکە بۆ چەند خاڵێک لەسەر چارتی یەک خولەکی، بۆیە زۆربەی مامەڵەکان لەدەست دەدەیت و هەر لەرزینێکی بچووک لێت دەدات. هەڵەی چوارەم گۆڕینی چوارچێوەیە دوای چوونەژوورەوە، وەک ئەوەی لەسەر پازدە خولەکی بچیتە ژوورەوە، پاشان سەیری چارتی یەک خولەکی بکەیت، لە یەک مۆم بترسیت و مامەڵەکە زوو دابخەیت. هەڵەی پێنجەم کێشانی ناوچەیە لەسەر چارتی یەک خولەکی، چونکە زۆر زۆرن و لاوازن و بە spread کاریگەر دەبن."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: هەمیشە لە سەرەوە بۆ خوارەوە کار بکە. لە چارتی ڕۆژانە یان چوار کاتژمێرییەوە ئاڕاستە و ناوچە سەرەکییەکە دیاری بکە و بە سیستەمی خاڵ هەڵیبسەنگێنە. لەسەر چارتی یەک کاتژمێری ناوچەی کاری ئەمڕۆ بکێشە. لەسەر چارتی پازدە خولەکی بەدوای بنکەی لەناو یەکدا بگەڕێ بۆ پاڵاوتن، یان چاوەڕێی گۆڕانی پێکهاتە بکە بە مۆمێکی داخراو بۆ پشتڕاستکردنەوە. بازرگانی لە ناوچەیەکی بچووک مەکە کە پێچەوانەی چوارچێوەی بەرزترە، ئامانجەکەت بکە بە ناوچە پێچەوانەکەی سەر چوارچێوەی بەرزتر، و مەچۆ ژوورەوە ئەگەر قازانج کەمتر بێت لە دوو هێندەی مەترسی. قەبارە لە مەودای ڕاستەقینەی stop loss حیساب بکە بۆ ئەوەی مەترسی نزیکەی یەک لە سەد بمێنێتەوە. لە دەفتەرەکەتدا چوارچێوەی ناوچەکە و چوارچێوەی چوونەژوورەوە بنووسە، بۆ ئەوەی بزانیت کام تێکەڵە گونجاوە بۆت."
+    }
+   ]
+  },
+  "sk-l3-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "عائلتان للدخول",
+     "narration": "بعد أن نختار المنطقة ونقيّمها، يبقى سؤال التنفيذ: كيف ندخل فعلياً؟ في منهج SK هناك عائلتان للدخول. الأولى هي الأمر المعلّق، أي أن تضع أمراً عند حافة المنطقة قبل وصول السعر، فينفذه الوسيط تلقائياً عند الوصول. والثانية هي الدخول بالتأكيد، أي أن تنتظر وصول السعر إلى المنطقة، ثم ترى دليلاً على رد الفعل على إطار أصغر بشمعة مغلقة، وبعدها تدخل. تحدثنا من قبل عن الفكرة العامة لكل أسلوب. في هذا الدرس نركز على التفاصيل العملية: أين بالضبط يوضع الأمر، وأين الوقف، ومتى نلغي، وكيف نحسب الحجم."
+    },
+    {
+     "id": "s2",
+     "title": "آلية الأمر المعلّق",
+     "narration": "في منطقة الطلب نستخدم أمر Buy Limit، أي أمر شراء بسعر أقل من السعر الحالي، ونضعه عند الحافة القريبة من السعر، وهي الحد العلوي للمنطقة. وفي منطقة العرض نستخدم Sell Limit، أي أمر بيع بسعر أعلى من الحالي، عند الحد السفلي للمنطقة. انتبه للفرق بين سعر العرض وسعر الطلب، ويسمى Spread. الشارت يعرض عادة سعر البيع، بينما يُنفذ أمر الشراء على سعر الشراء الأعلى قليلاً. لذلك نضع أمر الشراء أعلى الحافة بنقطة أو نقطتين، ونضيف الهامش نفسه إلى وقف صفقات البيع، حتى لا يفوتنا التنفيذ أو يضربنا الوقف بسبب الفرق فقط."
+    },
+    {
+     "id": "s3",
+     "title": "الوقف والهدف والإلغاء",
+     "narration": "مع الأمر المعلّق نحدد كل شيء مسبقاً. الوقف يوضع خلف الحافة البعيدة للمنطقة بهامش صغير، نقطتين إلى ثلاث نقاط في العملات، أو دولار إلى دولارين في الذهب. والهدف عند المنطقة المعاكسة على الإطار الأعلى، بشرط ألا يقل عن ضعفي المخاطرة. ثم نحدد شروط الإلغاء، وهي جزء أساسي من الخطة. نلغي الأمر قبل الأخبار الكبرى بثلاثين دقيقة إذا لم يُنفذ. ونلغيه إذا كسر الإطار الأعلى بنيته في الاتجاه المعاكس. ونلغيه في نهاية جلسة نيويورك إذا لم يصل السعر، ثم نعيد التقييم في اليوم التالي، لأن الأمر المنسي قد يُنفذ في ظروف لا تعرفها."
+    },
+    {
+     "id": "s4",
+     "title": "آلية الدخول بالتأكيد",
+     "narration": "في الدخول بالتأكيد لا نضع أي أمر قبل وصول السعر. عندما يدخل السعر المنطقة، ننزل إلى إطار الخمس دقائق أو الخمس عشرة دقيقة. في منطقة الطلب يكون السعر عادة هابطاً على هذا الإطار الصغير، يصنع قمماً أدنى. التأكيد الأول هو تغيّر البنية، ويسمى CHOCH، أي أن تغلق شمعة كاملة فوق آخر قمة أدنى، فيدل ذلك على أن البائعين فقدوا السيطرة على هذا الإطار. والتأكيد الثاني هو شمعة رفض قوية مغلقة، مثل شمعة ابتلاعية صاعدة أو شمعة بذيل سفلي طويل. نفضّل CHOCH لأنه أوضح وأسهل في القياس، ونكتب في الخطة أي تأكيد نقبله."
+    },
+    {
+     "id": "s5",
+     "title": "التنفيذ بعد التأكيد",
+     "narration": "بعد ظهور التأكيد لدينا طريقتان للتنفيذ. الأولى دخول فوري بسعر السوق عند إغلاق شمعة التأكيد، وهي تضمن الدخول لكنها تعطي سعراً أسوأ. والثانية أمر معلّق صغير عند أول عودة إلى الأساس الجديد الذي صنع الكسر على الإطار الصغير، وهي تعطي سعراً أفضل لكن قد لا تُنفذ. الوقف يوضع تحت القاع الذي صنعه السعر داخل المنطقة، بهامش صغير. والهدف يبقى المنطقة المعاكسة على الإطار الأعلى. وهنا قاعدة مهمة: إذا ابتعد السعر كثيراً قبل التأكيد، فأصبح العائد أقل من ضعفي المخاطرة، نترك الصفقة ولا نطاردها مهما كانت المنطقة جميلة."
+    },
+    {
+     "id": "s6",
+     "title": "مثال الأمر المعلّق على اليورو",
+     "narration": "على اليورو مقابل الدولار، منطقة طلب حديثة على إطار الساعة بين 1.0745 و1.0758، وتقييمها ست نقاط، والإطار اليومي صاعد، والفرق السعري نحو نقطة واحدة. في السابعة صباحاً بتوقيت لندن وضعنا Buy Limit عند 1.0759، أي فوق الحافة بنقطة، ووقفاً عند 1.0742، أي سبع عشرة نقطة، وهدفاً عند منطقة العرض على الأربع ساعات عند 1.0810، أي إحدى وخمسين نقطة، ثلاثة أضعاف المخاطرة. بحساب عشرة آلاف دولار ومخاطرة واحد بالمئة، وقيمة النقطة عشرة دولارات للوت، يكون الحجم نحو 0.58 لوت. وكتبنا شرط الإلغاء: إذا لم يُنفذ الأمر قبل خبر أمريكي مهم، نلغيه قبله بثلاثين دقيقة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال الدخول بالتأكيد على الذهب",
+     "narration": "على الذهب، منطقة طلب على إطار الساعة بين 2352 و2358، وتقييمها أربع نقاط، لذلك نشترط التأكيد. في التاسعة وأربعين دقيقة صباحاً بتوقيت نيويورك دخل السعر المنطقة وصنع قاعاً عند 2353. على إطار الخمس دقائق كانت آخر قمة أدنى عند 2361، وفي التاسعة وخمس وخمسين أغلقت شمعة عند 2363 فوقها، وهذا CHOCH. دخلنا شراءً عند 2363 بوقف عند 2351.5 تحت القاع بهامش، أي أحد عشر دولاراً ونصف. الهدف قمة الإطار الأعلى عند 2390، أي سبعة وعشرون دولاراً، أكثر من ضعفي المخاطرة. بحساب عشرة آلاف ومخاطرة مئة دولار، وكل دولار حركة يساوي مئة دولار للوت، يكون الحجم 0.08 لوت."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو ترك الأمر المعلّق مفتوحاً قبل خبر كبير، فيُنفذ في لحظة انزلاق ويتجاوز السعر الوقف بسرعة. الخطأ الثاني هو اعتبار كسر داخل شمعة لم تُغلق تأكيداً، فالشمعة قد تعود وتغلق تحت المستوى بعد دقائق. الخطأ الثالث هو مطاردة الصفقة بعد تأكيد متأخر، حين يكون السعر قد ابتعد عن المنطقة وأصبح العائد ضعيفاً. الخطأ الرابع هو تحريك الأمر المعلّق أقرب إلى السعر لأنك تخشى أن يفوتك، فتدخل خارج المنطقة. والخطأ الخامس هو الخلط بين الأسلوبين في الصفقة نفسها دون خطة، كأن تضع أمراً معلّقاً ثم تلغيه عند أول شمعة مقلقة."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: اربط أسلوب الدخول بتقييم المنطقة. خمس أو ست نقاط مع الإطار الأعلى تسمح بأمر معلّق عند الحافة القريبة، مع هامش الفرق السعري، ووقف خلف الحافة البعيدة، وشروط إلغاء مكتوبة قبل الأخبار وفي نهاية اليوم. ثلاث أو أربع نقاط تحتاج إلى تأكيد على إطار أصغر، إما CHOCH بشمعة مغلقة أو شمعة رفض قوية مغلقة، ثم دخول بسعر السوق أو عند أول عودة. في الحالتين لا تدخل إذا كان العائد أقل من ضعفي المخاطرة، واحسب الحجم من مسافة الوقف الفعلية بحيث تبقى المخاطرة نحو واحد بالمئة، وسجّل نوع الدخول في دفترك لمقارنة النتائج."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Two Families of Entry",
+     "narration": "After we choose a zone and rate it, the execution question remains: how do we actually enter? In the SK method there are two families of entry. The first is the pending order, meaning you place an order at the edge of the zone before price arrives, and the broker fills it automatically when price gets there. The second is the confirmation entry, meaning you wait for price to reach the zone, then see evidence of a reaction on a lower timeframe with a closed candle, and only then enter. We discussed the general idea of each style before. In this lesson we focus on the practical details: exactly where the order goes, where the stop goes, when to cancel, and how to size the position."
+    },
+    {
+     "id": "s2",
+     "title": "How a Pending Order Works",
+     "narration": "In a demand zone we use a Buy Limit order, meaning an order to buy at a price below the current price, and we place it at the edge nearest to price, which is the top of the zone. In a supply zone we use a Sell Limit, an order to sell above the current price, at the bottom of the zone. Pay attention to the difference between the bid and the ask, called the Spread. The chart usually shows the bid, while a buy order is filled at the slightly higher ask. So we place a buy order one or two pips above the edge, and we add the same margin to the stop of sell trades, so we do not miss the fill or get stopped out just because of the spread."
+    },
+    {
+     "id": "s3",
+     "title": "Stop, Target and Cancellation",
+     "narration": "With a pending order we set everything in advance. The stop goes behind the far edge of the zone with a small margin, two to three pips on currencies, or one to two dollars on gold. The target is at the opposing zone on the higher timeframe, provided it is at least twice the risk. Then we set the cancellation conditions, which are an essential part of the plan. We cancel the order thirty minutes before major news if it has not been filled. We cancel it if the higher timeframe breaks its structure in the opposite direction. And we cancel it at the end of the New York session if price has not arrived, then re-rate the next day, because a forgotten order may be filled in conditions you know nothing about."
+    },
+    {
+     "id": "s4",
+     "title": "How a Confirmation Entry Works",
+     "narration": "In a confirmation entry we place no order before price arrives. When price enters the zone, we drop to the five-minute or fifteen-minute chart. In a demand zone, price is usually falling on this small timeframe, making lower highs. The first type of confirmation is a change of character, called CHOCH, meaning a full candle closes above the last lower high, which shows that sellers have lost control on this timeframe. The second type is a strong closed rejection candle, such as a bullish engulfing candle or a candle with a long lower wick. We prefer CHOCH because it is clearer and easier to measure, and we write in the plan which confirmation we accept."
+    },
+    {
+     "id": "s5",
+     "title": "Executing After Confirmation",
+     "narration": "Once confirmation appears we have two ways to execute. The first is an immediate market entry at the close of the confirmation candle; it guarantees entry but gives a worse price. The second is a small pending order at the first return to the new base that produced the break on the small timeframe; it gives a better price but may not be filled. The stop goes under the low that price made inside the zone, with a small margin. The target remains the opposing zone on the higher timeframe. And here is an important rule: if price moved too far before confirming, so the reward is now less than twice the risk, we skip the trade and do not chase it, however nice the zone is."
+    },
+    {
+     "id": "s6",
+     "title": "Pending Order Example on EURUSD",
+     "narration": "On EURUSD there is a fresh one-hour demand zone between 1.0745 and 1.0758, rated six points, the daily chart is rising, and the spread is about one pip. At seven in the morning London time we placed a Buy Limit at 1.0759, one pip above the edge, a stop at 1.0742, which is seventeen pips, and a target at the four-hour supply zone at 1.0810, fifty-one pips, three times the risk. With a ten thousand dollar account, one percent risk, and a pip value of ten dollars per lot, the size is about 0.58 lots. We also wrote the cancellation condition: if the order is not filled before an important US news release, we cancel it thirty minutes before."
+    },
+    {
+     "id": "s7",
+     "title": "Confirmation Entry Example on Gold",
+     "narration": "On gold there is a one-hour demand zone between 2352 and 2358, rated four points, so we require confirmation. At nine forty in the morning New York time price entered the zone and made a low at 2353. On the five-minute chart the last lower high was at 2361, and at nine fifty-five a candle closed at 2363 above it, which is a CHOCH. We bought at 2363 with a stop at 2351.5 under the low with a margin, which is eleven and a half dollars. The target is the higher-timeframe high at 2390, twenty-seven dollars, more than twice the risk. With ten thousand dollars and one hundred dollars of risk, where each dollar of movement equals one hundred dollars per lot, the size is 0.08 lots."
+    },
+    {
+     "id": "s8",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is leaving a pending order open before major news, so it gets filled during slippage and price runs through the stop quickly. The second mistake is treating a break inside a candle that has not closed as confirmation, since the candle can come back and close below the level minutes later. The third mistake is chasing the trade after a late confirmation, when price has already moved away from the zone and the reward has become poor. The fourth mistake is moving the pending order closer to price because you fear missing it, so you enter outside the zone. The fifth mistake is mixing both styles in the same trade without a plan, such as placing a pending order and then cancelling it at the first worrying candle."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "The practical rule: link your entry style to the zone rating. Five or six points with the higher timeframe allow a pending order at the near edge, with a spread margin, a stop behind the far edge, and written cancellation conditions before news and at the end of the day. Three or four points require confirmation on a lower timeframe, either a CHOCH on a closed candle or a strong closed rejection candle, then entry at market or on the first return. In both cases, do not enter if the reward is less than twice the risk, size the position from the actual stop distance so risk stays around one percent, and record the entry type in your journal to compare results."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "دوو خێزانی چوونەژوورەوە",
+     "narration": "دوای ئەوەی ناوچەکە هەڵدەبژێرین و هەڵیدەسەنگێنین، پرسیاری جێبەجێکردن دەمێنێتەوە: بەڕاستی چۆن دەچینە ژوورەوە؟ لە ڕێبازی SK دوو خێزانی چوونەژوورەوە هەن. یەکەم فەرمانی هەڵپەسێردراوە، واتە پێش گەیشتنی نرخ فەرمانێک لە لێواری ناوچەکە دادەنێیت، و بڕۆکەر کاتێک نرخ گەیشت خۆکارانە جێبەجێی دەکات. دووەم چوونەژوورەوەیە بە پشتڕاستکردنەوە، واتە چاوەڕێ دەکەیت نرخ بگاتە ناوچەکە، پاشان بەڵگەی کاردانەوە لەسەر چوارچێوەیەکی بچووکتر بە مۆمێکی داخراو دەبینیت، و ئینجا دەچیتە ژوورەوە. پێشتر باسی بیرۆکەی گشتی هەر شێوازێکمان کرد. لەم وانەیەدا سەرنج دەخەینە سەر وردەکارییە کردارییەکان: فەرمانەکە ڕێک لە کوێ دادەنرێت، stop loss لە کوێیە، کەی هەڵیدەوەشێنینەوە، و چۆن قەبارە حیساب دەکەین."
+    },
+    {
+     "id": "s2",
+     "title": "فەرمانی هەڵپەسێردراو چۆن کار دەکات",
+     "narration": "لە ناوچەی خواستدا فەرمانی Buy Limit بەکاردەهێنین، واتە فەرمانی کڕین بە نرخێکی خوارتر لە نرخی ئێستا، و لە نزیکترین لێوار لە نرخەوە دایدەنێین، کە سەرەوەی ناوچەکەیە. لە ناوچەی خستنەڕوودا Sell Limit بەکاردەهێنین، واتە فەرمانی فرۆشتن لە سەرووی نرخی ئێستا، لە خوارەوەی ناوچەکە. ئاگاداری جیاوازی نێوان نرخی فرۆشتن و نرخی کڕین بە، کە پێی دەوترێت Spread. چارتەکە زۆرجار نرخی فرۆشتن نیشان دەدات، لە کاتێکدا فەرمانی کڕین لەسەر نرخی کڕینی کەمێک بەرزتر جێبەجێ دەکرێت. بۆیە فەرمانی کڕین یەک یان دوو خاڵ لە سەرووی لێوارەکە دادەنێین، و هەمان پەراوێز بۆ stop lossی مامەڵەکانی فرۆشتن زیاد دەکەین، بۆ ئەوەی جێبەجێکردن لەدەست نەدەین یان تەنها بەهۆی spread لێمان نەدرێت."
+    },
+    {
+     "id": "s3",
+     "title": "stop loss و ئامانج و هەڵوەشاندنەوە",
+     "narration": "لەگەڵ فەرمانی هەڵپەسێردراو هەموو شتێک پێشوەختە دیاری دەکەین. stop loss لە پشت لێوارە دوورەکەی ناوچەکە بە پەراوێزێکی بچووک دادەنرێت، دوو تا سێ خاڵ لە دراوەکاندا، یان یەک تا دوو دۆلار لە زێڕدا. ئامانج لە ناوچە پێچەوانەکەیە لەسەر چوارچێوەی بەرزتر، بە مەرجێک کەمتر نەبێت لە دوو هێندەی مەترسی. پاشان مەرجەکانی هەڵوەشاندنەوە دیاری دەکەین، کە بەشێکی بنەڕەتی پلانەکەن. ئەگەر جێبەجێ نەکرابوو، سی خولەک پێش هەواڵە گەورەکان فەرمانەکە هەڵدەوەشێنینەوە. ئەگەر چوارچێوەی بەرزتر پێکهاتەکەی بە ئاڕاستەی پێچەوانە شکاند هەڵیدەوەشێنینەوە. و لە کۆتایی دانیشتنی نیویۆرک ئەگەر نرخ نەگەیشت هەڵیدەوەشێنینەوە، پاشان ڕۆژی دواتر دووبارە هەڵیدەسەنگێنین، چونکە فەرمانێکی لەبیرکراو لەوانەیە لە بارودۆخێکدا جێبەجێ بێت کە نایناسیت."
+    },
+    {
+     "id": "s4",
+     "title": "چوونەژوورەوە بە پشتڕاستکردنەوە چۆن کار دەکات",
+     "narration": "لە چوونەژوورەوە بە پشتڕاستکردنەوەدا پێش گەیشتنی نرخ هیچ فەرمانێک دانانێین. کاتێک نرخ دەچێتە ناو ناوچەکە، دەچینە سەر چارتی پێنج خولەکی یان پازدە خولەکی. لە ناوچەی خواستدا نرخ زۆرجار لەسەر ئەم چوارچێوە بچووکە دادەبەزێت و لووتکەی نزمتر دروست دەکات. یەکەم جۆری پشتڕاستکردنەوە گۆڕانی کارەکتەرە، کە پێی دەوترێت CHOCH، واتە مۆمێکی تەواو لە سەرووی دوایین لووتکەی نزمتر دابخرێت، کە نیشان دەدات فرۆشیاران کۆنترۆڵیان لەسەر ئەم چوارچێوەیە لەدەستداوە. جۆری دووەم مۆمێکی ڕەتکردنەوەی بەهێزی داخراوە، وەک مۆمی هەڵلووشینی بەرزبوونەوە یان مۆمێک بە کلکی خوارەوەی درێژ. CHOCH مان پێ باشترە چونکە ڕوونترە و پێوانەکردنی ئاسانترە، و لە پلانەکەدا دەنووسین کام پشتڕاستکردنەوە قبوڵ دەکەین."
+    },
+    {
+     "id": "s5",
+     "title": "جێبەجێکردن دوای پشتڕاستکردنەوە",
+     "narration": "کاتێک پشتڕاستکردنەوە دەردەکەوێت دوو ڕێگامان هەیە بۆ جێبەجێکردن. یەکەم چوونەژوورەوەی دەستبەجێیە بە نرخی بازاڕ لە داخستنی مۆمی پشتڕاستکردنەوە، ئەمە چوونەژوورەوە مسۆگەر دەکات بەڵام نرخێکی خراپتر دەدات. دووەم فەرمانێکی هەڵپەسێردراوی بچووکە لە یەکەم گەڕانەوەدا بۆ ئەو بنکە نوێیەی شکاندنەکەی لەسەر چوارچێوە بچووکەکە دروست کرد، ئەمە نرخێکی باشتر دەدات بەڵام لەوانەیە جێبەجێ نەبێت. stop loss لە ژێر ئەو نزمییە دادەنرێت کە نرخ لە ناو ناوچەکەدا دروستی کرد، بە پەراوێزێکی بچووک. ئامانج هەر ناوچە پێچەوانەکەی سەر چوارچێوەی بەرزترە. و لێرەدا یاسایەکی گرنگ هەیە: ئەگەر نرخ پێش پشتڕاستکردنەوە زۆر دوور کەوتەوە و قازانج کەمتر بوو لە دوو هێندەی مەترسی، مامەڵەکە جێدەهێڵین و ڕاوی ناکەین هەرچەندە ناوچەکە جوان بێت."
+    },
+    {
+     "id": "s6",
+     "title": "نموونەی فەرمانی هەڵپەسێردراو لەسەر یۆرۆ",
+     "narration": "لەسەر یۆرۆ بەرامبەر دۆلار، ناوچەیەکی خواستی تازە لەسەر یەک کاتژمێری هەیە لە نێوان 1.0745 و 1.0758، هەڵسەنگاندنەکەی شەش خاڵە، چارتی ڕۆژانە بەرزبوونەوەیە، و spread نزیکەی یەک خاڵە. لە کاتژمێر حەوتی بەیانی بە کاتی لەندەن Buy Limitمان لە 1.0759 دانا، واتە یەک خاڵ لە سەرووی لێوارەکە، stop loss لە 1.0742، واتە حەڤدە خاڵ، و ئامانج لە ناوچەی خستنەڕووی چوار کاتژمێری لە 1.0810، واتە پەنجا و یەک خاڵ، سێ هێندەی مەترسی. بە حسابی دە هەزار دۆلار، مەترسی یەک لە سەد، و بەهای خاڵ دە دۆلار بۆ هەر لۆتێک، قەبارەکە نزیکەی 0.58 لۆتە. مەرجی هەڵوەشاندنەوەشمان نووسی: ئەگەر فەرمانەکە پێش هەواڵێکی گرنگی ئەمریکی جێبەجێ نەکرا، سی خولەک پێشی هەڵیدەوەشێنینەوە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونەی چوونەژوورەوە بە پشتڕاستکردنەوە لەسەر زێڕ",
+     "narration": "لەسەر زێڕ، ناوچەیەکی خواست لەسەر یەک کاتژمێری هەیە لە نێوان 2352 و 2358، هەڵسەنگاندنەکەی چوار خاڵە، بۆیە پشتڕاستکردنەوە بە مەرج دادەنێین. لە 9:40ی بەیانی بە کاتی نیویۆرک نرخ چووە ناو ناوچەکە و نزمییەکی لە 2353 دروست کرد. لەسەر چارتی پێنج خولەکی دوایین لووتکەی نزمتر لە 2361 بوو، و لە 9:55دا مۆمێک لە 2363 لە سەرووی ئەوەوە داخرا، و ئەمە CHOCHە. لە 2363 کڕیمان بە stop loss لە 2351.5 لە ژێر نزمییەکە بە پەراوێز، واتە یازدە دۆلار و نیو. ئامانج لووتکەی چوارچێوەی بەرزترە لە 2390، واتە بیست و حەوت دۆلار، زیاتر لە دوو هێندەی مەترسی. بە دە هەزار دۆلار و مەترسی سەد دۆلار، کە هەر دۆلارێک جووڵە بەرامبەر سەد دۆلارە بۆ هەر لۆتێک، قەبارەکە 0.08 لۆتە."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم هێشتنەوەی فەرمانی هەڵپەسێردراوە پێش هەواڵێکی گەورە، بۆیە لە کاتی خلیسکاندندا جێبەجێ دەبێت و نرخ بە خێرایی لە stop loss تێدەپەڕێت. هەڵەی دووەم ئەوەیە شکاندنێک لە ناو مۆمێکی دانەخراودا بە پشتڕاستکردنەوە دابنێیت، چونکە مۆمەکە لەوانەیە دوای چەند خولەکێک بگەڕێتەوە و لە خوار ئاستەکە دابخرێت. هەڵەی سێیەم ڕاوکردنی مامەڵەیە دوای پشتڕاستکردنەوەیەکی دواکەوتوو، کاتێک نرخ لە ناوچەکە دوور کەوتۆتەوە و قازانج لاواز بووە. هەڵەی چوارەم نزیککردنەوەی فەرمانی هەڵپەسێردراوە لە نرخ چونکە دەترسیت لەدەستی بدەیت، بۆیە لە دەرەوەی ناوچەکە دەچیتە ژوورەوە. هەڵەی پێنجەم تێکەڵکردنی هەردوو شێوازە لە هەمان مامەڵەدا بەبێ پلان، وەک ئەوەی فەرمانێکی هەڵپەسێردراو دابنێیت و پاشان لە یەکەم مۆمی نیگەرانکەردا هەڵیبوەشێنیتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: شێوازی چوونەژوورەوە بە هەڵسەنگاندنی ناوچەکەوە ببەستەوە. پێنج یان شەش خاڵ لەگەڵ چوارچێوەی بەرزتر ڕێگە بە فەرمانی هەڵپەسێردراو دەدات لە لێوارە نزیکەکە، لەگەڵ پەراوێزی spread، stop loss لە پشت لێوارە دوورەکە، و مەرجی هەڵوەشاندنەوەی نووسراو پێش هەواڵەکان و لە کۆتایی ڕۆژدا. سێ یان چوار خاڵ پێویستی بە پشتڕاستکردنەوە هەیە لەسەر چوارچێوەیەکی بچووکتر، یان CHOCH بە مۆمێکی داخراو یان مۆمێکی ڕەتکردنەوەی بەهێزی داخراو، پاشان چوونەژوورەوە بە نرخی بازاڕ یان لە یەکەم گەڕانەوەدا. لە هەردوو حاڵەتدا، ئەگەر قازانج کەمتر بوو لە دوو هێندەی مەترسی مەچۆ ژوورەوە، قەبارە لە مەودای ڕاستەقینەی stop loss حیساب بکە بۆ ئەوەی مەترسی نزیکەی یەک لە سەد بمێنێتەوە، و جۆری چوونەژوورەوە لە دەفتەرەکەتدا تۆمار بکە بۆ بەراوردکردنی ئەنجامەکان."
+    }
+   ]
+  },
+  "sk-l4-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "كيف نقرأ هذه الأمثلة",
+     "narration": "في هذا الدرس نجمع كل ما تعلمناه في منهج SK ونطبقه على ثلاث حالات كاملة، من التحضير قبل الجلسة حتى المراجعة بعدها. اخترنا الحالات عمداً لتكون مختلفة: صفقة على الذهب انتهت بربح، وصفقة على اليورو انتهت بخسارة مع أنها نُفذت حسب الخطة، وفرصة على الجنيه تركناها ولم ندخلها أصلاً. الهدف أن ترى أن المنهج لا يعني الربح في كل مرة، بل يعني اتخاذ القرار نفسه بالطريقة نفسها في كل مرة. الأرقام هنا أمثلة تعليمية واقعية، والسوق الحقيقي قد يتصرف بشكل مختلف، لذلك ركّز على تسلسل القرارات لا على النتيجة."
+    },
+    {
+     "id": "s2",
+     "title": "قائمة الفحص",
+     "narration": "قبل كل صفقة نمر على القائمة نفسها بالترتيب. أولاً اتجاه الإطار اليومي أو الأربع ساعات. ثانياً المنطقة وتقييمها بنظام النقاط: الوقت في الأساس، وقوة الانطلاق، والحداثة. ثالثاً التوقيت: هل نحن في جلسة لندن أو نيويورك، وما الأخبار المهمة اليوم ومتى. رابعاً أسلوب الدخول المناسب للتقييم، أمر معلّق أو تأكيد. خامساً الوقف خلف المنطقة والهدف عند المنطقة المعاكسة، بعائد لا يقل عن ضعفي المخاطرة. سادساً الحجم بحيث تبقى المخاطرة نحو واحد بالمئة. وسابعاً خطة الإدارة: متى نغلق الجزء الأول، ومتى ننقل الوقف إلى التعادل. إذا فشل بند واحد فلا صفقة."
+    },
+    {
+     "id": "s3",
+     "title": "الذهب: التحضير",
+     "narration": "المثال الأول على الذهب. في السابعة صباحاً بتوقيت لندن بدأنا التحضير. الإطار اليومي صاعد بقمم وقيعان أعلى. على الأربع ساعات منطقة طلب بين 2318 و2326، أساسها شمعتان، وانطلق منها السعر إلى 2365 كاسراً القمة السابقة عند 2350 بإغلاق، أي انطلاق بنحو خمسة أضعاف عرض الأساس. لكن السعر لمسها مرة واحدة من قبل، فالتقييم خمس نقاط من ست، وهذا يسمح بأمر معلّق. نطاق جلسة آسيا كان بين 2334 و2342. وفي التقويم بيانات التضخم الأمريكية في الثامنة والنصف صباحاً بتوقيت نيويورك، أي الواحدة والنصف ظهراً بتوقيت لندن."
+    },
+    {
+     "id": "s4",
+     "title": "الذهب: الدخول",
+     "narration": "الخطة المكتوبة: Buy Limit عند 2326.5، أي فوق الحافة بنصف دولار لتغطية الفرق السعري، ووقف عند 2316، أي دولاران تحت المنطقة، فتكون المخاطرة عشرة دولارات ونصفاً. الهدف الأول عند 2337، أي مسافة تساوي المخاطرة، والهدف الثاني عند القمة 2365. حسابنا عشرة آلاف دولار، وكل دولار حركة يساوي مئة دولار للوت، فالحجم 0.08 لوت، والخسارة القصوى أربعة وثمانون دولاراً، أقل قليلاً من واحد بالمئة. مع افتتاح لندن كسر السعر قاع آسيا عند 2334 وواصل الهبوط، ثم في الثامنة وعشر دقائق نُفذ الأمر عند 2326.5، وصنع السعر قاعاً عند 2321 داخل المنطقة ثم ارتد."
+    },
+    {
+     "id": "s5",
+     "title": "الذهب: الإدارة والخروج",
+     "narration": "في التاسعة وأربعين دقيقة بتوقيت لندن وصل السعر إلى الهدف الأول 2337. أغلقنا نصف الصفقة، أي 0.04 لوت، بربح اثنين وأربعين دولاراً، ونقلنا الوقف إلى 2327، أي التعادل مع تغطية الفرق. قبل بيانات التضخم لم نفتح أي صفقة جديدة، وأبقينا النصف الثاني لأن وقفه عند التعادل، مع العلم أن الانزلاق وقت الخبر قد يسبب خسارة صغيرة. بعد البيانات صعد السعر بقوة، وفي الواحدة وخمسين دقيقة ظهراً وصل إلى 2365 فأُغلق الجزء الثاني بربح مئة وأربعة وخمسين دولاراً. المجموع مئة وستة وتسعون دولاراً، أي أكثر من ضعفي المخاطرة. ولو انعكس السعر بعد الهدف الأول، لكانت النتيجة ربحاً صغيراً فقط."
+    },
+    {
+     "id": "s6",
+     "title": "اليورو: صفقة خاسرة حسب الخطة",
+     "narration": "المثال الثاني على اليورو مقابل الدولار. الإطار اليومي هابط، وعلى إطار الساعة منطقة عرض حديثة بين 1.0920 و1.0932، أساسها شمعتان وانطلاقها كسر قاعاً سابقاً بإغلاق، والتقييم ست نقاط. وضعنا Sell Limit عند 1.0920، ووقفاً عند 1.0936 بعد إضافة هامش الفرق، أي ست عشرة نقطة، وهدفاً عند منطقة الطلب على الأربع ساعات عند 1.0870، أي ثلاثة أضعاف المخاطرة. الحجم 0.62 لوت. نُفذ الأمر في العاشرة وربع بتوقيت لندن، وتحرك السعر قليلاً لصالحنا ثم عاد. وفي الواحدة والنصف ظهراً جاء تصريح مفاجئ رفع اليورو بقوة، فأغلقت شمعة فوق الوقف، وخسرنا تسعة وتسعين دولاراً، أي مخاطرة واحدة كاملة."
+    },
+    {
+     "id": "s7",
+     "title": "الجنيه: صفقة تركناها",
+     "narration": "المثال الثالث على الجنيه مقابل الدولار. على الأربع ساعات منطقة طلب بين 1.2710 و1.2745 تقييمها أربع نقاط، فالشرط تأكيد على إطار الخمس عشرة دقيقة. والهدف منطقة العرض عند 1.2800. في الثامنة صباحاً بتوقيت لندن وصل السعر إلى 1.2730 وصنع قاعاً عند 1.2716، لكن التأكيد لم يظهر. وفي العاشرة والنصف فقط أغلقت شمعة فوق آخر قمة أدنى عند 1.2765، فأصبح الدخول عند 1.2768 والوقف عند 1.2714، أي أربع وخمسون نقطة، مقابل عائد اثنتين وثلاثين نقطة فقط حتى الهدف. العائد أقل من المخاطرة، فتركنا الصفقة. ثم وصل السعر إلى 1.2800 فعلاً، وكان قرار الترك صحيحاً مع ذلك."
+    },
+    {
+     "id": "s8",
+     "title": "الدروس والأخطاء الشائعة",
+     "narration": "ماذا تعلمنا من الأمثلة الثلاثة؟ صفقة الذهب ربحت لأن السوق تعاون، لا لأننا كنا أذكى. وصفقة اليورو خسرت مع أنها كانت جيدة، والخسارة بقيت مخاطرة واحدة فقط لأن الحجم كان محسوباً. وصفقة الجنيه علمتنا أن الدخول المتأخر يحوّل الفكرة الجيدة إلى صفقة سيئة. أما الأخطاء الشائعة فأولها الحكم على الصفقة بنتيجتها لا بالتزامها بالخطة. وثانيها الدخول في صفقة الجنيه لأن السعر وصل إلى الهدف لاحقاً، أي الندم الذي يدفعك لكسر قاعدة العائد. وثالثها إلغاء نقل الوقف إلى التعادل قبل الأخبار. ورابعها زيادة الحجم بعد صفقة الذهب الرابحة."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: كل صفقة تمر على القائمة نفسها، الاتجاه، والمنطقة وتقييمها، والتوقيت والأخبار، وأسلوب الدخول، والوقف والهدف بعائد لا يقل عن ضعفي المخاطرة، والحجم بنحو واحد بالمئة، وخطة الإدارة. اكتب الخطة قبل الجلسة، ونفذها كما هي، وإذا لم تتحقق الشروط فلا تدخل حتى لو وصل السعر إلى الهدف لاحقاً. بعد كل صفقة سجّل في دفترك هل التزمت بالخطة، بغض النظر عن الربح أو الخسارة، ولا تحكم على المنهج من صفقة واحدة. بعد عشرين أو ثلاثين صفقة ستبدأ النتائج تعكس جودة المنهج، لا حظ يوم واحد، وهذا وحده ما يمكن البناء عليه."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "How to Read These Examples",
+     "narration": "In this lesson we bring together everything we have learned in the SK method and apply it to three complete cases, from preparation before the session to the review after it. We chose the cases deliberately to be different: a gold trade that ended in profit, a EURUSD trade that ended in a loss even though it was executed according to plan, and a GBPUSD opportunity that we skipped and never entered. The goal is for you to see that the method does not mean winning every time; it means making the same decision in the same way every time. The numbers here are realistic teaching examples, and the real market may behave differently, so focus on the sequence of decisions, not on the outcome."
+    },
+    {
+     "id": "s2",
+     "title": "The Checklist",
+     "narration": "Before every trade we go through the same list in order. First, the direction of the daily or four-hour chart. Second, the zone and its rating with the points system: time at the base, departure strength, and freshness. Third, timing: are we in the London or New York session, and what important news is due today and when. Fourth, the entry style that fits the rating, a pending order or confirmation. Fifth, the stop behind the zone and the target at the opposing zone, with a reward of at least twice the risk. Sixth, the size, so that risk stays around one percent. And seventh, the management plan: when we close the first part, and when we move the stop to breakeven. If a single item fails, there is no trade."
+    },
+    {
+     "id": "s3",
+     "title": "Gold: Preparation",
+     "narration": "The first example is on gold. At seven in the morning London time we started preparing. The daily chart is rising with higher highs and higher lows. On the four-hour chart there is a demand zone between 2318 and 2326, with a two-candle base, from which price departed to 2365, breaking the previous high at 2350 on a close, a departure of about five times the base width. But price had touched it once before, so the rating is five out of six, which allows a pending order. The Asian session range was between 2334 and 2342. And the calendar shows US inflation data at eight thirty in the morning New York time, which is one thirty in the afternoon London time."
+    },
+    {
+     "id": "s4",
+     "title": "Gold: Entry",
+     "narration": "The written plan: a Buy Limit at 2326.5, half a dollar above the edge to cover the spread, and a stop at 2316, two dollars below the zone, so the risk is ten and a half dollars. The first target is at 2337, a distance equal to the risk, and the second target is the 2365 high. Our account is ten thousand dollars, and each dollar of movement equals one hundred dollars per lot, so the size is 0.08 lots, and the maximum loss is eighty-four dollars, slightly under one percent. At the London open price broke the Asian low at 2334 and kept falling, then at eight ten the order was filled at 2326.5, and price made a low at 2321 inside the zone and bounced."
+    },
+    {
+     "id": "s5",
+     "title": "Gold: Management and Exit",
+     "narration": "At nine forty London time price reached the first target at 2337. We closed half the trade, 0.04 lots, for a profit of forty-two dollars, and moved the stop to 2327, breakeven plus the spread. Before the inflation data we opened no new trades, and we kept the second half because its stop was at breakeven, knowing that slippage at news time could still cause a small loss. After the data price rose strongly, and at one fifty in the afternoon it reached 2365, closing the second part for a profit of one hundred fifty-four dollars. The total was one hundred ninety-six dollars, more than twice the risk. Had price reversed after the first target, the result would have been only a small profit."
+    },
+    {
+     "id": "s6",
+     "title": "EURUSD: A Losing Trade by the Plan",
+     "narration": "The second example is on EURUSD. The daily chart is falling, and on the one-hour chart there is a fresh supply zone between 1.0920 and 1.0932, with a two-candle base and a departure that broke a previous low on a close, rated six points. We placed a Sell Limit at 1.0920, a stop at 1.0936 after adding the spread margin, which is sixteen pips, and a target at the four-hour demand zone at 1.0870, three times the risk. The size was 0.62 lots. The order was filled at ten fifteen London time, price moved a little in our favor and then came back. At one thirty in the afternoon a surprise statement lifted the euro sharply, a candle closed above the stop, and we lost ninety-nine dollars, one full unit of risk."
+    },
+    {
+     "id": "s7",
+     "title": "GBPUSD: A Trade We Skipped",
+     "narration": "The third example is on GBPUSD. On the four-hour chart there is a demand zone between 1.2710 and 1.2745 rated four points, so the condition is confirmation on the fifteen-minute chart. The target is the supply zone at 1.2800. At eight in the morning London time price reached 1.2730 and made a low at 1.2716, but confirmation did not appear. Only at ten thirty did a candle close above the last lower high at 1.2765, so the entry would be 1.2768 and the stop 1.2714, fifty-four pips, against a reward of only thirty-two pips to the target. The reward was less than the risk, so we skipped the trade. Price did reach 1.2800, and the decision to skip was still correct."
+    },
+    {
+     "id": "s8",
+     "title": "Lessons and Common Mistakes",
+     "narration": "What did we learn from the three examples? The gold trade won because the market cooperated, not because we were smarter. The EURUSD trade lost even though it was a good trade, and the loss stayed at one unit of risk because the size was calculated. The GBPUSD case taught us that a late entry turns a good idea into a bad trade. As for common mistakes, the first is judging a trade by its outcome rather than by whether it followed the plan. The second is entering trades like the GBPUSD one because price later reached the target, meaning regret that pushes you to break the reward rule. The third is skipping the move to breakeven before news. The fourth is increasing size after the winning gold trade."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "The practical rule: every trade goes through the same list: direction, the zone and its rating, timing and news, entry style, stop and target with a reward of at least twice the risk, size at about one percent, and the management plan. Write the plan before the session and execute it as written, and if the conditions are not met, do not enter, even if price later reaches the target. After every trade, record in your journal whether you followed the plan, regardless of profit or loss. Do not judge the method by a single trade. After twenty or thirty trades, your results will start to reflect the quality of the method rather than the luck of a single day, and that alone is something you can build on."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چۆن ئەم نموونانە بخوێنینەوە",
+     "narration": "لەم وانەیەدا هەموو ئەوەی لە ڕێبازی SK فێری بووین کۆدەکەینەوە و لەسەر سێ حاڵەتی تەواو جێبەجێی دەکەین، لە ئامادەکاری پێش دانیشتنەوە تا پێداچوونەوەی دوای. حاڵەتەکانمان بە ئەنقەست جیاواز هەڵبژارد: مامەڵەیەکی زێڕ کە بە قازانج کۆتایی هات، مامەڵەیەکی یۆرۆ کە بە زیان کۆتایی هات هەرچەندە بەپێی پلان جێبەجێ کرا، و دەرفەتێکی پاوەند کە جێمانهێشت و هەرگیز نەچووینە ناوی. ئامانج ئەوەیە ببینیت ڕێبازەکە واتای قازانج نییە لە هەموو جارێکدا، بەڵکو واتای وەرگرتنی هەمان بڕیارە بە هەمان شێوە لە هەموو جارێکدا. ژمارەکان لێرەدا نموونەی فێرکاری واقیعین، و بازاڕی ڕاستەقینە لەوانەیە جیاواز ڕەفتار بکات، بۆیە سەرنج بخە سەر زنجیرەی بڕیارەکان نەک ئەنجامەکە."
+    },
+    {
+     "id": "s2",
+     "title": "لیستی پشکنین",
+     "narration": "پێش هەر مامەڵەیەک بە ڕیز بە هەمان لیستدا تێدەپەڕین. یەکەم، ئاڕاستەی چارتی ڕۆژانە یان چوار کاتژمێری. دووەم، ناوچەکە و هەڵسەنگاندنەکەی بە سیستەمی خاڵ: کات لە بنکەدا، هێزی دەرچوون، و تازەیی. سێیەم، کات: ئایا لە دانیشتنی لەندەن یان نیویۆرکداین، و ئەمڕۆ چ هەواڵێکی گرنگ هەیە و کەی. چوارەم، ئەو شێوازی چوونەژوورەوەیەی لەگەڵ هەڵسەنگاندنەکە دەگونجێت، فەرمانی هەڵپەسێردراو یان پشتڕاستکردنەوە. پێنجەم، stop loss لە پشت ناوچەکە و ئامانج لە ناوچە پێچەوانەکە، بە قازانجێک کەمتر نەبێت لە دوو هێندەی مەترسی. شەشەم، قەبارە بە شێوەیەک کە مەترسی نزیکەی یەک لە سەد بمێنێتەوە. و حەوتەم، پلانی بەڕێوەبردن: کەی بەشی یەکەم دادەخەین، و کەی stop loss دەگوازینەوە بۆ خاڵی یەکسانی. ئەگەر یەک خاڵ سەرنەکەوت، مامەڵە نییە."
+    },
+    {
+     "id": "s3",
+     "title": "زێڕ: ئامادەکاری",
+     "narration": "نموونەی یەکەم لەسەر زێڕە. لە کاتژمێر حەوتی بەیانی بە کاتی لەندەن دەستمان بە ئامادەکاری کرد. چارتی ڕۆژانە بەرزبوونەوەیە بە لووتکە و نزمی بەرزتر. لەسەر چوار کاتژمێری ناوچەیەکی خواست هەیە لە نێوان 2318 و 2326، بنکەکەی دوو مۆمە، و نرخ لێیەوە دەرچوو بۆ 2365 و لووتکەی پێشووی لە 2350 بە داخستن شکاند، واتە دەرچوونێک نزیکەی پێنج هێندەی پانی بنکە. بەڵام نرخ پێشتر جارێک دەستی لێدابوو، بۆیە هەڵسەنگاندنەکە پێنج لە شەشە، کە ڕێگە بە فەرمانی هەڵپەسێردراو دەدات. مەودای دانیشتنی ئاسیا لە نێوان 2334 و 2342 بوو. و لە ڕۆژژمێردا داتای هەڵاوسانی ئەمریکی هەیە لە هەشت و نیوی بەیانی بە کاتی نیویۆرک، واتە یەک و نیوی پاش نیوەڕۆ بە کاتی لەندەن."
+    },
+    {
+     "id": "s4",
+     "title": "زێڕ: چوونەژوورەوە",
+     "narration": "پلانی نووسراو: Buy Limit لە 2326.5، واتە نیو دۆلار لە سەرووی لێوارەکە بۆ داپۆشینی spread، و stop loss لە 2316، واتە دوو دۆلار لە ژێر ناوچەکە، کەواتە مەترسی دە دۆلار و نیوە. ئامانجی یەکەم لە 2337، مەودایەک یەکسان بە مەترسی، و ئامانجی دووەم لووتکەی 2365. حسابەکەمان دە هەزار دۆلارە، و هەر دۆلارێک جووڵە بەرامبەر سەد دۆلارە بۆ هەر لۆتێک، بۆیە قەبارەکە 0.08 لۆتە، و زۆرترین زیان هەشتا و چوار دۆلارە، کەمێک کەمتر لە یەک لە سەد. لەگەڵ کرانەوەی لەندەن نرخ نزمی ئاسیای لە 2334 شکاند و بەردەوام بوو لە دابەزین، پاشان لە هەشت و دە خولەکدا فەرمانەکە لە 2326.5 جێبەجێ کرا، و نرخ نزمییەکی لە 2321 لە ناو ناوچەکەدا دروست کرد و گەڕایەوە."
+    },
+    {
+     "id": "s5",
+     "title": "زێڕ: بەڕێوەبردن و دەرچوون",
+     "narration": "لە 9:40 بە کاتی لەندەن نرخ گەیشتە ئامانجی یەکەم لە 2337. نیوەی مامەڵەکەمان داخست، واتە 0.04 لۆت، بە قازانجی چل و دوو دۆلار، و stop lossمان گواستەوە بۆ 2327، واتە خاڵی یەکسانی لەگەڵ داپۆشینی spread. پێش داتای هەڵاوسان هیچ مامەڵەیەکی نوێمان نەکردەوە، و نیوەی دووەممان هێشتەوە چونکە stop lossەکەی لە خاڵی یەکسانی بوو، لەگەڵ زانینی ئەوەی خلیسکاندن لە کاتی هەواڵدا لەوانەیە زیانێکی بچووک دروست بکات. دوای داتاکە نرخ بە بەهێزی بەرزبووەوە، و لە 13:50دا گەیشتە 2365 و بەشی دووەم بە قازانجی سەد و پەنجا و چوار دۆلار داخرا. کۆی گشتی سەد و نەوەد و شەش دۆلار بوو، زیاتر لە دوو هێندەی مەترسی. ئەگەر نرخ دوای ئامانجی یەکەم بگەڕایەتەوە، ئەنجامەکە تەنها قازانجێکی بچووک دەبوو."
+    },
+    {
+     "id": "s6",
+     "title": "یۆرۆ: مامەڵەیەکی زیانکردوو بەپێی پلان",
+     "narration": "نموونەی دووەم لەسەر یۆرۆ بەرامبەر دۆلارە. چارتی ڕۆژانە دابەزینە، و لەسەر یەک کاتژمێری ناوچەیەکی خستنەڕووی تازە هەیە لە نێوان 1.0920 و 1.0932، بنکەکەی دوو مۆمە و دەرچوونەکەی نزمییەکی پێشووی بە داخستن شکاند، و هەڵسەنگاندنەکەی شەش خاڵە. Sell Limitمان لە 1.0920 دانا، stop loss لە 1.0936 دوای زیادکردنی پەراوێزی spread، واتە شازدە خاڵ، و ئامانج لە ناوچەی خواستی چوار کاتژمێری لە 1.0870، سێ هێندەی مەترسی. قەبارەکە 0.62 لۆت بوو. فەرمانەکە لە دە و چارەکی بە کاتی لەندەن جێبەجێ کرا، نرخ کەمێک بە قازانجمان جووڵا و پاشان گەڕایەوە. لە یەک و نیوی پاش نیوەڕۆ لێدوانێکی چاوەڕواننەکراو یۆرۆی بە بەهێزی بەرزکردەوە، مۆمێک لە سەرووی stop loss داخرا، و نەوەد و نۆ دۆلارمان دۆڕاند، واتە یەک یەکەی تەواوی مەترسی."
+    },
+    {
+     "id": "s7",
+     "title": "پاوەند: مامەڵەیەک کە جێمانهێشت",
+     "narration": "نموونەی سێیەم لەسەر پاوەند بەرامبەر دۆلارە. لەسەر چوار کاتژمێری ناوچەیەکی خواست هەیە لە نێوان 1.2710 و 1.2745 هەڵسەنگاندنەکەی چوار خاڵە، بۆیە مەرجەکە پشتڕاستکردنەوەیە لەسەر چارتی پازدە خولەکی. ئامانج ناوچەی خستنەڕووە لە 1.2800. لە هەشتی بەیانی بە کاتی لەندەن نرخ گەیشتە 1.2730 و نزمییەکی لە 1.2716 دروست کرد، بەڵام پشتڕاستکردنەوە دەرنەکەوت. تەنها لە دە و نیودا مۆمێک لە سەرووی دوایین لووتکەی نزمتر لە 1.2765 داخرا، بۆیە چوونەژوورەوە دەبوو لە 1.2768 بێت و stop loss لە 1.2714، واتە پەنجا و چوار خاڵ، بەرامبەر قازانجی تەنها سی و دوو خاڵ تا ئامانج. قازانج کەمتر بوو لە مەترسی، بۆیە مامەڵەکەمان جێهێشت. نرخ بەڕاستی گەیشتە 1.2800، و بڕیاری جێهێشتن هەر دروست بوو."
+    },
+    {
+     "id": "s8",
+     "title": "وانەکان و هەڵە باوەکان",
+     "narration": "لە سێ نموونەکە چیمان فێربوو؟ مامەڵەی زێڕ قازانجی کرد چونکە بازاڕ هاوکاری کرد، نەک چونکە ئێمە زیرەکتر بووین. مامەڵەی یۆرۆ زیانی کرد هەرچەندە مامەڵەیەکی باش بوو، و زیانەکە تەنها یەک یەکەی مەترسی مایەوە چونکە قەبارەکە حیساب کرابوو. حاڵەتی پاوەند فێری کردین کە چوونەژوورەوەی دواکەوتوو بیرۆکەیەکی باش دەکاتە مامەڵەیەکی خراپ. هەڵە باوەکانیش، یەکەمیان حوکمدانە لەسەر مامەڵە بە ئەنجامەکەی نەک بە پابەندبوونی بە پلانەوە. دووەم چوونە ناو مامەڵەی وەک پاوەندە چونکە نرخ دواتر گەیشتە ئامانج، واتە پەشیمانییەک کە پاڵت پێوە دەنێت یاسای قازانج بشکێنیت. سێیەم وازهێنانە لە گواستنەوەی stop loss بۆ خاڵی یەکسانی پێش هەواڵەکان. چوارەم زیادکردنی قەبارەیە دوای مامەڵە قازانجکردووەکەی زێڕ."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: هەر مامەڵەیەک بە هەمان لیستدا تێدەپەڕێت: ئاڕاستە، ناوچەکە و هەڵسەنگاندنەکەی، کات و هەواڵەکان، شێوازی چوونەژوورەوە، stop loss و ئامانج بە قازانجێک کەمتر نەبێت لە دوو هێندەی مەترسی، قەبارە بە نزیکەی یەک لە سەد، و پلانی بەڕێوەبردن. پلانەکە پێش دانیشتن بنووسە و وەک خۆی جێبەجێی بکە، و ئەگەر مەرجەکان نەهاتنەدی مەچۆ ژوورەوە، تەنانەت ئەگەر نرخ دواتر بگاتە ئامانج. دوای هەر مامەڵەیەک لە دەفتەرەکەتدا تۆمار بکە ئایا پابەندی پلانەکە بوویت، بێ گوێدانە قازانج یان زیان. حوکم لەسەر ڕێبازەکە بە یەک مامەڵە مەدە. دوای بیست یان سی مامەڵە، ئەنجامەکانت دەست دەکەن بە ڕەنگدانەوەی کوالیتی ڕێبازەکە نەک بەختی یەک ڕۆژ، و تەنها ئەمەیە کە دەتوانیت لەسەری بنیات بنێیت."
+    }
+   ]
+  },
+  "sk-l5-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا علم النفس",
+     "narration": "تعلمنا في منهج SK رسم المناطق وتقييمها، واختيار أسلوب الدخول، وإدارة الصفقة. لكن كثيراً من المتداولين يعرفون كل ذلك ثم يخسرون، والسبب غالباً ليس التحليل بل التنفيذ. الخوف يجعلك تغلق الصفقة الرابحة مبكراً، والطمع يجعلك تلغي الهدف، والغضب بعد الخسارة يجعلك تدخل صفقة بلا خطة. ميزة منهج SK أنه منهج رد فعل لا تنبؤ، فأنت لا تحتاج أن تكون محقاً في توقع السوق، بل تحتاج فقط أن تنفذ ما كتبته. لذلك فإن علم النفس هنا ليس كلاماً عاماً عن الثقة بالنفس، بل قواعد عملية تحمي خطتك من مشاعرك."
+    },
+    {
+     "id": "s2",
+     "title": "الصبر والانتظار",
+     "narration": "أصعب ما في منهج SK هو الانتظار. في معظم الأيام لا يصل السعر إلى منطقتك، أو يصل دون أن يتحقق شرطك. هنا يظهر الخوف من فوات الفرصة، وهو الشعور بأن السوق يتحرك وأنت خارجه، فتبدأ بالبحث عن أي سبب للدخول. العلاج عملي: قرار واحد في كل جلسة، ومنطقة أو منطقتان فقط مكتوبتان قبل الافتتاح. إذا لم يحدث ما كتبته، فيومك ناجح لأنك حميت رأس مالك. وتذكر أن الأمر المعلّق يساعد على الصبر، لأنه ينفذ خطتك دون أن تحدق في الشارت طوال الوقت. يوم بلا صفقات ليس يوماً ضائعاً، بل جزء طبيعي من المنهج."
+    },
+    {
+     "id": "s3",
+     "title": "تقبّل الخسارة والتفكير بسلسلة",
+     "narration": "الخسارة في منهج SK ليست فشلاً، بل تكلفة عمل. لنأخذ مثالاً حسابياً. إذا كانت نسبة نجاحك خمسة وأربعين بالمئة، ومتوسط ربحك مرتين ونصف المخاطرة، فإن كل مئة صفقة تعطي خمساً وأربعين رابحة بمئة واثني عشر ونصف وحدة مخاطرة، وخمساً وخمسين خاسرة بخمس وخمسين وحدة. الصافي نحو سبعة وخمسين بالمئة من وحدة المخاطرة لكل صفقة في المتوسط. لكن داخل هذه المئة صفقة من الطبيعي أن تمر بست أو ثماني خسائر متتالية. مع مخاطرة واحد بالمئة، ثماني خسائر تعني تراجعاً بنحو 7.7 بالمئة فقط، وهذا يمكن تحمله نفسياً ومالياً. لهذا نفكر بالسلسلة لا بالصفقة الواحدة."
+    },
+    {
+     "id": "s4",
+     "title": "الانتقام والثقة الزائدة",
+     "narration": "هناك فخان متعاكسان. الأول هو التداول الانتقامي بعد الخسارة، حين تشعر أن السوق مدين لك، فتدخل فوراً بلا منطقة وبحجم أكبر لتعويض ما خسرت. والثاني هو الثقة الزائدة بعد سلسلة أرباح، حين تظن أنك فهمت السوق، فترفع المخاطرة وتخفف الشروط. علاج الفخين واحد: قواعد مكتوبة لا تُناقش أثناء الجلسة. مثلاً: بعد خسارتين في اليوم نتوقف حتى اليوم التالي. وإذا وصل التراجع الأسبوعي إلى ثلاثة بالمئة نتوقف حتى الأسبوع القادم ونراجع. والمخاطرة تبقى نحو واحد بالمئة مهما كانت النتائج الأخيرة، فلا نضاعفها بعد الخسارة ولا بعد الربح."
+    },
+    {
+     "id": "s5",
+     "title": "دفتر التداول",
+     "narration": "دفتر التداول هو الأداة التي تحوّل التجربة إلى معرفة. بعد كل صفقة، وحتى بعد كل قرار بعدم الدخول، نسجل بيانات ثابتة: التاريخ ووقت الجلسة، والأداة، والإطار الذي جاءت منه المنطقة، وتقييمها بالنقاط، ونوع الدخول، أمر معلّق أم تأكيد، وسعر الدخول والوقف والهدف، والنتيجة بوحدات المخاطرة، أي كم مرة من المخاطرة ربحت أو خسرت. ونضيف صورتين للشارت، قبل الدخول وبعد الخروج. وأهم خانتين: هل التزمت بالخطة، نعم أم لا؟ وما شعورك قبل الدخول من واحد إلى خمسة؟ هاتان الخانتان تكشفان الأخطاء النفسية التي لا تظهر في الأرقام وحدها."
+    },
+    {
+     "id": "s6",
+     "title": "المراجعة الأسبوعية",
+     "narration": "في نهاية كل أسبوع نخصص ساعة للمراجعة. نحسب ثلاثة أرقام: نسبة النجاح، ومتوسط الربح بوحدات المخاطرة، والتوقع، أي متوسط ما تكسبه أو تخسره في كل صفقة. ثم نقسم الصفقات إلى مجموعات: حسب تقييم المنطقة، وحسب نوع الدخول، وحسب الجلسة، وحسب الالتزام بالخطة. الهدف أن نجد التسريب، أي المجموعة التي تأكل أرباحك. لكن انتبه لقاعدتين. لا نغير أي قاعدة قبل خمسين صفقة على الأقل، لأن العدد القليل يخدع. ونغير قاعدة واحدة فقط في كل مرة، حتى نعرف أثرها بوضوح. المراجعة ليست جلد ذات، بل بحث هادئ عن تحسين واحد قابل للقياس."
+    },
+    {
+     "id": "s7",
+     "title": "مثال مراجعة: عشرون صفقة",
+     "narration": "لنفترض مراجعة لعشرين صفقة على اليورو والجنيه. ربحت تسع صفقات بمجموع 21.6 وحدة مخاطرة، وخسرت إحدى عشرة صفقة بإحدى عشرة وحدة، فالصافي 10.6 وحدة، أي نحو نصف وحدة لكل صفقة. الآن نقسم. الصفقات على مناطق بتقييم خمس أو ست نقاط كانت اثنتي عشرة صفقة، وصافيها موجب 12.5 وحدة. والصفقات على مناطق بتقييم ثلاث أو أربع كانت ثماني صفقات، وصافيها سالب 1.9 وحدة. ومن بين الخسائر ثلاث صفقات دخلناها على شمعة لم تُغلق. القرار: نشترط تقييم خمس نقاط فما فوق، ونمنع الدخول قبل الإغلاق. لكن العينة ما زالت صغيرة، فنواصل القياس قبل الحكم النهائي."
+    },
+    {
+     "id": "s8",
+     "title": "مثال نفسي على الذهب",
+     "narration": "مثال من الذهب يوضح الفرق بين القاعدة والشعور. حساب عشرة آلاف دولار. في العاشرة صباحاً بتوقيت نيويورك دخل متداول بيعاً من منطقة عرض عند 2380 بوقف عند 2388، بحجم 0.12 لوت، وضُرب الوقف فخسر ستة وتسعين دولاراً. بدافع الغضب دخل فوراً شراءً بلا منطقة وبحجم 0.25 لوت ووقف ثمانية دولارات، فخسر مئتي دولار أخرى. المجموع نحو ثلاثة بالمئة في ساعة واحدة. لو طبق قاعدة الخسارتين في اليوم، والمخاطرة الثابتة، لما دخل الصفقة الثانية أصلاً، ولكانت خسارة اليوم نحو واحد بالمئة فقط. الخسارة الأولى كانت جزءاً من المنهج، أما الثانية فكانت قراراً عاطفياً."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو الحكم على نفسك من نتيجة يوم أو أسبوع، فتغير المنهج كله بعد ثلاث خسائر متتالية. الخطأ الثاني هو كتابة الدفتر بشكل متقطع، أو تسجيل الصفقات الرابحة فقط، فتصبح المراجعة مبنية على بيانات ناقصة ومضللة. الخطأ الثالث هو تحريك الوقف بعيداً عندما يقترب السعر منه، على أمل أن يعود، فتتحول خسارة صغيرة إلى كبيرة. الخطأ الرابع هو التداول وأنت متعب أو غاضب أو تحت ضغط مالي، فالحالة النفسية جزء من شروط الدخول. والخطأ الخامس هو تغيير عدة قواعد دفعة واحدة بعد المراجعة، فلا تعرف أي تغيير حسّن النتائج وأيها أفسدها."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: اكتب قواعدك النفسية كما تكتب قواعد الدخول. قرار واحد في كل جلسة، والتوقف بعد خسارتين في اليوم، والتوقف إذا وصل التراجع الأسبوعي إلى ثلاثة بالمئة، ومخاطرة ثابتة بنحو واحد بالمئة لا تتغير بعد ربح أو خسارة. لا تتداول وأنت متعب أو غاضب. سجّل كل صفقة وكل قرار بعدم الدخول في الدفتر، مع خانة الالتزام بالخطة وخانة الشعور. وفي نهاية كل أسبوع احسب نسبة النجاح ومتوسط الربح والتوقع، وابحث عن التسريب، وغيّر قاعدة واحدة فقط بعد خمسين صفقة على الأقل. الانضباط في التنفيذ والمراجعة هو ما يجعل المنهج يعمل على المدى الطويل."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why Psychology",
+     "narration": "In the SK method we have learned to draw and rate zones, choose an entry style, and manage the trade. But many traders know all of this and still lose, and the reason is usually not analysis but execution. Fear makes you close a winning trade early, greed makes you cancel the target, and anger after a loss makes you enter a trade with no plan. The advantage of the SK method is that it is reactive, not predictive, so you do not need to be right about where the market goes; you only need to execute what you wrote. That is why psychology here is not general talk about self-confidence, but practical rules that protect your plan from your emotions."
+    },
+    {
+     "id": "s2",
+     "title": "Patience and Waiting",
+     "narration": "The hardest part of the SK method is waiting. On most days price does not reach your zone, or it reaches it without your condition being met. This is where the fear of missing out appears, the feeling that the market is moving while you are outside it, so you start looking for any reason to enter. The cure is practical: one decision per session, and only one or two zones written before the open. If what you wrote does not happen, your day is a success because you protected your capital. And remember that a pending order helps with patience, because it executes your plan without you staring at the chart all the time. A day without trades is not a wasted day; it is a normal part of the method."
+    },
+    {
+     "id": "s3",
+     "title": "Accepting Losses and Thinking in Series",
+     "narration": "A loss in the SK method is not failure; it is a business cost. Let us take a numerical example. If your win rate is forty-five percent and your average win is two and a half times the risk, then every hundred trades give forty-five winners worth one hundred twelve and a half units of risk, and fifty-five losers worth fifty-five units. The net is about fifty-seven percent of a risk unit per trade on average. But within those hundred trades it is normal to go through six or eight losses in a row. With one percent risk, eight losses mean a drawdown of only about 7.7 percent, which is bearable both emotionally and financially. That is why we think in series, not in single trades."
+    },
+    {
+     "id": "s4",
+     "title": "Revenge and Overconfidence",
+     "narration": "There are two opposite traps. The first is revenge trading after a loss, when you feel the market owes you, so you enter immediately with no zone and a bigger size to recover what you lost. The second is overconfidence after a winning streak, when you think you have figured out the market, so you raise your risk and loosen the conditions. The cure for both traps is the same: written rules that are not debated during the session. For example: after two losses in a day, we stop until the next day. If the weekly drawdown reaches three percent, we stop until next week and review. And risk stays around one percent whatever the recent results, so we never double it after a loss or after a win."
+    },
+    {
+     "id": "s5",
+     "title": "The Trading Journal",
+     "narration": "The trading journal is the tool that turns experience into knowledge. After every trade, and even after every decision not to enter, we record fixed data: the date and session time, the instrument, the timeframe the zone came from, its points rating, the entry type, pending order or confirmation, the entry price, stop and target, and the result in risk units, meaning how many times the risk you won or lost. We add two chart screenshots, before entry and after exit. And the two most important fields: did you follow the plan, yes or no? And how did you feel before entering, from one to five? These two fields reveal the psychological mistakes that do not show up in the numbers alone."
+    },
+    {
+     "id": "s6",
+     "title": "The Weekly Review",
+     "narration": "At the end of each week we set aside an hour for review. We calculate three numbers: the win rate, the average win in risk units, and the expectancy, meaning the average amount you win or lose per trade. Then we split the trades into groups: by zone rating, by entry type, by session, and by whether the plan was followed. The goal is to find the leak, meaning the group that eats your profits. But keep two rules in mind. We change no rule before at least fifty trades, because a small sample deceives. And we change only one rule at a time, so we can see its effect clearly. The review is not self-punishment, but a calm search for one measurable improvement."
+    },
+    {
+     "id": "s7",
+     "title": "Review Example: Twenty Trades",
+     "narration": "Suppose a review of twenty trades on EURUSD and GBPUSD. Nine trades won for a total of 21.6 risk units, and eleven trades lost for eleven units, so the net is 10.6 units, about half a unit per trade. Now we split. Trades on zones rated five or six points were twelve trades, with a positive net of 12.5 units. Trades on zones rated three or four were eight trades, with a negative net of 1.9 units. And among the losses there were three trades we entered on a candle that had not closed. The decision: we require a rating of five points or more, and we forbid entering before the close. But the sample is still small, so we keep measuring before reaching a final verdict."
+    },
+    {
+     "id": "s8",
+     "title": "Psychology Example on Gold",
+     "narration": "An example on gold shows the difference between a rule and a feeling. The account is ten thousand dollars. At ten in the morning New York time a trader sold from a supply zone at 2380 with a stop at 2388, at a size of 0.12 lots, the stop was hit, and he lost ninety-six dollars. Driven by anger, he immediately bought with no zone, at 0.25 lots with an eight-dollar stop, and lost another two hundred dollars. The total was about three percent in a single hour. Had he applied the two-losses-per-day rule and fixed risk, he would not have taken the second trade at all, and the day's loss would have been only about one percent. The first loss was part of the method; the second was an emotional decision."
+    },
+    {
+     "id": "s9",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is judging yourself by the result of one day or one week, and changing the whole method after three losses in a row. The second mistake is keeping the journal irregularly, or recording only the winning trades, so the review is built on incomplete and misleading data. The third mistake is moving the stop further away when price gets close to it, hoping it will come back, turning a small loss into a big one. The fourth mistake is trading while tired, angry or under financial pressure, because your mental state is part of the entry conditions. The fifth mistake is changing several rules at once after a review, so you cannot tell which change improved the results and which one hurt them."
+    },
+    {
+     "id": "s10",
+     "title": "The Practical Rule",
+     "narration": "The practical rule: write your psychological rules the same way you write your entry rules. One decision per session, stop after two losses in a day, stop if the weekly drawdown reaches three percent, and a fixed risk of about one percent that does not change after a win or a loss. Do not trade when you are tired or angry. Record every trade and every decision not to enter in the journal, with the plan-followed field and the feeling field. At the end of each week, calculate the win rate, the average win and the expectancy, look for the leak, and change only one rule after at least fifty trades. Discipline in execution and review is what makes the method work over the long run."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی دەروونناسی",
+     "narration": "لە ڕێبازی SK فێربووین ناوچەکان بکێشین و هەڵیانبسەنگێنین، شێوازی چوونەژوورەوە هەڵبژێرین، و مامەڵە بەڕێوە ببەین. بەڵام زۆرێک لە بازرگانان هەموو ئەمانە دەزانن و هێشتا زیان دەکەن، و هۆکارەکە زۆرجار شیکاری نییە بەڵکو جێبەجێکردنە. ترس وات لێدەکات مامەڵەی قازانجکردوو زوو دابخەیت، تەماح وات لێدەکات ئامانج هەڵبوەشێنیتەوە، و تووڕەیی دوای زیان وات لێدەکات بەبێ پلان بچیتە ناو مامەڵەیەک. تایبەتمەندی ڕێبازی SK ئەوەیە کە ڕێبازی کاردانەوەیە نەک پێشبینی، بۆیە پێویست ناکات لە پێشبینی بازاڕدا ڕاست بیت، تەنها پێویستە ئەوەی نووسیوتە جێبەجێی بکەیت. بۆیە دەروونناسی لێرەدا قسەی گشتی نییە دەربارەی متمانە بە خۆبوون، بەڵکو یاسای کردارییە کە پلانەکەت لە هەستەکانت دەپارێزێت."
+    },
+    {
+     "id": "s2",
+     "title": "ئارامگرتن و چاوەڕوانی",
+     "narration": "سەختترین بەشی ڕێبازی SK چاوەڕوانییە. لە زۆربەی ڕۆژەکاندا نرخ ناگاتە ناوچەکەت، یان دەگات بەبێ ئەوەی مەرجەکەت بێتەدی. لێرەدا ترسی لەدەستدانی دەرفەت دەردەکەوێت، ئەو هەستەی کە بازاڕ دەجووڵێت و تۆ لە دەرەوەیت، بۆیە دەست دەکەیت بە گەڕان بەدوای هەر هۆیەک بۆ چوونەژوورەوە. چارەسەر کردارییە: یەک بڕیار لە هەر دانیشتنێکدا، و تەنها یەک یان دوو ناوچە کە پێش کرانەوە نووسراون. ئەگەر ئەوەی نووسیوتە ڕووی نەدا، ڕۆژەکەت سەرکەوتووە چونکە سەرمایەکەت پاراست. و لەبیرت بێت فەرمانی هەڵپەسێردراو یارمەتی ئارامگرتن دەدات، چونکە پلانەکەت جێبەجێ دەکات بەبێ ئەوەی هەموو کات چاو لە چارتەکە ببڕیت. ڕۆژێکی بێ مامەڵە ڕۆژێکی بەفیڕۆچوو نییە، بەڵکو بەشێکی ئاسایی ڕێبازەکەیە."
+    },
+    {
+     "id": "s3",
+     "title": "قبوڵکردنی زیان و بیرکردنەوە بە زنجیرە",
+     "narration": "زیان لە ڕێبازی SK شکست نییە، بەڵکو تێچووی کارە. با نموونەیەکی ژمارەیی وەربگرین. ئەگەر ڕێژەی سەرکەوتنت چل و پێنج لە سەد بێت، و تێکڕای قازانجت دوو و نیو هێندەی مەترسی بێت، ئەوا هەر سەد مامەڵەیەک چل و پێنج مامەڵەی قازانجکردوو دەدات بە سەد و دوازدە و نیو یەکەی مەترسی، و پەنجا و پێنج زیانکردوو بە پەنجا و پێنج یەکە. ئەنجامی کۆتایی بە تێکڕا نزیکەی پەنجا و حەوت لە سەدی یەکەیەکی مەترسییە بۆ هەر مامەڵەیەک. بەڵام لە ناو ئەو سەد مامەڵەیەدا ئاساییە شەش یان هەشت زیانی یەک لە دوای یەک ببینیت. بە مەترسی یەک لە سەد، هەشت زیان واتە دابەزینی تەنها نزیکەی 7.7 لە سەد، کە بە دەروونی و داراییش دەتوانرێت هەڵبگیرێت. بۆیە بە زنجیرە بیر دەکەینەوە نەک بە یەک مامەڵە."
+    },
+    {
+     "id": "s4",
+     "title": "تۆڵەسەندنەوە و متمانەی زیادە",
+     "narration": "دوو تەڵەی پێچەوانە هەن. یەکەم بازرگانی تۆڵەسەندنەوەیە دوای زیان، کاتێک هەست دەکەیت بازاڕ قەرزاری تۆیە، بۆیە دەستبەجێ بەبێ ناوچە و بە قەبارەیەکی گەورەتر دەچیتە ژوورەوە بۆ قەرەبووکردنەوەی ئەوەی دۆڕاندت. دووەم متمانەی زیادەیە دوای زنجیرەیەک قازانج، کاتێک وا دەزانیت بازاڕت تێگەیشتووە، بۆیە مەترسی بەرز دەکەیتەوە و مەرجەکان سووک دەکەیت. چارەسەری هەردوو تەڵەکە یەکە: یاسای نووسراو کە لە کاتی دانیشتندا گفتوگۆی لەسەر ناکرێت. بۆ نموونە: دوای دوو زیان لە ڕۆژێکدا تا ڕۆژی دواتر دەوەستین. ئەگەر دابەزینی هەفتانە گەیشتە سێ لە سەد، تا هەفتەی داهاتوو دەوەستین و پێدادەچینەوە. و مەترسی نزیکەی یەک لە سەد دەمێنێتەوە هەر ئەنجامێکی دوایی هەبێت، بۆیە نە دوای زیان و نە دوای قازانج دووبەرابەری ناکەینەوە."
+    },
+    {
+     "id": "s5",
+     "title": "دەفتەری بازرگانی",
+     "narration": "دەفتەری بازرگانی ئەو ئامرازەیە کە ئەزموون دەکاتە زانیاری. دوای هەر مامەڵەیەک، و تەنانەت دوای هەر بڕیارێکی نەچوونەژوورەوە، داتای جێگیر تۆمار دەکەین: بەروار و کاتی دانیشتن، ئامراز، ئەو چوارچێوەیەی ناوچەکەی لێوە هات، هەڵسەنگاندنەکەی بە خاڵ، جۆری چوونەژوورەوە، فەرمانی هەڵپەسێردراو یان پشتڕاستکردنەوە، نرخی چوونەژوورەوە و stop loss و ئامانج، و ئەنجام بە یەکەی مەترسی، واتە چەند هێندەی مەترسی بردیتەوە یان دۆڕاندت. دوو وێنەی چارتیش زیاد دەکەین، پێش چوونەژوورەوە و دوای دەرچوون. و گرنگترین دوو خانە: ئایا پابەندی پلانەکە بوویت، بەڵێ یان نەخێر؟ و پێش چوونەژوورەوە هەستت چۆن بوو لە یەک تا پێنج؟ ئەم دوو خانەیە ئەو هەڵە دەروونییانە ئاشکرا دەکەن کە تەنها لە ژمارەکاندا دەرناکەون."
+    },
+    {
+     "id": "s6",
+     "title": "پێداچوونەوەی هەفتانە",
+     "narration": "لە کۆتایی هەر هەفتەیەکدا کاتژمێرێک بۆ پێداچوونەوە تەرخان دەکەین. سێ ژمارە حیساب دەکەین: ڕێژەی سەرکەوتن، تێکڕای قازانج بە یەکەی مەترسی، و چاوەڕوانی، واتە تێکڕای ئەوەی لە هەر مامەڵەیەکدا دەیبەیتەوە یان دەیدۆڕێنیت. پاشان مامەڵەکان دابەش دەکەین بۆ گرووپ: بەپێی هەڵسەنگاندنی ناوچە، بەپێی جۆری چوونەژوورەوە، بەپێی دانیشتن، و بەپێی پابەندبوون بە پلانەوە. ئامانج دۆزینەوەی دزەکردنە، واتە ئەو گرووپەی قازانجەکانت دەخوات. بەڵام ئاگاداری دوو یاسا بە. پێش لانیکەم پەنجا مامەڵە هیچ یاسایەک ناگۆڕین، چونکە ژمارەی کەم فریوت دەدات. و لە هەر جارێکدا تەنها یەک یاسا دەگۆڕین، بۆ ئەوەی کاریگەرییەکەی بە ڕوونی بزانین. پێداچوونەوە سزادانی خۆ نییە، بەڵکو گەڕانێکی ئارامە بەدوای یەک باشترکردنی پێوانەکراودا."
+    },
+    {
+     "id": "s7",
+     "title": "نموونەی پێداچوونەوە: بیست مامەڵە",
+     "narration": "با وا دابنێین پێداچوونەوەیەک بۆ بیست مامەڵە لەسەر یۆرۆ و پاوەند دەکەین. نۆ مامەڵە قازانجیان کرد بە کۆی 21.6 یەکەی مەترسی، و یازدە مامەڵە زیانیان کرد بە یازدە یەکە، کەواتە ئەنجامی کۆتایی 10.6 یەکەیە، نزیکەی نیو یەکە بۆ هەر مامەڵەیەک. ئێستا دابەشی دەکەین. مامەڵەکان لەسەر ناوچەی هەڵسەنگاندنی پێنج یان شەش خاڵ دوازدە مامەڵە بوون، و ئەنجامیان موجەب 12.5 یەکە بوو. مامەڵەکان لەسەر ناوچەی سێ یان چوار خاڵ هەشت مامەڵە بوون، و ئەنجامیان سالب 1.9 یەکە بوو. و لە نێو زیانەکاندا سێ مامەڵە هەبوون کە لەسەر مۆمێکی دانەخراو چووینە ژوورەوە. بڕیار: هەڵسەنگاندنی پێنج خاڵ و زیاتر بە مەرج دادەنێین، و چوونەژوورەوە پێش داخستن قەدەغە دەکەین. بەڵام نموونەکە هێشتا بچووکە، بۆیە پێش حوکمی کۆتایی بەردەوام دەبین لە پێوانەکردن."
+    },
+    {
+     "id": "s8",
+     "title": "نموونەی دەروونی لەسەر زێڕ",
+     "narration": "نموونەیەک لە زێڕ جیاوازی نێوان یاسا و هەست ڕوون دەکاتەوە. حسابەکە دە هەزار دۆلارە. لە کاتژمێر دەی بەیانی بە کاتی نیویۆرک بازرگانێک لە ناوچەیەکی خستنەڕوو لە 2380 فرۆشتی بە stop loss لە 2388، بە قەبارەی 0.12 لۆت، stop loss لێدرا و نەوەد و شەش دۆلاری دۆڕاند. بە پاڵنەری تووڕەیی، دەستبەجێ بەبێ ناوچە کڕی، بە 0.25 لۆت و stop lossی هەشت دۆلار، و دوو سەد دۆلاری تری دۆڕاند. کۆی گشتی نزیکەی سێ لە سەد بوو لە یەک کاتژمێردا. ئەگەر یاسای دوو زیان لە ڕۆژێکدا و مەترسی جێگیری جێبەجێ بکردایە، هەرگیز نەدەچووە ناو مامەڵەی دووەم، و زیانی ڕۆژەکە تەنها نزیکەی یەک لە سەد دەبوو. زیانی یەکەم بەشێک بوو لە ڕێبازەکە، بەڵام دووەم بڕیارێکی هەستەکی بوو."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم حوکمدانە لەسەر خۆت بە ئەنجامی یەک ڕۆژ یان یەک هەفتە، و گۆڕینی هەموو ڕێبازەکە دوای سێ زیانی یەک لە دوای یەک. هەڵەی دووەم نووسینی دەفتەرە بە شێوەی پچڕپچڕ، یان تەنها تۆمارکردنی مامەڵە قازانجکردووەکان، بۆیە پێداچوونەوە لەسەر داتای ناتەواو و چەواشەکار بنیات دەنرێت. هەڵەی سێیەم دوورخستنەوەی stop lossە کاتێک نرخ لێی نزیک دەبێتەوە، بە هیوای ئەوەی بگەڕێتەوە، بۆیە زیانێکی بچووک دەبێتە زیانێکی گەورە. هەڵەی چوارەم بازرگانییە لە کاتێکدا ماندوو یان تووڕە یان لە ژێر فشاری داراییدایت، چونکە باری دەروونیت بەشێکە لە مەرجەکانی چوونەژوورەوە. هەڵەی پێنجەم گۆڕینی چەند یاسایەکە بە یەکجار دوای پێداچوونەوە، بۆیە نازانیت کام گۆڕانکاری ئەنجامەکانی باشتر کرد و کامیان خراپی کرد."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: یاسا دەروونییەکانت بنووسە هەروەک یاساکانی چوونەژوورەوە دەنووسیت. یەک بڕیار لە هەر دانیشتنێکدا، وەستان دوای دوو زیان لە ڕۆژێکدا، وەستان ئەگەر دابەزینی هەفتانە گەیشتە سێ لە سەد، و مەترسی جێگیر بە نزیکەی یەک لە سەد کە دوای قازانج یان زیان ناگۆڕێت. لە کاتی ماندوویی یان تووڕەییدا بازرگانی مەکە. هەموو مامەڵەیەک و هەموو بڕیارێکی نەچوونەژوورەوە لە دەفتەرەکەدا تۆمار بکە، لەگەڵ خانەی پابەندبوون بە پلان و خانەی هەست. لە کۆتایی هەر هەفتەیەکدا ڕێژەی سەرکەوتن و تێکڕای قازانج و چاوەڕوانی حیساب بکە، بەدوای دزەکردندا بگەڕێ، و تەنها یەک یاسا بگۆڕە دوای لانیکەم پەنجا مامەڵە. دیسیپلین لە جێبەجێکردن و پێداچوونەوەدا ئەوەیە کە ڕێبازەکە لە ماوەی درێژدا کارا دەکات."
+    }
+   ]
   }
  }
 }

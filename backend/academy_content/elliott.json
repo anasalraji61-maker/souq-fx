@@ -648,6 +648,909 @@
      "narration": "پوختەی کرداری: پێش هەر مامەڵەیەک پلانەکە بە تەواوی بنووسە. چوونەژوورەوە دوای سەلماندن لەسەر مۆمێکی داخراو، stop لە پشت ئاستی هەڵوەشاندنەوەوە کە لە یاساکانەوە وەرگیراوە، و ئامانج لە ڕێژەکانی Fibonacci وەک ناوچەیەک نەک ژمارەیەکی پیرۆز. قەبارە بە شێوەیەک حیساب بکە کە زیان لە ڕێژەیەکی بچووکی هەژمار تێنەپەڕێت، وەک یەک لەسەد. ئەگەر ئاستی هەڵوەشاندنەوە شکێنرا، دەرچوون بڕیارێکی شیکارییە نەک شکستێکی کەسی. پابەندبوون بە پلانەوە گرنگترە لە وردی ژماردنەکە."
     }
    ]
+  },
+  "ew-l1-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "الفكرة: موجات داخل موجات",
+     "narration": "تعلّمنا في الدروس السابقة أن الاتجاه في نظرية إليوت يتحرك في خمس موجات دافعة ثم ثلاث موجات تصحيحية. الفكرة الجديدة اليوم أن كل موجة من هذه الموجات تتكون بدورها من موجات أصغر، وكل موجة صغيرة تتكون من موجات أصغر منها. هذه الخاصية تسمى التكرار الذاتي، أو Fractal بالإنجليزية. ولكي لا نخلط بين موجة كبيرة على الإطار اليومي وموجة صغيرة على إطار الخمس دقائق، أعطى إليوت لكل حجم من الموجات اسماً يسمى الدرجة، أو Degree. الدرجة تخبرك أين تقع الموجة التي تراها داخل الصورة الكاملة، وهذا ما يمنع الفوضى في الترقيم."
+    },
+    {
+     "id": "s2",
+     "title": "سلّم الدرجات",
+     "narration": "وضع إليوت تسع درجات رئيسية، من الأكبر إلى الأصغر: Grand Supercycle وتمتد عقوداً طويلة، ثم Supercycle، ثم Cycle وتمتد سنوات، ثم Primary وتمتد أشهراً إلى سنة أو أكثر، ثم Intermediate وتمتد أسابيع إلى أشهر، ثم Minor وتمتد أسابيع، ثم Minute وتمتد أياماً، ثم Minuette وتمتد ساعات، ثم Subminuette وتمتد دقائق إلى ساعات. هذه المدد تقريبية وليست قوانين، فالدرجة تتحدد بموقع الموجة داخل البنية لا بعدد الأيام. وما يهم المتداول اليومي عادة ثلاث أو أربع درجات فقط، من Intermediate على اليومي إلى Minuette على إطار الخمس عشرة دقيقة."
+    },
+    {
+     "id": "s3",
+     "title": "رموز الترقيم",
+     "narration": "لكل درجة طريقة كتابة خاصة حتى تعرف درجة الموجة بمجرد النظر إلى رقمها. الشائع في البرامج اليوم: درجة Primary تُكتب بأرقام داخل دوائر، واحد إلى خمسة، والتصحيح A وB وC داخل دوائر. ودرجة Intermediate تُكتب بأرقام بين قوسين، مثل واحد بين قوسين، والتصحيح A وB وC بين قوسين. ودرجة Minor تُكتب بأرقام عادية وحروف كبيرة. ودرجة Minute تُكتب بأرقام رومانية صغيرة i وii وiii، وحروف صغيرة a وb وc. ودرجة Minuette بأرقام رومانية صغيرة بين قوسين. الهدف ليس الشكل نفسه، بل الثبات: اختر نظاماً واحداً والتزم به في كل رسوماتك."
+    },
+    {
+     "id": "s4",
+     "title": "الترقيم من الأعلى إلى الأسفل",
+     "narration": "الطريقة الصحيحة للترقيم تبدأ من الإطار الأكبر. افتح الإطار الأسبوعي أو اليومي، وابحث عن أوضح قمة أو قاع واضح تبدأ منه الحركة، ورقّم الموجات الكبيرة أولاً بدرجة Intermediate مثلاً. بعد ذلك انزل إلى إطار الأربع ساعات وقسّم الموجة الحالية فقط إلى موجات درجة Minor. ثم انزل إلى إطار الساعة أو الخمس عشرة دقيقة لتقسيم الموجة الأخيرة إلى درجة Minute. تذكّر التقسيم الداخلي: الموجة الدافعة تنقسم إلى خمس موجات، أي خمسة ثم ثلاثة ثم خمسة ثم ثلاثة ثم خمسة، والتصحيح المتعرج من نوع Zigzag ينقسم إلى خمسة ثم ثلاثة ثم خمسة."
+    },
+    {
+     "id": "s5",
+     "title": "شروط الترقيم السليم",
+     "narration": "هناك شروط تحمي ترقيمك من الأخطاء. الأول أن الموجات من الدرجة نفسها يجب أن تكون متقاربة في الحجم والزمن بشكل معقول، فلا تضع موجة مدتها ساعتان بجانب موجة مدتها شهر وتعطيهما الدرجة نفسها. الثاني أن القواعد الثلاث الأساسية تنطبق على كل درجة: الموجة الثانية لا تتجاوز بداية الموجة الأولى، والموجة الثالثة ليست الأقصر، والموجة الرابعة لا تدخل منطقة الموجة الأولى في الموجة الدافعة العادية. الثالث أن الموجة الكبيرة لا تكتمل إلا بعد اكتمال تقسيماتها الداخلية. والرابع أن الحكم يكون على شموع مغلقة، لأن الشمعة غير المغلقة قد تغيّر الصورة."
+    },
+    {
+     "id": "s6",
+     "title": "كيف تساعدك الدرجة في الصفقة",
+     "narration": "معرفة الدرجة تحوّل العدّ إلى خطة. إذا كانت الموجة الكبيرة على اليومي في موجة ثالثة صاعدة، فأنت تبحث على الإطار الأصغر عن نهاية موجة ثانية من درجة أصغر لتشتري معها، لأن موجة ثالثة داخل موجة ثالثة قد تكون أقوى أجزاء الاتجاه. أما الوقف فيوضع خلف نقطة الإبطال، أي بداية الموجة الأولى من الدرجة الصغيرة، لأن تجاوزها يعني أن العدّ خطأ. والهدف يُقاس عادة بنسب فيبوناتشي، مثل أن تساوي الموجة الثالثة 1.618 من طول الموجة الأولى. واحرص أن تبقى المخاطرة نحو واحد بالمئة من حسابك مهما بدا العدّ مقنعاً."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار. على الإطار اليومي نرى موجة Intermediate ثانية بين قوسين انتهت عند 1.0780، ونتوقع بداية الموجة الثالثة بين قوسين. ننزل إلى إطار الأربع ساعات فنجد موجة Minor أولى صعدت من 1.0780 إلى 1.0910، أي 130 نقطة، ثم موجة Minor ثانية هبطت إلى 1.0835. على إطار الساعة أغلقت شمعة الساعة العاشرة صباحاً بتوقيت نيويورك فوق قمة صغيرة عند 1.0842، فدخلنا شراء عند 1.0845. الوقف تحت 1.0780 عند 1.0775، أي 70 نقطة. الهدف عند 1.0835 زائد 1.618 ضرب 130، أي نحو 1.1045، وهو قرابة ثلاثة أضعاف المخاطرة إن تحقق السيناريو."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال ثانٍ على الذهب لكن في موجة تصحيحية. على إطار الأربع ساعات اكتملت موجة Minor ثالثة عند 2450 دولاراً، وقمة الموجة الأولى كانت عند 2370. الموجة الرابعة لا يجوز أن تهبط تحت 2370. ننزل إلى إطار الخمس عشرة دقيقة فنرى الموجة الرابعة تتشكل كتصحيح Zigzag بدرجة Minute: موجة a هبطت إلى 2410، وموجة b ارتدت إلى 2428، وموجة c هبطت إلى 2395. في الساعة 9:15 بتوقيت لندن أغلقت شمعة فوق خط اتجاه الموجة c، فدخلنا شراء عند 2402. الوقف تحت قاع c عند 2388، أي 14 دولاراً، والهدف الأول إعادة اختبار 2450 للموجة الخامسة."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أكثر الأخطاء شيوعاً هو البدء من الإطار الصغير، فيرى المتداول خمس موجات على إطار الخمس دقائق ويظنها اتجاهاً كبيراً، بينما هي جزء صغير من تصحيح على اليومي. والخطأ الثاني خلط الدرجات، أي إعطاء موجة صغيرة رقماً من درجة كبيرة لأن ذلك يناسب الرغبة في الشراء أو البيع. والثالث تغيير العدّ بعد كل شمعة لإنقاذ الصفقة بدلاً من احترام نقطة الإبطال. والرابع إهمال الرموز، فتصبح الرسومات مليئة بأرقام لا تعرف درجتها. والخامس أن تدخل بحجم كبير لأن العدّ يبدو مثالياً، مع أن أي عدّ يبقى احتمالاً لا يقيناً."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ابدأ دائماً من الإطار الأكبر، وحدّد الموجة الكبيرة التي أنت فيها ودرجتها قبل أن تنظر إلى أي إطار صغير. استخدم نظام رموز ثابتاً لكل درجة حتى تقرأ الرسم بنظرة واحدة. تأكد أن الموجات من الدرجة نفسها متقاربة في الحجم والزمن، وأن القواعد الأساسية محترمة في كل درجة. ابحث عن الدخول في اتجاه الموجة الأكبر، وضع الوقف عند نقطة الإبطال للدرجة الأصغر، وقِس الهدف بنسب فيبوناتشي. احكم على الشموع المغلقة فقط، واجعل المخاطرة نحو واحد بالمئة. وإذا كُسرت نقطة الإبطال، فاقبل الخسارة وأعد العدّ من جديد بهدوء."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The idea: waves within waves",
+     "narration": "In earlier lessons we learned that, in Elliott Wave theory, a trend moves in five motive waves followed by three corrective waves. Today's new idea is that each of these waves is itself made of smaller waves, and each small wave is made of even smaller ones. This property is called self-similarity, or a fractal. So that we do not confuse a large wave on the daily chart with a small wave on the five-minute chart, Elliott gave every size of wave a name called its degree. The degree tells you where the wave you are looking at sits inside the complete picture, and that is what keeps your labeling from turning into chaos."
+    },
+    {
+     "id": "s2",
+     "title": "The degree ladder",
+     "narration": "Elliott set nine main degrees, from largest to smallest: Grand Supercycle, which spans many decades, then Supercycle, then Cycle, which spans years, then Primary, lasting months to a year or more, then Intermediate, lasting weeks to months, then Minor, lasting weeks, then Minute, lasting days, then Minuette, lasting hours, and then Subminuette, lasting minutes to hours. These durations are approximate, not laws, because a degree is defined by the wave's position inside the structure rather than by a number of days. What usually matters to a day trader is only three or four degrees, from Intermediate on the daily chart down to Minuette on the fifteen-minute chart."
+    },
+    {
+     "id": "s3",
+     "title": "Label notation",
+     "narration": "Each degree has its own way of being written, so you can know a wave's degree just by looking at its label. The common style in charting software today is this: Primary degree is written with circled numbers one to five, and its correction with circled A, B and C. Intermediate degree is written with numbers in parentheses, like one in parentheses, and its correction with A, B and C in parentheses. Minor degree uses plain numbers and capital letters. Minute degree uses small Roman numerals, i, ii and iii, with small letters a, b and c. Minuette uses small Roman numerals in parentheses. The goal is not the style itself but consistency: choose one system and stick to it on all your charts."
+    },
+    {
+     "id": "s4",
+     "title": "Labeling from the top down",
+     "narration": "The correct way to label starts from the higher timeframe. Open the weekly or daily chart, find the clearest high or low from which the move begins, and label the large waves first, at Intermediate degree for example. Then drop to the four-hour chart and subdivide only the current wave into Minor degree waves. Then drop to the one-hour or fifteen-minute chart to subdivide the latest wave into Minute degree. Remember the internal subdivision: a motive wave divides into five waves, that is five, then three, then five, then three, then five, while a Zigzag correction divides into five, then three, then five. Working this way, every small count always has a clear home inside a larger one."
+    },
+    {
+     "id": "s5",
+     "title": "Conditions for a sound count",
+     "narration": "Some conditions protect your count from errors. First, waves of the same degree should be reasonably similar in size and time, so do not place a two-hour wave next to a one-month wave and give them the same degree. Second, the three core rules apply at every degree: wave two never moves beyond the start of wave one, wave three is never the shortest, and wave four does not enter the territory of wave one in a normal impulse. Third, a large wave is not complete until its internal subdivisions are complete. Fourth, every judgment is made on closed candles, because a candle that has not closed yet can still change the picture completely."
+    },
+    {
+     "id": "s6",
+     "title": "How degree helps your trade",
+     "narration": "Knowing the degree turns a count into a plan. If the large wave on the daily chart is in a rising wave three, you look on the lower timeframe for the end of a wave two of smaller degree to buy with it, because a third wave inside a third wave can be the strongest part of the trend. The stop goes beyond the invalidation point, which is the start of wave one of the smaller degree, because breaking it means the count is wrong. The target is usually measured with Fibonacci ratios, for example wave three equal to 1.618 times the length of wave one. And keep your risk around one percent of your account, however convincing the count looks."
+    },
+    {
+     "id": "s7",
+     "title": "Example on EURUSD",
+     "narration": "An example on the euro dollar. On the daily chart we see an Intermediate wave two, in parentheses, that ended at 1.0780, and we expect the start of wave three in parentheses. We drop to the four-hour chart and find a Minor wave one that rose from 1.0780 to 1.0910, that is 130 pips, followed by a Minor wave two that fell to 1.0835. On the one-hour chart, the 10:00 New York candle closed above a small high at 1.0842, so we bought at 1.0845. The stop goes below 1.0780, at 1.0775, which is 70 pips. The target is 1.0835 plus 1.618 times 130, about 1.1045, which is nearly three times the risk if the scenario plays out."
+    },
+    {
+     "id": "s8",
+     "title": "Example on gold, XAUUSD",
+     "narration": "A second example on gold, but this time in a corrective wave. On the four-hour chart a Minor wave three completed at 2450 dollars, and the top of wave one was at 2370. Wave four is not allowed to fall below 2370. We drop to the fifteen-minute chart and see wave four forming as a Zigzag correction at Minute degree: wave a fell to 2410, wave b bounced to 2428, and wave c fell to 2395. At 9:15 London time a candle closed above the trendline of wave c, so we bought at 2402. The stop goes below the low of c at 2388, which is 14 dollars, and the first target is a retest of 2450 for wave five."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The most common mistake is starting from the small timeframe: the trader sees five waves on the five-minute chart and thinks it is a big trend, while it is only a small part of a correction on the daily. The second mistake is mixing degrees, giving a small wave a label from a large degree because it suits the wish to buy or sell. The third is changing the count after every candle to rescue a trade instead of respecting the invalidation point. The fourth is ignoring notation, so the charts fill with numbers whose degree nobody knows. The fifth is entering with a large size because the count looks perfect, even though any count remains a probability, not a certainty."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: always start from the higher timeframe, and identify the large wave you are in and its degree before you look at any small timeframe. Use one fixed notation system for each degree so you can read the chart at a glance. Make sure waves of the same degree are similar in size and time, and that the core rules are respected at every degree. Look for entries in the direction of the larger wave, place the stop at the invalidation point of the smaller degree, and measure the target with Fibonacci ratios. Judge only on closed candles, and keep risk around one percent. And if the invalidation point breaks, accept the loss and calmly rebuild the count from the beginning."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بیرۆکە: شەپۆل لەناو شەپۆلدا",
+     "narration": "لە وانەکانی پێشوودا فێربووین کە لە تیۆری ئێلیۆتدا ترێند بە پێنج شەپۆلی پاڵنەر دەجوڵێت و دواتر سێ شەپۆلی ڕاستکردنەوە دێت. بیرۆکەی نوێی ئەمڕۆ ئەوەیە کە هەر یەکێک لەم شەپۆلانە خۆی لە شەپۆلی بچووکتر پێکهاتووە، و هەر شەپۆلێکی بچووکیش لە شەپۆلی بچووکتر لەخۆی پێکهاتووە. ئەم تایبەتمەندییە پێی دەوترێت دووبارەبوونەوەی خۆیی، یان Fractal. بۆ ئەوەی شەپۆلێکی گەورە لە چارتی ڕۆژانە لەگەڵ شەپۆلێکی بچووک لە چارتی پێنج خولەکی تێکەڵ نەکەین، ئێلیۆت ناوێکی دا بە هەر قەبارەیەکی شەپۆل کە پێی دەوترێت پلە، یان Degree. پلە پێت دەڵێت ئەو شەپۆلەی دەیبینیت لە کوێی وێنە گشتییەکەدایە، و ئەمە ڕێگری لە پشێوی لە ژمارەکردندا دەکات."
+    },
+    {
+     "id": "s2",
+     "title": "پەیژەی پلەکان",
+     "narration": "ئێلیۆت نۆ پلەی سەرەکی دانا، لە گەورەترینەوە بۆ بچووکترین: Grand Supercycle کە چەندین دەیە دەخایەنێت، دواتر Supercycle، دواتر Cycle کە چەند ساڵێک دەخایەنێت، دواتر Primary کە چەند مانگێک تا ساڵێک یان زیاتر دەخایەنێت، دواتر Intermediate کە چەند هەفتەیەک تا چەند مانگێک، دواتر Minor کە چەند هەفتەیەک، دواتر Minute کە چەند ڕۆژێک، دواتر Minuette کە چەند کاتژمێرێک، و دواتر Subminuette کە چەند خولەکێک تا چەند کاتژمێرێک. ئەم ماوانە نزیکەیین نەک یاسا، چونکە پلە بە شوێنی شەپۆل لەناو پێکهاتەکەدا دیاری دەکرێت نەک بە ژمارەی ڕۆژ. ئەوەی بۆ بازرگانی ڕۆژانە گرنگە زۆرجار تەنها سێ یان چوار پلەیە، لە Intermediate لەسەر ڕۆژانەوە تا Minuette لەسەر پازدە خولەکی."
+    },
+    {
+     "id": "s3",
+     "title": "هێماکانی ژمارەکردن",
+     "narration": "هەر پلەیەک شێوازی نووسینی تایبەتی خۆی هەیە، بۆ ئەوەی تەنها بە سەیرکردنی ژمارەکەی پلەی شەپۆلەکە بزانیت. شێوازی باو لە بەرنامەکانی ئەمڕۆدا ئەمەیە: پلەی Primary بە ژمارەی ناو بازنە دەنووسرێت، یەک تا پێنج، و ڕاستکردنەوەکەی بە A و B و C ی ناو بازنە. پلەی Intermediate بە ژمارەی ناو کەوانە دەنووسرێت، و ڕاستکردنەوەکەی بە A و B و C ی ناو کەوانە. پلەی Minor بە ژمارەی ئاسایی و پیتی گەورە. پلەی Minute بە ژمارەی ڕۆمانی بچووک i و ii و iii، لەگەڵ پیتی بچووک a و b و c. پلەی Minuette بە ژمارەی ڕۆمانی بچووک لەناو کەوانەدا. ئامانج خودی شێوازەکە نییە، بەڵکو جێگیرییە: سیستەمێک هەڵبژێرە و لە هەموو چارتەکانتدا پێوەی پابەند بە."
+    },
+    {
+     "id": "s4",
+     "title": "ژمارەکردن لە سەرەوە بۆ خوارەوە",
+     "narration": "ڕێگای دروستی ژمارەکردن لە چوارچێوەی گەورەترەوە دەست پێدەکات. چارتی هەفتانە یان ڕۆژانە بکەرەوە، ڕوونترین لووتکە یان نزمترین خاڵ بدۆزەرەوە کە جوڵەکە لێیەوە دەست پێدەکات، و یەکەم جار شەپۆلە گەورەکان ژمارە بکە، بۆ نموونە بە پلەی Intermediate. دواتر دابەزە بۆ چوارچێوەی چوار کاتژمێری و تەنها شەپۆلی ئێستا دابەش بکە بۆ شەپۆلەکانی پلەی Minor. دواتر دابەزە بۆ چوارچێوەی یەک کاتژمێری یان پازدە خولەکی بۆ دابەشکردنی دوایین شەپۆل بۆ پلەی Minute. دابەشبوونی ناوخۆیی لەبیر بێت: شەپۆلی پاڵنەر دابەش دەبێت بۆ پێنج شەپۆل، واتە پێنج، سێ، پێنج، سێ، پێنج، و ڕاستکردنەوەی Zigzag دابەش دەبێت بۆ پێنج، سێ، پێنج."
+    },
+    {
+     "id": "s5",
+     "title": "مەرجەکانی ژمارەکردنی دروست",
+     "narration": "هەندێک مەرج هەن کە ژمارەکردنەکەت لە هەڵە دەپارێزن. یەکەم، شەپۆلەکانی هەمان پلە دەبێت لە قەبارە و کاتدا بە شێوەیەکی گونجاو نزیک بن، بۆیە شەپۆلێکی دوو کاتژمێری لە تەنیشت شەپۆلێکی یەک مانگی دامەنێ و هەمان پلەیان پێ مەدە. دووەم، سێ یاسا بنەڕەتییەکە لە هەموو پلەیەکدا جێبەجێ دەبن: شەپۆلی دووەم لە سەرەتای شەپۆلی یەکەم تێناپەڕێت، شەپۆلی سێیەم کورتترین نییە، و شەپۆلی چوارەم ناچێتە ناو ناوچەی شەپۆلی یەکەم لە پاڵنەری ئاساییدا. سێیەم، شەپۆلی گەورە تەواو نابێت تا دابەشبوونە ناوخۆییەکانی تەواو نەبن. چوارەم، هەموو بڕیارێک لەسەر مۆمی داخراو دەدرێت، چونکە مۆمی دانەخراو دەتوانێت وێنەکە بگۆڕێت."
+    },
+    {
+     "id": "s6",
+     "title": "پلە چۆن یارمەتیت دەدات لە مامەڵەدا",
+     "narration": "زانینی پلە ژماردن دەکاتە پلان. ئەگەر شەپۆلە گەورەکە لەسەر ڕۆژانە لە شەپۆلی سێیەمی بەرزبووندا بێت، لەسەر چوارچێوەی بچووکتر بەدوای کۆتایی شەپۆلی دووەمی پلەیەکی بچووکتردا دەگەڕێیت بۆ ئەوەی لەگەڵیدا بکڕیت، چونکە شەپۆلی سێیەم لەناو شەپۆلی سێیەمدا دەتوانێت بەهێزترین بەشی ترێندەکە بێت. وەستاندنی زیان لە پشت خاڵی هەڵوەشاندنەوە دادەنرێت، واتە سەرەتای شەپۆلی یەکەمی پلە بچووکەکە، چونکە تێپەڕاندنی واتای ئەوەیە ژماردنەکە هەڵەیە. ئامانج زۆرجار بە ڕێژەکانی فیبۆناچی دەپێورێت، وەک ئەوەی شەپۆلی سێیەم یەکسان بێت بە 1.618 ی درێژی شەپۆلی یەکەم. ڕیسکەکەت نزیکەی یەک لەسەدی هەژمارەکەت بهێڵەوە، هەرچەندە ژماردنەکە قایلکەر دیار بێت."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار. لەسەر چارتی ڕۆژانە شەپۆلی دووەمی Intermediate لەناو کەوانەدا دەبینین کە لە 1.0780 کۆتایی هات، و چاوەڕێی دەستپێکی شەپۆلی سێیەمی ناو کەوانە دەکەین. دادەبەزین بۆ چوار کاتژمێری و شەپۆلی یەکەمی Minor دەدۆزینەوە کە لە 1.0780 بەرزبووەوە بۆ 1.0910، واتە 130 پیپ، دواتر شەپۆلی دووەمی Minor دابەزی بۆ 1.0835. لەسەر چارتی یەک کاتژمێری، مۆمی کاتژمێر 10:00 ی نیویۆرک لەسەرووی لووتکەیەکی بچووک لە 1.0842 داخرا، بۆیە لە 1.0845 کڕینمان کرد. وەستان لە ژێر 1.0780، لە 1.0775، واتە 70 پیپ. ئامانج 1.0835 زیاد 1.618 جارانی 130، نزیکەی 1.1045، کە نزیکەی سێ هێندەی ڕیسکەکەیە ئەگەر سیناریۆکە ڕووبدات."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر ئاڵتوون XAUUSD",
+     "narration": "نموونەی دووەم لەسەر ئاڵتوون، بەڵام ئەمجارە لە شەپۆلێکی ڕاستکردنەوەدا. لەسەر چارتی چوار کاتژمێری شەپۆلی سێیەمی Minor لە 2450 دۆلار تەواو بوو، و لووتکەی شەپۆلی یەکەم لە 2370 بوو. شەپۆلی چوارەم بۆی نییە بچێتە ژێر 2370. دادەبەزین بۆ پازدە خولەکی و دەبینین شەپۆلی چوارەم وەک ڕاستکردنەوەی Zigzag بە پلەی Minute دروست دەبێت: شەپۆلی a دابەزی بۆ 2410، شەپۆلی b گەڕایەوە بۆ 2428، و شەپۆلی c دابەزی بۆ 2395. لە کاتژمێر 9:15 ی لەندەن مۆمێک لەسەرووی هێڵی ئاراستەی شەپۆلی c داخرا، بۆیە لە 2402 کڕینمان کرد. وەستان لە ژێر نزمی c لە 2388، واتە 14 دۆلار، و ئامانجی یەکەم تاقیکردنەوەی دووبارەی 2450 ە بۆ شەپۆلی پێنجەم."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "باوترین هەڵە دەستپێکردنە لە چوارچێوەی بچووکەوە: بازرگان پێنج شەپۆل لەسەر چارتی پێنج خولەکی دەبینێت و وا دەزانێت ترێندێکی گەورەیە، لە کاتێکدا تەنها بەشێکی بچووکی ڕاستکردنەوەیەکە لەسەر ڕۆژانە. هەڵەی دووەم تێکەڵکردنی پلەکانە، واتە دانی ژمارەی پلەیەکی گەورە بە شەپۆلێکی بچووک چونکە لەگەڵ ئارەزووی کڕین یان فرۆشتن دەگونجێت. سێیەم گۆڕینی ژماردنە دوای هەر مۆمێک بۆ ڕزگارکردنی مامەڵەکە لەجیاتی ڕێزگرتن لە خاڵی هەڵوەشاندنەوە. چوارەم پشتگوێخستنی هێماکانە، بۆیە چارتەکان پڕ دەبن لە ژمارە کە کەس پلەکەیان نازانێت. پێنجەم چوونەژوورەوەیە بە قەبارەی گەورە چونکە ژماردنەکە تەواو دیارە، لە کاتێکدا هەر ژماردنێک ئەگەرە نەک دڵنیایی."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: هەمیشە لە چوارچێوەی گەورەترەوە دەست پێبکە، و پێش سەیرکردنی هەر چوارچێوەیەکی بچووک، ئەو شەپۆلە گەورەیەی تێیدایت و پلەکەی دیاری بکە. سیستەمێکی جێگیری هێما بۆ هەر پلەیەک بەکاربهێنە بۆ ئەوەی بە یەک سەیرکردن چارتەکە بخوێنیتەوە. دڵنیابە کە شەپۆلەکانی هەمان پلە لە قەبارە و کاتدا نزیکن، و یاسا بنەڕەتییەکان لە هەموو پلەیەکدا ڕێزیان لێ دەگیرێت. بەدوای چوونەژوورەوەدا بگەڕێ بە ئاراستەی شەپۆلە گەورەکە، وەستان لە خاڵی هەڵوەشاندنەوەی پلە بچووکەکە دابنێ، و ئامانج بە ڕێژەکانی فیبۆناچی بپێوە. تەنها لەسەر مۆمی داخراو بڕیار بدە، و ڕیسک نزیکەی یەک لەسەد بهێڵەوە. ئەگەر خاڵی هەڵوەشاندنەوە شکا، زیانەکە قبووڵ بکە و بە ئارامی ژماردنەکە لە سەرەتاوە دروست بکەرەوە."
+    }
+   ]
+  },
+  "ew-l1-04": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "التعريف",
+     "narration": "النمط القطري، أو Diagonal، هو موجة دافعة من خمس موجات، لكنها لا تتحرك بقوة الموجة الدافعة العادية التي تسمى Impulse. شكله يشبه الوتد أو المثلث المائل، لأن الخط الذي يصل قمم الموجات والخط الذي يصل قيعانها يتقاربان مع الوقت. السبب أن الموجات فيه متداخلة وبطيئة، فالموجة الرابعة تدخل عادة منطقة الموجة الأولى، وهذا ممنوع في الـ Impulse العادي. النمط القطري يظهر في مواقع محددة فقط: في بداية الحركة كموجة أولى، أو في نهايتها كموجة خامسة. ولهذا نقسمه إلى نوعين رئيسيين سنشرحهما الآن: Leading Diagonal و Ending Diagonal."
+    },
+    {
+     "id": "s2",
+     "title": "النوعان: Leading و Ending",
+     "narration": "الـ Leading Diagonal، أي القطري القائد، يظهر في موقع الموجة الأولى من اتجاه جديد، أو في موقع الموجة A من تصحيح Zigzag. تقسيمه الداخلي في الغالب خمسة ثم ثلاثة ثم خمسة ثم ثلاثة ثم خمسة، وأحياناً ثلاثة في كل موجة. أما الـ Ending Diagonal، أي القطري الختامي، فيظهر في موقع الموجة الخامسة من اتجاه، أو في موقع الموجة C من تصحيح، وكل موجة من موجاته الخمس تتكون من ثلاث موجات. معناه أن الاتجاه فقد زخمه، والمشترون أو البائعون يتعبون. لذلك يعطينا القطري القائد إشارة بداية، ويعطينا القطري الختامي إشارة نهاية وانعكاس محتمل."
+    },
+    {
+     "id": "s3",
+     "title": "كيف ترسمه على الشارت",
+     "narration": "لرسم النمط القطري تحتاج خطين فقط. الخط الأول يصل نهاية الموجة الأولى بنهاية الموجة الثالثة، والخط الثاني يصل نهاية الموجة الثانية بنهاية الموجة الرابعة. في النوع الشائع، وهو المتقارب أو Contracting، يقترب الخطان من بعضهما فيظهر الوتد بوضوح. وهناك نوع نادر متباعد، أو Expanding، يتسع فيه الخطان. ابحث عن علامات مميزة: موجات متداخلة بطيئة، وزخم يضعف من موجة إلى أخرى، وأحياناً تتجاوز الموجة الخامسة خط الموجتين الأولى والثالثة قليلاً ثم تعود، وهذا يسمى Throw-over. ارسم الخطوط دائماً على الشموع المغلقة، لا على ذيول الشمعة الحالية التي ما زالت تتحرك."
+    },
+    {
+     "id": "s4",
+     "title": "القواعد والشروط",
+     "narration": "للنمط القطري المتقارب قواعد واضحة. الموجة الثانية لا تتجاوز بداية الموجة الأولى. الموجة الثالثة لا تكون الأقصر، وفي النوع المتقارب تكون عادة أقصر من الأولى. الموجة الخامسة أقصر من الثالثة، والموجة الرابعة أقصر من الثانية. والموجة الرابعة تدخل في الغالب منطقة الموجة الأولى، وهذا التداخل هو ما يميز القطري عن الـ Impulse. وكل موجة يجب أن تنتهي قريباً من خطَّي الحدود. إذا وجدت موجة ثالثة طويلة جداً وقوية مع موجة رابعة لا تتداخل مع الأولى، فهذا ليس قطرياً بل موجة دافعة عادية، فلا تفرض الشكل على السعر."
+    },
+    {
+     "id": "s5",
+     "title": "كيف يُستخدم للدخول",
+     "narration": "مع الـ Ending Diagonal الفكرة أن السعر بعد اكتماله يعود غالباً بسرعة إلى نقطة بدايته، أي بداية الموجة الأولى من القطري. لا ندخل أثناء تكوّنه، بل ننتظر أن تغلق شمعة خارج خط الموجتين الثانية والرابعة. الدخول بعد الإغلاق أو عند إعادة اختبار الخط، والوقف خلف نهاية الموجة الخامسة، والهدف الأول منطقة الموجة الرابعة، والهدف الثاني بداية القطري. أما الـ Leading Diagonal فلا نتداول انعكاسه، بل ننتظر الموجة الثانية التي تكون عادة عميقة، ثم ندخل مع بداية الموجة الثالثة، والوقف تحت بداية الموجة الأولى، مع مخاطرة نحو واحد بالمئة."
+    },
+    {
+     "id": "s6",
+     "title": "مثال: Ending Diagonal على GBPUSD",
+     "narration": "مثال على الجنيه دولار على إطار الساعة في نهاية اتجاه صاعد. بدأت الموجة الخامسة من 1.2650 وتشكلت كوتد: الموجة الأولى إلى 1.2740، والثانية إلى 1.2690، والثالثة إلى 1.2785، والرابعة إلى 1.2725، أي دخلت منطقة الموجة الأولى. ثم صعدت الخامسة إلى 1.2810 متجاوزة خط الأولى والثالثة قليلاً ثم عادت. في الساعة 15:00 بتوقيت لندن أغلقت شمعة الساعة تحت خط الثانية والرابعة عند 1.2760، فدخلنا بيعاً عند 1.2755. الوقف فوق القمة عند 1.2815، أي 60 نقطة. الهدف الأول 1.2725 والثاني بداية القطري عند 1.2650، أي 105 نقاط."
+    },
+    {
+     "id": "s7",
+     "title": "مثال: Leading Diagonal على USDJPY",
+     "narration": "مثال ثانٍ على الدولار ين على إطار الأربع ساعات. بعد هبوط طويل انتهى عند 148.20، صعد السعر في خمس موجات متداخلة على شكل وتد حتى 149.60، أي 140 نقطة، وهذا Leading Diagonal في موقع الموجة الأولى. لم نشترِ عند القمة، بل انتظرنا الموجة الثانية، فهبطت هبوطاً عميقاً إلى 148.55، أي نحو 75 بالمئة من الموجة الأولى. في الساعة 9:00 بتوقيت نيويورك أغلقت شمعة الساعة فوق قمة صغيرة، فدخلنا شراء عند 148.80. الوقف تحت بداية الموجة الأولى عند 148.15، أي 65 نقطة. الهدف للموجة الثالثة 1.618 من الأولى فوق 148.55، أي نحو 150.80."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول أن ترى وتداً في كل مكان، فتسمي أي حركة متداخلة Diagonal حتى لو كانت في موقع الموجة الثالثة، والقطري لا يظهر في الموجة الثالثة أبداً. الخطأ الثاني البيع مبكراً أثناء تكوّن الـ Ending Diagonal قبل كسر خط الثانية والرابعة، فيستمر السعر بموجة خامسة أو Throw-over ويضرب الوقف. الخطأ الثالث الشراء عند قمة الـ Leading Diagonal بدلاً من انتظار الموجة الثانية العميقة. الخطأ الرابع الخلط بين القطري والمثلث التصحيحي، فالقطري موجة دافعة تتجه في اتجاه واحد، والمثلث تصحيح أفقي. وأخيراً، الدخول على شمعة لم تغلق بعد."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: النمط القطري موجة دافعة ضعيفة متداخلة على شكل وتد، ولا يظهر إلا في الموجة الأولى أو A، أو في الموجة الخامسة أو C. ارسم خط الأولى والثالثة وخط الثانية والرابعة، وتأكد من التداخل وقصر الموجات تدريجياً. مع الـ Ending Diagonal انتظر إغلاق شمعة خارج خط الثانية والرابعة، وضع الوقف خلف نهاية الموجة الخامسة، واستهدف الموجة الرابعة ثم بداية القطري. ومع الـ Leading Diagonal انتظر الموجة الثانية العميقة وادخل مع بداية الثالثة، والوقف تحت بداية الأولى. احكم على الشموع المغلقة، وخاطر بنحو واحد بالمئة فقط، فالنمط احتمال لا يقين."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Definition",
+     "narration": "A diagonal is a motive wave made of five waves, but it does not move with the strength of a normal motive wave, which is called an Impulse. Its shape looks like a wedge or a slanted triangle, because the line connecting the wave highs and the line connecting the wave lows converge over time. The reason is that its waves overlap and move slowly: wave four usually enters the territory of wave one, which is forbidden in a normal Impulse. A diagonal appears only in specific positions: at the beginning of a move as wave one, or at its end as wave five. That is why we divide it into two types, the Leading Diagonal and the Ending Diagonal."
+    },
+    {
+     "id": "s2",
+     "title": "The two types: Leading and Ending",
+     "narration": "The Leading Diagonal appears in the position of wave one of a new trend, or in the position of wave A of a Zigzag correction. Its internal subdivision is usually five, then three, then five, then three, then five, and sometimes three in every wave. The Ending Diagonal appears in the position of wave five of a trend, or of wave C of a correction, and each of its five waves is made of three waves. Its meaning is that the trend has lost momentum and the buyers or sellers are getting tired. So the leading diagonal gives us a signal of a beginning, while the ending diagonal gives us a signal of an end and a possible reversal."
+    },
+    {
+     "id": "s3",
+     "title": "How to draw it on the chart",
+     "narration": "To draw a diagonal you need only two lines. The first line connects the end of wave one to the end of wave three, and the second line connects the end of wave two to the end of wave four. In the common type, the contracting diagonal, the two lines move toward each other, so the wedge appears clearly. There is also a rare expanding type, in which the two lines widen apart. Look for distinctive signs: overlapping slow waves, momentum that weakens from one wave to the next, and sometimes wave five briefly pushing past the line of waves one and three before returning, which is called a throw-over. Always draw the lines on closed candles, not on the wicks of the current candle that is still moving."
+    },
+    {
+     "id": "s4",
+     "title": "Rules and conditions",
+     "narration": "The contracting diagonal has clear rules. Wave two never moves beyond the start of wave one. Wave three is never the shortest, and in the contracting type it is usually shorter than wave one. Wave five is shorter than wave three, and wave four is shorter than wave two. Wave four usually enters the territory of wave one, and this overlap is what separates a diagonal from an Impulse. Each wave should end close to the two boundary lines. If you find a very long and powerful wave three together with a wave four that does not overlap wave one, then this is not a diagonal but a normal impulse, so do not force the shape onto price."
+    },
+    {
+     "id": "s5",
+     "title": "How it is used for entry",
+     "narration": "With an Ending Diagonal, the idea is that once it is complete, price often returns quickly to its starting point, the start of wave one of the diagonal. We do not enter while it is forming; we wait for a candle to close outside the line of waves two and four. Entry comes after that close or on a retest of the line, the stop goes beyond the end of wave five, the first target is the wave four area, and the second target is the start of the diagonal. With a Leading Diagonal we do not trade a reversal; we wait for wave two, which is usually deep, then enter as wave three begins, with the stop below the start of wave one and risk around one percent."
+    },
+    {
+     "id": "s6",
+     "title": "Example: Ending Diagonal on GBPUSD",
+     "narration": "An example on the pound dollar, on the one-hour chart, at the end of an uptrend. Wave five started at 1.2650 and formed as a wedge: wave one to 1.2740, wave two to 1.2690, wave three to 1.2785, and wave four to 1.2725, which means it entered wave one territory. Then wave five rose to 1.2810, briefly pushing past the line of waves one and three before returning. At 15:00 London time the hourly candle closed below the line of waves two and four at 1.2760, so we sold at 1.2755. The stop goes above the high at 1.2815, which is 60 pips. The first target is 1.2725 and the second is the start of the diagonal at 1.2650, which is 105 pips away."
+    },
+    {
+     "id": "s7",
+     "title": "Example: Leading Diagonal on USDJPY",
+     "narration": "A second example on the dollar yen, on the four-hour chart. After a long decline that ended at 148.20, price rose in five overlapping waves shaped like a wedge up to 149.60, which is 140 pips, and this is a Leading Diagonal in the position of wave one. We did not buy at the top; we waited for wave two, which fell deeply to 148.55, about 75 percent of wave one. At 9:00 New York time the hourly candle closed above a small high, so we bought at 148.80. The stop goes below the start of wave one at 148.15, which is 65 pips. The target for wave three is 1.618 times wave one above 148.55, about 150.80."
+    },
+    {
+     "id": "s8",
+     "title": "Common mistakes",
+     "narration": "The first mistake is seeing wedges everywhere and calling any overlapping move a diagonal, even when it sits in the position of wave three, although a diagonal never appears as wave three. The second mistake is selling too early while an Ending Diagonal is still forming, before the line of waves two and four breaks, so price continues with wave five or a throw-over and hits the stop. The third mistake is buying at the top of a Leading Diagonal instead of waiting for the deep wave two. The fourth is confusing a diagonal with a corrective triangle: the diagonal is a motive wave heading in one direction, while the triangle is a sideways correction. Finally, entering on a candle that has not closed yet."
+    },
+    {
+     "id": "s9",
+     "title": "The practical rule",
+     "narration": "The practical rule: a diagonal is a weak, overlapping, wedge-shaped motive wave that appears only as wave one or A, or wave five or C. Draw the line of waves one and three and the line of waves two and four, and confirm the overlap and the gradually shortening waves. With an Ending Diagonal, wait for a candle to close outside the line of waves two and four, place the stop beyond the end of wave five, and target wave four and then the start of the diagonal. With a Leading Diagonal, wait for the deep wave two and enter as wave three begins, with the stop below the start of wave one. Judge on closed candles and risk about one percent, since a pattern is a probability, not a certainty."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پێناسە",
+     "narration": "شێوەی لار، یان Diagonal، شەپۆلێکی پاڵنەرە کە لە پێنج شەپۆل پێکهاتووە، بەڵام بە هێزی شەپۆلی پاڵنەری ئاسایی ناجوڵێت کە پێی دەوترێت Impulse. شێوەکەی لە سەبەتە یان سێگۆشەیەکی لار دەچێت، چونکە ئەو هێڵەی لووتکەکانی شەپۆل پێکەوە دەبەستێت و ئەو هێڵەی نزمەکان دەبەستێت بەرەو یەکتر نزیک دەبنەوە. هۆکارەکەی ئەوەیە شەپۆلەکانی تێکەڵ و هێواشن، شەپۆلی چوارەم زۆرجار دەچێتە ناو ناوچەی شەپۆلی یەکەم، کە ئەمە لە Impulse ی ئاساییدا قەدەغەیە. شێوەی لار تەنها لە شوێنی دیاریکراودا دەردەکەوێت: لە سەرەتای جوڵەدا وەک شەپۆلی یەکەم، یان لە کۆتاییدا وەک شەپۆلی پێنجەم. بۆیە دابەشی دەکەین بۆ دوو جۆر: Leading Diagonal و Ending Diagonal."
+    },
+    {
+     "id": "s2",
+     "title": "دوو جۆرەکە: Leading و Ending",
+     "narration": "Leading Diagonal، واتە لاری پێشەنگ، لە شوێنی شەپۆلی یەکەمی ترێندێکی نوێدا دەردەکەوێت، یان لە شوێنی شەپۆلی A ی ڕاستکردنەوەی Zigzag. دابەشبوونی ناوخۆیی زۆرجار پێنج، سێ، پێنج، سێ، پێنجە، و هەندێک جار سێ لە هەر شەپۆلێکدا. بەڵام Ending Diagonal، واتە لاری کۆتایی، لە شوێنی شەپۆلی پێنجەمی ترێنددا دەردەکەوێت، یان لە شوێنی شەپۆلی C ی ڕاستکردنەوە، و هەر یەکێک لە پێنج شەپۆلەکەی لە سێ شەپۆل پێکهاتووە. واتاکەی ئەوەیە ترێندەکە هێزی خۆی لەدەستداوە و کڕیاران یان فرۆشیاران ماندوو دەبن. بۆیە لاری پێشەنگ نیشانەی دەستپێکمان پێدەدات، و لاری کۆتایی نیشانەی کۆتایی و گەڕانەوەیەکی ئەگەری."
+    },
+    {
+     "id": "s3",
+     "title": "چۆن لەسەر چارت بیکێشیت",
+     "narration": "بۆ کێشانی شێوەی لار تەنها پێویستت بە دوو هێڵە. هێڵی یەکەم کۆتایی شەپۆلی یەکەم بە کۆتایی شەپۆلی سێیەمەوە دەبەستێت، و هێڵی دووەم کۆتایی شەپۆلی دووەم بە کۆتایی شەپۆلی چوارەمەوە دەبەستێت. لە جۆرە باوەکەدا، کە نزیکبووەوە یان Contracting ە، دوو هێڵەکە لە یەکتر نزیک دەبنەوە و سەبەتەکە بە ڕوونی دەردەکەوێت. جۆرێکی دەگمەنی فراوانبوو یان Expanding یش هەیە کە تێیدا دوو هێڵەکە لێک دوور دەکەونەوە. بەدوای نیشانە تایبەتەکاندا بگەڕێ: شەپۆلی تێکەڵ و هێواش، هێزێک کە لە شەپۆلێکەوە بۆ شەپۆلێکی تر لاواز دەبێت، و هەندێک جار شەپۆلی پێنجەم کەمێک لە هێڵی شەپۆلی یەک و سێ تێدەپەڕێت و دەگەڕێتەوە، کە پێی دەوترێت Throw-over. هێڵەکان هەمیشە لەسەر مۆمی داخراو بکێشە، نەک لەسەر کلکی مۆمی ئێستا کە هێشتا دەجوڵێت."
+    },
+    {
+     "id": "s4",
+     "title": "یاسا و مەرجەکان",
+     "narration": "شێوەی لاری نزیکبووەوە یاسای ڕوونی هەیە. شەپۆلی دووەم لە سەرەتای شەپۆلی یەکەم تێناپەڕێت. شەپۆلی سێیەم کورتترین نییە، و لە جۆری نزیکبووەوەدا زۆرجار لە شەپۆلی یەکەم کورتترە. شەپۆلی پێنجەم لە سێیەم کورتترە، و شەپۆلی چوارەم لە دووەم کورتترە. شەپۆلی چوارەم زۆرجار دەچێتە ناو ناوچەی شەپۆلی یەکەم، و ئەم تێکەڵبوونە ئەوەیە کە لار لە Impulse جیا دەکاتەوە. هەر شەپۆلێک دەبێت نزیک لە دوو هێڵی سنوورەکە کۆتایی بێت. ئەگەر شەپۆلی سێیەمی زۆر درێژ و بەهێزت دۆزییەوە لەگەڵ شەپۆلی چوارەم کە لەگەڵ یەکەم تێکەڵ نابێت، ئەوە لار نییە بەڵکو پاڵنەرێکی ئاساییە، بۆیە شێوەکە بەسەر نرخدا مەسەپێنە."
+    },
+    {
+     "id": "s5",
+     "title": "چۆن بۆ چوونەژوورەوە بەکاردێت",
+     "narration": "لەگەڵ Ending Diagonal بیرۆکەکە ئەوەیە کە دوای تەواوبوونی، نرخ زۆرجار بە خێرایی دەگەڕێتەوە بۆ خاڵی دەستپێکی، واتە سەرەتای شەپۆلی یەکەمی لارەکە. لە کاتی دروستبوونیدا ناچینە ژوورەوە، بەڵکو چاوەڕێ دەکەین مۆمێک لە دەرەوەی هێڵی شەپۆلی دوو و چوار دابخرێت. چوونەژوورەوە دوای ئەو داخستنە یان لە کاتی تاقیکردنەوەی دووبارەی هێڵەکە، وەستان لە پشت کۆتایی شەپۆلی پێنجەم، ئامانجی یەکەم ناوچەی شەپۆلی چوارەم، و ئامانجی دووەم سەرەتای لارەکە. بەڵام لەگەڵ Leading Diagonal گەڕانەوە مامەڵە ناکەین، بەڵکو چاوەڕێی شەپۆلی دووەم دەکەین کە زۆرجار قووڵە، دواتر لەگەڵ دەستپێکی شەپۆلی سێیەم دەچینە ژوورەوە، وەستان لە ژێر سەرەتای شەپۆلی یەکەم، و ڕیسک نزیکەی یەک لەسەد."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە: Ending Diagonal لەسەر GBPUSD",
+     "narration": "نموونەیەک لەسەر پاوەند دۆلار لەسەر چارتی یەک کاتژمێری لە کۆتایی ترێندێکی بەرزبووندا. شەپۆلی پێنجەم لە 1.2650 دەستی پێکرد و وەک سەبەتە دروست بوو: شەپۆلی یەکەم بۆ 1.2740، دووەم بۆ 1.2690، سێیەم بۆ 1.2785، و چوارەم بۆ 1.2725، واتە چووە ناو ناوچەی شەپۆلی یەکەم. دواتر شەپۆلی پێنجەم بەرزبووەوە بۆ 1.2810 و کەمێک لە هێڵی یەک و سێ تێپەڕی و گەڕایەوە. لە کاتژمێر 15:00 ی لەندەن مۆمی کاتژمێرەکە لە ژێر هێڵی دوو و چوار لە 1.2760 داخرا، بۆیە لە 1.2755 فرۆشتنمان کرد. وەستان لەسەرووی لووتکە لە 1.2815، واتە 60 پیپ. ئامانجی یەکەم 1.2725 و دووەم سەرەتای لارەکە لە 1.2650، واتە 105 پیپ."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە: Leading Diagonal لەسەر USDJPY",
+     "narration": "نموونەی دووەم لەسەر دۆلار یەن لەسەر چارتی چوار کاتژمێری. دوای دابەزینێکی درێژ کە لە 148.20 کۆتایی هات، نرخ بە پێنج شەپۆلی تێکەڵ بە شێوەی سەبەتە بەرزبووەوە تا 149.60، واتە 140 پیپ، و ئەمە Leading Diagonal ە لە شوێنی شەپۆلی یەکەم. لە لووتکەدا نەمانکڕی، بەڵکو چاوەڕێی شەپۆلی دووەممان کرد، کە بە قووڵی دابەزی بۆ 148.55، واتە نزیکەی 75 لەسەدی شەپۆلی یەکەم. لە کاتژمێر 9:00 ی نیویۆرک مۆمی کاتژمێرەکە لەسەرووی لووتکەیەکی بچووک داخرا، بۆیە لە 148.80 کڕینمان کرد. وەستان لە ژێر سەرەتای شەپۆلی یەکەم لە 148.15، واتە 65 پیپ. ئامانج بۆ شەپۆلی سێیەم 1.618 جارانی یەکەمە لەسەرووی 148.55، نزیکەی 150.80."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم ئەوەیە لە هەموو شوێنێک سەبەتە ببینیت و هەر جوڵەیەکی تێکەڵ ناو بنێیت Diagonal، تەنانەت ئەگەر لە شوێنی شەپۆلی سێیەمدا بێت، لە کاتێکدا لار هەرگیز وەک شەپۆلی سێیەم دەرناکەوێت. هەڵەی دووەم فرۆشتنی زووە لە کاتی دروستبوونی Ending Diagonal پێش شکانی هێڵی دوو و چوار، بۆیە نرخ بە شەپۆلی پێنجەم یان Throw-over بەردەوام دەبێت و وەستانەکە دەپێکێت. هەڵەی سێیەم کڕینە لە لووتکەی Leading Diagonal لەجیاتی چاوەڕوانی شەپۆلی دووەمی قووڵ. چوارەم تێکەڵکردنی لارە لەگەڵ سێگۆشەی ڕاستکردنەوە، لار شەپۆلێکی پاڵنەرە بە یەک ئاراستە، و سێگۆشە ڕاستکردنەوەیەکی ئاسۆییە. و لە کۆتاییدا، چوونەژوورەوە لەسەر مۆمێک کە هێشتا دانەخراوە."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: شێوەی لار شەپۆلێکی پاڵنەری لاواز و تێکەڵە بە شێوەی سەبەتە، و تەنها وەک شەپۆلی یەکەم یان A، یان وەک شەپۆلی پێنجەم یان C دەردەکەوێت. هێڵی شەپۆلی یەک و سێ و هێڵی شەپۆلی دوو و چوار بکێشە، و دڵنیابە لە تێکەڵبوون و کورتبوونەوەی هێدی هێدی شەپۆلەکان. لەگەڵ Ending Diagonal چاوەڕێی داخستنی مۆمێک بکە لە دەرەوەی هێڵی دوو و چوار، وەستان لە پشت کۆتایی شەپۆلی پێنجەم دابنێ، و شەپۆلی چوارەم و دواتر سەرەتای لارەکە بکە ئامانج. لەگەڵ Leading Diagonal چاوەڕێی شەپۆلی دووەمی قووڵ بکە و لەگەڵ دەستپێکی سێیەم بچۆ ژوورەوە، وەستان لە ژێر سەرەتای یەکەم. لەسەر مۆمی داخراو بڕیار بدە، و تەنها نزیکەی یەک لەسەد ڕیسک بکە، چونکە شێوەکە ئەگەرە نەک دڵنیایی."
+    }
+   ]
+  },
+  "ew-l2-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "الفكرة",
+     "narration": "تعلّمنا التصحيحات البسيطة الثلاثة: الـ Zigzag الحاد، والـ Flat الأفقي، والـ Triangle أو المثلث. لكن السوق أحياناً لا يكتفي بتصحيح بسيط واحد، فيربط تصحيحين أو ثلاثة ببعضها لتمديد التصحيح في الزمن. هذا ما يسمى التصحيح المركب، أو Combination. نرقّم التصحيح البسيط الأول بالحرف W، ثم موجة رابطة بينه وبين التصحيح التالي بالحرف X، ثم التصحيح الثاني بالحرف Y. وإذا جاء تصحيح ثالث فنضيف X ثانية ثم Z. التصحيح المركب يعني غالباً أن السوق يحتاج وقتاً قبل أن يكمل الاتجاه الأكبر، وأنه يستهلك صبر المتداولين ويخدع المتسرعين منهم."
+    },
+    {
+     "id": "s2",
+     "title": "Double Three و Double Zigzag",
+     "narration": "أشهر الأنواع هو الـ Double Three، أي W ثم X ثم Y، حيث W وY تصحيحان بسيطان من أي نوع، مثل Zigzag ثم Flat، وشكله العام أفقي جانبي. وهناك نوع قريب منه لكنه حاد، وهو الـ Double Zigzag، حيث W وY كلاهما Zigzag، فيتحرك التصحيح بعمق في اتجاه واحد بدلاً من الحركة الأفقية. الـ Double Zigzag يظهر كثيراً في الموجة الثانية لأنها تكون عادة حادة وعميقة، أما الـ Double Three الأفقي فيظهر أكثر في الموجة الرابعة وفي الموجة B. والموجة X نفسها قد تكون أي تصحيح، وغالباً ما تكون Zigzag قصيراً."
+    },
+    {
+     "id": "s3",
+     "title": "Triple Three",
+     "narration": "الـ Triple Three هو أطول أنواع التصحيح المركب، وترقيمه W ثم X ثم Y ثم X ثم Z، أي ثلاثة تصحيحات بسيطة تربطها موجتان من نوع X. هذا النوع نادر، ويظهر عندما يبقى السوق عالقاً في نطاق جانبي لفترة طويلة. وبالمثل يوجد الـ Triple Zigzag، وهو ثلاثة Zigzag متتالية في اتجاه واحد، وهو نادر جداً. والقاعدة المهمة أن التصحيح المركب لا يتجاوز ثلاثة تصحيحات بسيطة، فإذا وجدت نفسك تعدّ رابعاً فالعدّ غالباً خطأ ويحتاج مراجعة على الإطار الأكبر. ولهذا لا تفترض مسبقاً أن التصحيح سيكون ثلاثياً، بل دع السعر يُثبت ذلك."
+    },
+    {
+     "id": "s4",
+     "title": "كيف تتعرف عليه على الشارت",
+     "narration": "العلامة الأولى للتصحيح المركب أن التصحيح يطول في الزمن أكثر من المتوقع، والسعر يتحرك في موجات متداخلة متقطعة بلا اتجاه واضح. العلامة الثانية أن كل جزء يتكون من ثلاث موجات لا خمس، فإذا رأيت ثلاثة ثم ثلاثة ثم ثلاثة فأنت غالباً داخل تصحيح مركب لا داخل اتجاه جديد. للتحديد: ارسم W أولاً كتصحيح بسيط كامل، ثم حدّد X كحركة معاكسة من ثلاث موجات، ثم انتظر Y. استخدم قاعدة التناوب، أي Alternation: إذا كانت الموجة الثانية حادة بسيطة فالرابعة غالباً جانبية مركبة. وانظر إلى الإطار الأكبر دائماً لتعرف أي موجة تصحح."
+    },
+    {
+     "id": "s5",
+     "title": "القواعد والشروط",
+     "narration": "هناك قواعد أساسية للتصحيح المركب. أولاً، لا يزيد عدد التصحيحات البسيطة عن ثلاثة: W وY وZ. ثانياً، المثلث Triangle لا يظهر إلا في الموقع الأخير، أي كموجة Y في الثنائي أو Z في الثلاثي، ولا يظهر كموجة W. ثالثاً، الموجة X لا تكون موجة دافعة من خمس موجات أبداً، بل تصحيح من ثلاث. رابعاً، قواعد الموجة الأكبر تبقى سارية، فإذا كان التصحيح موجة رابعة فلا يجوز أن يدخل منطقة الموجة الأولى. ومن الإرشادات المفيدة أن Y تساوي W غالباً في الطول، أو تقارب 1.618 منها، وهذا يساعدنا في تقدير نهاية التصحيح."
+    },
+    {
+     "id": "s6",
+     "title": "كيف يُستخدم للدخول",
+     "narration": "القاعدة الذهبية: لا تتداول داخل التصحيح المركب، لأن حركته متقطعة وتضرب الوقف من الجهتين. الفرصة الحقيقية في نهايته، أي عند اكتمال الموجة Y أو Z. أولاً قِس منطقة الهدف لـ Y، مثل تساويها مع W، وقارن ذلك بنسبة فيبوناتشي على الموجة الكبيرة مثل 38.2 أو 61.8 بالمئة. ثانياً، عندما يصل السعر إلى هذه المنطقة، انتظر تأكيداً على إطار أصغر، مثل كسر خط اتجاه الموجة c الأخيرة داخل Y بشمعة مغلقة. الدخول بعد هذا الكسر، والوقف خلف نهاية Y، والهدف الأول نهاية X، والهدف الثاني استئناف الاتجاه الأكبر بعد نهاية W، مع مخاطرة نحو واحد بالمئة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال: WXY على EURUSD",
+     "narration": "مثال على اليورو دولار في اتجاه هابط على إطار الساعة. الموجة الثالثة انتهت عند 1.0720، وقاع الموجة الأولى كان عند 1.0850، فالموجة الرابعة لا يجوز أن تتجاوز 1.0850. صعد التصحيح في Zigzag أول، وهو W، إلى 1.0790، أي 70 نقطة، ثم هبطت X إلى 1.0750، ثم بدأت Y. هدف Y المساوي لـ W هو 1.0750 زائد 70، أي 1.0820. وصل السعر إلى 1.0818 قرب الساعة 9:00 بتوقيت نيويورك، ثم أغلقت شمعة الخمس عشرة دقيقة تحت خط الموجة c عند 1.0805. دخلنا بيعاً عند 1.0803، والوقف عند 1.0828، أي 25 نقطة، والهدف الأول 1.0750 والثاني تحت 1.0720."
+    },
+    {
+     "id": "s8",
+     "title": "مثال: Double Zigzag على الذهب",
+     "narration": "مثال ثانٍ على الذهب في موجة ثانية على إطار الساعة. صعدت الموجة الأولى من 2320 إلى 2380، أي 60 دولاراً، والموجة الثانية لا يجوز أن تهبط تحت 2320. هبط التصحيح في Zigzag أول، وهو W، إلى 2355، ثم ارتدت X إلى 2366، ثم هبطت Y في Zigzag ثانٍ إلى 2338، أي نحو 70 بالمئة من الموجة الأولى، وطول Y قريب من طول W. في الساعة 8:30 بتوقيت لندن أغلقت شمعة الخمس عشرة دقيقة فوق قمة الموجة b داخل Y عند 2347، فدخلنا شراء عند 2348. الوقف تحت 2333، أي 15 دولاراً، والهدف الأول 2380، والهدف الأبعد للموجة الثالثة قرب 2435."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو اعتبار نهاية W نهاية التصحيح كله، فيدخل المتداول مع الاتجاه مبكراً ثم تأتي X وY وتضرب وقفه. لذلك إذا كان التصحيح قصيراً جداً مقارنة بالموجة التي يصححها، فاحتمل أن يكون مركباً. الخطأ الثاني التداول داخل X، وهي غالباً حركة قصيرة ومخادعة. الخطأ الثالث عدّ أكثر من ثلاثة تصحيحات بسيطة، أو وضع المثلث في موقع W. الخطأ الرابع نسيان قواعد الموجة الأكبر، مثل دخول الموجة الرابعة منطقة الموجة الأولى. والخطأ الخامس الدخول دون تأكيد على شمعة مغلقة، أو بمخاطرة كبيرة لأن نهاية Y تبدو واضحة."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: إذا طال التصحيح وتداخلت موجاته وكانت أجزاؤه من ثلاث موجات، ففكّر في تصحيح مركب. رقّمه بالحروف W ثم X ثم Y، وفي الحالة النادرة أضف X ثم Z، ولا تتجاوز ثلاثة تصحيحات بسيطة. تذكّر أن المثلث لا يأتي إلا في الموقع الأخير، وأن X دائماً تصحيح من ثلاث موجات، وأن قواعد الموجة الأكبر لا تتغير. لا تتداول داخل التصحيح، بل قِس هدف Y بمساواتها مع W ونسب فيبوناتشي، ثم انتظر كسراً على شمعة مغلقة في إطار أصغر. ضع الوقف خلف نهاية Y، واستهدف X ثم استئناف الاتجاه، وخاطر بنحو واحد بالمئة فقط."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The idea",
+     "narration": "We have learned the three simple corrections: the sharp Zigzag, the sideways Flat, and the Triangle. But sometimes the market is not satisfied with one simple correction, so it links two or three of them together to stretch the correction out in time. This is called a complex correction, or a Combination. We label the first simple correction with the letter W, then a connecting wave between it and the next correction with the letter X, and then the second correction with the letter Y. If a third correction comes, we add a second X and then Z. A complex correction usually means the market needs time before it continues the larger trend, and it wears out traders' patience and tricks the hasty ones."
+    },
+    {
+     "id": "s2",
+     "title": "Double Three and Double Zigzag",
+     "narration": "The best-known type is the Double Three, that is W, then X, then Y, where W and Y are simple corrections of any kind, such as a Zigzag followed by a Flat, and its overall shape is sideways. There is a close relative that is sharp, called the Double Zigzag, in which both W and Y are Zigzags, so the correction moves deeply in one direction instead of sideways. The Double Zigzag often appears in wave two, because wave two is usually sharp and deep, while the sideways Double Three appears more in wave four and in wave B. The X wave itself can be any correction, and it is often a short Zigzag that connects the two parts."
+    },
+    {
+     "id": "s3",
+     "title": "Triple Three",
+     "narration": "The Triple Three is the longest type of complex correction, labeled W, then X, then Y, then X, then Z, that is three simple corrections linked by two X waves. This type is rare, and it appears when the market stays stuck in a sideways range for a long period. Similarly there is the Triple Zigzag, three Zigzags in a row in one direction, and it is very rare. The important rule is that a complex correction never goes beyond three simple corrections, so if you find yourself counting a fourth, the count is most likely wrong and needs review on the higher timeframe. That is why you should not assume in advance that a correction will be triple; let price prove it first."
+    },
+    {
+     "id": "s4",
+     "title": "How to recognize it on the chart",
+     "narration": "The first sign of a complex correction is that the correction lasts longer in time than expected, and price moves in choppy, overlapping waves without a clear direction. The second sign is that each part is made of three waves, not five, so if you see three, then three, then three, you are most likely inside a complex correction, not inside a new trend. To identify it: mark W first as a complete simple correction, then mark X as a three-wave countermove, then wait for Y. Use the rule of alternation: if wave two was sharp and simple, wave four is often sideways and complex. And always look at the higher timeframe to know which wave is being corrected."
+    },
+    {
+     "id": "s5",
+     "title": "Rules and conditions",
+     "narration": "There are basic rules for a complex correction. First, the number of simple corrections never exceeds three: W, Y and Z. Second, a Triangle appears only in the final position, that is as wave Y in a double or wave Z in a triple, and it does not appear as wave W. Third, the X wave is never a five-wave motive wave; it is always a three-wave correction. Fourth, the rules of the larger wave remain in force, so if the correction is a wave four, it must not enter the territory of wave one. A useful guideline is that Y is often equal to W in length, or close to 1.618 times W, and this helps us estimate where the correction may end."
+    },
+    {
+     "id": "s6",
+     "title": "How it is used for entry",
+     "narration": "The golden rule: do not trade inside a complex correction, because its choppy movement hits stops on both sides. The real opportunity is at its end, when wave Y or Z completes. First, measure the target zone for Y, such as Y equal to W, and compare it with a Fibonacci ratio on the larger wave, like 38.2 or 61.8 percent. Second, when price reaches that zone, wait for confirmation on a lower timeframe, such as a break of the trendline of the final c wave inside Y on a closed candle. Entry comes after that break, the stop goes beyond the end of Y, the first target is the end of X, and the second target is the larger trend resuming beyond the end of W, with risk near one percent."
+    },
+    {
+     "id": "s7",
+     "title": "Example: WXY on EURUSD",
+     "narration": "An example on the euro dollar, in a downtrend, on the one-hour chart. Wave three ended at 1.0720, and the low of wave one was at 1.0850, so wave four must not go above 1.0850. The correction rose in a first Zigzag, which is W, to 1.0790, that is 70 pips, then X fell to 1.0750, and then Y began. The target for Y equal to W is 1.0750 plus 70, which is 1.0820. Price reached 1.0818 around 9:00 New York time, and then a fifteen-minute candle closed below the line of wave c at 1.0805. We sold at 1.0803, with the stop at 1.0828, which is 25 pips, the first target at 1.0750, and the second target below 1.0720."
+    },
+    {
+     "id": "s8",
+     "title": "Example: Double Zigzag on gold",
+     "narration": "A second example on gold, in a wave two, on the one-hour chart. Wave one rose from 2320 to 2380, that is 60 dollars, and wave two must not fall below 2320. The correction fell in a first Zigzag, which is W, to 2355, then X bounced to 2366, then Y fell in a second Zigzag to 2338, about 70 percent of wave one, and the length of Y is close to the length of W. At 8:30 London time a fifteen-minute candle closed above the high of wave b inside Y at 2347, so we bought at 2348. The stop goes below 2333, which is 15 dollars, the first target is 2380, and the farther target for wave three is near 2435."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The first mistake is treating the end of W as the end of the whole correction, so the trader enters with the trend too early, and then X and Y arrive and hit the stop. So if a correction looks very short compared with the wave it is correcting, consider that it may be complex. The second mistake is trading inside X, which is usually a short and deceptive move. The third is counting more than three simple corrections, or placing a triangle in the W position. The fourth is forgetting the rules of the larger wave, such as wave four entering wave one territory. The fifth is entering without confirmation on a closed candle, or with large risk because the end of Y looks obvious."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: if a correction drags on, its waves overlap, and its parts are made of three waves, think of a complex correction. Label it W, then X, then Y, and in the rare case add X and then Z, but never go beyond three simple corrections. Remember that a triangle comes only in the final position, that X is always a three-wave correction, and that the rules of the larger wave do not change. Do not trade inside the correction; instead measure the target for Y using equality with W and Fibonacci ratios, then wait for a break on a closed candle on a lower timeframe. Place the stop beyond the end of Y, target X and then the resumption of the trend, and risk only about one percent."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بیرۆکە",
+     "narration": "سێ ڕاستکردنەوە سادەکەمان فێربووین: Zigzag ی تیژ، Flat ی ئاسۆیی، و Triangle یان سێگۆشە. بەڵام هەندێک جار بازاڕ بە یەک ڕاستکردنەوەی سادە ڕازی نابێت، بۆیە دوو یان سێ دانەیان پێکەوە دەبەستێتەوە بۆ درێژکردنەوەی ڕاستکردنەوەکە لە کاتدا. ئەمە پێی دەوترێت ڕاستکردنەوەی ئاڵۆز، یان Combination. یەکەم ڕاستکردنەوەی سادە بە پیتی W ژمارە دەکەین، دواتر شەپۆلێکی بەستەر لە نێوان ئەو و ڕاستکردنەوەی دواتر بە پیتی X، و دواتر ڕاستکردنەوەی دووەم بە پیتی Y. ئەگەر ڕاستکردنەوەی سێیەم هات، X ی دووەم و دواتر Z زیاد دەکەین. ڕاستکردنەوەی ئاڵۆز زۆرجار واتای ئەوەیە بازاڕ پێویستی بە کاتە پێش بەردەوامبوون لەسەر ترێندە گەورەکە، و ئارامی بازرگانان دەخوات و پەلەکەرەکانیان فریو دەدات."
+    },
+    {
+     "id": "s2",
+     "title": "Double Three و Double Zigzag",
+     "narration": "ناسراوترین جۆر Double Three ە، واتە W دواتر X دواتر Y، کە تێیدا W و Y دوو ڕاستکردنەوەی سادەن لە هەر جۆرێک، وەک Zigzag و دواتر Flat، و شێوە گشتییەکەی ئاسۆیی و لاتەنیشتە. جۆرێکی نزیکی هەیە بەڵام تیژە، کە پێی دەوترێت Double Zigzag، تێیدا هەردوو W و Y دەبنە Zigzag، بۆیە ڕاستکردنەوەکە بە قووڵی بە یەک ئاراستە دەجوڵێت لەجیاتی جوڵەی ئاسۆیی. Double Zigzag زۆرجار لە شەپۆلی دووەمدا دەردەکەوێت چونکە شەپۆلی دووەم زۆرجار تیژ و قووڵە، بەڵام Double Three ی ئاسۆیی زیاتر لە شەپۆلی چوارەم و شەپۆلی B دا دەردەکەوێت. شەپۆلی X خۆی دەتوانێت هەر ڕاستکردنەوەیەک بێت، و زۆرجار Zigzag ێکی کورتە."
+    },
+    {
+     "id": "s3",
+     "title": "Triple Three",
+     "narration": "Triple Three درێژترین جۆری ڕاستکردنەوەی ئاڵۆزە، و ژمارەکردنەکەی W دواتر X دواتر Y دواتر X دواتر Z ە، واتە سێ ڕاستکردنەوەی سادە کە دوو شەپۆلی X پێکەوەیان دەبەستن. ئەم جۆرە دەگمەنە، و کاتێک دەردەکەوێت کە بازاڕ بۆ ماوەیەکی درێژ لە مەودایەکی لاتەنیشتدا دەمێنێتەوە. بە هەمان شێوە Triple Zigzag هەیە، کە سێ Zigzag ی یەک لە دوای یەکە بە یەک ئاراستە، و زۆر دەگمەنە. یاسا گرنگەکە ئەوەیە کە ڕاستکردنەوەی ئاڵۆز لە سێ ڕاستکردنەوەی سادە تێناپەڕێت، بۆیە ئەگەر خۆت بینییەوە چوارەمین دەژمێریت، ژماردنەکە بە ئەگەری زۆر هەڵەیە و پێویستی بە پێداچوونەوە هەیە لەسەر چوارچێوەی گەورەتر. بۆیە پێشوەختە وا دامەنێ کە ڕاستکردنەوەکە سێیانە دەبێت، با نرخ ئەوە بسەلمێنێت."
+    },
+    {
+     "id": "s4",
+     "title": "چۆن لەسەر چارت بیناسیتەوە",
+     "narration": "یەکەم نیشانەی ڕاستکردنەوەی ئاڵۆز ئەوەیە کە ڕاستکردنەوەکە لە کاتدا زیاتر لە چاوەڕوانکراو درێژ دەبێتەوە، و نرخ بە شەپۆلی تێکەڵ و پچڕپچڕ بێ ئاراستەیەکی ڕوون دەجوڵێت. نیشانەی دووەم ئەوەیە هەر بەشێک لە سێ شەپۆل پێکهاتووە نەک پێنج، بۆیە ئەگەر سێ و دواتر سێ و دواتر سێ ببینیت، بە ئەگەری زۆر لەناو ڕاستکردنەوەیەکی ئاڵۆزدایت نەک لەناو ترێندێکی نوێ. بۆ دیاریکردن: یەکەم W وەک ڕاستکردنەوەیەکی سادەی تەواو دیاری بکە، دواتر X وەک جوڵەیەکی پێچەوانەی سێ شەپۆلی، و دواتر چاوەڕێی Y بکە. یاسای ئاڵوگۆڕ یان Alternation بەکاربهێنە: ئەگەر شەپۆلی دووەم تیژ و سادە بوو، شەپۆلی چوارەم زۆرجار لاتەنیشت و ئاڵۆزە. هەمیشە سەیری چوارچێوەی گەورەتر بکە بۆ ئەوەی بزانیت کام شەپۆل ڕاست دەکرێتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "یاسا و مەرجەکان",
+     "narration": "چەند یاسایەکی بنەڕەتی بۆ ڕاستکردنەوەی ئاڵۆز هەن. یەکەم، ژمارەی ڕاستکردنەوە سادەکان لە سێ تێناپەڕێت: W و Y و Z. دووەم، Triangle یان سێگۆشە تەنها لە شوێنی کۆتاییدا دەردەکەوێت، واتە وەک شەپۆلی Y لە دووانەدا یان Z لە سێیانەدا، و وەک شەپۆلی W دەرناکەوێت. سێیەم، شەپۆلی X هەرگیز شەپۆلێکی پاڵنەری پێنج شەپۆلی نییە، بەڵکو هەمیشە ڕاستکردنەوەیەکی سێ شەپۆلییە. چوارەم، یاساکانی شەپۆلە گەورەکە هەر جێبەجێ دەبن، بۆیە ئەگەر ڕاستکردنەوەکە شەپۆلی چوارەم بێت، بۆی نییە بچێتە ناو ناوچەی شەپۆلی یەکەم. ڕێنماییەکی بەسوود ئەوەیە کە Y زۆرجار لە درێژیدا یەکسانە بە W، یان نزیکە لە 1.618 جارانی W، و ئەمە یارمەتیمان دەدات کۆتایی ڕاستکردنەوەکە خەمڵێنین."
+    },
+    {
+     "id": "s6",
+     "title": "چۆن بۆ چوونەژوورەوە بەکاردێت",
+     "narration": "یاسای زێڕین: لەناو ڕاستکردنەوەی ئاڵۆزدا مامەڵە مەکە، چونکە جوڵەکەی پچڕپچڕە و وەستان لە هەردوو لاوە دەپێکێت. دەرفەتی ڕاستەقینە لە کۆتاییدایە، واتە کاتێک شەپۆلی Y یان Z تەواو دەبێت. یەکەم ناوچەی ئامانجی Y بپێوە، وەک یەکسانبوونی لەگەڵ W، و بەراوردی بکە لەگەڵ ڕێژەیەکی فیبۆناچی لەسەر شەپۆلە گەورەکە وەک 38.2 یان 61.8 لەسەد. دووەم، کاتێک نرخ دەگاتە ئەو ناوچەیە، چاوەڕێی پشتڕاستکردنەوە بکە لەسەر چوارچێوەیەکی بچووکتر، وەک شکاندنی هێڵی ئاراستەی دوایین شەپۆلی c لەناو Y بە مۆمی داخراو. چوونەژوورەوە دوای ئەو شکاندنە، وەستان لە پشت کۆتایی Y، ئامانجی یەکەم کۆتایی X، و ئامانجی دووەم دەستپێکردنەوەی ترێندە گەورەکە لە دوای کۆتایی W، لەگەڵ ڕیسکی نزیکەی یەک لەسەد."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە: WXY لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار لە ترێندێکی دابەزیندا لەسەر چارتی یەک کاتژمێری. شەپۆلی سێیەم لە 1.0720 کۆتایی هات، و نزمی شەپۆلی یەکەم لە 1.0850 بوو، بۆیە شەپۆلی چوارەم بۆی نییە لە 1.0850 تێپەڕێت. ڕاستکردنەوەکە بە Zigzag ی یەکەم، کە W ە، بەرزبووەوە بۆ 1.0790، واتە 70 پیپ، دواتر X دابەزی بۆ 1.0750، و دواتر Y دەستی پێکرد. ئامانجی Y بە یەکسانی لەگەڵ W دەکاتە 1.0750 زیاد 70، واتە 1.0820. نرخ گەیشتە 1.0818 نزیکەی کاتژمێر 9:00 ی نیویۆرک، و دواتر مۆمێکی پازدە خولەکی لە ژێر هێڵی شەپۆلی c لە 1.0805 داخرا. لە 1.0803 فرۆشتنمان کرد، وەستان لە 1.0828، واتە 25 پیپ، ئامانجی یەکەم 1.0750 و دووەم لە ژێر 1.0720."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە: Double Zigzag لەسەر ئاڵتوون",
+     "narration": "نموونەی دووەم لەسەر ئاڵتوون لە شەپۆلی دووەمدا لەسەر چارتی یەک کاتژمێری. شەپۆلی یەکەم لە 2320 بەرزبووەوە بۆ 2380، واتە 60 دۆلار، و شەپۆلی دووەم بۆی نییە بچێتە ژێر 2320. ڕاستکردنەوەکە بە Zigzag ی یەکەم، کە W ە، دابەزی بۆ 2355، دواتر X گەڕایەوە بۆ 2366، دواتر Y بە Zigzag ی دووەم دابەزی بۆ 2338، واتە نزیکەی 70 لەسەدی شەپۆلی یەکەم، و درێژی Y نزیکە لە درێژی W. لە کاتژمێر 8:30 ی لەندەن مۆمێکی پازدە خولەکی لەسەرووی لووتکەی شەپۆلی b لەناو Y لە 2347 داخرا، بۆیە لە 2348 کڕینمان کرد. وەستان لە ژێر 2333، واتە 15 دۆلار، ئامانجی یەکەم 2380، و ئامانجی دوورتر بۆ شەپۆلی سێیەم نزیک 2435."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم ئەوەیە کۆتایی W بە کۆتایی هەموو ڕاستکردنەوەکە دابنێیت، بۆیە بازرگان زوو لەگەڵ ترێندەکە دەچێتە ژوورەوە، و دواتر X و Y دێن و وەستانەکەی دەپێکن. بۆیە ئەگەر ڕاستکردنەوەکە بە بەراورد بەو شەپۆلەی ڕاستی دەکاتەوە زۆر کورت دیار بوو، ئەگەری ئەوە لەبەرچاو بگرە کە ئاڵۆز بێت. هەڵەی دووەم مامەڵەکردنە لەناو X، کە زۆرجار جوڵەیەکی کورت و فریودەرە. سێیەم ژماردنی زیاتر لە سێ ڕاستکردنەوەی سادەیە، یان دانانی سێگۆشە لە شوێنی W. چوارەم لەبیرکردنی یاساکانی شەپۆلە گەورەکەیە، وەک چوونی شەپۆلی چوارەم بۆ ناو ناوچەی شەپۆلی یەکەم. پێنجەم چوونەژوورەوەیە بێ پشتڕاستکردنەوە لەسەر مۆمی داخراو، یان بە ڕیسکی گەورە چونکە کۆتایی Y ڕوون دیارە."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: ئەگەر ڕاستکردنەوەیەک درێژ بووەوە، شەپۆلەکانی تێکەڵ بوون، و بەشەکانی لە سێ شەپۆل پێکهاتبوون، بیر لە ڕاستکردنەوەی ئاڵۆز بکەرەوە. بە W دواتر X دواتر Y ژمارەی بکە، و لە حاڵەتی دەگمەندا X و دواتر Z زیاد بکە، بەڵام هەرگیز لە سێ ڕاستکردنەوەی سادە تێمەپەڕە. لەبیرت بێت کە سێگۆشە تەنها لە شوێنی کۆتاییدا دێت، کە X هەمیشە ڕاستکردنەوەیەکی سێ شەپۆلییە، و یاساکانی شەپۆلە گەورەکە ناگۆڕێن. لەناو ڕاستکردنەوەکەدا مامەڵە مەکە، بەڵکو ئامانجی Y بە یەکسانی لەگەڵ W و ڕێژەکانی فیبۆناچی بپێوە، دواتر چاوەڕێی شکاندنێک بکە لەسەر مۆمی داخراو لە چوارچێوەیەکی بچووکتر. وەستان لە پشت کۆتایی Y دابنێ، X و دواتر بەردەوامبوونی ترێند بکە ئامانج، و تەنها نزیکەی یەک لەسەد ڕیسک بکە."
+    }
+   ]
+  },
+  "ew-l2-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "فكرة القناة في إليوت",
+     "narration": "في الدرس السابق تعلمنا قواعد الموجة الدافعة ذات الخمس موجات. اليوم نضيف ثلاث أدوات تساعدنا على توقع أين قد تنتهي الموجات، وهي القناة، وقاعدة التناوب، وإرشادات الموجات. القناة هي خطان متوازيان يحيطان بحركة الموجة الدافعة. لاحظ إليوت أن الموجة الدافعة تتحرك غالباً داخل قناة منتظمة، تماماً كما يجري النهر بين ضفتين. فائدة القناة أنها لا تعطيك نقطة واحدة، بل منطقة تقريبية نتوقع أن تنتهي عندها الموجة الرابعة أو الخامسة. لكن تذكر دائماً أن القناة أداة تقدير وليست يقيناً، والسعر قد يخرج منها، ولذلك نستخدمها مع أدوات أخرى ونؤكد دائماً على شموع مغلقة."
+    },
+    {
+     "id": "s2",
+     "title": "كيف نرسم القناة خطوة بخطوة",
+     "narration": "الرسم يتم على مرحلتين. المرحلة الأولى لتوقع نهاية الموجة الرابعة: نصل خطاً بين نهاية الموجة الأولى ونهاية الموجة الثالثة، ثم نرسم خطاً موازياً له يمر بنهاية الموجة الثانية. المنطقة القريبة من هذا الخط السفلي هي مكان محتمل لانتهاء الموجة الرابعة. المرحلة الثانية بعد أن تكتمل الموجة الرابعة فعلاً: نصل خطاً بين نهاية الموجة الثانية ونهاية الموجة الرابعة، ثم نرسم خطاً موازياً يمر بقمة الموجة الثالثة. هذا الخط العلوي يعطينا منطقة تقريبية لنهاية الموجة الخامسة. وأحياناً تخترق الموجة الخامسة الخط العلوي قليلاً ثم تعود، وهذا يسمى Throw-over أي تجاوز مؤقت، ويحدث غالباً في نهاية الحركات القوية."
+    },
+    {
+     "id": "s3",
+     "title": "قاعدة التناوب",
+     "narration": "التناوب، أو Alternation بالإنجليزية، إرشاد يقول إن السوق نادراً ما يكرر الشكل نفسه مرتين متتاليتين في الموجتين التصحيحيتين داخل الموجة الدافعة، أي الموجة الثانية والموجة الرابعة. فإذا كانت الموجة الثانية حادة وعميقة، مثل Zigzag يصحح ستين في المئة أو أكثر من الموجة الأولى، فالأرجح أن تكون الموجة الرابعة جانبية وضحلة، مثل Flat أو Triangle تصحح حوالي ثمانية وثلاثين في المئة. والعكس صحيح. والتناوب لا يقتصر على الشكل، بل قد يظهر في العمق وفي الزمن أيضاً، فقد تستغرق إحدى الموجتين وقتاً أطول بكثير من الأخرى. فائدته العملية أنه يمنعك من انتظار ارتداد عميق في الموجة الرابعة فقط لأن الموجة الثانية كانت عميقة."
+    },
+    {
+     "id": "s4",
+     "title": "القواعد مقابل الإرشادات",
+     "narration": "من المهم جداً أن تفرق بين القاعدة والإرشاد. القواعد ثلاث لا تُكسر أبداً: الموجة الثانية لا تتجاوز بداية الموجة الأولى، والموجة الثالثة ليست أقصر الموجات الدافعة، والموجة الرابعة لا تدخل منطقة سعر الموجة الأولى في الدافعة العادية. إذا كُسرت قاعدة فالعدّ خاطئ ويجب تغييره فوراً. أما الإرشادات فهي ميول متكررة وليست إلزامية، ومنها التناوب، والقناة، وأن الموجة الرابعة تنتهي غالباً قرب منطقة الموجة الرابعة الأصغر داخل الموجة الثالثة، وأنه إذا امتدت الموجة الثالثة فالموجة الخامسة تميل إلى أن تساوي الموجة الأولى تقريباً في الطول. الإرشاد يرفع الاحتمال، والقاعدة تحدد متى يكون العدّ باطلاً."
+    },
+    {
+     "id": "s5",
+     "title": "كيف نستخدم الأدوات للدخول",
+     "narration": "الفكرة العملية هي تجميع الأدلة في منطقة واحدة. عندما تنتهي الموجة الثالثة، نبحث عن منطقة نهاية الموجة الرابعة حيث يلتقي خط القناة السفلي، ومستوى تصحيح فيبوناتشي 38.2 بالمئة أو 50 بالمئة، ومنطقة الموجة الرابعة الأصغر، مع مراعاة التناوب في الشكل. بعد ذلك لا ندخل مباشرة، بل ننتظر علامة على انتهاء التصحيح، مثل شمعة مغلقة تكسر آخر قمة صغيرة داخل التصحيح. وقف الخسارة يوضع أسفل قاع الموجة الرابعة، أما نقطة الإلغاء الكبرى فهي قمة الموجة الأولى، لأن تجاوزها يكسر القاعدة. الهدف الأول هو مساواة الموجة الخامسة بالأولى، والهدف الثاني هو خط القناة العلوي، مع مخاطرة لا تزيد عن واحد بالمئة من الحساب."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على EURUSD",
+     "narration": "على إطار الأربع ساعات في EURUSD، صعدت الموجة الأولى من 1.0720 إلى 1.0810، ثم جاءت موجة ثانية حادة على شكل Zigzag هبطت إلى 1.0750، أي صححت حوالي سبعين في المئة. بعدها انطلقت الموجة الثالثة بقوة إلى 1.0960. حسب التناوب نتوقع موجة رابعة جانبية وضحلة. رسمنا القناة فوقع خطها السفلي قرب 1.0885، وتصحيح 38.2 بالمئة عند 1.0880 تقريباً، فصارت المنطقة واضحة. تشكل Flat بين 1.0935 و1.0885 لمدة يومين. يوم الأربعاء الساعة العاشرة صباحاً بتوقيت لندن أغلقت شمعة ساعة فوق 1.0905، فكان الشراء عند 1.0905 والوقف عند 1.0865، والهدف الأول 1.0975 حيث تساوي الخامسة الأولى بتسعين نقطة، والثاني خط القناة قرب 1.1010."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على XAUUSD",
+     "narration": "على الذهب XAUUSD بإطار الأربع ساعات، صعدت الموجة الأولى من 2310 إلى 2365 دولاراً، ثم جاءت موجة ثانية جانبية طويلة على شكل Flat انتهت عند 2335 بعد ثلاثة أيام. ثم صعدت الموجة الثالثة إلى 2450. هنا يقول التناوب إن الموجة الرابعة قد تكون حادة وأعمق. مستوى 50 بالمئة من الموجة الثالثة يقع قرب 2392، وقمة الموجة الأولى عند 2365 هي حد الإلغاء. هبط السعر في Zigzag سريع إلى 2395 الساعة العاشرة والربع بتوقيت نيويورك، ثم أغلقت شمعة ساعة فوق 2410. كان الشراء عند 2410 والوقف عند 2388 أسفل القاع، أي مخاطرة 22 دولاراً للأونصة. الهدف الأول اختبار قمة الثالثة عند 2450، والثاني خط القناة العلوي قرب 2468."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو معاملة الإرشاد كأنه قاعدة، فتلغي عدّاً صحيحاً لأن الموجة الرابعة لم تلتزم بالتناوب، أو لأن الموجة الخامسة لم تصل إلى خط القناة. الإرشاد قد يفشل والعدّ يبقى صالحاً. الخطأ الثاني هو العكس: تجاهل كسر قاعدة حقيقية، مثل دخول الموجة الرابعة منطقة الموجة الأولى، والاستمرار في الصفقة على أمل أن يصح العدّ. الخطأ الثالث هو رسم القناة على نقاط خاطئة، أو تعديلها كل ساعة حتى تناسب رأيك. الخطأ الرابع هو الدخول بأمر معلق عند خط القناة دون انتظار شمعة مغلقة تؤكد انتهاء التصحيح. والخطأ الخامس هو رفع حجم الصفقة لأن عدة أدوات اجتمعت، بينما المخاطرة يجب أن تبقى في حدود واحد بالمئة."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "لنلخص الدرس في خطوات واضحة. أولاً، تحقق من القواعد الثلاث قبل أي شيء، فإذا كُسرت واحدة فغيّر العدّ. ثانياً، بعد انتهاء الموجة الثالثة ارسم القناة من نهاية الأولى إلى نهاية الثالثة، وخطاً موازياً من نهاية الثانية. ثالثاً، طبّق التناوب: إن كانت الثانية حادة فتوقع رابعة جانبية، وإن كانت جانبية فتوقع رابعة حادة. رابعاً، اجمع القناة وفيبوناتشي ومنطقة الموجة الرابعة الأصغر في منطقة واحدة. خامساً، انتظر شمعة مغلقة تؤكد انتهاء التصحيح، وضع الوقف أسفل قاع الرابعة، واجعل قمة الأولى حد الإلغاء. سادساً، استهدف مساواة الخامسة بالأولى ثم خط القناة، ولا تخاطر بأكثر من واحد بالمئة. هذه أدوات احتمال وليست ضماناً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The idea of the Elliott channel",
+     "narration": "In the previous lesson we learned the rules of the five-wave impulse. Today we add three tools that help us anticipate where waves may end: the channel, the alternation guideline, and the wave guidelines. A channel is two parallel lines that contain the movement of an impulse wave. Elliott noticed that an impulse often travels inside a regular channel, just as a river flows between two banks. The value of the channel is that it does not give you a single point, but an approximate zone where we expect wave four or wave five to end. Always remember, though, that the channel is an estimating tool, not a certainty. Price can leave it, so we combine it with other tools and always confirm on closed candles."
+    },
+    {
+     "id": "s2",
+     "title": "How to draw the channel step by step",
+     "narration": "Drawing has two stages. The first stage anticipates the end of wave four: connect a line between the end of wave one and the end of wave three, then draw a parallel line through the end of wave two. The area near this lower line is a likely place for wave four to finish. The second stage comes after wave four has actually completed: connect a line between the end of wave two and the end of wave four, then draw a parallel line through the top of wave three. This upper line gives us an approximate zone for the end of wave five. Sometimes wave five pierces the upper line slightly and then returns; this is called a Throw-over, a temporary overshoot, and it usually happens at the end of strong moves."
+    },
+    {
+     "id": "s3",
+     "title": "The alternation guideline",
+     "narration": "Alternation is a guideline saying that the market rarely repeats the same shape twice in a row in the two corrective waves inside an impulse, that is, wave two and wave four. If wave two is sharp and deep, such as a Zigzag that retraces sixty percent or more of wave one, then wave four is more likely to be sideways and shallow, such as a Flat or a Triangle retracing about thirty-eight percent. The reverse is also true. Alternation is not limited to shape; it can also appear in depth and in time, so one of the two waves may take much longer than the other. Its practical value is that it stops you from waiting for a deep pullback in wave four simply because wave two was deep."
+    },
+    {
+     "id": "s4",
+     "title": "Rules versus guidelines",
+     "narration": "Distinguish a rule from a guideline. There are three rules that are never broken: wave two does not go beyond the start of wave one, wave three is not the shortest of the impulse waves, and wave four does not enter the price territory of wave one in a normal impulse. If a rule is broken, the count is wrong and must be changed immediately. Guidelines, on the other hand, are recurring tendencies, not obligations. They include alternation, the channel, the tendency of wave four to end near the area of the smaller fourth wave inside wave three, and the tendency, when wave three is extended, for wave five to be roughly equal to wave one in length. A guideline raises probability; a rule tells you when the count is invalid."
+    },
+    {
+     "id": "s5",
+     "title": "How we use the tools for entry",
+     "narration": "The practical idea is to stack evidence in one zone. When wave three ends, we look for the end zone of wave four, where the lower channel line meets the 38.2 percent or 50 percent Fibonacci retracement and the area of the smaller fourth wave, while respecting alternation in shape. Then we do not enter immediately; we wait for a sign that the correction is over, such as a closed candle breaking the last small high inside the correction. The stop loss goes below the low of wave four, while the major invalidation point is the top of wave one, because moving beyond it breaks the rule. The first target is wave five equal to wave one, and the second target is the upper channel line, with risk not exceeding one percent of the account."
+    },
+    {
+     "id": "s6",
+     "title": "Example on EURUSD",
+     "narration": "On the four-hour chart of EURUSD, wave one rose from 1.0720 to 1.0810, then a sharp wave two came as a Zigzag and fell to 1.0750, retracing about seventy percent. Then wave three launched strongly to 1.0960. According to alternation, we expect a sideways and shallow wave four. We drew the channel and its lower line fell near 1.0885, and the 38.2 percent retracement was at about 1.0880, so the zone became clear. A Flat formed between 1.0935 and 1.0885 over two days. On Wednesday at ten in the morning London time, a one-hour candle closed above 1.0905, so the buy was at 1.0905 with the stop at 1.0865. The first target was 1.0975, where wave five equals wave one at ninety pips, and the second was the channel line near 1.1010."
+    },
+    {
+     "id": "s7",
+     "title": "Example on XAUUSD",
+     "narration": "On gold, XAUUSD, on the four-hour chart, wave one rose from 2310 to 2365 dollars, then a long sideways wave two formed as a Flat and ended at 2335 after three days. Wave three then climbed to 2450. Here alternation says that wave four may be sharp and deeper. The 50 percent level of wave three sits near 2392, and the top of wave one at 2365 is the invalidation limit. Price dropped in a quick Zigzag to 2395 at ten fifteen New York time, then a one-hour candle closed above 2410. The buy was at 2410 with the stop at 2388 below the low, a risk of 22 dollars per ounce. The first target was a test of the wave three top at 2450, and the second was the upper channel line near 2468."
+    },
+    {
+     "id": "s8",
+     "title": "Common mistakes",
+     "narration": "The first mistake is treating a guideline as a rule, cancelling a valid count because wave four did not respect alternation, or because wave five did not reach the channel line. A guideline can fail while the count remains valid. The second mistake is the opposite: ignoring the break of a real rule, such as wave four entering the territory of wave one, and staying in the trade hoping the count will work out. The third is drawing the channel on wrong points, or adjusting it hourly to fit your opinion. The fourth is entering with a pending order at the channel line without waiting for a closed candle that confirms the correction is over. The fifth is increasing size because several tools lined up; risk should stay within one percent."
+    },
+    {
+     "id": "s9",
+     "title": "The practical rule",
+     "narration": "In summary: first, check the three rules before anything else; if one is broken, change the count. Second, after wave three ends, draw the channel from the end of wave one to the end of wave three, and a parallel line from the end of wave two. Third, apply alternation: a sharp wave two suggests a sideways wave four, and vice versa. Fourth, combine the channel, Fibonacci and the smaller fourth wave area into one zone. Fifth, wait for a closed candle confirming the correction is over, place the stop below the low of wave four, and make the top of wave one the invalidation limit. Sixth, target wave five equal to wave one, then the channel line, and never risk more than one percent. These are probability tools."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بیرۆکەی کەناڵ لە ئێلیۆتدا",
+     "narration": "لە وانەی پێشوودا یاساکانی شەپۆلی پاڵنەری پێنج شەپۆلیمان فێربووین. ئەمڕۆ سێ ئامراز زیاد دەکەین کە یارمەتیمان دەدەن پێشبینی بکەین شەپۆلەکان لە کوێ تەواو دەبن، ئەوانیش کەناڵ، ڕێنمایی ئاڵوگۆڕ و ڕێنماییەکانی شەپۆلەکانن. کەناڵ دوو هێڵی تەریبە کە جووڵەی شەپۆلی پاڵنەر لە نێوانیاندایە. ئێلیۆت تێبینی کرد کە شەپۆلی پاڵنەر زۆرجار لە ناو کەناڵێکی ڕێکدا دەجووڵێت، وەک ئەوەی ڕووبارێک لە نێوان دوو کەناردا دەڕوات. سوودی کەناڵ ئەوەیە کە تەنها یەک خاڵ نادات، بەڵکو ناوچەیەکی نزیکەیی دەدات کە چاوەڕێ دەکەین شەپۆلی چوارەم یان پێنجەم لێی تەواو بێت. بەڵام هەمیشە لەبیرت بێت کەناڵ ئامرازی خەمڵاندنە نەک دڵنیایی، نرخ دەتوانێت لێی دەربچێت، بۆیە لەگەڵ ئامرازی تر بەکاری دەهێنین و هەمیشە لەسەر مۆمی داخراو پشتڕاستی دەکەینەوە."
+    },
+    {
+     "id": "s2",
+     "title": "چۆن کەناڵەکە هەنگاو بە هەنگاو دەکێشین",
+     "narration": "کێشان لە دوو قۆناغدا دەکرێت. قۆناغی یەکەم بۆ پێشبینیی کۆتایی شەپۆلی چوارەمە: هێڵێک لە نێوان کۆتایی شەپۆلی یەکەم و کۆتایی شەپۆلی سێیەم دەکێشین، پاشان هێڵێکی تەریب بەوە دەکێشین کە بە کۆتایی شەپۆلی دووەمدا تێدەپەڕێت. ناوچەی نزیک ئەم هێڵە خوارەوەیە شوێنێکی ئەگەرییە بۆ تەواوبوونی شەپۆلی چوارەم. قۆناغی دووەم دوای ئەوەی شەپۆلی چوارەم بە ڕاستی تەواو بوو: هێڵێک لە نێوان کۆتایی شەپۆلی دووەم و کۆتایی شەپۆلی چوارەم دەکێشین، پاشان هێڵێکی تەریب کە بە لووتکەی شەپۆلی سێیەمدا تێدەپەڕێت. ئەم هێڵە سەرەوەیە ناوچەیەکی نزیکەیی بۆ کۆتایی شەپۆلی پێنجەم دەدات. هەندێک جار شەپۆلی پێنجەم کەمێک هێڵی سەرەوە دەبڕێت و دەگەڕێتەوە، ئەمە پێی دەڵێن Throw-over واتە تێپەڕاندنی کاتی، و زۆرجار لە کۆتایی جووڵە بەهێزەکاندا ڕوودەدات."
+    },
+    {
+     "id": "s3",
+     "title": "ڕێنمایی ئاڵوگۆڕ",
+     "narration": "ئاڵوگۆڕ یان Alternation ڕێنماییەکە دەڵێت بازاڕ بە دەگمەن هەمان شێوە دوو جار لە دوای یەک دووبارە دەکاتەوە لە دوو شەپۆلە ڕاستکەرەوەکەی ناو شەپۆلی پاڵنەردا، واتە شەپۆلی دووەم و شەپۆلی چوارەم. ئەگەر شەپۆلی دووەم تیژ و قووڵ بێت، وەک Zigzag کە شەست لە سەد یان زیاتری شەپۆلی یەکەم ڕاست دەکاتەوە، ئەوا ئەگەری زیاترە شەپۆلی چوارەم لاتەنیشت و تەنک بێت، وەک Flat یان Triangle کە نزیکەی سی و هەشت لە سەد ڕاست دەکاتەوە. پێچەوانەکەشی ڕاستە. ئاڵوگۆڕ تەنها لە شێوەدا نییە، بەڵکو لە قووڵی و کاتیشدا دەردەکەوێت، لەوانەیە یەکێک لە دوو شەپۆلەکە کاتێکی زۆر درێژتر لە ئەوی تر ببات. سوودی کردەیی ئەوەیە کە ڕێگرت دەبێت چاوەڕێی گەڕانەوەیەکی قووڵ لە شەپۆلی چوارەمدا بیت تەنها لەبەر ئەوەی شەپۆلی دووەم قووڵ بوو."
+    },
+    {
+     "id": "s4",
+     "title": "یاساکان بەرامبەر ڕێنماییەکان",
+     "narration": "زۆر گرنگە جیاوازی لە نێوان یاسا و ڕێنمایی بکەیت. سێ یاسا هەن کە هەرگیز ناشکێن: شەپۆلی دووەم لە سەرەتای شەپۆلی یەکەم تێناپەڕێت، شەپۆلی سێیەم کورتترینی شەپۆلە پاڵنەرەکان نییە، و شەپۆلی چوارەم ناچێتە ناو ناوچەی نرخی شەپۆلی یەکەم لە پاڵنەری ئاساییدا. ئەگەر یاسایەک شکا، ژماردنەکە هەڵەیە و دەبێت دەستبەجێ بگۆڕدرێت. بەڵام ڕێنماییەکان مەیلی دووبارەبووەوەن نەک پابەندی. لەوانە ئاڵوگۆڕ، کەناڵ، ئەوەی شەپۆلی چوارەم زۆرجار نزیک ناوچەی شەپۆلی چوارەمی بچووکتر لە ناو شەپۆلی سێیەمدا تەواو دەبێت، و ئەوەی ئەگەر شەپۆلی سێیەم درێژ بووەوە، شەپۆلی پێنجەم مەیلی هەیە نزیکەی یەکسان بێت بە شەپۆلی یەکەم لە درێژیدا. ڕێنمایی ئەگەر بەرز دەکاتەوە، و یاسا دیاری دەکات کەی ژماردن بەتاڵە."
+    },
+    {
+     "id": "s5",
+     "title": "چۆن ئامرازەکان بۆ چوونەژوورەوە بەکاردەهێنین",
+     "narration": "بیرۆکە کردەییەکە کۆکردنەوەی بەڵگەکانە لە یەک ناوچەدا. کاتێک شەپۆلی سێیەم تەواو دەبێت، بەدوای ناوچەی کۆتایی شەپۆلی چوارەمدا دەگەڕێین، لەو شوێنەی هێڵی خوارەوەی کەناڵ، ئاستی گەڕانەوەی فیبۆناچی 38.2 لە سەد یان 50 لە سەد، و ناوچەی شەپۆلی چوارەمی بچووکتر یەکدەگرنەوە، لەگەڵ ڕەچاوکردنی ئاڵوگۆڕ لە شێوەدا. پاشان ڕاستەوخۆ ناچینە ژوورەوە، بەڵکو چاوەڕێی نیشانەیەک دەکەین کە ڕاستکردنەوەکە تەواو بووە، وەک مۆمێکی داخراو کە دوایین لووتکەی بچووک لە ناو ڕاستکردنەوەکەدا دەشکێنێت. وەستانی زیان لە خوار نزمترین خاڵی شەپۆلی چوارەم دادەنرێت، بەڵام خاڵی هەڵوەشاندنەوەی گەورە لووتکەی شەپۆلی یەکەمە، چونکە تێپەڕاندنی یاساکە دەشکێنێت. ئامانجی یەکەم یەکسانبوونی شەپۆلی پێنجەمە بە یەکەم، و ئامانجی دووەم هێڵی سەرەوەی کەناڵە، بە مەترسییەک کە لە یەک لە سەدی هەژمار زیاتر نەبێت."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "لەسەر چوارچێوەی چوار کاتژمێری EURUSD، شەپۆلی یەکەم لە 1.0720 بۆ 1.0810 بەرز بووەوە، پاشان شەپۆلێکی دووەمی تیژ بە شێوەی Zigzag هات و بۆ 1.0750 دابەزی، واتە نزیکەی حەفتا لە سەدی ڕاستکردەوە. دواتر شەپۆلی سێیەم بە هێزەوە بۆ 1.0960 دەستی پێکرد. بەپێی ئاڵوگۆڕ چاوەڕێی شەپۆلێکی چوارەمی لاتەنیشت و تەنک دەکەین. کەناڵەکەمان کێشا و هێڵە خوارەوەکەی نزیک 1.0885 کەوت، و گەڕانەوەی 38.2 لە سەد نزیکەی 1.0880 بوو، Flat ێک لە نێوان 1.0935 و 1.0885 بۆ ماوەی دوو ڕۆژ دروست بوو. چوارشەممە کاتژمێر دەی بەیانی کاتی لەندەن، مۆمێکی یەک کاتژمێری لە سەرووی 1.0905 داخرا، بۆیە کڕین لە 1.0905 بوو و وەستان لە 1.0865. ئامانجی یەکەم 1.0975 بوو کە شەپۆلی پێنجەم بە نەوەد پیپ یەکسانی یەکەم دەبێت، و دووەم هێڵی کەناڵ نزیک 1.1010."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر XAUUSD",
+     "narration": "لەسەر ئاڵتوون XAUUSD بە چوارچێوەی چوار کاتژمێری، شەپۆلی یەکەم لە 2310 بۆ 2365 دۆلار بەرز بووەوە، پاشان شەپۆلێکی دووەمی لاتەنیشتی درێژ بە شێوەی Flat دروست بوو و دوای سێ ڕۆژ لە 2335 تەواو بوو. دواتر شەپۆلی سێیەم بۆ 2450 بەرز بووەوە. ئاڵوگۆڕ دەڵێت چوارەم لەوانەیە تیژتر و قووڵتر بێت. ئاستی 50 لە سەدی شەپۆلی سێیەم نزیک 2392 دەکەوێت، و لووتکەی شەپۆلی یەکەم لە 2365 سنووری هەڵوەشاندنەوەیە. نرخ بە Zigzag ێکی خێرا لە 10:15 ی کاتی نیویۆرک بۆ 2395 دابەزی، پاشان مۆمێکی یەک کاتژمێری لە سەرووی 2410 داخرا. کڕین لە 2410 بوو و وەستان لە 2388 لە خوار نزمترین خاڵ، واتە مەترسیی 22 دۆلار بۆ ئۆنسێک. ئامانجی یەکەم لووتکەی سێیەم لە 2450 بوو، و دووەم هێڵی سەرەوەی کەناڵ نزیک 2468."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم مامەڵەکردنە لەگەڵ ڕێنمایی وەک ئەوەی یاسا بێت، بۆیە ژماردنێکی دروست هەڵدەوەشێنیتەوە چونکە شەپۆلی چوارەم پابەندی ئاڵوگۆڕ نەبوو، یان چونکە شەپۆلی پێنجەم نەگەیشتە هێڵی کەناڵ. ڕێنمایی دەکرێت سەرنەکەوێت و ژماردنەکە هێشتا دروست بێت. هەڵەی دووەم پێچەوانەکەیەتی: پشتگوێخستنی شکانی یاسایەکی ڕاستەقینە، وەک چوونی شەپۆلی چوارەم بۆ ناوچەی شەپۆلی یەکەم، و مانەوە لە مامەڵەکەدا بە هیوای ئەوەی ژماردنەکە ڕاست دەربچێت. هەڵەی سێیەم کێشانی کەناڵە لەسەر خاڵی هەڵە، یان گۆڕینی هەموو کاتژمێرێک تا لەگەڵ ڕاکەتدا بگونجێت. هەڵەی چوارەم چوونەژوورەوەیە بە فەرمانی هەڵپەسێردراو لەسەر هێڵی کەناڵ بێ چاوەڕوانیی مۆمێکی داخراو کە تەواوبوونی ڕاستکردنەوە پشتڕاست بکاتەوە. و هەڵەی پێنجەم زیادکردنی قەبارەی مامەڵەیە چونکە چەند ئامرازێک یەکیان گرتەوە، لە کاتێکدا مەترسی دەبێت لە سنووری یەک لە سەددا بمێنێتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کردەیی",
+     "narration": "با وانەکە لە چەند هەنگاوێکی ڕووندا کورت بکەینەوە. یەکەم، پێش هەموو شتێک سێ یاساکە بپشکنە، ئەگەر یەکێکیان شکا ژماردنەکە بگۆڕە. دووەم، دوای تەواوبوونی شەپۆلی سێیەم کەناڵەکە لە کۆتایی یەکەمەوە بۆ کۆتایی سێیەم بکێشە، و هێڵێکی تەریب لە کۆتایی دووەمەوە. سێیەم، ئاڵوگۆڕ جێبەجێ بکە: ئەگەر دووەم تیژ بوو چاوەڕێی چوارەمێکی لاتەنیشت بکە، و ئەگەر لاتەنیشت بوو چاوەڕێی چوارەمێکی تیژ بکە. چوارەم، کەناڵ و فیبۆناچی و ناوچەی شەپۆلی چوارەمی بچووکتر لە یەک ناوچەدا کۆبکەرەوە. پێنجەم، چاوەڕێی مۆمێکی داخراو بکە کە تەواوبوونی ڕاستکردنەوە پشتڕاست بکاتەوە، وەستان لە خوار نزمترین خاڵی چوارەم دابنێ، و لووتکەی یەکەم بکە بە سنووری هەڵوەشاندنەوە. شەشەم، ئامانجت یەکسانبوونی پێنجەم بە یەکەم بێت، پاشان هێڵی کەناڵ، و هەرگیز زیاتر لە یەک لە سەد مەترسی مەکە. ئەمانە ئامرازی ئەگەرن نەک گەرەنتی."
+    }
+   ]
+  },
+  "ew-l3-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما معنى شخصية الموجة",
+     "narration": "عندما تفتح الرسم البياني، السؤال الأصعب في إليوت ليس رسم الموجات بعد اكتمالها، بل معرفة أين أنت الآن. هنا تأتي فكرة شخصية الموجة. كل موجة تعكس حالة نفسية للمتداولين، ولذلك تترك بصمة يمكن ملاحظتها: سرعة الحركة، وحجم الشموع، ومدى تداخل الشموع مع بعضها، وقوة الزخم، أي سرعة تغير السعر، ورد فعل السوق على الأخبار. عندما تقرأ هذه البصمة، تستطيع أن تقول مثلاً إن هذه الحركة تبدو كموجة ثالثة وليست خامسة. الشخصية لا تحل محل القواعد، بل تساعدك على الاختيار بين عدّين صحيحين، وعلى معرفة الوقت المناسب للدخول والوقت الذي يجب فيه أن تبقى خارج السوق."
+    },
+    {
+     "id": "s2",
+     "title": "الموجة الأولى والموجة الثانية",
+     "narration": "الموجة الأولى تولد عادة بعد اتجاه طويل معاكس، ولذلك يظن معظم المتداولين أنها مجرد تصحيح صغير. تكون حركتها متوسطة، وكثيراً ما تتداخل شموعها، ولا تدعمها الأخبار في البداية. ثم تأتي الموجة الثانية، وشخصيتها مخيفة. فهي غالباً عميقة، تصحح بين خمسين وثمانية وستين في المئة من الموجة الأولى، وأحياناً أكثر، فتقترب من بداية الأولى، ويعود الخوف ويقول الجميع إن الاتجاه القديم مستمر. علامتها المهمة أنها لا تكسر بداية الموجة الأولى، وأنها تتكون عادة من ثلاث موجات. هذا الخوف بالذات هو ما يجعل نهاية الموجة الثانية من أفضل مناطق الدخول، بشرط تأكيد على شمعة مغلقة."
+    },
+    {
+     "id": "s3",
+     "title": "الموجة الثالثة: الأقوى والأوضح",
+     "narration": "الموجة الثالثة هي قلب الاتجاه. شخصيتها قوية وواضحة: شموع كبيرة متتالية في اتجاه واحد، وتداخل قليل بينها، وفجوات سعرية، وزخم يصل إلى أعلى مستوياته. في هذه المرحلة تبدأ الأخبار والتحليلات باللحاق بالحركة، ويقتنع الجميع بالاتجاه الجديد. من علاماتها العملية أنها تكسر قمة الموجة الأولى بشمعة مغلقة قوية، وأن سرعتها أكبر بوضوح من سرعة الموجة الأولى، وأنها كثيراً ما تكون الموجة الممتدة، أي تمتد إلى 1.618 من طول الموجة الأولى أو أكثر. وإذا رأيت حركة بطيئة متداخلة وتسميها موجة ثالثة، فعلى الأرجح أن عدّك خاطئ، أو أنك ما زلت داخل موجة أولى أو تصحيح."
+    },
+    {
+     "id": "s4",
+     "title": "الموجة الرابعة والموجة الخامسة",
+     "narration": "الموجة الرابعة مملة ومحبطة. تتحرك غالباً بشكل جانبي، وتتداخل شموعها كثيراً، وتأخذ وقتاً طويلاً، وكثيراً ما تكون Flat أو Triangle، فتخرج المتداولين بأوقاف خسارة متكررة في الاتجاهين. أفضل ما تفعله فيها هو الصبر وعدم الإفراط في التداول. أما الموجة الخامسة فتأتي مع تفاؤل كبير، والجميع يتحدث عن الاتجاه، لكن الزخم يكون أضعف من الموجة الثالثة. تظهر هنا Divergence أي تباعد، فالسعر يصنع قمة أعلى بينما مؤشر الزخم مثل RSI يصنع قمة أدنى. كما تصبح الشموع أصغر ومتداخلة أكثر. هذه الشخصية تقول لك إن الدخول المتأخر في نهاية الحركة مخاطرة عالية، وإن الوقت قد حان لحماية الأرباح."
+    },
+    {
+     "id": "s5",
+     "title": "شخصية الموجات A وB وC",
+     "narration": "التصحيح أيضاً له شخصيات. الموجة A يظنها معظم المتداولين مجرد تراجع عادي داخل الاتجاه، فيشترون فيها. ثم تأتي الموجة B، وهي الفخ الأشهر في إليوت. تكون غالباً ضعيفة الزخم، متداخلة، بطيئة، وتقنع الناس بأن الاتجاه القديم عاد، فيدخلون متأخرين. ولهذا يقال إن الموجة B هي موجة الحمقى، لأنها تخدع الكثيرين. ثم تأتي الموجة C، وهي مدمرة وسريعة، وتتكون من خمس موجات، وتشبه في قوتها الموجة الثالثة، فتكسر نهاية الموجة A وتضرب الأوقاف. العلامة العملية: إذا رأيت ارتداداً ضعيفاً بطيئاً بعد هبوط من خمس موجات، فكر في أنه قد يكون موجة B وليس بداية اتجاه جديد."
+    },
+    {
+     "id": "s6",
+     "title": "كيف تستخدم الشخصية في التداول",
+     "narration": "قبل كل صفقة اسأل نفسك ثلاثة أسئلة. الأول: ما سرعة الحركة الحالية مقارنة بالحركة السابقة في الاتجاه نفسه؟ الثاني: هل الشموع متداخلة أم متتابعة بلا تداخل؟ الثالث: هل الزخم يقوى أم يضعف عند كل قمة جديدة؟ إذا كانت الإجابات تشير إلى موجة ثانية تنتهي أو موجة B تفشل، فأنت أمام فرصة دخول قبل حركة قوية من نوع الموجة الثالثة أو الموجة C. أما إذا كانت تشير إلى موجة رابعة مملة أو خامسة ضعيفة، فالأفضل الانتظار أو حماية صفقاتك المفتوحة. في كل الحالات يوضع الوقف خلف نقطة الإلغاء أو خلف آخر قاع أو قمة واضحة، وتبقى المخاطرة واحداً بالمئة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على GBPUSD",
+     "narration": "على إطار الساعة في GBPUSD، وبعد هبوط طويل، صعد السعر من 1.2600 إلى 1.2680 بحركة متوسطة متداخلة لم يهتم بها أحد، وهذه شخصية موجة أولى. ثم هبط في ثلاث موجات خلال جلسة نيويورك إلى 1.2620، أي صحح خمسة وسبعين بالمئة، وساد الخوف، لكنه لم يكسر 1.2600. هذه شخصية موجة ثانية. في الساعة الثالثة فجراً بتوقيت نيويورك أغلقت شمعة ساعة صاعدة فوق 1.2635، فكان الشراء عند 1.2635 والوقف عند 1.2595 تحت بداية الموجة الأولى، أي أربعين نقطة. مع افتتاح لندن كسر السعر 1.2680 بشموع كبيرة متتالية، وهذه شخصية موجة ثالثة، فنُقل الوقف إلى نقطة الدخول. الهدف 1.2749، وهو 1.618 من طول الموجة الأولى."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على USDJPY",
+     "narration": "على إطار الأربع ساعات في USDJPY، صعدت الموجة الثالثة من 151.20 إلى 154.80 بزخم قوي ووصل RSI إلى 75. بعد موجة رابعة جانبية إلى 153.90، صنعت الموجة الخامسة قمة أعلى عند 155.40، لكن RSI توقف عند 62، والشموع صارت صغيرة ومتداخلة. هذه شخصية موجة خامسة، فلا نشتري. ثم هبط السعر في خمس موجات سريعة إلى 154.40، وهذه موجة A. بعدها ارتد ببطء وتداخل إلى 155.05، وهذه شخصية موجة B. عندما أغلقت شمعة ساعة تحت 154.80 الساعة التاسعة صباحاً بتوقيت لندن، كان البيع عند 154.75 والوقف عند 155.20 فوق قمة B. الهدف الأول 154.05 حيث تساوي C الموجة A، والثاني 153.43."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو أن تسمي كل حركة قوية موجة ثالثة، دون مقارنتها بما قبلها، فقد تكون موجة C داخل تصحيح. الخطأ الثاني هو الشراء في الموجة الخامسة بسبب التفاؤل والأخبار الإيجابية، مع تجاهل التباعد في الزخم. الخطأ الثالث هو الوقوع في فخ الموجة B، فتظن أن الارتداد البطيء بداية اتجاه جديد. الخطأ الرابع هو التداول بكثرة داخل الموجة الرابعة المملة، فتتكرر الخسائر الصغيرة. الخطأ الخامس هو الاعتماد على الشخصية وحدها وترك القواعد، فالشخصية تساعد على الترجيح، لكن كسر القاعدة يلغي العدّ مهما كان شكل الموجة. وأخيراً، لا تحكم على شخصية شمعة لم تغلق بعد، فالشمعة المفتوحة قد تتغير تماماً."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "الخلاصة: لكي تعرف أين أنت، اقرأ شخصية الحركة الحالية وقارنها بما قبلها. الموجة الأولى مشكوك فيها ومتداخلة، والثانية عميقة ومخيفة ولا تكسر البداية، والثالثة سريعة وقوية بلا تداخل وتكسر قمة الأولى بشمعة مغلقة، والرابعة جانبية مملة، والخامسة تفاؤل مع زخم أضعف وتباعد. وفي التصحيح، A تبدو تراجعاً عادياً، وB ارتداد ضعيف خادع، وC هبوط قوي من خمس موجات. ابحث عن الدخول في نهاية الموجة الثانية أو عند فشل الموجة B، واحمِ أرباحك في الموجة الخامسة، وابتعد عن الإفراط في التداول داخل الرابعة. ضع الوقف خلف نقطة الإلغاء، وخاطر بواحد بالمئة فقط، وتذكر أن هذه قراءة احتمالات وليست يقيناً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What wave personality means",
+     "narration": "When you open a chart, the hardest question in Elliott is not labelling waves after they finish, but knowing where you are right now. This is where wave personality comes in. Each wave reflects a psychological state of traders, so it leaves a fingerprint you can observe: the speed of the move, the size of the candles, how much the candles overlap, the strength of momentum, meaning how fast price is changing, and how the market reacts to news. When you read this fingerprint, you can say, for example, that this move looks like a third wave, not a fifth. Personality does not replace the rules; it helps you choose between two valid counts, and know when to enter and when to stay out of the market."
+    },
+    {
+     "id": "s2",
+     "title": "Wave one and wave two",
+     "narration": "Wave one is usually born after a long opposite trend, so most traders believe it is just a small correction. Its movement is moderate, its candles often overlap, and the news does not support it at first. Then comes wave two, and its personality is frightening. It is often deep, retracing between fifty and sixty-eight percent of wave one, sometimes more, coming close to the start of wave one, so fear returns and everyone says the old trend is continuing. Its key sign is that it does not break the start of wave one, and it usually consists of three waves. This very fear is what makes the end of wave two one of the best entry zones, provided there is confirmation on a closed candle."
+    },
+    {
+     "id": "s3",
+     "title": "Wave three: the strongest and clearest",
+     "narration": "Wave three is the heart of the trend. Its personality is strong and obvious: large consecutive candles in one direction, little overlap between them, price gaps, and momentum reaching its highest levels. At this stage news and analysis start to catch up with the move, and everyone becomes convinced of the new trend. Its practical signs are that it breaks the top of wave one with a strong closed candle, that its speed is clearly greater than that of wave one, and that it is often the extended wave, reaching 1.618 times the length of wave one or more. If you see a slow, overlapping move and call it wave three, your count is probably wrong, or you are still inside a wave one or a correction."
+    },
+    {
+     "id": "s4",
+     "title": "Wave four and wave five",
+     "narration": "Wave four is dull and frustrating. It usually moves sideways, its candles overlap a lot, it takes a long time, and it is often a Flat or a Triangle, stopping traders out repeatedly in both directions. The best thing to do in it is to be patient and avoid overtrading. Wave five, on the other hand, arrives with great optimism; everyone talks about the trend, but momentum is weaker than in wave three. Here a Divergence appears: price makes a higher high while a momentum indicator such as RSI makes a lower high. Candles also become smaller and overlap more. This personality tells you that a late entry at the end of the move is high risk, and that it is time to protect profits."
+    },
+    {
+     "id": "s5",
+     "title": "The personality of waves A, B and C",
+     "narration": "Corrections have personalities too. Most traders think wave A is just a normal pullback within the trend, so they buy into it. Then comes wave B, the most famous trap in Elliott. It is often weak in momentum, overlapping and slow, and it convinces people that the old trend is back, so they enter late. That is why wave B is sometimes called the sucker wave, because it fools many traders. Then comes wave C, which is destructive and fast, made of five waves, and resembles wave three in strength, breaking the end of wave A and hitting stops. The practical sign: if you see a weak, slow bounce after a five-wave decline, consider that it may be wave B rather than the start of a new trend."
+    },
+    {
+     "id": "s6",
+     "title": "How to use personality in trading",
+     "narration": "Before every trade, ask yourself three questions. First: how fast is the current move compared with the previous move in the same direction? Second: are the candles overlapping, or do they follow one another without overlap? Third: is momentum getting stronger or weaker at each new high? If the answers point to a wave two that is ending or a wave B that is failing, you are facing an entry opportunity before a strong move like wave three or wave C. If they point to a dull wave four or a weak wave five, it is better to wait or protect your open trades. In every case, the stop goes beyond the invalidation point or beyond the last clear low or high, and risk stays at one percent."
+    },
+    {
+     "id": "s7",
+     "title": "Example on GBPUSD",
+     "narration": "On the one-hour chart of GBPUSD, after a long decline, price rose from 1.2600 to 1.2680 in a moderate, overlapping move nobody cared about: the personality of a wave one. It then fell in three waves during the New York session to 1.2620, a seventy-five percent retracement, and fear took over, but it did not break 1.2600. This is the personality of a wave two. At three in the morning New York time, a bullish one-hour candle closed above 1.2635, so the buy was at 1.2635 with the stop at 1.2595, below the start of wave one, forty pips away. At the London open, price broke 1.2680 with large consecutive candles, the personality of a wave three, so the stop moved to entry. The target was 1.2749, which is 1.618 of wave one."
+    },
+    {
+     "id": "s8",
+     "title": "Example on USDJPY",
+     "narration": "On the four-hour chart of USDJPY, wave three rose from 151.20 to 154.80 with strong momentum and RSI reached 75. After a sideways wave four down to 153.90, wave five made a higher high at 155.40, but RSI stopped at 62 and candles became small and overlapping. This is the personality of a fifth wave, so we do not buy. Price then fell in five fast waves to 154.40; this is wave A. After that it bounced slowly, overlapping, to 155.05; this is the personality of wave B. When a one-hour candle closed below 154.80 at nine in the morning London time, the sell was at 154.75 with the stop at 155.20, above the top of B. The first target was 154.05, where C equals A, and the second was 153.43."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The first mistake is calling every strong move a third wave without comparing it with what came before; it may be a wave C inside a correction. The second mistake is buying in wave five because of optimism and positive news, while ignoring the divergence in momentum. The third mistake is falling into the wave B trap, thinking a slow bounce is the start of a new trend. The fourth mistake is overtrading inside a dull wave four, so small losses keep piling up. The fifth mistake is relying on personality alone and dropping the rules; personality helps you weigh options, but a broken rule cancels the count whatever the wave looks like. Finally, do not judge the personality of a candle that has not closed, because an open candle can change completely."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "To know where you are, read the personality of the current move and compare it with what came before. Wave one is doubted and overlapping, wave two is deep and frightening but does not break the start, wave three is fast and strong without overlap and breaks the top of wave one with a closed candle, wave four is sideways and dull, and wave five brings optimism with weaker momentum and divergence. In corrections, A looks like a normal pullback, B is a weak, deceptive bounce, and C is a strong five-wave drop. Look for entries at the end of wave two or when wave B fails, protect profits in wave five, and avoid overtrading in wave four. Place the stop beyond invalidation, risk only one percent, and remember these are probabilities, not certainty."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "کەسایەتیی شەپۆل واتای چییە",
+     "narration": "کاتێک چارتەکە دەکەیتەوە، قورسترین پرسیار لە ئێلیۆتدا ناونانی شەپۆلەکان نییە دوای تەواوبوونیان، بەڵکو زانینی ئەوەیە ئێستا لە کوێیت. لێرەدا بیرۆکەی کەسایەتیی شەپۆل دێتە پێشەوە. هەر شەپۆلێک دۆخێکی دەروونیی بازرگانان نیشان دەدات، بۆیە شوێنپەنجەیەک بەجێدەهێڵێت کە دەتوانرێت ببینرێت: خێرایی جووڵە، قەبارەی مۆمەکان، ئەندازەی تێکەڵبوونی مۆمەکان، هێزی زەخم واتە خێرایی گۆڕانی نرخ، و کاردانەوەی بازاڕ بەرامبەر هەواڵەکان. کاتێک ئەم شوێنپەنجەیە دەخوێنیتەوە، دەتوانیت بڵێیت بۆ نموونە ئەم جووڵەیە وەک شەپۆلی سێیەم دەردەکەوێت نەک پێنجەم. کەسایەتی جێگەی یاساکان ناگرێتەوە، بەڵکو یارمەتیت دەدات لە نێوان دوو ژماردنی دروستدا هەڵبژێریت، و بزانیت کەی بچیتە ژوورەوە و کەی لە دەرەوەی بازاڕ بمێنیتەوە."
+    },
+    {
+     "id": "s2",
+     "title": "شەپۆلی یەکەم و شەپۆلی دووەم",
+     "narration": "شەپۆلی یەکەم بەزۆری دوای ئاڕاستەیەکی درێژی پێچەوانە لەدایک دەبێت، بۆیە زۆربەی بازرگانان وا دەزانن تەنها ڕاستکردنەوەیەکی بچووکە. جووڵەکەی مامناوەندە، مۆمەکانی زۆرجار تێکەڵ دەبن، و لە سەرەتادا هەواڵەکان پشتگیری ناکەن. پاشان شەپۆلی دووەم دێت و کەسایەتییەکەی ترسناکە. زۆرجار قووڵە، لە نێوان پەنجا و شەست و هەشت لە سەدی شەپۆلی یەکەم ڕاست دەکاتەوە، هەندێک جار زیاتر، و لە سەرەتای یەکەم نزیک دەبێتەوە، بۆیە ترس دەگەڕێتەوە و هەموو دەڵێن ئاڕاستە کۆنەکە بەردەوامە. نیشانە گرنگەکەی ئەوەیە کە سەرەتای شەپۆلی یەکەم ناشکێنێت، و بەزۆری لە سێ شەپۆل پێکدێت. هەر ئەم ترسەیە کە کۆتایی شەپۆلی دووەم دەکاتە یەکێک لە باشترین ناوچەکانی چوونەژوورەوە، بە مەرجی پشتڕاستکردنەوە لەسەر مۆمێکی داخراو."
+    },
+    {
+     "id": "s3",
+     "title": "شەپۆلی سێیەم: بەهێزترین و ڕوونترین",
+     "narration": "شەپۆلی سێیەم دڵی ئاڕاستەکەیە. کەسایەتییەکەی بەهێز و ڕوونە: مۆمی گەورەی یەک لە دوای یەک بە یەک ئاڕاستە، تێکەڵبوونی کەم لە نێوانیاندا، بۆشاییی نرخ، و زەخمێک کە دەگاتە بەرزترین ئاستەکانی. لەم قۆناغەدا هەواڵ و شیکردنەوەکان دەست دەکەن بە شوێنکەوتنی جووڵەکە، و هەموو قەناعەت بە ئاڕاستە نوێیەکە دەهێنن. نیشانە کردەییەکانی ئەوەن کە لووتکەی شەپۆلی یەکەم بە مۆمێکی داخراوی بەهێز دەشکێنێت، خێراییەکەی بە ڕوونی لە خێرایی شەپۆلی یەکەم زیاترە، و زۆرجار شەپۆلە درێژبووەکەیە، واتە دەگاتە 1.618 ئەوەندەی درێژیی شەپۆلی یەکەم یان زیاتر. ئەگەر جووڵەیەکی خاو و تێکەڵ ببینیت و ناوی بنێیت شەپۆلی سێیەم، بە ئەگەری زۆر ژماردنەکەت هەڵەیە، یان هێشتا لە ناو شەپۆلی یەکەم یان ڕاستکردنەوەدایت."
+    },
+    {
+     "id": "s4",
+     "title": "شەپۆلی چوارەم و شەپۆلی پێنجەم",
+     "narration": "شەپۆلی چوارەم بێزارکەر و نائومێدکەرە. بەزۆری بە لاتەنیشتدا دەجووڵێت، مۆمەکانی زۆر تێکەڵ دەبن، کاتێکی درێژ دەبات، و زۆرجار Flat یان Triangle ە، بۆیە بازرگانان بە وەستانی زیانی دووبارە لە هەردوو ئاڕاستەدا دەردەکات. باشترین کار تێیدا ئارامگرتن و دوورکەوتنەوەیە لە زۆر مامەڵەکردن. بەڵام شەپۆلی پێنجەم لەگەڵ گەشبینییەکی زۆردا دێت، هەموو باسی ئاڕاستەکە دەکەن، بەڵام زەخم لە شەپۆلی سێیەم لاوازترە. لێرەدا Divergence واتە جیابوونەوە دەردەکەوێت، نرخ لووتکەیەکی بەرزتر دروست دەکات لە کاتێکدا نیشاندەری زەخم وەک RSI لووتکەیەکی نزمتر دروست دەکات. هەروەها مۆمەکان بچووکتر و تێکەڵتر دەبن. ئەم کەسایەتییە پێت دەڵێت چوونەژوورەوەی دواکەوتوو لە کۆتایی جووڵەدا مەترسیی بەرزە، و کاتی پاراستنی قازانجە."
+    },
+    {
+     "id": "s5",
+     "title": "کەسایەتیی شەپۆلەکانی A و B و C",
+     "narration": "ڕاستکردنەوەش کەسایەتیی خۆی هەیە. زۆربەی بازرگانان وا دەزانن شەپۆلی A تەنها گەڕانەوەیەکی ئاساییە لە ناو ئاڕاستەکەدا، بۆیە تێیدا دەکڕن. پاشان شەپۆلی B دێت، کە ناودارترین تەڵەیە لە ئێلیۆتدا. زۆرجار زەخمی لاوازە، تێکەڵە و خاوە، و خەڵک قایل دەکات کە ئاڕاستە کۆنەکە گەڕاوەتەوە، بۆیە بە دواکەوتوویی دەچنە ژوورەوە. لەبەر ئەمە هەندێک جار پێی دەوترێت شەپۆلی فریودراوان، چونکە زۆر کەس هەڵدەخەڵەتێنێت. پاشان شەپۆلی C دێت، کە وێرانکەر و خێرایە، لە پێنج شەپۆل پێکدێت، و لە هێزدا لە شەپۆلی سێیەم دەچێت، کۆتایی شەپۆلی A دەشکێنێت و وەستانەکان دەپێکێت. نیشانە کردەییەکە: ئەگەر دوای دابەزینێکی پێنج شەپۆلی گەڕانەوەیەکی لاواز و خاو ببینیت، بیر لەوە بکەرەوە کە لەوانەیە شەپۆلی B بێت نەک سەرەتای ئاڕاستەیەکی نوێ."
+    },
+    {
+     "id": "s6",
+     "title": "چۆن کەسایەتی لە مامەڵەدا بەکاربهێنیت",
+     "narration": "پێش هەر مامەڵەیەک سێ پرسیار لە خۆت بکە. یەکەم: خێرایی جووڵەی ئێستا بەراورد بە جووڵەی پێشوو لە هەمان ئاڕاستەدا چەندە؟ دووەم: ئایا مۆمەکان تێکەڵن یان یەک لە دوای یەک بێ تێکەڵبوون دێن؟ سێیەم: ئایا زەخم لە هەر لووتکەیەکی نوێدا بەهێزتر دەبێت یان لاوازتر؟ ئەگەر وەڵامەکان ئاماژە بە شەپۆلێکی دووەم بکەن کە تەواو دەبێت یان شەپۆلێکی B کە سەرناکەوێت، ئەوا لە بەردەم دەرفەتێکی چوونەژوورەوەدایت پێش جووڵەیەکی بەهێز وەک شەپۆلی سێیەم یان شەپۆلی C. بەڵام ئەگەر ئاماژە بە شەپۆلێکی چوارەمی بێزارکەر یان پێنجەمێکی لاواز بکەن، باشترە چاوەڕێ بکەیت یان مامەڵە کراوەکانت بپارێزیت. لە هەموو حاڵەتەکاندا وەستان لە پشت خاڵی هەڵوەشاندنەوە یان دوایین نزمترین یان بەرزترین خاڵی ڕوون دادەنرێت، و مەترسی یەک لە سەد دەمێنێتەوە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر GBPUSD",
+     "narration": "لەسەر چوارچێوەی یەک کاتژمێری GBPUSD، دوای دابەزینێکی درێژ، نرخ لە 1.2600 بۆ 1.2680 بەرز بووەوە بە جووڵەیەکی مامناوەندی تێکەڵ کە کەس گرنگیی پێنەدا، ئەمە کەسایەتیی شەپۆلی یەکەمە. پاشان بە سێ شەپۆل لە ماوەی دانیشتنی نیویۆرکدا بۆ 1.2620 دابەزی، واتە 75 لە سەدی ڕاستکردەوە و ترس باڵی کێشا، بەڵام 1.2600 ی نەشکاند. ئەمە کەسایەتیی شەپۆلی دووەمە. لە کاتژمێر سێی بەرەبەیانی کاتی نیویۆرک مۆمێکی یەک کاتژمێری بەرزبووەوە لە سەرووی 1.2635 داخرا، بۆیە کڕین لە 1.2635 بوو و وەستان لە 1.2595 لە خوار سەرەتای شەپۆلی یەکەم، واتە چل پیپ. لەگەڵ کردنەوەی لەندەن نرخ 1.2680 ی بە مۆمی گەورەی یەک لە دوای یەک شکاند، ئەمە کەسایەتیی شەپۆلی سێیەمە، بۆیە وەستان گوازرایەوە بۆ خاڵی چوونەژوورەوە. ئامانج 1.2749 بوو، کە 1.618 ی درێژیی شەپۆلی یەکەمە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر USDJPY",
+     "narration": "لەسەر چوارچێوەی چوار کاتژمێری USDJPY، شەپۆلی سێیەم لە 151.20 بۆ 154.80 بە زەخمێکی بەهێز بەرز بووەوە و RSI گەیشتە 75. دوای شەپۆلێکی چوارەمی لاتەنیشت بۆ 153.90، شەپۆلی پێنجەم لووتکەیەکی بەرزتری لە 155.40 دروست کرد، بەڵام RSI لە 62 وەستا، و مۆمەکان بچووک و تێکەڵ بوون. ئەمە کەسایەتیی شەپۆلی پێنجەمە، بۆیە ناکڕین. پاشان نرخ بە پێنج شەپۆلی خێرا بۆ 154.40 دابەزی، ئەمە شەپۆلی A یە. دواتر بە خاوی و تێکەڵی بۆ 155.05 گەڕایەوە، ئەمە کەسایەتیی شەپۆلی B یە. کاتێک مۆمێکی یەک کاتژمێری لە کاتژمێر نۆی بەیانی کاتی لەندەن لە خوار 154.80 داخرا، فرۆشتن لە 154.75 بوو و وەستان لە 155.20 لە سەرووی لووتکەی B. ئامانجی یەکەم 154.05 بوو کە C یەکسانی A دەبێت، و دووەم 153.43."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم ئەوەیە هەر جووڵەیەکی بەهێز ناو بنێیت شەپۆلی سێیەم بێ ئەوەی بەراوردی بکەیت بەوەی پێشتر هاتووە، لەوانەیە شەپۆلی C بێت لە ناو ڕاستکردنەوەدا. هەڵەی دووەم کڕینە لە شەپۆلی پێنجەمدا بەهۆی گەشبینی و هەواڵی ئەرێنی، لەگەڵ پشتگوێخستنی جیابوونەوە لە زەخمدا. هەڵەی سێیەم کەوتنە ناو تەڵەی شەپۆلی B یە، وا بزانیت گەڕانەوەی خاو سەرەتای ئاڕاستەیەکی نوێیە. هەڵەی چوارەم زۆر مامەڵەکردنە لە ناو شەپۆلی چوارەمی بێزارکەردا، بۆیە زیانە بچووکەکان دووبارە دەبنەوە. هەڵەی پێنجەم پشتبەستنە بە کەسایەتی بە تەنها و وازهێنان لە یاساکان، کەسایەتی یارمەتی هەڵسەنگاندن دەدات، بەڵام شکانی یاسا ژماردن هەڵدەوەشێنێتەوە هەرچۆنێک شەپۆلەکە دەربکەوێت. لە کۆتاییدا، حوکم لەسەر کەسایەتیی مۆمێک مەدە کە هێشتا دانەخراوە، چونکە مۆمی کراوە دەکرێت بە تەواوی بگۆڕێت."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کردەیی",
+     "narration": "پوختە: بۆ ئەوەی بزانیت لە کوێیت، کەسایەتیی جووڵەی ئێستا بخوێنەوە و بەراوردی بکە بەوەی پێشتر هاتووە. شەپۆلی یەکەم گومانلێکراو و تێکەڵە، دووەم قووڵ و ترسناکە بەڵام سەرەتا ناشکێنێت، سێیەم خێرا و بەهێزە بێ تێکەڵبوون و لووتکەی یەکەم بە مۆمی داخراو دەشکێنێت، چوارەم لاتەنیشت و بێزارکەرە، و پێنجەم گەشبینی دەهێنێت لەگەڵ زەخمی لاوازتر و جیابوونەوە. لە ڕاستکردنەوەدا، A وەک گەڕانەوەیەکی ئاسایی دەردەکەوێت، B گەڕانەوەیەکی لاوازی فریودەرە، و C دابەزینێکی بەهێزی پێنج شەپۆلییە. بەدوای چوونەژوورەوەدا بگەڕێ لە کۆتایی شەپۆلی دووەم یان کاتێک شەپۆلی B سەرناکەوێت، قازانجەکانت لە شەپۆلی پێنجەمدا بپارێزە، و لە زۆر مامەڵەکردن لە ناو چوارەمدا دووربکەوە. وەستان لە پشت خاڵی هەڵوەشاندنەوە دابنێ، تەنها یەک لە سەد مەترسی بکە، و لەبیرت بێت ئەمە خوێندنەوەی ئەگەرەکانە نەک دڵنیایی."
+    }
+   ]
+  },
+  "ew-l5-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا نحتاج عدة أطر زمنية",
+     "narration": "هذا الدرس يجمع كل ما تعلمته في إليوت داخل خطة واحدة يمكنك تنفيذها. الفكرة الأساسية أن كل موجة تتكون من موجات أصغر، وهذا ما نسميه درجة الموجة. الموجة الثالثة على الإطار اليومي تتكون من خمس موجات على إطار الأربع ساعات، وكل واحدة منها تتكون من خمس أو ثلاث موجات على إطار الساعة. لذلك نستخدم ثلاثة أطر: الإطار اليومي لفهم الصورة الكبيرة واتجاهها، وإطار الأربع ساعات لتحديد الموجة التي نريد تداولها ومنطقة انتهاء التصحيح، وإطار الساعة أو الخمس عشرة دقيقة للتنفيذ الدقيق. القاعدة الذهبية: لا تتداول على الإطار الصغير عكس العدّ على الإطار الكبير."
+    },
+    {
+     "id": "s2",
+     "title": "الخطوة الأولى: الإطار اليومي",
+     "narration": "على الإطار اليومي نضع العدّ الرئيسي، أي السيناريو الأرجح، ونضع معه عدّاً بديلاً، أي السيناريو الثاني إذا فشل الأول. مثلاً: العدّ الرئيسي يقول إننا في موجة ثانية تصحيحية، وبعدها نتوقع موجة ثالثة صاعدة. والعدّ البديل يقول إن الصعود السابق كان موجة A فقط، وإن الهبوط قد يستمر. بعد ذلك نحدد نقطة الإلغاء بوضوح، وهي المستوى الذي إذا أغلقت شمعة يومية خلفه سقط العدّ الرئيسي. في مثالنا تكون نقطة الإلغاء بداية الموجة الأولى. نكتب هذا كله في المذكرة قبل أي صفقة، لأن الخطة المكتوبة تحميك من تغيير رأيك مع كل شمعة."
+    },
+    {
+     "id": "s3",
+     "title": "الخطوة الثانية: إطار الأربع ساعات",
+     "narration": "على إطار الأربع ساعات نختار الموجة التي نريد تداولها. أفضل الفرص في إليوت ثلاث: بداية الموجة الثالثة بعد انتهاء الموجة الثانية، وبداية الموجة الخامسة بعد انتهاء الرابعة، وبداية الموجة C بعد انتهاء B. بعد ذلك نحدد منطقة نهاية التصحيح بتجميع الأدلة: مستويات فيبوناتشي مثل 50 و61.8 بالمئة للموجة الثانية، أو 38.2 بالمئة للرابعة، ومساواة الموجة C بالموجة A، وخط القناة، وقاعدة التناوب. عندما تلتقي ثلاثة أدلة أو أكثر في منطقة ضيقة، تصبح هذه منطقة المراقبة. لا نضع أمراً معلقاً هناك، بل ننتقل إلى الإطار الصغير وننتظر الدليل على أن التصحيح انتهى."
+    },
+    {
+     "id": "s4",
+     "title": "الخطوة الثالثة: التنفيذ على الإطار الصغير",
+     "narration": "عندما يصل السعر إلى منطقة المراقبة، ننتقل إلى إطار الساعة أو الخمس عشرة دقيقة. ما نبحث عنه هو بداية الموجة الجديدة بشكلها الصغير: حركة من خمس موجات صغيرة في اتجاه صفقتنا، ثم تصحيح من ثلاث موجات لا يكسر بداية هذه الحركة. هذا هو نمط الموجة الأولى والموجة الثانية على الدرجة الأصغر. الدخول يكون عندما تغلق شمعة فوق قمة التصحيح الصغير في الشراء، أو تحت قاعه في البيع. الوقف يوضع خلف نهاية التصحيح الكبير على الأربع ساعات، لأن كسره يعني أن التصحيح لم ينتهِ. ثم نحسب حجم الصفقة بحيث تكون الخسارة إذا ضرب الوقف واحداً بالمئة فقط من الحساب."
+    },
+    {
+     "id": "s5",
+     "title": "إدارة الصفقة والأهداف",
+     "narration": "بعد الدخول تبدأ الإدارة. الهدف الأول نحسبه من الموجة الصغيرة الأولى على إطار التنفيذ، مثل 1.618 من طولها مضافاً إلى نهاية تصحيحها، وعنده نغلق نصف الصفقة وننقل الوقف إلى نقطة الدخول. الهدف الثاني يأتي من الإطار الأكبر، مثل قمة الموجة الأولى على الإطار اليومي، أو امتداد 1.618 للموجة الثالثة. أثناء الصفقة نراقب الشخصية: إذا جاءت الحركة سريعة وقوية فهذا يدعم أنها موجة ثالثة، وإذا جاءت بطيئة ومتداخلة فقد يكون العدّ البديل هو الصحيح، فنحمي الربح مبكراً. وإذا أغلقت شمعة خلف نقطة الإلغاء نخرج دون نقاش، ثم نعيد العدّ من جديد."
+    },
+    {
+     "id": "s6",
+     "title": "مثال كامل على EURUSD",
+     "narration": "على اليومي في EURUSD، الموجة الأولى صعدت من 1.0450 إلى 1.0900، والعدّ الرئيسي يقول إننا في موجة ثانية، ونقطة الإلغاء 1.0450. على الأربع ساعات تشكل Zigzag: الموجة A هبطت إلى 1.0720، وB ارتدت إلى 1.0800. مساواة C بـ A تعطي 1.0620، وتصحيح 61.8 بالمئة للموجة الأولى عند 1.0622، فصارت منطقة المراقبة 1.0620. يوم الثلاثاء في جلسة لندن لمس السعر 1.0625، ثم صعد على إطار الساعة في خمس موجات إلى 1.0690، وصحح إلى 1.0650. الساعة 9:30 بتوقيت نيويورك أغلقت شمعة فوق 1.0665، فاشترينا عند 1.0668 والوقف 1.0615، أي 53 نقطة. بحساب عشرة آلاف دولار ومخاطرة مئة دولار، الحجم 0.19 لوت. الهدف الأول 1.0755، والثاني 1.0900."
+    },
+    {
+     "id": "s7",
+     "title": "مثال كامل على XAUUSD",
+     "narration": "على اليومي في الذهب، انتهت الموجة الثالثة عند 2480، وقمة الموجة الأولى عند 2360 هي حد الإلغاء للموجة الرابعة. الموجة الثانية كانت Zigzag حادة، فالتناوب يرجح رابعة جانبية. على الأربع ساعات تشكل Flat: الموجة A هبطت إلى 2405، وB ارتدت إلى 2475، وC تساوي A تقريباً عند 2400. على إطار الخمس عشرة دقيقة صعد السعر من 2398 في خمس موجات إلى 2422، ثم صحح إلى 2410. الساعة 10:30 بتوقيت نيويورك أغلقت شمعة فوق 2416، فاشترينا عند 2417 والوقف 2396، أي 21 دولاراً. كل دولار حركة يساوي مئة دولار للوت الكامل، فالحجم 0.05 لوت تقريباً لمخاطرة مئة دولار. الهدف الأول 2449، والثاني 2480."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو البدء من الإطار الصغير، فترى خمس موجات على الخمس عشرة دقيقة وتشتري، بينما الإطار اليومي في منتصف موجة C هابطة. الخطأ الثاني هو عدم كتابة العدّ البديل ونقطة الإلغاء، فتبقى في صفقة خاسرة لأنك لا تعرف متى تعترف بالخطأ. الخطأ الثالث هو الدخول بمجرد وصول السعر إلى منطقة فيبوناتشي، دون انتظار الخمس موجات الصغيرة وتصحيحها وشمعة مغلقة. الخطأ الرابع هو وضع وقف قريب جداً داخل التصحيح الكبير، فيضربه أي تذبذب عادي. الخطأ الخامس هو حساب الحجم بالإحساس بدلاً من معادلة المخاطرة. سجّل كل صفقة في المذكرة مع صورة للعدّ على الأطر الثلاثة، لتتعلم من النتائج بصدق."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية: قائمة الخطة",
+     "narration": "إليك الخطة كاملة في قائمة قصيرة تراجعها قبل كل صفقة. أولاً، على اليومي اكتب العدّ الرئيسي والعدّ البديل ونقطة الإلغاء. ثانياً، على الأربع ساعات اختر موجة واحدة تتداولها، ثالثة أو خامسة أو C، وحدد منطقة نهاية التصحيح بثلاثة أدلة على الأقل. ثالثاً، على الساعة أو الخمس عشرة دقيقة انتظر خمس موجات صغيرة في اتجاهك، ثم تصحيحاً من ثلاث، ثم شمعة مغلقة تكسر قمة التصحيح أو قاعه. رابعاً، ضع الوقف خلف نهاية التصحيح الكبير، واحسب الحجم لمخاطرة واحد بالمئة. خامساً، أغلق نصف الصفقة عند الهدف الأول وانقل الوقف إلى الدخول. سادساً، اخرج فوراً عند كسر نقطة الإلغاء. إليوت أداة احتمالات، والانضباط هو ما يحميك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why we need several timeframes",
+     "narration": "This lesson combines everything you have learned about Elliott into one plan you can execute. The core idea is that every wave is made of smaller waves; this is what we call wave degree. A third wave on the daily chart is made of five waves on the four-hour chart, and each of those is made of five or three waves on the one-hour chart. So we use three timeframes: the daily chart to understand the big picture and its direction, the four-hour chart to choose the wave we want to trade and the zone where the correction ends, and the one-hour or fifteen-minute chart for precise execution. The golden rule: do not trade on the small timeframe against the count on the larger timeframe."
+    },
+    {
+     "id": "s2",
+     "title": "Step one: the daily chart",
+     "narration": "On the daily chart we set the primary count, meaning the most likely scenario, and alongside it an alternate count, meaning the second scenario if the first fails. For example, the primary count says we are in a corrective wave two, after which we expect a rising wave three. The alternate count says the previous rise was only a wave A, and the decline may continue. Then we clearly define the invalidation point, the level where, if a daily candle closes beyond it, the primary count falls. In our example, the invalidation point is the start of wave one. We write all of this in the journal before any trade, because a written plan protects you from changing your mind with every candle."
+    },
+    {
+     "id": "s3",
+     "title": "Step two: the four-hour chart",
+     "narration": "On the four-hour chart we choose the wave we want to trade. The three best opportunities in Elliott are: the start of wave three after wave two ends, the start of wave five after wave four ends, and the start of wave C after wave B ends. Then we define the correction's end zone by stacking evidence: Fibonacci levels such as 50 and 61.8 percent for wave two, or 38.2 percent for wave four, wave C equal to wave A, the channel line, and the alternation guideline. When three or more pieces of evidence meet in a narrow zone, it becomes the watch zone. We do not place a pending order there; instead we move to the small timeframe and wait for proof that the correction has ended."
+    },
+    {
+     "id": "s4",
+     "title": "Step three: execution on the small timeframe",
+     "narration": "When price reaches the watch zone, we move to the one-hour or fifteen-minute chart. What we look for is the start of the new wave in its small form: a five-wave move in the direction of our trade, followed by a three-wave correction that does not break the start of that move. This is the pattern of wave one and wave two at the smaller degree. We enter when a candle closes above the top of the small correction for a buy, or below its low for a sell. The stop goes beyond the end of the larger correction on the four-hour chart, because breaking it means the correction is not over. Then we size the position so that, if the stop is hit, the loss is only one percent of the account."
+    },
+    {
+     "id": "s5",
+     "title": "Managing the trade and the targets",
+     "narration": "After entry, management begins. The first target comes from the first small wave on the execution chart, such as 1.618 of its length added to the end of its correction; there we close half the position and move the stop to entry. The second target comes from the larger timeframe, such as the top of wave one on the daily chart, or the 1.618 extension for wave three. During the trade we watch personality: if the move is fast and strong, that supports a third wave; if it is slow and overlapping, the alternate count may be the right one, so we protect profit early. If a candle closes beyond the invalidation point, we exit without debate and then recount from scratch."
+    },
+    {
+     "id": "s6",
+     "title": "A complete example on EURUSD",
+     "narration": "On the EURUSD daily chart, wave one rose from 1.0450 to 1.0900; the primary count says we are in wave two, with invalidation at 1.0450. On the four-hour chart a Zigzag formed: wave A fell to 1.0720 and B bounced to 1.0800. C equal to A gives 1.0620, and the 61.8 percent retracement of wave one is at 1.0622, so the watch zone became 1.0620. On Tuesday in the London session price touched 1.0625, then on the one-hour chart rose in five waves to 1.0690 and pulled back to 1.0650. At 9:30 New York time a candle closed above 1.0665, so we bought at 1.0668 with the stop at 1.0615, 53 pips. With a ten-thousand-dollar account and one hundred dollars of risk, the size is 0.19 lots. The first target was 1.0755, the second 1.0900."
+    },
+    {
+     "id": "s7",
+     "title": "A complete example on XAUUSD",
+     "narration": "On the daily gold chart, wave three ended at 2480, and the top of wave one at 2360 is the invalidation limit for wave four. Wave two was a sharp Zigzag, so alternation favours a sideways wave four. On the four-hour chart a Flat formed: wave A fell to 2405, B bounced to 2475, and C roughly equalled A at 2400. On the fifteen-minute chart price rose from 2398 in five waves to 2422, then pulled back to 2410. At 10:30 New York time a candle closed above 2416, so we bought at 2417 with the stop at 2396, 21 dollars away. Each one-dollar move is worth one hundred dollars per standard lot, so the size is about 0.05 lots for one hundred dollars of risk. The first target was 2449, the second 2480."
+    },
+    {
+     "id": "s8",
+     "title": "Common mistakes",
+     "narration": "The first mistake is starting small: you see five waves on the fifteen-minute chart and buy, while the daily chart is in the middle of a falling wave C. The second is not writing down the alternate count and the invalidation point, so you stay in a losing trade, not knowing when to admit you were wrong. The third is entering as soon as price reaches the Fibonacci zone, without waiting for the five small waves, their correction and a closed candle. The fourth is placing the stop too close, inside the larger correction, where normal noise hits it. The fifth is sizing by feel instead of the risk formula. Record every trade in the journal with a screenshot of the count on all three timeframes, to learn honestly from results."
+    },
+    {
+     "id": "s9",
+     "title": "The practical rule: the plan checklist",
+     "narration": "Here is the plan as a checklist to review before every trade. First, on the daily chart, write the primary count, the alternate count and the invalidation point. Second, on the four-hour chart, choose one wave to trade, a third, a fifth or a C, and define the correction's end zone with at least three pieces of evidence. Third, on the one-hour or fifteen-minute chart, wait for five small waves in your direction, then a three-wave correction, then a closed candle breaking the top or low of that correction. Fourth, place the stop beyond the end of the larger correction, and size for one percent risk. Fifth, close half at the first target and move the stop to entry. Sixth, exit at once if invalidation breaks. Elliott gives probabilities; discipline protects you."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی پێویستمان بە چەند چوارچێوەیەکی کاتی هەیە",
+     "narration": "ئەم وانەیە هەموو ئەوەی لە ئێلیۆت فێربوویت لە یەک پلاندا کۆدەکاتەوە کە دەتوانیت جێبەجێی بکەیت. بیرۆکە سەرەکییەکە ئەوەیە هەر شەپۆلێک لە شەپۆلی بچووکتر پێکدێت، ئەمە ئەوەیە پێی دەڵێین پلەی شەپۆل. شەپۆلی سێیەم لەسەر چوارچێوەی ڕۆژانە لە پێنج شەپۆل پێکدێت لەسەر چوارچێوەی چوار کاتژمێری، و هەر یەکێکیان لە پێنج یان سێ شەپۆل پێکدێت لەسەر چوارچێوەی یەک کاتژمێری. بۆیە سێ چوارچێوە بەکاردەهێنین: ڕۆژانە بۆ تێگەیشتن لە وێنە گەورەکە و ئاڕاستەکەی، چوار کاتژمێری بۆ هەڵبژاردنی ئەو شەپۆلەی دەمانەوێت مامەڵەی لەسەر بکەین و ناوچەی کۆتایی ڕاستکردنەوە، و یەک کاتژمێری یان پانزە خولەکی بۆ جێبەجێکردنی ورد. یاسای زێڕین: لەسەر چوارچێوەی بچووک دژی ژماردنی چوارچێوەی گەورە مامەڵە مەکە."
+    },
+    {
+     "id": "s2",
+     "title": "هەنگاوی یەکەم: چوارچێوەی ڕۆژانە",
+     "narration": "لەسەر چوارچێوەی ڕۆژانە ژماردنی سەرەکی دادەنێین، واتە ئەگەرترین سیناریۆ، و لەگەڵیدا ژماردنێکی جێگرەوە، واتە سیناریۆی دووەم ئەگەر یەکەم سەرنەکەوت. بۆ نموونە: ژماردنی سەرەکی دەڵێت ئێمە لە شەپۆلێکی دووەمی ڕاستکەرەوەداین، و دوای ئەوە چاوەڕێی شەپۆلێکی سێیەمی بەرزبووەوە دەکەین. ژماردنی جێگرەوە دەڵێت بەرزبوونەوەی پێشوو تەنها شەپۆلی A بوو، و دابەزین لەوانەیە بەردەوام بێت. پاشان بە ڕوونی خاڵی هەڵوەشاندنەوە دیاری دەکەین، ئەو ئاستەیە کە ئەگەر مۆمێکی ڕۆژانە لە پشتیەوە داخرا ژماردنی سەرەکی دەڕووخێت. لە نموونەکەماندا خاڵی هەڵوەشاندنەوە سەرەتای شەپۆلی یەکەمە. هەموو ئەمە لە دەفتەری بیرەوەریدا دەنووسین پێش هەر مامەڵەیەک، چونکە پلانی نووسراو دەتپارێزێت لە گۆڕینی بیروڕات لەگەڵ هەر مۆمێکدا."
+    },
+    {
+     "id": "s3",
+     "title": "هەنگاوی دووەم: چوارچێوەی چوار کاتژمێری",
+     "narration": "لەسەر چوارچێوەی چوار کاتژمێری ئەو شەپۆلە هەڵدەبژێرین کە دەمانەوێت مامەڵەی لەسەر بکەین. باشترین سێ دەرفەت لە ئێلیۆتدا ئەمانەن: سەرەتای شەپۆلی سێیەم دوای تەواوبوونی دووەم، سەرەتای شەپۆلی پێنجەم دوای تەواوبوونی چوارەم، و سەرەتای شەپۆلی C دوای تەواوبوونی B. پاشان ناوچەی کۆتایی ڕاستکردنەوە دیاری دەکەین بە کۆکردنەوەی بەڵگەکان: ئاستەکانی فیبۆناچی وەک 50 و 61.8 لە سەد بۆ شەپۆلی دووەم، یان 38.2 لە سەد بۆ چوارەم، یەکسانبوونی C بە A، هێڵی کەناڵ، و ڕێنمایی ئاڵوگۆڕ. کاتێک سێ بەڵگە یان زیاتر لە ناوچەیەکی تەسکدا یەکدەگرنەوە، دەبێتە ناوچەی چاودێری. لەوێ فەرمانی هەڵپەسێردراو دانانێین، بەڵکو دەچینە سەر چوارچێوەی بچووک و چاوەڕێی بەڵگە دەکەین کە ڕاستکردنەوەکە تەواو بووە."
+    },
+    {
+     "id": "s4",
+     "title": "هەنگاوی سێیەم: جێبەجێکردن لەسەر چوارچێوەی بچووک",
+     "narration": "کاتێک نرخ دەگاتە ناوچەی چاودێری، دەچینە سەر چوارچێوەی یەک کاتژمێری یان پانزە خولەکی. ئەوەی بەدوایدا دەگەڕێین سەرەتای شەپۆلە نوێیەکەیە بە شێوە بچووکەکەی: جووڵەیەکی پێنج شەپۆلی بچووک بە ئاڕاستەی مامەڵەکەمان، پاشان ڕاستکردنەوەیەکی سێ شەپۆلی کە سەرەتای ئەو جووڵەیە ناشکێنێت. ئەمە نەخشەی شەپۆلی یەکەم و دووەمە لە پلەی بچووکتردا. چوونەژوورەوە کاتێکە مۆمێک لە سەرووی لووتکەی ڕاستکردنەوە بچووکەکە دادەخرێت بۆ کڕین، یان لە خوار نزمترین خاڵەکەی بۆ فرۆشتن. وەستان لە پشت کۆتایی ڕاستکردنەوە گەورەکە لەسەر چوار کاتژمێری دادەنرێت، چونکە شکاندنی واتای ئەوەیە ڕاستکردنەوەکە تەواو نەبووە. پاشان قەبارەی مامەڵە حیساب دەکەین بە شێوەیەک ئەگەر وەستان پێکرا، زیانەکە تەنها یەک لە سەدی هەژمار بێت."
+    },
+    {
+     "id": "s5",
+     "title": "بەڕێوەبردنی مامەڵە و ئامانجەکان",
+     "narration": "دوای چوونەژوورەوە بەڕێوەبردن دەست پێدەکات. ئامانجی یەکەم لە شەپۆلی بچووکی یەکەم لەسەر چوارچێوەی جێبەجێکردن حیساب دەکەین، وەک 1.618 ی درێژییەکەی کە بۆ کۆتایی ڕاستکردنەوەکەی زیاد دەکرێت، لەوێ نیوەی مامەڵەکە دادەخەین و وەستان دەگوازینەوە بۆ خاڵی چوونەژوورەوە. ئامانجی دووەم لە چوارچێوەی گەورەترەوە دێت، وەک لووتکەی شەپۆلی یەکەم لەسەر ڕۆژانە، یان درێژکردنەوەی 1.618 بۆ شەپۆلی سێیەم. لە ماوەی مامەڵەکەدا چاودێریی کەسایەتی دەکەین: ئەگەر جووڵەکە خێرا و بەهێز بوو ئەوە پشتگیریی ئەوە دەکات کە شەپۆلی سێیەمە، و ئەگەر خاو و تێکەڵ بوو لەوانەیە ژماردنی جێگرەوە دروست بێت، بۆیە زوو قازانج دەپارێزین. ئەگەر مۆمێک لە پشت خاڵی هەڵوەشاندنەوە داخرا، بێ دەمەقاڵێ دەردەچین و پاشان لە سەرەتاوە دووبارە دەژمێرینەوە."
+    },
+    {
+     "id": "s6",
+     "title": "نموونەیەکی تەواو لەسەر EURUSD",
+     "narration": "لەسەر ڕۆژانەی EURUSD، شەپۆلی یەکەم لە 1.0450 بۆ 1.0900 بەرز بووەوە، ژماردنی سەرەکی دەڵێت لە شەپۆلی دووەمداین و هەڵوەشاندنەوە 1.0450 ە. لەسەر چوار کاتژمێری Zigzag ێک دروست بوو: شەپۆلی A بۆ 1.0720 دابەزی، و B بۆ 1.0800 گەڕایەوە. یەکسانبوونی C بە A دەدات 1.0620، و گەڕانەوەی 61.8 لە سەدی شەپۆلی یەکەم لە 1.0622 یە، بۆیە ناوچەی چاودێری بوو بە 1.0620. سێشەممە لە دانیشتنی لەندەن نرخ 1.0625 ی بەرکەوت، پاشان لەسەر H1 بە پێنج شەپۆل بۆ 1.0690 بەرز بووەوە و بۆ 1.0650 گەڕایەوە. لە 9:30 ی کاتی نیویۆرک مۆمێک لە سەرووی 1.0665 داخرا، بۆیە لە 1.0668 کڕیمان و وەستان 1.0615، واتە 53 پیپ. بە هەژماری 10000 دۆلار و مەترسیی 100 دۆلار، قەبارە 0.19 لۆتە. ئامانجی یەکەم 1.0755 بوو، و دووەم 1.0900."
+    },
+    {
+     "id": "s7",
+     "title": "نموونەیەکی تەواو لەسەر XAUUSD",
+     "narration": "لەسەر ڕۆژانەی ئاڵتوون شەپۆلی سێیەم لە 2480 تەواو بوو، و لووتکەی شەپۆلی یەکەم لە 2360 سنووری هەڵوەشاندنەوەیە بۆ شەپۆلی چوارەم. شەپۆلی دووەم Zigzag ێکی تیژ بوو، بۆیە ئاڵوگۆڕ چوارەمی لاتەنیشت پێشبینی دەکات. لەسەر چوار کاتژمێری Flat ێک دروست بوو: شەپۆلی A بۆ 2405 دابەزی، B بۆ 2475 گەڕایەوە، و C نزیکەی یەکسانی A بوو لە 2400. لەسەر چوارچێوەی پانزە خولەکی نرخ لە 2398 ەوە بە پێنج شەپۆل بۆ 2422 بەرز بووەوە، پاشان بۆ 2410 گەڕایەوە. لە 10:30 ی کاتی نیویۆرک مۆمێک لە سەرووی 2416 داخرا، بۆیە لە 2417 کڕیمان و وەستان 2396، واتە 21 دۆلار. هەر یەک دۆلار جووڵە بەرامبەر سەد دۆلارە بۆ لۆتێک، بۆیە قەبارە نزیکەی 0.05 لۆتە بۆ مەترسیی سەد دۆلار. ئامانجی یەکەم 2449 بوو، و دووەم 2480."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم دەستپێکردنە لە چوارچێوەی بچووکەوە، پێنج شەپۆل لەسەر پانزە خولەکی دەبینیت و دەکڕیت، لە کاتێکدا ڕۆژانە لە ناوەڕاستی شەپۆلێکی C ی دابەزیندایە. هەڵەی دووەم نەنووسینی ژماردنی جێگرەوە و خاڵی هەڵوەشاندنەوەیە، بۆیە لە مامەڵەیەکی زیانبەخشدا دەمێنیتەوە چونکە نازانیت کەی دان بە هەڵەکەتدا بنێیت. هەڵەی سێیەم چوونەژوورەوەیە هەر کە نرخ گەیشتە ناوچەی فیبۆناچی، بێ چاوەڕوانیی پێنج شەپۆلە بچووکەکە و ڕاستکردنەوەکەیان و مۆمێکی داخراو. هەڵەی چوارەم دانانی وەستانێکی زۆر نزیکە لە ناو ڕاستکردنەوە گەورەکەدا، بۆیە هەر لەرینەوەیەکی ئاسایی دەیپێکێت. هەڵەی پێنجەم حیسابکردنی قەبارەیە بە هەست لە جیاتی هاوکێشەی مەترسی. هەموو مامەڵەیەک لە دەفتەری بیرەوەریدا تۆمار بکە لەگەڵ وێنەیەکی ژماردن لەسەر هەر سێ چوارچێوەکە، بۆ ئەوەی بە ڕاستگۆیی لە ئەنجامەکان فێر بیت."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کردەیی: لیستی پلان",
+     "narration": "ئەمە پلانەکەیە لە لیستێکدا بۆ پێش هەر مامەڵەیەک. یەکەم، لەسەر ڕۆژانە ژماردنی سەرەکی و جێگرەوە و خاڵی هەڵوەشاندنەوە بنووسە. دووەم، لەسەر چوار کاتژمێری یەک شەپۆل هەڵبژێرە بۆ مامەڵە، سێیەم یان پێنجەم یان C، و ناوچەی کۆتایی ڕاستکردنەوە بە لانیکەم سێ بەڵگە دیاری بکە. سێیەم، لەسەر یەک کاتژمێری یان پانزە خولەکی چاوەڕێی پێنج شەپۆلی بچووک بکە بە ئاڕاستەکەت، پاشان ڕاستکردنەوەیەکی سێ شەپۆلی، پاشان مۆمێکی داخراو کە لووتکە یان نزمترین خاڵی ئەو ڕاستکردنەوەیە بشکێنێت. چوارەم، وەستان لە پشت کۆتایی ڕاستکردنەوە گەورەکە دابنێ، و قەبارە بۆ مەترسیی یەک لە سەد حیساب بکە. پێنجەم، نیوەی مامەڵەکە لە ئامانجی یەکەمدا دابخە و وەستان بگوازەرەوە بۆ خاڵی چوونەژوورەوە. شەشەم، هەر کە خاڵی هەڵوەشاندنەوە شکا دەستبەجێ دەربچە. ئێلیۆت ئەگەر دەدات، و ڕێکوپێکی دەتپارێزێت."
+    }
+   ]
   }
  }
 }

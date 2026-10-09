@@ -188,7 +188,7 @@ def test_post_progress_frontend_body_updates_completed(client, first_school):
     course = data["courses"][first_school["id"]]
     assert course["completed_lectures"] == 1
     total = course["total_lectures"]
-    expected_pct = round((1 / total) * 100)
+    expected_pct = round((1 / total) * 100, 1)
     assert course["progress_pct"] == expected_pct
 
 

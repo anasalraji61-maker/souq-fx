@@ -13,6 +13,7 @@ import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
 import { ChannelChatPanel } from './ChannelChatPanel';
 import { VotePanel } from './VotePanel';
+import { FundamentalPanel } from './FundamentalPanel';
 import { AnalystsPanel } from './AnalystsPanel';
 import { SocialConsensusPanel } from './SocialConsensusPanel';
 import { IndicatorForecastPanel } from './IndicatorForecastPanel';
@@ -285,6 +286,7 @@ export function MatrixBottomDock({
               <View style={styles.community}>
                 <ChannelChatPanel />
                 <VotePanel />
+                <FundamentalPanel symbol={symbol} />
               </View>
             ) : null}
             {tab === 'dom' ? (

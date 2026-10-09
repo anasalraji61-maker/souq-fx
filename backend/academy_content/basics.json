@@ -550,6 +550,1383 @@
      "narration": "پوختەی کردەیی ئەوەیە کە بە هەژماری Demo دەست پێ بکەیت بۆ لێهاتووبوون لە پلاتفۆرمەکە و تاقیکردنەوەی پلانەکەت، پاشان بە پلە بگوازیتەوە بۆ هەژمارێکی ڕاستەقینەی بچووک کاتێک یاساکانت بوونە خوویەکی جێگیر، نەک کاتێک قازانجێکی خێرات کرد. لە هەژماری ڕاستەقینەدا پارەیەک بەکاربهێنە کە بۆ ژیانی ڕۆژانەت پێویستت پێی نییە، و هەمان مەترسیی بچووک بپارێزە. پاشان هەموو هەفتەیەک دەفتەرەکەت پێدا بچۆوە، چونکە ئەوە پێت دەڵێت کەی دەتوانیت بە وریاییەوە قەبارە زیاد بکەیت و کەی دەبێت بوەستیت و پێداچوونەوە بکەیت."
     }
    ]
+  },
+  "basics-l0-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو الفوركس",
+     "narration": "مرحباً بك في أول درس من مدرسة أساسيات التداول. كلمة فوركس اختصار للعبارة الإنجليزية Foreign Exchange، أي تبادل العملات الأجنبية. ببساطة، هو السوق الذي تُشترى فيه عملة مقابل بيع عملة أخرى في الوقت نفسه. عندما يسافر شخص من بغداد إلى إسطنبول ويحوّل الدولار إلى ليرة، فهو يشارك في هذه الفكرة نفسها ولكن على نطاق صغير جداً. وسوق الفوركس هو أكبر سوق مالي في العالم، إذ يتجاوز حجم التداول فيه سبعة تريليونات دولار يومياً. وفي هذه المدرسة سنركّز على أزواج العملات والذهب فقط، وسنبني معرفتك خطوة بخطوة، بدءاً من الصفر تماماً، حتى تصل إلى مرحلة التطبيق."
+    },
+    {
+     "id": "s2",
+     "title": "سوق لا مركزي",
+     "narration": "على عكس البورصة التي لها مبنى ومركز واحد تُسجَّل فيه كل الصفقات، فإن الفوركس سوق لا مركزي، ويسمى بالإنجليزية Over The Counter. هذا يعني أنه لا يوجد مكان واحد يجتمع فيه الجميع، بل شبكة إلكترونية ضخمة من البنوك والمؤسسات والوسطاء موزعة حول العالم، تتبادل الأسعار فيما بينها مباشرة. ولأن المراكز المالية تفتح بالتتابع، من سيدني إلى طوكيو ثم لندن ثم نيويورك، يعمل السوق أربعاً وعشرين ساعة في اليوم، خمسة أيام في الأسبوع. ونتيجة لذلك قد ترى فروقاً بسيطة في السعر بين وسيط وآخر، وهذا أمر طبيعي تماماً في سوق ليس له مركز واحد."
+    },
+    {
+     "id": "s3",
+     "title": "من يتداول في السوق",
+     "narration": "المشاركون في السوق طبقات. في القمة تأتي البنوك المركزية، مثل الاحتياطي الفيدرالي الأمريكي والبنك المركزي الأوروبي، وهي لا تتداول بهدف الربح، بل تحدد أسعار الفائدة وتتدخل أحياناً لحماية عملتها. بعدها البنوك التجارية الكبرى، التي تتداول فيما بينها في ما يسمى Interbank Market أو سوق ما بين البنوك، وهي التي تصنع معظم الحجم. ثم المؤسسات المالية مثل صناديق الاستثمار وصناديق التحوط، التي تحرك مبالغ ضخمة بناءً على تحليلها. وهناك الشركات التي تحتاج العملات لأعمالها الحقيقية، كشركة تستورد بضاعة من أوروبا وتدفع ثمنها باليورو. وفي النهاية يأتي المتداول الفرد، أي أنت."
+    },
+    {
+     "id": "s4",
+     "title": "الوسيط والمتداول الفرد",
+     "narration": "المتداول الفرد، ويسمى Retail Trader، لا يستطيع الدخول مباشرة إلى سوق ما بين البنوك، لذلك يحتاج إلى وسيط أو Broker. الوسيط شركة تفتح لك حساباً ومنصة تداول، وتنقل أوامرك إلى مزودي السيولة، أي البنوك والمؤسسات الكبيرة. يربح الوسيط عادة من الـ Spread، وهو الفرق الصغير بين سعر الشراء وسعر البيع، أو من عمولة ثابتة على كل صفقة. ومن المهم جداً أن تختار وسيطاً مرخصاً من جهة رقابية معروفة، لأن أموالك ستكون عنده. وتذكر أن حجم صفقاتك كفرد صغير جداً مقارنة بالسوق، فأنت لا تحرك السعر، بل تحاول قراءة حركته والسير معها."
+    },
+    {
+     "id": "s5",
+     "title": "لماذا تتحرك الأسعار",
+     "narration": "السعر في أي سوق يتحرك بسبب العرض والطلب. عندما يرغب عدد أكبر من المشاركين في شراء الدولار، يرتفع سعره مقابل العملات الأخرى، والعكس صحيح. وما الذي يغير هذه الرغبة؟ أهم الأسباب أسعار الفائدة، فالعملة التي يرفع بنكها المركزي الفائدة تصبح غالباً أكثر جاذبية. ثم البيانات الاقتصادية مثل التضخم والتوظيف والنمو، ثم الأحداث السياسية والأزمات، ثم معنويات المخاطرة، فعندما يخاف المستثمرون يتجهون إلى الملاذات الآمنة مثل الذهب. وكل هذه القرارات تظهر في النهاية على الرسم البياني على شكل شموع، فالشارت هو سجل مرئي لما فعله المشترون والبائعون."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على EURUSD",
+     "narration": "لنأخذ مثالاً على زوج اليورو دولار. افترض أن السعر يتداول عند 1.0850 صباح يوم صدور بيانات التضخم الأمريكية. في الساعة 8:30 بتوقيت نيويورك تصدر الأرقام أعلى من المتوقع، فيتوقع السوق أن يُبقي الاحتياطي الفيدرالي الفائدة مرتفعة لفترة أطول. يزداد الطلب على الدولار، فينخفض الزوج خلال ساعة تقريباً إلى 1.0790، أي حركة بستين نقطة. والنقطة، أو الـ Pip، هي أصغر وحدة حركة معتادة في السعر، وسنشرحها بالتفصيل لاحقاً. لاحظ أن أحداً لم يقرر خفض السعر يدوياً، بل تغيرت توقعات آلاف المشاركين في الوقت نفسه، فتغير التوازن بين الشراء والبيع."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على الذهب",
+     "narration": "الذهب يُسعَّر عالمياً بالدولار، ورمزه على المنصات XAUUSD، أي سعر أونصة الذهب بالدولار الأمريكي. لنفترض أن السعر عند 2,330 دولاراً يوم الجمعة قبل صدور تقرير الوظائف الأمريكي في الساعة 8:30 بتوقيت نيويورك. يصدر التقرير أضعف بكثير من المتوقع، فيضعف الدولار وتزداد المخاوف بشأن الاقتصاد، ويتجه بعض المستثمرين إلى الذهب كملاذ آمن. يرتفع السعر خلال الساعات التالية إلى 2,352 دولاراً. هنا اجتمع سببان معاً: ضعف الدولار الذي يُسعَّر به الذهب، وزيادة الطلب على الأمان. لكن تذكر أن ردة فعل السوق على الخبر قد تكون عنيفة ومتقلبة جداً في الدقائق الأولى."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ يقع فيه المبتدئ هو النظر إلى الفوركس كطريق سريع للثراء، بينما هو مهارة تحتاج إلى تعلم وصبر وإدارة صارمة للمخاطر، والخسارة جزء طبيعي منه. والخطأ الثاني اختيار وسيط غير مرخص لمجرد أنه يقدم مكافآت مغرية. والثالث الاعتقاد بأن هناك جهة واحدة تتحكم بالسعر وتلاحق صفقتك شخصياً، والحقيقة أن السعر نتيجة قرارات عدد هائل من المشاركين. والرابع الدخول في صفقات وقت الأخبار دون فهم ما يحدث. والخامس المخاطرة بمبلغ كبير من الحساب في صفقة واحدة، والقاعدة الشائعة ألا تتجاوز المخاطرة نحو واحد بالمئة من الحساب في الصفقة الواحدة."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "لنلخص ما تعلمناه. الفوركس سوق لتبادل العملات، لا مركزي، يعمل عبر شبكة عالمية من البنوك والمؤسسات على مدار أربع وعشرين ساعة لخمسة أيام. المشاركون فيه هم البنوك المركزية والبنوك التجارية والمؤسسات والشركات، ثم المتداول الفرد الذي يصل إلى السوق عبر وسيط مرخص. والسعر يتحرك بسبب العرض والطلب، الذي تغيره الفائدة والبيانات الاقتصادية والأحداث ومعنويات المخاطرة. قاعدتك العملية من اليوم: أنت لا تحرك السوق، بل تقرأه. ابدأ بحساب تجريبي، ولا تخاطر بمال حقيقي قبل أن تفهم الأساسيات جيداً. وفي الدرس القادم نتعلم كيف نقرأ سعر زوج العملات."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is Forex",
+     "narration": "Welcome to the first lesson of the Trading Basics school. The word forex is short for Foreign Exchange, meaning the exchange of foreign currencies. Put simply, it is the market where one currency is bought while another currency is sold at the same moment. When someone travels from Baghdad to Istanbul and converts dollars into lira, they are taking part in exactly the same idea, only on a very small scale. The forex market is the largest financial market in the world, with more than seven trillion dollars traded every single day. In this school we will focus only on currency pairs and gold, and we will build your knowledge step by step, starting completely from zero, until you reach the stage of practical application."
+    },
+    {
+     "id": "s2",
+     "title": "A Decentralised Market",
+     "narration": "Unlike a stock exchange, which has one building and one centre where every trade is recorded, forex is a decentralised market, known in English as Over The Counter. This means there is no single place where everyone meets. Instead, there is a huge electronic network of banks, institutions and brokers spread around the world, exchanging prices directly with one another. Because the financial centres open one after another, from Sydney to Tokyo, then London, then New York, the market runs twenty-four hours a day, five days a week. As a result, you may see small price differences between one broker and another, and this is completely normal in a market that has no single centre."
+    },
+    {
+     "id": "s3",
+     "title": "Who Trades the Market",
+     "narration": "Market participants come in layers. At the top are the central banks, such as the US Federal Reserve and the European Central Bank. They do not trade to make a profit; they set interest rates and sometimes intervene to protect their currency. Next come the large commercial banks, which trade with one another in what is called the Interbank Market, and they create most of the volume. Then come financial institutions such as investment funds and hedge funds, which move huge amounts of money based on their analysis. There are also companies that need currencies for real business, like a company that imports goods from Europe and pays for them in euros. And finally comes the retail trader, which means you."
+    },
+    {
+     "id": "s4",
+     "title": "The Broker and the Retail Trader",
+     "narration": "The individual trader, called a Retail Trader, cannot access the interbank market directly, so they need an intermediary called a Broker. A broker is a company that opens an account and a trading platform for you, and passes your orders on to liquidity providers, meaning the large banks and institutions. The broker usually earns from the Spread, which is the small difference between the buying price and the selling price, or from a fixed commission on each trade. It is very important to choose a broker licensed by a well-known regulator, because your money will be held with them. And remember that your trade size as an individual is tiny compared with the market, so you do not move the price; you try to read its movement and go with it."
+    },
+    {
+     "id": "s5",
+     "title": "Why Prices Move",
+     "narration": "Price in any market moves because of supply and demand. When more participants want to buy the dollar, its price rises against other currencies, and the opposite is also true. So what changes this desire? The most important reason is interest rates: a currency whose central bank raises rates often becomes more attractive. Then come economic data such as inflation, employment and growth, then political events and crises, and then risk sentiment. When investors are afraid, they move towards safe havens such as gold. In the end, all of these decisions appear on the chart in the form of candles, so the chart is a visual record of what buyers and sellers have actually done."
+    },
+    {
+     "id": "s6",
+     "title": "Example on EURUSD",
+     "narration": "Let us take an example on the euro dollar pair. Suppose the price is trading at 1.0850 on the morning that US inflation data is released. At 8:30 New York time the numbers come out higher than expected, so the market expects the Federal Reserve to keep interest rates high for longer. Demand for the dollar increases, and the pair falls within about an hour to 1.0790, a move of sixty pips. A pip is the smallest usual unit of price movement, and we will explain it in detail later. Notice that nobody decided to push the price down by hand; the expectations of thousands of participants changed at the same moment, so the balance between buying and selling changed."
+    },
+    {
+     "id": "s7",
+     "title": "Example on Gold",
+     "narration": "Gold is priced worldwide in dollars, and its symbol on trading platforms is XAUUSD, meaning the price of one ounce of gold in US dollars. Suppose the price is at 2,330 dollars on a Friday, before the US jobs report is released at 8:30 New York time. The report comes out much weaker than expected, so the dollar weakens, worries about the economy grow, and some investors turn to gold as a safe haven. Over the following hours the price rises to 2,352 dollars. Here two reasons came together: the weakness of the dollar in which gold is priced, and greater demand for safety. But remember that the market's reaction to news can be violent and very volatile in the first few minutes."
+    },
+    {
+     "id": "s8",
+     "title": "Common Mistakes",
+     "narration": "The first mistake beginners make is seeing forex as a fast road to riches, when in fact it is a skill that requires learning, patience and strict risk management, and losses are a normal part of it. The second mistake is choosing an unregulated broker just because it offers attractive bonuses. The third is believing that one party controls the price and is personally hunting your trade, when in reality price is the result of decisions by an enormous number of participants. The fourth is entering trades during news releases without understanding what is happening. The fifth is risking a large part of the account on a single trade; the common rule is that risk should not exceed about one percent of the account per trade."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "Let us summarise what we have learned. Forex is a decentralised market for exchanging currencies, running through a global network of banks and institutions around the clock, twenty-four hours a day for five days a week. Its participants are central banks, commercial banks, institutions and companies, and then the retail trader, who reaches the market through a regulated broker. Price moves because of supply and demand, which is changed by interest rates, economic data, events and risk sentiment. Your practical rule from today is this: you do not move the market, you read it. Start with a demo account, and do not risk real money before you understand the basics well. In the next lesson we learn how to read the price of a currency pair."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "فۆرێکس چییە",
+     "narration": "بەخێربێیت بۆ یەکەم وانەی قوتابخانەی بنەماکانی بازرگانی. وشەی فۆرێکس کورتکراوەی دەستەواژەی ئینگلیزی Foreign Exchange ە، واتە ئاڵوگۆڕی دراوە بیانییەکان. بە سادەیی، ئەو بازاڕەیە کە تێیدا دراوێک دەکڕدرێت و لە هەمان کاتدا دراوێکی تر دەفرۆشرێت. کاتێک کەسێک لە بەغداوە گەشت دەکات بۆ ئیستانبوڵ و دۆلار دەگۆڕێتەوە بە لیرە، ئەوا بەشداری لە هەمان بیرۆکەدا دەکات، بەڵام بە شێوەیەکی زۆر بچووک. بازاڕی فۆرێکس گەورەترین بازاڕی دارایی جیهانە، و بڕی بازرگانی تێیدا ڕۆژانە لە حەوت تریلیۆن دۆلار زیاترە. لەم قوتابخانەیەدا تەنها جەخت دەکەینە سەر جووتە دراوەکان و زێڕ، و زانیارییەکانت هەنگاو بە هەنگاو لە سفرەوە بنیات دەنێین، تا دەگەیتە قۆناغی جێبەجێکردن."
+    },
+    {
+     "id": "s2",
+     "title": "بازاڕێکی ناناوەندی",
+     "narration": "بە پێچەوانەی بۆرسەوە کە یەک بینا و یەک ناوەندی هەیە و هەموو مامەڵەکان تێیدا تۆمار دەکرێن، فۆرێکس بازاڕێکی ناناوەندییە، و بە ئینگلیزی پێی دەوترێت Over The Counter. ئەمە واتە هیچ شوێنێکی تاک نییە کە هەمووان تێیدا کۆببنەوە، بەڵکو تۆڕێکی ئەلیکترۆنی گەورەیە لە بانک و دامەزراوە و بڕۆکەرەکان کە بە جیهاندا بڵاوبوونەتەوە و ڕاستەوخۆ نرخ لە نێوان خۆیاندا ئاڵوگۆڕ دەکەن. لەبەر ئەوەی ناوەندە داراییەکان یەک لە دوای یەک دەکرێنەوە، لە سیدنییەوە بۆ تۆکیۆ، پاشان لەندەن، پاشان نیویۆرک، بازاڕەکە بیست و چوار کاتژمێر لە ڕۆژێکدا و پێنج ڕۆژ لە هەفتەیەکدا کار دەکات. لە ئەنجامدا لەوانەیە جیاوازییەکی بچووک لە نرخدا لە نێوان بڕۆکەرێک و بڕۆکەرێکی تردا ببینیت، و ئەمە شتێکی تەواو ئاساییە."
+    },
+    {
+     "id": "s3",
+     "title": "کێ لە بازاڕدا بازرگانی دەکات",
+     "narration": "بەشداربووانی بازاڕ چەند چینێکن. لە لووتکەدا بانکە ناوەندییەکان دێن، وەک یەدەگی فیدراڵی ئەمریکی و بانکی ناوەندیی ئەوروپی، کە بە مەبەستی قازانج بازرگانی ناکەن، بەڵکو ڕێژەی سوود دیاری دەکەن و هەندێک جار دەستێوەردان دەکەن بۆ پاراستنی دراوەکەیان. دواتر بانکە بازرگانییە گەورەکان دێن، کە لە نێوان خۆیاندا لەوەی پێی دەوترێت Interbank Market یان بازاڕی نێوان بانکەکان بازرگانی دەکەن، و زۆربەی قەبارەکە دروست دەکەن. پاشان دامەزراوە داراییەکان وەک سندوقەکانی وەبەرهێنان و سندوقەکانی پاراستن، کە بڕی زۆر گەورە لەسەر بنەمای شیکارییەکانیان دەجووڵێنن. هەروەها ئەو کۆمپانیایانە هەن کە بۆ کاری ڕاستەقینەیان پێویستیان بە دراوە، وەک کۆمپانیایەک کە کاڵا لە ئەوروپاوە هاوردە دەکات و بە یۆرۆ پارەی دەدات. و لە کۆتاییدا بازرگانی تاک دێت، واتە تۆ."
+    },
+    {
+     "id": "s4",
+     "title": "بڕۆکەر و بازرگانی تاک",
+     "narration": "بازرگانی تاک، کە پێی دەوترێت Retail Trader، ناتوانێت ڕاستەوخۆ بچێتە ناو بازاڕی نێوان بانکەکان، بۆیە پێویستی بە ناوەندگیرێک یان Broker هەیە. بڕۆکەر کۆمپانیایەکە کە هەژمارێک و پلاتفۆرمێکی بازرگانیت بۆ دەکاتەوە، و فەرمانەکانت دەگوازێتەوە بۆ دابینکەرانی لیکویدیتی، واتە بانک و دامەزراوە گەورەکان. بڕۆکەر زۆرجار لە Spread قازانج دەکات، کە جیاوازییە بچووکەکەی نێوان نرخی کڕین و نرخی فرۆشتنە، یان لە کۆمیسیۆنێکی جێگیر لەسەر هەر مامەڵەیەک. زۆر گرنگە بڕۆکەرێک هەڵبژێریت کە لەلایەن دەزگایەکی چاودێریی ناسراوەوە مۆڵەتی هەبێت، چونکە پارەکەت لای ئەو دەبێت. و لەبیرت بێت قەبارەی مامەڵەکانت وەک تاکێک زۆر بچووکە بەراورد بە بازاڕ، کەواتە تۆ نرخ ناجووڵێنیت، بەڵکو هەوڵ دەدەیت جووڵەکەی بخوێنیتەوە و لەگەڵیدا بڕۆیت."
+    },
+    {
+     "id": "s5",
+     "title": "بۆچی نرخەکان دەجووڵێن",
+     "narration": "نرخ لە هەر بازاڕێکدا بەهۆی خستنەڕوو و داواکارییەوە دەجووڵێت. کاتێک ژمارەیەکی زیاتر لە بەشداربووان دەیانەوێت دۆلار بکڕن، نرخەکەی بەرامبەر دراوەکانی تر بەرز دەبێتەوە، و پێچەوانەکەشی ڕاستە. ئەی چی ئەم ئارەزووە دەگۆڕێت؟ گرنگترین هۆکار ڕێژەی سوودە، ئەو دراوەی بانکە ناوەندییەکەی سوود بەرز دەکاتەوە زۆرجار سەرنجڕاکێشتر دەبێت. پاشان داتا ئابوورییەکان وەک هەڵئاوسان و دامەزراندن و گەشە، پاشان ڕووداوە سیاسییەکان و قەیرانەکان، پاشان هەستی مەترسی. کاتێک وەبەرهێنەران دەترسن، ڕوو دەکەنە پەناگە سەلامەتەکان وەک زێڕ. لە کۆتاییدا هەموو ئەم بڕیارانە لەسەر چارتەکە بە شێوەی مۆم دەردەکەون، کەواتە چارت تۆمارێکی بینراوی ئەوەیە کە کڕیار و فرۆشیارەکان کردوویانە."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "با نموونەیەک لەسەر جووتی یۆرۆ دۆلار وەربگرین. وا دابنێ نرخەکە لە 1.0850 بازرگانی پێوە دەکرێت لە بەیانی ئەو ڕۆژەی داتای هەڵئاوسانی ئەمریکی بڵاو دەکرێتەوە. لە کاتژمێر 8:30 بە کاتی نیویۆرک ژمارەکان لە چاوەڕوانکراو بەرزتر دەردەچن، بۆیە بازاڕ چاوەڕێ دەکات یەدەگی فیدراڵی ماوەیەکی درێژتر سوود بە بەرزی بهێڵێتەوە. داواکاری لەسەر دۆلار زیاد دەبێت، و جووتەکە لە ماوەی نزیکەی کاتژمێرێکدا دادەبەزێت بۆ 1.0790، واتە جووڵەیەکی شەست خاڵی. خاڵ، یان Pip، بچووکترین یەکەی ئاسایی جووڵەی نرخە، و دواتر بە وردی ڕوونی دەکەینەوە. سەرنج بدە کە کەس بە دەست بڕیاری نەدا نرخەکە دابەزێنێت، بەڵکو چاوەڕوانیی هەزاران بەشداربوو لە هەمان کاتدا گۆڕا، بۆیە هاوسەنگیی نێوان کڕین و فرۆشتن گۆڕا."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر زێڕ",
+     "narration": "زێڕ لە جیهاندا بە دۆلار نرخی بۆ دادەنرێت، و هێمای لەسەر پلاتفۆرمەکان XAUUSD ە، واتە نرخی ئۆنسەیەک زێڕ بە دۆلاری ئەمریکی. وا دابنێ نرخەکە لە ڕۆژی هەینیدا 2,330 دۆلارە، پێش بڵاوبوونەوەی ڕاپۆرتی کاری ئەمریکی لە کاتژمێر 8:30 بە کاتی نیویۆرک. ڕاپۆرتەکە زۆر لاوازتر لە چاوەڕوانکراو دەردەچێت، بۆیە دۆلار لاواز دەبێت و نیگەرانی لەسەر ئابووری زیاد دەبێت، و هەندێک وەبەرهێنەر ڕوو دەکەنە زێڕ وەک پەناگەیەکی سەلامەت. لە کاتژمێرەکانی دواتردا نرخەکە بەرز دەبێتەوە بۆ 2,352 دۆلار. لێرەدا دوو هۆکار پێکەوە کۆبوونەوە: لاوازیی ئەو دۆلارەی زێڕی پێ نرخ دەکرێت، و زیادبوونی داواکاری لەسەر سەلامەتی. بەڵام لەبیرت بێت کاردانەوەی بازاڕ بەرامبەر هەواڵ لە یەکەم خولەکەکاندا دەتوانێت توند و زۆر ناجێگیر بێت."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵە کە سەرەتاکار تێیدەکەوێت ئەوەیە فۆرێکس وەک ڕێگایەکی خێرا بۆ دەوڵەمەندبوون ببینێت، لە کاتێکدا شارەزاییەکە پێویستی بە فێربوون و ئارامی و بەڕێوەبردنی توندی مەترسی هەیە، و زەرەر بەشێکی ئاسایییە لێی. هەڵەی دووەم هەڵبژاردنی بڕۆکەرێکی بێ مۆڵەتە تەنها لەبەر ئەوەی پاداشتی سەرنجڕاکێش پێشکەش دەکات. سێیەم باوەڕبوونە بەوەی لایەنێکی تاک کۆنترۆڵی نرخ دەکات و بە شێوەیەکی کەسی بەدوای مامەڵەکەتدا دەگەڕێت، لە ڕاستیدا نرخ ئەنجامی بڕیاری ژمارەیەکی زۆر گەورەی بەشداربووانە. چوارەم چوونە ناو مامەڵەیە لە کاتی هەواڵەکاندا بێ تێگەیشتن لەوەی ڕوودەدات. پێنجەم مەترسیکردنە بە بڕێکی زۆر لە هەژمار لە یەک مامەڵەدا، و یاسا باوەکە ئەوەیە مەترسی لە نزیکەی یەک لە سەدی هەژمار لە هەر مامەڵەیەکدا تێنەپەڕێت."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "با ئەوەی فێری بووین کورت بکەینەوە. فۆرێکس بازاڕێکی ناناوەندییە بۆ ئاڵوگۆڕی دراوەکان، لە ڕێگەی تۆڕێکی جیهانیی بانک و دامەزراوەکانەوە بیست و چوار کاتژمێر بۆ پێنج ڕۆژ کار دەکات. بەشداربووانی بانکە ناوەندییەکان و بانکە بازرگانییەکان و دامەزراوەکان و کۆمپانیاکانن، پاشان بازرگانی تاک کە لە ڕێگەی بڕۆکەرێکی مۆڵەتدارەوە دەگاتە بازاڕ. نرخیش بەهۆی خستنەڕوو و داواکارییەوە دەجووڵێت، کە سوود و داتا ئابوورییەکان و ڕووداوەکان و هەستی مەترسی دەیگۆڕن. یاسای کرداریت لە ئەمڕۆوە ئەمەیە: تۆ بازاڕ ناجووڵێنیت، بەڵکو دەیخوێنیتەوە. بە هەژمارێکی تاقیکاری دەست پێبکە، و پێش ئەوەی بە باشی لە بنەماکان تێبگەیت پارەی ڕاستەقینە مەخەرە مەترسییەوە. لە وانەی داهاتوودا فێر دەبین چۆن نرخی جووتە دراوێک بخوێنینەوە."
+    }
+   ]
+  },
+  "basics-l0-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو زوج العملات",
+     "narration": "في الدرس السابق عرفنا أن الفوركس هو شراء عملة وبيع أخرى في الوقت نفسه. لهذا السبب تُعرض العملات دائماً على شكل أزواج، مثل EURUSD، أي اليورو مقابل الدولار الأمريكي. كل عملة لها رمز من ثلاثة أحرف: USD للدولار الأمريكي، وEUR لليورو، وGBP للجنيه الإسترليني، وJPY للين الياباني، وCHF للفرنك السويسري. وعندما ترى على المنصة أن سعر EURUSD هو 1.0850، فهذا يعني أن يورو واحداً يساوي دولاراً واحداً وثمانية سنتات ونصف تقريباً. إذن سعر الزوج هو ببساطة قيمة عملة واحدة مقاسة بعملة أخرى، وهذه هي الفكرة التي يُبنى عليها كل ما سيأتي."
+    },
+    {
+     "id": "s2",
+     "title": "العملة الأساسية والعملة المقابلة",
+     "narration": "العملة الأولى في الزوج تسمى العملة الأساسية أو Base Currency، والعملة الثانية تسمى العملة المقابلة أو Quote Currency. السعر يخبرك دائماً كم وحدة من العملة المقابلة تحتاج لشراء وحدة واحدة من العملة الأساسية. في EURUSD اليورو هو الأساسية والدولار هو المقابلة. أما في USDJPY عند 150.20، فالدولار هو الأساسية، ويعني السعر أن دولاراً واحداً يساوي 150.20 ين. والقاعدة المهمة: إذا ارتفع سعر الزوج فهذا يعني أن العملة الأساسية قويت مقابل المقابلة، وإذا انخفض فالأساسية ضعفت. لذلك ارتفاع USDJPY يعني قوة الدولار، بينما ارتفاع EURUSD يعني ضعف الدولار."
+    },
+    {
+     "id": "s3",
+     "title": "الأزواج الرئيسية والثانوية",
+     "narration": "الأزواج الرئيسية، وتسمى Majors، هي الأزواج التي يكون الدولار الأمريكي طرفاً فيها مع عملة اقتصاد كبير، وأشهرها EURUSD وGBPUSD وUSDJPY وUSDCHF وAUDUSD وUSDCAD وNZDUSD. هذه الأزواج هي الأعلى سيولة، أي أن حجم التداول فيها ضخم، ولذلك يكون الفرق بين سعر الشراء والبيع فيها صغيراً عادة. أما الأزواج الثانوية، أو Minors، وتسمى أيضاً Crosses، فهي أزواج لا يدخل فيها الدولار، مثل EURGBP وEURJPY وGBPJPY. وهناك أزواج غريبة تسمى Exotics، تجمع عملة رئيسية مع عملة سوق ناشئ، وتكاليفها أعلى وحركتها أقل انتظاماً. نصيحتنا للمبتدئ أن يبدأ بزوجين أو ثلاثة من الرئيسية مع الذهب."
+    },
+    {
+     "id": "s4",
+     "title": "سعر الشراء وسعر البيع",
+     "narration": "عندما تفتح المنصة سترى لكل زوج سعرين لا سعراً واحداً. السعر الأدنى يسمى Bid، وهو السعر الذي تبيع عنده. والسعر الأعلى يسمى Ask، وهو السعر الذي تشتري عنده. والفرق بينهما يسمى Spread، وهو تكلفة الدخول التي تدفعها للوسيط. مثلاً قد ترى EURUSD عند 1.0850 للبيع و1.0851 للشراء، فيكون الـ Spread نقطة واحدة فقط. معنى ذلك أنك عندما تفتح أي صفقة تبدأ بخسارة صغيرة تساوي الـ Spread، ويجب أن يتحرك السعر لصالحك بهذا المقدار أولاً حتى تصل إلى نقطة التعادل. والـ Spread يتسع عادة وقت الأخبار وفي الساعات الهادئة."
+    },
+    {
+     "id": "s5",
+     "title": "الشراء والبيع على الزوج",
+     "narration": "في الفوركس يمكنك أن تربح من الصعود ومن الهبوط. عندما تشتري زوجاً، وهذا يسمى Buy أو مركز Long، فأنت تشتري العملة الأساسية وتبيع العملة المقابلة، لأنك تتوقع أن ترتفع الأساسية. وعندما تبيع زوجاً، ويسمى Sell أو مركز Short، فأنت تبيع الأساسية وتشتري المقابلة، لأنك تتوقع أن تنخفض. لا تحتاج أن تملك اليورو حتى تبيعه، فالمنصة تحسب الفرق فقط. وتذكر قاعدة الإغلاق: صفقة الشراء تُفتح عند سعر Ask وتُغلق بالبيع عند سعر Bid، وصفقة البيع تُفتح عند Bid وتُغلق بالشراء عند Ask. ومع كل صفقة تحدد مسبقاً وقف الخسارة والهدف."
+    },
+    {
+     "id": "s6",
+     "title": "الذهب XAUUSD",
+     "narration": "الذهب يُعامل على المنصات كأنه زوج عملات. الرمز XAU يمثل أونصة واحدة من الذهب، وهو العملة الأساسية هنا، والدولار هو العملة المقابلة. فإذا كان سعر XAUUSD هو 2,350.40، فهذا يعني أن أونصة الذهب تساوي 2,350 دولاراً و40 سنتاً. ولأن الدولار هو المقابل، فشراء الذهب يعني عملياً بيع الدولار، ولهذا غالباً ما يرتفع الذهب عندما يضعف الدولار. والذهب أكثر تقلباً من أزواج العملات الرئيسية، فقد يتحرك عشرين أو ثلاثين دولاراً في يوم واحد. وانتبه إلى أن الوسطاء يختلفون في تعريف النقطة على الذهب، لذلك من الأوضح أن تقيس حركته بالدولار، فتقول تحرك السعر خمسة دولارات مثلاً."
+    },
+    {
+     "id": "s7",
+     "title": "مثال: صفقة شراء على GBPUSD",
+     "narration": "مثال على الجنيه دولار. عند افتتاح لندن في الساعة 8:00 بتوقيت لندن، تعرض المنصة سعر البيع 1.2700 وسعر الشراء 1.2702، أي Spread بنقطتين. تحليلك يقول إن الجنيه قد يقوى، فتفتح صفقة شراء، وتدخل عند سعر Ask أي 1.2702. تضع وقف الخسارة عند 1.2672، أي ثلاثين نقطة تحت الدخول، والهدف عند 1.2762، أي ستين نقطة فوقه، فتكون المكافأة ضعف المخاطرة. لاحظ أن صفقتك تظهر فور فتحها بخسارة نقطتين بسبب الـ Spread. إذا وصل سعر Bid إلى 1.2762 تُغلق الصفقة على الهدف. وإذا هبط Bid إلى 1.2672 تُغلق على الوقف، ويجب أن تكون هذه الخسارة نحو واحد بالمئة من حسابك فقط."
+    },
+    {
+     "id": "s8",
+     "title": "مثال: صفقة بيع على الذهب",
+     "narration": "مثال على الذهب. في الساعة 10:00 بتوقيت نيويورك تعرض المنصة سعر البيع 2,350.20 وسعر الشراء 2,350.50، أي Spread بثلاثين سنتاً. تتوقع أن ينخفض الذهب، فتفتح صفقة بيع عند سعر Bid أي 2,350.20. تضع الوقف عند 2,358.50، أي ثمانية دولارات تقريباً فوق الدخول، والهدف عند 2,334.00، أي نحو ستة عشر دولاراً تحته. هذه الصفقة تُغلق بالشراء، لذلك ما يهم هنا هو سعر Ask: إذا وصل Ask إلى 2,334.00 تحقق الهدف، وإذا وصل إلى 2,358.50 ضُرب الوقف. لاحظ أن الذهب يتحرك بمسافات أكبر من العملات، لذلك يكون الوقف أوسع بالدولار، ويجب تصغير حجم الصفقة ليبقى الخطر نحو واحد بالمئة."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ شائع هو قراءة اتجاه الدولار بشكل معكوس. تذكر أن ارتفاع USDJPY يعني قوة الدولار، أما ارتفاع EURUSD أو XAUUSD فيعني ضعفه. والخطأ الثاني نسيان الـ Spread، فيضع المبتدئ وقفه قريباً جداً من الدخول فيُضرب الوقف بسبب اتساع الفرق وحده، خصوصاً وقت الأخبار. والثالث الظن أن الشارت يعرض سعر الشراء، بينما معظم المنصات تعرض سعر Bid على الشموع، لذلك قد يُضرب وقف صفقة البيع دون أن تلمس الشمعة مستواه. والرابع التداول على الأزواج الغريبة بسبب حركتها الكبيرة رغم تكلفتها العالية. والخامس معاملة نقطة الذهب كنقطة اليورو دولار، فيصبح حجم الصفقة خاطئاً تماماً."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية لهذا الدرس: قبل أي صفقة، اقرأ الزوج من اليسار إلى اليمين. اسأل نفسك أي العملتين هي الأساسية، وماذا يعني ارتفاع السعر بالنسبة للدولار. إذا كنت تتوقع قوة العملة الأساسية فأنت مشترٍ، وإذا كنت تتوقع ضعفها فأنت بائع. انظر إلى سعري Bid وAsk واحسب الـ Spread، وتذكر أن الشراء يُفتح عند Ask ويُغلق عند Bid، والبيع بالعكس. ابدأ بالأزواج الرئيسية مثل EURUSD وGBPUSD وUSDJPY ومعها الذهب، وقس حركة الذهب بالدولار. وحدد دائماً الوقف والهدف قبل الدخول. في الدرس القادم نتعلم متى يكون السوق نشطاً ومتى يكون هادئاً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is a Currency Pair",
+     "narration": "In the previous lesson we learned that forex means buying one currency and selling another at the same moment. That is why currencies are always shown as pairs, such as EURUSD, meaning the euro against the US dollar. Each currency has a three-letter code: USD for the US dollar, EUR for the euro, GBP for the British pound, JPY for the Japanese yen, and CHF for the Swiss franc. When you see on the platform that the price of EURUSD is 1.0850, it means that one euro is worth about one dollar and eight and a half cents. So the price of a pair is simply the value of one currency measured in another currency, and this is the idea that everything else is built upon."
+    },
+    {
+     "id": "s2",
+     "title": "The Base and the Quote Currency",
+     "narration": "The first currency in the pair is called the Base Currency, and the second is called the Quote Currency. The price always tells you how many units of the quote currency you need to buy one unit of the base currency. In EURUSD, the euro is the base and the dollar is the quote. In USDJPY at 150.20, however, the dollar is the base, and the price means that one dollar equals 150.20 yen. Here is the important rule: if the price of the pair rises, the base currency has strengthened against the quote, and if it falls, the base has weakened. So a rising USDJPY means a stronger dollar, while a rising EURUSD means a weaker dollar."
+    },
+    {
+     "id": "s3",
+     "title": "Major and Minor Pairs",
+     "narration": "The major pairs, called Majors, are the pairs in which the US dollar is paired with the currency of a large economy. The best known are EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, USDCAD and NZDUSD. These pairs have the highest liquidity, meaning their trading volume is huge, so the difference between the buying and selling price is usually small. The minor pairs, also called Crosses, are pairs that do not include the dollar, such as EURGBP, EURJPY and GBPJPY. There are also exotic pairs, called Exotics, which combine a major currency with the currency of an emerging market; their costs are higher and their movement is less orderly. Our advice to a beginner is to start with two or three majors along with gold."
+    },
+    {
+     "id": "s4",
+     "title": "The Buy Price and the Sell Price",
+     "narration": "When you open the platform, you will see two prices for every pair, not one. The lower price is called the Bid, and it is the price at which you sell. The higher price is called the Ask, and it is the price at which you buy. The difference between them is called the Spread, and it is the entry cost you pay to the broker. For example, you might see EURUSD at 1.0850 to sell and 1.0851 to buy, so the spread is just one pip. This means that whenever you open a trade, you start with a small loss equal to the spread, and the price must first move in your favour by that amount before you reach breakeven. The spread usually widens during news and in quiet hours."
+    },
+    {
+     "id": "s5",
+     "title": "Buying and Selling a Pair",
+     "narration": "In forex you can profit from both rising and falling prices. When you buy a pair, which is called a Buy or a Long position, you are buying the base currency and selling the quote currency, because you expect the base to rise. When you sell a pair, called a Sell or a Short position, you are selling the base and buying the quote, because you expect it to fall. You do not need to own euros in order to sell them; the platform only calculates the difference. Remember the closing rule: a buy trade opens at the Ask price and closes by selling at the Bid, and a sell trade opens at the Bid and closes by buying at the Ask. With every trade, set your stop loss and target in advance."
+    },
+    {
+     "id": "s6",
+     "title": "Gold, XAUUSD",
+     "narration": "Gold is treated on trading platforms as if it were a currency pair. The code XAU represents one ounce of gold, and it is the base currency here, while the dollar is the quote currency. So if the price of XAUUSD is 2,350.40, it means that one ounce of gold is worth 2,350 dollars and 40 cents. Because the dollar is the quote, buying gold effectively means selling the dollar, which is why gold often rises when the dollar weakens. Gold is more volatile than the major currency pairs; it can move twenty or thirty dollars in a single day. Note that brokers differ in how they define a pip on gold, so it is clearer to measure its movement in dollars, for example by saying the price moved five dollars."
+    },
+    {
+     "id": "s7",
+     "title": "Example: A Buy Trade on GBPUSD",
+     "narration": "An example on the pound dollar. At the London open, at 8:00 London time, the platform shows a sell price of 1.2700 and a buy price of 1.2702, a spread of two pips. Your analysis says the pound may strengthen, so you open a buy trade, entering at the Ask price, 1.2702. You place the stop loss at 1.2672, thirty pips below the entry, and the target at 1.2762, sixty pips above it, so the reward is twice the risk. Notice that your trade shows a two-pip loss the moment it opens, because of the spread. If the Bid price reaches 1.2762, the trade closes at the target. If the Bid falls to 1.2672, it closes at the stop, and that loss should be only about one percent of your account."
+    },
+    {
+     "id": "s8",
+     "title": "Example: A Sell Trade on Gold",
+     "narration": "An example on gold. At 10:00 New York time, the platform shows a sell price of 2,350.20 and a buy price of 2,350.50, a spread of thirty cents. You expect gold to fall, so you open a sell trade at the Bid price, 2,350.20. You place the stop at 2,358.50, about eight dollars above the entry, and the target at 2,334.00, about sixteen dollars below it. This trade closes by buying, so what matters here is the Ask price: if the Ask reaches 2,334.00, the target is hit, and if it reaches 2,358.50, the stop is hit. Notice that gold moves over larger distances than currencies, so the stop is wider in dollars, and you must reduce the trade size so the risk stays around one percent."
+    },
+    {
+     "id": "s9",
+     "title": "Common Mistakes",
+     "narration": "The first common mistake is reading the dollar's direction backwards. Remember that a rising USDJPY means a stronger dollar, while a rising EURUSD or XAUUSD means a weaker one. The second mistake is forgetting the spread, so the beginner places the stop very close to the entry and it gets hit just because the spread widened, especially during news. The third is assuming the chart shows the buy price, when most platforms draw the Bid price on the candles, so the stop of a sell trade can be hit without the candle touching that level. The fourth is trading exotic pairs because of their big moves despite their high cost. The fifth is treating a gold pip like a euro dollar pip, which makes the trade size completely wrong."
+    },
+    {
+     "id": "s10",
+     "title": "The Practical Rule",
+     "narration": "The practical rule for this lesson: before any trade, read the pair from left to right. Ask yourself which of the two currencies is the base, and what a rising price means for the dollar. If you expect the base currency to strengthen, you are a buyer, and if you expect it to weaken, you are a seller. Look at the Bid and Ask prices and work out the spread, and remember that a buy opens at the Ask and closes at the Bid, while a sell does the opposite. Start with the major pairs such as EURUSD, GBPUSD and USDJPY, together with gold, and measure gold's movement in dollars. Always set the stop and target before entering. In the next lesson we learn when the market is active and when it is quiet."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "جووتە دراو چییە",
+     "narration": "لە وانەی پێشوودا زانیمان کە فۆرێکس واتە کڕینی دراوێک و فرۆشتنی دراوێکی تر لە هەمان کاتدا. لەبەر ئەم هۆیە دراوەکان هەمیشە بە شێوەی جووت پیشان دەدرێن، وەک EURUSD، واتە یۆرۆ بەرامبەر دۆلاری ئەمریکی. هەر دراوێک هێمایەکی سێ پیتی هەیە: USD بۆ دۆلاری ئەمریکی، EUR بۆ یۆرۆ، GBP بۆ پاوەندی بەریتانی، JPY بۆ یەنی ژاپۆنی، و CHF بۆ فرانکی سویسری. کاتێک لەسەر پلاتفۆرمەکە دەبینیت نرخی EURUSD بریتییە لە 1.0850، ئەمە واتە یەک یۆرۆ نزیکەی یەک دۆلار و هەشت سەنت و نیو دەکات. کەواتە نرخی جووت بە سادەیی بەهای دراوێکە کە بە دراوێکی تر پێوانە دەکرێت، و ئەمە ئەو بیرۆکەیەیە کە هەموو شتەکانی داهاتووی لەسەر بنیات دەنرێت."
+    },
+    {
+     "id": "s2",
+     "title": "دراوی بنەڕەتی و دراوی بەرامبەر",
+     "narration": "یەکەم دراو لە جووتەکەدا پێی دەوترێت دراوی بنەڕەتی یان Base Currency، و دراوی دووەم پێی دەوترێت دراوی بەرامبەر یان Quote Currency. نرخ هەمیشە پێت دەڵێت چەند یەکە لە دراوی بەرامبەر پێویستە بۆ کڕینی یەک یەکە لە دراوی بنەڕەتی. لە EURUSD یۆرۆ بنەڕەتییە و دۆلار بەرامبەرە. بەڵام لە USDJPY لە 150.20، دۆلار بنەڕەتییە، و نرخەکە واتە یەک دۆلار یەکسانە بە 150.20 یەن. یاسا گرنگەکە: ئەگەر نرخی جووتەکە بەرز بێتەوە ئەوا دراوی بنەڕەتی بەرامبەر بە دراوی بەرامبەر بەهێز بووە، و ئەگەر دابەزێت ئەوا بنەڕەتی لاواز بووە. بۆیە بەرزبوونەوەی USDJPY واتە بەهێزیی دۆلار، لە کاتێکدا بەرزبوونەوەی EURUSD واتە لاوازیی دۆلار."
+    },
+    {
+     "id": "s3",
+     "title": "جووتە سەرەکی و لاوەکییەکان",
+     "narration": "جووتە سەرەکییەکان، کە پێیان دەوترێت Majors، ئەو جووتانەن کە دۆلاری ئەمریکی لەگەڵ دراوی ئابوورییەکی گەورە تێیاندایە، بەناوبانگترینیان EURUSD و GBPUSD و USDJPY و USDCHF و AUDUSD و USDCAD و NZDUSD ن. ئەم جووتانە بەرزترین لیکویدیتییان هەیە، واتە قەبارەی بازرگانییان زۆر گەورەیە، بۆیە جیاوازیی نێوان نرخی کڕین و فرۆشتنیان زۆرجار بچووکە. جووتە لاوەکییەکان، یان Minors کە پێیان دەوترێت Crosses ـیش، ئەو جووتانەن کە دۆلاریان تێدا نییە، وەک EURGBP و EURJPY و GBPJPY. هەروەها جووتی نامۆ هەن کە پێیان دەوترێت Exotics، دراوێکی سەرەکی لەگەڵ دراوی بازاڕێکی تازەپێگەیشتوو کۆدەکەنەوە، تێچوونیان بەرزترە و جووڵەیان کەمتر ڕێکخراوە. ئامۆژگاریمان بۆ سەرەتاکار ئەوەیە بە دوو یان سێ جووتی سەرەکی لەگەڵ زێڕ دەست پێبکات."
+    },
+    {
+     "id": "s4",
+     "title": "نرخی کڕین و نرخی فرۆشتن",
+     "narration": "کاتێک پلاتفۆرمەکە دەکەیتەوە، بۆ هەر جووتێک دوو نرخ دەبینیت نەک یەک نرخ. نرخە نزمترەکە پێی دەوترێت Bid، و ئەو نرخەیە کە پێی دەفرۆشیت. نرخە بەرزترەکە پێی دەوترێت Ask، و ئەو نرخەیە کە پێی دەکڕیت. جیاوازیی نێوانیان پێی دەوترێت Spread، و ئەوە تێچووی چوونە ژوورەوەیە کە بە بڕۆکەری دەدەیت. بۆ نموونە لەوانەیە EURUSD ببینیت لە 1.0850 بۆ فرۆشتن و 1.0851 بۆ کڕین، بۆیە Spread تەنها یەک خاڵە. واتای ئەمە ئەوەیە هەر کاتێک مامەڵەیەک بکەیتەوە، بە زەرەرێکی بچووک دەست پێدەکەیت کە یەکسانە بە Spread، و نرخەکە دەبێت سەرەتا بەو بڕە بە قازانجی تۆ بجووڵێت تا دەگەیتە خاڵی یەکسانبوون. Spread زۆرجار لە کاتی هەواڵەکان و لە کاتژمێرە هێمنەکاندا فراوان دەبێت."
+    },
+    {
+     "id": "s5",
+     "title": "کڕین و فرۆشتن لەسەر جووت",
+     "narration": "لە فۆرێکسدا دەتوانیت هەم لە بەرزبوونەوە و هەم لە دابەزین قازانج بکەیت. کاتێک جووتێک دەکڕیت، کە پێی دەوترێت Buy یان پێگەی Long، تۆ دراوی بنەڕەتی دەکڕیت و دراوی بەرامبەر دەفرۆشیت، چونکە چاوەڕێ دەکەیت بنەڕەتی بەرز بێتەوە. کاتێک جووتێک دەفرۆشیت، کە پێی دەوترێت Sell یان پێگەی Short، تۆ بنەڕەتی دەفرۆشیت و بەرامبەر دەکڕیت، چونکە چاوەڕێ دەکەیت دابەزێت. پێویست ناکات خاوەنی یۆرۆ بیت بۆ ئەوەی بیفرۆشیت، پلاتفۆرمەکە تەنها جیاوازییەکە حیساب دەکات. یاسای داخستن لەبیر بکە: مامەڵەی کڕین لە نرخی Ask دەکرێتەوە و بە فرۆشتن لە Bid دادەخرێت، و مامەڵەی فرۆشتن لە Bid دەکرێتەوە و بە کڕین لە Ask دادەخرێت. لەگەڵ هەر مامەڵەیەکدا پێشوەختە وەستاندنی زەرەر و ئامانج دیاری بکە."
+    },
+    {
+     "id": "s6",
+     "title": "زێڕ XAUUSD",
+     "narration": "زێڕ لەسەر پلاتفۆرمەکان وەک جووتە دراوێک مامەڵەی لەگەڵ دەکرێت. هێمای XAU نوێنەرایەتی یەک ئۆنسە زێڕ دەکات، و لێرەدا دراوی بنەڕەتییە، و دۆلار دراوی بەرامبەرە. کەواتە ئەگەر نرخی XAUUSD بریتی بێت لە 2,350.40، ئەمە واتە ئۆنسەیەک زێڕ 2,350 دۆلار و 40 سەنت دەکات. لەبەر ئەوەی دۆلار بەرامبەرە، کڕینی زێڕ لە کرداردا واتە فرۆشتنی دۆلار، بۆیە زێڕ زۆرجار بەرز دەبێتەوە کاتێک دۆلار لاواز دەبێت. زێڕ لە جووتە دراوە سەرەکییەکان ناجێگیرترە، لەوانەیە لە یەک ڕۆژدا بیست یان سی دۆلار بجووڵێت. ئاگاداربە کە بڕۆکەرەکان لە پێناسەی خاڵ لەسەر زێڕ جیاوازن، بۆیە ڕوونترە جووڵەکەی بە دۆلار پێوانە بکەیت، بۆ نموونە بڵێیت نرخەکە پێنج دۆلار جووڵا."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە: مامەڵەی کڕین لەسەر GBPUSD",
+     "narration": "نموونەیەک لەسەر پاوەند دۆلار. لە کردنەوەی لەندەن لە کاتژمێر 8:00 بە کاتی لەندەن، پلاتفۆرمەکە نرخی فرۆشتن 1.2700 و نرخی کڕین 1.2702 پیشان دەدات، واتە Spread دوو خاڵ. شیکارییەکەت دەڵێت لەوانەیە پاوەند بەهێز ببێت، بۆیە مامەڵەی کڕین دەکەیتەوە، و لە نرخی Ask واتە 1.2702 دەچیتە ژوورەوە. وەستاندنی زەرەر لە 1.2672 دادەنێیت، واتە سی خاڵ لە خوار چوونە ژوورەوە، و ئامانج لە 1.2762، واتە شەست خاڵ لە سەرووی، بۆیە پاداشت دوو هێندەی مەترسییە. سەرنج بدە مامەڵەکەت هەر کە دەکرێتەوە بەهۆی Spread زەرەری دوو خاڵ پیشان دەدات. ئەگەر نرخی Bid گەیشتە 1.2762 مامەڵەکە لەسەر ئامانج دادەخرێت. ئەگەر Bid دابەزی بۆ 1.2672 لەسەر وەستاندن دادەخرێت، و ئەو زەرەرە دەبێت تەنها نزیکەی یەک لە سەدی هەژمارەکەت بێت."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە: مامەڵەی فرۆشتن لەسەر زێڕ",
+     "narration": "نموونەیەک لەسەر زێڕ. لە کاتژمێر 10:00 بە کاتی نیویۆرک، پلاتفۆرمەکە نرخی فرۆشتن 2,350.20 و نرخی کڕین 2,350.50 پیشان دەدات، واتە Spread سی سەنت. چاوەڕێ دەکەیت زێڕ دابەزێت، بۆیە مامەڵەی فرۆشتن لە نرخی Bid واتە 2,350.20 دەکەیتەوە. وەستاندن لە 2,358.50 دادەنێیت، واتە نزیکەی هەشت دۆلار لە سەرووی چوونە ژوورەوە، و ئامانج لە 2,334.00، واتە نزیکەی شازدە دۆلار لە خوارییەوە. ئەم مامەڵەیە بە کڕین دادەخرێت، بۆیە ئەوەی لێرەدا گرنگە نرخی Ask ە: ئەگەر Ask گەیشتە 2,334.00 ئامانج پێکراوە، و ئەگەر گەیشتە 2,358.50 وەستاندن پێکراوە. سەرنج بدە زێڕ بە مەودای گەورەتر لە دراوەکان دەجووڵێت، بۆیە وەستاندن بە دۆلار فراوانترە، و دەبێت قەبارەی مامەڵەکە بچووک بکەیتەوە تا مەترسی لە نزیکەی یەک لە سەددا بمێنێتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵەی باو خوێندنەوەی ئاراستەی دۆلارە بە پێچەوانەوە. لەبیرت بێت بەرزبوونەوەی USDJPY واتە بەهێزیی دۆلار، بەڵام بەرزبوونەوەی EURUSD یان XAUUSD واتە لاوازییەکەی. هەڵەی دووەم لەبیرچوونی Spread ە، بۆیە سەرەتاکار وەستاندنەکەی زۆر نزیک لە چوونە ژوورەوە دادەنێت و تەنها بەهۆی فراوانبوونی جیاوازییەکەوە پێدەکرێت، بە تایبەتی لە کاتی هەواڵەکاندا. سێیەم وا دەزانێت چارتەکە نرخی کڕین پیشان دەدات، لە کاتێکدا زۆربەی پلاتفۆرمەکان نرخی Bid لەسەر مۆمەکان دەکێشن، بۆیە لەوانەیە وەستاندنی مامەڵەی فرۆشتن پێبکرێت بێ ئەوەی مۆمەکە دەست لەو ئاستە بدات. چوارەم بازرگانییە لەسەر جووتە نامۆکان بەهۆی جووڵە گەورەکانیانەوە سەرەڕای تێچووی بەرزیان. پێنجەم مامەڵەکردنە لەگەڵ خاڵی زێڕ وەک خاڵی یۆرۆ دۆلار، کە قەبارەی مامەڵەکە بە تەواوی هەڵە دەکات."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداریی ئەم وانەیە: پێش هەر مامەڵەیەک، جووتەکە لە چەپەوە بۆ ڕاست بخوێنەوە. لە خۆت بپرسە کام لە دوو دراوەکە بنەڕەتییە، و بەرزبوونەوەی نرخ بۆ دۆلار چی دەگەیەنێت. ئەگەر چاوەڕێی بەهێزبوونی دراوی بنەڕەتی دەکەیت ئەوا تۆ کڕیاریت، و ئەگەر چاوەڕێی لاوازبوونی دەکەیت ئەوا فرۆشیاریت. سەیری نرخەکانی Bid و Ask بکە و Spread حیساب بکە، و لەبیرت بێت کڕین لە Ask دەکرێتەوە و لە Bid دادەخرێت، و فرۆشتن بە پێچەوانەوە. بە جووتە سەرەکییەکان وەک EURUSD و GBPUSD و USDJPY لەگەڵ زێڕ دەست پێبکە، و جووڵەی زێڕ بە دۆلار پێوانە بکە. هەمیشە پێش چوونە ژوورەوە وەستاندن و ئامانج دیاری بکە. لە وانەی داهاتوودا فێر دەبین کەی بازاڕ چالاکە و کەی هێمنە."
+    }
+   ]
+  },
+  "basics-l0-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا نهتم بالوقت",
+     "narration": "عرفنا أن سوق الفوركس يعمل أربعاً وعشرين ساعة، لكن هذا لا يعني أن كل الساعات متساوية. نشاط السوق يتبع ساعات عمل المراكز المالية الكبرى، فعندما تفتح البنوك في لندن أو نيويورك يزداد عدد الأوامر بشكل كبير. وهنا نحتاج مصطلحاً مهماً هو السيولة أو Liquidity، أي كمية الأوامر المتاحة للشراء والبيع في لحظة معينة. السيولة العالية تعني حركة أوضح وفرقاً أصغر بين سعر الشراء والبيع، والسيولة المنخفضة تعني حركة بطيئة أو قفزات مفاجئة وتكلفة أعلى. سنكتب الأوقات بتوقيت غرينتش GMT وبتوقيت بغداد، الذي يزيد ثلاث ساعات على غرينتش طوال السنة."
+    },
+    {
+     "id": "s2",
+     "title": "جلسة سيدني وطوكيو",
+     "narration": "يبدأ أسبوع التداول بجلسة سيدني، التي تعمل تقريباً من الساعة 22:00 إلى 07:00 بتوقيت غرينتش، أي من الواحدة بعد منتصف الليل حتى العاشرة صباحاً بتوقيت بغداد. ثم تأتي جلسة طوكيو من 00:00 إلى 09:00 غرينتش، أي من الثالثة فجراً حتى الثانية عشرة ظهراً بتوقيت بغداد. يسمي المتداولون هاتين الجلستين معاً الجلسة الآسيوية. طابعها العام هادئ، والسعر فيها يتحرك غالباً داخل نطاق ضيق، وتكون أزواج الين والدولار الأسترالي أنشط من غيرها. أما EURUSD والذهب فحركتهما فيها محدودة عادة. وقمة هذه الجلسة وقاعها مهمان، لأن جلسة لندن كثيراً ما تخترق أحدهما."
+    },
+    {
+     "id": "s3",
+     "title": "جلسة لندن",
+     "narration": "جلسة لندن هي الأكبر من حيث حجم التداول، لأن لندن أهم مركز للعملات في العالم. تعمل في الشتاء من 08:00 إلى 17:00 غرينتش، أي من الحادية عشرة صباحاً حتى الثامنة مساءً بتوقيت بغداد. وفي الصيف تطبّق بريطانيا التوقيت الصيفي، فتبدأ الجلسة قبل ذلك بساعة، أي من العاشرة صباحاً بتوقيت بغداد، لأن العراق لا يغيّر ساعته. عند افتتاح لندن تدخل سيولة كبيرة دفعة واحدة، فتنشط أزواج اليورو والجنيه والذهب بوضوح. وكثيراً ما تبدأ هنا الحركة الرئيسية لليوم، وأحياناً تسبقها حركة خادعة في الاتجاه المعاكس، لذلك لا تتسرع في الدقائق الأولى من الافتتاح."
+    },
+    {
+     "id": "s4",
+     "title": "نيويورك والتداخل",
+     "narration": "جلسة نيويورك تعمل في الشتاء من 13:00 إلى 22:00 غرينتش، أي من الرابعة عصراً حتى الواحدة بعد منتصف الليل بتوقيت بغداد، وفي الصيف تتقدم ساعة كذلك. أهم فترة في اليوم هي التداخل بين لندن ونيويورك، عندما تكون الجلستان مفتوحتين معاً، من 13:00 إلى 17:00 غرينتش، أي من الرابعة عصراً حتى الثامنة مساءً بتوقيت بغداد في الشتاء. في هذه الساعات تكون السيولة في أعلى مستوياتها، والـ Spread في أدناه، وتصدر فيها أغلب الأخبار الأمريكية. لذلك يعتبرها كثير من المتداولين أفضل ساعات اليوم للعملات الرئيسية والذهب، وخاصة لمن يعيش في العراق لأنها تقع في وقت مريح."
+    },
+    {
+     "id": "s5",
+     "title": "أسوأ الساعات وعطلة نهاية الأسبوع",
+     "narration": "أسوأ الساعات عادة هي آخر جلسة نيويورك وما بعدها، أي تقريباً من 20:00 إلى 23:00 غرينتش، من الحادية عشرة ليلاً إلى الثانية فجراً بتوقيت بغداد. في هذه الفترة يحدث ما يسمى Rollover، وهو التبييت اليومي عند الخامسة مساءً بتوقيت نيويورك، فيتسع الـ Spread كثيراً، والذهب يتوقف عادة عن التداول نحو ساعة. أما عطلة نهاية الأسبوع، فالسوق يغلق مساء الجمعة نحو 22:00 غرينتش، أي الواحدة فجر السبت بتوقيت بغداد، ويفتح مساء الأحد في الوقت نفسه تقريباً، أي الواحدة فجر الاثنين بتوقيت بغداد. وقد يفتح السعر بعيداً عن إغلاق الجمعة، وهذا يسمى فجوة أو Gap."
+    },
+    {
+     "id": "s6",
+     "title": "ساعات الأخبار",
+     "narration": "الأخبار الاقتصادية هي أكثر ما يحرك السوق في وقت قصير. أهمها الأخبار الأمريكية مثل بيانات التضخم وتقرير الوظائف، وتصدر غالباً في الساعة 8:30 بتوقيت نيويورك، أي 13:30 غرينتش و16:30 بتوقيت بغداد في الشتاء، و15:30 في الصيف. وقرارات الفائدة الأمريكية تصدر عادة في الساعة 14:00 بتوقيت نيويورك، أي العاشرة ليلاً بتوقيت بغداد في الشتاء. قبل الخبر يهدأ السوق، وعند صدوره قد يقفز السعر عشرات النقاط في ثوانٍ، ويتسع الـ Spread، وقد يُنفّذ أمرك بسعر أسوأ من المطلوب، وهذا يسمى Slippage. لذلك افتح التقويم الاقتصادي كل صباح، واعرف موعد الأخبار المهمة قبل أن تتداول."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار في يوم شتوي. خلال الجلسة الآسيوية تحرك السعر في نطاق ضيق بين 1.0840 و1.0860، أي عشرين نقطة فقط طوال الليل. عند افتتاح لندن، الساعة 8:00 بتوقيت لندن، أي الحادية عشرة صباحاً بتوقيت بغداد، نزل السعر أولاً تحت قاع آسيا إلى 1.0832، ثم انعكس بقوة وأغلقت شمعة الخمس عشرة دقيقة فوق 1.0860. استمر الصعود خلال تداخل لندن ونيويورك حتى 1.0905. لاحظ الدرس هنا: حركة الليل كانت عشرين نقطة، بينما حركة لندن ونيويورك تجاوزت سبعين نقطة. وهذا لا يحدث كل يوم بالشكل نفسه، لكنه يوضح أين تتركز السيولة عادة."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب وقت الخبر",
+     "narration": "مثال على الذهب في يوم صدور بيانات التضخم الأمريكية. خلال الجلسة الآسيوية تحرك السعر أربعة دولارات فقط بين 2,341 و2,345. قبل الخبر بقليل فتح متداول مبتدئ صفقة شراء عند 2,344 ووضع وقفه على بعد ثلاثة دولارات عند 2,341. في الساعة 8:30 بتوقيت نيويورك، أي 16:30 بتوقيت بغداد، صدر الخبر، فهبط الذهب إلى 2,336 في دقيقة واحدة، واتسع الـ Spread من ثلاثين سنتاً إلى أكثر من دولار، فضُرب الوقف، ثم ارتفع السعر إلى 2,362 خلال ربع ساعة. الدرس: الوقف القريب لا يصمد أمام تقلب الأخبار، والأسلم أن تنتظر إغلاق شمعة الخمس عشرة دقيقة الأولى بعد الخبر قبل أن تقرر."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ هو التداول في أي وقت يتوفر لك، حتى في ساعات الليل الميتة أو وقت التبييت، حيث الحركة عشوائية والتكلفة عالية. والخطأ الثاني نسيان تغيير التوقيت الصيفي في أوروبا وأمريكا، فيظن المتداول في العراق أن لندن تفتح في الحادية عشرة دائماً، بينما تفتح في العاشرة صيفاً. والثالث ترك صفقات مفتوحة عبر عطلة نهاية الأسبوع دون حساب خطر الفجوة عند الافتتاح. والرابع الدخول قبل الخبر بثوانٍ أو في لحظة صدوره، على أمل اصطياد الحركة. والخامس الحكم على شمعة لم تُغلق بعد في وقت الخبر، فالشمعة التي لم تُغلق قد تنقلب تماماً قبل إغلاقها."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: اختر نافذة زمنية ثابتة لتداولك ولا تتداول خارجها. للمتداول في العراق، أفضل نافذة عادة هي من افتتاح لندن حتى نهاية التداخل مع نيويورك، أي من الحادية عشرة صباحاً حتى الثامنة مساءً بتوقيت بغداد في الشتاء، ومن العاشرة حتى السابعة في الصيف. ارسم قمة وقاع الجلسة الآسيوية كل يوم، وراقب ماذا تفعل لندن بهما. افتح التقويم الاقتصادي صباحاً، وتجنب الدخول قبل الأخبار القوية بربع ساعة وبعدها حتى تُغلق أول شمعة. ابتعد عن وقت التبييت، وفكّر جيداً قبل ترك صفقة مفتوحة يوم الجمعة. والتزم دائماً بوقف خسارة ومخاطرة نحو واحد بالمئة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why Time Matters",
+     "narration": "We learned that the forex market runs twenty-four hours a day, but that does not mean all hours are equal. Market activity follows the working hours of the major financial centres, so when banks open in London or New York, the number of orders increases sharply. Here we need an important term: Liquidity, meaning the amount of buy and sell orders available at a given moment. High liquidity means clearer movement and a smaller difference between the buy and sell price, while low liquidity means slow movement or sudden jumps and a higher cost. We will write times in Greenwich Mean Time, GMT, and in Baghdad time, which is three hours ahead of GMT throughout the year."
+    },
+    {
+     "id": "s2",
+     "title": "The Sydney and Tokyo Sessions",
+     "narration": "The trading week begins with the Sydney session, which runs roughly from 22:00 to 07:00 GMT, that is, from one o'clock after midnight until ten in the morning Baghdad time. Then comes the Tokyo session, from 00:00 to 09:00 GMT, which is from three in the morning until twelve noon Baghdad time. Traders call these two sessions together the Asian session. Its general character is quiet, price often moves inside a narrow range, and the yen pairs and the Australian dollar are more active than others. EURUSD and gold usually move only a little during it. The high and low of this session are important, because the London session often breaks through one of them."
+    },
+    {
+     "id": "s3",
+     "title": "The London Session",
+     "narration": "The London session is the largest by trading volume, because London is the most important currency centre in the world. In winter it runs from 08:00 to 17:00 GMT, that is, from eleven in the morning until eight in the evening Baghdad time. In summer, Britain applies daylight saving time, so the session starts one hour earlier, from ten in the morning Baghdad time, because Iraq does not change its clocks. At the London open, a large amount of liquidity enters all at once, so the euro, pound and gold become clearly active. The main move of the day often begins here, and sometimes it is preceded by a deceptive move in the opposite direction, so do not rush in the first minutes of the open."
+    },
+    {
+     "id": "s4",
+     "title": "New York and the Overlap",
+     "narration": "The New York session runs in winter from 13:00 to 22:00 GMT, that is, from four in the afternoon until one after midnight Baghdad time, and in summer it also moves one hour earlier. The most important period of the day is the overlap between London and New York, when both sessions are open together, from 13:00 to 17:00 GMT, which is from four in the afternoon until eight in the evening Baghdad time in winter. During these hours liquidity is at its highest and the spread at its lowest, and most US news is released then. That is why many traders consider them the best hours of the day for the major currencies and gold, especially for someone living in Iraq, since they fall at a comfortable time."
+    },
+    {
+     "id": "s5",
+     "title": "The Worst Hours and the Weekend",
+     "narration": "The worst hours are usually the end of the New York session and just after it, roughly from 20:00 to 23:00 GMT, which is from eleven at night until two in the morning Baghdad time. During this period the so-called Rollover happens, the daily rollover at five in the evening New York time, so the spread widens a lot, and gold usually stops trading for about an hour. As for the weekend, the market closes on Friday evening at about 22:00 GMT, which is one in the morning on Saturday Baghdad time, and it reopens on Sunday evening at about the same time, which is one in the morning on Monday Baghdad time. Price may open far from Friday's close, and this is called a Gap."
+    },
+    {
+     "id": "s6",
+     "title": "News Hours",
+     "narration": "Economic news is what moves the market the most in a short time. The most important is US news such as inflation data and the jobs report, usually released at 8:30 New York time, which is 13:30 GMT and 16:30 Baghdad time in winter, or 15:30 in summer. US interest rate decisions are usually released at 14:00 New York time, which is ten at night Baghdad time in winter. Before the news the market goes quiet, and when it is released, price can jump dozens of pips in seconds, the spread widens, and your order may be filled at a worse price than requested, which is called Slippage. So open the economic calendar every morning, and know the time of the important news before you trade."
+    },
+    {
+     "id": "s7",
+     "title": "Example on EURUSD",
+     "narration": "An example on the euro dollar on a winter day. During the Asian session, price moved in a narrow range between 1.0840 and 1.0860, only twenty pips all night. At the London open, 8:00 London time, which is eleven in the morning Baghdad time, price first dropped below the Asian low to 1.0832, then reversed strongly, and a fifteen-minute candle closed above 1.0860. The rise continued through the London and New York overlap up to 1.0905. Notice the lesson here: the night's movement was twenty pips, while the London and New York movement exceeded seventy pips. This does not happen in the same way every day, but it shows where liquidity is usually concentrated."
+    },
+    {
+     "id": "s8",
+     "title": "Example on Gold at News Time",
+     "narration": "An example on gold on the day US inflation data is released. During the Asian session, price moved only four dollars, between 2,341 and 2,345. Shortly before the news, a beginner opened a buy trade at 2,344 and placed the stop three dollars away at 2,341. At 8:30 New York time, which is 16:30 Baghdad time, the news came out, gold dropped to 2,336 within one minute, and the spread widened from thirty cents to more than a dollar, so the stop was hit. Then price rose to 2,362 within a quarter of an hour. The lesson: a tight stop does not survive news volatility, and the safer approach is to wait for the first fifteen-minute candle after the news to close before deciding."
+    },
+    {
+     "id": "s9",
+     "title": "Common Mistakes",
+     "narration": "The first mistake is trading whenever you happen to be free, even in the dead hours of the night or at rollover time, when movement is random and costs are high. The second mistake is forgetting the daylight saving change in Europe and America, so a trader in Iraq assumes London always opens at eleven, when it opens at ten in summer. The third is leaving trades open over the weekend without accounting for the risk of a gap at the open. The fourth is entering seconds before the news or at the moment it is released, hoping to catch the move. The fifth is judging a candle that has not yet closed during news time, because a candle that has not closed can reverse completely before it closes."
+    },
+    {
+     "id": "s10",
+     "title": "The Practical Rule",
+     "narration": "The practical rule: choose a fixed time window for your trading and do not trade outside it. For a trader in Iraq, the best window is usually from the London open until the end of the overlap with New York, that is, from eleven in the morning until eight in the evening Baghdad time in winter, and from ten until seven in summer. Mark the high and low of the Asian session every day, and watch what London does with them. Open the economic calendar in the morning, and avoid entering for a quarter of an hour before strong news and afterwards until the first candle closes. Stay away from rollover time, and think carefully before leaving a trade open on Friday. Always use a stop loss and risk about one percent."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی گرنگی بە کات دەدەین",
+     "narration": "زانیمان کە بازاڕی فۆرێکس بیست و چوار کاتژمێر کار دەکات، بەڵام ئەمە ئەوە ناگەیەنێت هەموو کاتژمێرەکان وەک یەک بن. چالاکیی بازاڕ شوێن کاتژمێرەکانی کاری ناوەندە داراییە گەورەکان دەکەوێت، بۆیە کاتێک بانکەکان لە لەندەن یان نیویۆرک دەکرێنەوە، ژمارەی فەرمانەکان بە شێوەیەکی زۆر زیاد دەبێت. لێرەدا پێویستمان بە زاراوەیەکی گرنگ هەیە کە لیکویدیتی یان Liquidity یە، واتە بڕی ئەو فەرمانانەی کڕین و فرۆشتن کە لە ساتێکی دیاریکراودا بەردەستن. لیکویدیتیی بەرز واتە جووڵەی ڕوونتر و جیاوازیی بچووکتر لە نێوان نرخی کڕین و فرۆشتن، و لیکویدیتیی نزم واتە جووڵەی هێواش یان بازدانی لەناکاو و تێچووی بەرزتر. کاتەکان بە کاتی گرینیچ GMT و بە کاتی بەغدا دەنووسین، کە بە درێژایی ساڵ سێ کاتژمێر لە گرینیچ پێشترە."
+    },
+    {
+     "id": "s2",
+     "title": "دانیشتنی سیدنی و تۆکیۆ",
+     "narration": "هەفتەی بازرگانی بە دانیشتنی سیدنی دەست پێدەکات، کە بە نزیکەیی لە کاتژمێر 22:00 تا 07:00 بە کاتی گرینیچ کار دەکات، واتە لە کاتژمێر یەکی دوای نیوەشەو تا دەی بەیانی بە کاتی بەغدا. پاشان دانیشتنی تۆکیۆ دێت لە 00:00 تا 09:00 گرینیچ، واتە لە سێی بەرەبەیان تا دوازدەی نیوەڕۆ بە کاتی بەغدا. بازرگانان ئەم دوو دانیشتنە پێکەوە ناو دەنێن دانیشتنی ئاسیایی. سروشتی گشتیی هێمنە، و نرخ تێیدا زۆرجار لە ناو مەودایەکی تەسکدا دەجووڵێت، و جووتەکانی یەن و دۆلاری ئوسترالی لە ئەوانی تر چالاکترن. بەڵام EURUSD و زێڕ زۆرجار تێیدا جووڵەیان سنووردارە. بەرزترین و نزمترین خاڵی ئەم دانیشتنە گرنگن، چونکە دانیشتنی لەندەن زۆرجار یەکێکیان دەبڕێت."
+    },
+    {
+     "id": "s3",
+     "title": "دانیشتنی لەندەن",
+     "narration": "دانیشتنی لەندەن لە ڕووی قەبارەی بازرگانییەوە گەورەترینە، چونکە لەندەن گرنگترین ناوەندی دراوە لە جیهاندا. لە زستاندا لە 08:00 تا 17:00 گرینیچ کار دەکات، واتە لە یازدەی بەیانی تا هەشتی ئێوارە بە کاتی بەغدا. لە هاویندا بەریتانیا کاتی هاوینە جێبەجێ دەکات، بۆیە دانیشتنەکە کاتژمێرێک زووتر دەست پێدەکات، واتە لە دەی بەیانی بە کاتی بەغدا، چونکە عێراق کاتژمێرەکەی ناگۆڕێت. لە کردنەوەی لەندەندا بڕێکی زۆر لیکویدیتی بە یەکجار دێتە ژوورەوە، بۆیە یۆرۆ و پاوەند و زێڕ بە ڕوونی چالاک دەبن. زۆرجار جووڵەی سەرەکیی ڕۆژ لێرەوە دەست پێدەکات، و هەندێک جار جووڵەیەکی فریودەر بە ئاراستەی پێچەوانە پێشی دەکەوێت، بۆیە لە یەکەم خولەکەکانی کردنەوەدا پەلە مەکە."
+    },
+    {
+     "id": "s4",
+     "title": "نیویۆرک و یەکگرتن",
+     "narration": "دانیشتنی نیویۆرک لە زستاندا لە 13:00 تا 22:00 گرینیچ کار دەکات، واتە لە چواری دوانیوەڕۆ تا یەکی دوای نیوەشەو بە کاتی بەغدا، و لە هاوینیشدا کاتژمێرێک پێش دەکەوێت. گرنگترین ماوەی ڕۆژ یەکگرتنی نێوان لەندەن و نیویۆرکە، کاتێک هەردوو دانیشتن پێکەوە کراوەن، لە 13:00 تا 17:00 گرینیچ، واتە لە چواری دوانیوەڕۆ تا هەشتی ئێوارە بە کاتی بەغدا لە زستاندا. لەم کاتژمێرانەدا لیکویدیتی لە بەرزترین ئاستیدایە و Spread لە نزمترینیدا، و زۆربەی هەواڵە ئەمریکییەکان تێیدا بڵاو دەکرێنەوە. بۆیە زۆرێک لە بازرگانان بە باشترین کاتژمێرەکانی ڕۆژی دادەنێن بۆ دراوە سەرەکییەکان و زێڕ، بە تایبەتی بۆ کەسێک لە عێراق دەژی چونکە لە کاتێکی گونجاودان."
+    },
+    {
+     "id": "s5",
+     "title": "خراپترین کاتژمێرەکان و پشووی کۆتایی هەفتە",
+     "narration": "خراپترین کاتژمێرەکان زۆرجار کۆتایی دانیشتنی نیویۆرک و دوای ئەوەن، بە نزیکەیی لە 20:00 تا 23:00 گرینیچ، واتە لە یازدەی شەو تا دووی بەرەبەیان بە کاتی بەغدا. لەم ماوەیەدا ئەوەی پێی دەوترێت Rollover ڕوودەدات، کە گواستنەوەی ڕۆژانەیە لە کاتژمێر پێنجی ئێوارە بە کاتی نیویۆرک، بۆیە Spread زۆر فراوان دەبێت، و زێڕ زۆرجار نزیکەی کاتژمێرێک بازرگانیی پێ ناکرێت. سەبارەت بە پشووی کۆتایی هەفتە، بازاڕ ئێوارەی هەینی نزیکەی 22:00 گرینیچ دادەخرێت، واتە یەکی بەرەبەیانی شەممە بە کاتی بەغدا، و ئێوارەی یەکشەممە نزیکەی هەمان کات دەکرێتەوە، واتە یەکی بەرەبەیانی دووشەممە بە کاتی بەغدا. لەوانەیە نرخ دوور لە داخستنی هەینی بکرێتەوە، و ئەمە پێی دەوترێت بۆشایی یان Gap."
+    },
+    {
+     "id": "s6",
+     "title": "کاتژمێرەکانی هەواڵ",
+     "narration": "هەواڵە ئابوورییەکان ئەو شتەن کە لە ماوەیەکی کورتدا زیاترین جووڵە بە بازاڕ دەدەن. گرنگترینیان هەواڵە ئەمریکییەکانن وەک داتای هەڵئاوسان و ڕاپۆرتی کار، کە زۆرجار لە کاتژمێر 8:30 بە کاتی نیویۆرک بڵاو دەکرێنەوە، واتە 13:30 گرینیچ و 16:30 بە کاتی بەغدا لە زستاندا، و 15:30 لە هاویندا. بڕیارەکانی سوودی ئەمریکی زۆرجار لە کاتژمێر 14:00 بە کاتی نیویۆرک دەردەچن، واتە دەی شەو بە کاتی بەغدا لە زستاندا. پێش هەواڵ بازاڕ هێمن دەبێت، و کاتێک بڵاو دەکرێتەوە لەوانەیە نرخ لە چەند چرکەیەکدا دەیان خاڵ باز بدات، Spread فراوان دەبێت، و لەوانەیە فەرمانەکەت بە نرخێکی خراپتر لە داواکراو جێبەجێ بکرێت، کە پێی دەوترێت Slippage. بۆیە هەموو بەیانییەک ڕۆژژمێری ئابووری بکەرەوە، و پێش بازرگانیکردن کاتی هەواڵە گرنگەکان بزانە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار لە ڕۆژێکی زستاندا. لە ماوەی دانیشتنی ئاسیاییدا نرخ لە مەودایەکی تەسکدا لە نێوان 1.0840 و 1.0860 جووڵا، واتە تەنها بیست خاڵ بە درێژایی شەو. لە کردنەوەی لەندەندا، کاتژمێر 8:00 بە کاتی لەندەن، واتە یازدەی بەیانی بە کاتی بەغدا، نرخ سەرەتا لە خوار نزمترین خاڵی ئاسیا دابەزی بۆ 1.0832، پاشان بە هێز گەڕایەوە و مۆمی پازدە خولەکی لە سەرووی 1.0860 داخرا. بەرزبوونەوەکە لە ماوەی یەکگرتنی لەندەن و نیویۆرکدا بەردەوام بوو تا 1.0905. سەرنجی وانەکە بدە: جووڵەی شەو بیست خاڵ بوو، لە کاتێکدا جووڵەی لەندەن و نیویۆرک لە حەفتا خاڵ تێپەڕی. ئەمە هەموو ڕۆژێک بە هەمان شێوە ڕوونادات، بەڵام پیشانی دەدات لیکویدیتی زۆرجار لە کوێدا کۆدەبێتەوە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر زێڕ لە کاتی هەواڵ",
+     "narration": "نموونەیەک لەسەر زێڕ لە ڕۆژی بڵاوبوونەوەی داتای هەڵئاوسانی ئەمریکی. لە ماوەی دانیشتنی ئاسیاییدا نرخ تەنها چوار دۆلار جووڵا، لە نێوان 2,341 و 2,345. کەمێک پێش هەواڵەکە، بازرگانێکی سەرەتاکار مامەڵەی کڕینی لە 2,344 کردەوە و وەستاندنەکەی بە دووریی سێ دۆلار لە 2,341 دانا. لە کاتژمێر 8:30 بە کاتی نیویۆرک، واتە 16:30 بە کاتی بەغدا، هەواڵەکە دەرچوو، زێڕ لە یەک خولەکدا دابەزی بۆ 2,336، و Spread لە سی سەنتەوە فراوان بوو بۆ زیاتر لە دۆلارێک، بۆیە وەستاندنەکە پێکرا. پاشان نرخ لە ماوەی چارەکە کاتژمێرێکدا بەرز بووەوە بۆ 2,362. وانەکە: وەستاندنی نزیک لە بەرامبەر ناجێگیریی هەواڵدا خۆڕاگر نییە، و سەلامەتتر ئەوەیە چاوەڕێ بکەیت یەکەم مۆمی پازدە خولەکی دوای هەواڵ دابخرێت پێش ئەوەی بڕیار بدەیت."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵە بازرگانیکردنە لە هەر کاتێکدا کە بۆت بگونجێت، تەنانەت لە کاتژمێرە مردووەکانی شەو یان کاتی ڕۆڵۆڤەر، کە جووڵە هەڕەمەکییە و تێچوو بەرزە. هەڵەی دووەم لەبیرچوونی گۆڕینی کاتی هاوینەیە لە ئەوروپا و ئەمریکا، بۆیە بازرگان لە عێراق وا دەزانێت لەندەن هەمیشە لە یازدە دەکرێتەوە، لە کاتێکدا لە هاویندا لە دە دەکرێتەوە. سێیەم بەجێهێشتنی مامەڵەی کراوەیە بە درێژایی پشووی کۆتایی هەفتە بێ حیسابکردنی مەترسیی بۆشایی لە کردنەوەدا. چوارەم چوونە ژوورەوەیە چەند چرکەیەک پێش هەواڵ یان لە ساتی بڵاوبوونەوەیدا، بە هیوای ڕاوکردنی جووڵەکە. پێنجەم بڕیاردانە لەسەر مۆمێک کە هێشتا دانەخراوە لە کاتی هەواڵدا، چونکە مۆمێک کە دانەخراوە دەتوانێت پێش داخستنی بە تەواوی پێچەوانە ببێتەوە."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: پەنجەرەیەکی کاتیی جێگیر بۆ بازرگانییەکەت هەڵبژێرە و لە دەرەوەی بازرگانی مەکە. بۆ بازرگانێک لە عێراق، باشترین پەنجەرە زۆرجار لە کردنەوەی لەندەنەوەیە تا کۆتایی یەکگرتن لەگەڵ نیویۆرک، واتە لە یازدەی بەیانی تا هەشتی ئێوارە بە کاتی بەغدا لە زستاندا، و لە دەوە تا حەوت لە هاویندا. هەموو ڕۆژێک بەرزترین و نزمترین خاڵی دانیشتنی ئاسیایی دیاری بکە، و سەیر بکە لەندەن چییان لێدەکات. بەیانیان ڕۆژژمێری ئابووری بکەرەوە، و چارەکە کاتژمێرێک پێش هەواڵە بەهێزەکان و دوای ئەوە تا یەکەم مۆم دادەخرێت خۆت لە چوونە ژوورەوە بپارێزە. لە کاتی ڕۆڵۆڤەر دوور بکەوەرەوە، و پێش بەجێهێشتنی مامەڵەیەکی کراوە لە ڕۆژی هەینیدا باش بیر بکەرەوە. هەمیشە وەستاندنی زەرەر بەکاربهێنە و نزیکەی یەک لە سەد مەترسی بکە."
+    }
+   ]
+  },
+  "basics-l0-04": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو الشارت؟",
+     "narration": "الشارت، أو الرسم البياني، هو الطريقة التي نرى بها حركة السعر عبر الزمن. المحور الأفقي في الأسفل يمثل الوقت، والمحور العمودي على الجانب يمثل السعر. كل نقطة على الشارت تجيب عن سؤال بسيط: كم كان سعر الزوج أو الذهب في تلك اللحظة؟ في هذا الدرس سنتعلم أهم طريقة لعرض السعر، وهي الشموع اليابانية، وسنفهم معنى الإطار الزمني، أي المدة التي تمثلها كل شمعة. هذه المهارة هي الأساس لكل ما سيأتي بعدها في الدورة، فكل نمط أو منطقة أو استراتيجية ستتعلمها لاحقاً تُقرأ من الشموع. لذلك خذ وقتك هنا، وافتح الشارت أمامك وأنت تستمع."
+    },
+    {
+     "id": "s2",
+     "title": "تشريح الشمعة",
+     "narration": "كل شمعة تلخّص ما حدث للسعر خلال فترة زمنية محددة بأربعة أسعار. الأول هو سعر الافتتاح، أي السعر في بداية الفترة، ويسمى Open. الثاني سعر الإغلاق في نهايتها، ويسمى Close. الثالث أعلى سعر وصل إليه السوق خلال الفترة، ويسمى High، والرابع أدنى سعر، ويسمى Low. الجزء العريض من الشمعة يسمى الجسم، ويمتد بين الافتتاح والإغلاق. أما الخطوط الرفيعة فوق الجسم وتحته فتسمى الذيول أو الظلال، وبالإنجليزية Wick، وهي تُظهر أين وصل السعر ثم تراجع عنه. الذيل العلوي ينتهي دائماً عند الـ High، والذيل السفلي ينتهي دائماً عند الـ Low، فالشمعة كلها من طرفها إلى طرفها هي مدى حركة الفترة."
+    },
+    {
+     "id": "s3",
+     "title": "الشمعة الصاعدة والهابطة",
+     "narration": "إذا أغلق السعر أعلى من سعر افتتاحه فالشمعة صاعدة، وتسمى Bullish، وتُلوّن عادة بالأخضر أو الأبيض، ويكون الافتتاح في أسفل الجسم والإغلاق في أعلاه. وإذا أغلق أدنى من افتتاحه فالشمعة هابطة، وتسمى Bearish، وتُلوّن عادة بالأحمر أو الأسود، ويكون الافتتاح في الأعلى والإغلاق في الأسفل. الألوان يمكن تغييرها من إعدادات المنصة، فلا تعتمد على اللون وحده، بل على موقع الافتتاح والإغلاق. الجسم الكبير يدل على أن طرفاً واحداً سيطر بقوة خلال الفترة. والذيل الطويل يعني أن السعر ذهب بعيداً ثم رُفض وعاد. والشمعة ذات الجسم الصغير جداً تدل على تردد وتوازن بين المشترين والبائعين."
+    },
+    {
+     "id": "s4",
+     "title": "الخط والبار والشمعة",
+     "narration": "هناك ثلاث طرق شائعة لعرض السعر. الرسم الخطي، ويسمى Line Chart، يصل أسعار الإغلاق فقط بخط واحد، وهو بسيط ونظيف ومفيد لرؤية الاتجاه العام، لكنه يخفي القمم والقيعان الحقيقية والذيول. رسم البار، ويسمى أيضاً OHLC، يعرض الأسعار الأربعة: خط عمودي من الـ Low إلى الـ High، وشرطة صغيرة إلى اليسار للافتتاح، وأخرى إلى اليمين للإغلاق. أما الشموع اليابانية، أو Candlestick، فتعرض المعلومات الأربع نفسها التي يعرضها البار، لكن بجسم ملوّن يجعل قراءتها أسرع بالعين. لهذا يستخدمها معظم المتداولين، وهي التي سنعتمدها في كل دروس هذه الأكاديمية، ويمكنك اختيارها من قائمة نوع الشارت في أي منصة."
+    },
+    {
+     "id": "s5",
+     "title": "الأطر الزمنية",
+     "narration": "الإطار الزمني، ويسمى Timeframe، هو المدة التي تمثلها كل شمعة. على إطار الدقيقة الواحدة، ويُكتب M1، كل شمعة تمثل دقيقة واحدة. ثم هناك M5 وM15 وM30، أي خمس دقائق وخمس عشرة دقيقة ونصف ساعة. بعدها H1 للساعة، وH4 لأربع ساعات، ثم D1 لليوم، وW1 للأسبوع، وأخيراً MN للشهر. الأطر الصغيرة تُظهر تفاصيل كثيرة وضجيجاً كبيراً، وتتحرك بسرعة وتحتاج متابعة مستمرة. أما الأطر الكبيرة فتُظهر الصورة العامة والاتجاه الرئيسي، وإشاراتها أبطأ لكنها أوضح. لاحظ أن الشمعة اليومية في الفوركس والذهب تبدأ عادة عند الخامسة مساءً بتوقيت نيويورك، وقد يختلف ذلك قليلاً حسب توقيت الوسيط."
+    },
+    {
+     "id": "s6",
+     "title": "الشمعة الكبيرة تحتوي الصغيرة",
+     "narration": "كل شمعة على إطار كبير هي مجموع عدة شموع على إطار أصغر. شمعة الساعة الواحدة مثلاً تتكون من أربع شموع من إطار الخمس عشرة دقيقة. افتتاحها هو افتتاح أول شمعة صغيرة، وإغلاقها هو إغلاق آخر شمعة صغيرة. وأعلى سعر فيها هو أعلى قمة بين الشموع الأربع، وأدنى سعر هو أدنى قاع بينها. بالطريقة نفسها، شمعة الأربع ساعات تحتوي أربع شموع ساعة، والشمعة اليومية تحتوي ست شموع من الأربع ساعات. لذلك قد ترى على الإطار الصغير هبوطاً قوياً، بينما الشمعة الكبيرة ما زالت صاعدة. الإطاران لا يتناقضان، بل يعرضان القصة نفسها بدرجة تفصيل مختلفة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار. شمعة الساعة بين التاسعة والعاشرة صباحاً بتوقيت لندن افتتحت عند 1.0850، ونزلت إلى 1.0841، ثم صعدت إلى 1.0872، وأغلقت عند 1.0866. إنها شمعة صاعدة جسمها 16 نقطة، والنقطة أو الـ pip في هذا الزوج هي الرقم الرابع بعد الفاصلة. لو فتحنا إطار الخمس عشرة دقيقة لرأينا أربع شموع: الأولى هابطة نزلت إلى 1.0841 وأغلقت عند 1.0845، والثانية صاعدة أغلقت عند 1.0858، والثالثة صاعدة لمست 1.0872 وأغلقت عند 1.0869، والرابعة هابطة صغيرة أغلقت عند 1.0866. إذن الذيل السفلي لشمعة الساعة هو ببساطة هبوط الربع ساعة الأولى، والذيل العلوي هو تراجع الربع الأخير."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال على الذهب على الإطار اليومي. افتتحت الشمعة عند 4020 دولاراً للأونصة، ونزلت قليلاً إلى 4008، ثم صعدت خلال جلسة لندن حتى 4061، لكنها عادت وهبطت في جلسة نيويورك وأغلقت عند 4015. النتيجة شمعة هابطة بجسم صغير، خمسة دولارات فقط، وذيل علوي طويل يقارب 41 دولاراً. هذا الذيل يخبرنا أن المشترين دفعوا السعر للأعلى ثم رُفض هناك. على إطار الأربع ساعات سترى ست شموع، منها شموع صاعدة قوية في الصباح، ثم شموع هابطة متتالية بعد الظهر. الشمعة اليومية الواحدة تخفي كل هذه القصة، والإطار الأصغر يكشف لك كيف ومتى حدث الرفض."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ شائع هو الحكم على شمعة لم تُغلق بعد. الشمعة الحالية تتغير مع كل حركة، وقد تبدو صاعدة قوية ثم تُغلق بذيل طويل وجسم صغير، لذلك انتظر دائماً إغلاق الشمعة قبل أن تقرأها. الخطأ الثاني هو الالتصاق بإطار الدقيقة أو الخمس دقائق فقط، فترى ضجيجاً كثيراً وتنسى الاتجاه الكبير. الخطأ الثالث هو الاعتماد على اللون وحده دون النظر إلى مكان الافتتاح والإغلاق وطول الذيول. والخطأ الرابع هو تجاهل توقيت المنصة، فتختلف الشمعة اليومية عندك عن الشموع التي يتحدث عنها غيرك، ويختلط عليك وقت الافتتاح والإغلاق الحقيقي."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: كل شمعة تحكي أربعة أسعار، الافتتاح والأعلى والأدنى والإغلاق. اقرأ الجسم لتعرف من سيطر، واقرأ الذيول لتعرف أين رُفض السعر. استخدم الشموع اليابانية، وابدأ دائماً من إطار كبير مثل اليومي أو الأربع ساعات لترى الصورة العامة، ثم انزل إلى إطار أصغر للتفاصيل. تذكّر أن الشمعة الكبيرة مكوّنة من شموع صغيرة، فلا تتفاجأ إذا اختلف شكل الحركة بين الإطارين. ولا تبنِ أي قرار على شمعة لم تُغلق بعد. تدرّب الآن: افتح شارت اليورو دولار، وقارن شمعة ساعة واحدة بشموعها الأربع على إطار الخمس عشرة دقيقة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is a Chart?",
+     "narration": "A chart is the way we see price move over time. The horizontal axis along the bottom represents time, and the vertical axis on the side represents price. Every point on the chart answers one simple question: what was the price of this pair, or of gold, at that moment? In this lesson we will learn the most important way to display price, which is Japanese candlesticks, and we will understand what a timeframe means, that is, the period of time each candle represents. This skill is the foundation for everything that comes after it in the course, because every pattern, zone or strategy you learn later is read from candles. So take your time here, and keep a chart open in front of you while you listen."
+    },
+    {
+     "id": "s2",
+     "title": "Candle Anatomy",
+     "narration": "Every candle summarizes a specific period of price using four prices. The first is the opening price, the price at the start, called the Open. The second is the closing price at the end of it, called the Close. The third is the highest price the market reached during the period, called the High, and the fourth is the lowest price, called the Low. The wide part of the candle is called the body, and it stretches between the open and the close. The thin lines above and below the body are called wicks or shadows, showing where price went and then pulled back. The upper wick always ends at the High, and the lower wick always ends at the Low, so the whole candle is the period's range."
+    },
+    {
+     "id": "s3",
+     "title": "Bullish and Bearish Candles",
+     "narration": "If price closes above its open, the candle is rising, called Bullish, and it is usually colored green or white, with the open at the bottom of the body and the close at the top. If it closes lower than where it opened, the candle is falling, called Bearish, and it is usually colored red or black, with the open at the top and the close at the bottom. Colors can be changed in the platform settings, so do not rely on color alone, but on where the open and the close are. A large body shows that one side was firmly in control during the period. A long wick means price traveled far, was rejected and came back. A candle with a very small body shows hesitation and balance between buyers and sellers."
+    },
+    {
+     "id": "s4",
+     "title": "Line, Bar and Candle",
+     "narration": "There are three common ways to display price. The line chart connects only the closing prices with a single line; it is simple, clean and useful for seeing the general trend, but it hides the real highs, lows and wicks. The bar chart, also called OHLC, shows all four prices: a vertical line from the Low to the High, a small tick to the left for the open, and another to the right for the close. Japanese candlesticks show exactly the same four pieces of information as the bar, but with a colored body that makes them faster to read by eye. That is why most traders use them, and they are what we will use in every lesson of this academy. You can select them from the chart type menu on any platform."
+    },
+    {
+     "id": "s5",
+     "title": "Timeframes",
+     "narration": "The timeframe is the period of time that each candle represents. On the one-minute timeframe, written M1, each candle represents a single minute. Then there are M5, M15 and M30, meaning five minutes, fifteen minutes and half an hour. After that comes H1 for one hour, H4 for four hours, then D1 for one day, W1 for one week, and MN for one month. Lower timeframes show a lot of detail and a lot of noise; they move fast and need constant attention. Higher timeframes show the big picture and the main trend; their signals are slower but clearer. Note that the daily candle in forex and gold usually starts at five in the evening New York time, although this can differ slightly depending on your broker's server time."
+    },
+    {
+     "id": "s6",
+     "title": "A Big Candle Contains Small Ones",
+     "narration": "Every candle on a higher timeframe is the sum of several candles on a lower timeframe. A one-hour candle, for example, is made of four candles from the fifteen-minute timeframe. Its open is the open of the first small candle, and its close is the close of the last small candle. Its high is the highest high among the four candles, and its low is the lowest low among them. In the same way, a four-hour candle contains four one-hour candles, and a daily candle contains six four-hour candles. That is why you may see a strong drop on the lower timeframe while the bigger candle is still bullish. The two timeframes do not contradict each other; they tell the same story at a different level of detail."
+    },
+    {
+     "id": "s7",
+     "title": "EURUSD Example",
+     "narration": "An example on EURUSD. The one-hour candle between nine and ten in the morning London time opened at 1.0850, dropped to 1.0841, then rose to 1.0872, and closed at 1.0866. It is a bullish candle with a body of 16 pips, and a pip on this pair is the fourth digit after the decimal point. If we open the fifteen-minute timeframe we see four candles: the first is bearish, it dropped to 1.0841 and closed at 1.0845; the second is bullish and closed at 1.0858; the third is bullish, touched 1.0872 and closed at 1.0869; and the fourth is a small bearish candle that closed at 1.0866. So the lower wick of the hourly candle is simply the drop of the first quarter hour, and the upper wick is the pullback of the last quarter."
+    },
+    {
+     "id": "s8",
+     "title": "Gold Example XAUUSD",
+     "narration": "An example on gold on the daily timeframe. The candle opened at 4020 dollars per ounce, dipped slightly to 4008, then climbed during the London session up to 4061, but it came back down in the New York session and closed at 4015. The result is a bearish candle with a small body, only five dollars, and a long upper wick of about 41 dollars. That wick tells us that buyers pushed price higher and then it was rejected up there. On the four-hour timeframe you would see six candles, including strong bullish candles in the morning, then consecutive bearish candles in the afternoon. The single daily candle hides that whole story, and the lower timeframe reveals how and when the rejection happened."
+    },
+    {
+     "id": "s9",
+     "title": "Common Mistakes",
+     "narration": "The first common mistake is judging a candle that has not closed yet. The current candle changes with every tick; it may look strongly bullish and then close with a long wick and a small body, so always wait for the candle to close before you read it. The second mistake is sticking to the one-minute or five-minute timeframe only, so you see a lot of noise and forget the bigger trend. The third mistake is relying on color alone without looking at where the open and close are and how long the wicks are. The fourth mistake is ignoring your platform's time zone, so your daily candle differs from the candles other people talk about, and you confuse the real opening and closing times."
+    },
+    {
+     "id": "s10",
+     "title": "Practical Rule",
+     "narration": "The practical rule: every candle tells four prices, the open, the high, the low and the close. Read the body to know who was in control, and read the wicks to know where price was rejected. Use Japanese candlesticks, and always start from a higher timeframe such as the daily or the four-hour to see the big picture, then drop to a lower timeframe for the details. Remember that a big candle is built from small candles, so do not be surprised if the shape of the move looks different between the two timeframes. And never base any decision on a candle that has not closed yet. Practice now: open a EURUSD chart and compare one hourly candle with its four candles on the fifteen-minute timeframe."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "چارت چییە؟",
+     "narration": "چارت، یان هێڵکاری نرخ، ئەو ڕێگایەیە کە پێی جووڵەی نرخ بە درێژایی کات دەبینین. تەوەرە ئاسۆییەکە لە خوارەوە کات نیشان دەدات، و تەوەرە ستوونییەکە لە لایەکەوە نرخ نیشان دەدات. هەر خاڵێک لەسەر چارت وەڵامی پرسیارێکی سادە دەداتەوە: نرخی جووتەکە یان زێڕ لەو ساتەدا چەند بوو؟ لەم وانەیەدا گرنگترین ڕێگای نیشاندانی نرخ فێر دەبین، کە مۆمە ژاپۆنییەکانە، و تێدەگەین چوارچێوەی کاتی چییە، واتە ئەو ماوەیەی هەر مۆمێک نوێنەرایەتی دەکات. ئەم لێهاتووییە بنەمای هەموو ئەو شتانەیە کە دواتر لەم خولەدا دێن، چونکە هەر شێوە یان ناوچە یان ستراتیژییەک کە دواتر فێری دەبیت لە مۆمەکانەوە دەخوێنرێتەوە. بۆیە لێرەدا کاتی خۆت بدە، و چارتێک لەبەردەمت بکەرەوە کاتێک گوێ دەگریت."
+    },
+    {
+     "id": "s2",
+     "title": "پێکهاتەی مۆم",
+     "narration": "هەر مۆمێک ئەوەی لە ماوەیەکی کاتی دیاریکراودا بەسەر نرخدا هاتووە بە چوار نرخ کورت دەکاتەوە. یەکەم نرخی کردنەوەیە، واتە نرخ لە سەرەتای ماوەکەدا، و پێی دەڵێن Open. دووەم نرخی داخستنە لە کۆتاییدا، و پێی دەڵێن Close. سێیەم بەرزترین نرخە کە بازاڕ لەو ماوەیەدا پێی گەیشتووە، و پێی دەڵێن High، و چوارەم نزمترین نرخە، و پێی دەڵێن Low. بەشە پانەکەی مۆم پێی دەڵێن جەستە، و لە نێوان کردنەوە و داخستندا درێژ دەبێتەوە. هێڵە باریکەکانی سەرەوە و خوارەوەی جەستە پێیان دەڵێن کلک یان سێبەر، بە ئینگلیزی Wick، و نیشان دەدەن نرخ گەیشتووەتە کوێ و پاشان لێی گەڕاوەتەوە. کلکی سەرەوە هەمیشە لە High کۆتایی دێت، و کلکی خوارەوە هەمیشە لە Low، کەواتە هەموو مۆمەکە لە سەرەوە تا خوارەوە مەودای جووڵەی ئەو ماوەیەیە."
+    },
+    {
+     "id": "s3",
+     "title": "مۆمی بەرزبوونەوە و دابەزین",
+     "narration": "ئەگەر نرخ لە سەرووی نرخی کردنەوەکەیەوە داخرا، مۆمەکە بەرزبوونەوەیە، پێی دەڵێن Bullish، و بە زۆری بە سەوز یان سپی ڕەنگ دەکرێت، و کردنەوە لە خوارەوەی جەستەیە و داخستن لە سەرەوەی. ئەگەر لە خوارووی کردنەوەکەیەوە داخرا، مۆمەکە دابەزینە، پێی دەڵێن Bearish، و بە زۆری بە سوور یان ڕەش ڕەنگ دەکرێت، و کردنەوە لە سەرەوەیە و داخستن لە خوارەوە. ڕەنگەکان دەتوانرێت لە ڕێکخستنەکانی پلاتفۆرمەوە بگۆڕدرێن، بۆیە تەنها پشت بە ڕەنگ مەبەستە، بەڵکو بە شوێنی کردنەوە و داخستن. جەستەی گەورە نیشانی دەدات لایەنێک بە بەهێزی لەو ماوەیەدا زاڵ بووە. کلکی درێژ واتە نرخ دوور ڕۆیشتووە، پاشان ڕەتکراوەتەوە و گەڕاوەتەوە. مۆمێک بە جەستەیەکی زۆر بچووک دوودڵی و هاوسەنگی نێوان کڕیاران و فرۆشیاران نیشان دەدات."
+    },
+    {
+     "id": "s4",
+     "title": "هێڵ و بار و مۆم",
+     "narration": "سێ ڕێگای باو هەن بۆ نیشاندانی نرخ. چارتی هێڵی، کە پێی دەڵێن Line Chart، تەنها نرخەکانی داخستن بە یەک هێڵ پێکەوە دەبەستێت، سادە و پاکە و بۆ بینینی ئاڕاستەی گشتی بەسوودە، بەڵام لووتکە و نزمییە ڕاستەقینەکان و کلکەکان دەشارێتەوە. چارتی بار، کە پێی دەڵێن OHLC، هەر چوار نرخەکە نیشان دەدات: هێڵێکی ستوونی لە Low تا High، و نیشانەیەکی بچووک بەلای چەپدا بۆ کردنەوە، و یەکێکی تر بەلای ڕاستدا بۆ داخستن. مۆمە ژاپۆنییەکان، یان Candlestick، هەمان چوار زانیاری بار نیشان دەدەن، بەڵام بە جەستەیەکی ڕەنگکراو کە خوێندنەوەیان بە چاو خێراتر دەکات. بۆیە زۆربەی بازرگانان بەکاریان دەهێنن، و ئێمەش لە هەموو وانەکانی ئەم ئەکادیمیایەدا پشتیان پێ دەبەستین، و دەتوانیت لە لیستی جۆری چارت لە هەر پلاتفۆرمێکدا هەڵیانبژێریت."
+    },
+    {
+     "id": "s5",
+     "title": "چوارچێوە کاتییەکان",
+     "narration": "چوارچێوەی کاتی، کە پێی دەڵێن Timeframe، ئەو ماوەیەیە کە هەر مۆمێک نوێنەرایەتی دەکات. لەسەر چوارچێوەی یەک خولەک، کە دەنووسرێت M1، هەر مۆمێک خولەکێکە. پاشان M5 و M15 و M30 هەن، واتە پێنج خولەک و پازدە خولەک و نیو کاتژمێر. دواتر H1 بۆ کاتژمێرێک، و H4 بۆ چوار کاتژمێر، پاشان D1 بۆ ڕۆژێک، و W1 بۆ هەفتەیەک، و MN بۆ مانگێک. چوارچێوە بچووکەکان وردەکاری زۆر و ژاوەژاوی زۆر نیشان دەدەن، خێرا دەجووڵێن و پێویستیان بە چاودێری بەردەوام هەیە. چوارچێوە گەورەکان وێنەی گشتی و ئاڕاستەی سەرەکی نیشان دەدەن، نیشانەکانیان خاوترن بەڵام ڕوونترن. تێبینی بکە کە مۆمی ڕۆژانە لە فۆرێکس و زێڕدا بە زۆری لە کاتژمێر پێنجی ئێوارە بە کاتی نیویۆرک دەست پێدەکات، و لەوانەیە بەپێی بڕۆکەرەکەت کەمێک جیاواز بێت."
+    },
+    {
+     "id": "s6",
+     "title": "مۆمی گەورە مۆمە بچووکەکان لەخۆ دەگرێت",
+     "narration": "هەر مۆمێک لەسەر چوارچێوەیەکی گەورە کۆی چەند مۆمێکە لەسەر چوارچێوەیەکی بچووکتر. بۆ نموونە مۆمی یەک کاتژمێر لە چوار مۆمی چوارچێوەی پازدە خولەکی پێکدێت. کردنەوەکەی کردنەوەی یەکەم مۆمی بچووکە، و داخستنەکەی داخستنی دوایین مۆمی بچووکە. بەرزترین نرخی بەرزترین لووتکەیە لە نێوان چوار مۆمەکەدا، و نزمترین نرخی نزمترین قوڵاییە لە نێوانیاندا. بە هەمان شێوە، مۆمی چوار کاتژمێری چوار مۆمی کاتژمێرێک لەخۆ دەگرێت، و مۆمی ڕۆژانە شەش مۆمی چوار کاتژمێری لەخۆ دەگرێت. بۆیە لەوانەیە لەسەر چوارچێوە بچووکەکە دابەزینێکی بەهێز ببینیت، لە کاتێکدا مۆمە گەورەکە هێشتا بەرزبوونەوەیە. دوو چوارچێوەکە دژی یەک نین، بەڵکو هەمان چیرۆک بە ئاستێکی جیاوازی وردەکاری دەگێڕنەوە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار. مۆمی کاتژمێرێک لە نێوان کاتژمێر نۆ و دەی بەیانی بە کاتی لەندەن لە 1.0850 کرایەوە، دابەزی بۆ 1.0841، پاشان بەرزبووەوە بۆ 1.0872، و لە 1.0866 داخرا. مۆمێکی بەرزبوونەوەیە کە جەستەکەی 16 خاڵە، و خاڵ یان pip لەم جووتەدا ژمارەی چوارەمە دوای فاریزە. ئەگەر چوارچێوەی پازدە خولەکی بکەینەوە چوار مۆم دەبینین: یەکەم دابەزینە، گەیشتە 1.0841 و لە 1.0845 داخرا، دووەم بەرزبوونەوەیە و لە 1.0858 داخرا، سێیەم بەرزبوونەوەیە، دەستی لە 1.0872 دا و لە 1.0869 داخرا، و چوارەم مۆمێکی دابەزینی بچووکە کە لە 1.0866 داخرا. کەواتە کلکی خوارەوەی مۆمی کاتژمێرەکە بە سادەیی دابەزینی یەکەم چارەکە، و کلکی سەرەوەی گەڕانەوەی دوایین چارەکە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر زێڕ XAUUSD",
+     "narration": "نموونەیەک لەسەر زێڕ لەسەر چوارچێوەی ڕۆژانە. مۆمەکە لە 4020 دۆلار بۆ هەر ئۆنسەیەک کرایەوە، کەمێک دابەزی بۆ 4008، پاشان لە کاتی دانیشتنی لەندەندا بەرزبووەوە تا 4061، بەڵام لە دانیشتنی نیویۆرکدا گەڕایەوە خوارەوە و لە 4015 داخرا. ئەنجامەکە مۆمێکی دابەزینە بە جەستەیەکی بچووک، تەنها پێنج دۆلار، و کلکێکی سەرەوەی درێژ نزیکەی 41 دۆلار. ئەو کلکە پێمان دەڵێت کڕیاران نرخیان بەرز کردەوە و پاشان لەوێ ڕەتکرایەوە. لەسەر چوارچێوەی چوار کاتژمێری شەش مۆم دەبینیت، لەوانە مۆمی بەرزبوونەوەی بەهێز لە بەیانیدا، پاشان مۆمی دابەزینی یەک لە دوای یەک دوای نیوەڕۆ. یەک مۆمی ڕۆژانە هەموو ئەم چیرۆکە دەشارێتەوە، و چوارچێوە بچووکترەکە بۆت ئاشکرا دەکات ڕەتکردنەوەکە چۆن و کەی ڕوویدا."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵەی باو حوکمدانە لەسەر مۆمێک کە هێشتا دانەخراوە. مۆمی ئێستا لەگەڵ هەر جووڵەیەک دەگۆڕێت، لەوانەیە وەک بەرزبوونەوەیەکی بەهێز دەربکەوێت و پاشان بە کلکێکی درێژ و جەستەیەکی بچووک دابخرێت، بۆیە هەمیشە چاوەڕێی داخستنی مۆمەکە بکە پێش ئەوەی بیخوێنیتەوە. هەڵەی دووەم پابەندبوونە تەنها بە چوارچێوەی یەک خولەک یان پێنج خولەک، بەمەش ژاوەژاوی زۆر دەبینیت و ئاڕاستە گەورەکە لەبیر دەکەیت. هەڵەی سێیەم پشتبەستنە تەنها بە ڕەنگ بەبێ سەیرکردنی شوێنی کردنەوە و داخستن و درێژی کلکەکان. هەڵەی چوارەم پشتگوێخستنی کاتی پلاتفۆرمەکەیە، بەمەش مۆمی ڕۆژانەی تۆ جیاواز دەبێت لەو مۆمانەی کەسانی تر باسی دەکەن، و کاتی ڕاستەقینەی کردنەوە و داخستنت لێ تێکەڵ دەبێت."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: هەر مۆمێک چوار نرخ دەگێڕێتەوە، کردنەوە و بەرزترین و نزمترین و داخستن. جەستەکە بخوێنەرەوە بۆ ئەوەی بزانیت کێ زاڵ بووە، و کلکەکان بخوێنەرەوە بۆ ئەوەی بزانیت نرخ لە کوێ ڕەتکراوەتەوە. مۆمە ژاپۆنییەکان بەکاربهێنە، و هەمیشە لە چوارچێوەیەکی گەورەوە وەک ڕۆژانە یان چوار کاتژمێری دەست پێبکە بۆ بینینی وێنەی گشتی، پاشان بۆ وردەکارییەکان بچۆ بۆ چوارچێوەیەکی بچووکتر. لەبیرت بێت مۆمی گەورە لە مۆمی بچووک پێکدێت، بۆیە سەرت سوڕ نەمێنێت ئەگەر شێوەی جووڵەکە لە نێوان دوو چوارچێوەکەدا جیاواز بوو. و هیچ بڕیارێک لەسەر مۆمێک دامەمەزرێنە کە هێشتا دانەخراوە. ئێستا ڕاهێنان بکە: چارتی یۆرۆ دۆلار بکەرەوە، و مۆمێکی کاتژمێرێک لەگەڵ چوار مۆمەکەی لەسەر چوارچێوەی پازدە خولەکی بەراورد بکە."
+    }
+   ]
+  },
+  "basics-l2-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو الأمر؟",
+     "narration": "الأمر، ويسمى Order، هو التعليمات التي ترسلها إلى الوسيط عبر المنصة لتفتح صفقة أو تغلقها. هناك اتجاهان فقط: شراء، ويسمى Buy، إذا توقعت أن يرتفع السعر، وبيع، ويسمى Sell، إذا توقعت أن ينخفض. وهناك عائلتان من الأوامر. الأولى أمر السوق الذي يُنفّذ فوراً بالسعر الحالي. والثانية الأوامر المعلّقة، أو Pending Orders، التي تنتظر حتى يصل السعر إلى مستوى تحدده أنت، ثم تُنفّذ تلقائياً. ومع أي صفقة نضيف أمرين للحماية والخروج: وقف الخسارة والهدف. في هذا الدرس سنشرح كل نوع، ومتى يُستخدم، وما الذي قد يحدث عند التنفيذ في الواقع."
+    },
+    {
+     "id": "s2",
+     "title": "أمر السوق Market",
+     "narration": "أمر السوق، أو Market Order، يعني: نفّذ الآن بأفضل سعر متاح. عند الشراء تدخل بسعر الطلب، ويسمى Ask، وعند البيع تدخل بسعر العرض، ويسمى Bid، والفرق بينهما هو السبريد الذي سنشرحه في الدرس القادم. ميزة أمر السوق أنه مضمون التنفيذ تقريباً، فلن تفوتك الحركة. وعيبه أنك لا تضمن السعر بدقة، خاصة في الأوقات السريعة. يُستخدم أمر السوق عندما تكون إشارتك قد اكتملت الآن على شمعة مغلقة، والسعر ما زال قريباً من مستوى دخولك المخطط. أما إذا ابتعد السعر كثيراً فالدخول بأمر سوق يصبح مطاردة للسعر، وهذا من أكثر أخطاء المبتدئين شيوعاً."
+    },
+    {
+     "id": "s3",
+     "title": "الأوامر المحددة Limit",
+     "narration": "الأمر المحدد، أو Limit Order، هو أمر معلّق ينتظر سعراً أفضل من السعر الحالي. الـ Buy Limit يوضع تحت السعر الحالي، لأنك تريد الشراء أرخص بعد تراجع. والـ Sell Limit يوضع فوق السعر الحالي، لأنك تريد البيع أغلى بعد ارتفاع. فكرته أنك تتوقع أن يعود السعر إلى منطقة مهمة، مثل دعم أو مقاومة، ثم ينطلق منها في اتجاهك. ميزته أنك تحصل على سعر أفضل ووقف خسارة أصغر غالباً، وأنه لا يُنفّذ بسعر أسوأ مما حددت. وعيبه أن السعر قد لا يصل إليه أبداً، فتفوتك الصفقة، وهذا أمر مقبول ولا يعني أنك أخطأت."
+    },
+    {
+     "id": "s4",
+     "title": "أوامر الإيقاف Stop",
+     "narration": "أمر الإيقاف للدخول، أو Stop Order، هو أمر معلّق ينتظر سعراً أسوأ من الحالي، لكن في اتجاه الحركة. الـ Buy Stop يوضع فوق السعر الحالي، فيشتري فقط إذا صعد السعر واخترق مستوى معيناً. والـ Sell Stop يوضع تحت السعر الحالي، فيبيع فقط إذا هبط السعر وكسر مستوى معيناً. يُستخدم هذا النوع لمن يريد الدخول مع الاختراق والزخم، لا مع التراجع. وقاعدة سهلة للتذكر: الـ Limit يعني انتظار سعر أفضل بعد ارتداد، والـ Stop يعني الدخول بعد أن يثبت السعر حركته. وتذكّر أن الاختراق قد يكون كاذباً، لذلك لا يُغني هذا الأمر عن خطة ووقف خسارة."
+    },
+    {
+     "id": "s5",
+     "title": "وقف الخسارة والهدف",
+     "narration": "وقف الخسارة، ويسمى Stop Loss أو SL، هو أمر يغلق الصفقة تلقائياً إذا تحرك السعر ضدك إلى مستوى حددته مسبقاً. في صفقة الشراء يوضع تحت سعر الدخول، وفي صفقة البيع يوضع فوقه. أما الهدف، ويسمى Take Profit أو TP، فهو أمر يغلق الصفقة تلقائياً عند مستوى الربح الذي خططت له، فوق الدخول في الشراء وتحته في البيع. ضع الوقف في مكان منطقي يُبطل فكرتك إذا وصل إليه السعر، لا في رقم عشوائي، ثم احسب حجم الصفقة بحيث لا تتجاوز الخسارة نحو 1% من حسابك. الصفقة بلا وقف خسارة قد تتحول إلى خسارة كبيرة جداً."
+    },
+    {
+     "id": "s6",
+     "title": "الانزلاق السعري Slippage",
+     "narration": "الانزلاق السعري، ويسمى Slippage، هو الفرق بين السعر الذي طلبته والسعر الذي نُفّذت عليه الصفقة فعلاً. يحدث عندما يتحرك السعر بسرعة كبيرة، أو تقل السيولة، فلا يجد الوسيط من يطابق طلبك بالسعر نفسه. يظهر غالباً عند الأخبار الاقتصادية القوية، وعند الافتتاح بعد عطلة نهاية الأسبوع. يتأثر به أمر السوق وأمر الـ Stop ووقف الخسارة، لأنها كلها تُنفّذ بأول سعر متاح بعد لمس المستوى. أما أمر الـ Limit فلا يُنفّذ بسعر أسوأ مما حددت، لكنه قد لا يُنفّذ أصلاً. والانزلاق قد يكون لصالحك أحياناً، لكن عليك أن تحسب حسابه في الأوقات السريعة."
+    },
+    {
+     "id": "s7",
+     "title": "الفجوات السعرية Gap",
+     "narration": "الفجوة السعرية، أو Gap، هي قفزة في السعر بين إغلاق شمعة وافتتاح التي تليها دون تداول بينهما. أشهرها فجوة نهاية الأسبوع، لأن السوق يغلق مساء الجمعة ويفتح مساء الأحد بتوقيت نيويورك، وقد تقع أخبار مهمة في هذه الفترة. مثال على الجنيه دولار: اشتريت ووضعت وقف الخسارة عند 1.2650. أغلق السوق يوم الجمعة عند 1.2680، ثم افتتح الأحد عند 1.2610 بعد خبر مفاجئ. هنا لا يُنفّذ وقفك عند 1.2650، بل عند أول سعر متاح، أي قرابة 1.2610، فتخسر 40 نقطة إضافية فوق ما خططت له. لذلك ينتبه كثير من المتداولين لحجم صفقاتهم المفتوحة قبل عطلة نهاية الأسبوع."
+    },
+    {
+     "id": "s8",
+     "title": "مثال Buy Limit على EURUSD",
+     "narration": "مثال بأمر Buy Limit على اليورو دولار. السعر الحالي 1.0850، وعلى إطار الساعة هناك منطقة دعم واضحة عند 1.0820 ارتد منها السعر مرتين. بدلاً من الشراء الآن، تضع أمر Buy Limit عند 1.0822، ووقف الخسارة تحت الدعم عند 1.0802، أي 20 نقطة، والهدف عند 1.0882، أي 60 نقطة، وهو ثلاثة أضعاف المخاطرة. حسابك 5000 دولار، والمخاطرة 1% تعني 50 دولاراً، فيكون الحجم 0.25 لوت، لأن قيمة النقطة في اللوت الكامل عشرة دولارات. عند الحادية عشرة صباحاً بتوقيت لندن هبط السعر ولمس 1.0822 فنُفّذ الأمر تلقائياً. ولو لم يهبط السعر، لبقي الأمر معلّقاً دون أي خسارة."
+    },
+    {
+     "id": "s9",
+     "title": "مثال Buy Stop على الذهب",
+     "narration": "مثال بأمر Buy Stop على الذهب. السعر يتحرك منذ الصباح في نطاق ضيق تحت مقاومة عند 4050. تريد الشراء فقط إذا اخترق السعر هذا المستوى، فتضع أمر Buy Stop عند 4052، ووقف الخسارة عند 4040، أي 12 دولاراً، والهدف عند 4076، أي ضعف المخاطرة. عند الثامنة والنصف صباحاً بتوقيت نيويورك صدر خبر اقتصادي مهم، فقفز السعر بسرعة من 4049 إلى 4060. نُفّذ أمرك عند 4054 بدلاً من 4052، أي بانزلاق دولارين، فصارت مخاطرتك الفعلية 14 دولاراً لا 12. لهذا يتجنب كثير من المبتدئين وضع أوامر معلّقة قريبة جداً من وقت الأخبار القوية."
+    },
+    {
+     "id": "s10",
+     "title": "الأخطاء والقاعدة العملية",
+     "narration": "من الأخطاء الشائعة الخلط بين الـ Limit والـ Stop، فيُنفّذ الأمر فوراً أو في المكان الخطأ. ونسيان أمر معلّق قديم يُنفّذ بعد أيام دون خطة. وفتح صفقة بلا وقف خسارة، أو تحريك الوقف بعيداً عندما يقترب السعر منه. أما القاعدة العملية: حدّد قبل الدخول اتجاهك ومستوى الدخول والوقف والهدف. استخدم أمر السوق عندما تكتمل الإشارة على شمعة مغلقة والسعر قريب، والـ Limit لانتظار ارتداد، والـ Stop للدخول مع اختراق. ضع الوقف والهدف مع الصفقة نفسها، واحسب الحجم لمخاطرة نحو 1%، وخذ الانزلاق والفجوات في الحسبان وقت الأخبار وقبل نهاية الأسبوع."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Is an Order?",
+     "narration": "An order is the instruction you send to your broker through the platform to open or close a trade. There are only two directions: buying, called Buy, if you expect price to rise, and selling, called Sell, if you expect it to fall. And there are two families of orders. The first is the market order, which is executed immediately at the current price. The second is pending orders, which wait until price reaches a level you choose and are then executed automatically. With any trade we add two orders for protection and exit: the stop loss and the take profit. In this lesson we will explain each type, when it is used, and what can actually happen when it is executed in real conditions."
+    },
+    {
+     "id": "s2",
+     "title": "The Market Order",
+     "narration": "A market order means: execute now at the best available price. When buying you enter at the asking price, called the Ask, and when selling you enter at the bid price, called the Bid; the difference between them is the spread, which we will explain in the next lesson. The advantage of a market order is that execution is almost guaranteed, so you will not miss the move. Its drawback is that the exact price is not guaranteed, especially during fast moments. A market order is used when your signal has just completed on a closed candle and price is still close to your planned entry level. But if price has moved far away, entering with a market order becomes chasing price, and that is one of the most common beginner mistakes."
+    },
+    {
+     "id": "s3",
+     "title": "Limit Orders",
+     "narration": "A limit order is a pending order that waits for a better price than the current one. A Buy Limit is placed below the current price, because you want to buy cheaper after a pullback. A Sell Limit is placed above the current price, because you want to sell higher after a rise. The idea is that you expect price to return to an important area, such as support or resistance, and then move away from it in your direction. Its advantage is that you get a better price and often a smaller stop loss, and it will not be filled at a worse price than the one you set. Its drawback is that price may never reach it, so you miss the trade, which is acceptable and not a mistake."
+    },
+    {
+     "id": "s4",
+     "title": "Stop Orders",
+     "narration": "A stop entry order is a pending order that waits for a worse price than the current one, but in the direction of the move. A Buy Stop is placed above the current price, so it buys only if price rises and breaks through a certain level. A Sell Stop is placed below the current price, so it sells only if price falls and breaks a certain level. This type is used by traders who want to enter with the breakout and the momentum, not with the pullback. An easy rule to remember: Limit means waiting for a better price after a pullback, and Stop means entering after price has proven its move. And remember that a breakout can be false, so this order does not replace a plan and a stop loss."
+    },
+    {
+     "id": "s5",
+     "title": "Stop Loss and Take Profit",
+     "narration": "The stop loss, called SL, is an order that closes the trade automatically if price moves against you to a level you set in advance. In a buy trade it is placed below the entry price, and in a sell trade it is placed above it. The take profit, called TP, is an order that closes the trade automatically at the profit level you planned, above the entry for a buy and below it for a sell. Place the stop at a logical spot that cancels your idea if price reaches it, not at a random number, then calculate the position size so that the loss does not exceed about 1% of your account. A trade without a stop loss can turn into a very large loss."
+    },
+    {
+     "id": "s6",
+     "title": "Slippage",
+     "narration": "Slippage is the difference between the price you requested and the price your trade was actually filled at. It happens when price moves very fast or liquidity is thin, so the broker cannot find anyone to match your order at the same price. It appears most often around strong economic news and at the market open after the weekend. Market orders, stop orders and stop losses are all affected by it, because they are all filled at the first available price after the level is touched. A limit order, on the other hand, is never filled at a worse price than the one you set, but it may not be filled at all. Slippage can sometimes be in your favor, but you must account for it during fast moments."
+    },
+    {
+     "id": "s7",
+     "title": "Price Gaps",
+     "narration": "A price gap is a jump in price between the close of one candle and the open of the next, with no trading in between. The best known is the weekend gap, because the market closes on Friday evening and reopens on Sunday evening New York time, and important news can happen during that period. An example on GBPUSD: you bought and placed your stop loss at 1.2650. The market closed on Friday at 1.2680, then opened on Sunday at 1.2610 after surprising news. Your stop is not filled at 1.2650 but at the first available price, around 1.2610, so you lose 40 extra pips beyond what you planned. That is why many traders pay attention to the size of their open positions before the weekend."
+    },
+    {
+     "id": "s8",
+     "title": "Buy Limit Example on EURUSD",
+     "narration": "An example of a Buy Limit order on EURUSD. The current price is 1.0850, and on the one-hour chart there is a clear support area at 1.0820 that price has bounced from twice. Instead of buying now, you place a Buy Limit at 1.0822, a stop loss below support at 1.0802, which is 20 pips, and a target at 1.0882, which is 60 pips, three times the risk. Your account is 5000 dollars, and 1% risk means 50 dollars, so the size is 0.25 lots, because a pip on a full standard lot is worth ten dollars. At eleven in the morning London time, price dropped and touched 1.0822, and the order was filled automatically. Had price not dropped, the order would have stayed pending with no loss at all."
+    },
+    {
+     "id": "s9",
+     "title": "Buy Stop Example on Gold",
+     "narration": "An example of a Buy Stop order on gold. Since the morning, price has been moving in a tight range below resistance at 4050. You want to buy only if price breaks through this level, so you place a Buy Stop at 4052, a stop loss at 4040, which is 12 dollars, and a target at 4076, which is twice the risk. At half past eight in the morning New York time, an important economic release came out, and price jumped quickly from 4049 to 4060. Your order was filled at 4054 instead of 4052, a slippage of two dollars, so your actual risk became 14 dollars, not 12. That is why many beginners avoid placing pending orders very close to the time of strong news releases."
+    },
+    {
+     "id": "s10",
+     "title": "Mistakes and Practical Rule",
+     "narration": "Common mistakes include mixing up Limit and Stop, so the order is filled immediately or in the wrong place; forgetting an old pending order that gets filled days later without a plan; and opening a trade without a stop loss, or moving the stop further away when price gets close to it. The practical rule: before entering, decide your direction, your entry level, your stop and your target. Use a market order when the signal completes on a closed candle and price is close, a Limit to wait for a pullback, and a Stop to enter with a breakout. Attach the stop and target to the trade itself, size the position for about 1% risk, and account for slippage and gaps around news and before the weekend."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "فەرمان چییە؟",
+     "narration": "فەرمان، کە پێی دەڵێن Order، ئەو ڕێنماییەیە کە لە ڕێگەی پلاتفۆرمەوە بۆ بڕۆکەرەکەتی دەنێریت بۆ کردنەوە یان داخستنی مامەڵەیەک. تەنها دوو ئاڕاستە هەن: کڕین، کە پێی دەڵێن Buy، ئەگەر چاوەڕێی بەرزبوونەوەی نرخ بکەیت، و فرۆشتن، کە پێی دەڵێن Sell، ئەگەر چاوەڕێی دابەزینی بکەیت. و دوو خێزانی فەرمان هەن. یەکەم فەرمانی بازاڕە کە یەکسەر بە نرخی ئێستا جێبەجێ دەکرێت. دووەم فەرمانە هەڵپەسێردراوەکانن، یان Pending Orders، کە چاوەڕێ دەکەن تا نرخ دەگاتە ئاستێک کە خۆت دیاری دەکەیت، پاشان بە شێوەیەکی خۆکار جێبەجێ دەکرێن. لەگەڵ هەر مامەڵەیەکدا دوو فەرمان بۆ پاراستن و دەرچوون زیاد دەکەین: Stop Loss و Take Profit. لەم وانەیەدا هەر جۆرێک ڕوون دەکەینەوە، کەی بەکاردێت، و لە ڕاستیدا لە کاتی جێبەجێکردندا چی ڕوودەدات."
+    },
+    {
+     "id": "s2",
+     "title": "فەرمانی بازاڕ Market",
+     "narration": "فەرمانی بازاڕ، یان Market Order، واتە: ئێستا بە باشترین نرخی بەردەست جێبەجێی بکە. لە کاتی کڕیندا بە نرخی داواکاری دەچیتە ژوورەوە، کە پێی دەڵێن Ask، و لە کاتی فرۆشتندا بە نرخی پێشکەشکردن، کە پێی دەڵێن Bid، و جیاوازی نێوانیان سپرێدە کە لە وانەی داهاتوودا ڕوونی دەکەینەوە. سوودی فەرمانی بازاڕ ئەوەیە کە جێبەجێکردنی نزیکەی دڵنیایە، بۆیە جووڵەکەت لەدەست ناچێت. کەموکورییەکەی ئەوەیە نرخەکە بە وردی دڵنیا نییە، بەتایبەتی لە کاتە خێراکاندا. فەرمانی بازاڕ بەکاردێت کاتێک نیشانەکەت ئێستا لەسەر مۆمێکی داخراو تەواو بووە، و نرخ هێشتا نزیکە لە ئاستی چوونەژوورەوەی پلاندانراوت. بەڵام ئەگەر نرخ زۆر دوورکەوتبێتەوە، چوونەژوورەوە بە فەرمانی بازاڕ دەبێتە ڕاونانی نرخ، و ئەمە یەکێکە لە باوترین هەڵەکانی سەرەتاییەکان."
+    },
+    {
+     "id": "s3",
+     "title": "فەرمانە دیاریکراوەکان Limit",
+     "narration": "فەرمانی دیاریکراو، یان Limit Order، فەرمانێکی هەڵپەسێردراوە کە چاوەڕێی نرخێکی باشتر لە نرخی ئێستا دەکات. Buy Limit لە خوارووی نرخی ئێستاوە دادەنرێت، چونکە دەتەوێت دوای گەڕانەوەیەک هەرزانتر بکڕیت. Sell Limit لە سەرووی نرخی ئێستاوە دادەنرێت، چونکە دەتەوێت دوای بەرزبوونەوەیەک گرانتر بفرۆشیت. بیرۆکەکەی ئەوەیە چاوەڕێ دەکەیت نرخ بگەڕێتەوە بۆ ناوچەیەکی گرنگ، وەک پشتگیری یان بەرگری، پاشان بە ئاڕاستەی تۆدا لێی دوور بکەوێتەوە. سوودەکەی ئەوەیە نرخێکی باشتر و زۆرجار Stop Lossی بچووکتر بەدەست دەهێنیت، و بە نرخێکی خراپتر لەوەی دیاریت کردووە جێبەجێ ناکرێت. کەموکورییەکەی ئەوەیە لەوانەیە نرخ هەرگیز پێی نەگات، و مامەڵەکەت لەدەست بچێت، ئەمەش پەسەندکراوە و مانای ئەوە نییە هەڵەت کردووە."
+    },
+    {
+     "id": "s4",
+     "title": "فەرمانەکانی وەستان Stop",
+     "narration": "فەرمانی وەستان بۆ چوونەژوورەوە، یان Stop Order، فەرمانێکی هەڵپەسێردراوە کە چاوەڕێی نرخێکی خراپتر لە نرخی ئێستا دەکات، بەڵام بە ئاڕاستەی جووڵەکەدا. Buy Stop لە سەرووی نرخی ئێستاوە دادەنرێت، و تەنها ئەگەر نرخ بەرزبووەوە و ئاستێکی دیاریکراوی تێپەڕاند دەکڕێت. Sell Stop لە خوارووی نرخی ئێستاوە دادەنرێت، و تەنها ئەگەر نرخ دابەزی و ئاستێکی دیاریکراوی شکاند دەفرۆشێت. ئەم جۆرە بۆ ئەو کەسانەیە کە دەیانەوێت لەگەڵ تێپەڕاندن و هێزی جووڵەکەدا بچنە ژوورەوە، نەک لەگەڵ گەڕانەوە. یاسایەکی ئاسان بۆ لەبیرکردن: Limit واتە چاوەڕوانی نرخێکی باشتر دوای گەڕانەوە، و Stop واتە چوونەژوورەوە دوای ئەوەی نرخ جووڵەکەی سەلماند. لەبیرت بێت تێپەڕاندن لەوانەیە درۆ بێت، بۆیە ئەم فەرمانە جێگەی پلان و Stop Loss ناگرێتەوە."
+    },
+    {
+     "id": "s5",
+     "title": "Stop Loss و Take Profit",
+     "narration": "Stop Loss، یان SL، فەرمانێکە کە مامەڵەکە بە شێوەیەکی خۆکار دادەخات ئەگەر نرخ بە دژی تۆ بجووڵێت بۆ ئاستێک کە پێشوەختە دیاریت کردووە. لە مامەڵەی کڕیندا لە خوارووی نرخی چوونەژوورەوە دادەنرێت، و لە مامەڵەی فرۆشتندا لە سەرووییەوە. Take Profit، یان TP، فەرمانێکە کە مامەڵەکە بە شێوەیەکی خۆکار لەو ئاستی قازانجەدا دادەخات کە پلانت بۆ داناوە، لە سەرووی چوونەژوورەوە لە کڕیندا و لە خوارەوەی لە فرۆشتندا. Stopەکە لە شوێنێکی لۆژیکیدا دابنێ کە ئەگەر نرخ پێی گەیشت بیرۆکەکەت هەڵبوەشێنێتەوە، نەک لە ژمارەیەکی هەڕەمەکیدا، پاشان قەبارەی مامەڵە حیساب بکە بە شێوەیەک کە زیان لە نزیکەی 1%ی حسابەکەت تێنەپەڕێت. مامەڵەیەک بەبێ Stop Loss لەوانەیە ببێتە زیانێکی زۆر گەورە."
+    },
+    {
+     "id": "s6",
+     "title": "خلیسکانی نرخ Slippage",
+     "narration": "خلیسکانی نرخ، کە پێی دەڵێن Slippage، جیاوازی نێوان ئەو نرخەیە کە داوات کردووە و ئەو نرخەی مامەڵەکەت بە ڕاستی لەسەری جێبەجێ کراوە. ڕوودەدات کاتێک نرخ زۆر خێرا دەجووڵێت، یان شلەیی کەم دەبێتەوە، و بڕۆکەر کەسێک نادۆزێتەوە بە هەمان نرخ فەرمانەکەت پڕ بکاتەوە. زۆرتر لە کاتی هەواڵە ئابوورییە بەهێزەکاندا دەردەکەوێت، و لە کردنەوەی بازاڕ دوای پشووی کۆتایی هەفتە. فەرمانی بازاڕ و فەرمانی Stop و Stop Loss هەموویان کاریگەر دەبن پێی، چونکە هەموویان بە یەکەم نرخی بەردەست دوای گەیشتن بە ئاستەکە جێبەجێ دەکرێن. بەڵام فەرمانی Limit بە نرخێکی خراپتر لەوەی دیاریت کردووە جێبەجێ ناکرێت، بەڵام لەوانەیە هەر جێبەجێ نەکرێت. خلیسکان هەندێک جار لە بەرژەوەندی تۆیە، بەڵام دەبێت لە کاتە خێراکاندا حیسابی بۆ بکەیت."
+    },
+    {
+     "id": "s7",
+     "title": "بۆشاییەکانی نرخ Gap",
+     "narration": "بۆشایی نرخ، یان Gap، بازدانێکە لە نرخدا لە نێوان داخستنی مۆمێک و کردنەوەی مۆمی دواتردا بەبێ هیچ بازرگانییەک لە نێوانیاندا. ناسراوترینیان بۆشایی کۆتایی هەفتەیە، چونکە بازاڕ ئێوارەی هەینی دادەخرێت و ئێوارەی یەکشەممە بە کاتی نیویۆرک دەکرێتەوە، و لەوانەیە لەو ماوەیەدا هەواڵی گرنگ ڕووبدات. نموونەیەک لەسەر پاوەند دۆلار: کڕیت و Stop Lossت لە 1.2650 دانا. بازاڕ ڕۆژی هەینی لە 1.2680 داخرا، پاشان یەکشەممە دوای هەواڵێکی چاوەڕواننەکراو لە 1.2610 کرایەوە. لێرەدا Stopەکەت لە 1.2650 جێبەجێ ناکرێت، بەڵکو لە یەکەم نرخی بەردەست، واتە نزیکەی 1.2610، و 40 خاڵی زیادە لەوەی پلانت بۆ دانابوو زیان دەکەیت. بۆیە زۆر بازرگان پێش کۆتایی هەفتە ئاگایان لە قەبارەی مامەڵە کراوەکانیان دەبێت."
+    },
+    {
+     "id": "s8",
+     "title": "نموونەی Buy Limit لەسەر EURUSD",
+     "narration": "نموونەیەک بە فەرمانی Buy Limit لەسەر یۆرۆ دۆلار. نرخی ئێستا 1.0850ە، و لەسەر چارتی کاتژمێرێک ناوچەیەکی پشتگیری ڕوون لە 1.0820 هەیە کە نرخ دوو جار لێیەوە گەڕاوەتەوە. لە جیاتی ئەوەی ئێستا بکڕیت، فەرمانی Buy Limit لە 1.0822 دادەنێیت، و Stop Loss لە خوارووی پشتگیرییەکە لە 1.0802، واتە 20 خاڵ، و ئامانج لە 1.0882، واتە 60 خاڵ، کە سێ هێندەی مەترسییە. حسابەکەت 5000 دۆلارە، و مەترسی 1% واتە 50 دۆلار، کەواتە قەبارەکە 0.25 لۆتە، چونکە نرخی خاڵێک لە لۆتێکی تەواودا دە دۆلارە. لە کاتژمێر یازدەی بەیانی بە کاتی لەندەن نرخ دابەزی و گەیشتە 1.0822 و فەرمانەکە بە شێوەیەکی خۆکار جێبەجێ کرا. ئەگەر نرخ دانەبەزیبایە، فەرمانەکە بەبێ هیچ زیانێک هەڵپەسێردراو دەمایەوە."
+    },
+    {
+     "id": "s9",
+     "title": "نموونەی Buy Stop لەسەر زێڕ",
+     "narration": "نموونەیەک بە فەرمانی Buy Stop لەسەر زێڕ. لە بەیانییەوە نرخ لە مەودایەکی تەسکدا لە خوارووی بەرگرییەک لە 4050 دەجووڵێت. دەتەوێت تەنها ئەگەر نرخ ئەم ئاستەی تێپەڕاند بکڕیت، بۆیە فەرمانی Buy Stop لە 4052 دادەنێیت، و Stop Loss لە 4040، واتە 12 دۆلار، و ئامانج لە 4076، واتە دوو هێندەی مەترسی. لە کاتژمێر هەشت و نیوی بەیانی بە کاتی نیویۆرک هەواڵێکی ئابووری گرنگ بڵاوکرایەوە، و نرخ بە خێرایی لە 4049ەوە بازیدا بۆ 4060. فەرمانەکەت لە 4054 جێبەجێ کرا لە جیاتی 4052، واتە خلیسکانی دوو دۆلار، و مەترسی ڕاستەقینەت بوو بە 14 دۆلار نەک 12. بۆیە زۆر لە سەرەتاییەکان خۆیان لە دانانی فەرمانی هەڵپەسێردراو زۆر نزیک لە کاتی هەواڵە بەهێزەکان دەپارێزن."
+    },
+    {
+     "id": "s10",
+     "title": "هەڵەکان و یاسای کرداری",
+     "narration": "لە هەڵە باوەکان تێکەڵکردنی Limit و Stopە، بەمەش فەرمانەکە یەکسەر یان لە شوێنی هەڵەدا جێبەجێ دەکرێت. هەروەها لەبیرکردنی فەرمانێکی هەڵپەسێردراوی کۆن کە دوای چەند ڕۆژێک بەبێ پلان جێبەجێ دەکرێت. و کردنەوەی مامەڵە بەبێ Stop Loss، یان دوورخستنەوەی Stopەکە کاتێک نرخ لێی نزیک دەبێتەوە. یاسای کرداری: پێش چوونەژوورەوە ئاڕاستەکەت و ئاستی چوونەژوورەوە و Stop و ئامانج دیاری بکە. فەرمانی بازاڕ بەکاربهێنە کاتێک نیشانەکە لەسەر مۆمێکی داخراو تەواو دەبێت و نرخ نزیکە، و Limit بۆ چاوەڕوانی گەڕانەوە، و Stop بۆ چوونەژوورەوە لەگەڵ تێپەڕاندن. Stop و ئامانج لەگەڵ خودی مامەڵەکەدا دابنێ، قەبارە بۆ مەترسی نزیکەی 1% حیساب بکە، و خلیسکان و بۆشاییەکان لە کاتی هەواڵ و پێش کۆتایی هەفتە لەبەرچاو بگرە."
+    }
+   ]
+  },
+  "basics-l2-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "كم تكلّف الصفقة؟",
+     "narration": "كل صفقة تفتحها لها تكلفة، حتى قبل أن يتحرك السعر. هذه التكلفة هي الطريقة التي يربح بها الوسيط، وهي تُخصم منك سواء ربحت الصفقة أو خسرت. هناك ثلاث تكاليف رئيسية يجب أن تعرفها. الأولى السبريد، وهو الفرق بين سعر الشراء وسعر البيع. الثانية العمولة، وهي مبلغ ثابت يأخذه بعض الوسطاء على كل لوت. والثالثة السواب، وهي رسوم أو فائدة تُحسب على الصفقة إذا بقيت مفتوحة إلى اليوم التالي. هذه التكاليف تبدو صغيرة في الصفقة الواحدة، لكنها مع عشرات الصفقات قد تصنع الفرق بين حساب رابح وحساب خاسر. لذلك سنحسبها اليوم بالأرقام."
+    },
+    {
+     "id": "s2",
+     "title": "ما هو السبريد؟",
+     "narration": "في أي لحظة يعرض الوسيط سعرين. سعر Bid، وهو السعر الذي تبيع عنده، وسعر Ask، وهو السعر الذي تشتري عنده، ويكون دائماً أعلى قليلاً. الفرق بينهما هو السبريد، أو Spread. مثلاً إذا كان اليورو دولار Bid عند 1.0850 وAsk عند 1.0851، فالسبريد نقطة واحدة. عند الشراء تدخل بسعر الـ Ask، لكن صفقتك تُقيَّم وتُغلق بسعر الـ Bid، لذلك تبدأ كل صفقة بخسارة صغيرة تساوي السبريد. ولاحظ أن الشارت يعرض عادة سعر الـ Bid فقط، فقد يُضرب وقف خسارة صفقة البيع بسعر الـ Ask مع أن الشموع على الشارت لم تلمس مستواه."
+    },
+    {
+     "id": "s3",
+     "title": "السبريد بالدولار",
+     "narration": "لتحويل السبريد إلى مال نضرب عدد نقاط السبريد في قيمة النقطة ثم في حجم الصفقة. في اليورو دولار قيمة النقطة عشرة دولارات للوت الكامل. فإذا كان السبريد نقطة واحدة وفتحت نصف لوت، فالتكلفة خمسة دولارات تدفعها لحظة الدخول. أما الذهب فيختلف، لأن اللوت الكامل فيه يساوي مئة أونصة، وتحرك السعر دولاراً واحداً يساوي مئة دولار للوت. فإذا كان سبريد الذهب ثلاثين سنتاً، أي 0.30، فتكلفته ثلاثون دولاراً للوت الكامل، وثلاثة دولارات فقط لعُشر لوت. لذلك احسب دائماً تكلفة السبريد بحجم صفقتك الحقيقي، لا بالنقاط وحدها."
+    },
+    {
+     "id": "s4",
+     "title": "العمولة وأنواع الحسابات",
+     "narration": "يقدّم معظم الوسطاء نوعين أساسيين من الحسابات. الحساب العادي، ويسمى Standard، يكون السبريد فيه أوسع لكن بلا عمولة، لأن ربح الوسيط موجود داخل السبريد. والحساب منخفض السبريد، ويسمى Raw أو ECN، يكون السبريد فيه قريباً من الصفر، لكنك تدفع عمولة ثابتة، مثلاً سبعة دولارات لكل لوت كامل ذهاباً وإياباً، أي عند الفتح والإغلاق معاً. لنقارن على اليورو دولار بلوت كامل: حساب عادي بسبريد 1.2 نقطة يكلّف 12 دولاراً. وحساب Raw بسبريد 0.2 نقطة يكلّف دولارين، مع عمولة سبعة، فالمجموع تسعة دولارات. الأرقام تختلف بين الوسطاء، فاقرأ شروط حسابك."
+    },
+    {
+     "id": "s5",
+     "title": "متى يتسع السبريد؟",
+     "narration": "السبريد ليس ثابتاً في معظم الحسابات، بل يتغير مع السيولة. يكون في أضيق حالاته عادة خلال جلستي لندن ونيويورك، خاصة وقت تداخلهما. ويتسع بشدة في ثلاث حالات. الأولى عند الأخبار القوية، مثل تقرير الوظائف الأمريكي الذي يصدر عادة الثامنة والنصف صباحاً بتوقيت نيويورك. الثانية وقت التبييت، ويسمى Rollover، قرب الخامسة مساءً بتوقيت نيويورك، حين تنتقل البنوك إلى يوم جديد وتقل السيولة. والثالثة عند افتتاح الأسبوع. في هذه الأوقات قد يقفز سبريد الذهب من 0.30 إلى دولارين أو أكثر، فيُضرب وقف قريب بسبب السبريد وحده دون أن يتحرك السعر فعلاً."
+    },
+    {
+     "id": "s6",
+     "title": "السواب Swap",
+     "narration": "السواب، أو Swap، هو مبلغ يُضاف إلى حسابك أو يُخصم منه عن كل ليلة تبقى فيها الصفقة مفتوحة بعد وقت الـ Rollover. أصله الفرق في أسعار الفائدة بين العملتين في الزوج، مع هامش يضيفه الوسيط. لذلك قد يكون السواب سالباً في اتجاه وموجباً في الاتجاه المعاكس، وغالباً يكون سالباً في الاتجاهين على الذهب. ويُحسب عادة سواب ثلاث ليالٍ مرة واحدة ليلة الأربعاء، تعويضاً عن عطلة نهاية الأسبوع، وقد يختلف اليوم حسب الوسيط والأداة. ستجد قيمة السواب لكل أداة في مواصفات العقد على المنصة. وإذا كنت تغلق صفقاتك في اليوم نفسه، فلن تدفع سواباً أصلاً."
+    },
+    {
+     "id": "s7",
+     "title": "مثال التكلفة الكاملة على EURUSD",
+     "narration": "مثال كامل على اليورو دولار. اشتريت نصف لوت يوم الثلاثاء الساعة العاشرة صباحاً بتوقيت لندن، على حساب عادي بسبريد نقطة واحدة، فدفعت خمسة دولارات عند الدخول. سواب الشراء في هذا الزوج سالب، لنفترض ستة دولارات لكل لوت في الليلة، أي ثلاثة دولارات لنصف لوت. أبقيت الصفقة حتى ظهر الجمعة، فمرّت ليلة الثلاثاء، وليلة الأربعاء التي تُحسب ثلاث ليالٍ، وليلة الخميس، أي خمس ليالٍ بخمسة عشر دولاراً. التكلفة الكلية عشرون دولاراً. ربحت الصفقة 40 نقطة، أي 200 دولار، فيصبح الصافي 180 دولاراً. التكلفة هنا صغيرة مقارنة بالهدف، وهذا هو المطلوب."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب وقت الأخبار",
+     "narration": "مثال على الذهب بحساب Raw. فتحت 0.2 لوت بسبريد 0.12، أي 2.4 دولار، مع عمولة سبعة دولارات للوت، أي 1.4 دولار، فالتكلفة 3.8 دولار. هدفك ثلاثة دولارات في السعر، أي 60 دولاراً، ووقفك أربعة دولارات، أي 80 دولاراً. التكلفة هنا نحو 6% من الهدف، وهذا مقبول. لكن تخيّل أنك فتحت الصفقة نفسها قبل خبر الثامنة والنصف بتوقيت نيويورك بدقيقة، واتسع السبريد إلى 1.50. التكلفة تقفز إلى نحو 30 دولاراً، أي نصف الهدف، وقد يُضرب الوقف بسبب اتساع السبريد. الأهداف الصغيرة تجعل التكلفة أهم، والتوقيت السيئ يضاعفها."
+    },
+    {
+     "id": "s9",
+     "title": "الحسابات الإسلامية",
+     "narration": "الحساب الإسلامي، ويسمى أيضاً Swap-Free، هو حساب لا يُحسب فيه السواب، لا خصماً ولا إضافة. تقدّمه كثير من الوسطاء لمن يفضّل عدم دفع الفائدة أو تلقّيها لأسباب دينية. لكن الوسيط يبقى بحاجة إلى تغطية تكلفة التبييت، لذلك قد يضع بدلاً منه رسماً إدارياً ثابتاً بعد عدد معين من الأيام، أو سبريداً أوسع قليلاً، أو حداً لمدة إبقاء الصفقة مفتوحة. اقرأ هذه الشروط بدقة قبل فتح الحساب، واحسب تكلفتها الحقيقية على أسلوبك. أما الحكم الشرعي للتداول نفسه فليس موضوع هذا الدرس، ومن يهمّه الأمر يسأل أهل العلم المختصين."
+    },
+    {
+     "id": "s10",
+     "title": "الأخطاء والقاعدة العملية",
+     "narration": "من الأخطاء الشائعة تجاهل التكاليف في الصفقات السريعة ذات الأهداف الصغيرة، والدخول قبل الأخبار أو قرب الخامسة مساءً بتوقيت نيويورك حين يتسع السبريد، ووضع وقف خسارة أقرب من السبريد نفسه، ونسيان السواب في الصفقات التي تبقى أياماً. والقاعدة العملية: قبل كل صفقة احسب التكلفة الكاملة بالدولار، أي السبريد والعمولة والسواب المتوقع، وقارنها بالهدف والوقف. تداول في أوقات السيولة الجيدة مثل جلستي لندن ونيويورك، وتجنّب الدقائق المحيطة بالأخبار القوية ووقت الـ Rollover. واختر نوع الحساب الذي يناسب أسلوبك بعد قراءة شروطه كاملة، ثم دوّن تكاليف كل صفقة في سجل تداولك لتعرف أثرها الحقيقي."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What Does a Trade Cost?",
+     "narration": "Every trade you open has a cost, even before price moves. This cost is how the broker earns money, and it is deducted from you whether the trade wins or loses. There are three main costs you need to know. The first is the spread, which is the difference between the buying price and the selling price. The second is the commission, a fixed amount some brokers charge on every lot. The third is the swap, a fee or interest calculated on the trade if it stays open into the next day. These costs look small on a single trade, but over dozens of trades they can make the difference between a winning account and a losing one. That is why today we will calculate them with real numbers."
+    },
+    {
+     "id": "s2",
+     "title": "What Is the Spread?",
+     "narration": "At any moment the broker shows two prices. The Bid, which is the price at which you sell, and the Ask, which is the price at which you buy, and it is always slightly higher. The difference between them is the spread. For example, if EURUSD has a Bid of 1.0850 and an Ask of 1.0851, the spread is one pip. When you buy, you enter at the Ask, but your trade is valued and closed at the Bid, so every trade starts with a small loss equal to the spread. Also note that the chart usually shows only the Bid price, so the stop loss of a sell trade can be hit by the Ask price even though the candles on the chart never touched that level."
+    },
+    {
+     "id": "s3",
+     "title": "The Spread in Dollars",
+     "narration": "To turn the spread into money, we multiply the number of spread pips by the pip value and then by the position size. On EURUSD a pip is worth ten dollars for a full standard lot. So if the spread is one pip and you open half a lot, the cost is five dollars, paid the moment you enter. Gold is different, because a full lot of gold equals one hundred ounces, so a one-dollar move in price equals one hundred dollars per lot. If the gold spread is thirty cents, that is 0.30, it costs thirty dollars for a full lot, and only three dollars for a tenth of a lot. So always calculate the spread cost with your real position size, not in pips alone."
+    },
+    {
+     "id": "s4",
+     "title": "Commission and Account Types",
+     "narration": "Most brokers offer two basic account types. The standard account has a wider spread but no commission, because the broker's earnings are built into the spread. The low-spread account, called Raw or ECN, has a spread close to zero, but you pay a fixed commission, for example seven dollars per full lot round trip, meaning for opening and closing together. Let us compare on EURUSD with one full lot: a standard account with a 1.2 pip spread costs 12 dollars. A Raw account with a 0.2 pip spread costs two dollars, plus a commission of seven, for a total of nine dollars. The numbers differ between brokers, so read the conditions of your own account carefully before deciding which type suits your style."
+    },
+    {
+     "id": "s5",
+     "title": "When Does the Spread Widen?",
+     "narration": "On most accounts the spread is not fixed; it changes with liquidity. It is usually at its tightest during the London and New York sessions, especially when they overlap. It widens sharply in three situations. The first is strong news, such as the US jobs report, which is usually released at half past eight in the morning New York time. The second is the rollover time, around five in the evening New York time, when banks move to a new day and liquidity drops. The third is the weekly open. At these times the gold spread may jump from 0.30 to two dollars or more, so a tight stop can be hit by the spread alone, without price really moving."
+    },
+    {
+     "id": "s6",
+     "title": "The Swap",
+     "narration": "The swap is an amount added to or deducted from your account for every night your trade stays open past the rollover time. It comes from the difference in interest rates between the two currencies in the pair, plus a margin the broker adds. That is why the swap can be negative in one direction and positive in the opposite one, and on gold it is often negative in both directions. Usually three nights of swap are charged at once on Wednesday night, to cover the weekend, although the day can differ by broker and instrument. You will find the swap value for each instrument in the contract specifications on the platform. And if you close your trades within the same day, you do not pay any swap at all."
+    },
+    {
+     "id": "s7",
+     "title": "Full Cost Example on EURUSD",
+     "narration": "A complete example on EURUSD. You bought half a lot on Tuesday at ten in the morning London time, on a standard account with a one-pip spread, so you paid five dollars on entry. The swap for buying this pair is negative; let us assume six dollars per lot per night, which is three dollars for half a lot. You held the trade until Friday midday, so it passed Tuesday night, Wednesday night, which counts as three nights, and Thursday night, a total of five nights costing fifteen dollars. The total cost is twenty dollars. The trade gained 40 pips, which is 200 dollars, so the net result is 180 dollars. Here the cost is small compared to the target, and that is exactly what you want."
+    },
+    {
+     "id": "s8",
+     "title": "Gold Example at News Time",
+     "narration": "An example on gold with a Raw account. You opened 0.2 lots with a spread of 0.12, which is 2.4 dollars, plus a commission of seven dollars per lot, which is 1.4 dollars, so the cost is 3.8 dollars. Your target is three dollars in price, which is 60 dollars, and your stop is four dollars, which is 80 dollars. The cost here is about 6% of the target, which is acceptable. But imagine you opened the same trade one minute before the eight-thirty New York news, and the spread widened to 1.50. The cost jumps to about 30 dollars, half of the target, and the stop may be hit just because the spread widened. Small targets make costs matter more, and bad timing multiplies them."
+    },
+    {
+     "id": "s9",
+     "title": "Islamic Accounts",
+     "narration": "An Islamic account, also called a swap-free account, is an account where no swap is applied, neither charged nor paid. Many brokers offer it for those who prefer not to pay or receive interest for religious reasons. However, the broker still needs to cover the cost of holding positions overnight, so instead it may charge a fixed administration fee after a certain number of days, or a slightly wider spread, or a limit on how long a trade can stay open. Read these conditions carefully before opening the account, and calculate their real cost for your own trading style. As for the religious ruling on trading itself, that is not the subject of this lesson, and anyone concerned should ask qualified scholars."
+    },
+    {
+     "id": "s10",
+     "title": "Mistakes and Practical Rule",
+     "narration": "Common mistakes include ignoring costs in quick trades with small targets, entering just before news or near five in the evening New York time when the spread widens, placing a stop loss closer than the spread itself, and forgetting the swap on trades held for several days. The practical rule: before every trade, calculate the full cost in dollars, meaning the spread, the commission and the expected swap, and compare it to your target and your stop. Trade during times of good liquidity such as the London and New York sessions, and avoid the minutes around strong news and the rollover time. And choose the account type that suits your style only after reading all of its conditions, then record the costs of every trade in your journal to see their real impact."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "مامەڵەیەک چەندی تێدەچێت؟",
+     "narration": "هەر مامەڵەیەک کە دەیکەیتەوە تێچوویەکی هەیە، تەنانەت پێش ئەوەی نرخ بجووڵێت. ئەم تێچووە ئەو ڕێگایەیە کە بڕۆکەر پێی قازانج دەکات، و لێت دەبڕدرێت جا مامەڵەکە قازانج بکات یان زیان. سێ تێچووی سەرەکی هەن کە دەبێت بیانناسیت. یەکەم سپرێدە، کە جیاوازی نێوان نرخی کڕین و نرخی فرۆشتنە. دووەم کۆمیسیۆنە، کە بڕێکی جێگیرە هەندێک بڕۆکەر لەسەر هەر لۆتێک وەریدەگرن. سێیەم سواپە، کە کرێ یان سوودێکە لەسەر مامەڵەکە حیساب دەکرێت ئەگەر تا ڕۆژی دواتر کراوە بمێنێتەوە. ئەم تێچووانە لە یەک مامەڵەدا بچووک دەردەکەون، بەڵام لەگەڵ دەیان مامەڵەدا لەوانەیە جیاوازی نێوان حسابێکی قازانجکەر و حسابێکی زیانکەر دروست بکەن. بۆیە ئەمڕۆ بە ژمارە حیسابیان دەکەین."
+    },
+    {
+     "id": "s2",
+     "title": "سپرێد چییە؟",
+     "narration": "لە هەر ساتێکدا بڕۆکەر دوو نرخ نیشان دەدات. نرخی Bid، کە ئەو نرخەیە پێی دەفرۆشیت، و نرخی Ask، کە ئەو نرخەیە پێی دەکڕیت، و هەمیشە کەمێک بەرزترە. جیاوازی نێوانیان سپرێدە، یان Spread. بۆ نموونە ئەگەر یۆرۆ دۆلار Bidی لە 1.0850 بێت و Askی لە 1.0851، سپرێدەکە یەک خاڵە. لە کاتی کڕیندا بە نرخی Ask دەچیتە ژوورەوە، بەڵام مامەڵەکەت بە نرخی Bid هەڵدەسەنگێنرێت و دادەخرێت، بۆیە هەموو مامەڵەیەک بە زیانێکی بچووک بە قەدەر سپرێد دەست پێدەکات. تێبینی بکە کە چارت بە زۆری تەنها نرخی Bid نیشان دەدات، بۆیە لەوانەیە Stop Lossی مامەڵەی فرۆشتن بە نرخی Ask بپێکرێت لە کاتێکدا مۆمەکانی سەر چارت نەگەیشتوونەتە ئەو ئاستە."
+    },
+    {
+     "id": "s3",
+     "title": "سپرێد بە دۆلار",
+     "narration": "بۆ گۆڕینی سپرێد بۆ پارە، ژمارەی خاڵەکانی سپرێد لە نرخی خاڵ و پاشان لە قەبارەی مامەڵە دەدەین. لە یۆرۆ دۆلار نرخی خاڵێک دە دۆلارە بۆ لۆتێکی تەواو. کەواتە ئەگەر سپرێد یەک خاڵ بێت و نیو لۆتت کردبێتەوە، تێچووەکە پێنج دۆلارە کە لە ساتی چوونەژوورەوەدا دەیدەیت. زێڕ جیاوازە، چونکە لۆتێکی تەواوی زێڕ سەد ئۆنسە، و جووڵەی یەک دۆلار لە نرخدا یەکسانە بە سەد دۆلار بۆ هەر لۆتێک. ئەگەر سپرێدی زێڕ سی سەنت بێت، واتە 0.30، تێچووەکەی سی دۆلارە بۆ لۆتێکی تەواو، و تەنها سێ دۆلار بۆ دەیەکی لۆتێک. بۆیە هەمیشە تێچووی سپرێد بە قەبارەی ڕاستەقینەی مامەڵەکەت حیساب بکە، نەک تەنها بە خاڵ."
+    },
+    {
+     "id": "s4",
+     "title": "کۆمیسیۆن و جۆرەکانی حساب",
+     "narration": "زۆربەی بڕۆکەرەکان دوو جۆری سەرەکی حساب پێشکەش دەکەن. حسابی ئاسایی، کە پێی دەڵێن Standard، سپرێدەکەی فراوانترە بەڵام بێ کۆمیسیۆنە، چونکە قازانجی بڕۆکەر لە ناو سپرێدەکەدایە. حسابی سپرێد نزم، کە پێی دەڵێن Raw یان ECN، سپرێدەکەی نزیکە لە سفر، بەڵام کۆمیسیۆنێکی جێگیر دەدەیت، بۆ نموونە حەوت دۆلار بۆ هەر لۆتێکی تەواو بۆ چوون و گەڕانەوە، واتە بۆ کردنەوە و داخستن پێکەوە. با لەسەر یۆرۆ دۆلار بە لۆتێکی تەواو بەراورد بکەین: حسابی ئاسایی بە سپرێدی 1.2 خاڵ 12 دۆلار تێدەچێت. حسابی Raw بە سپرێدی 0.2 خاڵ دوو دۆلار تێدەچێت، لەگەڵ کۆمیسیۆنی حەوت، کۆی گشتی نۆ دۆلار. ژمارەکان لە نێوان بڕۆکەرەکاندا جیاوازن، بۆیە مەرجەکانی حسابەکەت بخوێنەرەوە."
+    },
+    {
+     "id": "s5",
+     "title": "سپرێد کەی فراوان دەبێت؟",
+     "narration": "لە زۆربەی حسابەکاندا سپرێد جێگیر نییە، بەڵکو لەگەڵ شلەییدا دەگۆڕێت. بە زۆری لە کاتی دانیشتنەکانی لەندەن و نیویۆرکدا لە تەسکترین باریدایە، بەتایبەتی کاتێک تێکەڵ دەبن. لە سێ حاڵەتدا بە توندی فراوان دەبێت. یەکەم لە کاتی هەواڵە بەهێزەکاندا، وەک ڕاپۆرتی کاری ئەمریکی کە بە زۆری کاتژمێر هەشت و نیوی بەیانی بە کاتی نیویۆرک بڵاودەکرێتەوە. دووەم کاتی گواستنەوەی شەو، کە پێی دەڵێن Rollover، نزیکەی کاتژمێر پێنجی ئێوارە بە کاتی نیویۆرک، کاتێک بانکەکان دەچنە ڕۆژێکی نوێ و شلەیی کەم دەبێتەوە. سێیەم لە کردنەوەی هەفتەدا. لەم کاتانەدا لەوانەیە سپرێدی زێڕ لە 0.30ەوە باز بدات بۆ دوو دۆلار یان زیاتر، و Stopێکی نزیک تەنها بەهۆی سپرێدەوە بپێکرێت بەبێ ئەوەی نرخ بە ڕاستی بجووڵێت."
+    },
+    {
+     "id": "s6",
+     "title": "سواپ Swap",
+     "narration": "سواپ، یان Swap، بڕێکە کە بۆ هەر شەوێک مامەڵەکە دوای کاتی Rollover کراوە بمێنێتەوە بۆ حسابەکەت زیاد دەکرێت یان لێی دەبڕدرێت. بنەڕەتەکەی جیاوازی ڕێژەی سوودە لە نێوان دوو دراوەکەی جووتەکەدا، لەگەڵ پەراوێزێک کە بڕۆکەر زیادی دەکات. بۆیە لەوانەیە سواپ لە ئاڕاستەیەکدا نێگەتیڤ و لە ئاڕاستەی پێچەوانەدا پۆزەتیڤ بێت، و لەسەر زێڕ زۆرجار لە هەردوو ئاڕاستەدا نێگەتیڤە. بە زۆری سواپی سێ شەو بە یەکجار لە شەوی چوارشەممەدا حیساب دەکرێت، وەک قەرەبوو بۆ پشووی کۆتایی هەفتە، و لەوانەیە ڕۆژەکە بەپێی بڕۆکەر و ئامراز جیاواز بێت. نرخی سواپی هەر ئامرازێک لە تایبەتمەندییەکانی گرێبەست لەسەر پلاتفۆرمەکە دەدۆزیتەوە. و ئەگەر مامەڵەکانت لە هەمان ڕۆژدا دابخەیت، هیچ سواپێک نادەیت."
+    },
+    {
+     "id": "s7",
+     "title": "نموونەی تێچووی تەواو لەسەر EURUSD",
+     "narration": "نموونەیەکی تەواو لەسەر یۆرۆ دۆلار. ڕۆژی سێشەممە کاتژمێر دەی بەیانی بە کاتی لەندەن نیو لۆتت کڕی، لەسەر حسابێکی ئاسایی بە سپرێدی یەک خاڵ، بۆیە لە کاتی چوونەژوورەوەدا پێنج دۆلارت دا. سواپی کڕین لەم جووتەدا نێگەتیڤە، با وای دابنێین شەش دۆلارە بۆ هەر لۆتێک لە شەوێکدا، واتە سێ دۆلار بۆ نیو لۆت. مامەڵەکەت تا نیوەڕۆی هەینی هێشتەوە، بۆیە شەوی سێشەممە و شەوی چوارشەممە کە بە سێ شەو حیساب دەکرێت و شەوی پێنجشەممە تێپەڕین، واتە پێنج شەو بە پازدە دۆلار. کۆی تێچوو بیست دۆلارە. مامەڵەکە 40 خاڵی قازانج کرد، واتە 200 دۆلار، کەواتە ئەنجامی پاک 180 دۆلارە. لێرەدا تێچووەکە بەراورد بە ئامانجەکە بچووکە، و ئەمە ئەوەیە کە دەمانەوێت."
+    },
+    {
+     "id": "s8",
+     "title": "نموونەی زێڕ لە کاتی هەواڵدا",
+     "narration": "نموونەیەک لەسەر زێڕ بە حسابی Raw. 0.2 لۆتت کردەوە بە سپرێدی 0.12، واتە 2.4 دۆلار، لەگەڵ کۆمیسیۆنی حەوت دۆلار بۆ هەر لۆتێک، واتە 1.4 دۆلار، کەواتە تێچووەکە 3.8 دۆلارە. ئامانجەکەت سێ دۆلارە لە نرخدا، واتە 60 دۆلار، و Stopەکەت چوار دۆلارە، واتە 80 دۆلار. تێچوو لێرەدا نزیکەی 6%ی ئامانجەکەیە، و ئەمە پەسەندکراوە. بەڵام وابزانە هەمان مامەڵەت یەک خولەک پێش هەواڵی هەشت و نیوی نیویۆرک کردەوە، و سپرێد فراوان بوو بۆ 1.50. تێچووەکە باز دەدات بۆ نزیکەی 30 دۆلار، واتە نیوەی ئامانجەکە، و لەوانەیە Stopەکە تەنها بەهۆی فراوانبوونی سپرێدەوە بپێکرێت. ئامانجە بچووکەکان تێچوو گرنگتر دەکەن، و کاتی خراپ چەند هێندەی دەکات."
+    },
+    {
+     "id": "s9",
+     "title": "حسابە ئیسلامییەکان",
+     "narration": "حسابی ئیسلامی، کە پێی دەڵێن Swap-Free، حسابێکە کە سواپی تێدا حیساب ناکرێت، نە دەبڕدرێت و نە زیاد دەکرێت. زۆر بڕۆکەر پێشکەشی دەکەن بۆ ئەو کەسانەی بە هۆکاری ئایینی پێیان باشترە سوود نەدەن و وەرینەگرن. بەڵام بڕۆکەر هێشتا پێویستی بە داپۆشینی تێچووی هێشتنەوەی مامەڵە بە شەو هەیە، بۆیە لە جیاتی ئەوە لەوانەیە دوای ژمارەیەک ڕۆژ کرێیەکی کارگێڕی جێگیر دابنێت، یان سپرێدێکی کەمێک فراوانتر، یان سنوورێک بۆ ماوەی کراوەیی مامەڵە. پێش کردنەوەی حسابەکە ئەم مەرجانە بە وردی بخوێنەرەوە، و تێچووی ڕاستەقینەیان لەسەر شێوازەکەت حیساب بکە. حوکمی شەرعی خودی بازرگانی بابەتی ئەم وانەیە نییە، و هەر کەسێک گرنگی پێ بدات با پرسیار لە زانایانی پسپۆڕ بکات."
+    },
+    {
+     "id": "s10",
+     "title": "هەڵەکان و یاسای کرداری",
+     "narration": "لە هەڵە باوەکان پشتگوێخستنی تێچووەکانە لە مامەڵە خێراکاندا کە ئامانجیان بچووکە، و چوونەژوورەوە پێش هەواڵ یان نزیک کاتژمێر پێنجی ئێوارە بە کاتی نیویۆرک کاتێک سپرێد فراوان دەبێت، و دانانی Stop Loss نزیکتر لە خودی سپرێد، و لەبیرکردنی سواپ لەو مامەڵانەی چەند ڕۆژێک دەمێننەوە. یاسای کرداری: پێش هەر مامەڵەیەک تێچووی تەواو بە دۆلار حیساب بکە، واتە سپرێد و کۆمیسیۆن و سواپی چاوەڕوانکراو، و بەراوردی بکە لەگەڵ ئامانج و Stopەکەت. لە کاتەکانی شلەیی باشدا بازرگانی بکە وەک دانیشتنەکانی لەندەن و نیویۆرک، و خۆت لەو خولەکانە بپارێزە کە دەوری هەواڵە بەهێزەکان و کاتی Rolloverیان داوە. و ئەو جۆرە حسابە هەڵبژێرە کە لەگەڵ شێوازەکەت دەگونجێت دوای خوێندنەوەی هەموو مەرجەکانی، پاشان تێچووی هەر مامەڵەیەک لە تۆماری بازرگانییەکەتدا بنووسە بۆ ئەوەی کاریگەرییە ڕاستەقینەکەی بزانیت."
+    }
+   ]
+  },
+  "basics-l2-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي منصة التداول",
+     "narration": "منصة التداول هي البرنامج الذي يربطك بالوسيط، ومنه ترى الأسعار وتفتح الصفقات وتغلقها. أشهر المنصات في الفوركس والذهب تتبع نمط MetaTrader، ولذلك سنشرح الأجزاء المشتركة بينها، وستجد الأسماء نفسها تقريباً في أي منصة مشابهة. قبل أي شيء، القاعدة الأولى في هذا الدرس هي أن تتدرب على حساب تجريبي، أي Demo Account، وهو حساب بأموال افتراضية وأسعار حقيقية. هدفك أن تتقن الأزرار والخطوات حتى تصبح تلقائية، لأن خطأ واحداً في الحجم أو في اتجاه الصفقة على حساب حقيقي قد يكلفك أكثر من خسارة عادية. وفي هذا الدرس نمشي معاً من فتح المنصة حتى مراجعة الصفقة بعد إغلاقها."
+    },
+    {
+     "id": "s2",
+     "title": "نافذة الأسعار Market Watch",
+     "narration": "أول نافذة تراها عادة هي قائمة الأسعار، وتسمى Market Watch أو Watchlist. فيها الرموز مثل EURUSD وXAUUSD، وبجانب كل رمز سعران. الأول هو Bid، وهو السعر الذي تبيع عنده، والثاني هو Ask، وهو السعر الذي تشتري عنده، ويكون أعلى قليلاً. الفرق بينهما هو الـ Spread، أي تكلفة الدخول التي يأخذها الوسيط. مثلاً إذا كان Bid على اليورو دولار 1.0850 وAsk هو 1.0851، فالفارق نقطة واحدة. يمكنك إضافة الرموز التي تتابعها فقط وإخفاء الباقي، حتى تبقى الشاشة بسيطة. وانتبه أن الفارق يتسع أحياناً وقت الأخبار وعند افتتاح السوق."
+    },
+    {
+     "id": "s3",
+     "title": "نافذة الرسم البياني",
+     "narration": "عندما تسحب الرمز إلى الشاشة، أو تضغط عليه بالزر الأيمن وتختار نافذة الرسم البياني، يفتح لك الـ Chart. اختر نوع الشموع اليابانية، لأنها تعرض الافتتاح والإغلاق والأعلى والأدنى لكل فترة. في الأعلى ستجد أزرار الإطار الزمني، أي Timeframe، مثل M15 لربع ساعة وH1 لساعة وH4 لأربع ساعات وD1 ليوم كامل. كل شمعة تمثل فترة واحدة من الإطار الذي اخترته. وستجد أيضاً أدوات الرسم، مثل الخط الأفقي وخط الاتجاه. تذكر دائماً أن الشمعة الأخيرة لم تغلق بعد وقد يتغير شكلها، فلا تبنِ قراراً عليها قبل إغلاقها."
+    },
+    {
+     "id": "s4",
+     "title": "نافذة الأمر الجديد",
+     "narration": "لفتح صفقة اضغط على زر New Order، فتظهر نافذة الأمر الجديد. فيها أولاً الرمز، فتأكد أنه الصحيح. ثم نوع التنفيذ، وأهمه خياران. الأول Market Execution، أي أمر السوق، ويفتح الصفقة فوراً بالسعر الحالي بزر Buy للشراء أو Sell للبيع. والثاني Pending Order، أي الأمر المعلّق، وتحدد فيه سعراً تريد الدخول عنده لاحقاً، مثل Buy Limit للشراء تحت السعر الحالي، أو Sell Limit للبيع فوقه، أو أوامر Stop للدخول مع اختراق مستوى. الأمر المعلّق يفيد عندما تكون خطتك جاهزة ولا تريد مطاردة السعر. وفي البداية يكفيك هذان النوعان حتى تفهمهما جيداً."
+    },
+    {
+     "id": "s5",
+     "title": "خانة الحجم Volume",
+     "narration": "أهم خانة في النافذة هي Volume، أي حجم الصفقة بوحدة اللوت. اللوت القياسي يساوي 1.00، والميني 0.10، والمايكرو 0.01. في أزواج مثل EURUSD قيمة النقطة الواحدة تقارب 10 دولارات للوت الكامل، ودولاراً واحداً لـ 0.10، وعشرة سنتات لـ 0.01. لا تكتب الحجم عشوائياً، بل احسبه من المخاطرة. مثلاً حساب 1000 دولار ومخاطرة 1 بالمئة تعني 10 دولارات. إذا كان وقفك 20 نقطة، فكل نقطة يجب أن تساوي نصف دولار، أي حجم 0.05 لوت. وراجع الرقم مرتين قبل الضغط، فالصفر الزائد يحول خسارة صغيرة إلى كارثة."
+    },
+    {
+     "id": "s6",
+     "title": "مثال: صفقة شراء على EURUSD",
+     "narration": "لنطبق على اليورو دولار. الساعة 9:30 بتوقيت لندن، وخطتك تقول شراء عند 1.0850. في نافذة الأمر الجديد تكتب الحجم 0.05، وفي خانة Stop Loss تكتب 1.0830، أي عشرين نقطة تحت الدخول، وفي خانة Take Profit تكتب 1.0890، أي أربعين نقطة فوقه. ثم تضغط Buy. ستظهر الصفقة في نافذة Trade أسفل الشاشة، ومعها خطان على الرسم، أحمر للوقف وأخضر للهدف. إذا ضُرب الوقف تخسر نحو 10 دولارات، وإذا تحقق الهدف تربح نحو 20 دولاراً. لا تفتح الصفقة أبداً دون وقف خسارة مكتوب في الخانة نفسها، حتى لو كنت تنوي مراقبة السعر بنفسك."
+    },
+    {
+     "id": "s7",
+     "title": "مثال: التعديل والإغلاق الجزئي على الذهب",
+     "narration": "مثال ثانٍ على الذهب. حساب 2000 دولار ومخاطرة 1 بالمئة، أي 20 دولاراً. بعت عند 2350 مع وقف عند 2355، أي خمسة دولارات من حركة السعر. في الذهب كل دولار حركة يساوي دولاراً واحداً لحجم 0.01، فيكون الحجم 0.04. الهدف 2340. عند وصول السعر إلى 2345 تفتح قائمة الصفقة وتختار Close جزئياً بحجم 0.02، فتأخذ نحو 10 دولارات ربحاً. ثم تختار Modify وتنقل الوقف إلى 2350، أي نقطة الدخول، وهذا يسمى Breakeven. التعديل مسموح لتقليل المخاطرة، لكن لا تبعد الوقف أبداً لأن السعر اقترب منه."
+    },
+    {
+     "id": "s8",
+     "title": "السجل History والأخطاء الشائعة",
+     "narration": "بعد إغلاق الصفقة تنتقل إلى تبويب Account History أو History، وفيه كل صفقاتك المغلقة مع سعر الدخول والخروج والحجم والربح أو الخسارة والعمولة والـ Swap، وهو رسوم تبييت الصفقة إلى اليوم التالي. هذا السجل هو مادة مراجعتك الأسبوعية. أما الأخطاء الشائعة عند المبتدئين فأولها الضغط على Sell بدل Buy من العجلة، وثانيها كتابة 0.50 بدل 0.05، وثالثها نسيان وقف الخسارة، ورابعها فتح الصفقة على الرمز الخطأ. وهناك خطأ صامت، وهو التداول على حساب حقيقي قبل أن تتقن هذه الخطوات على الحساب التجريبي، فتدفع ثمن التعلم من مالك الحقيقي."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية لكل صفقة على المنصة تمر بخمس خطوات ثابتة. أولاً تأكد من الرمز والإطار الزمني على الرسم البياني، وانتظر إغلاق الشمعة التي تبني عليها قرارك. ثانياً احسب الحجم من المخاطرة، بحيث لا تتجاوز الخسارة نحو 1 بالمئة من الحساب. ثالثاً اكتب وقف الخسارة والهدف في نافذة الأمر قبل الضغط. رابعاً راجع الاتجاه والحجم مرة أخيرة، ثم نفّذ. خامساً أدِر الصفقة وفق الخطة فقط، بإغلاق جزئي أو نقل الوقف إلى Breakeven، ثم سجّلها. كرر هذا على الحساب التجريبي عشرين صفقة على الأقل قبل أي مال حقيقي."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What a Trading Platform Is",
+     "narration": "A trading platform is the program that connects you to your broker. From it you see prices and open and close trades. The most common platforms for forex and gold follow the MetaTrader style, so we will explain the parts they share, and you will find almost the same names in any similar platform. Before anything else, the first rule of this lesson is to practise on a demo account, which is an account with virtual money and real prices. Your goal is to master the buttons and the steps until they become automatic, because a single mistake in volume or in trade direction on a real account can cost you more than a normal loss. In this lesson we walk together from opening the platform to reviewing the trade after it closes."
+    },
+    {
+     "id": "s2",
+     "title": "The Market Watch Window",
+     "narration": "The first window you usually see is the price list, called Market Watch or Watchlist. It shows symbols such as EURUSD and XAUUSD, and next to each symbol there are two prices. The first is the Bid, the price at which you sell, and the second is the Ask, the price at which you buy, which is slightly higher. The difference between them is the Spread, the entry cost the broker takes. For example, if the Bid on euro dollar is 1.0850 and the Ask is 1.0851, the spread is one pip. You can add only the symbols you follow and hide the rest so the screen stays simple. Note that the spread sometimes widens during news releases and at the market open."
+    },
+    {
+     "id": "s3",
+     "title": "The Chart Window",
+     "narration": "When you drag the symbol onto the screen, or right click it and choose the chart window, the Chart opens. Choose Japanese candlesticks, because they show the open, close, high and low of each period. At the top you will find the timeframe buttons, such as M15 for fifteen minutes, H1 for one hour, H4 for four hours and D1 for a full day. Each candle represents one period of the timeframe you selected. You will also find the drawing tools, such as the horizontal line and the trendline. Always remember that the last candle has not closed yet and its shape may still change, so do not build a decision on it before it closes."
+    },
+    {
+     "id": "s4",
+     "title": "The New Order Window",
+     "narration": "To open a trade, click the New Order button and the new order window appears. First check that the symbol is the right one. Then comes the execution type, with two main choices. The first is Market Execution, a market order, which opens the trade immediately at the current price using the Buy button to buy or the Sell button to sell. The second is a Pending Order: you set a price at which you want to enter later, such as a Buy Limit to buy below the current price, a Sell Limit to sell above it, or Stop orders to enter on a break of a level. A pending order is useful when your plan is ready and you do not want to chase price. At first, these two types are enough."
+    },
+    {
+     "id": "s5",
+     "title": "The Volume Field",
+     "narration": "The most important field in the window is Volume, the trade size in lots. A standard lot is 1.00, a mini lot is 0.10 and a micro lot is 0.01. On pairs like EURUSD, one pip is worth about 10 dollars for a full lot, one dollar for 0.10 and ten cents for 0.01. Do not type the volume at random; calculate it from your risk. For example, a 1000 dollar account with 1 percent risk means 10 dollars. If your stop is 20 pips, each pip must be worth half a dollar, which means a volume of 0.05 lots. Check the number twice before you click, because one extra zero can turn a small loss into a disaster."
+    },
+    {
+     "id": "s6",
+     "title": "Example: A Buy Trade on EURUSD",
+     "narration": "Let us apply this to euro dollar. It is 9:30 London time, and your plan says buy at 1.0850. In the new order window you type a volume of 0.05, in the Stop Loss field you type 1.0830, twenty pips below the entry, and in the Take Profit field you type 1.0890, forty pips above it. Then you click Buy. The trade appears in the Trade window at the bottom of the screen, together with two lines on the chart, a red one for the stop and a green one for the target. If the stop is hit you lose about 10 dollars, and if the target is reached you gain about 20 dollars. Never open a trade without a stop loss in the field itself, even if you plan to watch price."
+    },
+    {
+     "id": "s7",
+     "title": "Example: Modifying and Partial Close on Gold",
+     "narration": "A second example on gold. The account is 2000 dollars with 1 percent risk, which is 20 dollars. You sell at 2350 with a stop at 2355, five dollars of price movement. On gold, each dollar of movement is worth one dollar for a volume of 0.01, so the volume is 0.04. The target is 2340. When price reaches 2345, you open the trade menu and choose a partial Close with a volume of 0.02, locking in about 10 dollars of profit. Then you choose Modify and move the stop to 2350, the entry price, which is called Breakeven. Modifying is allowed to reduce risk, but never move the stop further away just because price is getting close to it."
+    },
+    {
+     "id": "s8",
+     "title": "History and Common Mistakes",
+     "narration": "After closing the trade, go to the Account History or History tab. It lists all your closed trades with the entry and exit price, volume, profit or loss, commission and Swap, which is the fee for holding a trade overnight. This record is the material for your weekly review. As for common beginner mistakes, the first is clicking Sell instead of Buy out of haste, the second is typing 0.50 instead of 0.05, the third is forgetting the stop loss, and the fourth is opening the trade on the wrong symbol. There is also a silent mistake: trading on a real account before you have mastered these steps on the demo account, paying for your learning with real money."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "The practical rule is that every trade on the platform goes through five fixed steps. First, confirm the symbol and the timeframe on the chart, and wait for the candle you base your decision on to close. Second, calculate the volume from your risk, so that the loss does not exceed about 1 percent of the account. Third, write the stop loss and the target in the order window before clicking. Fourth, check the direction and the volume one last time, then execute. Fifth, manage the trade only according to the plan, with a partial close or by moving the stop to Breakeven, then record it. Repeat this on the demo account for at least twenty trades before using any real money."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پلاتفۆرمی بازرگانی چییە",
+     "narration": "پلاتفۆرمی بازرگانی ئەو بەرنامەیەیە کە تۆ بە بڕۆکەرەکەتەوە دەبەستێتەوە، و لێیەوە نرخەکان دەبینیت و مامەڵەکان دەکەیتەوە و دایاندەخەیت. بەناوبانگترین پلاتفۆرمەکان لە فۆرێکس و زێڕدا شێوازی MetaTrader پەیڕەو دەکەن، بۆیە بەشە هاوبەشەکانیان ڕوون دەکەینەوە، و نزیکەی هەمان ناوەکان لە هەر پلاتفۆرمێکی هاوشێوەدا دەبینیتەوە. پێش هەموو شتێک، یەکەم یاسای ئەم وانەیە ئەوەیە کە لەسەر هەژماری تاقیکاری ڕاهێنان بکەیت، واتە Demo Account، کە هەژمارێکە بە پارەی خەیاڵی و نرخی ڕاستەقینە. ئامانجت ئەوەیە دوگمە و هەنگاوەکان بە باشی فێربیت تا خۆکار دەبن، چونکە تەنها هەڵەیەک لە قەبارە یان ئاراستەی مامەڵەدا لەسەر هەژماری ڕاستەقینە دەکرێت لە زیانێکی ئاسایی زیاتر تێچووی هەبێت. لەم وانەیەدا پێکەوە لە کردنەوەی پلاتفۆرمەوە تا پێداچوونەوەی مامەڵە دوای داخستنی دەڕۆین."
+    },
+    {
+     "id": "s2",
+     "title": "پەنجەرەی نرخەکان Market Watch",
+     "narration": "یەکەم پەنجەرە کە بەزۆری دەیبینیت لیستی نرخەکانە، کە پێی دەوترێت Market Watch یان Watchlist. هێماکانی وەک EURUSD و XAUUSD تێدایە، و لە تەنیشت هەر هێمایەکەوە دوو نرخ هەیە. یەکەمیان Bid ە، ئەو نرخەی پێی دەفرۆشیت، و دووەمیان Ask ە، ئەو نرخەی پێی دەکڕیت، کەمێک بەرزترە. جیاوازی نێوانیان Spread ە، واتە تێچووی چوونەژوورەوە کە بڕۆکەر وەریدەگرێت. بۆ نموونە ئەگەر Bid لەسەر یۆرۆ دۆلار 1.0850 بێت و Ask بریتی بێت لە 1.0851، ئەوا جیاوازییەکە یەک پیپە. دەتوانیت تەنها ئەو هێمایانە زیاد بکەیت کە بەدوایاندا دەچیت و ئەوانی تر بشاریتەوە، تا شاشەکە سادە بمێنێتەوە. ئاگاداربە کە جیاوازییەکە هەندێک جار لە کاتی هەواڵ و کردنەوەی بازاڕدا فراوان دەبێت."
+    },
+    {
+     "id": "s3",
+     "title": "پەنجەرەی هێڵکاری",
+     "narration": "کاتێک هێماکە ڕادەکێشیت بۆ سەر شاشە، یان کلیکی ڕاستی لێدەکەیت و پەنجەرەی هێڵکاری هەڵدەبژێریت، Chart بۆت دەکرێتەوە. جۆری مۆمی ژاپۆنی هەڵبژێرە، چونکە کردنەوە و داخستن و بەرزترین و نزمترینی هەر ماوەیەک پیشان دەدات. لە سەرەوە دوگمەکانی چوارچێوەی کات دەبینیت، واتە Timeframe، وەک M15 بۆ چارەکە کاتژمێرێک و H1 بۆ کاتژمێرێک و H4 بۆ چوار کاتژمێر و D1 بۆ ڕۆژێکی تەواو. هەر مۆمێک نوێنەرایەتی یەک ماوە دەکات لەو چوارچێوەیەی هەڵتبژاردووە. ئامرازەکانی کێشانیش دەبینیت، وەک هێڵی ئاسۆیی و هێڵی ئاراستە. هەمیشە لەبیرت بێت کە دوایین مۆم هێشتا دانەخراوە و لەوانەیە شێوەی بگۆڕێت، بۆیە پێش داخستنی بڕیاری لەسەر بنیات مەنێ."
+    },
+    {
+     "id": "s4",
+     "title": "پەنجەرەی فەرمانی نوێ",
+     "narration": "بۆ کردنەوەی مامەڵە دوگمەی New Order دابگرە، پەنجەرەی فەرمانی نوێ دەردەکەوێت. سەرەتا هێماکەی تێدایە، دڵنیابە کە دروستە. پاشان جۆری جێبەجێکردن، کە دوو هەڵبژاردەی سەرەکی هەیە. یەکەم Market Execution، واتە فەرمانی بازاڕ، کە مامەڵەکە دەستبەجێ بە نرخی ئێستا دەکاتەوە بە دوگمەی Buy بۆ کڕین یان Sell بۆ فرۆشتن. دووەم Pending Order، واتە فەرمانی هەڵپەسێردراو، کە تێیدا نرخێک دیاری دەکەیت بۆ چوونەژوورەوە دواتر، وەک Buy Limit بۆ کڕین لە خوار نرخی ئێستا، یان Sell Limit بۆ فرۆشتن لە سەرووی، یان فەرمانەکانی Stop بۆ چوونەژوورەوە لەگەڵ تێپەڕاندنی ئاستێک. فەرمانی هەڵپەسێردراو بەسوودە کاتێک پلانەکەت ئامادەیە و ناتەوێت بەدوای نرخدا ڕابکەیت. لە سەرەتادا ئەم دوو جۆرە بەسن تا بە باشی تێیان بگەیت."
+    },
+    {
+     "id": "s5",
+     "title": "خانەی قەبارە Volume",
+     "narration": "گرنگترین خانە لە پەنجەرەکەدا Volume ە، واتە قەبارەی مامەڵە بە یەکەی لۆت. لۆتی ستاندارد یەکسانە بە 1.00، و مینی 0.10، و مایکرۆ 0.01. لە جووتەکانی وەک EURUSD بەهای یەک پیپ نزیکەی 10 دۆلارە بۆ لۆتێکی تەواو، و یەک دۆلار بۆ 0.10، و دە سەنت بۆ 0.01. قەبارە بە هەڕەمەکی مەنووسە، بەڵکو لە مەترسییەوە حیسابی بکە. بۆ نموونە هەژمارێکی 1000 دۆلاری و مەترسی 1 لەسەد واتە 10 دۆلار. ئەگەر وەستانەکەت 20 پیپ بێت، هەر پیپێک دەبێت نیو دۆلار بێت، واتە قەبارەی 0.05 لۆت. پێش دابگرتن دوو جار ژمارەکە بپشکنە، چونکە سفرێکی زیادە زیانێکی بچووک دەکاتە کارەسات."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە: مامەڵەی کڕین لەسەر EURUSD",
+     "narration": "با لەسەر یۆرۆ دۆلار جێبەجێی بکەین. کاتژمێر 9:30 بە کاتی لەندەنە، و پلانەکەت دەڵێت کڕین لە 1.0850. لە پەنجەرەی فەرمانی نوێدا قەبارەی 0.05 دەنووسیت، و لە خانەی Stop Loss دەنووسیت 1.0830، واتە بیست پیپ لە خوار چوونەژوورەوە، و لە خانەی Take Profit دەنووسیت 1.0890، واتە چل پیپ لە سەرووی. پاشان Buy دادەگریت. مامەڵەکە لە پەنجەرەی Trade لە خوارەوەی شاشە دەردەکەوێت، و دوو هێڵیش لەسەر هێڵکاری، سوور بۆ وەستان و سەوز بۆ ئامانج. ئەگەر وەستانەکە پێکرا نزیکەی 10 دۆلار زیان دەکەیت، و ئەگەر ئامانجەکە هاتەدی نزیکەی 20 دۆلار قازانج دەکەیت. هەرگیز مامەڵە مەکەرەوە بەبێ وەستانی زیان کە لە خودی خانەکەدا نووسرابێت، تەنانەت ئەگەر بتەوێت خۆت چاودێری نرخ بکەیت."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە: دەستکاری و داخستنی بەشێک لەسەر زێڕ",
+     "narration": "نموونەی دووەم لەسەر زێڕ. هەژمارێکی 2000 دۆلاری و مەترسی 1 لەسەد، واتە 20 دۆلار. لە 2350 فرۆشتت لەگەڵ وەستان لە 2355، واتە پێنج دۆلار لە جووڵەی نرخ. لە زێڕدا هەر دۆلارێک جووڵە یەکسانە بە یەک دۆلار بۆ قەبارەی 0.01، بۆیە قەبارەکە 0.04 دەبێت. ئامانج 2340 ە. کاتێک نرخ دەگاتە 2345، لیستی مامەڵەکە دەکەیتەوە و Close ی بەشێک بە قەبارەی 0.02 هەڵدەبژێریت، نزیکەی 10 دۆلار قازانج وەردەگریت. پاشان Modify هەڵدەبژێریت و وەستانەکە دەگوازیتەوە بۆ 2350، واتە خاڵی چوونەژوورەوە، کە پێی دەوترێت Breakeven. دەستکاری ڕێگەپێدراوە بۆ کەمکردنەوەی مەترسی، بەڵام هەرگیز وەستانەکە دوور مەخەرەوە تەنها لەبەر ئەوەی نرخ لێی نزیک بووەتەوە."
+    },
+    {
+     "id": "s8",
+     "title": "مێژوو History و هەڵە باوەکان",
+     "narration": "دوای داخستنی مامەڵەکە دەچیت بۆ تابی Account History یان History، کە هەموو مامەڵە داخراوەکانتی تێدایە لەگەڵ نرخی چوونەژوورەوە و دەرچوون و قەبارە و قازانج یان زیان و کۆمیسیۆن و Swap، کە کرێی هێشتنەوەی مامەڵەیە بۆ ڕۆژی دواتر. ئەم تۆمارە کەرەستەی پێداچوونەوەی هەفتانەتە. بەڵام هەڵە باوەکانی دەستپێکەران، یەکەمیان دابگرتنی Sell لە جیاتی Buy لە پەلەدا، دووەمیان نووسینی 0.50 لە جیاتی 0.05، سێیەمیان لەبیرچوونی وەستانی زیان، و چوارەمیان کردنەوەی مامەڵە لەسەر هێمای هەڵە. هەڵەیەکی بێدەنگیش هەیە، ئەویش بازرگانییە لەسەر هەژماری ڕاستەقینە پێش ئەوەی ئەم هەنگاوانە لەسەر هەژماری تاقیکاری بە باشی فێربیت، و نرخی فێربوون لە پارەی ڕاستەقینەی خۆت بدەیت."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری بۆ هەر مامەڵەیەک لەسەر پلاتفۆرم بە پێنج هەنگاوی جێگیردا تێدەپەڕێت. یەکەم، دڵنیابە لە هێما و چوارچێوەی کات لەسەر هێڵکاری، و چاوەڕێی داخستنی ئەو مۆمە بکە کە بڕیارەکەتی لەسەر بنیات دەنێیت. دووەم، قەبارە لە مەترسییەوە حیساب بکە، بە شێوەیەک زیانەکە لە نزیکەی 1 لەسەدی هەژمار تێنەپەڕێت. سێیەم، وەستانی زیان و ئامانج لە پەنجەرەی فەرماندا بنووسە پێش دابگرتن. چوارەم، ئاراستە و قەبارە بۆ دوایین جار بپشکنە، پاشان جێبەجێی بکە. پێنجەم، مامەڵەکە تەنها بەپێی پلان بەڕێوەببە، بە داخستنی بەشێک یان گواستنەوەی وەستان بۆ Breakeven، پاشان تۆماری بکە. ئەمە لەسەر هەژماری تاقیکاری لانیکەم بیست مامەڵە دووبارە بکەرەوە پێش هەر پارەیەکی ڕاستەقینە."
+    }
+   ]
+  },
+  "basics-l2-04": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا علم النفس مهم",
+     "narration": "قد تتعلم أفضل طريقة لقراءة الرسم البياني، ثم تخسر بسبب قراراتك أنت لا بسبب الطريقة. التداول يضعك أمام مال حقيقي يتحرك أمام عينيك كل ثانية، وهذا يثير مشاعر قوية مثل الخوف والطمع والغضب والحماس. هذه المشاعر طبيعية عند كل إنسان، والمشكلة ليست في وجودها بل في أن تتخذ القرار بدلاً منك. الانضباط معناه أن تنفذ خطتك المكتوبة حتى عندما لا تشعر بالرغبة في ذلك. في هذا الدرس نتعرف على أشهر الفخاخ النفسية، وكيف تكتشفها مبكراً، وما القواعد العملية التي تحميك منها. وتذكر أن المحترف ليس من لا يشعر بالخوف، بل من لا يدعه يقرر."
+    },
+    {
+     "id": "s2",
+     "title": "الخوف",
+     "narration": "الخوف يظهر بأشكال كثيرة. بعد سلسلة خسائر قد تتردد في الدخول رغم أن كل شروط خطتك متحققة، فتفوتك الصفقة الجيدة. وقد تغلق الصفقة الرابحة مبكراً جداً عند أول تراجع صغير، فتأخذ ربحاً صغيراً بينما خسائرك بحجمها الكامل، وهذا يدمر نسبة العائد إلى المخاطرة مع الوقت. والعلاج يبدأ من الحجم، فإذا كان الخوف شديداً فغالباً أنك تخاطر بأكثر مما تتحمل، فخفّض المخاطرة إلى نصف بالمئة مثلاً. ثم ضع الوقف والهدف مسبقاً، واترك الصفقة تعمل دون أن تحدق في كل حركة صغيرة على الرسم. ومع التكرار على حجم صغير سيتحول الخوف إلى ثقة مبنية على التجربة."
+    },
+    {
+     "id": "s3",
+     "title": "الطمع",
+     "narration": "الطمع هو الوجه الآخر للخوف. يظهر عندما تربح عدة صفقات متتالية فتشعر أنك لا تخطئ، فتضاعف الحجم دون سبب في الخطة. ويظهر عندما تصل الصفقة إلى الهدف فتلغيه وتنتظر المزيد، ثم يعود السعر ويضرب الوقف. ويظهر أيضاً عندما تفتح عدة صفقات في الاتجاه نفسه على أزواج مترابطة، مثل EURUSD وGBPUSD معاً، فتتضاعف مخاطرتك دون أن تنتبه. العلاج أن يكون الهدف وحجم المخاطرة مكتوبين في الخطة، وألا تغيّرهما أثناء الصفقة إلا وفق قاعدة محددة مسبقاً، مثل الإغلاق الجزئي عند هدف أول. فالخطة هي التي تقرر متى تأخذ الربح، لا شعورك في تلك اللحظة."
+    },
+    {
+     "id": "s4",
+     "title": "تداول الانتقام: مثال على GBPUSD",
+     "narration": "تداول الانتقام هو أن تدخل صفقة جديدة فوراً بعد خسارة كي تستعيد المال، لا لأن خطتك أعطت إشارة. مثال: متداول بحساب 1000 دولار باع الجنيه دولار عند 1.2750 الساعة 8:15 بتوقيت لندن، بوقف 20 نقطة وحجم 0.05، فخسر 10 دولارات. غضب، فاشترى بعد دقائق بحجم 0.15 دون أي إعداد، ووضع وقفاً بعيداً 40 نقطة. ضُرب الوقف فخسر 60 دولاراً، أي ستة أضعاف الخسارة الأولى في أقل من ساعة. العلاج قاعدة بسيطة: بعد أي خسارة تبتعد عن الشاشة خمس عشرة دقيقة على الأقل، ولا تغيّر الحجم أبداً بعد خسارة."
+    },
+    {
+     "id": "s5",
+     "title": "الإفراط في التداول Overtrading",
+     "narration": "الإفراط في التداول، أي Overtrading، هو أن تفتح صفقات كثيرة لأنك تشعر أنك يجب أن تكون داخل السوق دائماً. علاماته أن تدخل صفقات لا تطابق كل شروط خطتك، أو أن تتداول خارج الجلسات التي حددتها، أو أن تقفز بين إطارات زمنية صغيرة جداً بحثاً عن أي حركة. النتيجة تكاليف Spread وعمولات أعلى، وتركيز أضعف، وقرارات متعبة. العلاج أن تضع حداً أقصى لعدد الصفقات في اليوم، مثل صفقتين فقط، وأن تتذكر أن عدم الدخول قرار صحيح تماماً عندما لا يعطيك السوق إعداداً واضحاً حسب خطتك. فالمتداول المنضبط يقضي وقتاً في الانتظار أطول بكثير من الوقت الذي يقضيه داخل الصفقات."
+    },
+    {
+     "id": "s6",
+     "title": "الـ FOMO: مثال على الذهب",
+     "narration": "الـ FOMO اختصار Fear Of Missing Out، أي الخوف من أن تفوتك الحركة. مثال: الساعة 8:30 بتوقيت نيويورك صدر خبر اقتصادي، فقفز الذهب من 2330 إلى 2348 خلال دقائق. متداول رأى الشموع الخضراء الكبيرة فاشترى عند 2347 دون خطة، لأنه شعر أن القطار سيفوته. بعد قليل تراجع السعر إلى 2336، فخسر أحد عشر دولاراً من حركة السعر في كل أونصة. المشكلة أنه دخل في نهاية الحركة، بوقف غير محسوب وبعيد عن أي مستوى منطقي. القاعدة: إذا فاتتك الحركة فقد فاتتك، والسوق سيعطيك فرصة أخرى غداً."
+    },
+    {
+     "id": "s7",
+     "title": "تقبّل الخسارة",
+     "narration": "لا توجد طريقة تربح في كل صفقة. حتى الخطة الجيدة قد تربح خمس صفقات من عشر فقط، وتبقى رابحة إذا كان متوسط الربح ضعف متوسط الخسارة. لنحسبها: خمس خسائر بعشرة دولارات تساوي خمسين دولاراً، وخمسة أرباح بعشرين دولاراً تساوي مئة دولار، والصافي خمسون دولاراً ربحاً. لكن هذه الصفقات لا تأتي بالترتيب، فقد تأتي أربع خسائر متتالية. إذا رأيت الخسارة إهانة شخصية فستكسر خطتك عند أول سلسلة سيئة. انظر إليها كتكلفة عمل محسوبة مسبقاً، وقيّم نفسك على التزامك بالخطة لا على نتيجة صفقة واحدة. والخسارة الصغيرة المحسوبة ليست فشلاً، بل هي ثمن البقاء في اللعبة."
+    },
+    {
+     "id": "s8",
+     "title": "الروتين اليومي",
+     "narration": "الروتين يقلل القرارات العاطفية لأنه يجعل التداول عملاً منظماً. قبل الجلسة خصص عشر دقائق لمراجعة الأخبار المهمة في اليوم، وتحديد المستويات الرئيسية على الإطار الأكبر، وكتابة ما الذي سيجعلك تدخل وما الذي سيمنعك. أثناء الجلسة التزم بحدودك: عدد صفقات أقصى، وحد خسارة يومي مثل 2 بالمئة من الحساب، فإذا وصلت إليه تغلق المنصة حتى الغد. وبعد الجلسة سجّل صفقاتك وحالتك النفسية في دفتر التداول. ولا تتداول وأنت متعب أو غاضب أو تحت ضغط مالي، فهذه الحالات تضعف الحكم مهما كانت خبرتك. ومع الوقت يصبح هذا الروتين عادة تحميك في الأيام الصعبة."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: المشاعر لن تختفي، لكن يمكنك أن تبني نظاماً يقلل تأثيرها. اكتب خطتك قبل الجلسة، وخاطر بنحو 1 بالمئة أو أقل في كل صفقة، وضع الوقف والهدف قبل الدخول ولا تبعد الوقف أبداً. ضع حداً يومياً للخسارة وحداً لعدد الصفقات، وابتعد عن الشاشة بعد كل خسارة. لا تطارد حركة فاتتك، ولا تضاعف الحجم بعد ربح أو خسارة. وفي نهاية كل أسبوع اسأل نفسك سؤالاً واحداً: هل نفذت خطتي كما كتبتها؟ إذا كان الجواب نعم فأنت تتقدم، حتى لو كان الأسبوع خاسراً. وإذا كان لا، فالمشكلة في الانضباط قبل أن تكون في الطريقة."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why Psychology Matters",
+     "narration": "You may learn the best way to read a chart and still lose because of your own decisions, not because of the method. Trading puts you in front of real money that moves before your eyes every second, and this stirs strong emotions such as fear, greed, anger and excitement. These emotions are natural in every human being, and the problem is not that they exist but that they make the decision instead of you. Discipline means executing your written plan even when you do not feel like it. In this lesson we learn the most common psychological traps, how to spot them early, and the practical rules that protect you from them. Remember that a professional is not someone who never feels fear, but someone who does not let it decide."
+    },
+    {
+     "id": "s2",
+     "title": "Fear",
+     "narration": "Fear shows up in many forms. After a series of losses you may hesitate to enter even though every condition of your plan is met, and you miss the good trade. Or you may close a winning trade far too early at the first small pullback, taking a small profit while your losses stay at full size, and over time this destroys your reward to risk ratio. The cure starts with size. If the fear is intense, you are probably risking more than you can handle, so lower your risk to half a percent, for example. Then set the stop and the target in advance, and let the trade work without staring at every small move on the chart. With repetition at a small size, fear turns into confidence built on experience."
+    },
+    {
+     "id": "s3",
+     "title": "Greed",
+     "narration": "Greed is the other face of fear. It appears when you win several trades in a row and feel you cannot be wrong, so you double the size without any reason in the plan. It appears when a trade reaches its target and you cancel it to wait for more, then price comes back and hits the stop. Also when you open several trades in the same direction on correlated pairs, such as EURUSD and GBPUSD together, doubling your risk unnoticed. The cure is to have the target and the risk size written in the plan, and not to change them during the trade except by a rule set in advance, such as a partial close at a first target. The plan decides when to take profit, not your feeling in that moment."
+    },
+    {
+     "id": "s4",
+     "title": "Revenge Trading: An Example on GBPUSD",
+     "narration": "Revenge trading means entering a new trade right after a loss to win the money back, not because your plan gave a signal. Example: a trader with a 1000 dollar account sold pound dollar at 1.2750 at 8:15 London time, with a 20 pip stop and a volume of 0.05, and lost 10 dollars. Angry, he bought a few minutes later with a volume of 0.15 without any setup, and placed a wide stop of 40 pips. The stop was hit and he lost 60 dollars, six times the first loss in less than an hour. The cure is a simple rule: after any loss, step away from the screen for at least fifteen minutes, and never change the size after a loss."
+    },
+    {
+     "id": "s5",
+     "title": "Overtrading",
+     "narration": "Overtrading means opening many trades because you feel you must always be in the market. Its signs are entering trades that do not match all the conditions of your plan, trading outside the sessions you defined, or jumping between very small timeframes looking for any movement at all. The result is higher Spread costs and commissions, weaker focus and tired decisions. The cure is to set a maximum number of trades per day, such as only two, and to remember that not entering is a completely correct decision when the market does not give you a clear setup according to your plan. A disciplined trader spends far more time waiting than inside trades."
+    },
+    {
+     "id": "s6",
+     "title": "FOMO: An Example on Gold",
+     "narration": "FOMO stands for Fear Of Missing Out, the fear that the move will leave without you. Example: at 8:30 New York time an economic report was released, and gold jumped from 2330 to 2348 within minutes. A trader saw the big green candles and bought at 2347 without a plan, because he felt the train was leaving. Shortly after, price pulled back to 2336, and he lost eleven dollars of price movement on every ounce. The problem is that he entered at the end of the move, with an uncalculated stop far from any logical level. The rule: if you missed the move, you missed it, and the market will give you another chance tomorrow."
+    },
+    {
+     "id": "s7",
+     "title": "Accepting Losses",
+     "narration": "No method wins every trade. Even a good plan may win only five trades out of ten and still be profitable if the average win is twice the average loss. Five losses of ten dollars equal fifty dollars, five wins of twenty dollars equal one hundred dollars, and the net is fifty dollars of profit. But these trades do not come in order, and four losses may come in a row. If you see a loss as a personal insult, you will break your plan at the first bad streak. See it as a business cost calculated in advance, and judge yourself on how well you followed the plan, not on the result of a single trade. A small, calculated loss is not failure; it is the price of staying in the game."
+    },
+    {
+     "id": "s8",
+     "title": "The Daily Routine",
+     "narration": "A routine reduces emotional decisions because it turns trading into organized work. Before the session, set aside ten minutes to check the day's important news, mark the key levels on the higher timeframe, and write down what would make you enter and what would stop you. During the session, keep to your limits: a maximum number of trades, and a daily loss limit such as 2 percent of the account; if you reach it, you close the platform until tomorrow. After the session, record your trades and your emotional state in the trading journal. And do not trade while tired, angry or under financial pressure, because these states weaken judgement no matter how experienced you are. Over time this routine becomes a habit that protects you on hard days."
+    },
+    {
+     "id": "s9",
+     "title": "The Practical Rule",
+     "narration": "Emotions will not disappear, but you can build a system that reduces their effect. Write your plan before the session, risk about 1 percent or less per trade, set the stop and the target before entering, and never move the stop further away. Set a daily loss limit and a limit on the number of trades, and step away from the screen after every loss. Do not chase a move you missed, and do not double the size after a win or a loss. Each weekend, ask yourself one question: did I execute my plan as I wrote it? If the answer is yes, you are making progress, even if the week was a losing one. If it is no, the problem lies in discipline before it lies in the method."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی دەروونناسی گرنگە",
+     "narration": "لەوانەیە باشترین ڕێگای خوێندنەوەی هێڵکاری فێربیت، پاشان بەهۆی بڕیارەکانی خۆتەوە زیان بکەیت نەک بەهۆی ڕێگاکەوە. بازرگانی تۆ دەخاتە بەردەم پارەی ڕاستەقینە کە هەموو چرکەیەک لە بەرچاوت دەجووڵێت، و ئەمە هەستی بەهێز دەورووژێنێت وەک ترس و تەماع و تووڕەیی و حەماسەت. ئەم هەستانە لای هەموو مرۆڤێک سروشتین، و کێشەکە لە بوونیاندا نییە بەڵکو لەوەدایە کە لە جیاتی تۆ بڕیار بدەن. دیسیپلین واتە پلانە نووسراوەکەت جێبەجێ بکەیت تەنانەت کاتێک حەزت لێی نییە. لەم وانەیەدا بەناوبانگترین داوە دەروونییەکان دەناسین، و چۆن زوو بیاندۆزیتەوە، و ئەو یاسا کردارییانەی کە لێیان دەتپارێزن. لەبیرت بێت کە پیشەگەر ئەو کەسە نییە کە هەست بە ترس ناکات، بەڵکو ئەوەیە کە ڕێگەی پێنادات بڕیار بدات."
+    },
+    {
+     "id": "s2",
+     "title": "ترس",
+     "narration": "ترس بە چەندین شێوە دەردەکەوێت. دوای زنجیرەیەک زیان لەوانەیە دوودڵ بیت لە چوونەژوورەوە هەرچەندە هەموو مەرجەکانی پلانەکەت هاتوونەتەدی، و مامەڵە باشەکەت لەدەست دەچێت. یان لەوانەیە مامەڵەی قازانجدار زۆر زوو دابخەیت لە یەکەم گەڕانەوەی بچووکدا، قازانجێکی بچووک وەردەگریت لە کاتێکدا زیانەکانت بە قەبارەی تەواوی خۆیانن، و ئەمە بە تێپەڕبوونی کات ڕێژەی قازانج بۆ مەترسی تێکدەدات. چارەسەر لە قەبارەوە دەست پێدەکات، ئەگەر ترسەکە زۆر بوو ئەوا بەزۆری زیاتر لە توانات مەترسی دەکەیت، بۆیە مەترسی کەم بکەرەوە بۆ نیو لەسەد بۆ نموونە. پاشان وەستان و ئامانج پێشوەختە دابنێ، و ڕێگە بدە مامەڵەکە کار بکات بەبێ ئەوەی سەیری هەموو جووڵەیەکی بچووک بکەیت. بە دووبارەکردنەوە لەسەر قەبارەی بچووک، ترس دەبێتە متمانەیەک کە لەسەر ئەزموون بنیات نراوە."
+    },
+    {
+     "id": "s3",
+     "title": "تەماع",
+     "narration": "تەماع ڕووەکەی تری ترسە. کاتێک دەردەکەوێت کە چەند مامەڵەیەک لە دوای یەک قازانج دەکەیت و هەست دەکەیت هەڵە ناکەیت، بۆیە قەبارە دوو هێندە دەکەیت بەبێ هۆکارێک لە پلاندا. دەردەکەوێت کاتێک مامەڵەکە دەگاتە ئامانج و تۆ هەڵیدەوەشێنیتەوە و چاوەڕێی زیاتر دەکەیت، پاشان نرخ دەگەڕێتەوە و وەستانەکە دەپێکێت. هەروەها دەردەکەوێت کاتێک چەند مامەڵەیەک بە هەمان ئاراستە لەسەر جووتە پەیوەندیدارەکان دەکەیتەوە، وەک EURUSD و GBPUSD پێکەوە، بۆیە مەترسییەکەت بەبێ ئاگاداری دوو هێندە دەبێت. چارەسەر ئەوەیە ئامانج و قەبارەی مەترسی لە پلاندا نووسرابن، و لە کاتی مامەڵەدا نەیانگۆڕیت جگە لە ڕێگەی یاسایەکی پێشوەختە، وەک داخستنی بەشێک لە ئامانجی یەکەمدا. پلانەکەیە کە بڕیار دەدات کەی قازانج وەربگریت، نەک هەستت لەو ساتەدا."
+    },
+    {
+     "id": "s4",
+     "title": "بازرگانی تۆڵەسەندنەوە: نموونە لەسەر GBPUSD",
+     "narration": "بازرگانی تۆڵەسەندنەوە ئەوەیە دوای زیانێک دەستبەجێ مامەڵەیەکی نوێ بکەیتەوە بۆ گەڕاندنەوەی پارەکە، نەک لەبەر ئەوەی پلانەکەت نیشانەی دابێت. نموونە: بازرگانێک بە هەژمارێکی 1000 دۆلاری پاوەند دۆلاری لە 1.2750 فرۆشت لە کاتژمێر 8:15 بە کاتی لەندەن، بە وەستانی 20 پیپ و قەبارەی 0.05، و 10 دۆلار زیانی کرد. تووڕە بوو، و دوای چەند خولەکێک بە قەبارەی 0.15 کڕی بەبێ هیچ ئامادەکارییەک، و وەستانێکی دووری 40 پیپی دانا. وەستانەکە پێکرا و 60 دۆلار زیانی کرد، واتە شەش هێندەی زیانی یەکەم لە کەمتر لە کاتژمێرێکدا. چارەسەر یاسایەکی سادەیە: دوای هەر زیانێک لانیکەم پازدە خولەک لە شاشە دوور بکەوەرەوە، و هەرگیز دوای زیان قەبارە مەگۆڕە."
+    },
+    {
+     "id": "s5",
+     "title": "زیادەڕەوی لە بازرگانی Overtrading",
+     "narration": "زیادەڕەوی لە بازرگانی، واتە Overtrading، ئەوەیە مامەڵەی زۆر بکەیتەوە چونکە هەست دەکەیت دەبێت هەمیشە لە ناو بازاڕدا بیت. نیشانەکانی ئەوەن کە مامەڵەیەک بکەیتەوە کە لەگەڵ هەموو مەرجەکانی پلانەکەت ناگونجێت، یان لە دەرەوەی ئەو دانیشتنانە بازرگانی بکەیت کە دیاریت کردوون، یان لە نێوان چوارچێوەی کاتی زۆر بچووکدا باز بدەیت بە دوای هەر جووڵەیەکدا. ئەنجامەکەی تێچووی Spread و کۆمیسیۆنی بەرزترە، و سەرنجی لاوازتر، و بڕیاری ماندوو. چارەسەر ئەوەیە سنوورێکی زۆرینە بۆ ژمارەی مامەڵەکان لە ڕۆژێکدا دابنێیت، وەک تەنها دوو مامەڵە، و لەبیرت بێت کە نەچوونەژوورەوە بڕیارێکی تەواو دروستە کاتێک بازاڕ ئامادەکارییەکی ڕوونت بەپێی پلانەکەت پێنادات. بازرگانی بە دیسیپلین کاتێکی زۆر زیاتر لە چاوەڕوانیدا بەسەر دەبات وەک لە ناو مامەڵەکاندا."
+    },
+    {
+     "id": "s6",
+     "title": "FOMO: نموونە لەسەر زێڕ",
+     "narration": "FOMO کورتکراوەی Fear Of Missing Out ە، واتە ترس لەوەی جووڵەکەت لەدەست بچێت. نموونە: لە کاتژمێر 8:30 بە کاتی نیویۆرک هەواڵێکی ئابووری بڵاوکرایەوە، و زێڕ لە ماوەی چەند خولەکێکدا لە 2330 وە بازی دا بۆ 2348. بازرگانێک مۆمە سەوزە گەورەکانی بینی و لە 2347 کڕی بەبێ پلان، چونکە هەستی کرد شەمەندەفەرەکە دەڕوات. دوای کەمێک نرخ گەڕایەوە بۆ 2336، و یازدە دۆلار لە جووڵەی نرخ لەسەر هەر ئۆنسەیەک زیانی کرد. کێشەکە ئەوەیە لە کۆتایی جووڵەکەدا چووە ژوورەوە، بە وەستانێکی حیسابنەکراو و دوور لە هەر ئاستێکی لۆژیکی. یاسا: ئەگەر جووڵەکەت لەدەست چوو ئەوا لەدەست چوو، و بازاڕ سبەی دەرفەتێکی ترت پێدەدات."
+    },
+    {
+     "id": "s7",
+     "title": "قبوڵکردنی زیان",
+     "narration": "هیچ ڕێگایەک نییە لە هەموو مامەڵەیەکدا قازانج بکات. تەنانەت پلانێکی باش لەوانەیە تەنها پێنج مامەڵە لە دە قازانج بکات، و هێشتا قازانجدار بمێنێتەوە ئەگەر تێکڕای قازانج دوو هێندەی تێکڕای زیان بێت. با حیسابی بکەین: پێنج زیان بە دە دۆلار یەکسانە بە پەنجا دۆلار، و پێنج قازانج بە بیست دۆلار یەکسانە بە سەد دۆلار، و پوختەکەی پەنجا دۆلار قازانجە. بەڵام ئەم مامەڵانە بە ڕیز نایەن، لەوانەیە چوار زیان لە دوای یەک بێت. ئەگەر زیان وەک سووکایەتییەکی کەسی ببینیت، لە یەکەم زنجیرەی خراپدا پلانەکەت دەشکێنیت. وەک تێچووی کارێکی پێشوەختە حیسابکراو سەیری بکە، و خۆت هەڵبسەنگێنە لەسەر پابەندبوونت بە پلان نەک ئەنجامی یەک مامەڵە. زیانی بچووکی حیسابکراو شکست نییە، بەڵکو نرخی مانەوەیە لە یارییەکەدا."
+    },
+    {
+     "id": "s8",
+     "title": "ڕۆتینی ڕۆژانە",
+     "narration": "ڕۆتین بڕیارە هەستییەکان کەم دەکاتەوە چونکە بازرگانی دەکاتە کارێکی ڕێکخراو. پێش دانیشتن دە خولەک تەرخان بکە بۆ پێداچوونەوەی هەواڵە گرنگەکانی ڕۆژ، و دیاریکردنی ئاستە سەرەکییەکان لەسەر چوارچێوەی گەورەتر، و نووسینی ئەوەی کە وات لێدەکات بچیتە ژوورەوە و ئەوەی ڕێگرت دەبێت. لە کاتی دانیشتندا پابەندی سنوورەکانت بە: ژمارەیەکی زۆرینەی مامەڵە، و سنووری زیانی ڕۆژانە وەک 2 لەسەدی هەژمار، ئەگەر گەیشتیتە ئەوێ پلاتفۆرمەکە دادەخەیت تا سبەی. دوای دانیشتن مامەڵەکانت و دۆخی دەروونیت لە دەفتەری بازرگانیدا تۆمار بکە. و بازرگانی مەکە لە کاتێکدا ماندوویت یان تووڕەیت یان لەژێر فشاری داراییدایت، چونکە ئەم دۆخانە حوکمدان لاواز دەکەن هەرچەندە ئەزموونت هەبێت. بە تێپەڕبوونی کات ئەم ڕۆتینە دەبێتە خوویەک کە لە ڕۆژە سەختەکاندا دەتپارێزێت."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کرداری",
+     "narration": "یاسای کرداری: هەستەکان نامێنن، بەڵام دەتوانیت سیستەمێک بنیات بنێیت کە کاریگەرییان کەم بکاتەوە. پلانەکەت پێش دانیشتن بنووسە، و لە هەر مامەڵەیەکدا نزیکەی 1 لەسەد یان کەمتر مەترسی بکە، و وەستان و ئامانج پێش چوونەژوورەوە دابنێ و هەرگیز وەستانەکە دوور مەخەرەوە. سنوورێکی ڕۆژانە بۆ زیان و سنوورێک بۆ ژمارەی مامەڵەکان دابنێ، و دوای هەر زیانێک لە شاشە دوور بکەوەرەوە. بە دوای جووڵەیەکدا مەڕۆ کە لەدەستت چووە، و دوای قازانج یان زیان قەبارە دوو هێندە مەکە. لە کۆتایی هەر هەفتەیەکدا یەک پرسیار لە خۆت بکە: ئایا پلانەکەم وەک نووسیبووم جێبەجێ کرد؟ ئەگەر وەڵامەکە بەڵێ بوو ئەوا پێشدەکەویت، تەنانەت ئەگەر هەفتەکە زیاندار بووبێت. ئەگەر نەخێر بوو، کێشەکە لە دیسیپلیندایە پێش ئەوەی لە ڕێگاکەدا بێت."
+    }
+   ]
+  },
+  "basics-l2-05": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي خطة التداول",
+     "narration": "خطة التداول وثيقة مكتوبة تجيب مسبقاً عن كل سؤال قد تواجهه أثناء التداول: ماذا أتداول، ومتى، ولماذا أدخل، وأين أخرج، وكم أخاطر. الفكرة أن تتخذ القرارات المهمة وأنت هادئ قبل فتح المنصة، لا وأنت تحت ضغط حركة السعر. الخطة الجيدة بسيطة وواضحة، بحيث لو قرأها شخص آخر لاستطاع تنفيذ الصفقة نفسها. وهي لا تضمن الربح، فلا شيء يضمنه في الأسواق، لكنها تجعل نتائجك قابلة للقياس والتحسين. وبدون خطة مكتوبة لا تعرف هل خسرت لأن الطريقة ضعيفة أم لأنك لم تلتزم بها. لذلك نكتبها في هذا الدرس خطوة بخطوة."
+    },
+    {
+     "id": "s2",
+     "title": "الأسواق والأوقات والإطارات",
+     "narration": "أول قسم في الخطة يحدد أين ومتى تتداول. اختر عدداً قليلاً من الأدوات، مثل EURUSD والذهب فقط في البداية، لأنك ستتعلم طباعها بسرعة أكبر. ثم حدد الجلسة، مثلاً جلسة لندن من 8:00 إلى 11:00 بتوقيت لندن، أو بداية جلسة نيويورك من 8:30 إلى 11:00 بتوقيت نيويورك، وهي أوقات الحركة والسيولة الأعلى. بعد ذلك حدد الإطارات الزمنية، مثلاً H4 لمعرفة الاتجاه العام وH1 أو M15 للدخول. واكتب أيضاً متى لا تتداول، مثل الدقائق المحيطة بالأخبار القوية، أو يوم الجمعة بعد الظهر، أو عندما تكون متعباً. فالوقت الذي لا تتداول فيه جزء من الخطة أيضاً."
+    },
+    {
+     "id": "s3",
+     "title": "قواعد الدخول",
+     "narration": "قواعد الدخول يجب أن تكون محددة بحيث تجيب عنها بنعم أو لا. مثال لخطة مبتدئ: الشرط الأول أن يكون الاتجاه على H4 صاعداً، أي قمم وقيعان أعلى. الشرط الثاني أن يعود السعر إلى مستوى دعم واضح على H1. الشرط الثالث أن تغلق شمعة ابتلاعية صاعدة، أي Bullish Engulfing، عند هذا المستوى، والمهم أنها شمعة مغلقة لا شمعة ما زالت تتشكل. الشرط الرابع أن تكون نسبة العائد إلى المخاطرة 1 إلى 2 على الأقل. إذا غاب شرط واحد فلا صفقة. هذه الصرامة هي التي تحميك من الدخول بدافع الملل أو الحماس."
+    },
+    {
+     "id": "s4",
+     "title": "قواعد الخروج",
+     "narration": "قواعد الخروج لا تقل أهمية عن الدخول، وتُكتب قبل فتح الصفقة. أولاً وقف الخسارة، ومكانه المنطقي خلف المستوى الذي بنيت عليه الفكرة، مثلاً تحت قاع شمعة الابتلاع أو تحت الدعم ببضع نقاط، لا في رقم عشوائي. ثانياً الهدف، ويكون عند مستوى مقاومة واضح أو عند ضعف المسافة إلى الوقف على الأقل. ثالثاً قاعدة الإدارة، مثل إغلاق نصف الصفقة عند تحقيق ربح يساوي المخاطرة ثم نقل الوقف إلى نقطة الدخول. ورابعاً قاعدة الوقت، مثل إغلاق الصفقة يدوياً إذا لم تتحرك قبل نهاية الجلسة. ولا تغيّر أياً منها بعد الدخول بدافع الشعور."
+    },
+    {
+     "id": "s5",
+     "title": "قواعد المخاطرة وحد الخسارة اليومي",
+     "narration": "قسم المخاطرة هو الذي يبقيك في السوق مدة كافية لتتعلم. القاعدة الأساسية ألا تخاطر بأكثر من 1 بالمئة من الحساب في الصفقة الواحدة، وكثير من المبتدئين يبدؤون بنصف بالمئة. ثم حد الخسارة اليومي، مثلاً 2 بالمئة أو خسارتان متتاليتان، وعندها تتوقف حتى اليوم التالي مهما كانت الفرص. ثم حد أسبوعي، مثلاً 5 بالمئة، وعنده تتوقف وتراجع ما حدث. وأضف حداً لعدد الصفقات اليومية، ومنع فتح صفقتين في الاتجاه نفسه على أزواج مترابطة. بحساب 1000 دولار يعني هذا عشرة دولارات للصفقة وعشرين دولاراً كحد يومي. فهذه الأرقام الصغيرة هي التي تحمي الحساب."
+    },
+    {
+     "id": "s6",
+     "title": "مثال: تطبيق الخطة على EURUSD",
+     "narration": "لنطبق الخطة على اليورو دولار. على H4 الاتجاه صاعد بقمم وقيعان أعلى. الساعة 9:00 بتوقيت لندن عاد السعر إلى دعم 1.0900 على H1، وعند 10:00 أغلقت شمعة ابتلاعية صاعدة عند 1.0912. كل الشروط متحققة، فندخل شراء عند 1.0912. الوقف تحت قاع الشمعة والدعم عند 1.0892، أي عشرون نقطة. الهدف عند مقاومة 1.0952، أي أربعون نقطة، والنسبة 1 إلى 2. بحساب 1000 دولار ومخاطرة 1 بالمئة يكون الحجم 0.05 لوت. وعند 1.0932 نغلق النصف وننقل الوقف إلى 1.0912، كما تقول قاعدة الإدارة المكتوبة، لا كما يقول الشعور."
+    },
+    {
+     "id": "s7",
+     "title": "حقول دفتر التداول",
+     "narration": "دفتر التداول، أي Trading Journal، هو سجلك الشخصي لكل صفقة، ويمكن أن يكون جدولاً بسيطاً. الحقول الأساسية هي: التاريخ والوقت والجلسة، والأداة، والاتجاه شراء أو بيع، وسبب الدخول حسب شروط الخطة، وسعر الدخول والوقف والهدف، والحجم ونسبة المخاطرة، ونتيجة الصفقة بالدولار وبمضاعفات المخاطرة، مثل زائد 2R أو ناقص 1R، حيث R هي قيمة المخاطرة. ثم حقلان مهمان جداً: هل التزمت بالخطة نعم أم لا، وما حالتك النفسية قبل الصفقة وأثناءها. وأضف صورة للرسم البياني عند الدخول وعند الخروج، فالصور تكشف ما لا تكشفه الأرقام. ويكفي أن تملأه في دقيقتين بعد كل صفقة."
+    },
+    {
+     "id": "s8",
+     "title": "مثال: تسجيل صفقة على USDJPY",
+     "narration": "مثال لتسجيل صفقة على الدولار ين. التاريخ يوم الثلاثاء، الساعة 9:45 بتوقيت نيويورك، الجلسة نيويورك. الاتجاه بيع، والسبب أن H4 هابط والسعر عاد إلى مقاومة 151.30 وأغلقت شمعة ابتلاعية هابطة. الدخول 151.20، والوقف 151.45 أي خمس وعشرون نقطة، والهدف 150.70 أي خمسون نقطة. في الين قيمة النقطة للوت الكامل قرابة 6.6 دولار، فبمخاطرة 10 دولارات يكون الحجم 0.06 لوت. النتيجة: ضُرب الوقف، ناقص 1R، أي نحو 10 دولارات. الالتزام بالخطة: نعم. الحالة النفسية: هادئ. الملاحظة: صفقة صحيحة خاسرة، ولا يلزم أي تغيير. فالحكم يكون على جودة القرار، لا على نتيجة صفقة واحدة فقط."
+    },
+    {
+     "id": "s9",
+     "title": "المراجعة الأسبوعية والأخطاء الشائعة",
+     "narration": "في نهاية كل أسبوع خصص نصف ساعة لمراجعة الدفتر. احسب عدد الصفقات، ونسبة الصفقات الرابحة، ومجموع النتيجة بوحدة R، ثم أهم رقم وهو نسبة الصفقات التي التزمت فيها بالخطة. افصل بين الصفقات الملتزمة وغير الملتزمة، وقارن نتيجة كل مجموعة، وستجد غالباً أن معظم الخسائر الكبيرة جاءت من صفقات خارج الخطة. ثم اختر تحسيناً واحداً فقط للأسبوع القادم. ومن الأخطاء الشائعة تغيير الخطة بعد كل خسارة، والحكم عليها قبل عشرين صفقة على الأقل، والتوقف عن الكتابة في الدفتر عندما تسوء النتائج، وهو الوقت الذي تحتاجه فيه أكثر."
+    },
+    {
+     "id": "s10",
+     "title": "قالب جاهز والقاعدة العملية",
+     "narration": "إليك قالباً جاهزاً تنسخه في ورقة واحدة. السطر الأول: الأدوات EURUSD والذهب. الثاني: الجلسة لندن من 8:00 إلى 11:00. الثالث: الإطارات H4 للاتجاه وH1 للدخول. الرابع: شروط الدخول الأربعة بنعم أو لا. الخامس: الوقف خلف المستوى، والهدف بنسبة 1 إلى 2 على الأقل، وإغلاق النصف عند 1R. السادس: مخاطرة 1 بالمئة، وحد يومي 2 بالمئة، وحد أسبوعي 5 بالمئة، وصفقتان يومياً كحد أقصى. السابع: تسجيل كل صفقة ومراجعة أسبوعية. والقاعدة العملية: اكتب الخطة، وجرّبها على حساب تجريبي، وسجّل كل شيء، ولا تعدّلها إلا بعد مراجعة مبنية على أرقام."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What a Trading Plan Is",
+     "narration": "A trading plan is a written document that answers in advance every question you may face while trading: what do I trade, when, why do I enter, where do I exit, and how much do I risk. The idea is to make the important decisions while you are calm, before opening the platform, not under the pressure of moving price. A good plan is simple and clear, so that if another person read it, they could execute the same trade. It does not guarantee profit, because nothing guarantees it in the markets, but it makes your results measurable and improvable. Without a written plan, you cannot tell whether you lost because the method is weak or because you did not follow it. That is why we write it step by step in this lesson."
+    },
+    {
+     "id": "s2",
+     "title": "Markets, Times and Timeframes",
+     "narration": "The first section of the plan defines where and when you trade. Choose a small number of instruments, such as only EURUSD and gold at the start, because you will learn their behaviour faster. Then define the session, for example the London session from 8:00 to 11:00 London time, or the start of the New York session from 8:30 to 11:00 New York time, which are times of higher movement and liquidity. After that, define the timeframes, for example H4 to know the overall trend and H1 or M15 for entry. Also write down when you do not trade, such as the minutes around major news, Friday afternoon, or whenever you are tired. The time you do not trade is part of the plan too."
+    },
+    {
+     "id": "s3",
+     "title": "Entry Rules",
+     "narration": "Entry rules must be specific enough to answer with yes or no. Here is an example for a beginner's plan. The first condition is that the trend on H4 is up, meaning higher highs and higher lows. The second is that price returns to a clear support level on H1. The third is that a Bullish Engulfing candle closes at this level, and what matters is that it is a closed candle, not one that is still forming. The fourth is that the reward to risk ratio is at least 1 to 2. If a single condition is missing, there is no trade. This strictness is what protects you from entering out of boredom or excitement."
+    },
+    {
+     "id": "s4",
+     "title": "Exit Rules",
+     "narration": "Exit rules matter as much as entry rules, and they are written before the trade is opened. First, the stop loss, whose logical place is behind the level the idea is built on, for example below the low of the engulfing candle or a few pips below support, not at a random number. Second, the target, placed at a clear resistance level or at least twice the distance to the stop. Third, the management rule, such as closing half the trade when profit equals the risk and then moving the stop to the entry price. Fourth, the time rule, such as closing the trade manually if it has not moved before the session ends. Do not change any of them after entry because of a feeling."
+    },
+    {
+     "id": "s5",
+     "title": "Risk Rules and the Daily Loss Limit",
+     "narration": "The risk section is what keeps you in the market long enough to learn. The basic rule is not to risk more than 1 percent of the account on a single trade, and many beginners start with half a percent. Then comes the daily loss limit, for example 2 percent or two losses in a row, at which point you stop until the next day no matter what opportunities appear. Then a weekly limit, for example 5 percent, at which you stop and review what happened. Add a limit on the number of daily trades, and a ban on opening two trades in the same direction on correlated pairs. On a 1000 dollar account, this means ten dollars per trade and twenty dollars as the daily limit. These small numbers are what protect the account."
+    },
+    {
+     "id": "s6",
+     "title": "Example: Applying the Plan on EURUSD",
+     "narration": "Let us apply the plan to euro dollar. On H4 the trend is up, with higher highs and higher lows. At 9:00 London time, price returned to the 1.0900 support on H1, and at 10:00 a bullish engulfing candle closed at 1.0912. All conditions are met, so we buy at 1.0912. The stop goes below the candle low and the support at 1.0892, twenty pips away. The target is at the 1.0952 resistance, forty pips away, a ratio of 1 to 2. With a 1000 dollar account and 1 percent risk, the volume is 0.05 lots. At 1.0932 we close half and move the stop to 1.0912, as the written management rule says, not as our feelings say."
+    },
+    {
+     "id": "s7",
+     "title": "Trading Journal Fields",
+     "narration": "The Trading Journal is your personal record of every trade, and it can be a simple table. The basic fields are: date, time and session, the instrument, the direction, buy or sell, the reason for entry according to the plan's conditions, the entry price, stop and target, the volume and risk percentage, and the trade result in dollars and in multiples of risk, such as plus 2R or minus 1R, where R is the risk amount. Then two very important fields: did I follow the plan, yes or no, and what was my emotional state before and during the trade. Add a screenshot of the chart at entry and at exit, because pictures reveal what numbers do not. Two minutes after each trade are enough to fill it in."
+    },
+    {
+     "id": "s8",
+     "title": "Example: Recording a Trade on USDJPY",
+     "narration": "An example of recording a trade on dollar yen. The date is Tuesday, 9:45 New York time, the New York session. The direction is sell, because H4 is down, price returned to the 151.30 resistance and a bearish engulfing candle closed. Entry 151.20, stop 151.45, twenty five pips, target 150.70, fifty pips. On the yen, one pip for a full lot is worth about 6.6 dollars, so with 10 dollars of risk the volume is 0.06 lots. Result: the stop was hit, minus 1R, about 10 dollars. Followed the plan: yes. Emotional state: calm. Note: a correct trade that lost, and no change is needed. The judgement is on the quality of the decision, not on the result of a single trade only."
+    },
+    {
+     "id": "s9",
+     "title": "The Weekly Review and Common Mistakes",
+     "narration": "At the end of each week, set aside half an hour to review the journal. Count the trades, the percentage of winning trades and the total result in R, then the most important number, the percentage of trades in which you followed the plan. Separate the trades that followed the plan from those that did not, compare the result of each group, and you will often find that most big losses came from trades outside the plan. Then choose only one improvement for the next week. Common mistakes include changing the plan after every loss, judging it before at least twenty trades, and stopping writing in the journal when results get worse, which is exactly when you need it most."
+    },
+    {
+     "id": "s10",
+     "title": "A Ready Template and the Practical Rule",
+     "narration": "Here is a ready template you can copy onto a single page. Line one: instruments, EURUSD and gold. Line two: session, London from 8:00 to 11:00. Line three: timeframes, H4 for the trend and H1 for entry. Line four: the four entry conditions, answered yes or no. Line five: stop behind the level, target at least 1 to 2, and close half at 1R. Line six: 1 percent risk, a 2 percent daily limit, a 5 percent weekly limit, and a maximum of two trades a day. Line seven: record every trade and do a weekly review. The practical rule: write the plan, test it on a demo account, record everything, and change it only after a review based on numbers."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "پلانی بازرگانی چییە",
+     "narration": "پلانی بازرگانی بەڵگەنامەیەکی نووسراوە کە پێشوەختە وەڵامی هەموو پرسیارێک دەداتەوە کە لە کاتی بازرگانیدا ڕووبەڕووت دەبێتەوە: چی بازرگانی پێوە بکەم، و کەی، و بۆچی بچمە ژوورەوە، و لە کوێ دەربچم، و چەند مەترسی بکەم. بیرۆکەکە ئەوەیە بڕیارە گرنگەکان بدەیت لە کاتێکدا ئارامیت پێش کردنەوەی پلاتفۆرم، نەک لەژێر فشاری جووڵەی نرخدا. پلانی باش سادە و ڕوونە، بە شێوەیەک ئەگەر کەسێکی تر بیخوێنێتەوە بتوانێت هەمان مامەڵە جێبەجێ بکات. قازانج مسۆگەر ناکات، چونکە هیچ شتێک لە بازاڕەکاندا مسۆگەری ناکات، بەڵام ئەنجامەکانت دەکاتە شتێکی پێوانەکراو و باشترکراو. بەبێ پلانی نووسراو نازانیت ئایا زیانت کرد لەبەر ئەوەی ڕێگاکە لاوازە یان لەبەر ئەوەی پابەندی نەبوویت. بۆیە لەم وانەیەدا هەنگاو بە هەنگاو دەینووسین."
+    },
+    {
+     "id": "s2",
+     "title": "بازاڕەکان و کاتەکان و چوارچێوەکان",
+     "narration": "یەکەم بەشی پلان دیاری دەکات لە کوێ و کەی بازرگانی دەکەیت. ژمارەیەکی کەم لە ئامرازەکان هەڵبژێرە، وەک تەنها EURUSD و زێڕ لە سەرەتادا، چونکە خوو و ڕەفتاریان خێراتر فێردەبیت. پاشان دانیشتنەکە دیاری بکە، بۆ نموونە دانیشتنی لەندەن لە 8:00 تا 11:00 بە کاتی لەندەن، یان سەرەتای دانیشتنی نیویۆرک لە 8:30 تا 11:00 بە کاتی نیویۆرک، کە کاتەکانی جووڵە و شلەیی بەرزترن. دوای ئەوە چوارچێوە کاتییەکان دیاری بکە، بۆ نموونە H4 بۆ زانینی ئاراستەی گشتی و H1 یان M15 بۆ چوونەژوورەوە. هەروەها بنووسە کەی بازرگانی ناکەیت، وەک ئەو خولەکانەی دەوری هەواڵە بەهێزەکان، یان دوانیوەڕۆی هەینی، یان هەر کاتێک ماندوو بیت. ئەو کاتەی بازرگانی تێدا ناکەیت بەشێکە لە پلانیش."
+    },
+    {
+     "id": "s3",
+     "title": "یاساکانی چوونەژوورەوە",
+     "narration": "یاساکانی چوونەژوورەوە دەبێت ئەوەندە دیاریکراو بن کە بە بەڵێ یان نەخێر وەڵامیان بدەیتەوە. نموونەیەک بۆ پلانی دەستپێکەرێک: مەرجی یەکەم ئەوەیە ئاراستە لەسەر H4 بەرەو سەر بێت، واتە لووتکە و بنکەی بەرزتر. مەرجی دووەم ئەوەیە نرخ بگەڕێتەوە بۆ ئاستێکی پشتگیری ڕوون لەسەر H1. مەرجی سێیەم ئەوەیە مۆمێکی قووتدەری بەرەو سەر، واتە Bullish Engulfing، لەم ئاستەدا دابخرێت، و گرنگ ئەوەیە مۆمێکی داخراو بێت نەک مۆمێک کە هێشتا پێکدێت. مەرجی چوارەم ئەوەیە ڕێژەی قازانج بۆ مەترسی لانیکەم 1 بۆ 2 بێت. ئەگەر تەنها یەک مەرج نەبوو ئەوا مامەڵە نییە. ئەم توندییە ئەوەیە کە لە چوونەژوورەوە بەهۆی بێزاری یان حەماسەتەوە دەتپارێزێت."
+    },
+    {
+     "id": "s4",
+     "title": "یاساکانی دەرچوون",
+     "narration": "یاساکانی دەرچوون لە چوونەژوورەوە کەمتر گرنگ نین، و پێش کردنەوەی مامەڵە دەنووسرێن. یەکەم وەستانی زیان، کە شوێنە لۆژیکییەکەی لە پشت ئەو ئاستەیە کە بیرۆکەکەت لەسەر بنیات ناوە، بۆ نموونە لە خوار بنکەی مۆمی قووتدەر یان چەند پیپێک لە خوار پشتگیری، نەک لە ژمارەیەکی هەڕەمەکی. دووەم ئامانج، کە لە ئاستێکی بەرگری ڕوون دەبێت یان لانیکەم دوو هێندەی دووری وەستان. سێیەم یاسای بەڕێوەبردن، وەک داخستنی نیوەی مامەڵە کاتێک قازانج یەکسانە بە مەترسی پاشان گواستنەوەی وەستان بۆ خاڵی چوونەژوورەوە. چوارەم یاسای کات، وەک داخستنی مامەڵە بە دەست ئەگەر پێش کۆتایی دانیشتن نەجووڵا. هیچ کامیان دوای چوونەژوورەوە بەهۆی هەستەوە مەگۆڕە."
+    },
+    {
+     "id": "s5",
+     "title": "یاساکانی مەترسی و سنووری زیانی ڕۆژانە",
+     "narration": "بەشی مەترسی ئەوەیە کە بە ماوەیەکی پێویست لە بازاڕدا دەتهێڵێتەوە تا فێربیت. یاسای بنەڕەتی ئەوەیە لە یەک مامەڵەدا زیاتر لە 1 لەسەدی هەژمار مەترسی نەکەیت، و زۆرێک لە دەستپێکەران بە نیو لەسەد دەست پێدەکەن. پاشان سنووری زیانی ڕۆژانە، بۆ نموونە 2 لەسەد یان دوو زیانی لە دوای یەک، و لەوێدا ڕادەوەستیت تا ڕۆژی دواتر هەرچەندە دەرفەت هەبێت. پاشان سنوورێکی هەفتانە، بۆ نموونە 5 لەسەد، کە لەوێدا ڕادەوەستیت و پێداچوونەوە بە ئەوەی ڕوویدا دەکەیت. سنوورێکیش بۆ ژمارەی مامەڵە ڕۆژانەکان زیاد بکە، و قەدەغەکردنی کردنەوەی دوو مامەڵە بە هەمان ئاراستە لەسەر جووتە پەیوەندیدارەکان. لە هەژمارێکی 1000 دۆلاریدا ئەمە واتە دە دۆلار بۆ هەر مامەڵەیەک و بیست دۆلار وەک سنووری ڕۆژانە. ئەم ژمارە بچووکانە ئەوانەن کە هەژمارەکە دەپارێزن."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە: جێبەجێکردنی پلان لەسەر EURUSD",
+     "narration": "با پلانەکە لەسەر یۆرۆ دۆلار جێبەجێ بکەین. لەسەر H4 ئاراستە بەرەو سەرە بە لووتکە و بنکەی بەرزتر. لە کاتژمێر 9:00 بە کاتی لەندەن نرخ گەڕایەوە بۆ پشتگیری 1.0900 لەسەر H1، و لە 10:00 مۆمێکی قووتدەری بەرەو سەر لە 1.0912 داخرا. هەموو مەرجەکان هاتوونەتەدی، بۆیە لە 1.0912 دەکڕین. وەستان لە خوار بنکەی مۆم و پشتگیری لە 1.0892، واتە بیست پیپ. ئامانج لە بەرگری 1.0952، واتە چل پیپ، و ڕێژەکە 1 بۆ 2 ە. بە هەژمارێکی 1000 دۆلاری و مەترسی 1 لەسەد، قەبارەکە 0.05 لۆت دەبێت. لە 1.0932 نیوەی دادەخەین و وەستان دەگوازینەوە بۆ 1.0912، وەک یاسای نووسراوی بەڕێوەبردن دەڵێت، نەک وەک هەست دەڵێت."
+    },
+    {
+     "id": "s7",
+     "title": "خانەکانی دەفتەری بازرگانی",
+     "narration": "دەفتەری بازرگانی، واتە Trading Journal، تۆماری کەسیی تۆیە بۆ هەر مامەڵەیەک، و دەکرێت خشتەیەکی سادە بێت. خانە بنەڕەتییەکان ئەمانەن: بەروار و کات و دانیشتن، و ئامراز، و ئاراستە کڕین یان فرۆشتن، و هۆکاری چوونەژوورەوە بەپێی مەرجەکانی پلان، و نرخی چوونەژوورەوە و وەستان و ئامانج، و قەبارە و ڕێژەی مەترسی، و ئەنجامی مامەڵە بە دۆلار و بە چەندجارەی مەترسی، وەک کۆ 2R یان کەم 1R، کە R بەهای مەترسییە. پاشان دوو خانەی زۆر گرنگ: ئایا پابەندی پلان بوویت بەڵێ یان نەخێر، و دۆخی دەروونیت پێش مامەڵە و لە کاتیدا چی بوو. وێنەیەکی هێڵکاری لە کاتی چوونەژوورەوە و دەرچوون زیاد بکە، چونکە وێنەکان ئەوە ئاشکرا دەکەن کە ژمارەکان ئاشکرای ناکەن. بەسە دوای هەر مامەڵەیەک لە دوو خولەکدا پڕی بکەیتەوە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە: تۆمارکردنی مامەڵەیەک لەسەر USDJPY",
+     "narration": "نموونەیەک بۆ تۆمارکردنی مامەڵەیەک لەسەر دۆلار یەن. بەروار سێشەممە، کاتژمێر 9:45 بە کاتی نیویۆرک، دانیشتنی نیویۆرک. ئاراستە فرۆشتن، و هۆکار ئەوەیە H4 بەرەو خوارە و نرخ گەڕاوەتەوە بۆ بەرگری 151.30 و مۆمێکی قووتدەری بەرەو خوار داخرا. چوونەژوورەوە 151.20، و وەستان 151.45 واتە بیست و پێنج پیپ، و ئامانج 150.70 واتە پەنجا پیپ. لە یەندا بەهای پیپ بۆ لۆتی تەواو نزیکەی 6.6 دۆلارە، بۆیە بە مەترسی 10 دۆلار قەبارەکە 0.06 لۆت دەبێت. ئەنجام: وەستانەکە پێکرا، کەم 1R، واتە نزیکەی 10 دۆلار. پابەندبوون بە پلان: بەڵێ. دۆخی دەروونی: ئارام. تێبینی: مامەڵەیەکی دروستی زیاندار، و هیچ گۆڕانکارییەک پێویست نییە. حوکمدان لەسەر جۆریی بڕیارەکەیە، نەک تەنها لەسەر ئەنجامی یەک مامەڵە."
+    },
+    {
+     "id": "s9",
+     "title": "پێداچوونەوەی هەفتانە و هەڵە باوەکان",
+     "narration": "لە کۆتایی هەر هەفتەیەکدا نیو کاتژمێر تەرخان بکە بۆ پێداچوونەوەی دەفتەرەکە. ژمارەی مامەڵەکان، و ڕێژەی مامەڵە قازانجدارەکان، و کۆی ئەنجام بە یەکەی R حیساب بکە، پاشان گرنگترین ژمارە کە ڕێژەی ئەو مامەڵانەیە کە تێیاندا پابەندی پلان بوویت. مامەڵە پابەندەکان و ناپابەندەکان لێک جیا بکەرەوە، و ئەنجامی هەر کۆمەڵەیەک بەراورد بکە، و بەزۆری دەبینیت کە زۆربەی زیانە گەورەکان لە مامەڵەکانی دەرەوەی پلانەوە هاتوون. پاشان تەنها یەک باشترکردن بۆ هەفتەی داهاتوو هەڵبژێرە. لە هەڵە باوەکان گۆڕینی پلانە دوای هەر زیانێک، و حوکمدان لەسەری پێش لانیکەم بیست مامەڵە، و وەستان لە نووسین لە دەفتەردا کاتێک ئەنجامەکان خراپ دەبن، کە ئەوە ئەو کاتەیە زیاترین پێویستیت پێیەتی."
+    },
+    {
+     "id": "s10",
+     "title": "قاڵبێکی ئامادە و یاسای کرداری",
+     "narration": "ئەمە قاڵبێکی ئامادەیە کە لە یەک لاپەڕەدا کۆپی دەکەیت. دێڕی یەکەم: ئامرازەکان EURUSD و زێڕ. دووەم: دانیشتن لەندەن لە 8:00 تا 11:00. سێیەم: چوارچێوەکان H4 بۆ ئاراستە و H1 بۆ چوونەژوورەوە. چوارەم: چوار مەرجی چوونەژوورەوە بە بەڵێ یان نەخێر. پێنجەم: وەستان لە پشت ئاستەکە، و ئامانج لانیکەم بە ڕێژەی 1 بۆ 2، و داخستنی نیوە لە 1R. شەشەم: مەترسی 1 لەسەد، و سنووری ڕۆژانە 2 لەسەد، و سنووری هەفتانە 5 لەسەد، و زۆرینە دوو مامەڵە لە ڕۆژێکدا. حەوتەم: تۆمارکردنی هەموو مامەڵەیەک و پێداچوونەوەی هەفتانە. یاسای کرداری: پلانەکە بنووسە، و لەسەر هەژماری تاقیکاری تاقی بکەرەوە، و هەموو شتێک تۆمار بکە، و تەنها دوای پێداچوونەوەیەک کە لەسەر ژمارە بنیات نرابێت بیگۆڕە."
+    }
+   ]
   }
  }
 }

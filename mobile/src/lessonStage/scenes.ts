@@ -50,6 +50,8 @@ export type Scene = {
   steps: Step[];
   pane?: Pane;
   view: [number, number];
+  /** several worked examples played one after the other inside one lesson part */
+  seq?: Scene[];
 };
 
 export type Frame = {
@@ -58,6 +60,9 @@ export type Frame = {
   shapes: { s: Shape; q: number }[];
   cursor: { i: number; p: number; pane?: boolean; down: boolean; click: number };
   caption: string;
+  /** which example of the part is on screen, and its instrument */
+  part?: number;
+  symbol?: string;
 };
 
 // ------------------------------------------------------------------ colours
@@ -155,6 +160,19 @@ const W: Record<string, [string, string]> = {
   c_manage: ['ندير الصفقة', 'Managing the trade'],
   c_journal: ['نسجل نتيجة كل صفقة', 'Recording each trade'],
   c_pd: ['نقسم النطاق إلى غالٍ ورخيص', 'Splitting the range: premium and discount'],
+  mirrorOB: ['Order Block معاكس', 'Opposite OB'],
+  noNewLow: ['لا قاع جديد', 'No new low'],
+  closeThrough: ['إغلاق عبر الفجوة', 'Closed through the gap'],
+  c_sweep: ['السعر يصطاد السيولة', 'Price sweeps the liquidity'],
+  longWick: ['ذيل طويل', 'Long wick'],
+  pushAway: ['دفعة بعيداً', 'Push away'],
+  openPrice: ['سعر الافتتاح', 'Open price'],
+  realMove: ['الحركة الحقيقية', 'The real move'],
+  weekOpen: ['افتتاح الأسبوع', 'Week open'],
+  height: ['الارتفاع', 'Height'],
+  filled: ['تنفيذ الأمر', 'Order filled'],
+  c_trend: ['نحدد الاتجاه', 'Reading the trend'],
+  strongDep: ['انطلاق قوي = منطقة قوية', 'Strong departure = strong zone'],
 };
 
 // ------------------------------------------------------------------ symbols
@@ -246,6 +264,17 @@ const P = (i: number, p: number, pane?: boolean): Pt => (pane ? { i, p, pane } :
 /** Force candle i to be a solid candle in one direction (units). */
 function setCandle(c: Candle[], i: number, o: number, cl: number, wick = 0.15) {
   c[i] = { o, c: cl, h: Math.max(o, cl) + wick, l: Math.min(o, cl) - wick };
+  if (i + 1 < c.length) {
+    c[i + 1].o = cl;
+    c[i + 1].h = Math.max(c[i + 1].h, cl);
+    c[i + 1].l = Math.min(c[i + 1].l, cl);
+  }
+}
+
+/** Candle i closes at `cl`, opening at the previous close; optional absolute high / low. */
+function K(c: Candle[], i: number, cl: number, h?: number, l?: number) {
+  const o = i > 0 ? c[i - 1].c : c[i].o;
+  c[i] = { o, c: cl, h: Math.max(h ?? 0, Math.max(o, cl) + (h === undefined ? 0.12 : 0)), l: Math.min(l ?? 1e9, Math.min(o, cl) - (l === undefined ? 0.12 : 0)) };
   if (i + 1 < c.length) {
     c[i + 1].o = cl;
     c[i + 1].h = Math.max(c[i + 1].h, cl);
@@ -1094,6 +1123,7 @@ const S: Record<string, Builder> = {
       { s: { k: 'ring', at: P(40, c[40].l), color: GOLD, label: ctx.T('firstTouch'), below: true } },
     ];
     if (v === 'base') steps.unshift({ view: [8, 26], w: 1 }, { view: [-0.5, 61], w: 0.6 });
+    if (v === 'strength') steps.splice(2, 0, { s: { k: 'ruler', a: P(24, 3.2), b: P(24, c[30].h), text: ctx.T('strongDep') }, w: 1.4 });
     return { candles: c, n0: 30, steps };
   },
 
@@ -1115,6 +1145,682 @@ const S: Record<string, Builder> = {
         { s: { k: 'hline', p: entry, i0: 26, color: GOLD, label: 'SL → BE' } },
         { reveal: 56, w: 1.5 },
         { s: { k: 'path', pts: [P(30, c[30].l - 0.3), P(36, c[30].l - 0.3), P(36, c[42].l - 0.3), P(48, c[42].l - 0.3)], color: PURP, labels: [], w: 1.6 }, cap: ctx.T('trail') },
+      ],
+    };
+  },
+
+  // ============================================================== more scenes (ICT / SMC)
+  breaker(ctx) {
+    const c = walk(ctx, [[0, 4], [8, 8], [13, 9.6], [14, 10], [18, 5.5], [24, 2.4], [27, 3.4], [31, 8.5], [35, 11.8], [38, 10.8], [40, 10.4], [46, 13], [55, 16.5]], 0.26);
+    K(c, 14, 10.4);
+    K(c, 15, 8.6);
+    const lo = c[14].l;
+    const hi = c[14].h;
+    const sw = loIdx(c, 20, 28);
+    let brk = 33;
+    for (let i = 29; i < 44; i++)
+      if (c[i].c > hi) {
+        brk = i;
+        break;
+      }
+    wickTo(c, 41, hi - 0.3);
+    return {
+      candles: c,
+      n0: 24,
+      steps: [
+        { s: { k: 'box', a: P(14, lo), b: P(brk, hi), color: BEAR, label: ctx.T('mirrorOB') }, cap: ctx.T('c_ob'), w: 1.3 },
+        { reveal: 30, w: 1.2 },
+        { s: { k: 'ring', at: P(sw, c[sw].l), color: GOLD, label: ctx.T('sweep'), below: true } },
+        { s: { k: 'line', a: P(14, hi), b: P(brk, hi), color: ACC, label: 'BOS' }, cap: ctx.T('c_bos') },
+        { s: { k: 'box', a: P(brk, lo), b: P(55, hi), color: ACC, label: 'Breaker' }, cap: ctx.T('c_zone'), w: 1.4 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'ring', at: P(41, c[41].l), color: BULL, label: ctx.T('retest'), below: true } },
+      ],
+    };
+  },
+
+  mitigation(ctx) {
+    const c = walk(ctx, [[0, 9], [8, 10], [16, 2], [24, 7], [29, 3.4], [32, 3.6], [34, 8.4], [40, 10.5], [44, 7], [46, 6.2], [55, 12]], 0.26);
+    const a = loIdx(c, 12, 20);
+    const hl = loIdx(c, 27, 33);
+    K(c, hl, c[hl].c);
+    const zl = c[hl].l;
+    const zh = Math.max(c[hl].o, c[hl].c) + 0.5;
+    wickTo(c, 45, zh - 0.2);
+    return {
+      candles: c,
+      n0: 26,
+      steps: [
+        { s: { k: 'ring', at: P(a, c[a].l), color: BEAR, label: 'Low', below: true }, cap: ctx.T('c_swings') },
+        { reveal: 36, w: 1.4 },
+        { s: { k: 'line', a: P(a, c[a].l), b: P(hl, c[a].l), color: GRAY, dash: true, label: ctx.T('noNewLow') }, w: 1.2 },
+        { s: { k: 'box', a: P(hl - 1, zl), b: P(55, zh), color: BLUE, label: 'MB' }, cap: ctx.T('c_zone'), w: 1.4 },
+        { s: { k: 'line', a: P(24, c[24].h), b: P(35, c[24].h), color: ACC, label: 'BOS' } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'ring', at: P(45, c[45].l), color: BULL, label: ctx.T('reaction'), below: true } },
+      ],
+    };
+  },
+
+  ifvg(ctx) {
+    const c = walk(ctx, [[0, 0], [12, -2], [16, -1], [18, 1], [19, 4], [20, 5.5], [26, 8], [30, 7], [33, 3.5], [36, -0.5], [40, 2.5], [46, -2], [55, -6]], 0.26);
+    setCandle(c, 18, 0.4, 1.1, 0.12);
+    setCandle(c, 19, 1.1, 4.3, 0.1);
+    setCandle(c, 20, 4.3, 5.6, 0.12);
+    c[20].l = Math.max(c[20].l, c[18].h + 1.2);
+    const lo = c[18].h;
+    const hi = c[20].l;
+    let cl = 34;
+    for (let i = 28; i < 44; i++)
+      if (c[i].c < lo) {
+        cl = i;
+        break;
+      }
+    c[41] = { o: lo - 1, h: lo + 0.5, l: lo - 1.6, c: lo - 1.2 };
+    c[42].o = lo - 1.2;
+    return {
+      candles: c,
+      n0: 28,
+      steps: [
+        { view: [10, 34], w: 0.8 },
+        { s: { k: 'box', a: P(18, lo), b: P(cl, hi), color: PURP, label: 'FVG' }, cap: ctx.T('c_fvg'), w: 1.3 },
+        { reveal: 38, w: 1.3 },
+        { s: { k: 'ring', at: P(cl, c[cl].c), color: BEAR, label: ctx.T('closeThrough'), below: true } },
+        { s: { k: 'box', a: P(cl, lo), b: P(55, hi), color: BEAR, label: 'IFVG' }, cap: ctx.T('c_zone'), w: 1.4 },
+        { view: [-0.5, 61], w: 0.8 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+        { s: { k: 'ring', at: P(41, c[41].h), color: BEAR, label: ctx.T('reaction') } },
+      ],
+    };
+  },
+
+  bpr(ctx) {
+    const c = walk(ctx, [[0, 0], [12, -2], [16, -1], [18, 1], [19, 4], [20, 5.6], [23, 6.4], [26, 5.2], [27, 3.2], [28, 1.5], [32, -1], [35, 0.5], [38, 2.6], [44, 6], [55, 10]], 0.24);
+    K(c, 18, 1.1);
+    K(c, 19, 4.3);
+    K(c, 20, 5.6, undefined, 3.0);
+    K(c, 25, 6.0);
+    K(c, 26, 4.9, undefined, 4.4);
+    K(c, 27, 1.8);
+    K(c, 28, 1.0, 1.9);
+    wickTo(c, 38, 2.4);
+    const f1: [number, number] = [c[18].h, c[20].l];
+    const f2: [number, number] = [c[28].h, c[26].l];
+    const lo = Math.max(f1[0], f2[0]);
+    const hi = Math.min(f1[1], f2[1]);
+    return {
+      candles: c,
+      n0: 21,
+      steps: [
+        { s: { k: 'box', a: P(18, f1[0]), b: P(30, f1[1]), color: PURP, label: 'FVG ↑' }, cap: ctx.T('c_fvg'), w: 1.3 },
+        { reveal: 30, w: 1.4 },
+        { s: { k: 'box', a: P(26, f2[0]), b: P(40, f2[1]), color: BLUE, label: 'FVG ↓' }, w: 1.3 },
+        { s: { k: 'box', a: P(18, lo), b: P(55, hi), color: GOLD, label: 'BPR' }, cap: ctx.T('c_zone'), w: 1.5 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'ring', at: P(38, c[38].l), color: BULL, label: ctx.T('reaction'), below: true } },
+      ],
+    };
+  },
+
+  rejection(ctx) {
+    const c = walk(ctx, [[0, 0], [10, 4], [20, 6.5], [29, 7.2], [30, 7.0], [34, 4], [40, 6.4], [43, 8.4], [44, 8.2], [48, 5], [55, 1.5]], 0.26);
+    c[30] = { o: 7.2, c: 7.0, h: 9.8, l: 6.8 };
+    c[31].o = 7.0;
+    const bodyTop = 7.2;
+    c[44] = { o: c[43].c, h: 9.6, l: 8.0, c: 8.2 };
+    c[45].o = 8.2;
+    return {
+      candles: c,
+      n0: 32,
+      steps: [
+        { view: [20, 40], w: 0.8 },
+        { s: { k: 'ring', at: P(30, 9.8), color: GOLD, label: ctx.T('longWick') }, cap: ctx.T('c_candle') },
+        { s: { k: 'box', a: P(29, bodyTop), b: P(55, 9.8), color: BEAR, label: 'RB' }, cap: ctx.T('c_zone'), w: 1.4 },
+        { view: [-0.5, 61], w: 0.8 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 2 },
+        { s: { k: 'ring', at: P(44, 9.6), color: BEAR, label: ctx.T('reaction') } },
+      ],
+    };
+  },
+
+  propulsion(ctx) {
+    const c = walk(ctx, [[0, 8], [10, 3], [14, 4.6], [18, 1.6], [21, 0.6], [22, 3], [24, 8], [28, 6], [30, 3.0], [31, 5], [36, 10.5], [44, 13], [55, 16]], 0.26);
+    setCandle(c, 21, 1.5, 0.6, 0.2);
+    setCandle(c, 22, 0.6, 3.1, 0.1);
+    setCandle(c, 23, 3.1, 6.0, 0.1);
+    setCandle(c, 24, 6.0, 8.0, 0.15);
+    const obLo = c[21].l;
+    const obHi = c[21].h;
+    wickTo(c, 30, obHi + 0.1);
+    return {
+      candles: c,
+      n0: 26,
+      steps: [
+        { s: { k: 'box', a: P(21, obLo), b: P(55, obHi), color: BLUE, label: 'OB' }, cap: ctx.T('c_ob'), w: 1.3 },
+        { reveal: 31, w: 1.4 },
+        { s: { k: 'box', a: P(29.5, c[30].l), b: P(31.5, c[30].h), color: GOLD, label: 'PB' }, cap: ctx.T('c_zone'), w: 1.3 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'arrow', a: P(31, c[31].c), b: P(40, c[40].h), color: BULL, label: ctx.T('pushAway') } },
+      ],
+    };
+  },
+
+  displacement(ctx) {
+    const c = walk(ctx, [[0, 3], [10, 1.2], [17, 2.0], [18, 2.4], [19, 5.4], [20, 8.2], [28, 9.8], [36, 8.4], [55, 12]], 0.12, 0.18);
+    for (let i = 8; i <= 17; i++) c[i] = { o: 1.5 + (i % 2) * 0.4, c: 1.9 - (i % 2) * 0.4, h: 2.3, l: 1.1 };
+    c[18].o = c[17].c;
+    K(c, 18, 2.9, undefined, 1.9);
+    K(c, 19, 5.5, undefined, undefined);
+    K(c, 20, 8.2, undefined, 6.1);
+    c[20].l = Math.max(c[20].l, c[18].h + 0.5);
+    const rh = Math.max(...c.slice(8, 18).map((x) => x.h));
+    const rl = Math.min(...c.slice(8, 18).map((x) => x.l));
+    return {
+      candles: c,
+      n0: 18,
+      steps: [
+        { view: [4, 30], w: 0.8 },
+        { s: { k: 'box', a: P(8, rl), b: P(17.5, rh), color: GRAY, label: ctx.T('range') }, cap: ctx.T('c_zone'), w: 1.3 },
+        { reveal: 24, w: 1.2 },
+        { s: { k: 'arrow', a: P(18, c[18].l), b: P(21, c[20].h), color: BULL, label: 'Displacement' }, w: 1.5 },
+        { s: { k: 'box', a: P(19, c[18].h), b: P(30, c[20].l), color: PURP, label: 'FVG' }, cap: ctx.T('c_fvg') },
+        { s: { k: 'line', a: P(9, rh), b: P(20, rh), color: ACC, label: 'MSS' }, cap: ctx.T('c_bos') },
+        { reveal: 56, w: 1.4 },
+      ],
+    };
+  },
+
+  structure_int(ctx) {
+    const c = walk(ctx, [[0, 0], [6, 5], [9, 3.4], [12, 6.2], [15, 4.6], [20, 9.8], [24, 6.6], [27, 8.2], [30, 6.9], [36, 13], [40, 10.4], [43, 12], [46, 11], [55, 16]], 0.22);
+    const sw = [0, 6, 15, 20, 24, 36, 40, 55];
+    const swing = [6, 15, 20, 24, 36, 40].map((i, k) => P(i, k % 2 === 0 ? c[i].h : c[i].l));
+    const hh = hiIdx(c, 33, 38);
+    return {
+      candles: c,
+      n0: 30,
+      steps: [
+        { reveal: 56, w: 1.4 },
+        { s: { k: 'path', pts: swing, color: GOLD, labels: ['HH', 'HL', 'HH', 'HL', 'HH', 'HL'] }, cap: ctx.T('c_swings'), w: 2.2 },
+        { s: { k: 'path', pts: [P(20, c[20].h), P(24, c[24].l), P(27, c[27].h), P(30, c[30].l)], color: PURP, labels: ['', 'i-L', 'i-H', 'i-L'], dash: true }, w: 1.8 },
+        { s: { k: 'line', a: P(27, c[27].h), b: P(34, c[27].h), color: PURP, label: 'iBOS' }, cap: ctx.T('c_bos') },
+        { s: { k: 'ring', at: P(24, c[24].l), color: BULL, label: 'Strong Low', below: true } },
+        { s: { k: 'ring', at: P(hh, c[hh].h), color: BEAR, label: 'Weak High' } },
+        { s: { k: 'label', at: P(2, c[36].h), text: `${sw.length ? 'Swing' : ''} ≠ Internal`, color: GOLD } },
+      ],
+    };
+  },
+
+  turtle(ctx) {
+    const c = walk(ctx, [[0, 0], [8, 5], [12, 7], [14, 4], [20, 5.8], [26, 6.6], [27, 6.9], [28, 5.5], [34, 2.5], [40, 3], [46, 0], [55, -3]], 0.26);
+    const hi = c[hiIdx(c, 6, 13)].h;
+    c[27] = { o: 6.2, c: 6.0, h: hi + 1.4, l: 5.8 };
+    c[28].o = 6.0;
+    return {
+      candles: c,
+      n0: 24,
+      steps: [
+        { s: { k: 'hline', p: hi, i0: hiIdx(c, 6, 13), color: GOLD, dash: true, label: 'Old High' }, cap: ctx.T('c_liq'), w: 1.4 },
+        { reveal: 28, w: 1.2 },
+        { s: { k: 'ring', at: P(27, c[27].h), color: BEAR, label: 'Turtle Soup' }, cap: ctx.T('c_sweep'), w: 1.3 },
+        { s: { k: 'ring', at: P(28, c[28].c), color: ACC, label: ctx.T('closeBack'), below: true } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'arrow', a: P(28, c[28].c), b: P(46, c[46].l), color: BEAR, label: ctx.T('target') } },
+      ],
+    };
+  },
+
+  judas(ctx) {
+    const c = walk(ctx, [[0, 5], [10, 5.2], [18, 5], [20, 5], [22, 7.2], [24, 5.2], [30, 2.5], [40, 1], [55, 0]], 0.2);
+    const op = c[20].o;
+    return {
+      candles: c,
+      n0: 19,
+      steps: [
+        { s: { k: 'vline', i: 20, color: BLUE, label: 'Open' }, cap: ctx.T('c_sessions') },
+        { s: { k: 'hline', p: op, i0: 20, color: GOLD, dash: true, label: ctx.T('openPrice') } },
+        { reveal: 24, w: 1.2 },
+        { s: { k: 'ring', at: P(22, c[22].h), color: BEAR, label: 'Judas Swing' }, cap: ctx.T('c_sweep'), w: 1.3 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'arrow', a: P(24, c[24].c), b: P(42, c[40].l), color: BEAR, label: ctx.T('realMove') } },
+      ],
+    };
+  },
+
+  smt(ctx) {
+    const c = walk(ctx, [[0, 8], [10, 2], [16, 6], [26, 0.6], [32, 4], [40, 7], [55, 12]], 0.22);
+    const a = loIdx(c, 6, 14);
+    const b = loIdx(c, 22, 30);
+    const vals: number[] = [];
+    const pa: [number, number][] = [[0, 8], [10, 3.0], [16, 6], [26, 3.9], [32, 5], [40, 7], [55, 10]];
+    for (let i = 0; i < 56; i++) {
+      let v = pa[pa.length - 1][1];
+      for (let k = 1; k < pa.length; k++)
+        if (i <= pa[k][0]) {
+          v = lerp(pa[k - 1][1], pa[k][1], (i - pa[k - 1][0]) / (pa[k][0] - pa[k - 1][0]));
+          break;
+        }
+      vals.push(v + Math.sin(i * 1.7) * 0.15);
+    }
+    return {
+      candles: c,
+      n0: 34,
+      pane: { values: vals, kind: 'line', min: 0, max: 12, label: 'GBPUSD', color: BLUE },
+      steps: [
+        { s: { k: 'ring', at: P(a, c[a].l), color: GOLD, label: 'L1', below: true }, cap: ctx.T('c_swings') },
+        { s: { k: 'ring', at: P(b, c[b].l), color: BEAR, label: 'LL', below: true } },
+        { s: { k: 'ring', at: P(a, vals[a], true), color: GOLD, label: 'L1' }, w: 1.1 },
+        { s: { k: 'ring', at: P(b, vals[b], true), color: BULL, label: 'HL' }, w: 1.1 },
+        { s: { k: 'label', at: P(34, c[16].h + 1), text: 'SMT Divergence', color: PURP } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+      ],
+    };
+  },
+
+  amd(ctx) {
+    const c = walk(ctx, [[0, 5], [10, 5.2], [18, 4.9], [22, 3.4], [24, 3.2], [26, 5], [36, 9], [46, 11.5], [55, 12.5]], 0.2);
+    const op = c[19].o;
+    const low = loIdx(c, 20, 25);
+    return {
+      candles: c,
+      n0: 19,
+      steps: [
+        { s: { k: 'hline', p: op, i0: 0, color: GOLD, dash: true, label: ctx.T('openPrice') }, cap: ctx.T('c_sessions') },
+        { s: { k: 'band', i0: 0, i1: 19, color: BLUE, label: 'Accumulation' }, w: 1.3 },
+        { reveal: 26, w: 1.1 },
+        { s: { k: 'band', i0: 20, i1: 25, color: BEAR, label: 'Manipulation' } },
+        { s: { k: 'ring', at: P(low, c[low].l), color: BEAR, label: ctx.T('sweep'), below: true } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+        { s: { k: 'band', i0: 26, i1: 55, color: BULL, label: 'Distribution' } },
+      ],
+    };
+  },
+
+  bias(ctx, v) {
+    const b = S.ob(ctx, 'entry');
+    const lab = v === 'mtf' ? ['D1 / H4', 'M15'] : v === 'sk' ? ['H4 zone', 'M15'] : ['HTF Bias ↑', 'LTF'];
+    const first: Step = { s: { k: 'arrow', a: P(2, b.candles[2].l), b: P(52, b.candles[54].h), color: GOLD, label: lab[0] }, cap: ctx.T('c_trend'), w: 1.6 };
+    const steps = [first, ...b.steps];
+    steps.splice(2, 0, { view: [26, 52], cap: lab[1], w: 1 });
+    return { ...b, steps };
+  },
+
+  model2022(ctx, v) {
+    const c = walk(ctx, [[0, 6], [6, 4], [10, 3.2], [14, 4.4], [18, 3.25], [22, 4], [24, 2.2], [25, 3.6], [26, 6.2], [27, 7.6], [30, 6.6], [32, 6.2], [34, 8], [40, 10], [55, 13]], 0.22);
+    for (const i of [10, 18]) c[i].l = 3.15;
+    K(c, 24, 3.0, undefined, 2.0);
+    K(c, 25, 4.4);
+    K(c, 26, 6.4);
+    K(c, 27, 7.6, undefined, 5.6);
+    const fl = c[25].h;
+    const fh = c[27].l;
+    wickTo(c, 31, (fl + fh) / 2 - 0.1);
+    const ie = 31;
+    const entry = c[ie].c;
+    const sl = c[24].l - 0.3;
+    const steps: Step[] = [];
+    if (v === 'silver') steps.push({ s: { k: 'band', i0: 22, i1: 38, color: GOLD, label: 'Silver Bullet 10–11 NY' }, cap: ctx.T('c_sessions') });
+    steps.push(
+      { s: { k: 'hline', p: 3.15, i0: 10, color: GOLD, dash: true, label: 'SSL' }, cap: ctx.T('c_liq'), w: 1.2 },
+      { reveal: 25, w: 1.1 },
+      { s: { k: 'ring', at: P(24, c[24].l), color: BEAR, label: ctx.T('sweep'), below: true }, w: 1.1 },
+      { s: { k: 'arrow', a: P(25, c[25].l), b: P(28, c[27].h), color: BULL, label: 'Displacement' }, w: 1.3 },
+      { s: { k: 'box', a: P(26, fl), b: P(40, fh), color: PURP, label: 'FVG' }, cap: ctx.T('c_fvg') },
+      { reveal: 32, w: 1.2 },
+      ...positionSteps(ctx, c, ie, entry, sl, 2, 48),
+    );
+    return { candles: c, n0: 22, steps };
+  },
+
+  targets(ctx) {
+    const c = walk(ctx, [[0, 0], [8, 6], [12, 4], [16, 6.1], [20, 3], [24, 2.6], [30, 6.4], [34, 5], [40, 8.2], [44, 7.6], [50, 11.6], [55, 10.5]], 0.2);
+    for (const i of [8, 16]) c[i].h = 6.4;
+    const hiB = c[hiIdx(c, 40, 52)].h;
+    const ie = 25;
+    const entry = c[ie].c;
+    const sl = c[loIdx(c, 20, 25)].l - 0.5;
+    return {
+      candles: c,
+      n0: 26,
+      steps: [
+        { s: { k: 'hline', p: 6.4, i0: 8, color: GOLD, dash: true, label: 'BSL 1' }, cap: ctx.T('c_liq'), w: 1.2 },
+        { s: { k: 'hline', p: hiB, i0: 8, color: GOLD, dash: true, label: 'BSL 2' }, w: 1.2 },
+        { s: { k: 'ring', at: P(ie, entry), color: ACC, label: ctx.T('entry') }, cap: ctx.T('c_entry') },
+        { s: { k: 'hline', p: sl, i0: ie, color: BEAR, dash: true, label: 'SL' } },
+        { reveal: 32, cap: ctx.T('c_manage'), w: 1.5 },
+        { s: { k: 'ring', at: P(30, 6.4), color: BULL, label: 'TP1 50%' } },
+        { s: { k: 'hline', p: entry, i0: 31, color: GOLD, label: 'SL → BE' } },
+        { reveal: 56, w: 1.6 },
+        { s: { k: 'ring', at: P(50, hiB), color: BULL, label: 'TP2' } },
+      ],
+    };
+  },
+
+  nwog(ctx) {
+    const c = walk(ctx, [[0, 5], [12, 7], [26, 8], [27, 8.2], [28, 9.7], [30, 11], [34, 10], [38, 9.5], [44, 12], [55, 14]], 0.2);
+    c[27].c = 8.2;
+    c[28] = { o: 9.6, c: 10.2, h: 10.5, l: 9.4 };
+    c[29].o = 10.2;
+    const ce = (8.2 + 9.6) / 2;
+    wickTo(c, 38, ce);
+    return {
+      candles: c,
+      n0: 30,
+      steps: [
+        { s: { k: 'vline', i: 27.5, color: BLUE, label: ctx.T('weekOpen') }, cap: ctx.T('c_sessions') },
+        { s: { k: 'box', a: P(27, 8.2), b: P(55, 9.6), color: PURP, label: 'NWOG' }, cap: ctx.T('c_zone'), w: 1.5 },
+        { s: { k: 'hline', p: ce, i0: 27, color: GOLD, dash: true, label: 'CE 50%' } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 2 },
+        { s: { k: 'ring', at: P(38, c[38].l), color: BULL, label: ctx.T('reaction'), below: true } },
+      ],
+    };
+  },
+
+  // ============================================================== other schools
+  candles_patterns(ctx, v) {
+    const c = walk(ctx, [[0, 0], [10, 5], [20, 9], [29, 11.5], [30, 11.9], [31, 10.4], [36, 6.5], [44, 3], [55, 0]], 0.26);
+    if (v === 'pin') {
+      c[30] = { o: 11.5, c: 11.3, h: 14.2, l: 11.1 };
+      c[31] = { o: 11.3, c: 10.4, h: 11.4, l: 10.2 };
+    } else if (v === 'doji') {
+      c[30] = { o: 11.6, c: 11.62, h: 12.6, l: 10.7 };
+      c[31] = { o: 11.62, c: 10.3, h: 11.7, l: 10.2 };
+    } else {
+      K(c, 30, 12.0, 12.2);
+      c[30].o = c[29].c;
+      c[31] = { o: 12.2, c: 10.2, h: 12.3, l: 10.1 };
+    }
+    const nm = v === 'pin' ? 'Pin Bar' : v === 'doji' ? 'Doji' : 'Engulfing';
+    return {
+      candles: c,
+      n0: 31,
+      steps: [
+        { view: [20, 42], w: 0.8 },
+        { s: { k: 'hline', p: 12.3, i0: 20, color: GOLD, dash: true, label: ctx.T('resistance') }, cap: ctx.T('c_zone') },
+        { s: { k: 'box', a: P(29.4, c[31].l), b: P(31.6, c[30].h), color: BEAR, label: nm }, cap: ctx.T('c_pattern'), w: 1.4 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'arrow', a: P(31, c[31].c), b: P(46, c[44].l), color: BEAR, label: ctx.T('target') } },
+        { view: [-0.5, 61], w: 0.8 },
+      ],
+    };
+  },
+
+  double_top(ctx) {
+    const c = walk(ctx, [[0, 0], [10, 8], [16, 4], [24, 8.05], [30, 3.8], [34, 2], [40, 3], [55, -3]], 0.24);
+    c[10].h = 8.5;
+    c[24].h = 8.45;
+    const neck = c[loIdx(c, 14, 19)].l;
+    let brk = 31;
+    for (let i = 26; i < 40; i++)
+      if (c[i].c < neck) {
+        brk = i;
+        break;
+      }
+    const h = 8.5 - neck;
+    return {
+      candles: c,
+      n0: 28,
+      steps: [
+        { s: { k: 'ring', at: P(10, 8.5), color: BEAR, label: 'Top 1' }, cap: ctx.T('c_pattern') },
+        { s: { k: 'ring', at: P(24, 8.45), color: BEAR, label: 'Top 2' } },
+        { s: { k: 'line', a: P(6, neck), b: P(brk, neck), color: GOLD, label: ctx.T('neckline') }, w: 1.4 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+        { s: { k: 'ring', at: P(brk, neck), color: ACC, label: ctx.T('break') } },
+        { s: { k: 'ruler', a: P(46, 8.5), b: P(46, neck), text: ctx.T('height') } },
+        { s: { k: 'arrow', a: P(brk, neck), b: P(brk + 14, neck - h), color: BEAR, label: ctx.T('target') } },
+      ],
+    };
+  },
+
+  channel(ctx, v) {
+    const c = walk(ctx, [[0, 0], [6, 4], [10, 1.4], [18, 6.5], [22, 3.6], [30, 9.2], [34, 6.4], [42, 12], [46, 9.2], [55, 14.4]], 0.2);
+    const slope = (c[22].l - c[10].l) / 12;
+    const lows = [10, 22, 34, 46];
+    const base = c[10].l;
+    const w = 3.6;
+    const up = (i: number, off: number) => base + slope * (i - 10) + off;
+    const steps: Step[] = [
+      { s: { k: 'line', a: P(10, up(10, 0)), b: P(55, up(55, 0)), color: ACC, label: v === 'ew' ? '2–4' : ctx.T('support') }, cap: ctx.T('c_trendline'), w: 1.6 },
+      { s: { k: 'line', a: P(6, up(6, w + 0.8)), b: P(55, up(55, w + 0.8)), color: BLUE, label: v === 'ew' ? '1–3–5' : ctx.T('resistance'), dash: true }, cap: ctx.T('c_pattern'), w: 1.6 },
+      { s: { k: 'label', at: P(2, c[42].h), text: 'Channel', color: GOLD } },
+      { s: { k: 'ring', at: P(lows[3], c[lows[3]].l), color: BULL, label: ctx.T('touch'), below: true } },
+      { reveal: 56, w: 1.4 },
+    ];
+    return { candles: c, n0: 40, steps };
+  },
+
+  fib(ctx) {
+    const c = walk(ctx, [[0, 4], [6, 0], [22, 12], [28, 9.4], [34, 6.1], [40, 8], [48, 12.5], [55, 15.5]], 0.22);
+    const a = loIdx(c, 3, 10);
+    const b = hiIdx(c, 18, 26);
+    const lo = c[a].l;
+    const hi = c[b].h;
+    const r618 = hi - 0.618 * (hi - lo);
+    wickTo(c, 34, r618);
+    return {
+      candles: c,
+      n0: 28,
+      steps: [
+        { s: { k: 'fib', a: P(a, lo), b: P(b, hi), levels: [0, 0.382, 0.5, 0.618, 1], color: GOLD }, cap: ctx.T('c_fib'), w: 2 },
+        { reveal: 36, cap: ctx.T('c_watch'), w: 1.4 },
+        { s: { k: 'ring', at: P(34, c[34].l), color: BULL, label: '61.8%', below: true } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+        { s: { k: 'hline', p: hi + 0.272 * (hi - lo), i0: b, color: BULL, dash: true, label: '127.2%' } },
+      ],
+    };
+  },
+
+  volatility(ctx) {
+    const c = walk(ctx, [[0, 0], [8, 1.2], [16, 0.2], [24, 1.0], [30, 0.6], [34, 3.5], [38, 7], [44, 9], [48, 8], [55, 12]], 0.2);
+    const cl = c.map((x) => x.c);
+    const mid: Pt[] = [];
+    const up: Pt[] = [];
+    const dn: Pt[] = [];
+    for (let i = 19; i < 56; i++) {
+      const w = cl.slice(i - 19, i + 1);
+      const m = w.reduce((a, b) => a + b, 0) / 20;
+      const sd = Math.sqrt(w.reduce((a, b) => a + (b - m) * (b - m), 0) / 20);
+      mid.push(P(i, m));
+      up.push(P(i, m + 2 * sd));
+      dn.push(P(i, m - 2 * sd));
+    }
+    const ie = 36;
+    const atr = c.slice(ie - 14, ie).reduce((a, k) => a + (k.h - k.l), 0) / 14;
+    const entry = c[ie].c;
+    return {
+      candles: c,
+      n0: 30,
+      steps: [
+        { s: { k: 'path', pts: up, color: BLUE, labels: [] }, cap: ctx.T('c_indicator'), w: 1.6 },
+        { s: { k: 'path', pts: dn, color: BLUE, labels: [] }, w: 1.2 },
+        { s: { k: 'path', pts: mid, color: GRAY, labels: [], dash: true }, w: 1 },
+        { s: { k: 'label', at: P(26, 3), text: 'Squeeze', color: GOLD } },
+        { reveal: 56, w: 1.6 },
+        { s: { k: 'ring', at: P(ie, entry), color: ACC, label: ctx.T('entry') } },
+        { s: { k: 'hline', p: entry - 2 * atr, i0: ie, color: BEAR, dash: true, label: 'SL = 2×ATR' }, cap: ctx.T('c_sl') },
+      ],
+    };
+  },
+
+  breakout_retest(ctx) {
+    const c = walk(ctx, [[0, 2], [8, 5.6], [14, 4], [20, 5.8], [26, 7.2], [30, 8.8], [34, 6.3], [40, 9], [55, 13]], 0.22);
+    for (const i of [8, 20]) c[i].h = 6.1;
+    let brk = 26;
+    for (let i = 21; i < 32; i++)
+      if (c[i].c > 6.1) {
+        brk = i;
+        break;
+      }
+    wickTo(c, 34, 6.0);
+    const entry = c[34].c;
+    return {
+      candles: c,
+      n0: 24,
+      steps: [
+        { s: { k: 'hline', p: 6.1, i0: 8, color: GOLD, dash: true, label: ctx.T('resistance') }, cap: ctx.T('c_zone'), w: 1.3 },
+        { reveal: 30, w: 1.2 },
+        { s: { k: 'ring', at: P(brk, c[brk].c), color: ACC, label: ctx.T('breakout') }, cap: ctx.T('c_bos') },
+        { reveal: 35, w: 1.1 },
+        { s: { k: 'ring', at: P(34, c[34].l), color: BULL, label: ctx.T('retest'), below: true } },
+        { s: { k: 'box', a: P(34, entry), b: P(46, 5.2), color: BEAR, label: 'SL' }, cap: ctx.T('c_sl') },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+      ],
+    };
+  },
+
+  pivots(ctx) {
+    const c = walk(ctx, [[0, 4], [10, 6], [20, 5], [28, 2.4], [36, 4.8], [42, 8.8], [48, 7], [55, 9]], 0.22);
+    const pp = 5;
+    const lv: [string, number, string][] = [['R2', 10, BEAR], ['R1', 7.4, BEAR], ['PP', pp, GOLD], ['S1', 2.6, BULL], ['S2', 0.4, BULL]];
+    wickTo(c, 28, 2.5);
+    return {
+      candles: c,
+      n0: 22,
+      steps: [
+        ...lv.map(([l, p, col], k) => ({ s: { k: 'hline', p, i0: 0, color: col, label: l, dash: l !== 'PP' } as Shape, cap: k === 0 ? ctx.T('c_levels') : undefined, w: 0.9 })),
+        { reveal: 56, cap: ctx.T('c_result'), w: 2 },
+        { s: { k: 'ring', at: P(28, c[28].l), color: BULL, label: ctx.T('reaction'), below: true } },
+      ],
+    };
+  },
+
+  orders(ctx) {
+    const c = walk(ctx, [[0, 2], [10, 5], [20, 3.5], [30, 5.5], [34, 5], [40, 7.6], [46, 6.4], [55, 9]], 0.2);
+    const px = c[33].c;
+    const L: [string, number, string][] = [['Sell Limit', px + 3, BEAR], ['Buy Stop', px + 1.8, BULL], ['Market', px, GOLD], ['Sell Stop', px - 1.8, BEAR], ['Buy Limit', px - 3, BULL]];
+    return {
+      candles: c,
+      n0: 34,
+      steps: [
+        ...L.map(([l, p, col], k) => ({ s: { k: 'hline', p, i0: 28, color: col, label: l, dash: l !== 'Market' } as Shape, cap: k === 0 ? ctx.T('c_entry') : undefined, w: 1 })),
+        { reveal: 56, cap: ctx.T('c_result'), w: 2 },
+        { s: { k: 'ring', at: P(38, px + 1.8), color: BULL, label: ctx.T('filled') } },
+      ],
+    };
+  },
+
+  spread(ctx) {
+    const c = walk(ctx, [[0, 0], [20, 3], [40, 1], [55, 2.5]], 0.25);
+    const last = c[c.length - 1].c;
+    const sp = (ctx.sym === SYMS.XAUUSD ? 3 : 1.4) * ctx.sym.pip / ctx.u;
+    return {
+      candles: c,
+      n0: 56,
+      steps: [
+        { view: [44, 61], w: 0.8 },
+        { s: { k: 'hline', p: last, i0: 44, color: BEAR, label: 'Bid' }, cap: ctx.T('c_measure') },
+        { s: { k: 'hline', p: last + sp, i0: 44, color: BULL, label: 'Ask' } },
+        { s: { k: 'ruler', a: P(52, last), b: P(52, last + sp), text: `${ctx.sym === SYMS.XAUUSD ? 30 : 1.4} pips` }, w: 1.4 },
+        { s: { k: 'label', at: P(46, last + sp * 3), text: 'Spread = Ask − Bid', color: GOLD } },
+      ],
+    };
+  },
+
+  ew_diagonal(ctx) {
+    const c = walk(ctx, [[0, 0], [8, 5], [12, 2.5], [22, 7.5], [27, 4.5], [36, 8.5], [40, 6], [55, 0]], 0.2);
+    const p5 = hiIdx(c, 32, 38);
+    const pts = [P(0, c[0].l), P(8, c[8].h), P(12, c[12].l), P(22, c[22].h), P(27, c[27].l), P(p5, c[p5].h)];
+    return {
+      candles: c,
+      n0: 38,
+      steps: [
+        { s: { k: 'path', pts, color: GOLD, labels: ['', '1', '2', '3', '4', '5'] }, cap: ctx.T('c_waves'), w: 2.2 },
+        { s: { k: 'line', a: P(8, c[8].h), b: P(p5, c[p5].h), color: ACC, label: '1–3–5' }, cap: ctx.T('c_trendline') },
+        { s: { k: 'line', a: P(12, c[12].l), b: P(p5, c[27].l + (c[27].l - c[12].l) * ((p5 - 27) / 15)), color: ACC, label: '2–4' } },
+        { s: { k: 'label', at: P(4, c[p5].h), text: 'Wedge', color: GOLD } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+      ],
+    };
+  },
+
+  ew_complex(ctx) {
+    const c = walk(ctx, [[0, 12], [7, 6], [10, 8], [16, 3], [22, 8], [28, 4.5], [32, 6], [40, 1.5], [55, 9]], 0.22);
+    const idx = [0, 16, 22, 40];
+    const pts = [P(0, c[0].h), P(16, c[16].l), P(22, c[22].h), P(40, c[40].l)];
+    return {
+      candles: c,
+      n0: 42,
+      steps: [
+        { s: { k: 'path', pts: pts.slice(0, 2), color: BEAR, labels: ['', 'W'] }, cap: ctx.T('c_waves'), w: 1.4 },
+        { s: { k: 'path', pts: pts.slice(1, 3), color: GOLD, labels: ['', 'X'] }, w: 1.2 },
+        { s: { k: 'path', pts: pts.slice(2, 4), color: BEAR, labels: ['', 'Y'] }, w: 1.6 },
+        { s: { k: 'label', at: P(3, c[idx[0]].h - 1), text: 'W–X–Y', color: GOLD } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
+        { s: { k: 'ring', at: P(40, c[40].l), color: BULL, label: ctx.T('entry'), below: true } },
+      ],
+    };
+  },
+
+  gann_eighths(ctx) {
+    const c = walk(ctx, [[0, 2], [10, 6], [20, 1], [30, 7], [36, 4.3], [40, 5.2], [48, 9], [55, 12]], 0.24);
+    const lo = 0;
+    const hi = 12;
+    const steps: Step[] = [{ s: { k: 'ruler', a: P(3, lo), b: P(3, hi), text: ctx.T('range') }, cap: ctx.T('c_levels'), w: 1.2 }];
+    for (let k = 0; k <= 8; k++) {
+      const col = k === 4 ? GOLD : k === 2 || k === 6 ? ACC : GRAY;
+      steps.push({ s: { k: 'hline', p: lo + (hi * k) / 8, i0: 3, color: col, label: `${k}/8`, dash: k !== 4 }, w: 0.5 });
+    }
+    wickTo(c, 36, 4.2);
+    steps.push({ reveal: 56, cap: ctx.T('c_result'), w: 1.8 }, { s: { k: 'ring', at: P(36, c[36].l), color: BULL, label: '4/8', below: true } });
+    return { candles: c, n0: 34, steps };
+  },
+
+  wy_phases(ctx) {
+    const b = S.wy(ctx, 'accum');
+    const bands: [number, number, string][] = [[10, 25, 'A'], [25, 34, 'B'], [34, 40, 'C'], [40, 47, 'D'], [47, 55, 'E']];
+    const steps = [...b.steps];
+    bands.forEach(([i0, i1, l], k) => steps.push({ s: { k: 'band', i0, i1, color: [BLUE, GRAY, BULL, ACC, GOLD][k], label: l }, w: 1 }));
+    return { ...b, steps };
+  },
+
+  wy_reacc(ctx) {
+    const c = walk(ctx, [[0, 0], [10, 6], [16, 8], [20, 6.6], [26, 7.4], [30, 6.2], [32, 5.6], [34, 6.8], [40, 11], [46, 13.5], [55, 16]], 0.2);
+    wickTo(c, 32, 5.5);
+    return {
+      candles: c,
+      n0: 18,
+      steps: [
+        { s: { k: 'arrow', a: P(0, c[0].l), b: P(16, c[16].h), color: BULL, label: ctx.T('uptrend') }, cap: ctx.T('c_phases') },
+        { reveal: 34, w: 1.3 },
+        { s: { k: 'box', a: P(16, 5.4), b: P(36, 8.4), color: BLUE, label: 'Re-accumulation' }, cap: ctx.T('c_zone'), w: 1.5 },
+        { s: { k: 'ring', at: P(32, c[32].l), color: GOLD, label: 'Shakeout', below: true } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+        { s: { k: 'arrow', a: P(36, 8.4), b: P(52, c[52].h), color: BULL, label: 'SOS' } },
+      ],
+    };
+  },
+
+  vsa(ctx) {
+    const c = walk(ctx, [[0, 12], [10, 6], [16, 2], [18, 1.8], [24, 4], [30, 2.6], [34, 3.4], [42, 8], [55, 11]], 0.22);
+    c[18] = { o: 2.6, c: 2.3, h: 2.8, l: 1.5 };
+    c[19].o = 2.3;
+    const vol = c.map((_, i) => 24 + ((i * 31) % 15) + (i === 18 ? 80 : 0) + (i > 14 && i < 18 ? 30 : 0) + (i === 31 ? -8 : 0));
+    return {
+      candles: c,
+      n0: 28,
+      pane: { values: vol, kind: 'hist', min: 0, max: 120, label: 'Volume' },
+      steps: [
+        { s: { k: 'ring', at: P(18, vol[18], true), color: GOLD, label: 'Volume ↑↑' }, cap: ctx.T('c_volume'), w: 1.3 },
+        { s: { k: 'ring', at: P(18, c[18].l), color: BULL, label: 'Stopping Volume', below: true }, w: 1.3 },
+        { reveal: 34, w: 1.3 },
+        { s: { k: 'ring', at: P(31, vol[31], true), color: ACC, label: 'Test' }, w: 1.2 },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.8 },
+      ],
+    };
+  },
+
+  pnf(ctx) {
+    const c = walk(ctx, [[0, 6], [8, 2], [12, 4.4], [16, 2], [20, 5.2], [24, 2.4], [28, 6], [34, 3.2], [38, 7], [44, 12], [55, 16]], 0.22);
+    const sw = [8, 12, 16, 20, 24, 28, 34, 38];
+    const pts = sw.map((i, k) => P(i, k % 2 === 0 ? c[i].l : c[i].h));
+    return {
+      candles: c,
+      n0: 40,
+      steps: [
+        { s: { k: 'path', pts, color: GOLD, labels: ['O', 'X', 'O', 'X', 'O', 'X', 'O', 'X'] }, cap: ctx.T('c_swings'), w: 2 },
+        { s: { k: 'box', a: P(8, 1.6), b: P(38, 7.4), color: BLUE, label: ctx.T('base') }, cap: ctx.T('c_zone'), w: 1.4 },
+        { s: { k: 'ruler', a: P(41, 2), b: P(41, 7), text: 'count' }, w: 1.2 },
+        { s: { k: 'arrow', a: P(38, 7), b: P(52, 14), color: BULL, label: ctx.T('target') } },
+        { reveal: 56, cap: ctx.T('c_result'), w: 1.6 },
       ],
     };
   },
@@ -1187,6 +1893,48 @@ const ALIAS: Record<string, [string, string, boolean?]> = {
   sk_base: ['sk_zone', 'base'],
   sk_touch: ['sk_zone', 'touch'],
   sk_manage: ['sk_manage', ''],
+  breaker: ['breaker', ''],
+  mitigation: ['mitigation', ''],
+  ifvg: ['ifvg', ''],
+  bpr: ['bpr', ''],
+  rejection: ['rejection', ''],
+  propulsion: ['propulsion', ''],
+  displacement: ['displacement', ''],
+  structure_int: ['structure_int', ''],
+  turtle: ['turtle', ''],
+  judas: ['judas', ''],
+  smt: ['smt', ''],
+  amd: ['amd', ''],
+  bias: ['bias', ''],
+  silver: ['model2022', 'silver'],
+  nwog: ['nwog', ''],
+  model2022: ['model2022', ''],
+  targets: ['targets', ''],
+  candles_patterns: ['candles_patterns', ''],
+  engulfing: ['candles_patterns', ''],
+  pinbar: ['candles_patterns', 'pin'],
+  doji: ['candles_patterns', 'doji'],
+  double_top: ['double_top', ''],
+  channel: ['channel', ''],
+  fib: ['fib', ''],
+  volatility: ['volatility', ''],
+  mtf: ['bias', 'mtf'],
+  breakout_retest: ['breakout_retest', ''],
+  pivots: ['pivots', ''],
+  orders: ['orders', ''],
+  spread: ['spread', ''],
+  platform: ['position', ''],
+  psychology: ['journal', ''],
+  ew_diagonal: ['ew_diagonal', ''],
+  ew_complex: ['ew_complex', ''],
+  ew_channel: ['channel', 'ew'],
+  gann_eighths: ['gann_eighths', ''],
+  wy_phases: ['wy_phases', ''],
+  wy_reacc: ['wy_reacc', ''],
+  vsa: ['vsa', ''],
+  pnf: ['pnf', ''],
+  sk_mtf: ['bias', 'sk'],
+  sk_strength: ['sk_zone', 'strength'],
 };
 
 /** What is drawn for each part of each lesson (same order as the lesson's parts, every language). */
@@ -1235,6 +1983,59 @@ export const LESSON_SCENES: Record<string, string[]> = {
   'wy-l2-02': ['fakeout', 'liquidity', 'tlbreak', 'wy_spring', 'wy_spring@USDJPY', 'wy_utad@EURUSD', 'fakeout', 'wy_accum'],
   'wy-l3-01': ['wy_effort', 'wy_effort', 'candle', 'trend', 'wy_effort@GBPUSD', 'fakeout', 'wy_effort'],
   'wy-l4-01': ['dxy@XAUUSD', 'trend', 'dxy@XAUUSD', 'sessions@XAUUSD', 'plan@XAUUSD', 'position@XAUUSD', 'chase', 'checklist'],
+  'basics-l0-01': ['overview', 'sessions', 'overview', 'platform', 'trend', 'trend_down@EURUSD', 'trend@XAUUSD', 'psychology', 'checklist'],
+  'basics-l0-02': ['overview', 'pips', 'overview', 'spread', 'position', 'candle@XAUUSD', 'position@GBPUSD', 'position@XAUUSD', 'spread', 'checklist'],
+  'basics-l0-03': ['overview', 'sessions', 'sessions', 'sessions', 'spread', 'volatility', 'sessions@EURUSD', 'volatility@XAUUSD', 'psychology', 'checklist'],
+  'basics-l0-04': ['overview', 'candle', 'candle', 'candle', 'mtf', 'mtf', 'candle@EURUSD', 'mtf@XAUUSD', 'candle', 'checklist'],
+  'basics-l2-01': ['orders', 'orders', 'orders', 'orders', 'position', 'orders', 'nwog@GBPUSD', 'orders@EURUSD', 'orders@XAUUSD', 'checklist'],
+  'basics-l2-02': ['spread', 'spread', 'spread', 'spread', 'spread', 'spread', 'spread@EURUSD', 'spread@XAUUSD', 'spread', 'checklist'],
+  'basics-l2-03': ['platform', 'spread', 'candle@EURUSD', 'orders', 'lot', 'position@EURUSD', 'position@XAUUSD', 'journal', 'checklist'],
+  'basics-l2-04': ['psychology', 'psychology', 'position', 'psychology@GBPUSD', 'checklist', 'chase@XAUUSD', 'journal', 'checklist', 'plan'],
+  'basics-l2-05': ['plan', 'sessions', 'checklist', 'position', 'lot', 'plan@EURUSD', 'journal', 'journal@USDJPY', 'journal', 'checklist'],
+  'classic-l2-04': ['overview', 'candles_patterns', 'candle', 'candles_patterns', 'candles_patterns', 'sr', 'candles_patterns@EURUSD', 'candle@XAUUSD', 'fakeout', 'checklist'],
+  'classic-l2-05': ['overview', 'double_top', 'double_top', 'position', 'channel', 'channel', 'double_top@GBPUSD', 'channel@USDJPY', 'fakeout', 'checklist'],
+  'classic-l2-06': ['overview', 'fib', 'fib', 'sr', 'fib', 'position', 'fib@EURUSD', 'fib@XAUUSD', 'fakeout', 'checklist'],
+  'classic-l2-07': ['overview', 'volatility', 'volatility', 'volatility', 'position', 'volatility', 'volatility@GBPUSD', 'volatility@XAUUSD', 'fakeout', 'checklist'],
+  'classic-l3-03': ['mtf', 'mtf', 'trend', 'sr', 'candles_patterns', 'position', 'mtf@EURUSD', 'mtf@XAUUSD', 'chase', 'checklist'],
+  'classic-l3-04': ['breakout_retest', 'sr', 'breakout_retest', 'breakout_retest', 'position', 'breakout_retest@GBPUSD', 'breakout_retest@USDJPY', 'fakeout', 'checklist'],
+  'classic-l3-05': ['pivots', 'pivots', 'pivots', 'sr', 'pivots', 'position', 'pivots@EURUSD', 'pivots@XAUUSD', 'fakeout', 'checklist'],
+  'classic-l3-06': ['overview', 'checklist', 'lot', 'journal', 'journal', 'journal@EURUSD', 'journal@XAUUSD', 'platform', 'chase', 'plan'],
+  'ew-l1-03': ['ew', 'ew_rules', 'ew', 'mtf', 'ew_rules', 'ew_trade', 'ew_trade@EURUSD', 'ew_trade@XAUUSD', 'ew_invalid', 'checklist'],
+  'ew-l1-04': ['ew_diagonal', 'ew_diagonal', 'ew_channel', 'ew_rules', 'ew_trade', 'ew_diagonal@GBPUSD', 'ew_diagonal@USDJPY', 'ew_invalid', 'checklist'],
+  'ew-l2-02': ['ew_complex', 'ew_complex', 'ew_complex', 'ew_complex', 'ew_rules', 'ew_trade', 'ew_complex@EURUSD', 'ew_complex@XAUUSD', 'ew_invalid', 'checklist'],
+  'ew-l2-03': ['ew_channel', 'ew_channel', 'ew_alt', 'ew_rules', 'ew_trade', 'ew_channel@EURUSD', 'ew_alt@XAUUSD', 'ew_invalid', 'checklist'],
+  'ew-l3-02': ['ew', 'ew', 'ew_ext', 'ew_alt', 'ew_zigzag', 'ew_trade', 'ew_ext@GBPUSD', 'ew_zigzag@USDJPY', 'ew_invalid', 'checklist'],
+  'ew-l5-02': ['mtf', 'ew_alt', 'ew_fib', 'ew_trade', 'position', 'ew_trade@EURUSD', 'ew_trade@XAUUSD', 'journal', 'plan'],
+  'gann-l1-02': ['overview', 'lot', 'position', 'trend', 'position', 'position@EURUSD', 'trend_down@XAUUSD', 'psychology', 'checklist'],
+  'gann-l2-03': ['overview', 'gann_1x1', 'gann_fan', 'gann_fan@EURUSD', 'gann_1x1', 'position', 'gann_1x1@XAUUSD', 'gann_fan@USDJPY', 'fakeout', 'checklist'],
+  'gann-l2-04': ['gann_eighths', 'gann_eighths@GBPUSD', 'gann_balance', 'mtf', 'gann_eighths', 'position', 'gann_eighths@GBPUSD', 'gann_eighths@XAUUSD', 'fib', 'checklist'],
+  'gann-l4-02': ['overview', 'gann_1x1@EURUSD', 'gann_cycles', 'gann_cycles@EURUSD', 'gann_cycles', 'position', 'gann_cycles@EURUSD', 'gann_cycles@XAUUSD', 'psychology', 'checklist'],
+  'gann-l5-01': ['overview', 'mtf', 'gann_eighths', 'gann_cycles', 'position', 'plan@USDJPY', 'plan@GBPUSD', 'psychology', 'journal', 'checklist'],
+  'sk-l2-03': ['overview', 'sk_base', 'displacement', 'sk_touch', 'sk_strength', 'sk_strength@EURUSD', 'sk_zone@XAUUSD', 'fakeout', 'checklist'],
+  'sk-l2-04': ['overview', 'mtf', 'sk_mtf', 'trend', 'sk_strength', 'sk_mtf@GBPUSD', 'sk_mtf@USDJPY', 'chase', 'checklist'],
+  'sk-l3-02': ['overview', 'orders', 'position', 'choch', 'ob_entry', 'sk_touch@EURUSD', 'choch@XAUUSD', 'fakeout', 'checklist'],
+  'sk-l4-02': ['overview', 'checklist', 'plan@XAUUSD', 'sk_touch@XAUUSD', 'sk_manage@XAUUSD', 'sk_zone@EURUSD', 'sk_mtf@GBPUSD', 'journal', 'plan'],
+  'sk-l5-01': ['psychology', 'psychology', 'psychology', 'psychology', 'journal', 'journal', 'journal@EURUSD', 'psychology@XAUUSD', 'chase', 'checklist'],
+  'smc-l1-03': ['overview', 'structure_int', 'structure_int', 'structure_int', 'bos', 'position', 'structure_int@EURUSD', 'structure_int@XAUUSD', 'chase', 'checklist'],
+  'smc-l1-04': ['overview', 'displacement', 'displacement', 'fvg', 'position', 'displacement@GBPUSD', 'displacement@USDJPY', 'fakeout', 'checklist'],
+  'smc-l2-04': ['overview', 'breaker', 'breaker', 'mitigation', 'position', 'breaker@EURUSD', 'breaker@XAUUSD', 'mitigation@GBPUSD', 'fakeout', 'checklist'],
+  'smc-l2-05': ['fvg', 'ifvg', 'ifvg', 'bpr', 'checklist', 'position', 'ifvg@EURUSD', 'bpr@XAUUSD', 'fakeout', 'checklist'],
+  'smc-l2-06': ['rejection', 'rejection', 'propulsion', 'propulsion', 'checklist', 'position', 'rejection@GBPUSD', 'propulsion@USDJPY', 'fakeout', 'checklist'],
+  'smc-l3-03': ['pd_ote', 'displacement', 'fib', 'checklist', 'position', 'pd_ote@EURUSD', 'pd_ote@XAUUSD', 'pd_ote@USDJPY', 'fakeout', 'checklist'],
+  'smc-l3-04': ['liquidity', 'turtle', 'judas', 'checklist', 'position', 'turtle@EURUSD', 'judas@GBPUSD', 'fakeout', 'checklist'],
+  'smc-l3-05': ['overview', 'smt', 'dxy', 'smt', 'checklist', 'position', 'smt@EURUSD', 'smt@GBPUSD', 'fakeout', 'checklist'],
+  'smc-l4-02': ['overview', 'amd', 'sessions', 'amd', 'checklist', 'position', 'amd@EURUSD', 'amd@XAUUSD', 'fakeout', 'checklist'],
+  'smc-l4-03': ['bias', 'mtf', 'pd', 'liquidity', 'checklist', 'model2022', 'bias@EURUSD', 'bias@XAUUSD', 'chase', 'plan'],
+  'smc-l4-04': ['silver', 'sessions', 'bias', 'displacement', 'checklist', 'position', 'silver@EURUSD', 'silver@XAUUSD', 'fakeout', 'plan'],
+  'smc-l4-05': ['nwog', 'nwog', 'nwog', 'fvg_partial', 'checklist', 'position', 'nwog@EURUSD', 'nwog@XAUUSD', 'spread', 'plan'],
+  'smc-l5-02': ['overview', 'bias', 'liquidity', 'model2022', 'position', 'model2022@EURUSD', 'model2022@XAUUSD', 'fakeout@GBPUSD', 'chase', 'checklist'],
+  'smc-l5-03': ['overview', 'targets', 'structure_int', 'targets', 'bos', 'choch', 'targets@EURUSD', 'targets@XAUUSD', 'psychology', 'checklist'],
+  'wy-l1-03': ['overview', 'trend', 'wy_accum', 'wy_effort', 'wy_spring', 'wy_accum@EURUSD', 'wy_dist@XAUUSD', 'fakeout', 'checklist'],
+  'wy-l2-03': ['wy_phases', 'wy_accum', 'wy_phases', 'wy_spring', 'wy_accum', 'position', 'wy_accum@GBPUSD', 'wy_dist@XAUUSD', 'fakeout', 'checklist'],
+  'wy-l3-02': ['wy_reacc', 'wy_reacc', 'wy_dist', 'trend_down', 'wy_effort', 'position', 'wy_reacc@USDJPY', 'wy_dist@EURUSD', 'fakeout', 'checklist'],
+  'wy-l3-03': ['vsa', 'candle', 'vsa', 'vsa', 'wy_effort', 'position', 'vsa@EURUSD', 'wy_effort@XAUUSD', 'fakeout', 'checklist'],
+  'wy-l4-02': ['overview', 'dxy', 'dxy', 'pnf', 'wy_spring', 'mtf', 'plan@GBPUSD', 'wy_dist@XAUUSD', 'chase', 'checklist'],
+  'wy-l5-01': ['pnf', 'pnf', 'pnf', 'pnf', 'wy_phases', 'targets', 'pnf@EURUSD', 'pnf@XAUUSD', 'fakeout', 'checklist'],
 };
 
 const SCHOOL_FALLBACK: Record<string, string[]> = {
@@ -1262,14 +2063,49 @@ const translate = (lang: Lang) => (k: string) => {
 
 /** Build the scene for one lesson part. Deterministic: the same part always draws the same picture. */
 export function buildScene(schoolId: string, lectureId: string, index: number, lang: Lang): Scene {
-  const full = sceneIdFor(schoolId, lectureId, index);
-  const [name, symOverride] = full.split('@');
-  const [builder, variant, mirror] = ALIAS[name] ?? ['overview', ''];
+  const ids = examplesFor(schoolId, sceneIdFor(schoolId, lectureId, index), lectureId, index);
+  if (ids.length === 1) return buildOne(schoolId, lectureId, index, lang, ids[0]);
+  const seq = ids.map((id) => buildOne(schoolId, lectureId, index, lang, id));
+  return { ...seq[0], id: ids.join('+'), seq };
+}
+
+const NO_EXTRA = new Set(['overview', 'checklist', 'journal', 'psychology', 'plan', 'chase', 'pips', 'pipvalue', 'lot', 'margin', 'candle']);
+const SYM_CYCLE = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD'];
+
+/** A part shows its picture on one instrument, then the same idea again (often mirrored) on another one, like a teacher giving a second example. */
+function examplesFor(schoolId: string, full: string, lectureId: string, index: number): string[] {
+  if (full.includes('+')) return full.split('+');
+  const [name, sym] = full.split('@');
+  const base = name.replace('!', '');
+  if (NO_EXTRA.has(base)) return [full];
+  const cur = sym || SCHOOL_SYMBOL[schoolId] || 'EURUSD';
+  const h = hash(`${lectureId}:${index}`);
+  let next = SYM_CYCLE[h % 4];
+  if (next === cur) next = SYM_CYCLE[(h + 1) % 4];
+  return [full, `${name.endsWith('!') ? base : base + '!'}@${next}`];
+}
+
+function buildOne(schoolId: string, lectureId: string, index: number, lang: Lang, full: string): Scene {
+  const [rawName, symOverride] = full.split('@');
+  const flip = rawName.endsWith('!');
+  const name = rawName.replace('!', '');
+  const [builder, variant, mirror0] = ALIAS[name] ?? ['overview', ''];
+  let mirror = flip ? !mirror0 : !!mirror0;
   const symbol = symOverride || SCHOOL_SYMBOL[schoolId] || 'EURUSD';
   const sym = SYMS[symbol] ?? SYMS.EURUSD;
   const ctx: Ctx = { rng: rngOf(hash(`${lectureId}#${index}#${full}`)), T: translate(lang), sym, u: sym.B * 0.0012, N: 56, mirror: !!mirror };
-  const b = S[builder](ctx, variant);
+  let b = S[builder](ctx, variant);
+  if (mirror && b.pane) {
+    // an indicator pane cannot be mirrored: build the normal picture instead
+    mirror = !!mirror0 && !flip ? mirror : false;
+    ctx.mirror = !!mirror;
+    b = S[builder](ctx, variant);
+  }
   // units → prices (mirror flips the picture for the bearish versions)
+  for (const k of b.candles) {
+    k.h = Math.max(k.h, k.o, k.c);
+    k.l = Math.min(k.l, k.o, k.c);
+  }
   const sgn = mirror ? -1 : 1;
   const px = (v: number) => sym.B + sgn * v * ctx.u;
   const pt = (q: Pt): Pt => (q.pane ? q : { ...q, p: px(q.p) });
@@ -1383,6 +2219,12 @@ function topPrice(sc: Scene, n: number) {
 /** Where everything is at time p (0 → 1) of the narration of this part. */
 export function frameAt(sc: Scene, pIn: number): Frame {
   const p = clamp(pIn);
+  if (sc.seq && sc.seq.length > 1) {
+    const m = sc.seq.length;
+    const k = Math.min(m - 1, Math.floor(p * m));
+    const f = frameAt(sc.seq[k], clamp(p * m - k));
+    return { ...f, part: k, caption: f.caption ? `${f.caption}  ·  ${k + 1}/${m}` : f.caption };
+  }
   const wins = windows(sc);
   let n = sc.n0;
   let view: [number, number] = sc.view;
@@ -1426,7 +2268,7 @@ export function frameAt(sc: Scene, pIn: number): Frame {
       if (DRAG.has(st.s.k) && q < 0.18 && drawing) click = clamp(q / 0.18);
     }
   }
-  return { n: Math.max(1, Math.min(sc.candles.length, n)), view, shapes, cursor: { ...cursor, down, click }, caption };
+  return { n: Math.max(1, Math.min(sc.candles.length, n)), view, shapes, cursor: { ...cursor, down, click }, caption, part: 0, symbol: sc.symbol };
 }
 
 /** Narration length estimate when the real audio length is unknown (seconds at 1×). */
@@ -1446,7 +2288,8 @@ export type Op =
 const fmtPrice = (v: number, dec: number) => v.toFixed(Math.max(0, dec - 1));
 const textW = (s: string, size: number) => s.length * size * 0.56 + 8;
 
-export function drawOps(sc: Scene, f: Frame, Wpx: number, Hpx: number): Op[] {
+export function drawOps(sc0: Scene, f: Frame, Wpx: number, Hpx: number): Op[] {
+  const sc = sc0.seq && sc0.seq.length > 1 ? sc0.seq[Math.min(f.part ?? 0, sc0.seq.length - 1)] : sc0;
   const ops: Op[] = [];
   const axisW = 52;
   const paneH = sc.pane ? Math.round(Hpx * 0.24) : 0;

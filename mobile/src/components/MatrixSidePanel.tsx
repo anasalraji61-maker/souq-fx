@@ -15,6 +15,7 @@ import { TradeJournalPanel } from './TradeJournalPanel';
 import { IndicatorForecastPanel } from './IndicatorForecastPanel';
 import { ChannelChatPanel } from './ChannelChatPanel';
 import { VotePanel } from './VotePanel';
+import { FundamentalPanel } from './FundamentalPanel';
 import type { Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 import { SHOW_NEWS_FEED } from '../featureFlags';
@@ -211,6 +212,7 @@ export function MatrixSidePanel({
               <View style={styles.community}>
                 <ChannelChatPanel />
                 <VotePanel />
+                <FundamentalPanel symbol={symbol} />
               </View>
             ) : null}
           </ScrollView>

@@ -697,3 +697,22 @@ def coverage(lang: str) -> dict[str, int]:
                     seg += 1
                     seg_tr += 1 if (g["id"] in full) or (t and g["id"] in t.get("seg", {})) else 0
     return {"lectures": lec, "lectures_translated": lec_tr, "segments": seg, "segments_translated": seg_tr}
+
+
+def _add_extra_translations() -> None:
+    import json
+    from pathlib import Path
+
+    f = Path(__file__).resolve().parent / "academy_extra.json"
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    for code, table in (("en", EN), ("ku", KU)):
+        for x in data.get("level_titles", []):
+            table.setdefault(f"level:{x['school']}:{x['level']}", x["title"][code])
+        for ex in data.get("lectures", []):
+            table[f"lec:{ex['id']}"] = {"title": ex["title"][code], "outline": list(ex["outline"][code]), "seg": {}}
+
+
+_add_extra_translations()

@@ -66,6 +66,12 @@ async def lifespan(app: FastAPI):
         tasks.append(asyncio.create_task(td_ws.run_forever()))
         tasks.append(asyncio.create_task(alert_worker.run_alert_loop(60.0)))
         tasks.append(asyncio.create_task(ops.run_backup_loop()))
+        try:
+            import academy_audio_warm
+
+            academy_audio_warm.start()
+        except Exception as exc:  # noqa: BLE001 — warming is optional
+            print(f"[tts-warm] not started: {exc}")
         if shared_state.multi():
             tasks.append(asyncio.create_task(td_ws.publish_forever()))
     yield

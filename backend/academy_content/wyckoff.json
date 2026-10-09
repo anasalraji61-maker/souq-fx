@@ -708,6 +708,939 @@
      "narration": "یاسای کرداری: لە چوارچێوەی ڕۆژانەوە دەست پێبکە بۆ دیاریکردنی سیاق، پاشان مەودای وایکۆف لەسەر چوار کاتژمێر بکێشە، پاشان چوارچێوەی کاتژمێر تەنها بۆ کات دیاریکردن بەکاربهێنە. پێوەری دۆلار وەک هۆکارێکی پشتگیر یان دژ بپشکنە، نەک وەک ئاماژەیەکی سەربەخۆ. بە قۆناغی ڕێکخراو بچۆ ژوورەوە، دوای تاقیکردنەوەی Spring یان لە دوایین خاڵی پشتگیری، و لەسەر مۆمی داخراو. قەبارەی مامەڵە لە ماوەی stop و ڕێژەیەکی جێگیری مەترسییەوە حساب بکە، و لە ساتەکانی هەواڵی گەورە دوور بکەوە. ئەم ڕێبازە کوالیتی بڕیار باشتر دەکات، بەڵام ئەنجامی هیچ مامەڵەیەکی دیاریکراو مسۆگەر ناکات."
     }
    ]
+  },
+  "wy-l1-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "من هو المشغّل المركّب؟",
+     "narration": "في منهج وايكوف نتخيّل أن كل الأموال الكبيرة في السوق، من بنوك وصناديق ومؤسسات، يتصرف كأنه شخص واحد نسميه المشغّل المركّب أو Composite Operator. هذا ليس شخصاً حقيقياً ولا مؤامرة، بل أداة ذهنية تساعدك على قراءة الرسم البياني. الفكرة أن هذا الكيان يريد أن يشتري بسعر رخيص دون أن يلاحظه أحد، ثم يرفع السعر، ثم يبيع لجمهور المتأخرين بسعر مرتفع. وعندما تسأل نفسك عند كل حركة: ماذا يفعل المشغّل المركّب الآن، ولماذا؟ تبدأ برؤية السوق كقصة منطقية بدلاً من حركات عشوائية. وهذا السؤال هو حجر الأساس الذي ستبني عليه كل دروس وايكوف القادمة."
+    },
+    {
+     "id": "s2",
+     "title": "دورة السوق الأربع",
+     "narration": "يرى وايكوف أن السوق يتحرك في دورة من أربع مراحل. الأولى هي التجميع أو Accumulation، وفيها يتحرك السعر عرضياً في نطاق بعد هبوط طويل، بينما يشتري المشغّل المركّب بهدوء. الثانية هي الصعود أو Markup، حين يخرج السعر من النطاق ويبدأ اتجاه صاعد. الثالثة هي التوزيع أو Distribution، وهي نطاق عرضي في القمة يبيع فيه المشغّل ما اشتراه. والرابعة هي الهبوط أو Markdown، حين يكسر السعر النطاق نحو الأسفل. هذه الدورة تتكرر على كل الأطر الزمنية، من إطار الخمس دقائق إلى الإطار الأسبوعي. ومعرفة المرحلة الحالية تحدد لك هل تبحث عن شراء أم بيع أم تبقى خارج السوق."
+    },
+    {
+     "id": "s3",
+     "title": "كيف يعمل المشغّل داخل النطاق",
+     "narration": "المشغّل المركّب لا يستطيع شراء كمية ضخمة دفعة واحدة، لأن ذلك سيرفع السعر عليه قبل أن يكمل. لذلك يحتاج إلى نطاق عرضي يشتري فيه على مراحل من البائعين الخائفين. داخل هذا النطاق يختبر السعر القاع أكثر من مرة ليرى هل بقي عرض كبير، وقد يكسر القاع مؤقتاً ليجمع أوامر وقف الخسارة ثم يعود. وعندما يتأكد أن العرض جفّ، يرفع السعر بسهولة. على الرسم البياني ترى ذلك كنطاق بعد هبوط، مع قيعان لا تنخفض بقوة، وارتدادات صاعدة تصبح أقوى تدريجياً. وكلما طال النطاق وتكررت الاختبارات، كان السبب أكبر والحركة اللاحقة المحتملة أوسع."
+    },
+    {
+     "id": "s4",
+     "title": "القوانين الثلاثة وحجم التيك",
+     "narration": "يقوم المنهج على ثلاثة قوانين. قانون العرض والطلب: إذا زاد الطلب على العرض صعد السعر والعكس. وقانون السبب والنتيجة: طول فترة التجميع أو التوزيع هو السبب، وحجم الحركة التالية هو النتيجة. وقانون الجهد والنتيجة: الحجم هو الجهد، وحركة السعر هي النتيجة، وعدم التوافق بينهما إشارة تحذير. وهنا ملاحظة مهمة: في الفوركس لا يوجد حجم مركزي حقيقي، بل حجم التيك أو Tick Volume، أي عدد تغيّرات السعر في الشمعة. هو تقريب مفيد للنشاط، لكنه ليس عدد العقود الفعلي، ويختلف قليلاً من وسيط لآخر. لذلك نقارن الحجم بالشموع القريبة فقط، ولا نعامله كرقم مطلق."
+    },
+    {
+     "id": "s5",
+     "title": "كيف نستخدم الفكرة في الدخول",
+     "narration": "الهدف ليس التنبؤ بكل حركة، بل أن تتداول في نفس اتجاه المشغّل المركّب في المكان المنخفض المخاطرة. في نطاق التجميع، أفضل نقطة شراء تأتي غالباً بعد كسر كاذب للقاع يسمى Spring، أي نابض، ثم اختبار هادئ بحجم تيك منخفض يؤكد أن البائعين انتهوا. ننتظر إغلاق شمعة تعود داخل النطاق، ثم ندخل عند الاختبار. نضع وقف الخسارة تحت أدنى نقطة في الـ Spring، والهدف الأول عند قمة النطاق، والهدف الأكبر يُقاس لاحقاً بقانون السبب والنتيجة. ولا تخاطر بأكثر من نحو 1% من الحساب في الصفقة. وإذا أغلقت شمعة تحت قاع الـ Spring فالفكرة أُلغيت ونخرج دون تردد."
+    },
+    {
+     "id": "s6",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار على إطار الساعة. بعد هبوط من 1.0950 إلى 1.0720، تحرك السعر عرضياً ثلاثة أسابيع بين 1.0720 و1.0810. في جلسة لندن نزل السعر إلى 1.0703، أي تحت القاع بسبع عشرة نقطة، ثم أغلقت شمعة الساعة 9:00 بتوقيت لندن عائدة فوق 1.0720. بعد ساعات عاد السعر إلى 1.0725 بحجم تيك أقل بوضوح من حجم الكسر. الدخول شراء عند 1.0728، والوقف عند 1.0695 أي 33 نقطة، والهدف الأول قمة النطاق عند 1.0810 أي 82 نقطة. هذه قراءة لما فعله المشغّل المركّب، لا ضمان للنتيجة. ويمكن أخذ جزء من الربح عند 1.0810 ونقل الوقف إلى نقطة الدخول."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال معاكس على الذهب على إطار الأربع ساعات. بعد صعود قوي من 2280 إلى 2430 دولاراً، تحرك السعر عرضياً بين 2390 و2430. في افتتاح نيويورك 8:30 صعد السعر فوق القمة إلى 2441 بحجم تيك مرتفع، لكن الشمعة أغلقت عند 2422 داخل النطاق، أي جهد كبير بلا نتيجة. هذا يشير إلى أن المشغّل المركّب يبيع للمتأخرين. بعد اختبار ضعيف عند 2428 بحجم منخفض، الدخول بيع عند 2425، والوقف فوق 2441 عند 2445 أي 20 دولاراً، والهدف الأول قاع النطاق عند 2390 أي 35 دولاراً. ولو أغلقت شمعة الأربع ساعات فوق 2441 تُلغى الفكرة فوراً."
+    },
+    {
+     "id": "s8",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ هو التعامل مع المشغّل المركّب كأنه شخص يطاردك أنت تحديداً، فتفسر كل خسارة بأنها مؤامرة. هو مجرد نموذج لقراءة سلوك الأموال الكبيرة. الخطأ الثاني هو اعتبار كل نطاق عرضي تجميعاً، مع أنه قد يكون توزيعاً أو مجرد توقف داخل الاتجاه. الثالث هو الاعتماد على حجم التيك كأنه حجم حقيقي دقيق، أو مقارنة حجم شمعة في جلسة آسيا بشمعة في جلسة لندن، فالنشاط يختلف حسب الوقت. والرابع هو الدخول قبل إغلاق الشمعة، أو بلا وقف خسارة واضح. والخطأ الأخير هو المخاطرة الكبيرة لأنك واثق جداً من قراءتك."
+    },
+    {
+     "id": "s9",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: قبل أي صفقة حدّد أين نحن في دورة السوق، هل في تجميع أو صعود أو توزيع أو هبوط. ثم اسأل: ماذا يحاول المشغّل المركّب أن يفعل هنا؟ لا تشترِ في منتصف النطاق، بل انتظر اختبار الحواف، ويفضّل بعد Spring أو كسر كاذب يعود داخل النطاق على شمعة مغلقة. استخدم حجم التيك للمقارنة بين الشموع القريبة في نفس الجلسة، لا كرقم مطلق. ضع وقفك خلف النقطة التي تُبطل الفكرة، واحسب حجم الصفقة لتبقى المخاطرة قرابة 1%. المنهج إطار للقراءة، لا يقين. وسجّل كل صفقة في دفترك لتتعلم من قراءاتك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Who is the Composite Operator?",
+     "narration": "In the Wyckoff method we imagine that all the big money in the market, the banks, funds and institutions, behaves as if it were one person, which we call the Composite Operator. This is not a real person and not a conspiracy. It is a mental tool that helps you read the chart. The idea is that this entity wants to buy cheaply without anyone noticing, then push price higher, and then sell to the crowd of late buyers at a high price. When you ask yourself at every move what the Composite Operator is doing now, and why, you start to see the market as a logical story instead of random movements. This question is the foundation on which all the coming Wyckoff lessons are built."
+    },
+    {
+     "id": "s2",
+     "title": "The four-stage market cycle",
+     "narration": "Wyckoff saw the market moving in a cycle of four stages. The first is Accumulation, where price moves sideways in a range after a long decline while the Composite Operator quietly buys. The second is Markup, when price leaves the range and an uptrend begins. The third is Distribution, a sideways range at the top in which the operator sells what he bought. The fourth is Markdown, when price breaks the range to the downside. This cycle repeats on every timeframe, from the five-minute chart to the weekly chart, so the same reading works whether you trade intraday or hold positions for weeks. Knowing the current stage tells you whether to look for buys, sells, or to stay out of the market."
+    },
+    {
+     "id": "s3",
+     "title": "How the operator works inside the range",
+     "narration": "The Composite Operator cannot buy a huge quantity all at once, because that would push price up against him before he finishes. So he needs a sideways range in which to buy in stages from fearful sellers. Inside this range, price tests the low more than once to check whether heavy supply remains, and it may break the low temporarily to collect stop-loss orders and then return. When he is satisfied that supply has dried up, he can lift price easily. On the chart you see this as a range after a decline, with lows that no longer drop strongly and rallies that gradually become stronger. The longer the range and the more tests it contains, the larger the cause and the wider the potential move that follows."
+    },
+    {
+     "id": "s4",
+     "title": "The three laws and tick volume",
+     "narration": "The method rests on three laws. The law of supply and demand: when demand exceeds supply price rises, and the reverse. The law of cause and effect: the length of the accumulation or distribution period is the cause, and the size of the following move is the effect. The law of effort versus result: volume is the effort and price movement is the result, and any mismatch between them is a warning sign. An important note here: in forex there is no real centralized volume, only tick volume, meaning the number of price changes within a candle. It is a useful approximation of activity, but it is not the actual number of contracts, and it differs slightly from one broker to another. So compare it only with nearby candles."
+    },
+    {
+     "id": "s5",
+     "title": "How we use the idea for entries",
+     "narration": "The goal is not to predict every move, but to trade in the same direction as the Composite Operator at the low-risk spot. In an accumulation range, the best buying point often comes after a false break of the low called a Spring, followed by a quiet test on low tick volume that confirms the sellers are exhausted. We wait for a candle to close back inside the range, then enter on the test. The stop loss goes below the lowest point of the Spring, the first target is the top of the range, and the larger target is measured later with the law of cause and effect. Do not risk more than about 1% of the account on the trade. A close below the Spring low cancels the idea."
+    },
+    {
+     "id": "s6",
+     "title": "Example on EURUSD",
+     "narration": "An example on EURUSD on the one-hour chart. After a decline from 1.0950 to 1.0720, price moved sideways for three weeks between 1.0720 and 1.0810. During the London session price dropped to 1.0703, seventeen pips below the low, and then the 9:00 London candle closed back above 1.0720. A few hours later price returned to 1.0725 on clearly lower tick volume than the break. The entry is a buy at 1.0728, the stop at 1.0695, which is 33 pips, and the first target is the range top at 1.0810, which is 82 pips. This is a reading of what the Composite Operator did, not a guarantee of the outcome. Part of the profit can be taken at 1.0810 and the stop moved to the entry point."
+    },
+    {
+     "id": "s7",
+     "title": "Example on gold, XAUUSD",
+     "narration": "An opposite example on gold on the four-hour chart. After a strong rally from 2280 to 2430 dollars, price moved sideways between 2390 and 2430. At the New York open at 8:30, price pushed above the high to 2441 on high tick volume, but the candle closed at 2422, back inside the range, meaning a large effort with no result. This suggests the Composite Operator is selling to latecomers. After a weak retest at 2428 on low volume, the entry is a sell at 2425, the stop above 2441 at 2445, which is 20 dollars, and the first target is the range low at 2390, which is 35 dollars. If a four-hour candle closes above 2441, the idea is cancelled immediately."
+    },
+    {
+     "id": "s8",
+     "title": "Common mistakes",
+     "narration": "The first mistake is treating the Composite Operator as a person who is hunting you specifically, so that you explain every loss as a conspiracy. It is only a model for reading the behaviour of big money. The second mistake is assuming every sideways range is accumulation, when it may be distribution or simply a pause within the trend. The third is relying on tick volume as if it were precise real volume, or comparing a candle's volume in the Asian session with one in the London session, since activity differs with the time of day. The fourth is entering before the candle closes, or without a clear stop loss. The last mistake is taking a large risk because you feel very sure of your reading."
+    },
+    {
+     "id": "s9",
+     "title": "The practical rule",
+     "narration": "The practical rule: before any trade, identify where we are in the market cycle, whether in accumulation, markup, distribution or markdown. Then ask: what is the Composite Operator trying to do here? Do not buy in the middle of the range; wait for the edges to be tested, preferably after a Spring or a false break that returns inside the range on a closed candle. Use tick volume to compare nearby candles in the same session, not as an absolute number. Place your stop beyond the point that invalidates the idea, and size the trade so the risk stays around 1%. The method is a framework for reading price, not a certainty. And record every trade in your journal so you learn from your readings."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "Composite Operator کێیە؟",
+     "narration": "لە ڕێبازی وایکۆفدا وێنا دەکەین کە هەموو پارە گەورەکانی بازاڕ، وەک بانک و سندووق و دامەزراوەکان، وەک یەک کەس هەڵسوکەوت دەکەن، کە ناوی دەنێین ئۆپەراتۆری لێکدراو یان Composite Operator. ئەمە کەسێکی ڕاستەقینە نییە و پیلانگێڕیش نییە، بەڵکو ئامرازێکی بیرکردنەوەیە کە یارمەتیت دەدات چارتەکە بخوێنیتەوە. بیرۆکەکە ئەوەیە کە ئەم قەوارەیە دەیەوێت بە هەرزانی بکڕێت بێ ئەوەی کەس هەستی پێ بکات، پاشان نرخ بەرز بکاتەوە، دواتر بە نرخێکی بەرز بە کۆمەڵی دواکەوتووان بفرۆشێت. کاتێک لە هەر جووڵەیەکدا لە خۆت دەپرسیت ئێستا Composite Operator چی دەکات و بۆچی، دەست دەکەیت بە بینینی بازاڕ وەک چیرۆکێکی لۆژیکی نەک جووڵەی هەڕەمەکی. ئەم پرسیارە بناغەیەکە کە هەموو وانەکانی داهاتووی وایکۆف لەسەری بنیات دەنرێن."
+    },
+    {
+     "id": "s2",
+     "title": "سووڕی چوار قۆناغیی بازاڕ",
+     "narration": "وایکۆف پێی وایە بازاڕ لە سووڕێکی چوار قۆناغیدا دەجووڵێت. یەکەم کۆکردنەوە یان Accumulation، کە تێیدا دوای دابەزینێکی درێژ نرخ بە ئاسۆیی لە ناو مەودایەکدا دەجووڵێت، لە کاتێکدا Composite Operator بە بێدەنگی دەکڕێت. دووەم بەرزبوونەوە یان Markup، کاتێک نرخ لە مەوداکە دەردەچێت و ڕەوتێکی سەرەوە دەست پێدەکات. سێیەم دابەشکردن یان Distribution، مەودایەکی ئاسۆیی لە لووتکەدا کە ئۆپەراتۆر ئەوەی کڕیویەتی دەیفرۆشێت. چوارەم دابەزین یان Markdown، کاتێک نرخ مەوداکە بەرەو خوارەوە دەشکێنێت. ئەم سووڕە لە هەموو چوارچێوە کاتییەکاندا دووبارە دەبێتەوە، لە چارتی پێنج خولەکییەوە تا هەفتانە. زانینی قۆناغی ئێستا پێت دەڵێت بەدوای کڕیندا بگەڕێیت یان فرۆشتن یان لە دەرەوەی بازاڕ بمێنیتەوە."
+    },
+    {
+     "id": "s3",
+     "title": "ئۆپەراتۆر چۆن لە ناو مەوداکەدا کار دەکات",
+     "narration": "Composite Operator ناتوانێت بڕێکی زۆر گەورە بە یەکجار بکڕێت، چونکە ئەوە نرخەکە پێش تەواوبوونی لێی بەرز دەکاتەوە. بۆیە پێویستی بە مەودایەکی ئاسۆییە کە تێیدا بە قۆناغ لە فرۆشیارە ترساوەکان بکڕێت. لە ناو ئەم مەودایەدا نرخ زیاتر لە جارێک بنەکە تاقی دەکاتەوە بۆ ئەوەی بزانێت ئایا خستنەڕووی زۆر ماوە، و لەوانەیە بە شێوەیەکی کاتی بنەکە بشکێنێت بۆ کۆکردنەوەی فەرمانەکانی وەستانی زیان و پاشان بگەڕێتەوە. کاتێک دڵنیا بوو خستنەڕوو وشک بووە، بە ئاسانی نرخ بەرز دەکاتەوە. لەسەر چارت ئەمە وەک مەودایەک دوای دابەزین دەبینیت، بە بنەگەلێک کە ئیتر بە هێز دانابەزن و هەستانەوەگەلێک کە وردە وردە بەهێزتر دەبن. تا مەوداکە درێژتر بێت و تاقیکردنەوەکان زیاتر دووبارە ببنەوە، هۆکە گەورەترە و جووڵەی ئەگەریی دواتر فراوانترە."
+    },
+    {
+     "id": "s4",
+     "title": "سێ یاساکە و Tick Volume",
+     "narration": "ڕێبازەکە لەسەر سێ یاسا وەستاوە. یاسای خستنەڕوو و داواکاری: ئەگەر داواکاری لە خستنەڕوو زیاتر بوو نرخ بەرز دەبێتەوە و پێچەوانەکەشی. یاسای هۆ و ئەنجام: درێژیی ماوەی کۆکردنەوە یان دابەشکردن هۆیە، و قەبارەی جووڵەی دواتر ئەنجامە. یاسای هەوڵ و ئەنجام: قەبارە هەوڵە و جووڵەی نرخ ئەنجامە، و هەر ناکۆکییەک لە نێوانیاندا نیشانەی ئاگادارکردنەوەیە. لێرەدا تێبینییەکی گرنگ هەیە: لە فۆرێکسدا قەبارەی ناوەندیی ڕاستەقینە نییە، تەنها Tick Volume هەیە، واتە ژمارەی گۆڕانەکانی نرخ لە ناو مۆمێکدا. نزیککردنەوەیەکی بەسوودە بۆ چالاکی، بەڵام ژمارەی ڕاستەقینەی گرێبەستەکان نییە و کەمێک لە بڕۆکەرێکەوە بۆ بڕۆکەرێکی تر جیاوازە. بۆیە قەبارە تەنها لەگەڵ مۆمە نزیکەکان بەراورد دەکەین، نەک وەک ژمارەیەکی ڕەها."
+    },
+    {
+     "id": "s5",
+     "title": "چۆن بیرۆکەکە بۆ چوونەژوورەوە بەکاردێنین",
+     "narration": "ئامانج پێشبینیکردنی هەموو جووڵەیەک نییە، بەڵکو ئەوەیە لە هەمان ئاراستەی Composite Operator و لە شوێنی مەترسی کەمدا بازرگانی بکەیت. لە مەودای کۆکردنەوەدا، باشترین خاڵی کڕین زۆرجار دوای شکاندنێکی درۆینەی بنەکە دێت کە پێی دەڵێن Spring، پاشان تاقیکردنەوەیەکی هێمن بە Tick Volume ی کەم کە دەیسەلمێنێت فرۆشیارەکان تەواو بوون. چاوەڕێی داخستنی مۆمێک دەکەین کە دەگەڕێتەوە ناو مەوداکە، پاشان لە تاقیکردنەوەکەدا دەچینە ژوورەوە. وەستانی زیان لە ژێر نزمترین خاڵی Spring دادەنێین، ئامانجی یەکەم لووتکەی مەوداکەیە، و ئامانجی گەورەتر دواتر بە یاسای هۆ و ئەنجام دەپێورێت. زیاتر لە نزیکەی 1% ی هەژمار مەخە مەترسییەوە. ئەگەر مۆمێک لە ژێر بنی Spring داخرا، بیرۆکەکە هەڵوەشاوەتەوە و بێ دوودڵی دەردەچین."
+    },
+    {
+     "id": "s6",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار لە چارتی یەک کاتژمێری. دوای دابەزین لە 1.0950 بۆ 1.0720، نرخ سێ هەفتە بە ئاسۆیی لە نێوان 1.0720 و 1.0810 جووڵا. لە دانیشتنی لەندەندا نرخ دابەزی بۆ 1.0703، واتە حەڤدە پیپ لە ژێر بنەکە، پاشان مۆمی کاتژمێر 9:00 ی لەندەن لە سەرووی 1.0720 داخرا. چەند کاتژمێرێک دواتر نرخ گەڕایەوە بۆ 1.0725 بە Tick Volume ێکی بە ڕوونی کەمتر لە قەبارەی شکاندنەکە. چوونەژوورەوە کڕینە لە 1.0728، وەستان لە 1.0695 واتە 33 پیپ، و ئامانجی یەکەم لووتکەی مەوداکەیە لە 1.0810 واتە 82 پیپ. ئەمە خوێندنەوەیە بۆ ئەوەی Composite Operator کردی، نەک گەرەنتیی ئەنجام. دەتوانرێت بەشێک لە قازانج لە 1.0810 وەربگیرێت و وەستان بگوازرێتەوە بۆ خاڵی چوونەژوورەوە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر زێڕ XAUUSD",
+     "narration": "نموونەیەکی پێچەوانە لەسەر زێڕ لە چارتی چوار کاتژمێری. دوای بەرزبوونەوەیەکی بەهێز لە 2280 بۆ 2430 دۆلار، نرخ بە ئاسۆیی لە نێوان 2390 و 2430 جووڵا. لە کردنەوەی نیویۆرک کاتژمێر 8:30، نرخ لە سەرووی لووتکەکە بەرز بووەوە بۆ 2441 بە Tick Volume ی بەرز، بەڵام مۆمەکە لە 2422 لە ناو مەوداکەدا داخرا، واتە هەوڵێکی گەورە بێ ئەنجام. ئەمە ئاماژەیە بەوەی Composite Operator بە دواکەوتووان دەفرۆشێت. دوای تاقیکردنەوەیەکی لاواز لە 2428 بە قەبارەی کەم، چوونەژوورەوە فرۆشتنە لە 2425، وەستان لە سەرووی 2441 لە 2445 واتە 20 دۆلار، و ئامانجی یەکەم بنی مەوداکەیە لە 2390 واتە 35 دۆلار. ئەگەر مۆمێکی چوار کاتژمێری لە سەرووی 2441 داخرا، بیرۆکەکە دەستبەجێ هەڵدەوەشێتەوە."
+    },
+    {
+     "id": "s8",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵە ئەوەیە Composite Operator وەک کەسێک ببینیت کە بە تایبەتی ڕاوی تۆ دەکات، و هەموو زیانێک بە پیلانگێڕی لێک بدەیتەوە. ئەو تەنها مۆدێلێکە بۆ خوێندنەوەی هەڵسوکەوتی پارەی گەورە. هەڵەی دووەم ئەوەیە هەموو مەودایەکی ئاسۆیی بە کۆکردنەوە دابنێیت، لە کاتێکدا لەوانەیە دابەشکردن بێت یان تەنها وەستانێک بێت لە ناو ڕەوتەکەدا. سێیەم پشت بەستنە بە Tick Volume وەک ئەوەی قەبارەی ڕاستەقینەی وورد بێت، یان بەراوردکردنی قەبارەی مۆمێک لە دانیشتنی ئاسیا لەگەڵ مۆمێک لە دانیشتنی لەندەن، چونکە چالاکی بەپێی کات جیاوازە. چوارەم چوونەژوورەوەیە پێش داخستنی مۆمەکە، یان بێ وەستانی زیانی ڕوون. هەڵەی کۆتایی مەترسیی گەورەیە چونکە زۆر دڵنیایت لە خوێندنەوەکەت."
+    },
+    {
+     "id": "s9",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی: پێش هەر بازرگانییەک دیاری بکە لە کوێی سووڕی بازاڕداین، ئایا لە کۆکردنەوە، بەرزبوونەوە، دابەشکردن یان دابەزینداین. پاشان بپرسە: Composite Operator لێرەدا هەوڵی چی دەدات؟ لە ناوەڕاستی مەوداکەدا مەکڕە، بەڵکو چاوەڕێی تاقیکردنەوەی لێوارەکان بکە، باشتر دوای Spring یان شکاندنێکی درۆینە کە بە مۆمێکی داخراو دەگەڕێتەوە ناو مەوداکە. Tick Volume بۆ بەراوردکردنی مۆمە نزیکەکان لە هەمان دانیشتندا بەکاربهێنە، نەک وەک ژمارەیەکی ڕەها. وەستانەکەت لە پشت ئەو خاڵەوە دابنێ کە بیرۆکەکە پووچەڵ دەکاتەوە، و قەبارەی بازرگانییەکە وا حیساب بکە کە مەترسی نزیکەی 1% بمێنێتەوە. ڕێبازەکە چوارچێوەیەکە بۆ خوێندنەوە، نەک دڵنیایی. و هەموو بازرگانییەک لە دەفتەرەکەتدا تۆمار بکە بۆ ئەوەی لە خوێندنەوەکانت فێر بیت."
+    }
+   ]
+  },
+  "wy-l2-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا نقسّم النطاق إلى مراحل؟",
+     "narration": "عرفنا أن التجميع والتوزيع نطاقات عرضية يبني فيها المشغّل المركّب مركزه. لكن النطاق الواحد قد يستمر أسابيع، ولكل جزء منه معنى مختلف. لذلك قسّم أتباع وايكوف النطاق إلى خمس مراحل بالأحرف من A إلى E. المرحلة A توقف الاتجاه السابق، والمرحلة B تبني السبب، والمرحلة C تختبر السوق اختباراً أخيراً، والمرحلة D تُظهر سيطرة طرف واحد، والمرحلة E هي الاتجاه الجديد خارج النطاق. معرفة المرحلة الحالية تخبرك هل الوقت مناسب للدخول أم للانتظار، وهي أهم من أي إشارة منفردة. وفي هذا الدرس سنمر على كل مرحلة، ثم نطبقها على مثالين كاملين."
+    },
+    {
+     "id": "s2",
+     "title": "المرحلة A: توقف الاتجاه",
+     "narration": "في التجميع تبدأ المرحلة A بما يسمى Preliminary Support أو الدعم الأولي، وهو أول ظهور لمشترين كبار يبطئ الهبوط. ثم يأتي Selling Climax أو ذروة البيع، وهي شمعة أو عدة شموع هبوط حاد بأعلى حجم تيك في المنطقة، حين يبيع الخائفون بذعر والأموال الكبيرة تشتري. بعدها يرتد السعر بقوة فيما يسمى Automatic Rally أو الارتداد التلقائي، وقمته ترسم الحد العلوي للنطاق. ثم يعود السعر في Secondary Test أو الاختبار الثانوي نحو قاع الذروة بحجم أقل. في التوزيع تنعكس الصورة: ذروة شراء ثم هبوط تلقائي. وهذه النقاط الأربع معاً تخبرك أن الاتجاه السابق توقف، لا أن اتجاهاً جديداً بدأ."
+    },
+    {
+     "id": "s3",
+     "title": "المرحلة B: بناء السبب",
+     "narration": "المرحلة B هي غالباً الأطول، وقد تأخذ ثلث النطاق أو أكثر. فيها يتحرك السعر بين الحدين اللذين رسمتهما المرحلة A، ويشتري المشغّل المركّب في التجميع، أو يبيع في التوزيع، دون أن يدفع السعر بعيداً. سترى اختبارات ثانوية متكررة للقاع والقمة، وقد يتجاوز السعر الحدود قليلاً ثم يعود. هذه المرحلة مزعجة للمتداول لأنها بلا اتجاه واضح، والدخول فيها يعني غالباً وقف خسارة يُضرب مرة بعد مرة. راقب فيها الحجم: إذا صارت الهبوطات بحجم تيك أقل والارتدادات بحجم أكبر، فهذا علامة تجميع. والعكس، أي هبوطات بحجم أعلى، يرجّح التوزيع."
+    },
+    {
+     "id": "s4",
+     "title": "المرحلة C: الاختبار الحاسم",
+     "narration": "المرحلة C هي لحظة الحقيقة. في التجميع يحدث غالباً Spring، أي كسر كاذب تحت قاع النطاق يجمع أوامر وقف الخسارة ويغري البائعين، ثم يعود السعر بسرعة ويغلق داخل النطاق. بعده يأتي اختبار للـ Spring بحجم تيك منخفض يؤكد أن العرض انتهى. في التوزيع يقابله UTAD، أي Upthrust After Distribution، وهو كسر كاذب فوق القمة ثم عودة وإغلاق داخل النطاق. ليس كل نطاق يحتوي Spring واضحاً، فأحياناً يكون الاختبار مجرد قاع أعلى قليلاً. المهم أن السوق اختُبر وفشل الطرف الضعيف في الاستمرار. ولا نعتبره Spring إلا بعد إغلاق شمعة داخل النطاق، لا أثناء تكوّنها."
+    },
+    {
+     "id": "s5",
+     "title": "المرحلة D: سيطرة طرف واحد",
+     "narration": "في المرحلة D يُظهر الطلب سيطرته في التجميع. نرى Sign of Strength أو علامة قوة، وهي حركة صاعدة واسعة بحجم تيك مرتفع تصل إلى قمة النطاق أو تكسرها بإغلاق واضح. ثم يأتي تراجع هادئ يسمى Last Point of Support أو آخر نقطة دعم، بشموع صغيرة وحجم منخفض، وغالباً يكون قاعاً أعلى من القيعان السابقة. وإذا كسر السعر القمة ثم عاد يختبرها من الأعلى، نسمي ذلك Backup أو Back Up to the Edge. في التوزيع العكس: Sign of Weakness ثم Last Point of Supply، وهو ارتداد ضعيف نحو الحد المكسور."
+    },
+    {
+     "id": "s6",
+     "title": "المرحلة E وأين ندخل",
+     "narration": "المرحلة E هي الاتجاه الجديد خارج النطاق، صعوداً بعد التجميع أو هبوطاً بعد التوزيع، مع تراجعات قصيرة يمكن الدخول منها. أما أفضل نقاط الدخول منخفضة المخاطرة فهي ثلاث. الأولى اختبار الـ Spring في المرحلة C، ووقفها تحت قاع الـ Spring. الثانية الـ LPS في المرحلة D، ووقفها تحت قاع هذا التراجع. والثالثة الـ Backup بعد كسر قمة النطاق، ووقفها تحت الحد المكسور. الهدف الأول قمة النطاق أو القمة التالية، والهدف الأكبر يُحسب بالنقطة والرقم. وندخل فقط بعد إغلاق الشمعة، بمخاطرة قرابة 1%. وكلما تأخرت المرحلة كان التأكيد أقوى، لكن الوقف أبعد والعائد أقل."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على GBPUSD",
+     "narration": "مثال على الجنيه دولار على إطار الأربع ساعات. بعد هبوط من 1.2900، ظهر دعم أولي عند 1.2520، ثم ذروة بيع إلى 1.2450 بأعلى حجم تيك في شهر، وهذه المرحلة A مع ارتداد تلقائي إلى 1.2600. لمدة أسبوعين تحرك السعر بين الحدين، وهذه المرحلة B. ثم نزل إلى 1.2432 وأغلق عائداً فوق 1.2450، وهذا Spring في المرحلة C. بعده صعد بقوة وأغلق فوق 1.2600 عند 1.2640، علامة قوة في المرحلة D. التراجع الهادئ إلى 1.2605 كان الـ LPS. الدخول 1.2610، والوقف 1.2575 أي 35 نقطة، والهدف 1.2750 أي 140 نقطة."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال توزيع على الذهب على إطار الأربع ساعات. بعد صعود طويل، ظهرت ذروة شراء عند 2450 دولاراً بحجم تيك قياسي، ثم هبوط تلقائي إلى 2395، وهذه المرحلة A. تذبذب السعر بين 2395 و2450 أسبوعاً ونصفاً، وهذه المرحلة B. في افتتاح نيويورك صعد إلى 2462 ثم أغلقت الشمعة عند 2438 داخل النطاق، وهذا UTAD في المرحلة C. بعدها كسر السعر 2395 بإغلاق عند 2380 وحجم مرتفع، علامة ضعف في المرحلة D. الارتداد الضعيف إلى 2398 كان آخر نقطة عرض. البيع عند 2396، والوقف 2412، والهدف 2340. الإغلاق فوق 2412 يلغي الفكرة."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأكثر شيوعاً هو محاولة تسمية كل شمعة بحرف ومصطلح أثناء تكوّن النطاق، مع أن المراحل تتضح غالباً بعد اكتمالها. الخطأ الثاني هو الدخول في المرحلة B لأن السعر لمس الحد، فالمرحلة B مليئة بالاختراقات الكاذبة. الثالث هو اعتبار أي كسر للقاع Spring قبل أن تُغلق الشمعة عائدة داخل النطاق، فقد يكون كسراً حقيقياً وبداية هبوط جديد. الرابع هو مطاردة السعر في المرحلة E بعيداً عن أي تراجع. والخامس هو نسيان أن حجم التيك في الفوركس تقريبي، فلا تبنِ قراءة كاملة على شمعة واحدة. وتذكّر أن قراءة المراحل تتحسن مع المراجعة والتدرّب على رسوم سابقة."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ارسم حدود النطاق من المرحلة A، أي من الذروة والارتداد التلقائي. لا تتداول داخل المرحلة B، بل راقب الحجم فيها لتعرف أي طرف يجمع. انتظر المرحلة C، أي Spring أو UTAD، وتأكد من إغلاق الشمعة عائدة داخل النطاق، ثم اختبار بحجم أقل. ادخل عند الاختبار، أو عند الـ LPS أو الـ Backup في المرحلة D، وضع الوقف خلف آخر قاع أو قمة تُبطل الفكرة. خذ الهدف الأول عند الحد المقابل أو القمة التالية، وأبقِ المخاطرة قرابة 1%. المراحل خريطة احتمالات لا يقين. ودوّن المرحلة التي دخلت فيها في دفتر صفقاتك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why divide the range into phases?",
+     "narration": "We have learned that accumulation and distribution are sideways ranges in which the Composite Operator builds his position. But one range can last for weeks, and each part of it means something different. That is why Wyckoff practitioners divide the range into five phases labelled A to E. Phase A stops the previous trend, Phase B builds the cause, Phase C puts the market through a final test, Phase D shows one side taking control, and Phase E is the new trend outside the range. Knowing the current phase tells you whether it is time to enter or to wait, and it matters more than any single signal. In this lesson we will go through each phase, then apply them to two complete examples."
+    },
+    {
+     "id": "s2",
+     "title": "Phase A: stopping the trend",
+     "narration": "In accumulation, Phase A begins with what is called Preliminary Support, the first appearance of large buyers that slows the decline. Then comes the Selling Climax, a candle or a few candles of sharp decline on the highest tick volume in the area, when frightened traders sell in panic and big money buys. After that price bounces strongly in what is called the Automatic Rally, and its high draws the upper boundary of the range. Then price returns in a Secondary Test toward the climax low, on lower volume. In distribution the picture is reversed: a Buying Climax followed by an Automatic Reaction downward. Together these four points tell you the previous trend has stopped, not that a new one has begun."
+    },
+    {
+     "id": "s3",
+     "title": "Phase B: building the cause",
+     "narration": "Phase B is usually the longest, and it can take a third of the range or more. In it price moves between the two boundaries drawn by Phase A, while the Composite Operator buys in accumulation, or sells in distribution, without pushing price far away. You will see repeated secondary tests of the low and the high, and price may exceed the boundaries slightly and then return. This phase is frustrating for traders because it has no clear direction, and entering here usually means a stop loss that gets hit again and again. Watch volume in it: if declines come on lower tick volume and rallies on higher volume, that is a sign of accumulation. The reverse, declines on higher volume, favours distribution."
+    },
+    {
+     "id": "s4",
+     "title": "Phase C: the decisive test",
+     "narration": "Phase C is the moment of truth. In accumulation it usually contains a Spring, a false break below the range low that collects stop-loss orders and tempts sellers, after which price returns quickly and closes inside the range. Then comes a test of the Spring on low tick volume, confirming that supply is exhausted. In distribution the counterpart is the UTAD, the Upthrust After Distribution, a false break above the high followed by a return and a close inside the range. Not every range contains a clear Spring; sometimes the test is just a slightly higher low. What matters is that the market was tested and the weaker side failed to continue. We only call it a Spring after a candle closes inside the range, not while it is forming."
+    },
+    {
+     "id": "s5",
+     "title": "Phase D: one side takes control",
+     "narration": "In Phase D demand shows its control in accumulation. We see a Sign of Strength, a wide upward move on high tick volume that reaches or breaks the range top with a clear close. Then comes a quiet pullback called the Last Point of Support, with small candles and low volume, usually forming a higher low than the earlier lows. If price breaks the high and then returns to test it from above, we call that a Backup, or Back Up to the Edge. In distribution it is the reverse: a Sign of Weakness, then a Last Point of Supply, which is a weak rally toward the broken boundary."
+    },
+    {
+     "id": "s6",
+     "title": "Phase E and where we enter",
+     "narration": "Phase E is the new trend outside the range, upward after accumulation or downward after distribution, with short pullbacks that can be used for entries. The best low-risk entry points are three. The first is the test of the Spring in Phase C, with the stop below the Spring low. The second is the LPS in Phase D, with the stop below the low of that pullback. The third is the Backup after the break of the range top, with the stop below the broken boundary. The first target is the range top or the next high, and the larger target is calculated with Point and Figure. We enter only after the candle closes, risking about 1%. The later the phase, the stronger the confirmation, but the stop is wider and the reward smaller."
+    },
+    {
+     "id": "s7",
+     "title": "Example on GBPUSD",
+     "narration": "An example on GBPUSD on the four-hour chart. After a decline from 1.2900, Preliminary Support appeared at 1.2520, then a Selling Climax to 1.2450 on the highest tick volume in a month. That is Phase A, with an Automatic Rally to 1.2600. For two weeks price moved between the two boundaries, which is Phase B. Then it dropped to 1.2432 and closed back above 1.2450, a Spring in Phase C. After that it rose strongly and closed above 1.2600 at 1.2640, a Sign of Strength in Phase D. The quiet pullback to 1.2605 was the LPS. The entry is 1.2610, the stop 1.2575, which is 35 pips, and the target 1.2750, which is 140 pips."
+    },
+    {
+     "id": "s8",
+     "title": "Example on gold, XAUUSD",
+     "narration": "A distribution example on gold on the four-hour chart. After a long rally, a Buying Climax appeared at 2450 dollars on record tick volume, followed by an Automatic Reaction down to 2395. That is Phase A. Price swung between 2395 and 2450 for a week and a half, which is Phase B. At the New York open it rose to 2462, and then the candle closed at 2438 inside the range, a UTAD in Phase C. After that price broke 2395 with a close at 2380 on high volume, a Sign of Weakness in Phase D. The weak rally to 2398 was the Last Point of Supply. The sell is at 2396, the stop 2412, and the target 2340. A close above 2412 cancels the idea."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The most common mistake is trying to label every candle with a letter and a term while the range is still forming, when phases usually become clear only after they are complete. The second mistake is entering in Phase B because price touched a boundary, since Phase B is full of false breakouts. The third is calling any break of the low a Spring before a candle has closed back inside the range, because it may be a real break and the start of a new decline. The fourth is chasing price in Phase E far from any pullback. The fifth is forgetting that tick volume in forex is approximate, so do not build a whole reading on a single candle. Remember that reading phases improves with review and practice on past charts."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: draw the range boundaries from Phase A, that is, from the climax and the automatic move. Do not trade inside Phase B; instead watch its volume to learn which side is building a position. Wait for Phase C, a Spring or a UTAD, and make sure a candle closes back inside the range, followed by a test on lower volume. Enter on the test, or at the LPS or the Backup in Phase D, and put the stop beyond the last low or high that invalidates the idea. Take the first target at the opposite boundary or the next high, and keep the risk around 1%. Phases are a map of probabilities, not certainty. Note the phase you entered in your trade journal."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی مەوداکە دابەش دەکەین بۆ قۆناغ؟",
+     "narration": "زانیمان کە کۆکردنەوە و دابەشکردن مەودای ئاسۆیین کە Composite Operator پێگەی خۆی تێیاندا بنیات دەنێت. بەڵام یەک مەودا لەوانەیە چەند هەفتەیەک بخایەنێت، و هەر بەشێکی واتایەکی جیاوازی هەیە. بۆیە شوێنکەوتووانی وایکۆف مەوداکەیان دابەش کردووە بۆ پێنج قۆناغ بە پیتەکانی A تا E. قۆناغی A ڕەوتی پێشوو دەوەستێنێت، قۆناغی B هۆ بنیات دەنێت، قۆناغی C بازاڕ دەخاتە بەر تاقیکردنەوەیەکی کۆتایی، قۆناغی D کۆنترۆڵی یەک لایەن نیشان دەدات، و قۆناغی E ڕەوتی نوێیە لە دەرەوەی مەوداکە. زانینی قۆناغی ئێستا پێت دەڵێت کاتی چوونەژوورەوەیە یان چاوەڕوانی، و لە هەر نیشانەیەکی تاک گرنگترە. لەم وانەیەدا بە هەموو قۆناغەکاندا تێدەپەڕین، پاشان لەسەر دوو نموونەی تەواو جێبەجێیان دەکەین."
+    },
+    {
+     "id": "s2",
+     "title": "قۆناغی A: وەستانی ڕەوت",
+     "narration": "لە کۆکردنەوەدا قۆناغی A بەوە دەست پێدەکات کە پێی دەڵێن Preliminary Support یان پشتگیریی سەرەتایی، کە یەکەم دەرکەوتنی کڕیارە گەورەکانە و دابەزینەکە خاو دەکاتەوە. پاشان Selling Climax یان لووتکەی فرۆشتن دێت، کە مۆمێک یان چەند مۆمێکی دابەزینی تیژە بە بەرزترین Tick Volume لەو ناوچەیەدا، کاتێک ترساوەکان بە شڵەژاوی دەفرۆشن و پارەی گەورە دەکڕێت. دوای ئەوە نرخ بە هێز هەڵدەستێتەوە لەوەی پێی دەڵێن Automatic Rally، و لووتکەکەی سنووری سەرەوەی مەوداکە دەکێشێت. پاشان نرخ لە Secondary Test دا بەرەو بنی لووتکەی فرۆشتن دەگەڕێتەوە بە قەبارەی کەمتر. لە دابەشکردندا وێنەکە پێچەوانەیە: Buying Climax و پاشان کاردانەوەی خۆکار بەرەو خوارەوە. ئەم چوار خاڵە پێکەوە پێت دەڵێن ڕەوتی پێشوو وەستاوە، نەک ڕەوتێکی نوێ دەستی پێکردووە."
+    },
+    {
+     "id": "s3",
+     "title": "قۆناغی B: بنیاتنانی هۆ",
+     "narration": "قۆناغی B زۆرجار درێژترینە، و لەوانەیە سێیەکی مەوداکە یان زیاتر بگرێت. تێیدا نرخ لە نێوان ئەو دوو سنوورەدا دەجووڵێت کە قۆناغی A کێشاوێتی، لە کاتێکدا Composite Operator لە کۆکردنەوەدا دەکڕێت، یان لە دابەشکردندا دەفرۆشێت، بێ ئەوەی نرخ بە دوور پاڵ بنێت. تاقیکردنەوەی دووەمی دووبارە بۆ بن و لووتکە دەبینیت، و لەوانەیە نرخ کەمێک لە سنوورەکان تێپەڕێت و پاشان بگەڕێتەوە. ئەم قۆناغە بۆ بازرگان بێزارکەرە چونکە ئاراستەی ڕوونی نییە، و چوونەژوورەوە تێیدا زۆرجار واتای وەستانی زیانێکە کە جار لە دوای جار لێی دەدرێت. لێرەدا چاودێریی قەبارە بکە: ئەگەر دابەزینەکان بە Tick Volume ی کەمتر و هەستانەوەکان بە قەبارەی زیاتر بوون، ئەمە نیشانەی کۆکردنەوەیە. پێچەوانەکەی، واتە دابەزین بە قەبارەی زیاتر، دابەشکردن بەهێزتر دەکات."
+    },
+    {
+     "id": "s4",
+     "title": "قۆناغی C: تاقیکردنەوەی یەکلاکەرەوە",
+     "narration": "قۆناغی C ساتی ڕاستییە. لە کۆکردنەوەدا زۆرجار Spring ی تێدایە، واتە شکاندنێکی درۆینە لە ژێر بنی مەوداکە کە فەرمانەکانی وەستانی زیان کۆدەکاتەوە و فرۆشیاران هان دەدات، پاشان نرخ بە خێرایی دەگەڕێتەوە و لە ناو مەوداکەدا دادەخرێت. دواتر تاقیکردنەوەی Spring دێت بە Tick Volume ی کەم، کە دەیسەلمێنێت خستنەڕوو تەواو بووە. لە دابەشکردندا هاوتاکەی UTAD ە، واتە Upthrust After Distribution، شکاندنێکی درۆینە لە سەرووی لووتکەکە و پاشان گەڕانەوە و داخستن لە ناو مەوداکەدا. هەموو مەودایەک Spring ی ڕوونی تێدا نییە، هەندێک جار تاقیکردنەوەکە تەنها بنێکی کەمێک بەرزترە. گرنگ ئەوەیە بازاڕ تاقی کرایەوە و لایەنی لاواز نەیتوانی بەردەوام بێت. تەنها دوای داخستنی مۆمێک لە ناو مەوداکەدا بە Spring ی دادەنێین، نەک لە کاتی پێکهاتنیدا."
+    },
+    {
+     "id": "s5",
+     "title": "قۆناغی D: کۆنترۆڵی یەک لایەن",
+     "narration": "لە قۆناغی D دا لە کۆکردنەوەدا داواکاری کۆنترۆڵی خۆی نیشان دەدات. Sign of Strength یان نیشانەی هێز دەبینین، کە جووڵەیەکی سەرەوەی فراوانە بە Tick Volume ی بەرز و دەگاتە لووتکەی مەوداکە یان بە داخستنێکی ڕوون دەیشکێنێت. پاشان گەڕانەوەیەکی هێمن دێت کە پێی دەڵێن Last Point of Support یان دوایین خاڵی پشتگیری، بە مۆمی بچووک و قەبارەی کەم، و زۆرجار بنێکی بەرزترە لە بنەکانی پێشوو. ئەگەر نرخ لووتکەکەی شکاند و پاشان گەڕایەوە لە سەرەوە تاقی بکاتەوە، ناوی دەنێین Backup یان Back Up to the Edge. لە دابەشکردندا پێچەوانەیە: Sign of Weakness و پاشان Last Point of Supply، کە هەستانەوەیەکی لاوازە بەرەو سنوورە شکاوەکە."
+    },
+    {
+     "id": "s6",
+     "title": "قۆناغی E و لە کوێ دەچینە ژوورەوە",
+     "narration": "قۆناغی E ڕەوتی نوێیە لە دەرەوەی مەوداکە، بەرەو سەرەوە دوای کۆکردنەوە یان بەرەو خوارەوە دوای دابەشکردن، لەگەڵ گەڕانەوەی کورت کە دەتوانرێت بۆ چوونەژوورەوە بەکاربهێنرێن. باشترین خاڵەکانی چوونەژوورەوەی کەم مەترسی سێن. یەکەم تاقیکردنەوەی Spring لە قۆناغی C، و وەستانەکەی لە ژێر بنی Spring. دووەم LPS لە قۆناغی D، و وەستانەکەی لە ژێر بنی ئەو گەڕانەوەیە. سێیەم Backup دوای شکاندنی لووتکەی مەوداکە، و وەستانەکەی لە ژێر سنوورە شکاوەکە. ئامانجی یەکەم لووتکەی مەوداکە یان لووتکەی دواترە، و ئامانجی گەورەتر بە Point and Figure حیساب دەکرێت. تەنها دوای داخستنی مۆمەکە دەچینە ژوورەوە، بە مەترسیی نزیکەی 1%. تا قۆناغەکە دواتر بێت سەلماندن بەهێزترە، بەڵام وەستان دوورترە و قازانج کەمترە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر GBPUSD",
+     "narration": "نموونەیەک لەسەر پاوەند دۆلار لە چارتی چوار کاتژمێری. دوای دابەزین لە 1.2900، پشتگیریی سەرەتایی لە 1.2520 دەرکەوت، پاشان لووتکەی فرۆشتن بۆ 1.2450 بە بەرزترین Tick Volume لە ماوەی مانگێکدا. ئەمە قۆناغی A یە، لەگەڵ هەستانەوەی خۆکار بۆ 1.2600. بۆ ماوەی دوو هەفتە نرخ لە نێوان دوو سنوورەکەدا جووڵا، ئەمە قۆناغی B یە. پاشان دابەزی بۆ 1.2432 و لە سەرووی 1.2450 داخرایەوە، ئەمە Spring ە لە قۆناغی C. دوای ئەوە بە هێز بەرز بووەوە و لە سەرووی 1.2600 لە 1.2640 داخرا، نیشانەی هێز لە قۆناغی D. گەڕانەوە هێمنەکە بۆ 1.2605 LPS بوو. چوونەژوورەوە 1.2610، وەستان 1.2575 واتە 35 پیپ، و ئامانج 1.2750 واتە 140 پیپ."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر زێڕ XAUUSD",
+     "narration": "نموونەیەکی دابەشکردن لەسەر زێڕ لە چارتی چوار کاتژمێری. دوای بەرزبوونەوەیەکی درێژ، لووتکەی کڕین لە 2450 دۆلار دەرکەوت بە Tick Volume ی بێوێنە، و دواتر کاردانەوەی خۆکار بۆ 2395. ئەمە قۆناغی A یە. نرخ هەفتە و نیوێک لە نێوان 2395 و 2450 هاتوچۆی کرد، ئەمە قۆناغی B یە. لە کردنەوەی نیویۆرک بەرز بووەوە بۆ 2462 و پاشان مۆمەکە لە 2438 لە ناو مەوداکەدا داخرا، ئەمە UTAD ە لە قۆناغی C. دوای ئەوە نرخ 2395 ی شکاند بە داخستن لە 2380 و قەبارەی بەرز، نیشانەی لاوازی لە قۆناغی D. هەستانەوە لاوازەکە بۆ 2398 دوایین خاڵی خستنەڕوو بوو. فرۆشتن لە 2396، وەستان 2412، و ئامانج 2340. داخستن لە سەرووی 2412 بیرۆکەکە هەڵدەوەشێنێتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "باوترین هەڵە هەوڵدانە بۆ ناونانی هەموو مۆمێک بە پیت و زاراوەیەک لە کاتێکدا مەوداکە هێشتا پێک دێت، لە کاتێکدا قۆناغەکان زۆرجار تەنها دوای تەواوبوونیان ڕوون دەبنەوە. هەڵەی دووەم چوونەژوورەوەیە لە قۆناغی B چونکە نرخ دەستی لە سنوورەکە دا، لە کاتێکدا قۆناغی B پڕە لە شکاندنی درۆینە. سێیەم ئەوەیە هەر شکاندنێکی بن بە Spring دابنێیت پێش ئەوەی مۆمێک بگەڕێتەوە ناو مەوداکە و دابخرێت، چونکە لەوانەیە شکاندنێکی ڕاستەقینە و سەرەتای دابەزینێکی نوێ بێت. چوارەم ڕاونانی نرخە لە قۆناغی E بە دوور لە هەر گەڕانەوەیەک. پێنجەم لەبیرکردنی ئەوەیە کە Tick Volume لە فۆرێکسدا نزیککراوەیە، بۆیە خوێندنەوەیەکی تەواو لەسەر یەک مۆم بنیات مەنێ. لەبیرت بێت خوێندنەوەی قۆناغەکان بە پێداچوونەوە و ڕاهێنان لەسەر چارتی پێشوو باشتر دەبێت."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی: سنوورەکانی مەوداکە لە قۆناغی A وە بکێشە، واتە لە لووتکە و جووڵە خۆکارەکەوە. لە ناو قۆناغی B دا بازرگانی مەکە، بەڵکو چاودێریی قەبارەکەی بکە بۆ ئەوەی بزانیت کام لایەن پێگە کۆدەکاتەوە. چاوەڕێی قۆناغی C بکە، واتە Spring یان UTAD، و دڵنیا ببەوە کە مۆمێک گەڕاوەتەوە ناو مەوداکە و داخراوە، پاشان تاقیکردنەوەیەک بە قەبارەی کەمتر. لە تاقیکردنەوەکەدا بچۆ ژوورەوە، یان لە LPS یان Backup لە قۆناغی D، و وەستان لە پشت دوایین بن یان لووتکەوە دابنێ کە بیرۆکەکە پووچەڵ دەکاتەوە. ئامانجی یەکەم لە سنووری بەرامبەر یان لووتکەی دواتر وەربگرە، و مەترسی نزیکەی 1% بهێڵەوە. قۆناغەکان نەخشەی ئەگەرەکانن نەک دڵنیایی. ئەو قۆناغەی تێیدا چوویتە ژوورەوە لە دەفتەری بازرگانییەکانتدا بنووسە."
+    }
+   ]
+  },
+  "wy-l3-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هي إعادة التجميع؟",
+     "narration": "ليس كل نطاق عرضي في منتصف الاتجاه نهايةً له. إعادة التجميع أو Reaccumulation هي نطاق يظهر أثناء اتجاه صاعد، يتوقف فيه السعر ليستريح، بينما يضيف المشغّل المركّب إلى مراكز الشراء ويمتص بيع من يجنون أرباحهم. بعدها يستأنف السعر صعوده في موجة جديدة. أما إعادة التوزيع أو Redistribution فهي الصورة المعاكسة: نطاق داخل اتجاه هابط، يضيف فيه المشغّل مراكز بيع، ثم يستمر الهبوط. أهمية هذا الدرس أن هذه النطاقات تشبه كثيراً التجميع والتوزيع، والخطأ في تمييزها يجعلك تتداول عكس الاتجاه. لذلك سنتعلم هنا كيف تبدو هذه النطاقات، وكيف نميّزها، وكيف ندخل منها مع الاتجاه."
+    },
+    {
+     "id": "s2",
+     "title": "كيف تتكوّن وكيف تبدو",
+     "narration": "تبدأ إعادة التجميع عادة بعد موجة صعود قوية، حين يظهر توقف يشبه ذروة شراء صغيرة، ثم تراجع، ثم تذبذب جانبي. لكنها غالباً أقصر زمناً من التجميع الأصلي، وأضيق في المدى، لأن السبب المطلوب لموجة إضافية أصغر من سبب اتجاه كامل. ستلاحظ أن قاع النطاق يقع فوق قاع آخر تصحيح مهم، وأن الهبوطات داخل النطاق تأتي بحجم تيك منخفض. وقد تحتوي على Spring خفيف أو Shakeout، أي هزة سريعة تحت القاع، ثم ترتفع. إعادة التوزيع تتكون بالطريقة نفسها مقلوبة داخل اتجاه هابط. فإذا كانت الهبوطات تأتي بحجم تيك مرتفع وشموع واسعة، فهذه ليست الصورة المعتادة لإعادة التجميع."
+    },
+    {
+     "id": "s3",
+     "title": "السؤال الأصعب: إعادة تجميع أم توزيع؟",
+     "narration": "عندما يظهر نطاق بعد صعود، قد يكون إعادة تجميع أو توزيعاً، وفي البداية يتشابهان تماماً. الفرق يظهر في التفاصيل. في إعادة التجميع تكون الصعودات داخل النطاق أوسع وبحجم أعلى، والهبوطات ضيقة وبحجم منخفض، والقيعان ثابتة أو ترتفع. في التوزيع يحدث العكس: الهبوطات واسعة وبحجم مرتفع، والصعودات متعبة، والقمم تنخفض تدريجياً. والحكم النهائي يأتي من المرحلة C والمرحلة D: هل رأينا Spring ثم علامة قوة، أم UTAD ثم علامة ضعف؟ قبل ذلك نحن أمام احتمالين، فلا نتسرع. وانتبه إلى أن السعر قد يبقى في النطاق مدة أطول مما تتوقع، وهذا وحده لا يحسم شيئاً."
+    },
+    {
+     "id": "s4",
+     "title": "إعادة التوزيع داخل الهبوط",
+     "narration": "في الاتجاه الهابط يظهر أحياناً نطاق يبدو كأنه تجميع وقاع للسوق، فيشتري كثيرون ظناً أن الهبوط انتهى. لكن إذا كانت الارتدادات داخل هذا النطاق ضعيفة وبحجم تيك منخفض، والهبوطات حادة وبحجم مرتفع، فالأرجح أنه إعادة توزيع. غالباً يظهر فيه Upthrust، أي صعود كاذب فوق قمة النطاق يجمع أوامر وقف البائعين ويغري المشترين، ثم يعود السعر ويغلق داخله. بعدها تأتي علامة ضعف تكسر قاع النطاق، ثم ارتداد ضعيف نحو القاع المكسور هو Last Point of Supply، ومنه يستمر الهبوط عادة. وتذكّر أن الشراء عكس اتجاه هابط يحتاج دليلاً أقوى بكثير من مجرد توقف السعر."
+    },
+    {
+     "id": "s5",
+     "title": "شروط وعلامات مساعدة",
+     "narration": "هناك علامات تقوّي احتمال إعادة التجميع. أولاً أن يكون الاتجاه على الإطار الأكبر صاعداً بوضوح، بقمم وقيعان أعلى. ثانياً أن يبقى النطاق في النصف العلوي من الموجة السابقة، فلا يصحح أكثر من نصفها تقريباً. ثالثاً أن يكون حجم التيك في الهبوطات أقل من حجمه في الصعودات. رابعاً أن تكون أي هزة تحت القاع سريعة وتُغلق الشمعة عائدة داخل النطاق. وفي إعادة التوزيع نقلب الشروط كلها. وتذكّر أن حجم التيك يُقارن بين شموع الجلسة نفسها، لأن نشاط لندن ونيويورك أعلى طبيعياً من آسيا. وكلما اجتمعت علامات أكثر في نفس الاتجاه، زادت ثقتك في القراءة دون أن تصل إلى اليقين."
+    },
+    {
+     "id": "s6",
+     "title": "الدخول والوقف والهدف",
+     "narration": "أفضل دخول في إعادة التجميع يكون مع الاتجاه، لا عند أول لمسة لقاع النطاق. ننتظر علامة قوة تكسر قمة النطاق بإغلاق شمعة واضح، ثم نشتري عند الـ Backup، أي عودة السعر لاختبار القمة المكسورة من الأعلى بحجم منخفض، أو عند الـ LPS داخل النطاق قبيل الكسر. الوقف تحت قاع هذا الاختبار أو تحت الحد المكسور بهامش صغير. الهدف الأول هو مدى الموجة السابقة مقاساً من الكسر، أو القمة التالية على الإطار الأكبر. وفي إعادة التوزيع نبيع عند الـ LPSY بنفس المنطق، والمخاطرة قرابة 1%. وإذا أغلقت شمعة عائدة تحت الحد المكسور بوضوح، نخرج لأن الكسر فشل."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على USDJPY",
+     "narration": "مثال على الدولار ين على إطار الأربع ساعات. صعد السعر من 147.00 إلى 151.20 ثم توقف، وتحرك بين 149.80 و151.20 ثمانية أيام. القاع 149.80 بقي فوق منتصف الموجة، وكانت الهبوطات بحجم تيك منخفض. في جلسة طوكيو هبط إلى 149.65، ثم أغلقت شمعة لندن 8:00 عائدة عند 149.95، وهذه هزة خفيفة. بعد يومين أغلق السعر فوق 151.20 عند 151.45 بحجم مرتفع، ثم عاد إلى 151.25 بحجم منخفض، وهذا Backup. الشراء عند 151.30، والوقف 150.95 أي 35 نقطة، والهدف 152.80 أي 150 نقطة. ويمكن جني جزء من الربح عند 152.00 ونقل الوقف إلى نقطة الدخول لحماية الصفقة."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على EURUSD",
+     "narration": "مثال إعادة توزيع على اليورو دولار على إطار الساعة. هبط السعر من 1.1050 إلى 1.0880، ثم تحرك بين 1.0880 و1.0950 خمسة أيام، وارتداداته كانت بحجم تيك ضعيف. في افتتاح نيويورك 8:30 صعد إلى 1.0962 ثم أغلقت الشمعة عند 1.0940 داخل النطاق، وهذا Upthrust. بعدها أغلقت شمعة تحت 1.0880 عند 1.0865 بحجم مرتفع، علامة ضعف. ثم ارتد السعر بهدوء إلى 1.0882 فقط، وهذا الـ LPSY. البيع عند 1.0878، والوقف 1.0910 أي 32 نقطة، والهدف 1.0780 أي 98 نقطة، مع مخاطرة 1% من الحساب. ولاحظ أن الاتجاه الأكبر كان هابطاً، فالبيع هنا مع الاتجاه لا ضده."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "الخطأ الأول هو البيع في كل نطاق يظهر بعد صعود ظناً أنه توزيع، بينما الاتجاه الأكبر ما زال صاعداً بقوة. الخطأ الثاني هو العكس: الشراء في نطاق داخل هبوط ظناً أنه قاع، وهو في الحقيقة إعادة توزيع. الثالث هو الحكم على النطاق من شكله فقط دون مقارنة حجم التيك في الصعودات والهبوطات. الرابع هو الدخول عند كسر الحد مباشرة بدل انتظار الاختبار، فيصبح الوقف بعيداً أو يُضرب في عودة عادية. والخامس هو التمسك بالقراءة الأولى بعد أن أغلقت شمعة تنقضها بوضوح. وأخيراً، رفع حجم الصفقة لتعويض خسارة سابقة يحوّل خطأ صغيراً إلى خسارة كبيرة."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: عندما ترى نطاقاً في منتصف اتجاه، ابدأ بافتراض أن الاتجاه سيستمر، لأن الاتجاهات تستمر أكثر مما تنعكس. ثم اختبر هذا الافتراض بالحجم والهيكل: هل الهبوطات بحجم أقل والقيعان ثابتة؟ هل بقي النطاق في النصف الأعلى من الموجة؟ انتظر المرحلة C والمرحلة D لتحسم، أي هزة ثم علامة قوة، أو Upthrust ثم علامة ضعف، على شموع مغلقة. ادخل مع الاتجاه عند الـ Backup أو الـ LPS أو الـ LPSY، وضع الوقف خلف الاختبار، وأبقِ المخاطرة قرابة 1%. وإذا لم تتضح الصورة، فالبقاء خارج السوق قرار صحيح."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What is reaccumulation?",
+     "narration": "Not every sideways range in the middle of a trend is its end. Reaccumulation is a range that appears during an uptrend, where price pauses to rest while the Composite Operator adds to his buy positions and absorbs the selling of those taking profits. Afterwards price resumes its rise in a new leg. Redistribution is the opposite picture: a range inside a downtrend in which the operator adds sell positions, and then the decline continues. This lesson matters because these ranges look very much like accumulation and distribution, and misreading them makes you trade against the trend. So here we will learn what these ranges look like, how to tell them apart, and how to enter from them with the trend."
+    },
+    {
+     "id": "s2",
+     "title": "How it forms and what it looks like",
+     "narration": "Reaccumulation usually begins after a strong rally leg, when a pause appears that looks like a small buying climax, followed by a pullback and then sideways swings. But it is usually shorter in time than the original accumulation, and narrower in range, because the cause needed for one more leg is smaller than the cause of a whole trend. You will notice that the range low sits above the low of the last important correction, and that declines inside the range come on low tick volume. It may contain a light Spring or a Shakeout, a quick shake below the low, and then it rises. Redistribution forms the same way, inverted, inside a downtrend. If declines come on high tick volume and wide candles, that is not the usual picture of reaccumulation."
+    },
+    {
+     "id": "s3",
+     "title": "The hardest question: reaccumulation or distribution?",
+     "narration": "When a range appears after a rally, it may be reaccumulation or distribution, and at first they look exactly alike. The difference shows in the details. In reaccumulation, rallies inside the range are wider and on higher volume, declines are narrow and on low volume, and lows hold or rise. In distribution the reverse happens: declines are wide and on high volume, rallies look tired, and highs gradually fall. The final verdict comes from Phase C and Phase D: did we see a Spring and then a Sign of Strength, or a UTAD and then a Sign of Weakness? Before that we face two possibilities, so we do not rush. Note that price may stay in the range longer than you expect, and that alone decides nothing."
+    },
+    {
+     "id": "s4",
+     "title": "Redistribution inside a downtrend",
+     "narration": "In a downtrend a range sometimes appears that looks like accumulation and a market bottom, so many traders buy thinking the decline is over. But if the rallies inside this range are weak and on low tick volume, while the declines are sharp and on high volume, it is more likely redistribution. It often contains an Upthrust, a false rise above the range high that collects sellers' stop orders and tempts buyers, after which price returns and closes inside. Then comes a Sign of Weakness that breaks the range low, and then a weak rally toward the broken low, which is the Last Point of Supply, from which the decline usually continues. Remember that buying against a downtrend needs much stronger evidence than price merely pausing."
+    },
+    {
+     "id": "s5",
+     "title": "Conditions and supporting signs",
+     "narration": "Some signs strengthen the case for reaccumulation. First, the trend on the higher timeframe is clearly up, with higher highs and higher lows. Second, the range stays in the upper half of the previous leg, retracing no more than about half of it. Third, tick volume on declines is lower than on rallies. Fourth, any shake below the low is quick, and a candle closes back inside the range. For redistribution we reverse all of these conditions. Remember that tick volume is compared between candles of the same session, because London and New York activity is naturally higher than Asia's. The more signs line up in the same direction, the more confidence you can have in the reading, without ever reaching certainty."
+    },
+    {
+     "id": "s6",
+     "title": "Entry, stop and target",
+     "narration": "The best entry in reaccumulation is with the trend, not at the first touch of the range low. We wait for a Sign of Strength that breaks the range high with a clear candle close, then buy on the Backup, meaning price returns to test the broken high from above on low volume, or at the LPS inside the range just before the break. The stop goes below the low of that test, or below the broken boundary with a small margin. The first target is the size of the previous leg measured from the break, or the next high on the higher timeframe. In redistribution we sell at the LPSY with the same logic, risking about 1%. If a candle closes clearly back below the broken boundary, we exit because the break has failed."
+    },
+    {
+     "id": "s7",
+     "title": "Example on USDJPY",
+     "narration": "An example on USDJPY on the four-hour chart. Price rose from 147.00 to 151.20, then paused and moved between 149.80 and 151.20 for eight days. The 149.80 low stayed above the middle of the leg, and the declines came on low tick volume. In the Tokyo session it dropped to 149.65, then the 8:00 London candle closed back at 149.95, a light shakeout. Two days later price closed above 151.20 at 151.45 on high volume, then returned to 151.25 on low volume, a Backup. The buy is at 151.30, the stop 150.95, which is 35 pips, and the target 152.80, which is 150 pips. Part of the profit can be taken at 152.00 and the stop moved to entry to protect the trade."
+    },
+    {
+     "id": "s8",
+     "title": "Example on EURUSD",
+     "narration": "A redistribution example on EURUSD on the one-hour chart. Price fell from 1.1050 to 1.0880, then moved between 1.0880 and 1.0950 for five days, and its rallies came on weak tick volume. At the New York open at 8:30 it rose to 1.0962, then the candle closed at 1.0940 inside the range, an Upthrust. After that a candle closed below 1.0880 at 1.0865 on high volume, a Sign of Weakness. Then price rallied quietly to only 1.0882, the LPSY. The sell is at 1.0878, the stop 1.0910, which is 32 pips, and the target 1.0780, which is 98 pips, risking 1% of the account. Notice that the larger trend was down, so selling here is with the trend, not against it."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The first mistake is selling every range that appears after a rally, assuming it is distribution, while the larger trend is still strongly up. The second is the reverse: buying a range inside a decline, assuming it is a bottom, when it is actually redistribution. The third is judging the range by its shape alone, without comparing tick volume on rallies and declines. The fourth is entering right at the break of the boundary instead of waiting for the test, so the stop becomes too wide or is hit by a normal pullback. The fifth is clinging to the first reading after a candle has clearly closed against it. Finally, raising the trade size to recover an earlier loss turns a small mistake into a big loss."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: when you see a range in the middle of a trend, start by assuming the trend will continue, because trends continue more often than they reverse. Then test that assumption with volume and structure: are declines on lower volume and lows holding? Did the range stay in the upper half of the leg? Wait for Phase C and Phase D to decide, a shakeout then a Sign of Strength, or an Upthrust then a Sign of Weakness, on closed candles. Enter with the trend at the Backup, LPS or LPSY, place the stop beyond the test, and keep risk around 1%. If the picture is unclear, staying out is a valid decision."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "دووبارە کۆکردنەوە چییە؟",
+     "narration": "هەموو مەودایەکی ئاسۆیی لە ناوەڕاستی ڕەوتدا کۆتایی ئەو ڕەوتە نییە. دووبارە کۆکردنەوە یان Reaccumulation مەودایەکە کە لە کاتی ڕەوتێکی سەرەوەدا دەردەکەوێت، نرخ تێیدا دەوەستێت بۆ پشوودان، لە کاتێکدا Composite Operator پێگەی کڕینی زیاد دەکات و فرۆشتنی ئەوانە هەڵدەمژێت کە قازانج وەردەگرن. دواتر نرخ بە شەپۆلێکی نوێ بەرزبوونەوەکەی بەردەوام دەکات. دووبارە دابەشکردن یان Redistribution وێنە پێچەوانەکەیە: مەودایەک لە ناو ڕەوتی خوارەوەدا کە ئۆپەراتۆر پێگەی فرۆشتنی تێدا زیاد دەکات، پاشان دابەزین بەردەوام دەبێت. گرنگیی ئەم وانەیە لەوەدایە کە ئەم مەودایانە زۆر لە کۆکردنەوە و دابەشکردن دەچن، و هەڵە لە جیاکردنەوەیاندا وات لێدەکات دژی ڕەوت بازرگانی بکەیت. بۆیە لێرەدا فێر دەبین ئەم مەودایانە چۆن دەردەکەون، چۆن جیایان دەکەینەوە، و چۆن لەگەڵ ڕەوت لێیانەوە دەچینە ژوورەوە."
+    },
+    {
+     "id": "s2",
+     "title": "چۆن پێک دێت و چۆن دەردەکەوێت",
+     "narration": "دووبارە کۆکردنەوە زۆرجار دوای شەپۆلێکی بەرزبوونەوەی بەهێز دەست پێدەکات، کاتێک وەستانێک دەردەکەوێت کە لە لووتکەیەکی بچووکی کڕین دەچێت، پاشان گەڕانەوە، پاشان هاتوچۆی ئاسۆیی. بەڵام زۆرجار لە ڕووی کاتەوە لە کۆکردنەوەی سەرەکی کورتترە، و مەوداکەی تەسکترە، چونکە ئەو هۆیەی بۆ شەپۆلێکی زیادە پێویستە لە هۆی ڕەوتێکی تەواو بچووکترە. تێبینی دەکەیت کە بنی مەوداکە لە سەرووی بنی دوایین ڕاستکردنەوەی گرنگەوەیە، و دابەزینەکانی ناو مەوداکە بە Tick Volume ی کەم دێن. لەوانەیە Spring ێکی سووک یان Shakeout ی تێدا بێت، واتە هەژاندنێکی خێرا لە ژێر بنەکە، پاشان بەرز دەبێتەوە. دووبارە دابەشکردن بە هەمان شێوە بە پێچەوانەوە لە ناو ڕەوتی خوارەوەدا پێک دێت. ئەگەر دابەزینەکان بە Tick Volume ی بەرز و مۆمی فراوان هاتن، ئەمە وێنەی ئاسایی دووبارە کۆکردنەوە نییە."
+    },
+    {
+     "id": "s3",
+     "title": "سەختترین پرسیار: دووبارە کۆکردنەوە یان دابەشکردن؟",
+     "narration": "کاتێک مەودایەک دوای بەرزبوونەوە دەردەکەوێت، لەوانەیە دووبارە کۆکردنەوە بێت یان دابەشکردن، و لە سەرەتادا تەواو لە یەک دەچن. جیاوازییەکە لە وردەکارییەکاندا دەردەکەوێت. لە دووبارە کۆکردنەوەدا بەرزبوونەوەکانی ناو مەوداکە فراوانتر و بە قەبارەی زیاترن، دابەزینەکان تەسک و بە قەبارەی کەمن، و بنەکان جێگیرن یان بەرز دەبنەوە. لە دابەشکردندا پێچەوانەکەی ڕوودەدات: دابەزینەکان فراوان و بە قەبارەی بەرزن، بەرزبوونەوەکان ماندوون، و لووتکەکان وردە وردە نزم دەبنەوە. بڕیاری کۆتایی لە قۆناغی C و D وە دێت: ئایا Spring و پاشان نیشانەی هێزمان بینی، یان UTAD و پاشان نیشانەی لاوازی؟ پێش ئەوە دوو ئەگەرمان لەبەردەمە، بۆیە پەلە ناکەین. ئاگاداربە کە لەوانەیە نرخ ماوەیەکی درێژتر لەوەی چاوەڕێی دەکەیت لە مەوداکەدا بمێنێتەوە، و ئەمە بە تەنها هیچ یەکلا ناکاتەوە."
+    },
+    {
+     "id": "s4",
+     "title": "دووبارە دابەشکردن لە ناو دابەزیندا",
+     "narration": "لە ڕەوتی خوارەوەدا هەندێک جار مەودایەک دەردەکەوێت کە وەک کۆکردنەوە و بنی بازاڕ دەچێت، بۆیە زۆر کەس دەکڕن بەو گومانەی دابەزین تەواو بووە. بەڵام ئەگەر هەستانەوەکانی ناو ئەم مەودایە لاواز و بە Tick Volume ی کەم بن، و دابەزینەکان تیژ و بە قەبارەی بەرز بن، ئەگەری زیاتر ئەوەیە دووبارە دابەشکردن بێت. زۆرجار Upthrust ی تێدایە، واتە بەرزبوونەوەیەکی درۆینە لە سەرووی لووتکەی مەوداکە کە فەرمانەکانی وەستانی فرۆشیاران کۆدەکاتەوە و کڕیاران هان دەدات، پاشان نرخ دەگەڕێتەوە و لە ناویدا دادەخرێت. دواتر نیشانەی لاوازی دێت کە بنی مەوداکە دەشکێنێت، پاشان هەستانەوەیەکی لاواز بەرەو بنە شکاوەکە کە Last Point of Supply یە، و زۆرجار دابەزین لەوێوە بەردەوام دەبێت. لەبیرت بێت کڕین دژی ڕەوتێکی خوارەوە پێویستی بە بەڵگەیەکی زۆر بەهێزتر هەیە لە تەنها وەستانی نرخ."
+    },
+    {
+     "id": "s5",
+     "title": "مەرج و نیشانە یارمەتیدەرەکان",
+     "narration": "هەندێک نیشانە ئەگەری دووبارە کۆکردنەوە بەهێز دەکەن. یەکەم، ڕەوت لە چوارچێوەی گەورەتردا بە ڕوونی سەرەوە بێت، بە لووتکە و بنی بەرزتر. دووەم، مەوداکە لە نیوەی سەرەوەی شەپۆلی پێشوودا بمێنێتەوە، و زیاتر لە نزیکەی نیوەی ڕاست نەکاتەوە. سێیەم، Tick Volume لە دابەزینەکاندا کەمتر بێت لە بەرزبوونەوەکان. چوارەم، هەر هەژاندنێک لە ژێر بنەکە خێرا بێت و مۆمێک بگەڕێتەوە ناو مەوداکە و دابخرێت. بۆ دووبارە دابەشکردن هەموو ئەم مەرجانە پێچەوانە دەکەینەوە. لەبیرت بێت Tick Volume لە نێوان مۆمەکانی هەمان دانیشتندا بەراورد دەکرێت، چونکە چالاکیی لەندەن و نیویۆرک بە سروشتی لە ئاسیا زیاترە. تا نیشانەی زیاتر لە هەمان ئاراستەدا کۆببنەوە، متمانەت بە خوێندنەوەکە زیاتر دەبێت، بێ ئەوەی بگاتە دڵنیایی."
+    },
+    {
+     "id": "s6",
+     "title": "چوونەژوورەوە، وەستان و ئامانج",
+     "narration": "باشترین چوونەژوورەوە لە دووبارە کۆکردنەوەدا لەگەڵ ڕەوتە، نەک لە یەکەم دەستلێدانی بنی مەوداکە. چاوەڕێی نیشانەی هێز دەکەین کە لووتکەی مەوداکە بە داخستنی مۆمێکی ڕوون دەشکێنێت، پاشان لە Backup دا دەکڕین، واتە گەڕانەوەی نرخ بۆ تاقیکردنەوەی لووتکە شکاوەکە لە سەرەوە بە قەبارەی کەم، یان لە LPS لە ناو مەوداکەدا کەمێک پێش شکاندنەکە. وەستان لە ژێر بنی ئەو تاقیکردنەوەیە یان لە ژێر سنوورە شکاوەکە بە پەراوێزێکی بچووک. ئامانجی یەکەم قەبارەی شەپۆلی پێشووە کە لە شکاندنەکەوە دەپێورێت، یان لووتکەی دواتر لە چوارچێوەی گەورەتردا. لە دووبارە دابەشکردندا بە هەمان لۆژیک لە LPSY دەفرۆشین، بە مەترسیی نزیکەی 1%. ئەگەر مۆمێک بە ڕوونی لە ژێر سنوورە شکاوەکە داخرایەوە، دەردەچین چونکە شکاندنەکە سەرکەوتوو نەبوو."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر USDJPY",
+     "narration": "نموونەیەک لەسەر دۆلار یەن لە چارتی چوار کاتژمێری. نرخ لە 147.00 بۆ 151.20 بەرز بووەوە، پاشان وەستا و هەشت ڕۆژ لە نێوان 149.80 و 151.20 جووڵا. بنی 149.80 لە سەرووی ناوەڕاستی شەپۆلەکە مایەوە، و دابەزینەکان بە Tick Volume ی کەم هاتن. لە دانیشتنی تۆکیۆدا دابەزی بۆ 149.65، پاشان مۆمی 8:00 ی لەندەن لە 149.95 داخرایەوە، ئەمە هەژاندنێکی سووکە. دوو ڕۆژ دواتر نرخ لە سەرووی 151.20 لە 151.45 داخرا بە قەبارەی بەرز، پاشان گەڕایەوە بۆ 151.25 بە قەبارەی کەم، ئەمە Backup ە. کڕین لە 151.30، وەستان 150.95 واتە 35 پیپ، و ئامانج 152.80 واتە 150 پیپ. دەتوانرێت بەشێک لە قازانج لە 152.00 وەربگیرێت و وەستان بگوازرێتەوە بۆ خاڵی چوونەژوورەوە بۆ پاراستنی بازرگانییەکە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەکی دووبارە دابەشکردن لەسەر یۆرۆ دۆلار لە چارتی یەک کاتژمێری. نرخ لە 1.1050 بۆ 1.0880 دابەزی، پاشان پێنج ڕۆژ لە نێوان 1.0880 و 1.0950 جووڵا، و هەستانەوەکانی بە Tick Volume ی لاواز بوون. لە کردنەوەی نیویۆرک کاتژمێر 8:30 بەرز بووەوە بۆ 1.0962، پاشان مۆمەکە لە 1.0940 لە ناو مەوداکەدا داخرا، ئەمە Upthrust ە. دواتر مۆمێک لە ژێر 1.0880 لە 1.0865 داخرا بە قەبارەی بەرز، نیشانەی لاوازی. پاشان نرخ بە هێمنی تەنها بۆ 1.0882 هەستایەوە، ئەمە LPSY یە. فرۆشتن لە 1.0878، وەستان 1.0910 واتە 32 پیپ، و ئامانج 1.0780 واتە 98 پیپ، بە مەترسیی 1% ی هەژمار. تێبینی بکە کە ڕەوتە گەورەکە خوارەوە بوو، بۆیە فرۆشتن لێرەدا لەگەڵ ڕەوتە نەک دژی."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "هەڵەی یەکەم فرۆشتنە لە هەموو مەودایەک کە دوای بەرزبوونەوە دەردەکەوێت بە گومانی ئەوەی دابەشکردنە، لە کاتێکدا ڕەوتە گەورەکە هێشتا بە هێز سەرەوەیە. دووەم پێچەوانەکەیە: کڕین لە مەودایەک لە ناو دابەزیندا بە گومانی ئەوەی بنە، لە کاتێکدا لە ڕاستیدا دووبارە دابەشکردنە. سێیەم حوکمدانە لەسەر مەوداکە تەنها بە شێوەکەی بێ بەراوردکردنی Tick Volume لە بەرزبوونەوە و دابەزینەکاندا. چوارەم چوونەژوورەوەیە ڕاستەوخۆ لە شکاندنی سنوورەکە لە جیاتی چاوەڕوانیی تاقیکردنەوەکە، بۆیە وەستان زۆر دوور دەبێت یان بە گەڕانەوەیەکی ئاسایی لێی دەدرێت. پێنجەم دەستگرتنە بە خوێندنەوەی یەکەم دوای ئەوەی مۆمێک بە ڕوونی دژی داخراوە. لە کۆتاییدا، زیادکردنی قەبارەی بازرگانی بۆ قەرەبووکردنەوەی زیانێکی پێشوو هەڵەیەکی بچووک دەکات بە زیانێکی گەورە."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی: کاتێک مەودایەک لە ناوەڕاستی ڕەوتێکدا دەبینیت، بەو گریمانەیە دەست پێبکە کە ڕەوتەکە بەردەوام دەبێت، چونکە ڕەوتەکان زیاتر بەردەوام دەبن تا پێچەوانە ببنەوە. پاشان ئەو گریمانەیە بە قەبارە و پێکهاتە تاقی بکەرەوە: ئایا دابەزینەکان بە قەبارەی کەمترن و بنەکان جێگیرن؟ ئایا مەوداکە لە نیوەی سەرەوەی شەپۆلەکەدا مایەوە؟ چاوەڕێی قۆناغی C و D بکە بۆ یەکلاکردنەوە، هەژاندن و پاشان نیشانەی هێز، یان Upthrust و پاشان نیشانەی لاوازی، لەسەر مۆمی داخراو. لەگەڵ ڕەوت لە Backup یان LPS یان LPSY بچۆ ژوورەوە، وەستان لە پشت تاقیکردنەوەکە دابنێ، و مەترسی نزیکەی 1% بهێڵەوە. ئەگەر وێنەکە ڕوون نەبوو، مانەوە لە دەرەوەی بازاڕ بڕیارێکی دروستە."
+    }
+   ]
+  },
+  "wy-l3-03": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "ما هو VSA؟",
+     "narration": "تحليل الحجم والسبريد أو Volume Spread Analysis، واختصاره VSA، هو تطوير عملي لأفكار وايكوف يقرأ كل شمعة من خلال ثلاثة عناصر. الأول هو الحجم، أي مقدار النشاط في الشمعة. الثاني هو السبريد، والمقصود هنا مدى الشمعة من قمتها إلى قاعها، لا فرق سعر الشراء والبيع. والثالث هو موضع الإغلاق: قرب القمة أم في المنتصف أم قرب القاع. والفكرة أن العلاقة بين هذه العناصر تكشف ما إذا كانت الأموال الكبيرة تشتري أو تبيع. وفي الفوركس نستخدم حجم التيك، لأنه لا يوجد حجم مركزي حقيقي لأزواج العملات. لذلك نقرأ هذا الحجم كمؤشر نسبي للنشاط، ونقارن الشموع ببعضها لا بأرقام مطلقة."
+    },
+    {
+     "id": "s2",
+     "title": "كيف نقرأ شمعة واحدة",
+     "narration": "لا تُقرأ الشمعة وحدها، بل بالمقارنة مع الشموع السابقة، عادة آخر عشرين شمعة تقريباً. شمعة صاعدة واسعة المدى بحجم تيك مرتفع تُغلق قرب قمتها تعني طلباً حقيقياً، فالجهد الكبير أنتج نتيجة كبيرة. لكن شمعة صاعدة واسعة بحجم مرتفع جداً تُغلق في منتصفها أو قرب قاعها تعني أن بائعين كباراً دخلوا وامتصوا الشراء. وبالمثل، شمعة هابطة واسعة بحجم ضخم تُغلق بعيداً عن قاعها قد تعني أن مشترين كباراً يمتصون البيع. موضع الإغلاق هو غالباً العنصر الذي يكشف من انتصر في نهاية الشمعة. ولهذا ننتظر دائماً إغلاق الشمعة قبل الحكم، لأن موضع الإغلاق يتغير حتى اللحظة الأخيرة."
+    },
+    {
+     "id": "s3",
+     "title": "علامات الضعف",
+     "narration": "من أهم علامات الضعف No Demand أو انعدام الطلب: شمعة صاعدة ضيقة المدى، حجمها أقل من الشمعتين السابقتين، تظهر بعد صعود. معناها أن الأموال الكبيرة لا تشارك في هذا الصعود، فهو صعود بلا وقود. والعلامة الثانية Upthrust: شمعة ترتفع فوق قمة سابقة ثم تُغلق قرب قاعها، غالباً بحجم مرتفع، أي أن السعر دُفع إلى الأعلى لجمع أوامر الشراء ثم بيع بقوة. وتصبح هذه العلامات أقوى إذا ظهرت عند مقاومة واضحة أو في نطاق توزيع، وأضعف إذا ظهرت وسط اتجاه صاعد قوي. ولا تكفي علامة ضعف واحدة لعكس الاتجاه، بل هي دعوة للحذر ولمراقبة ما يليها."
+    },
+    {
+     "id": "s4",
+     "title": "علامات القوة",
+     "narration": "في المقابل، من علامات القوة No Supply أو انعدام العرض: شمعة هابطة ضيقة المدى بحجم أقل من الشمعتين السابقتين، تظهر بعد تراجع. معناها أن البائعين الكبار غائبون، فالهبوط يحدث بلا ضغط حقيقي. ويسمى الـ Test أو الاختبار عندما تهبط الشمعة إلى منطقة كان فيها بيع سابق ثم تُغلق قرب قمتها بحجم منخفض. والعلامة الأخرى Stopping Volume أو حجم الإيقاف: شمعة أو شمعتان هابطتان بحجم ضخم تُغلقان بعيداً عن القاع، أي أن مشترين كباراً أوقفوا الهبوط. هذه العلامات تشبه ما رأيناه في الـ Spring والاختبار عند وايكوف. وأقوى ما تكون هذه العلامات عند قاع نطاق تجميع أو بعد Spring واضح."
+    },
+    {
+     "id": "s5",
+     "title": "الجهد والنتيجة",
+     "narration": "قانون الجهد والنتيجة هو قلب VSA. الحجم هو الجهد، والمدى والحركة هما النتيجة. إذا كان الحجم كبيراً جداً والمدى ضيقاً، فهذا امتصاص: طرف كبير يقف في الجهة المقابلة ويمنع السعر من التقدم. فشمعة صاعدة ضيقة بحجم ضخم عند قمة النطاق تحذير من بيع مخفي. وإذا كانت الحركة كبيرة والحجم منخفضاً، فالسعر يتحرك بسهولة لأنه لا يوجد من يعترضه، وهذا يؤكد الاتجاه. وانتبه أيضاً لسلسلة الشموع: صعود متواصل يقل حجمه مع كل موجة يعني أن الطلب يضعف تدريجياً. أي أن الحجم يخبرك هل الحركة مدعومة، والسعر يخبرك هل الجهد نجح. وعدم توافقهما هو ما نبحث عنه."
+    },
+    {
+     "id": "s6",
+     "title": "الدخول بإشارة VSA",
+     "narration": "إشارة VSA وحدها ليست سبباً كافياً للدخول. نبدأ بالسياق أو الخلفية: ما الاتجاه على الإطار الأكبر، وأين نحن من نطاق وايكوف؟ ثم نبحث عن الإشارة في منطقة مهمة، مثل قاع نطاق أو دعم أو منطقة Spring. بعد ذلك ننتظر شمعة تأكيد تُغلق في اتجاه الصفقة. فعند No Supply أو Test في منطقة دعم، نشتري بعد إغلاق شمعة صاعدة تالية، والوقف تحت قاع شمعة الإشارة. وعند Upthrust أو No Demand عند مقاومة، نبيع بعد التأكيد، والوقف فوق قمة الإشارة. الهدف الأول هو الحد المقابل للنطاق، والمخاطرة قرابة 1%. وإذا لم تأتِ شمعة التأكيد، نتجاهل الإشارة ببساطة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار على إطار الساعة. السعر في نطاق تجميع بين 1.0840 و1.0925، وقد ظهر Spring قبل يومين. في جلسة لندن الساعة 10:00 هبطت شمعة ضيقة المدى إلى 1.0842، وكان حجم التيك فيها أقل من الشمعتين السابقتين في الجلسة نفسها، وأغلقت في منتصفها. هذه No Supply عند قاع النطاق. الشمعة التالية أغلقت صاعدة عند 1.0858، وهذا تأكيد. الشراء عند 1.0860، والوقف تحت قاع الإشارة عند 1.0835 أي 25 نقطة، والهدف قمة النطاق 1.0925 أي 65 نقطة، بمخاطرة 1% من الحساب. وإذا أغلقت شمعة تحت 1.0835 فالقراءة خاطئة ونخرج بخسارة صغيرة محسوبة."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال على الذهب على إطار الساعة. الاتجاه على الأربع ساعات هابط، والسعر ارتد إلى مقاومة قديمة عند 2380 دولاراً. في جلسة نيويورك الساعة 9:30 ارتفعت شمعة إلى 2394 ثم أغلقت عند 2378 قرب قاعها، بأعلى حجم تيك في اليوم. هذا Upthrust: جهد كبير ونتيجة سلبية. الشمعة التالية صعدت قليلاً بمدى ضيق وحجم أقل وأغلقت عند 2381، أي No Demand. البيع عند 2379 بعد إغلاقها، والوقف فوق قمة الـ Upthrust عند 2397 أي 18 دولاراً، والهدف 2345 أي 34 دولاراً، وهو قاع التراجع السابق. لاحظ أن الإشارة جاءت مع الاتجاه الأكبر وعند مقاومة، وهذا ما أعطاها قيمتها."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ هو قراءة شمعة واحدة خارج سياقها، فتبيع عند كل No Demand حتى في اتجاه صاعد قوي. الثاني هو مقارنة حجم التيك بين جلسات مختلفة، فشمعة في آسيا ستبدو دائماً ضعيفة مقارنة بلندن ونيويورك. الثالث هو تجاهل الأخبار: عند صدور بيانات مهمة مثل الوظائف الأمريكية الساعة 8:30 بتوقيت نيويورك يقفز الحجم لأسباب لا علاقة لها بتجميع أو توزيع. الرابع هو نسيان أن حجم التيك يختلف من وسيط لآخر، فهو تقريب للنشاط لا حجم حقيقي. والخامس هو الدخول قبل إغلاق شمعة الإشارة أو التأكيد. ومن الأخطاء أيضاً البحث عن إشارة في كل شمعة، فالإشارات القوية قليلة."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: ابدأ دائماً بالسياق، أي الاتجاه على الإطار الأكبر وموقعك داخل نطاق وايكوف. ثم اقرأ الشمعة بعناصرها الثلاثة: الحجم، والمدى، وموضع الإغلاق، وقارنها بالشموع القريبة في الجلسة نفسها. ابحث عن علامات القوة عند الدعم وفي التجميع، وعن علامات الضعف عند المقاومة وفي التوزيع. لا تدخل إلا بعد شمعة تأكيد مغلقة، وضع الوقف خلف طرف شمعة الإشارة، وتجنب القراءة وقت الأخبار الكبيرة. واجعل المخاطرة قرابة 1%. حجم التيك في الفوركس أداة تقريبية، فاستخدمه كدليل مساعد لا كحكم نهائي. وراجع إشاراتك السابقة في دفتر التداول لتعرف أيها نجح عندك فعلاً."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "What is VSA?",
+     "narration": "Volume Spread Analysis, abbreviated VSA, is a practical development of Wyckoff's ideas that reads every candle through three elements. The first is volume, the amount of activity in the candle. The second is the spread, which here means the candle's range from its high to its low, not the difference between the bid and ask prices. The third is the closing position: near the high, in the middle, or near the low. The idea is that the relationship between these elements reveals whether big money is buying or selling. In forex we use tick volume, because there is no real centralized volume for currency pairs. So we read this volume as a relative gauge of activity, comparing candles with each other, not with absolute numbers."
+    },
+    {
+     "id": "s2",
+     "title": "How to read a single candle",
+     "narration": "A candle is not read alone but compared with the previous candles, usually about the last twenty. A wide up candle on high tick volume that closes near its high means genuine demand: the large effort produced a large result. But a wide up candle on very high volume that closes in its middle or near its low means large sellers stepped in and absorbed the buying. Likewise, a wide down candle on huge volume that closes well off its low may mean large buyers are absorbing the selling. The closing position is often the element that reveals who won by the end of the candle. That is why we always wait for the candle to close before judging, because the closing position can change until the last moment."
+    },
+    {
+     "id": "s3",
+     "title": "Signs of weakness",
+     "narration": "One of the most important signs of weakness is No Demand: a narrow-range up candle whose volume is lower than the previous two candles, appearing after a rally. It means big money is not taking part in this rise, so it is a rally without fuel. The second sign is the Upthrust: a candle that rises above a previous high and then closes near its low, often on high volume, meaning price was pushed up to collect buy orders and then sold hard. These signs become stronger when they appear at clear resistance or in a distribution range, and weaker when they appear in the middle of a strong uptrend. One sign of weakness is not enough to reverse a trend; it is a call for caution and for watching what follows."
+    },
+    {
+     "id": "s4",
+     "title": "Signs of strength",
+     "narration": "On the other side, one sign of strength is No Supply: a narrow-range down candle on lower volume than the previous two candles, appearing after a pullback. It means large sellers are absent, so the decline happens without real pressure. It is called a Test when the candle drops into an area where there was earlier selling and then closes near its high on low volume. Another sign is Stopping Volume: one or two down candles on huge volume that close well off the low, meaning large buyers have halted the decline. These signs resemble what we saw in Wyckoff's Spring and test. These signs are strongest at the low of an accumulation range or after a clear Spring."
+    },
+    {
+     "id": "s5",
+     "title": "Effort versus result",
+     "narration": "The law of effort versus result is the heart of VSA. Volume is the effort, and the range and movement are the result. If volume is very large and the range is narrow, that is absorption: a large player stands on the other side and stops price from advancing. So a narrow up candle on huge volume at the range top warns of hidden selling. If movement is large and volume is low, price moves easily because no one opposes it, which confirms the trend. Also watch the series of candles: a continuing rise whose volume falls with each leg means demand is gradually weakening. Volume tells you whether the move is supported, and price tells you whether the effort worked. Their mismatch is what we look for."
+    },
+    {
+     "id": "s6",
+     "title": "Entering with a VSA signal",
+     "narration": "A VSA signal alone is not enough reason to enter. We start with context, or background: what is the trend on the higher timeframe, and where are we within the Wyckoff range? Then we look for the signal in an important area, such as a range low, a support, or a Spring zone. After that we wait for a confirmation candle that closes in the direction of the trade. So with No Supply or a Test at support, we buy after the next up candle closes, with the stop below the signal candle's low. With an Upthrust or No Demand at resistance, we sell after confirmation, with the stop above the signal's high. The first target is the opposite range boundary, with risk around 1%. If no confirmation candle comes, we simply ignore the signal."
+    },
+    {
+     "id": "s7",
+     "title": "Example on EURUSD",
+     "narration": "An example on EURUSD on the one-hour chart. Price is in an accumulation range between 1.0840 and 1.0925, and a Spring appeared two days ago. In the London session at 10:00, a narrow-range candle dropped to 1.0842, its tick volume was lower than the previous two candles in the same session, and it closed in its middle. That is No Supply at the range low. The next candle closed higher at 1.0858, which is the confirmation. The buy is at 1.0860, the stop below the signal low at 1.0835, which is 25 pips, and the target is the range top at 1.0925, which is 65 pips, risking 1% of the account. If a candle closes below 1.0835, the reading is wrong and we exit with a small, planned loss."
+    },
+    {
+     "id": "s8",
+     "title": "Example on gold, XAUUSD",
+     "narration": "An example on gold on the one-hour chart. The four-hour trend is down, and price has rallied to old resistance at 2380 dollars. In the New York session at 9:30 a candle rose to 2394, then closed at 2378 near its low, on the highest tick volume of the day. That is an Upthrust: large effort and a negative result. The next candle rose slightly with a narrow range and lower volume and closed at 2381, which is No Demand. The sell is at 2379 after it closes, the stop above the Upthrust high at 2397, which is 18 dollars, and the target 2345, which is 34 dollars, the low of the previous pullback. Notice that the signal came with the larger trend and at resistance, which is what gave it value."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The first mistake is reading a single candle out of context, so you sell every No Demand even in a strong uptrend. The second is comparing tick volume across different sessions, since an Asian candle will always look weak compared with London and New York. The third is ignoring news: when major data such as US jobs figures is released at 8:30 New York time, volume jumps for reasons unrelated to accumulation or distribution. The fourth is forgetting that tick volume differs from one broker to another, so it is an approximation of activity, not real volume. The fifth is entering before the signal or confirmation candle closes. Another mistake is hunting for a signal in every candle, because strong signals are few."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: always start with context, meaning the higher-timeframe trend and your position inside the Wyckoff range. Then read the candle through its three elements, volume, range and closing position, and compare it with nearby candles in the same session. Look for signs of strength at support and in accumulation, and signs of weakness at resistance and in distribution. Enter only after a closed confirmation candle, place the stop beyond the end of the signal candle, and avoid reading volume during major news. Keep the risk around 1%. Tick volume in forex is an approximate tool, so use it as supporting evidence, not as the final judge. Review your past signals in your trading journal to learn which ones actually work for you."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "VSA چییە؟",
+     "narration": "شیکردنەوەی قەبارە و مەودا یان Volume Spread Analysis، بە کورتی VSA، پەرەپێدانێکی کردەیی بیرۆکەکانی وایکۆفە کە هەر مۆمێک لە ڕێگەی سێ توخمەوە دەخوێنێتەوە. یەکەم قەبارەیە، واتە بڕی چالاکی لە مۆمەکەدا. دووەم Spread ە، کە لێرەدا مەبەست مەودای مۆمەکەیە لە لووتکەوە تا بنەکەی، نەک جیاوازیی نرخی کڕین و فرۆشتن. سێیەم شوێنی داخستنە: نزیک لووتکە، لە ناوەڕاست، یان نزیک بن. بیرۆکەکە ئەوەیە پەیوەندیی نێوان ئەم توخمانە ئاشکرای دەکات ئایا پارەی گەورە دەکڕێت یان دەفرۆشێت. لە فۆرێکسدا Tick Volume بەکاردێنین، چونکە بۆ جووتە دراوەکان قەبارەی ناوەندیی ڕاستەقینە نییە. بۆیە ئەم قەبارەیە وەک پێوەرێکی ڕێژەیی چالاکی دەخوێنینەوە، و مۆمەکان لەگەڵ یەکتر بەراورد دەکەین نەک لەگەڵ ژمارەی ڕەها."
+    },
+    {
+     "id": "s2",
+     "title": "چۆن یەک مۆم دەخوێنینەوە",
+     "narration": "مۆم بە تەنها ناخوێنرێتەوە، بەڵکو بە بەراورد لەگەڵ مۆمەکانی پێشوو، زۆرجار نزیکەی بیست مۆمی کۆتایی. مۆمێکی سەرەوەی مەودا فراوان بە Tick Volume ی بەرز کە نزیک لووتکەکەی دادەخرێت واتە داواکاریی ڕاستەقینە، چونکە هەوڵە گەورەکە ئەنجامێکی گەورەی هێنا. بەڵام مۆمێکی سەرەوەی فراوان بە قەبارەی زۆر بەرز کە لە ناوەڕاستیدا یان نزیک بنەکەی دادەخرێت واتە فرۆشیارانی گەورە هاتنە ناوەوە و کڕینەکەیان هەڵمژی. بە هەمان شێوە، مۆمێکی خوارەوەی فراوان بە قەبارەی زۆر گەورە کە دوور لە بنەکەی دادەخرێت لەوانەیە واتای ئەوە بێت کڕیارانی گەورە فرۆشتنەکە هەڵدەمژن. شوێنی داخستن زۆرجار ئەو توخمەیە کە ئاشکرای دەکات کێ لە کۆتایی مۆمەکەدا سەرکەوت. بۆیە هەمیشە پێش حوکمدان چاوەڕێی داخستنی مۆمەکە دەکەین، چونکە شوێنی داخستن تا دوا چرکە دەگۆڕێت."
+    },
+    {
+     "id": "s3",
+     "title": "نیشانەکانی لاوازی",
+     "narration": "یەکێک لە گرنگترین نیشانەکانی لاوازی No Demand یان نەبوونی داواکارییە: مۆمێکی سەرەوەی مەودا تەسک کە قەبارەکەی لە دوو مۆمی پێشوو کەمترە، و دوای بەرزبوونەوەیەک دەردەکەوێت. واتاکەی ئەوەیە پارەی گەورە بەشداری لەم بەرزبوونەوەیەدا ناکات، بۆیە بەرزبوونەوەیەکە بێ سووتەمەنی. نیشانەی دووەم Upthrust ە: مۆمێک کە لە سەرووی لووتکەیەکی پێشوو بەرز دەبێتەوە پاشان نزیک بنەکەی دادەخرێت، زۆرجار بە قەبارەی بەرز، واتە نرخ بەرەو سەرەوە پاڵ نرا بۆ کۆکردنەوەی فەرمانەکانی کڕین پاشان بە هێز فرۆشرا. ئەم نیشانانە بەهێزتر دەبن ئەگەر لە بەرگرییەکی ڕووندا یان لە مەودای دابەشکردندا دەرکەون، و لاوازتر دەبن ئەگەر لە ناوەڕاستی ڕەوتێکی سەرەوەی بەهێزدا دەرکەون. یەک نیشانەی لاوازی بەس نییە بۆ پێچەوانەکردنەوەی ڕەوت، بەڵکو بانگەوازێکە بۆ وریایی و چاودێریکردنی ئەوەی دوای دێت."
+    },
+    {
+     "id": "s4",
+     "title": "نیشانەکانی هێز",
+     "narration": "لە بەرامبەردا، یەکێک لە نیشانەکانی هێز No Supply یان نەبوونی خستنەڕووە: مۆمێکی خوارەوەی مەودا تەسک بە قەبارەی کەمتر لە دوو مۆمی پێشوو، کە دوای گەڕانەوەیەک دەردەکەوێت. واتاکەی ئەوەیە فرۆشیارە گەورەکان ئامادە نین، بۆیە دابەزینەکە بێ فشاری ڕاستەقینە ڕوودەدات. پێی دەڵێن Test یان تاقیکردنەوە کاتێک مۆمەکە دادەبەزێت بۆ ناوچەیەک کە پێشتر فرۆشتنی تێدا بووە پاشان نزیک لووتکەکەی بە قەبارەی کەم دادەخرێت. نیشانەیەکی تر Stopping Volume یان قەبارەی وەستێنەرە: یەک یان دوو مۆمی خوارەوە بە قەبارەی زۆر گەورە کە دوور لە بن دادەخرێن، واتە کڕیارانی گەورە دابەزینەکەیان وەستاند. ئەم نیشانانە لەوە دەچن کە لە Spring و تاقیکردنەوەی وایکۆفدا بینیمان. ئەم نیشانانە لە بنی مەودای کۆکردنەوەدا یان دوای Spring ێکی ڕووندا بەهێزترینن."
+    },
+    {
+     "id": "s5",
+     "title": "هەوڵ و ئەنجام",
+     "narration": "یاسای هەوڵ و ئەنجام دڵی VSA یە. قەبارە هەوڵە، و مەودا و جووڵە ئەنجامن. ئەگەر قەبارە زۆر گەورە و مەودا تەسک بوو، ئەمە هەڵمژینە: لایەنێکی گەورە لە بەرەی بەرامبەر وەستاوە و ڕێگە نادات نرخ پێش بکەوێت. بۆیە مۆمێکی سەرەوەی تەسک بە قەبارەی زۆر گەورە لە لووتکەی مەوداکەدا ئاگادارکردنەوەیە لە فرۆشتنێکی شاراوە. ئەگەر جووڵە گەورە و قەبارە کەم بوو، نرخ بە ئاسانی دەجووڵێت چونکە کەس بەرەنگاری نابێتەوە، و ئەمە ڕەوتەکە دەسەلمێنێت. هەروەها ئاگاداری زنجیرەی مۆمەکان بە: بەرزبوونەوەیەکی بەردەوام کە قەبارەکەی لەگەڵ هەر شەپۆلێک کەم دەبێتەوە واتە داواکاری وردە وردە لاواز دەبێت. قەبارە پێت دەڵێت ئایا جووڵەکە پشتگیری کراوە، و نرخ پێت دەڵێت ئایا هەوڵەکە سەرکەوتوو بوو. ناکۆکیی نێوانیان ئەوەیە کە بەدوایدا دەگەڕێین."
+    },
+    {
+     "id": "s6",
+     "title": "چوونەژوورەوە بە نیشانەی VSA",
+     "narration": "نیشانەی VSA بە تەنها هۆیەکی بەس نییە بۆ چوونەژوورەوە. بە دۆخ یان پاشخان دەست پێدەکەین: ڕەوت لە چوارچێوەی گەورەتردا چییە، و لە کوێی مەودای وایکۆفداین؟ پاشان بەدوای نیشانەکەدا دەگەڕێین لە ناوچەیەکی گرنگدا، وەک بنی مەودا یان پشتگیری یان ناوچەی Spring. دواتر چاوەڕێی مۆمێکی سەلماندن دەکەین کە بە ئاراستەی بازرگانییەکە دابخرێت. بۆیە لە No Supply یان Test لە پشتگیریدا، دوای داخستنی مۆمێکی سەرەوەی دواتر دەکڕین، و وەستان لە ژێر بنی مۆمی نیشانەکەیە. لە Upthrust یان No Demand لە بەرگریدا، دوای سەلماندن دەفرۆشین، و وەستان لە سەرووی لووتکەی نیشانەکەیە. ئامانجی یەکەم سنووری بەرامبەری مەوداکەیە، بە مەترسیی نزیکەی 1%. ئەگەر مۆمی سەلماندن نەهات، بە سادەیی نیشانەکە پشتگوێ دەخەین."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار لە چارتی یەک کاتژمێری. نرخ لە مەودای کۆکردنەوەدایە لە نێوان 1.0840 و 1.0925، و دوو ڕۆژ لەمەوبەر Spring دەرکەوت. لە دانیشتنی لەندەن کاتژمێر 10:00، مۆمێکی مەودا تەسک دابەزی بۆ 1.0842، Tick Volume ەکەی لە دوو مۆمی پێشووی هەمان دانیشتن کەمتر بوو، و لە ناوەڕاستیدا داخرا. ئەمە No Supply یە لە بنی مەوداکە. مۆمی دواتر بە سەرەوە لە 1.0858 داخرا، ئەمە سەلماندنە. کڕین لە 1.0860، وەستان لە ژێر بنی نیشانەکە لە 1.0835 واتە 25 پیپ، و ئامانج لووتکەی مەوداکەیە لە 1.0925 واتە 65 پیپ، بە مەترسیی 1% ی هەژمار. ئەگەر مۆمێک لە ژێر 1.0835 داخرا، خوێندنەوەکە هەڵەیە و بە زیانێکی بچووکی پلان بۆ داڕێژراو دەردەچین."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر زێڕ XAUUSD",
+     "narration": "نموونەیەک لەسەر زێڕ لە چارتی یەک کاتژمێری. ڕەوت لە چوار کاتژمێریدا خوارەوەیە، و نرخ هەستاوەتەوە بۆ بەرگرییەکی کۆن لە 2380 دۆلار. لە دانیشتنی نیویۆرک کاتژمێر 9:30 مۆمێک بەرز بووەوە بۆ 2394 پاشان لە 2378 نزیک بنەکەی داخرا، بە بەرزترین Tick Volume ی ڕۆژەکە. ئەمە Upthrust ە: هەوڵی گەورە و ئەنجامی نەرێنی. مۆمی دواتر کەمێک بەرز بووەوە بە مەودای تەسک و قەبارەی کەمتر و لە 2381 داخرا، واتە No Demand. فرۆشتن لە 2379 دوای داخستنی، وەستان لە سەرووی لووتکەی Upthrust لە 2397 واتە 18 دۆلار، و ئامانج 2345 واتە 34 دۆلار، کە بنی گەڕانەوەی پێشووە. تێبینی بکە کە نیشانەکە لەگەڵ ڕەوتە گەورەکە و لە بەرگریدا هات، ئەمەیە کە بەهای پێدا."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵە خوێندنەوەی یەک مۆمە بە دەر لە دۆخەکەی، بۆیە لە هەموو No Demand ێکدا دەفرۆشیت تەنانەت لە ڕەوتێکی سەرەوەی بەهێزیشدا. دووەم بەراوردکردنی Tick Volume ە لە نێوان دانیشتنە جیاوازەکاندا، چونکە مۆمێک لە ئاسیادا هەمیشە لە چاو لەندەن و نیویۆرک لاواز دەردەکەوێت. سێیەم پشتگوێخستنی هەواڵەکانە: کاتێک داتای گرنگ وەک ژمارەی کاری ئەمریکی لە کاتژمێر 8:30 ی نیویۆرک بڵاو دەکرێتەوە، قەبارە بە هۆکاری بێ پەیوەندی بە کۆکردنەوە یان دابەشکردن بەرز دەبێتەوە. چوارەم لەبیرکردنی ئەوەیە کە Tick Volume لە بڕۆکەرێکەوە بۆ یەکێکی تر جیاوازە، بۆیە نزیککردنەوەی چالاکییە نەک قەبارەی ڕاستەقینە. پێنجەم چوونەژوورەوەیە پێش داخستنی مۆمی نیشانە یان سەلماندن. هەروەها هەڵەیە لە هەموو مۆمێکدا بەدوای نیشانەدا بگەڕێیت، چونکە نیشانە بەهێزەکان کەمن."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی: هەمیشە بە دۆخەکە دەست پێبکە، واتە ڕەوت لە چوارچێوەی گەورەتردا و شوێنی تۆ لە ناو مەودای وایکۆفدا. پاشان مۆمەکە بە سێ توخمەکەی بخوێنەوە: قەبارە، مەودا، و شوێنی داخستن، و لەگەڵ مۆمە نزیکەکانی هەمان دانیشتندا بەراوردی بکە. لە پشتگیری و لە کۆکردنەوەدا بەدوای نیشانەکانی هێزدا بگەڕێ، و لە بەرگری و لە دابەشکردندا بەدوای نیشانەکانی لاوازیدا. تەنها دوای مۆمێکی سەلماندنی داخراو بچۆ ژوورەوە، وەستان لە پشت کۆتایی مۆمی نیشانەکەوە دابنێ، و لە کاتی هەواڵە گەورەکاندا قەبارە مەخوێنەوە. مەترسی نزیکەی 1% بهێڵەوە. Tick Volume لە فۆرێکسدا ئامرازێکی نزیککراوەیە، بۆیە وەک بەڵگەیەکی یارمەتیدەر بەکاری بهێنە نەک وەک حوکمی کۆتایی. نیشانەکانی پێشووت لە دەفتەری بازرگانیدا پێدا بچۆرەوە بۆ ئەوەی بزانیت کامیان بە ڕاستی بۆ تۆ سەرکەوتوو بوون."
+    }
+   ]
+  },
+  "wy-l4-02": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "لماذا خمس خطوات؟",
+     "narration": "حتى الآن تعلمنا قطع وايكوف: المشغّل المركّب، والدورة، والمراحل، والحجم. لكن المتداول يحتاج طريقة منظمة يجمع بها هذه القطع في قرار واحد. لذلك وضع وايكوف تسلسلاً من خمس خطوات: أولاً حدد اتجاه السوق العام، ثانياً اختر الأداة المتوافقة معه، ثالثاً تأكد أن لديها سبباً كافياً لهدفك، رابعاً تأكد أنها جاهزة للحركة، وخامساً وقّت دخولك مع منعطف السوق. صُمّم هذا المنهج أصلاً للأسهم، وفي الفوركس نطبقه بتعديل بسيط، فنستخدم مؤشر الدولار DXY كمرجع للسوق العام. والخطوات تُطبق بالترتيب، ولا ننتقل لخطوة قبل اجتياز التي قبلها. وفي هذا الدرس نشرح كل خطوة، ثم نطبق الخمس على مثالين."
+    },
+    {
+     "id": "s2",
+     "title": "الخطوة 1: اتجاه السوق العام",
+     "narration": "الخطوة الأولى أن تعرف أين يقف السوق العام وإلى أين يتجه على الأرجح. في الأسهم كان وايكوف ينظر إلى مؤشر السوق، أما في الفوركس فالدولار الأمريكي طرف في معظم الصفقات، لذلك ننظر إلى مؤشر الدولار DXY على الإطار اليومي والأربع ساعات. نسأل: هل الدولار في تجميع أم صعود أم توزيع أم هبوط؟ إذا كان الدولار في هبوط، فالأزواج مثل EURUSD وGBPUSD والذهب تميل للصعود، وUSDJPY يميل للهبوط. وإذا كان في نطاق غير واضح، فهذه إشارة لتقليل الحجم أو الانتظار. هذه الخطوة تحدد هل نبحث عن شراء أم بيع. وننظر أيضاً إلى أين يقع الدولار من نطاقه، لا إلى اتجاهه فقط."
+    },
+    {
+     "id": "s3",
+     "title": "الخطوة 2: اختيار الأداة المتوافقة",
+     "narration": "الخطوة الثانية أن تختار أداة تتحرك في انسجام مع السوق العام، والأفضل أن تكون أقوى منه في الصعود أو أضعف منه في الهبوط. في الفوركس نقارن الأزواج ببعضها. مثلاً إذا كان الدولار يضعف، نقارن EURUSD وGBPUSD: إذا صنع الجنيه قاعاً أعلى بينما صنع اليورو قاعاً أدنى في الفترة نفسها، فالجنيه أقوى، ونفضّل شراءه. وإذا كان الدولار يقوى، نبحث عن العملة أو الأداة الأضعف لبيعها. الأداة القوية في سوق صاعد تصعد أكثر وتتراجع أقل، وهذا يعطيك هامش أمان أكبر إذا تأخر السوق في التحرك. والمقارنة تكون على نفس الإطار الزمني ونفس الفترة، وإلا كانت مضللة."
+    },
+    {
+     "id": "s4",
+     "title": "الخطوة 3: سبب يكفي للهدف",
+     "narration": "الخطوة الثالثة مبنية على قانون السبب والنتيجة. قبل الدخول، اسأل: هل النطاق الذي بنته هذه الأداة كبير بما يكفي ليبرر الهدف الذي أريده؟ نقيس ذلك بالعدّ الأفقي على رسم النقطة والرقم، وسنشرحه بالتفصيل في درس لاحق. الفكرة باختصار أن عرض النطاق ومدته يعطيان تقديراً للحركة المحتملة. فإذا كان وقفك 40 نقطة وتريد عائداً لا يقل عن ثلاثة أضعاف، فأنت تحتاج سبباً يشير إلى 120 نقطة على الأقل. وإذا أشار العدّ إلى 60 نقطة فقط، فالصفقة لا تستحق المخاطرة مهما بدا الإعداد جميلاً. فالخطوة الثالثة تحميك من صفقات صحيحة الاتجاه لكنها ضعيفة العائد."
+    },
+    {
+     "id": "s5",
+     "title": "الخطوة 4: هل الأداة جاهزة للحركة؟",
+     "narration": "الخطوة الرابعة أن تتأكد أن الأداة أنهت تحضيرها وأصبحت جاهزة للانطلاق. هنا نستخدم ما تعلمناه عن المراحل: هل اكتملت المرحلة C بـ Spring أو اختبار ناجح؟ هل ظهرت علامة قوة في المرحلة D؟ هل جاء التراجع الأخير بحجم تيك منخفض وقاع أعلى؟ وضع وايكوف قائمة بتسعة اختبارات للشراء وتسعة للبيع، وخلاصتها: هدف الهبوط السابق تحقق، وظهر نشاط صعودي مع حجم أعلى وتراجع بحجم أقل، وتكوّنت قمم وقيعان أعلى، وكُسر خط الاتجاه الهابط. كلما اجتمعت علامات أكثر، كانت الأداة أكثر جاهزية. ولا تحتاج إلى كل الاختبارات التسعة، لكن غياب معظمها يعني أن التحضير لم يكتمل بعد."
+    },
+    {
+     "id": "s6",
+     "title": "الخطوة 5: توقيت الدخول",
+     "narration": "الخطوة الخامسة أن توقّت دخولك مع منعطف في السوق العام. حتى لو كانت الأداة جاهزة، قد تبقى أياماً في مكانها إذا كان الدولار ما زال يتحرك ضدها. لذلك ننتظر أن يُظهر مؤشر الدولار إشارة توافق، مثل كسر قاع مهم على شمعة مغلقة في الأربع ساعات إذا كنا نشتري EURUSD. عندها ننزل إلى إطار أصغر، كالساعة، وندخل عند LPS أو اختبار في الأداة نفسها. الوقف تحت قاع هذا الاختبار، والهدف من العدّ في الخطوة الثالثة، مع أخذ جزء من الربح عند أول مقاومة. والمخاطرة قرابة 1% من الحساب. وإذا عاد الدولار وأغلق فوق القاع المكسور قبل دخولك، نلغي الفكرة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال كامل على GBPUSD",
+     "narration": "مثال بالخطوات الخمس. الخطوة 1: مؤشر الدولار على اليومي في توزيع بين 104.90 و105.80، فنبحث عن شراء مقابل الدولار. الخطوة 2: الجنيه صنع قاعاً أعلى بينما كسر اليورو قاعه، فنختار GBPUSD. الخطوة 3: نطاق التجميع بين 1.2600 و1.2720 يعطي عدّاً بنحو 180 نقطة. الخطوة 4: ظهر Spring إلى 1.2588، ثم علامة قوة إلى 1.2735، ثم LPS هادئ عند 1.2690. الخطوة 5: الساعة 9:00 بتوقيت لندن أغلقت شمعة أربع ساعات للدولار تحت 104.90. نشتري عند 1.2695، والوقف 1.2655 أي 40 نقطة، والهدف 1.2880 أي 185 نقطة. ونأخذ جزءاً من الربح عند 1.2800، وننقل الوقف إلى نقطة الدخول."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال بيع على الذهب. الخطوة 1: مؤشر الدولار خرج من تجميع وبدأ مرحلة صعود، والدولار القوي يضغط عادة على الذهب. الخطوة 2: الذهب فشل في صنع قمة جديدة بينما صعد الدولار، أي أنه أضعف. الخطوة 3: نطاق التوزيع بين 2400 و2450 دولاراً يعطي عدّاً بنحو 90 دولاراً للأسفل. الخطوة 4: ظهر UTAD إلى 2462، ثم علامة ضعف كسرت 2400، ثم ارتداد ضعيف إلى 2405 هو LPSY. الخطوة 5: الساعة 10:00 بتوقيت نيويورك كسر الدولار قمة مقاومته بإغلاق واضح. نبيع عند 2403، والوقف 2422 أي 19 دولاراً، والهدف 2330 أي 73 دولاراً. والإغلاق فوق 2422 يلغي الصفقة."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أكثر الأخطاء شيوعاً هو البدء من الخطوة الرابعة مباشرة: ترى Spring جميلاً فتشتري دون أن تنظر إلى الدولار أو إلى قوة الزوج مقارنة بغيره. الخطأ الثاني هو تجاهل الخطوة الثالثة، فتدخل صفقة وقفها 40 نقطة وهدفها المنطقي 50 نقطة فقط. الثالث هو مطاردة السعر بعد انطلاقه لأنك فاتتك نقطة الدخول، بدل انتظار الاختبار التالي. الرابع هو الاعتقاد أن مؤشر الدولار يتحكم في كل شيء، مع أن لكل عملة أخبارها الخاصة. والخامس هو الدخول قبل إغلاق الشمعة التي تؤكد منعطف الدولار، فقد تعود وتلغي الإشارة. وأخيراً، تجاوز خطوة لأنك متحمس للصفقة هو بالضبط ما يحاول المنهج منعه."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: اجعل الخطوات الخمس قائمة تحقق تمر عليها قبل كل صفقة وبالترتيب. أولاً اتجاه الدولار على اليومي والأربع ساعات. ثانياً الزوج الأقوى أو الأضعف بالمقارنة. ثالثاً عدّ يبرر هدفاً لا يقل عن ضعفي أو ثلاثة أضعاف المخاطرة. رابعاً علامات الجاهزية: اختبار ناجح، وعلامة قوة أو ضعف، وتراجع بحجم تيك منخفض. خامساً منعطف في الدولار على شمعة مغلقة، ثم دخول عند اختبار مع وقف خلفه. إذا سقطت خطوة واحدة، فلا صفقة. واجعل المخاطرة قرابة 1%، وسجّل نتيجة كل خطوة في دفتر التداول. المنهج يرتب قرارك، لكنه لا يضمن الربح."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "Why five steps?",
+     "narration": "So far we have learned the pieces of Wyckoff: the Composite Operator, the cycle, the phases and volume. But a trader needs an organized way to combine these pieces into one decision. So Wyckoff set out a sequence of five steps: first, determine the overall market trend; second, choose the instrument in harmony with it; third, make sure it has a cause large enough for your target; fourth, confirm it is ready to move; and fifth, time your entry with a turn in the market. The method was designed for stocks, and in forex we apply it with a small adjustment, using the dollar index, DXY, as the reference for the overall market. The steps are applied in order. Do not move on until the previous one is passed."
+    },
+    {
+     "id": "s2",
+     "title": "Step 1: the overall market trend",
+     "narration": "The first step is to know where the overall market stands and where it is likely heading. In stocks Wyckoff looked at the market index, but in forex the US dollar is one side of most trades, so we look at the dollar index, DXY, on the daily and four-hour charts. We ask: is the dollar in accumulation, markup, distribution or markdown? If the dollar is in markdown, pairs like EURUSD, GBPUSD and gold tend to rise, while USDJPY tends to fall. If it is in an unclear range, that is a signal to reduce size or wait. This step decides whether we look for buys or sells. We also look at where the dollar sits within its range, not only at its direction."
+    },
+    {
+     "id": "s3",
+     "title": "Step 2: choosing the instrument in harmony",
+     "narration": "The second step is to choose an instrument that moves in harmony with the overall market, ideally stronger than it in a rise or weaker than it in a decline. In forex we compare pairs with each other. For example, if the dollar is weakening, we compare EURUSD and GBPUSD: if the pound made a higher low while the euro made a lower low over the same period, the pound is stronger, and we prefer to buy it. If the dollar is strengthening, we look for the weakest currency or instrument to sell. A strong instrument in a rising market rises more and pulls back less, which gives you a larger safety margin if the market is slow to move. The comparison must be on the same timeframe and the same period, otherwise it misleads."
+    },
+    {
+     "id": "s4",
+     "title": "Step 3: a cause large enough for the target",
+     "narration": "The third step is built on the law of cause and effect. Before entering, ask: is the range this instrument has built large enough to justify the target I want? We measure this with the horizontal count on a Point and Figure chart, which we will explain in detail in a later lesson. In short, the width and duration of the range give an estimate of the potential move. So if your stop is 40 pips and you want a return of at least three times that, you need a cause that points to at least 120 pips. If the count points to only 60 pips, the trade is not worth the risk, however attractive the setup looks. So step three protects you from trades that are right in direction but poor in reward."
+    },
+    {
+     "id": "s5",
+     "title": "Step 4: is the instrument ready to move?",
+     "narration": "The fourth step is to make sure the instrument has finished its preparation and is ready to move. Here we use what we learned about phases: has Phase C been completed with a Spring or a successful test? Has a Sign of Strength appeared in Phase D? Did the last pullback come on low tick volume with a higher low? Wyckoff set out nine buying tests and nine selling tests, and their essence is this: the prior downside objective has been reached, rallies show higher volume and pullbacks lower volume, higher highs and higher lows have formed, and the downtrend line has been broken. The more signs that line up, the more ready the instrument is. You do not need all nine tests, but if most are missing, the preparation is not yet complete."
+    },
+    {
+     "id": "s6",
+     "title": "Step 5: timing the entry",
+     "narration": "The fifth step is to time your entry with a turn in the overall market. Even if the instrument is ready, it may sit still for days if the dollar is still moving against it. So we wait for the dollar index to give a matching signal, such as a break of an important low on a closed four-hour candle if we are buying EURUSD. Then we drop to a smaller timeframe, such as the hourly, and enter at an LPS or a test in the instrument itself. The stop goes below the low of that test, and the target comes from the count in step three, taking partial profit at the first resistance. Risk stays around 1% of the account. If the dollar closes back above that low before entry, we cancel."
+    },
+    {
+     "id": "s7",
+     "title": "A complete example on GBPUSD",
+     "narration": "An example using the five steps. Step 1: the dollar index on the daily chart is in distribution between 104.90 and 105.80, so we look for buys against the dollar. Step 2: the pound made a higher low while the euro broke its low, so we choose GBPUSD. Step 3: the accumulation range between 1.2600 and 1.2720 gives a count of about 180 pips. Step 4: a Spring to 1.2588 appeared, then a Sign of Strength to 1.2735, then a quiet LPS at 1.2690. Step 5: at 9:00 London time a four-hour dollar candle closed below 104.90. We buy at 1.2695, with the stop at 1.2655, which is 40 pips, and the target 1.2880, which is 185 pips. We take partial profit at 1.2800 and move the stop to entry."
+    },
+    {
+     "id": "s8",
+     "title": "Example on gold, XAUUSD",
+     "narration": "A sell example on gold. Step 1: the dollar index has left accumulation and begun a markup phase, and a strong dollar usually weighs on gold. Step 2: gold failed to make a new high while the dollar rose, so it is weaker. Step 3: the distribution range between 2400 and 2450 dollars gives a count of about 90 dollars to the downside. Step 4: a UTAD to 2462 appeared, then a Sign of Weakness broke 2400, then a weak rally to 2405, which is the LPSY. Step 5: at 10:00 New York time the dollar broke above its resistance with a clear close. We sell at 2403, with the stop at 2422, which is 19 dollars, and the target 2330, which is 73 dollars. A close above 2422 cancels the trade."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The most common mistake is starting directly from step four: you see a nice Spring and buy without looking at the dollar or at the pair's strength compared with others. The second mistake is ignoring step three, so you enter a trade with a 40-pip stop and a logical target of only 50 pips. The third is chasing price after it takes off because you missed the entry, instead of waiting for the next test. The fourth is believing that the dollar index controls everything, when each currency has its own news. The fifth is entering before the candle that confirms the dollar's turn has closed, since it may reverse and cancel the signal. Finally, skipping a step because you are excited about a trade is exactly what the method tries to prevent."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: make the five steps a checklist you go through, in order, before every trade. First, the dollar's trend on the daily and four-hour charts. Second, the stronger or weaker pair by comparison. Third, a count that justifies a target of at least two or three times the risk. Fourth, signs of readiness: a successful test, a Sign of Strength or Weakness, and a pullback on low tick volume. Fifth, a turn in the dollar on a closed candle, then an entry on a test with the stop beyond it. If one step fails, there is no trade. Keep the risk around 1%, and record the result of each step in your trading journal. The method organizes your decision, but it does not guarantee profit."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "بۆچی پێنج هەنگاو؟",
+     "narration": "تا ئێستا پارچەکانی وایکۆفمان فێر بووین: Composite Operator، سووڕەکە، قۆناغەکان، و قەبارە. بەڵام بازرگان پێویستی بە ڕێگەیەکی ڕێکخراوە بۆ ئەوەی ئەم پارچانە لە یەک بڕیاردا کۆبکاتەوە. بۆیە وایکۆف زنجیرەیەکی پێنج هەنگاوی دانا: یەکەم ڕەوتی گشتیی بازاڕ دیاری بکە، دووەم ئەو ئامرازە هەڵبژێرە کە لەگەڵیدا گونجاوە، سێیەم دڵنیا ببەوە کە هۆیەکی بەسی هەیە بۆ ئامانجەکەت، چوارەم دڵنیا ببەوە کە ئامادەیە بۆ جووڵە، و پێنجەم کاتی چوونەژوورەوەت لەگەڵ وەرچەرخانی بازاڕ ڕێک بخە. ئەم ڕێبازە لە بنەڕەتدا بۆ پشکەکان داڕێژرا، و لە فۆرێکسدا بە گۆڕانکارییەکی سادە جێبەجێی دەکەین، بە بەکارهێنانی پێوەری دۆلار DXY وەک سەرچاوەی بازاڕی گشتی. هەنگاوەکان بە ڕیز جێبەجێ دەکرێن. تا هەنگاوی پێشوو تێنەپەڕێت مەچۆ بۆ دواتر. لەم وانەیەدا هەر هەنگاوێک ڕوون دەکەینەوە."
+    },
+    {
+     "id": "s2",
+     "title": "هەنگاوی 1: ڕەوتی گشتیی بازاڕ",
+     "narration": "هەنگاوی یەکەم ئەوەیە بزانیت بازاڕی گشتی لە کوێ وەستاوە و بە ئەگەری زۆر بەرەو کوێ دەچێت. لە پشکەکاندا وایکۆف سەیری پێوەری بازاڕی دەکرد، بەڵام لە فۆرێکسدا دۆلاری ئەمریکی لایەنێکی زۆربەی بازرگانییەکانە، بۆیە سەیری پێوەری دۆلار DXY دەکەین لە چارتی ڕۆژانە و چوار کاتژمێری. دەپرسین: ئایا دۆلار لە کۆکردنەوە، بەرزبوونەوە، دابەشکردن یان دابەزیندایە؟ ئەگەر دۆلار لە دابەزیندا بوو، جووتەکانی وەک EURUSD و GBPUSD و زێڕ مەیلیان بۆ بەرزبوونەوەیە، و USDJPY مەیلی بۆ دابەزینە. ئەگەر لە مەودایەکی ناڕووندا بوو، ئەمە نیشانەیە بۆ کەمکردنەوەی قەبارە یان چاوەڕوانی. ئەم هەنگاوە بڕیار دەدات بەدوای کڕیندا دەگەڕێین یان فرۆشتن. هەروەها سەیری ئەوە دەکەین دۆلار لە کوێی مەوداکەیدایە، نەک تەنها ئاراستەکەی."
+    },
+    {
+     "id": "s3",
+     "title": "هەنگاوی 2: هەڵبژاردنی ئامرازی گونجاو",
+     "narration": "هەنگاوی دووەم ئەوەیە ئامرازێک هەڵبژێریت کە لەگەڵ بازاڕی گشتیدا بە گونجاوی دەجووڵێت، و باشتر وایە لە بەرزبوونەوەدا لەو بەهێزتر بێت یان لە دابەزیندا لەو لاوازتر بێت. لە فۆرێکسدا جووتەکان لەگەڵ یەکتر بەراورد دەکەین. بۆ نموونە ئەگەر دۆلار لاواز دەبێت، EURUSD و GBPUSD بەراورد دەکەین: ئەگەر پاوەند بنێکی بەرزتری دروست کرد لە کاتێکدا یۆرۆ لە هەمان ماوەدا بنێکی نزمتری دروست کرد، پاوەند بەهێزترە، و کڕینی ئەو بەباشتر دەزانین. ئەگەر دۆلار بەهێز دەبێت، بەدوای لاوازترین دراو یان ئامرازدا دەگەڕێین بۆ فرۆشتن. ئامرازی بەهێز لە بازاڕی سەرەوەدا زیاتر بەرز دەبێتەوە و کەمتر دەگەڕێتەوە، و ئەمە پەراوێزی سەلامەتیی گەورەترت دەداتێ ئەگەر بازاڕ لە جووڵەدا دواکەوت. بەراوردکردن دەبێت لەسەر هەمان چوارچێوەی کات و هەمان ماوە بێت، ئەگەرنا چەواشەکەرە."
+    },
+    {
+     "id": "s4",
+     "title": "هەنگاوی 3: هۆیەکی بەس بۆ ئامانج",
+     "narration": "هەنگاوی سێیەم لەسەر یاسای هۆ و ئەنجام بنیات نراوە. پێش چوونەژوورەوە بپرسە: ئایا ئەو مەودایەی ئەم ئامرازە دروستی کردووە بەس گەورەیە بۆ ئەوەی ئەو ئامانجەی دەمەوێت ڕەوا بکات؟ ئەمە بە ژماردنی ئاسۆیی لەسەر چارتی Point and Figure دەپێوین، کە لە وانەیەکی دواتردا بە وردی ڕوونی دەکەینەوە. بە کورتی پانی و ماوەی مەوداکە خەمڵاندنێک بۆ جووڵەی ئەگەری دەدەن. بۆیە ئەگەر وەستانەکەت 40 پیپ بێت و قازانجێکی لانیکەم سێ هێندە بتەوێت، پێویستت بە هۆیەکە کە ئاماژە بە لانیکەم 120 پیپ بکات. ئەگەر ژماردنەکە تەنها ئاماژەی بە 60 پیپ کرد، بازرگانییەکە بەهای مەترسییەکەی نییە، هەر چەندە ڕێکخستنەکە جوان دەربکەوێت. بۆیە هەنگاوی سێیەم دەتپارێزێت لە بازرگانییەک کە ئاراستەکەی دروستە بەڵام قازانجی لاوازە."
+    },
+    {
+     "id": "s5",
+     "title": "هەنگاوی 4: ئایا ئامرازەکە ئامادەیە بۆ جووڵە؟",
+     "narration": "هەنگاوی چوارەم ئەوەیە دڵنیا ببیتەوە کە ئامرازەکە ئامادەکارییەکەی تەواو کردووە و ئامادەیە بۆ دەستپێکردن. لێرەدا ئەوەی دەربارەی قۆناغەکان فێری بووین بەکاردێنین: ئایا قۆناغی C بە Spring یان تاقیکردنەوەیەکی سەرکەوتوو تەواو بووە؟ ئایا نیشانەی هێز لە قۆناغی D دا دەرکەوتووە؟ ئایا دوایین گەڕانەوە بە Tick Volume ی کەم و بنێکی بەرزتر هات؟ وایکۆف لیستێکی نۆ تاقیکردنەوەی کڕین و نۆ تاقیکردنەوەی فرۆشتنی دانا، و پوختەکەیان ئەمەیە: ئامانجی دابەزینی پێشوو هاتووەتە دی، بەرزبوونەوەکان قەبارەی زیاتر و گەڕانەوەکان قەبارەی کەمتریان هەیە، لووتکە و بنی بەرزتر پێکهاتوون، و هێڵی ڕەوتی خوارەوە شکاوە. تا نیشانەی زیاتر کۆببنەوە، ئامرازەکە ئامادەترە. پێویستت بە هەر نۆ تاقیکردنەوەکە نییە، بەڵام ئەگەر زۆربەیان نەبوون، ئامادەکاری هێشتا تەواو نەبووە."
+    },
+    {
+     "id": "s6",
+     "title": "هەنگاوی 5: کاتی چوونەژوورەوە",
+     "narration": "هەنگاوی پێنجەم ئەوەیە کاتی چوونەژوورەوەت لەگەڵ وەرچەرخانێک لە بازاڕی گشتیدا ڕێک بخەیت. تەنانەت ئەگەر ئامرازەکە ئامادە بێت، لەوانەیە چەند ڕۆژێک لە شوێنی خۆی بمێنێتەوە ئەگەر دۆلار هێشتا دژی دەجووڵێت. بۆیە چاوەڕێ دەکەین پێوەری دۆلار نیشانەیەکی گونجاو نیشان بدات، وەک شکاندنی بنێکی گرنگ لەسەر مۆمێکی داخراوی چوار کاتژمێری ئەگەر EURUSD بکڕین. پاشان دادەبەزین بۆ چوارچێوەیەکی بچووکتر، وەک یەک کاتژمێری، و لە LPS یان تاقیکردنەوەیەک لە خودی ئامرازەکەدا دەچینە ژوورەوە. وەستان لە ژێر بنی ئەو تاقیکردنەوەیە، و ئامانج لە ژماردنی هەنگاوی سێیەمەوە دێت، لەگەڵ وەرگرتنی بەشێک لە قازانج لە یەکەم بەرگریدا. مەترسی نزیکەی 1% ی هەژمار دەمێنێتەوە. ئەگەر دۆلار پێش چوونەژوورەوەت گەڕایەوە و لە سەرووی بنە شکاوەکە داخرا، بیرۆکەکە هەڵدەوەشێنینەوە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونەیەکی تەواو لەسەر GBPUSD",
+     "narration": "نموونەیەک بە پێنج هەنگاوەکە. هەنگاوی 1: پێوەری دۆلار لە ڕۆژانەدا لە دابەشکردندایە لە نێوان 104.90 و 105.80، بۆیە بەدوای کڕیندا دەگەڕێین بەرامبەر دۆلار. هەنگاوی 2: پاوەند بنێکی بەرزتری دروست کرد لە کاتێکدا یۆرۆ بنەکەی شکاند، بۆیە GBPUSD هەڵدەبژێرین. هەنگاوی 3: مەودای کۆکردنەوە لە نێوان 1.2600 و 1.2720 ژماردنێکی نزیکەی 180 پیپ دەدات. هەنگاوی 4: Spring بۆ 1.2588 دەرکەوت، پاشان نیشانەی هێز بۆ 1.2735، پاشان LPS ێکی هێمن لە 1.2690. هەنگاوی 5: کاتژمێر 9:00 ی لەندەن مۆمێکی چوار کاتژمێریی دۆلار لە ژێر 104.90 داخرا. لە 1.2695 دەکڕین، وەستان لە 1.2655 واتە 40 پیپ، و ئامانج 1.2880 واتە 185 پیپ. بەشێک لە قازانج لە 1.2800 وەردەگرین و وەستان دەگوازینەوە بۆ خاڵی چوونەژوورەوە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر زێڕ XAUUSD",
+     "narration": "نموونەیەکی فرۆشتن لەسەر زێڕ. هەنگاوی 1: پێوەری دۆلار لە کۆکردنەوە دەرچووە و قۆناغی بەرزبوونەوەی دەست پێکردووە، و دۆلاری بەهێز زۆرجار فشار دەخاتە سەر زێڕ. هەنگاوی 2: زێڕ نەیتوانی لووتکەیەکی نوێ دروست بکات لە کاتێکدا دۆلار بەرز بووەوە، واتە لاوازترە. هەنگاوی 3: مەودای دابەشکردن لە نێوان 2400 و 2450 دۆلار ژماردنێکی نزیکەی 90 دۆلار بەرەو خوارەوە دەدات. هەنگاوی 4: UTAD بۆ 2462 دەرکەوت، پاشان نیشانەی لاوازی 2400 ی شکاند، پاشان هەستانەوەیەکی لاواز بۆ 2405 کە LPSY یە. هەنگاوی 5: کاتژمێر 10:00 ی نیویۆرک دۆلار بەرگرییەکەی بە داخستنێکی ڕوون شکاند. لە 2403 دەفرۆشین، وەستان لە 2422 واتە 19 دۆلار، و ئامانج 2330 واتە 73 دۆلار. داخستن لە سەرووی 2422 بازرگانییەکە هەڵدەوەشێنێتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "باوترین هەڵە دەستپێکردنە ڕاستەوخۆ لە هەنگاوی چوارەمەوە: Spring ێکی جوان دەبینیت و دەکڕیت بێ ئەوەی سەیری دۆلار یان هێزی جووتەکە بە بەراورد لەگەڵ ئەوانی تر بکەیت. هەڵەی دووەم پشتگوێخستنی هەنگاوی سێیەمە، بۆیە دەچیتە بازرگانییەکەوە کە وەستانەکەی 40 پیپ و ئامانجە لۆژیکییەکەی تەنها 50 پیپە. سێیەم ڕاونانی نرخە دوای دەستپێکردنی چونکە خاڵی چوونەژوورەوەت لەدەست چوو، لە جیاتی چاوەڕوانیی تاقیکردنەوەی دواتر. چوارەم باوەڕبوونە بەوەی پێوەری دۆلار کۆنترۆڵی هەموو شتێک دەکات، لە کاتێکدا هەر دراوێک هەواڵی تایبەتی خۆی هەیە. پێنجەم چوونەژوورەوەیە پێش داخستنی ئەو مۆمەی وەرچەرخانی دۆلار دەسەلمێنێت، چونکە لەوانەیە بگەڕێتەوە و نیشانەکە هەڵبوەشێنێتەوە. لە کۆتاییدا، تێپەڕاندنی هەنگاوێک چونکە بە بازرگانییەکە بە پەرۆشیت ڕێک ئەوەیە کە ڕێبازەکە هەوڵی ڕێگرتنی دەدات."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی: پێنج هەنگاوەکە بکە بە لیستێکی پشکنین کە پێش هەموو بازرگانییەک و بە ڕیز پێیدا تێدەپەڕیت. یەکەم ڕەوتی دۆلار لە ڕۆژانە و چوار کاتژمێریدا. دووەم جووتە بەهێزتر یان لاوازترەکە بە بەراورد. سێیەم ژماردنێک کە ئامانجێکی لانیکەم دوو یان سێ هێندەی مەترسی ڕەوا بکات. چوارەم نیشانەکانی ئامادەیی: تاقیکردنەوەیەکی سەرکەوتوو، نیشانەی هێز یان لاوازی، و گەڕانەوەیەک بە Tick Volume ی کەم. پێنجەم وەرچەرخانێک لە دۆلاردا لەسەر مۆمێکی داخراو، پاشان چوونەژوورەوە لە تاقیکردنەوەیەکدا بە وەستان لە پشتیەوە. ئەگەر یەک هەنگاو سەرنەکەوت، بازرگانی نییە. مەترسی نزیکەی 1% بهێڵەوە، و ئەنجامی هەر هەنگاوێک لە دەفتەری بازرگانیدا تۆمار بکە. ڕێبازەکە بڕیارەکەت ڕێک دەخات، بەڵام گەرەنتیی قازانج ناکات."
+    }
+   ]
+  },
+  "wy-l5-01": {
+   "ar": [
+    {
+     "id": "s1",
+     "title": "قانون السبب والنتيجة",
+     "narration": "قانون السبب والنتيجة يقول إن الحركة الكبيرة تحتاج تحضيراً كبيراً. النطاق العرضي الذي يجمع فيه المشغّل المركّب أو يوزع هو السبب، والاتجاه الذي يليه هو النتيجة. نطاق قصير وضيق يعطي غالباً حركة محدودة، ونطاق طويل وعريض يمكن أن يعطي حركة أكبر. لكن كيف نحوّل هذه الفكرة إلى رقم؟ استخدم وايكوف لذلك رسم النقطة والرقم أو Point and Figure، وطريقة تسمى العدّ الأفقي. الناتج ليس تنبؤاً دقيقاً، بل تقدير لمدى الحركة المحتملة يساعدك على اختيار الأهداف وتقييم الصفقة قبل الدخول. وفي هذا الدرس نتعلم الرسم والعدّ خطوة بخطوة، ثم نطبقه على مثالين."
+    },
+    {
+     "id": "s2",
+     "title": "أساسيات رسم النقطة والرقم",
+     "narration": "رسم النقطة والرقم لا يحتوي محوراً للزمن، بل يسجّل حركة السعر فقط. الصعود يُرسم بأعمدة من علامات X، والهبوط بأعمدة من علامات O. نحدد أولاً حجم المربع، مثلاً 5 نقاط في EURUSD، أو دولارين في الذهب، فلا يُضاف مربع جديد إلا إذا تحرك السعر بمقدار مربع كامل. ثم نحدد الانعكاس، والشائع ثلاثة مربعات: لا يبدأ عمود جديد في الاتجاه المعاكس إلا إذا ارتد السعر ثلاثة مربعات، أي 15 نقطة في مثالنا. والجميل أن هذا الرسم لا يعتمد على الحجم أصلاً، وهذا مناسب للفوركس حيث لا يتوفر إلا حجم التيك. ومعظم منصات الرسم تتيح هذا النوع من الرسوم."
+    },
+    {
+     "id": "s3",
+     "title": "العدّ الأفقي: أين نعدّ؟",
+     "narration": "العدّ الأفقي يعني أن نعدّ عدد الأعمدة على خط أفقي واحد داخل النطاق. الخط المعتاد في التجميع هو مستوى الـ LPS، أي آخر نقطة دعم قبل الانطلاق، أو مستوى اختبار الـ Spring. نبدأ من عمود الـ LPS ونعدّ الأعمدة نحو اليسار، عموداً عموداً، حتى نصل إلى بداية النطاق قرب الدعم الأولي أو ذروة البيع، أو إلى أول جدار من الأعمدة يقطع هذا الخط بقوة. المهم أننا نعدّ الأعمدة لا المربعات. وفي التوزيع نفعل الشيء نفسه على خط الـ LPSY، أي آخر نقطة عرض قبل الهبوط. وكلما زاد عدد الأعمدة على الخط، كان السبب أكبر والحركة المحتملة أبعد."
+    },
+    {
+     "id": "s4",
+     "title": "من العدّ إلى الهدف",
+     "narration": "المعادلة بسيطة: عدد الأعمدة مضروباً في حجم المربع مضروباً في عدد مربعات الانعكاس. الناتج هو المسافة المتوقعة للحركة. في التجميع نضيف هذه المسافة إلى أدنى نقطة في النطاق فنحصل على الهدف المحافظ، ونضيفها إلى خط العدّ نفسه فنحصل على هدف أبعد. وفي التوزيع نطرح المسافة من أعلى نقطة في النطاق للهدف المحافظ، ومن خط العدّ للهدف الأبعد. مثلاً 10 أعمدة بمربع 5 نقاط وانعكاس 3 تعطي 150 نقطة. نتعامل مع الهدفين كمنطقة يُحتمل أن تتباطأ فيها الحركة، لا كسعر دقيق. ومن الطبيعي أن يتجاوز السعر الهدف أحياناً أو يتوقف قبله."
+    },
+    {
+     "id": "s5",
+     "title": "شروط العدّ الصحيح",
+     "narration": "للعدّ شروط تجعله أكثر واقعية. أولاً لا نعدّ إلا بعد اكتمال النطاق تقريباً، أي بعد المرحلة C وظهور علامة قوة أو ضعف في المرحلة D، لأن السبب لم يكتمل قبل ذلك. ثانياً نثبت حجم المربع والانعكاس، فتغييرهما يغيّر العدّ كله. ثالثاً يمكن تقسيم النطاق إلى أجزاء، فنعدّ الجزء الأقرب أولاً لهدف قريب، ثم النطاق كاملاً لهدف أبعد، وهذا يسمى العدّ المرحلي. رابعاً نقارن الهدف بالمقاومات والدعوم الواضحة على الرسم العادي، فإذا تطابق معها زادت أهميته. وإذا كان الهدف يقع خلف مقاومة كبيرة قريبة، فخذ ذلك بالحسبان قبل الدخول، فقد يتوقف السعر عندها طويلاً."
+    },
+    {
+     "id": "s6",
+     "title": "استخدام العدّ في التداول",
+     "narration": "للعدّ ثلاثة استخدامات عملية. الأول تصفية الصفقات: إذا كان وقفك 30 نقطة والعدّ يشير إلى 60 نقطة فقط، فالعائد لا يستحق، ونتجاوز الصفقة. الثاني وضع الأهداف: نأخذ جزءاً من الربح، كالنصف، عند الهدف المحافظ، وننقل الوقف إلى نقطة الدخول، ونترك الباقي للهدف الأبعد. الثالث إدارة التوقعات: عندما يصل السعر إلى الهدف المحافظ ويظهر عنده توقف أو نطاق جديد، فقد يكون السبب قد استُهلك. أما الوقف فيبقى تحت الـ LPS أو قاع الاختبار في الشراء، وفوق الـ LPSY في البيع، بمخاطرة قرابة 1% من الحساب. فالعدّ لا يغني أبداً عن وقف الخسارة."
+    },
+    {
+     "id": "s7",
+     "title": "مثال على EURUSD",
+     "narration": "مثال على اليورو دولار. نستخدم رسم نقطة ورقم بمربع 5 نقاط وانعكاس ثلاثة مربعات. نطاق التجميع أدناه 1.0720 عند الـ Spring، والـ LPS عند 1.0760. على خط 1.0760 عددنا 12 عموداً من الـ LPS نحو اليسار حتى ذروة البيع. المسافة تساوي 12 ضرب 5 ضرب 3، أي 180 نقطة. الهدف المحافظ 1.0720 زائد 180 نقطة، أي 1.0900. والهدف الأبعد 1.0760 زائد 180، أي 1.0940. الشراء عند 1.0765 بعد إغلاق شمعة الساعة التي أكدت الـ LPS، والوقف 1.0735 أي 30 نقطة، والهدف الأول 1.0900 أي 135 نقطة. ونأخذ نصف الربح هناك، ونترك الباقي نحو 1.0940 مع وقف عند الدخول."
+    },
+    {
+     "id": "s8",
+     "title": "مثال على الذهب XAUUSD",
+     "narration": "مثال توزيع على الذهب. حجم المربع دولاران، والانعكاس ثلاثة مربعات، أي 6 دولارات. أعلى نقطة في النطاق 2450، والـ LPSY عند 2410. على خط 2410 عددنا 15 عموداً من الـ LPSY نحو اليسار حتى ذروة الشراء. المسافة تساوي 15 ضرب 2 ضرب 3، أي 90 دولاراً. الهدف المحافظ 2450 ناقص 90، أي 2360. والهدف الأبعد 2410 ناقص 90، أي 2320. البيع عند 2408 بعد إغلاق شمعة تؤكد ضعف الارتداد، والوقف 2426 أي 18 دولاراً. نأخذ نصف الربح عند 2360، أي 48 دولاراً، ونترك الباقي نحو 2320. والإغلاق فوق 2426 يلغي الفكرة."
+    },
+    {
+     "id": "s9",
+     "title": "أخطاء شائعة",
+     "narration": "أول خطأ هو العدّ قبل اكتمال النطاق، فيخرج رقم صغير أو كبير لا يعكس السبب الحقيقي. الثاني هو اختيار خط عدّ عشوائي بدل خط الـ LPS أو الـ LPSY، أو عدّ المربعات بدل الأعمدة. الثالث هو تغيير حجم المربع حتى تحصل على الهدف الذي تريده، وهذا خداع للنفس. الرابع هو اعتبار الهدف وعداً مؤكداً، فترفض الخروج حين يظهر ضعف واضح قبله. الخامس هو بناء الرسم على حركات الأخبار الحادة، مثل لحظة صدور الوظائف الأمريكية، فتضيف أعمدة لا تعبّر عن تجميع حقيقي. وأخيراً، نسيان الوقف لأن الهدف يبدو بعيداً ومغرياً خطأ يكلف كثيراً."
+    },
+    {
+     "id": "s10",
+     "title": "القاعدة العملية",
+     "narration": "القاعدة العملية: انتظر حتى يكتمل النطاق وتظهر علامة قوة أو ضعف. ارسم النقطة والرقم بحجم مربع ثابت وانعكاس ثلاثة مربعات. حدد خط العدّ عند الـ LPS أو الـ LPSY، وعدّ الأعمدة نحو اليسار حتى بداية النطاق. اضرب عدد الأعمدة في حجم المربع وفي ثلاثة، ثم احسب الهدف المحافظ من طرف النطاق والهدف الأبعد من خط العدّ. إذا كان العائد أقل من ضعفي المخاطرة، فتجاوز الصفقة. خذ جزءاً من الربح عند الهدف الأول، وضع الوقف خلف الـ LPS، وأبقِ المخاطرة قرابة 1%. الهدف تقدير، لا وعد. وسجّل العدّ ونتيجته في دفترك."
+    }
+   ],
+   "en": [
+    {
+     "id": "s1",
+     "title": "The law of cause and effect",
+     "narration": "The law of cause and effect says that a large move needs large preparation. The sideways range in which the Composite Operator accumulates or distributes is the cause, and the trend that follows is the effect. A short, narrow range usually gives a limited move, while a long, wide range can give a larger one. But how do we turn this idea into a number? For this Wyckoff used the Point and Figure chart and a method called the horizontal count. The result is not a precise prediction but an estimate of the potential move's size, which helps you choose targets and evaluate the trade before entering. In this lesson we learn the chart and the count step by step, then apply them to two examples."
+    },
+    {
+     "id": "s2",
+     "title": "Point and Figure basics",
+     "narration": "A Point and Figure chart has no time axis; it records only price movement. Rises are drawn as columns of X marks and declines as columns of O marks. First we set the box size, for example 5 pips on EURUSD or two dollars on gold, so a new box is added only when price moves a full box. Then we set the reversal, commonly three boxes: a new column in the opposite direction starts only if price reverses by three boxes, which is 15 pips in our example. The nice thing is that this chart does not rely on volume at all, which suits forex, where only tick volume is available. Most charting platforms offer this chart type."
+    },
+    {
+     "id": "s3",
+     "title": "The horizontal count: where do we count?",
+     "narration": "The horizontal count means counting the number of columns along one horizontal line inside the range. The usual line in accumulation is the LPS level, the Last Point of Support before the move, or the level of the Spring test. We start from the LPS column and count columns to the left, one by one, until we reach the start of the range near Preliminary Support or the Selling Climax, or the first wall of columns that cuts sharply through the line. What matters is that we count columns, not boxes. In distribution we do the same on the LPSY line, the Last Point of Supply before the decline. The more columns on the line, the larger the cause and the farther the potential move."
+    },
+    {
+     "id": "s4",
+     "title": "From the count to the target",
+     "narration": "The formula is simple: the number of columns multiplied by the box size multiplied by the number of reversal boxes. The result is the expected distance of the move. In accumulation we add this distance to the lowest point of the range to get the conservative target, and add it to the count line itself to get an extended target. In distribution we subtract the distance from the highest point of the range for the conservative target, and from the count line for the extended target. For example, 10 columns with a 5-pip box and a 3-box reversal give 150 pips. We treat the two targets as a zone where the move may slow down, not as an exact price. It is normal for price to overshoot the target sometimes, or stop short of it."
+    },
+    {
+     "id": "s5",
+     "title": "Conditions for a sound count",
+     "narration": "The count has conditions that make it more realistic. First, we count only after the range is roughly complete, meaning after Phase C and a Sign of Strength or Weakness in Phase D, because the cause is not complete before that. Second, we keep the box size and reversal fixed, since changing them changes the whole count. Third, the range can be divided into parts, so we count the nearest part first for a near target, then the whole range for a farther one; this is called a phased count. Fourth, we compare the target with clear resistance and support on the regular chart, and if they coincide its importance increases. If the target lies beyond a large nearby resistance, factor that in before entering, as price may stall there for a long time."
+    },
+    {
+     "id": "s6",
+     "title": "Using the count in trading",
+     "narration": "The count has three practical uses. The first is filtering trades: if your stop is 30 pips and the count points to only 60 pips, the reward is not worth it, and we skip the trade. The second is setting targets: we take part of the profit, such as half, at the conservative target, move the stop to entry, and leave the rest for the extended target. The third is managing expectations: when price reaches the conservative target and a pause or a new range appears there, the cause may have been used up. The stop stays below the LPS or the test low for buys, and above the LPSY for sells, risking about 1% of the account. The count never replaces a stop loss."
+    },
+    {
+     "id": "s7",
+     "title": "Example on EURUSD",
+     "narration": "An example on EURUSD. We use a Point and Figure chart with a 5-pip box and a three-box reversal. The accumulation range's low is 1.0720 at the Spring, and the LPS is at 1.0760. On the 1.0760 line we counted 12 columns from the LPS to the left, back to the Selling Climax. The distance equals 12 times 5 times 3, which is 180 pips. The conservative target is 1.0720 plus 180 pips, which is 1.0900. The extended target is 1.0760 plus 180, which is 1.0940. The buy is at 1.0765 after the hourly candle that confirmed the LPS closed, the stop 1.0735, which is 30 pips, and the first target 1.0900, which is 135 pips. We take half there and leave the rest toward 1.0940, stop at entry."
+    },
+    {
+     "id": "s8",
+     "title": "Example on gold, XAUUSD",
+     "narration": "A distribution example on gold. The box size is two dollars and the reversal is three boxes, so 6 dollars. The range's highest point is 2450, and the LPSY is at 2410. On the 2410 line we counted 15 columns from the LPSY to the left, back to the Buying Climax. The distance equals 15 times 2 times 3, which is 90 dollars. The conservative target is 2450 minus 90, which is 2360. The extended target is 2410 minus 90, which is 2320. The sell is at 2408 after a candle closes confirming the weak rally, with the stop at 2426, which is 18 dollars. We take half the profit at 2360, which is 48 dollars, and leave the rest toward 2320. A close above 2426 cancels the idea."
+    },
+    {
+     "id": "s9",
+     "title": "Common mistakes",
+     "narration": "The first mistake is counting before the range is complete, which produces a small or large number that does not reflect the real cause. The second is choosing a random count line instead of the LPS or LPSY line, or counting boxes instead of columns. The third is changing the box size until you get the target you want, which is self-deception. The fourth is treating the target as a sure promise, so you refuse to exit when clear weakness appears before it. The fifth is building the chart on sharp news moves, such as the moment US jobs data is released, adding columns that do not reflect real accumulation. Finally, forgetting the stop because the target looks far and tempting is a costly mistake."
+    },
+    {
+     "id": "s10",
+     "title": "The practical rule",
+     "narration": "The practical rule: wait until the range is complete and a Sign of Strength or Weakness appears. Draw the Point and Figure chart with a fixed box size and a three-box reversal. Set the count line at the LPS or LPSY, and count the columns to the left back to the start of the range. Multiply the number of columns by the box size and by three, then calculate the conservative target from the edge of the range and the extended target from the count line. If the reward is less than twice the risk, skip the trade. Take partial profit at the first target, keep the stop beyond the LPS, and keep risk around 1%. The target is an estimate, not a promise. Log each count and its outcome."
+    }
+   ],
+   "ku": [
+    {
+     "id": "s1",
+     "title": "یاسای هۆ و ئەنجام",
+     "narration": "یاسای هۆ و ئەنجام دەڵێت جووڵەی گەورە پێویستی بە ئامادەکاریی گەورە هەیە. ئەو مەودا ئاسۆییەی Composite Operator تێیدا کۆدەکاتەوە یان دابەش دەکات هۆیە، و ئەو ڕەوتەی دوای دێت ئەنجامە. مەودایەکی کورت و تەسک زۆرجار جووڵەیەکی سنووردار دەدات، و مەودایەکی درێژ و پان دەتوانێت جووڵەیەکی گەورەتر بدات. بەڵام چۆن ئەم بیرۆکەیە دەگۆڕین بۆ ژمارە؟ وایکۆف بۆ ئەمە چارتی Point and Figure و ڕێگەیەکی بەکارهێنا کە پێی دەڵێن ژماردنی ئاسۆیی. ئەنجامەکە پێشبینییەکی وورد نییە، بەڵکو خەمڵاندنی قەبارەی جووڵەی ئەگەرییە کە یارمەتیت دەدات ئامانج هەڵبژێریت و پێش چوونەژوورەوە بازرگانییەکە هەڵبسەنگێنیت. لەم وانەیەدا چارتەکە و ژماردن هەنگاو بە هەنگاو فێر دەبین، پاشان لەسەر دوو نموونە جێبەجێیان دەکەین."
+    },
+    {
+     "id": "s2",
+     "title": "بنەماکانی چارتی Point and Figure",
+     "narration": "چارتی Point and Figure تەوەرەی کاتی تێدا نییە، تەنها جووڵەی نرخ تۆمار دەکات. بەرزبوونەوە بە ستوونی نیشانەی X دەکێشرێت، و دابەزین بە ستوونی نیشانەی O. سەرەتا قەبارەی خانە دیاری دەکەین، بۆ نموونە 5 پیپ لە EURUSD یان دوو دۆلار لە زێڕ، بۆیە خانەیەکی نوێ زیاد ناکرێت مەگەر نرخ بە ئەندازەی خانەیەکی تەواو بجووڵێت. پاشان پێچەوانەبوونەوە دیاری دەکەین، و باوترینیان سێ خانەیە: ستوونێکی نوێ بە ئاراستەی پێچەوانە دەست پێناکات مەگەر نرخ سێ خانە بگەڕێتەوە، واتە 15 پیپ لە نموونەکەماندا. جوانییەکەی ئەوەیە ئەم چارتە هیچ پشت بە قەبارە نابەستێت، و ئەمە بۆ فۆرێکس گونجاوە کە تەنها Tick Volume ی تێدا بەردەستە. زۆربەی پلاتفۆڕمەکانی چارت ئەم جۆرە چارتە پێشکەش دەکەن."
+    },
+    {
+     "id": "s3",
+     "title": "ژماردنی ئاسۆیی: لە کوێ دەژمێرین؟",
+     "narration": "ژماردنی ئاسۆیی واتە ژمارەی ستوونەکان لەسەر یەک هێڵی ئاسۆیی لە ناو مەوداکەدا بژمێرین. هێڵی ئاسایی لە کۆکردنەوەدا ئاستی LPS ە، واتە دوایین خاڵی پشتگیری پێش دەستپێکردن، یان ئاستی تاقیکردنەوەی Spring. لە ستوونی LPS ەوە دەست پێدەکەین و ستوونەکان بەرەو چەپ دەژمێرین، یەک یەک، تا دەگەینە سەرەتای مەوداکە نزیک پشتگیریی سەرەتایی یان لووتکەی فرۆشتن، یان یەکەم دیواری ستوون کە بە هێز ئەو هێڵە دەبڕێت. گرنگ ئەوەیە ستوونەکان دەژمێرین نەک خانەکان. لە دابەشکردندا هەمان شت لەسەر هێڵی LPSY دەکەین، واتە دوایین خاڵی خستنەڕوو پێش دابەزین. تا ستوونی زیاتر لەسەر هێڵەکە بێت، هۆکە گەورەترە و جووڵەی ئەگەری دوورترە."
+    },
+    {
+     "id": "s4",
+     "title": "لە ژماردنەوە بۆ ئامانج",
+     "narration": "هاوکێشەکە سادەیە: ژمارەی ستوونەکان جارانی قەبارەی خانە جارانی ژمارەی خانەکانی پێچەوانەبوونەوە. ئەنجامەکە ماوەی چاوەڕوانکراوی جووڵەکەیە. لە کۆکردنەوەدا ئەم ماوەیە بۆ نزمترین خاڵی مەوداکە زیاد دەکەین و ئامانجی پارێزکارانە وەردەگرین، و بۆ خودی هێڵی ژماردن زیادی دەکەین و ئامانجێکی دوورتر وەردەگرین. لە دابەشکردندا ماوەکە لە بەرزترین خاڵی مەوداکە کەم دەکەینەوە بۆ ئامانجی پارێزکارانە، و لە هێڵی ژماردن بۆ ئامانجی دوورتر. بۆ نموونە 10 ستوون بە خانەی 5 پیپ و پێچەوانەبوونەوەی 3 دەکاتە 150 پیپ. هەردوو ئامانجەکە وەک ناوچەیەک مامەڵە دەکەین کە لەوانەیە جووڵەکە تێیدا خاو ببێتەوە، نەک وەک نرخێکی وورد. ئاساییە نرخ هەندێک جار لە ئامانجەکە تێپەڕێت یان پێش ئەوە بوەستێت."
+    },
+    {
+     "id": "s5",
+     "title": "مەرجەکانی ژماردنی دروست",
+     "narration": "ژماردن چەند مەرجێکی هەیە کە واقیعیتری دەکەن. یەکەم تەنها دوای ئەوەی مەوداکە نزیکەی تەواو بوو دەژمێرین، واتە دوای قۆناغی C و دەرکەوتنی نیشانەی هێز یان لاوازی لە قۆناغی D، چونکە پێش ئەوە هۆکە تەواو نەبووە. دووەم قەبارەی خانە و پێچەوانەبوونەوە جێگیر دەکەین، چونکە گۆڕینیان هەموو ژماردنەکە دەگۆڕێت. سێیەم دەتوانرێت مەوداکە دابەش بکرێت بۆ چەند بەشێک، بۆیە سەرەتا نزیکترین بەش دەژمێرین بۆ ئامانجێکی نزیک، پاشان هەموو مەوداکە بۆ ئامانجێکی دوورتر، ئەمە پێی دەڵێن ژماردنی قۆناغی. چوارەم ئامانجەکە لەگەڵ بەرگری و پشتگیرییە ڕوونەکانی چارتی ئاسایی بەراورد دەکەین، و ئەگەر لەگەڵیان یەکی گرتەوە گرنگییەکەی زیاد دەبێت. ئەگەر ئامانجەکە لە پشت بەرگرییەکی گەورەی نزیکەوە بوو، پێش چوونەژوورەوە ئەوە لەبەرچاو بگرە، چونکە لەوانەیە نرخ ماوەیەکی زۆر لەوێ بوەستێت."
+    },
+    {
+     "id": "s6",
+     "title": "بەکارهێنانی ژماردن لە بازرگانیدا",
+     "narration": "ژماردن سێ بەکارهێنانی کردەیی هەیە. یەکەم پاڵاوتنی بازرگانییەکان: ئەگەر وەستانەکەت 30 پیپ بێت و ژماردنەکە تەنها ئاماژە بە 60 پیپ بکات، قازانجەکە ناهێنێت، و بازرگانییەکە تێدەپەڕێنین. دووەم دانانی ئامانج: بەشێک لە قازانج، وەک نیوەی، لە ئامانجی پارێزکارانەدا وەردەگرین، وەستان دەگوازینەوە بۆ خاڵی چوونەژوورەوە، و ئەوەی ماوە بۆ ئامانجی دوورتر بەجێ دەهێڵین. سێیەم بەڕێوەبردنی چاوەڕوانییەکان: کاتێک نرخ دەگاتە ئامانجی پارێزکارانە و وەستانێک یان مەودایەکی نوێ لەوێ دەردەکەوێت، لەوانەیە هۆکە بەکار هاتبێت. وەستانیش لە ژێر LPS یان بنی تاقیکردنەوە دەمێنێتەوە بۆ کڕین، و لە سەرووی LPSY بۆ فرۆشتن، بە مەترسیی نزیکەی 1% ی هەژمار. ژماردن هەرگیز جێگەی وەستانی زیان ناگرێتەوە."
+    },
+    {
+     "id": "s7",
+     "title": "نموونە لەسەر EURUSD",
+     "narration": "نموونەیەک لەسەر یۆرۆ دۆلار. چارتی Point and Figure بەکاردێنین بە خانەی 5 پیپ و پێچەوانەبوونەوەی سێ خانە. بنی مەودای کۆکردنەوەکە 1.0720 ە لە Spring دا، و LPS لە 1.0760 ە. لەسەر هێڵی 1.0760 دوازدە ستوونمان ژمارد لە LPS ەوە بەرەو چەپ تا لووتکەی فرۆشتن. ماوەکە یەکسانە بە 12 جارانی 5 جارانی 3، واتە 180 پیپ. ئامانجی پارێزکارانە 1.0720 کۆ 180 پیپ، واتە 1.0900. ئامانجی دوورتر 1.0760 کۆ 180، واتە 1.0940. کڕین لە 1.0765 دوای داخستنی ئەو مۆمە یەک کاتژمێرییەی LPS ی سەلماند، وەستان 1.0735 واتە 30 پیپ، و ئامانجی یەکەم 1.0900 واتە 135 پیپ. نیوەی قازانج لەوێ وەردەگرین، و ئەوەی ماوە بەرەو 1.0940 بەجێ دەهێڵین بە وەستان لە خاڵی چوونەژوورەوە."
+    },
+    {
+     "id": "s8",
+     "title": "نموونە لەسەر زێڕ XAUUSD",
+     "narration": "نموونەیەکی دابەشکردن لەسەر زێڕ. قەبارەی خانە دوو دۆلارە، و پێچەوانەبوونەوە سێ خانەیە، واتە 6 دۆلار. بەرزترین خاڵی مەوداکە 2450 ە، و LPSY لە 2410 ە. لەسەر هێڵی 2410 پازدە ستوونمان ژمارد لە LPSY ەوە بەرەو چەپ تا لووتکەی کڕین. ماوەکە یەکسانە بە 15 جارانی 2 جارانی 3، واتە 90 دۆلار. ئامانجی پارێزکارانە 2450 کەم 90، واتە 2360. ئامانجی دوورتر 2410 کەم 90، واتە 2320. فرۆشتن لە 2408 دوای داخستنی مۆمێک کە لاوازیی هەستانەوەکە دەسەلمێنێت، و وەستان لە 2426 واتە 18 دۆلار. نیوەی قازانج لە 2360 وەردەگرین، واتە 48 دۆلار، و ئەوەی ماوە بەرەو 2320 بەجێ دەهێڵین. داخستن لە سەرووی 2426 بیرۆکەکە هەڵدەوەشێنێتەوە."
+    },
+    {
+     "id": "s9",
+     "title": "هەڵە باوەکان",
+     "narration": "یەکەم هەڵە ژماردنە پێش تەواوبوونی مەوداکە، کە ژمارەیەکی بچووک یان گەورە دەدات کە هۆی ڕاستەقینە نیشان نادات. دووەم هەڵبژاردنی هێڵێکی ژماردنی هەڕەمەکییە لە جیاتی هێڵی LPS یان LPSY، یان ژماردنی خانەکان لە جیاتی ستوونەکان. سێیەم گۆڕینی قەبارەی خانەیە تا ئەو ئامانجەت دەست دەکەوێت کە دەتەوێت، و ئەمە خۆفریودانە. چوارەم مامەڵەکردنە لەگەڵ ئامانجەکە وەک بەڵێنێکی دڵنیا، بۆیە ڕەتی دەکەیتەوە دەربچیت کاتێک لاوازییەکی ڕوون پێش ئەو دەردەکەوێت. پێنجەم بنیاتنانی چارتەکەیە لەسەر جووڵە تیژەکانی هەواڵ، وەک ساتی بڵاوبوونەوەی داتای کاری ئەمریکی، و زیادکردنی ستوونێک کە کۆکردنەوەی ڕاستەقینە نیشان نادات. لە کۆتاییدا، لەبیرکردنی وەستان چونکە ئامانجەکە دوور و سەرنجڕاکێش دەردەکەوێت هەڵەیەکی گرانە."
+    },
+    {
+     "id": "s10",
+     "title": "یاسای کردەیی",
+     "narration": "یاسای کردەیی: چاوەڕێ بکە تا مەوداکە تەواو دەبێت و نیشانەی هێز یان لاوازی دەردەکەوێت. چارتی Point and Figure بە قەبارەی خانەی جێگیر و پێچەوانەبوونەوەی سێ خانە بکێشە. هێڵی ژماردن لە LPS یان LPSY دیاری بکە، و ستوونەکان بەرەو چەپ بژمێرە تا سەرەتای مەوداکە. ژمارەی ستوونەکان جارانی قەبارەی خانە و جارانی سێ بکە، پاشان ئامانجی پارێزکارانە لە لێواری مەوداکەوە و ئامانجی دوورتر لە هێڵی ژماردنەوە حیساب بکە. ئەگەر قازانج لە دوو هێندەی مەترسی کەمتر بوو، بازرگانییەکە تێپەڕێنە. بەشێک لە قازانج لە ئامانجی یەکەمدا وەربگرە، وەستان لە پشت LPS ەوە دابنێ، و مەترسی نزیکەی 1% بهێڵەوە. ئامانج خەمڵاندنە، نەک بەڵێن. ژماردن و ئەنجامەکەی لە دەفتەرەکەتدا تۆمار بکە."
+    }
+   ]
   }
  }
 }
