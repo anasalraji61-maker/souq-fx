@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
-  wrapBare: { minWidth: 0, borderRadius: radii.sm },
+  wrapBare: { minWidth: 0, borderRadius: radii.sm, width: '100%', alignSelf: 'stretch' },
   // full-height frames: the chart sits on top of the measured area, so its own height can never push the box
   // taller (on iPhone that cut off the bottom time labels and the top candles)
   fillAbs: { position: 'absolute', top: 0, left: spacing.sm, right: spacing.sm, bottom: spacing.sm },

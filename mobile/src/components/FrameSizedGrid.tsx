@@ -695,6 +695,7 @@ const styles = StyleSheet.create({
   compactRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'stretch',
     width: '100%',
   },
   cellCompactColumn: {

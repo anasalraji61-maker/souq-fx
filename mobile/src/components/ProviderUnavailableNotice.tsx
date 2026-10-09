@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { FrameCellContext } from './FrameSizedGrid';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { API_URL, type ChartSeries } from '../api';
 import { normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
@@ -71,6 +73,7 @@ type Props = {
 
 export function ProviderUnavailableNotice({ symbol, timeframe, height, showSwitchHint, dataSource }: Props) {
   const { t } = useI18n();
+  const compact = useContext(FrameCellContext) !== 'normal';
   const reason = providerUnavailableReason(dataSource);
   if (reason === SERIES_LOADING) {
     const tf = timeframe ?? '';
@@ -86,7 +89,7 @@ export function ProviderUnavailableNotice({ symbol, timeframe, height, showSwitc
         accessibilityLabel={loadText.replace('{tf}', known ? t.tfLabelsA11y[tf] : tf)}
       >
         <ActivityIndicator color={colors.accent} />
-        <Text style={[styles.body, styles.loading]}>{loadText.replace('{tf}', text)}</Text>
+        <Text style={[styles.body, styles.loading, compact && styles.bodySm]} numberOfLines={compact ? 4 : undefined}>{loadText.replace('{tf}', text)}</Text>
       </View>
     );
   }
@@ -107,9 +110,9 @@ export function ProviderUnavailableNotice({ symbol, timeframe, height, showSwitc
   const tried = offline && __DEV__ ? t.chartServerUnreachableTried.replace('{url}', API_URL) : null;
   const label = [title, body, tried].filter(Boolean).join('. ');
   return (
-    <View style={[styles.box, height != null && { height }]} accessible accessibilityRole="text" accessibilityLabel={label}>
-      <Text style={styles.title}>{title}</Text>
-      {body ? <Text style={styles.body}>{body}</Text> : null}
+    <View style={[styles.box, compact && styles.boxSm, height != null && { height }]} accessible accessibilityRole="text" accessibilityLabel={label}>
+      <Text style={[styles.title, compact && styles.titleSm]} numberOfLines={compact ? 3 : undefined}>{title}</Text>
+      {body && !compact ? <Text style={styles.body}>{body}</Text> : null}
       {tried ? <Text style={[styles.body, styles.tried]}>{tried}</Text> : null}
     </View>
   );
@@ -123,6 +126,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
+  boxSm: { padding: 4 },
   title: { color: colors.text, fontSize: 13, fontWeight: '500', textAlign: 'center', lineHeight: 19 },
   body: {
     color: colors.textDim,
@@ -134,4 +138,6 @@ const styles = StyleSheet.create({
   },
   loading: { marginTop: spacing.sm },
   tried: { ...numeric, marginTop: spacing.sm },
+  titleSm: { fontSize: 10, lineHeight: 14 },
+  bodySm: { fontSize: 9, lineHeight: 13 },
 });

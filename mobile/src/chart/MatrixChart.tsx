@@ -1652,10 +1652,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   syncFollowRef.current = syncFollow;
   const candleBull = mutedCandles ? withAlpha(colors.bull, 0.34) : colors.bull;
   const candleBear = mutedCandles ? withAlpha(colors.bear, 0.34) : colors.bear;
-  const timeAxisH = hideTimeLabels ? 0 : tinyAxes ? 20 : slimAxes ? 22 : TIME_AXIS_HEIGHT;
+  const timeAxisH = hideTimeLabels ? 0 : tinyAxes ? 18 : slimAxes ? 20 : TIME_AXIS_HEIGHT;
   // clean frames: thin side-by-side rectangles have no price axis; phone squares a narrow one
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : tinyAxes ? 40 : slimAxes ? 48 : PRICE_AXIS_WIDTH_FULL;
+  const PRICE_AXIS_WIDTH = hidePriceLabels ? 0 : tinyAxes ? 38 : slimAxes ? 44 : PRICE_AXIS_WIDTH_FULL;
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const AXIS_TAG_TEXT_W = Math.max(30, PRICE_AXIS_WIDTH - 8);
   const syncKeyRef = useRef('');
@@ -9174,7 +9174,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ]}
                   >
                     <View style={styles.hiLoLeader} />
-                    <Text style={styles.hiLoText}>{text}</Text>
+                    <Text style={[styles.hiLoText, (slimAxes || tinyAxes) && { fontSize: 9 }]}>{text}</Text>
                     {drop > 1 ? (
                       <View
                         style={[
@@ -11496,6 +11496,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[
                 styles.axisCornerText,
                 (lang === 'ar' || lang === 'ku') && styles.axisCornerTextScript,
+                (slimAxes || tinyAxes) && { fontSize: 9 },
                 priceManual && styles.axisCornerTextManual,
               ]}
               numberOfLines={1}
